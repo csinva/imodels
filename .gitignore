@@ -1,0 +1,16 @@
+**.ipynb_checkpoints
+**cache*
+**.pdf
+**.zip
+**.npy
+**.pkl
+**.txt
+**slurm*
+**logs*
+env
+**.pyc
+**.gif
+**.DS_Store
+**.idea
+*.pth
+**Icon*
