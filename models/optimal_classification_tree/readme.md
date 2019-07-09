@@ -7,24 +7,23 @@ The user needs to have **IBM Cplex** or **Gurobi** installed on their computer, 
 ### Example 
 ```python
 import pandas as pd
-from pyoptree.optree import OptimalHyperTreeModel, OptimalTreeModel
+import numpy as np
+from pyoptree.optree import OptimalTreeModel
+feature_names = np.array(["x1", "x2"])
 
-data = pd.DataFrame({
-    "index": ['A', 'C', 'D', 'E', 'F'],
-    "x1": [1, 2, 2, 2, 3],
-    "x2": [1, 2, 1, 0, 1],
-    "y": [1, 1, 0, 0, 0]
-})
-test_data = pd.DataFrame({
-    "index": ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
-    "x1": [1, 1, 2, 2, 2, 3, 3],
-    "x2": [1, 2, 2, 1, 0, 1, 0],
-    "y": [1, 1, 1, 0, 0, 0, 0]
-})
-model = OptimalHyperTreeModel(["x1", "x2"], "y", tree_depth=2, N_min=1, alpha=0.1, solver_name="cplex")
-model.train(data, train_method="mio")
+X = np.array([[1, 2, 2, 2, 3], [1, 2, 1, 0, 1]]).T
+y = np.array([1, 1, 0, 0, 0]).reshape(-1, 1)
+X_test = np.array([[1, 1, 2, 2, 2, 3, 3], [1, 2, 2, 1, 0, 1, 0]]).T
+y_test = np.array([1, 1, 1, 0, 0, 0, 0])
 
-print(model.predict(test_data))
+X = np.random.randn(10, 5)
+
+
+model = OptimalTreeModel(tree_depth=3, N_min=1, alpha=0.1) #, solver_name='baron'
+model.fit(X, y) # this method is currently using the fast, but not optimal solver
+preds = model.predict(X_test)
+# print(np.mean())
+print('acc', np.mean(preds == y_test))
 ```
 
 ### Todos 
