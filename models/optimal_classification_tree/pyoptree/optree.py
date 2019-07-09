@@ -17,9 +17,9 @@ import multiprocessing
 
 
 class AbstractOptimalTreeModel(metaclass=ABCMeta):
-    def __init__(self, x_cols: list, y_col: str, tree_depth: int, N_min: int, alpha: float = 0,
-                 M: int = 10, epsilon: float = 1e-4,
-                 solver_name: str = "gurobi"):
+    def __init__(self, tree_depth: int = 3, N_min: int = 1, alpha: float = 0,
+                 x_cols: list = ["x1", "x2"], y_col: str = "y", M: int = 10, 
+                 epsilon: float = 1e-4, solver_name: str = "gurobi"):
         self.y_col = y_col
         self.P = len(x_cols)
         self.P_range = x_cols
@@ -119,8 +119,10 @@ class AbstractOptimalTreeModel(metaclass=ABCMeta):
         logging.info("Training done(Contd.): training accuracy: {0}".format(1 - sum(self.Lt.values()) / data.shape[0]))
 
     def fit(self, X, y, **kwargs):
+        self.P = X.shape[1]
+        self.P_range = ["x" + str(i + 1) for i in range(self.P)]
         data = pd.DataFrame(np.hstack([X, y.reshape(-1, 1)]), 
-                            columns=["x" + str(i + 1) for i in range(X.shape[1])] + ["y"])
+                            columns=self.P_range + ["y"])
         self.train(data, train_method="ls", warm_start=False, show_training_process=False, **kwargs)         
         
     def print_tree(self, feature_names):
