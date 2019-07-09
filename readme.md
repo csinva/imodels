@@ -2,6 +2,13 @@
 
 Code / slides for workshop on interpretable machine learning.
 
+Provides scikit-learn style implementations of different interpretable models (see readmes in individual folders within [models] for details)
+
+- [bayesian rule lists](https://arxiv.org/abs/1602.08610)
+- [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9)
+- sparse integer linear models (simple, unstable implementation)
+
+
 References / further reading:
 
 - [book on interpretable machine learning](https://christophm.github.io/interpretable-ml-book/)
