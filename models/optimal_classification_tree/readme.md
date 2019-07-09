@@ -1,5 +1,5 @@
-# pyoptree
-Python Optimal Tree from [this repo](https://github.com/pan5431333/pyoptree) with minor modifications to make it easier to install / use
+# Optimal classification trees python
+Sklearn-style implementation of [Optimal Classification Trees](https://link.springer.com/article/10.1007/s10994-017-5633-9), adapted from [this repo](https://github.com/pan5431333/pyoptree) with minor modifications to make it easier to install / use
 
 #### Then install solver (IMPORTANT!) 
 The user needs to have **IBM Cplex** or **Gurobi** installed on their computer, and make sure that **the executable has been added to PATH environment variable** (i.e. command `cplex` or `gurobi` can be run on terminal). 
