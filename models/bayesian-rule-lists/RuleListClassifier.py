@@ -3,8 +3,8 @@ import sklearn.metrics
 import sys
 import numpy as np
 import pandas as pd
-from LethamBRL.BRL_code import *
-from Discretization.MDLP import *
+from brl import *
+from discretization.MDLP import *
 import numbers
 
 class RuleListClassifier(BaseEstimator):

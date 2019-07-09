@@ -1,9 +1,7 @@
 Highly interpretable, sklearn-compatible classifier based on decision rules
 ===============
 
-Very heavily based on this repo: https://github.com/tmadl/sklearn-expertsys
-
-This is a scikit-learn compatible wrapper for the Bayesian Rule List classifier developed by [Letham et al., 2015](http://projecteuclid.org/euclid.aoas/1446488742) (see [Letham's original code](http://lethalletham.com/)), extended by a minimum description length-based discretizer ([Fayyad & Irani, 1993](http://sci2s.ugr.es/keel/pdf/algorithm/congreso/fayyad1993.pdf)) for continuous data, and by an approach to subsample large datasets for better performance.
+This is a python3 version adapted from [this repo](https://github.com/tmadl/sklearn-expertsys). This is a scikit-learn compatible wrapper for the Bayesian Rule List classifier developed by [Letham et al., 2015](http://projecteuclid.org/euclid.aoas/1446488742) (see [Letham's original code](http://lethalletham.com/)), extended by a minimum description length-based discretizer ([Fayyad & Irani, 1993](http://sci2s.ugr.es/keel/pdf/algorithm/congreso/fayyad1993.pdf)) for continuous data, and by an approach to subsample large datasets for better performance.
 
 It produces rule lists, which makes trained classifiers **easily interpretable to human experts**, and is competitive with state of the art classifiers such as random forests or SVMs.
 
@@ -36,36 +34,47 @@ Numerical data in `X` is automatically discretized. To prevent discretization (e
 Usage example:
 
 ```python
+
+import sys
+sys.path.append('discretization')
 from RuleListClassifier import *
 from sklearn.datasets.mldata import fetch_mldata
-from sklearn.cross_validation import train_test_split
+from sklearn.datasets import fetch_openml
+from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 
-feature_labels = ["#Pregnant","Glucose concentration test","Blood pressure(mmHg)","Triceps skin fold thickness(mm)","2-Hour serum insulin (mu U/ml)","Body mass index","Diabetes pedigree function","Age (years)"]
-    
-data = fetch_mldata("diabetes") # get dataset
-y = (data.target+1)/2 # target labels (0 or 1)
+
+feature_labels = ["#Pregnant","Glucose concentration test","Blood pressure(mmHg)","Triceps skin fold thickness(mm)",
+                  "2-Hour serum insulin (mu U/ml)","Body mass index","Diabetes pedigree function","Age (years)"]
+
+
+np.random.seed(13)
+data = fetch_openml("diabetes") # get dataset
+y = (data.target == 'tested_positive').astype(np.int) # labels 0-1
+
 Xtrain, Xtest, ytrain, ytest = train_test_split(data.data, y) # split
 
 # train classifier (allow more iterations for better accuracy; use BigDataRuleListClassifier for large datasets)
-model = RuleListClassifier(max_iter=10000, class1label="diabetes", verbose=False)
+print('training...')
+model = RuleListClassifier(max_iter=10000, class1label="diabetes", verbose=False) # max_iter = 100000
 model.fit(Xtrain, ytrain, feature_labels=feature_labels)
 
-print "RuleListClassifier Accuracy:", model.score(Xtest, ytest), "Learned interpretable model:\n", model
-print "RandomForestClassifier Accuracy:", RandomForestClassifier().fit(Xtrain, ytrain).score(Xtest, ytest)
+print("RuleListClassifier Accuracy:", model.score(Xtest, ytest), "Learned interpretable model:\n", model)
+print("RandomForestClassifier Accuracy:", RandomForestClassifier(n_estimators=10).fit(Xtrain, ytrain).score(Xtest, ytest))
+
 """
-**Output:**
-RuleListClassifier Accuracy: 0.776041666667 Learned interpretable model:
-Trained RuleListClassifier for detecting diabetes
+Output:
+
+RuleListClassifier Accuracy: 0.7291666666666666 Learned interpretable model:
+ Trained RuleListClassifier for detecting diabetes
 ==================================================
-IF Glucose concentration test : 157.5_to_inf THEN probability of diabetes: 81.1% (72.5%-72.5%)
-ELSE IF Body mass index : -inf_to_26.3499995 THEN probability of diabetes: 5.2% (1.9%-1.9%)
-ELSE IF Glucose concentration test : -inf_to_103.5 THEN probability of diabetes: 14.4% (8.8%-8.8%)
-ELSE IF Age (years) : 27.5_to_inf THEN probability of diabetes: 59.6% (51.8%-51.8%)
-ELSE IF Glucose concentration test : 103.5_to_127.5 THEN probability of diabetes: 15.9% (8.0%-8.0%)
-ELSE probability of diabetes: 44.7% (29.5%-29.5%)
+IF Glucose concentration test : 157.5_to_inf THEN probability of diabetes: 81.9% (73.0%-89.4%)
+ELSE IF Body mass index : -inf_to_27.45 THEN probability of diabetes: 8.3% (4.4%-13.3%)
+ELSE IF Glucose concentration test : 123.5_to_157.5 THEN probability of diabetes: 53.5% (44.9%-62.1%)
+ELSE IF Age (years) : -inf_to_28.5 THEN probability of diabetes: 11.6% (6.5%-17.8%)
+ELSE probability of diabetes: 36.9% (28.2%-46.1%)
 =================================================
 
-RandomForestClassifier Accuracy: 0.729166666667
+RandomForestClassifier Accuracy: 0.7135416666666666
 """
 ```

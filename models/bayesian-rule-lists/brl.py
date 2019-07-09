@@ -93,7 +93,6 @@ from numpy import *
 import os,time,json,traceback,sys
 from scipy.special import gammaln
 from scipy.stats import poisson,beta
-# import cPickle as Pickle
 import pickle as Pickle
 from collections import defaultdict,Counter
 from fim import fpgrowth #this is PyFIM, available from http://www.borgelt.net/pyfim.html
@@ -102,62 +101,6 @@ try:
     from matplotlib import pyplot as plt
 except:
     pass 
-
-def topscript():
-    fname = 'titanic'
-    
-    #Prior hyperparameters
-    lbda = 3. #prior hyperparameter for expected list length (excluding null rule)
-    eta = 1. #prior hyperparameter for expected list average width (excluding null rule)
-    alpha = array([1.,1.]) #prior hyperparameter for multinomial pseudocounts
-    
-    #rule mining parameters
-    maxlhs = 2 #maximum cardinality of an itemset
-    minsupport = 10 #minimum support (%) of an itemset
-    
-    #mcmc parameters
-    numiters = 5000#50000 # Uncomment plot_chains in run_bdl_multichain to visually check mixing and convergence
-    thinning = 1 #The thinning rate
-    burnin = numiters//2 #the number of samples to drop as burn-in in-simulation
-    nchains = 3 #number of MCMC chains. These are simulated in serial, and then merged after checking for convergence.
-    
-    #End parameters
-    
-    #Now we load data and do MCMC
-    permsdic = defaultdict(default_permsdic) #We will store here the MCMC results
-    Xtrain,Ytrain,nruleslen,lhs_len,itemsets = get_freqitemsets(fname+'_train',minsupport,maxlhs) #Do frequent itemset mining from the training data
-    Xtest,Ytest,Ylabels_test = get_testdata(fname+'_test',itemsets) #Load the demo data
-    print('Data loaded!')
-    
-    #Do MCMC
-    res,Rhat = run_bdl_multichain_serial(numiters,thinning,alpha,lbda,eta,Xtrain,Ytrain,nruleslen,lhs_len,maxlhs,permsdic,burnin,nchains,[None]*nchains)
-        
-    #Merge the chains
-    permsdic = merge_chains(res)
-    
-    ###The point estimate, BRL-point
-    d_star = get_point_estimate(permsdic,lhs_len,Xtrain,Ytrain,alpha,nruleslen,maxlhs,lbda,eta) #get the point estimate
-    
-    if d_star:
-        #Compute the rule consequent
-        theta, ci_theta = get_rule_rhs(Xtrain,Ytrain,d_star,alpha,True)
-        
-        #Print out the point estimate rule
-        print('antecedent risk (credible interval for risk)')
-        for i,j in enumerate(d_star):
-            print(itemsets[j],theta[i],ci_theta[i])
-        
-        #Evaluate on the demo data
-        preds_d_star = preds_d_t(Xtest,Ytest,d_star,theta) #Use d_star to make predictions on the demo data
-        accur_d_star = preds_to_acc(preds_d_star,Ylabels_test)#Accuracy of the point estimate
-        print('accuracy of point estimate',accur_d_star)
-    
-    ###The full posterior, BRL-post
-    preds_fullpost = preds_full_posterior(Xtest,Ytest,Xtrain,Ytrain,permsdic,alpha)
-    accur_fullpost = preds_to_acc(preds_fullpost,Ylabels_test) #Accuracy of the full posterior
-    print('accuracy of full posterior',accur_fullpost)
-    
-    return permsdic, d_star, itemsets, theta, ci_theta, preds_d_star, accur_d_star, preds_fullpost, accur_fullpost
 
 
 ###############BRL
@@ -651,37 +594,3 @@ def get_freqitemsets(fname,minsupport,maxlhs, verbose=True):
     itemsets_all.extend(itemsets)
     return X,Y,nruleslen,lhs_len,itemsets_all
   
-#Load the demo data, and determine which antecedents are satisfied by each demo observation
-def get_testdata(fname,itemsets):
-    #And now the demo data.
-    #first load the data
-    data,Y = load_data(fname)
-    #Now form the data-vs.-lhs set
-    #X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
-    X = [set() for j in range(len(itemsets))]
-    X[0] = set(range(len(data))) #the default rule satisfies all data
-    for (j,lhs) in enumerate(itemsets):
-        if j>0:
-            X[j] = set([i for (i,xi) in enumerate(data) if set(lhs).issubset(xi)])
-    Ylabels = [list(i).index(1) for i in Y]
-    return X,Y,Ylabels
-
-#Read in the .tab file
-def load_data(fname):
-    #Load data
-    with open(fname+'.tab','r') as fin:
-        A = fin.readlines()
-    data = []
-    for ln in A:
-        data.append(ln.split())
-    #Now load Y
-    Y = loadtxt(fname+'.Y')
-    if len(Y.shape)==1:
-        Y = array([Y])
-    return data,Y
-
-#############END!!
-
-
-if __name__ == '__main__':
-    topscript()

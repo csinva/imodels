@@ -2,7 +2,7 @@ from __future__ import division
 __author__ = 'Victor Ruiz, vmr11@pitt.edu'
 import pandas as pd
 import numpy as np
-from Entropy import entropy, cut_point_information_gain
+from entropy import entropy, cut_point_information_gain
 from math import log
 import sys
 import getopt
