@@ -11,7 +11,7 @@ Provides scikit-learn style implementations of different interpretable models (s
 - sparse integer linear models (simple, unstable implementation)
 
 ### Workshop notebooks
-The workshop consists of 3 main notebooks
+The workshop consists of 3 main notebooks, summarized in [cheat_sheet.pdf](cheat_sheet.pdf)
 
 1. [model_based.ipynb](model_based.ipynb) - how to use different interpretable models
 2. [posthoc.ipynb](posthoc.ipynb) - different simple analyses to interpret a trained model
