@@ -1,6 +1,6 @@
 # Interpretability workshop
 
-Code / slides for workshop on interpretable machine learning.
+Code for implementations of interpretable machine learning models and demos of how to use various interpretability techniques (with accompanying slides [here](https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present)).
 
 
 ### Code implementations
@@ -10,8 +10,8 @@ Provides scikit-learn style implementations of different interpretable models (s
 - [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9)
 - sparse integer linear models (simple, unstable implementation)
 
-### Workshop notebooks
-The workshop consists of 3 main notebooks, summarized in [cheat_sheet.pdf](cheat_sheet.pdf)
+### Demo notebooks
+The demos are contained in 3 main notebooks, summarized in [cheat_sheet.pdf](cheat_sheet.pdf)
 
 1. [model_based.ipynb](model_based.ipynb) - how to use different interpretable models
 2. [posthoc.ipynb](posthoc.ipynb) - different simple analyses to interpret a trained model
@@ -21,6 +21,6 @@ The workshop consists of 3 main notebooks, summarized in [cheat_sheet.pdf](cheat
 ### References / further reading
 
 - [book on interpretable machine learning](https://christophm.github.io/interpretable-ml-book/)
+- [high-level review on interpretable machine learning](https://arxiv.org/abs/1901.04592)
 - [review on black-blox explanation methods](https://hal.inria.fr/hal-02131174v2/document)
 - [review on variable importance](https://www.sciencedirect.com/science/article/pii/S0951832015001672)
-- [high-level review on interpretable machine learning](https://arxiv.org/abs/1901.04592)
