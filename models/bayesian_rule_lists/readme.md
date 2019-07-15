@@ -21,9 +21,7 @@ The inference procedure is slow on large datasets. If you have more than a few t
 Usage
 ===============
 
-The project requires [pyFIM](http://www.borgelt.net/pyfim.html), [scikit-learn](http://scikit-learn.org/stable/install.html), and [pandas](http://pandas.pydata.org/) to run.
-
-- easiest to just install .so file form pyFIM
+The project requires [pyFIM](http://www.borgelt.net/pyfim.html), [scikit-learn](http://scikit-learn.org/stable/install.html), and [pandas](http://pandas.pydata.org/) to run. All the dependencies can be installed except pyFim, but installing pyFim is [really pretty simple](http://www.borgelt.net/pyfim.html) (basically just download the .so file and add it to your python path).
 
 The included `RuleListClassifier` works as a scikit-learn estimator, with a `model.fit(X,y)` method which takes training data `X` (numpy array or pandas DataFrame; continuous, categorical or mixed data) and labels `y`. 
 
