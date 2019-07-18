@@ -4,18 +4,18 @@ Code for implementations of interpretable machine learning models and demos of h
 
 
 ### Code implementations
-Provides scikit-learn style implementations of different interpretable models (see readmes in individual folders within [models](models) for details)
+Provides scikit-learn style wrappers/implementations of different interpretable models (see readmes in individual folders within [models](models) for details)
 
 - [bayesian rule lists](https://arxiv.org/abs/1602.08610)
 - [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9)
 - sparse integer linear models (simple, unstable implementation)
 
 ### Demo notebooks
-The demos are contained in 3 main notebooks, summarized in [cheat_sheet.pdf](cheat_sheet.pdf)
+The demos are contained in 3 main [notebooks](notebooks), summarized in [cheat_sheet.pdf](cheat_sheet.pdf)
 
-1. [model_based.ipynb](model_based.ipynb) - how to use different interpretable models
-2. [posthoc.ipynb](posthoc.ipynb) - different simple analyses to interpret a trained model
-3. [uncertainty.ipynb](uncertainty.ipynb) - code to get uncertainty estimates for a model
+1. [model_based.ipynb](notebooks/model_based.ipynb) - how to use different interpretable models
+2. [posthoc.ipynb](notebooks/posthoc.ipynb) - different simple analyses to interpret a trained model
+3. [uncertainty.ipynb](notebooks/uncertainty.ipynb) - code to get uncertainty estimates for a model
 
 
 ### References / further reading

@@ -4,7 +4,7 @@ with open("readme.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="interpretable_models",
+    name="imodels",
     version="0.0.1",
     author="Chandan Singh",
     author_email="chandan_singh@berkeley.edu",
