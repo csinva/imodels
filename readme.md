@@ -2,9 +2,8 @@
 
 Code for implementations of interpretable machine learning models and demos of how to use various interpretability techniques (with accompanying slides [here](https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present)).
 
-
 ### Code implementations
-Provides scikit-learn style wrappers/implementations of different interpretable models (see readmes in individual folders within [models](models) for details)
+Provides scikit-learn style wrappers/implementations of different interpretable models (see readmes in individual folders within [imodels](imodels) for details)
 
 - [bayesian rule lists](https://arxiv.org/abs/1602.08610)
 - [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9)
@@ -18,12 +17,17 @@ The demos are contained in 3 main [notebooks](notebooks), summarized in [cheat_s
 3. [uncertainty.ipynb](notebooks/uncertainty.ipynb) - code to get uncertainty estimates for a model
 
 ### Installation / quickstart
-To install, `pip install git+https://github.com/csinva/interpretability-implementations-demos`
+The interpretable models within the [imodels](imodels) folder can be easily installed and used.
+
+`pip install git+https://github.com/csinva/interpretability-implementations-demos`
 
 ```
-
+from imodels.bayesian_rule_lists import RuleListClassifier
+model = RuleListClassifier()
+model.fit(X_train, y_train)
+model.score(X_test, y_test)
+preds = model.predict(X_test)
 ```
-
 
 ### References / further reading
 
