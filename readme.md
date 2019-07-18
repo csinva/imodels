@@ -17,6 +17,13 @@ The demos are contained in 3 main [notebooks](notebooks), summarized in [cheat_s
 2. [posthoc.ipynb](notebooks/posthoc.ipynb) - different simple analyses to interpret a trained model
 3. [uncertainty.ipynb](notebooks/uncertainty.ipynb) - code to get uncertainty estimates for a model
 
+### Installation / quickstart
+To install, `pip install git+https://github.com/csinva/interpretability-implementations-demos`
+
+```
+
+```
+
 
 ### References / further reading
 
