@@ -13,6 +13,17 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/csinva/interpretability-implementations-demos",
     packages=setuptools.find_packages(),
+    install_requires=[
+        'fim',
+        'numpy',
+        'scipy',
+        'matplotlib',
+        'pandas',
+        'scikit-learn',
+    ],
+    dependency_links=[
+        'https://github.com/csinva/pyfim-clone/tarball/master#egg=fim-6.28'
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

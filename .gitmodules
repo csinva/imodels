@@ -1,3 +1,0 @@
-[submodule "models/rulefit"]
-	path = models/rulefit
-	url = https://github.com/christophM/rulefit.git

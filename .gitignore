@@ -24,3 +24,4 @@ env
 /*.egg-info
 
 build
+.gitmodules
