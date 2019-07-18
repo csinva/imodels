@@ -1,4 +1,4 @@
-# Interpretability workshop
+# Interpretability implementations + demos
 
 Code for implementations of interpretable machine learning models and demos of how to use various interpretability techniques (with accompanying slides [here](https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present)).
 
