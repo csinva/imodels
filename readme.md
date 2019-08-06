@@ -14,6 +14,7 @@ Provides scikit-learn style wrappers/implementations of different interpretable 
 
 - [bayesian rule lists](https://arxiv.org/abs/1602.08610)
 - [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9)
+- [rulefit](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf)
 - sparse integer linear models (simple, unstable implementation)
 
 The interpretable models within the [imodels](imodels) folder can be easily installed and used.
@@ -21,8 +22,8 @@ The interpretable models within the [imodels](imodels) folder can be easily inst
 `pip install git+https://github.com/csinva/interpretability-implementations-demos`
 
 ```
-from imodels import RuleListClassifier
-model = RuleListClassifier()
+from imodels import RuleListClassifier, RuleFit
+model = RuleListClassifier() # RuleFit()
 model.fit(X_train, y_train)
 model.score(X_test, y_test)
 preds = model.predict(X_test)

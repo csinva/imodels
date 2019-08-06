@@ -65,7 +65,8 @@ class RuleListClassifier(BaseEstimator):
         self.discretizer = None
         self.d_star = None
         self.random_state = random_state
-        np.random.seed(random_state)
+        if random_state is not None:
+            np.random.seed(random_state)
         
         
     def _setlabels(self, X, feature_labels=[]):
@@ -122,6 +123,8 @@ class RuleListClassifier(BaseEstimator):
         -------
         self : returns an instance of self.
         """
+        if self.random_state is not None:
+            np.random.seed(self.random_state)
         if len(set(y)) != 2:
             raise Exception("Only binary classification is supported at this time!")
             
