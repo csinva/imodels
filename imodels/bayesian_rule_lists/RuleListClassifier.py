@@ -44,7 +44,7 @@ class RuleListClassifier(BaseEstimator):
         Verbose output
         
     random_state: int
-        Currently unsupported
+        Random seed
     """
     
     def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=10, alpha = np.array([1.,1.]), n_chains=3, max_iter=50000, class1label="class 1", verbose=True, random_state=None):
@@ -64,6 +64,8 @@ class RuleListClassifier(BaseEstimator):
         
         self.discretizer = None
         self.d_star = None
+        self.random_state = random_state
+        np.random.seed(random_state)
         
         
     def _setlabels(self, X, feature_labels=[]):
@@ -122,6 +124,12 @@ class RuleListClassifier(BaseEstimator):
         """
         if len(set(y)) != 2:
             raise Exception("Only binary classification is supported at this time!")
+            
+        # deal with pandas data
+        if type(X) == pd.DataFrame:
+            X = X.values
+        if type(y) == pd.DataFrame:
+            y = y.values
         
         X, y = self._setdata(X, y, feature_labels, undiscretized_features)
         
