@@ -21,7 +21,7 @@ The interpretable models within the [imodels](imodels) folder can be easily inst
 `pip install git+https://github.com/csinva/interpretability-implementations-demos`
 
 ```
-from imodels.bayesian_rule_lists.RuleListClassifier import RuleListClassifier
+from imodels import RuleListClassifier
 model = RuleListClassifier()
 model.fit(X_train, y_train)
 model.score(X_test, y_test)

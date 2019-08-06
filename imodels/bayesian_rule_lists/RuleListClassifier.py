@@ -42,9 +42,12 @@ class RuleListClassifier(BaseEstimator):
         
     verbose: bool, optional (default=True)
         Verbose output
+        
+    random_state: int
+        Currently unsupported
     """
     
-    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=10, alpha = np.array([1.,1.]), n_chains=3, max_iter=50000, class1label="class 1", verbose=True):
+    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=10, alpha = np.array([1.,1.]), n_chains=3, max_iter=50000, class1label="class 1", verbose=True, random_state=None):
         self.listlengthprior = listlengthprior
         self.listwidthprior = listwidthprior
         self.maxcardinality = maxcardinality
