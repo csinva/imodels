@@ -19,9 +19,6 @@ from sklearn.linear_model import LassoCV,LogisticRegressionCV
 from functools import reduce
 
 
-
-
-
 class RuleCondition():
     """Class for binary rule condition
 
@@ -352,6 +349,9 @@ class RuleFit(BaseEstimator, TransformerMixin):
         """Fit and estimate linear combination of rule ensemble
 
         """
+        if np.isnan(X).any():
+            raise ValueError('Input contains NaN.')
+            
         ## Enumerate features if feature names not provided
         N=X.shape[0]
         if feature_names is None:
