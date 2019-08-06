@@ -348,7 +348,7 @@ class RuleFit(BaseEstimator, TransformerMixin):
         self.cv=cv
         self.Cs=Cs
         
-    def fit(self, X, y=None, feature_names=None):
+    def fit(self, X, y=None, feature_names=None, verbose=False):
         """Fit and estimate linear combination of rule ensemble
 
         """

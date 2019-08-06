@@ -6,6 +6,7 @@ import pandas as pd
 from .brl import *
 from .discretization.MDLP import *
 import numbers
+import random
 
 class RuleListClassifier(BaseEstimator):
     """
@@ -47,7 +48,7 @@ class RuleListClassifier(BaseEstimator):
         Random seed
     """
     
-    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=10, alpha = np.array([1.,1.]), n_chains=3, max_iter=50000, class1label="class 1", verbose=True, random_state=None):
+    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=10, alpha = np.array([1.,1.]), n_chains=3, max_iter=50000, class1label="class 1", verbose=True, random_state=42):
         self.listlengthprior = listlengthprior
         self.listwidthprior = listwidthprior
         self.maxcardinality = maxcardinality
@@ -67,6 +68,7 @@ class RuleListClassifier(BaseEstimator):
         self.random_state = random_state
         if random_state is not None:
             np.random.seed(random_state)
+            random.seed(random_state)
         
         
     def _setlabels(self, X, feature_labels=[]):
@@ -125,6 +127,7 @@ class RuleListClassifier(BaseEstimator):
         """
         if self.random_state is not None:
             np.random.seed(self.random_state)
+            random.seed(self.random_state)
         if len(set(y)) != 2:
             raise Exception("Only binary classification is supported at this time!")
             
@@ -284,6 +287,3 @@ class RuleListClassifier(BaseEstimator):
     
     def score(self, X, y, sample_weight=None):
         return sklearn.metrics.accuracy_score(y, self.predict(X), sample_weight=sample_weight)
-    
-if __name__ == "__main__":
-    from examples.demo import *
