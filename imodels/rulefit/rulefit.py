@@ -349,8 +349,10 @@ class RuleFit(BaseEstimator, TransformerMixin):
         """Fit and estimate linear combination of rule ensemble
 
         """
-        if np.isnan(X).any():
-            raise ValueError('Input contains NaN.')
+        if type(X) == pd.DataFrame:
+            X = X.values
+        if type(y) in [pd.DataFrame, pd.Series]:
+            y = y.values
             
         ## Enumerate features if feature names not provided
         N=X.shape[0]
@@ -462,6 +464,9 @@ class RuleFit(BaseEstimator, TransformerMixin):
         """Predict outcome for X
 
         """
+        if type(X) == pd.DataFrame:
+            X = X.values.astype(np.float32)
+        
         X_concat=np.zeros([X.shape[0],0])
         if 'l' in self.model_type:
             if self.lin_standardise:
