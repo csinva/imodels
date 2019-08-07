@@ -102,7 +102,7 @@ class RuleListClassifier(BaseEstimator):
         X = self._discretize_mixed_data(X, y, undiscretized_features)
         return X, y
         
-    def fit(self, X, y, feature_labels = [], undiscretized_features = []):
+    def fit(self, X, y, feature_labels = [], undiscretized_features = [], verbose=False):
         """Fit rule lists to data
 
         Parameters
@@ -120,6 +120,9 @@ class RuleListClassifier(BaseEstimator):
             
         undiscretized_features : array_like, shape = [n_features], optional (default: [])
             String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized
+            
+        verbose : bool
+            Currently doesn't do anything
 
         Returns
         -------
@@ -132,9 +135,9 @@ class RuleListClassifier(BaseEstimator):
             raise Exception("Only binary classification is supported at this time!")
             
         # deal with pandas data
-        if type(X) == pd.DataFrame:
+        if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
-        if type(y) == pd.DataFrame:
+        if type(y) in [pd.DataFrame, pd.Series]:
             y = y.values
         
         X, y = self._setdata(X, y, feature_labels, undiscretized_features)
@@ -258,6 +261,9 @@ class RuleListClassifier(BaseEstimator):
             the model. The columns correspond to the classes in sorted
             order, as they appear in the attribute `classes_`.
         """
+        # deal with pandas data
+        if type(X) in [pd.DataFrame, pd.Series]:
+            X = X.values
         
         if self.discretizer != None:
             self.discretizer._data = pd.DataFrame(X, columns=self.feature_labels)
@@ -283,6 +289,10 @@ class RuleListClassifier(BaseEstimator):
         y_pred : array, shape = [n_samples]
             Class labels for samples in X.
         """
+        # deal with pandas data
+        if type(X) in [pd.DataFrame, pd.Series]:
+            X = X.values
+            
         return 1*(self.predict_proba(X)[:,1]>=0.5)
     
     def score(self, X, y, sample_weight=None):
