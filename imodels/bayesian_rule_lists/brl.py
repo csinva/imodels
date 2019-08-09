@@ -116,7 +116,11 @@ def reset_permsdic(permsdic):
     return permsdic
 
 #Run mcmc for each of the chains, IN SERIAL!
-def run_bdl_multichain_serial(numiters,thinning,alpha,lbda,eta,X,Y,nruleslen,lhs_len,maxlhs,permsdic,burnin,nchains,d_inits,verbose=True):
+def run_bdl_multichain_serial(numiters,thinning,alpha,lbda,eta,X,Y,nruleslen,lhs_len,maxlhs,permsdic,burnin,nchains,d_inits,verbose=True, seed=42):
+    
+    # random seed
+    random.seed(seed)
+    
     #Run each chain 
     t1 = time.clock()
     if verbose:
