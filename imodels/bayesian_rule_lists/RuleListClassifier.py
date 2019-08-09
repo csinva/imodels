@@ -66,10 +66,13 @@ class RuleListClassifier(BaseEstimator):
         self.discretizer = None
         self.d_star = None
         self.random_state = random_state
-        if random_state is not None:
-            np.random.seed(random_state)
-            random.seed(random_state)
+        self.seed()
         
+    def seed(self):
+        if self.random_state is not None:
+            random.seed(self.random_state)
+            np.random.seed(self.random_state)
+
         
     def _setlabels(self, X, feature_labels=[]):
         if len(feature_labels) == 0:
@@ -128,9 +131,8 @@ class RuleListClassifier(BaseEstimator):
         -------
         self : returns an instance of self.
         """
-        if self.random_state is not None:
-            np.random.seed(self.random_state)
-            random.seed(self.random_state)
+        self.seed()
+        
         if len(set(y)) != 2:
             raise Exception("Only binary classification is supported at this time!")
             
@@ -177,7 +179,7 @@ class RuleListClassifier(BaseEstimator):
         Xtrain,Ytrain,nruleslen,lhs_len,self.itemsets = (X,np.vstack((1-np.array(y), y)).T.astype(int),nruleslen,lhs_len,itemsets_all)
             
         #Do MCMC
-        res,Rhat = run_bdl_multichain_serial(self.max_iter,self.thinning,self.alpha,self.listlengthprior,self.listwidthprior,Xtrain,Ytrain,nruleslen,lhs_len,self.maxcardinality,permsdic,self.burnin,self.n_chains,[None]*self.n_chains, verbose=self.verbose)
+        res,Rhat = run_bdl_multichain_serial(self.max_iter,self.thinning,self.alpha,self.listlengthprior,self.listwidthprior,Xtrain,Ytrain,nruleslen,lhs_len,self.maxcardinality,permsdic,self.burnin,self.n_chains,[None]*self.n_chains, verbose=self.verbose, seed=self.random_state)
             
         #Merge the chains
         permsdic = merge_chains(res)
