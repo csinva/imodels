@@ -19,7 +19,7 @@ Provides scikit-learn style wrappers/implementations of different interpretable 
 
 The interpretable models within the [imodels](imodels) folder can be easily installed and used.
 
-`pip install git+https://github.com/csinva/interpretability-implementations-demos`
+`pip install git+https://github.com/Pacmed/interpretability-implementations-demos`
 
 ```
 from imodels import RuleListClassifier, RuleFit
@@ -35,4 +35,3 @@ preds = model.predict(X_test)
 - [high-level review on interpretable machine learning](https://arxiv.org/abs/1901.04592)
 - [review on black-blox explanation methods](https://hal.inria.fr/hal-02131174v2/document)
 - [review on variable importance](https://www.sciencedirect.com/science/article/pii/S0951832015001672)
-- for updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@chandan_singh96](https://twitter.com/chandan_singh96)

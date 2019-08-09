@@ -11,7 +11,7 @@ setuptools.setup(
     description="Implementations of various interpretable models",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/csinva/interpretability-implementations-demos",
+    url="https://github.com/Pacmed/interpretability-implementations-demos",
     packages=setuptools.find_packages(),
     install_requires=[
         'numpy',
@@ -19,7 +19,7 @@ setuptools.setup(
         'matplotlib',
         'pandas',
         'scikit-learn',
-        'fim @ git+https://github.com/csinva/pyfim-clone',                
+        'fim @ git+https://github.com/Pacmed/pyfim-clone',                
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
