@@ -1,9 +1,9 @@
 # Interpretability demos + implementations
 
-Demos of how to use various interpretability techniques (with accompanying slides [here](https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present) or pdf [here](slides.pdf)) and code for implementations of interpretable machine learning models.
+Demos of how to use various interpretability techniques (accompanying slides [here](https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present)) and code for implementations of interpretable machine learning models.
 
 ### Demo notebooks
-The demos are contained in 3 main [notebooks](notebooks), summarized in [cheat_sheet.pdf](cheat_sheet.pdf)
+The demos are contained in 3 main [notebooks](notebooks), following this cheat-sheet:![cheat_sheet](cheat_sheet.png)
 
 1. [model_based.ipynb](notebooks/1_model_based.ipynb) - how to use different interpretable models
 2. [posthoc.ipynb](notebooks/2_posthoc.ipynb) - different simple analyses to interpret a trained model
@@ -21,9 +21,9 @@ The interpretable models within the [imodels](imodels) folder can be easily inst
 
 `pip install git+https://github.com/csinva/interpretability-implementations-demos`
 
-```
+```python
 from imodels import RuleListClassifier, RuleFit
-model = RuleListClassifier() # RuleFit()
+model = RuleListClassifier() # Bayesian Rule List
 model.fit(X_train, y_train)
 model.score(X_test, y_test)
 preds = model.predict(X_test)
