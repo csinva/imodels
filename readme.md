@@ -9,13 +9,14 @@ The demos are contained in 3 main [notebooks](notebooks), following this cheat-s
 2. [posthoc.ipynb](notebooks/2_posthoc.ipynb) - different simple analyses to interpret a trained model
 3. [uncertainty.ipynb](notebooks/3_uncertainty.ipynb) - code to get uncertainty estimates for a model
 
-### Code implementations
+### Implementations of interpretable models
 Provides scikit-learn style wrappers/implementations of different interpretable models (see readmes in individual folders within [imodels](imodels) for details)
 
-- [bayesian rule lists](https://arxiv.org/abs/1602.08610)
-- [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9)
-- [rulefit](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf)
-- sparse integer linear models (simple, unstable implementation)
+- [bayesian rule list](https://arxiv.org/abs/1602.08610) (based on [this implementation](https://github.com/tmadl/sklearn-expertsys))
+- [rulefit](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf) (based on [this implementation](https://github.com/christophM/rulefit))
+- [sparse integer linear model](https://link.springer.com/article/10.1007/s10994-015-5528-6) (simple implementation based on cvxpy)
+- [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9) (based on [this implementation](https://github.com/pan5431333/pyoptree))
+- greedy rule list (based on [this impelemntation](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea)) - basically just a decision tree that only goes down one side
 
 The interpretable models within the [imodels](imodels) folder can be easily installed and used.
 
@@ -31,8 +32,8 @@ preds = model.predict(X_test)
 
 ### References / further reading
 
-- [book on interpretable machine learning](https://christophm.github.io/interpretable-ml-book/)
 - [high-level review on interpretable machine learning](https://arxiv.org/abs/1901.04592)
+- [book on interpretable machine learning](https://christophm.github.io/interpretable-ml-book/)
 - [review on black-blox explanation methods](https://hal.inria.fr/hal-02131174v2/document)
 - [review on variable importance](https://www.sciencedirect.com/science/article/pii/S0951832015001672)
 - for updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@chandan_singh96](https://twitter.com/chandan_singh96)
