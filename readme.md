@@ -14,9 +14,9 @@ Provides scikit-learn style wrappers/implementations of different interpretable 
 
 - [bayesian rule list](https://arxiv.org/abs/1602.08610) (based on [this implementation](https://github.com/tmadl/sklearn-expertsys))
 - [rulefit](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf) (based on [this implementation](https://github.com/christophM/rulefit))
-- [sparse integer linear model](https://link.springer.com/article/10.1007/s10994-015-5528-6) (simple implementation based on cvxpy)
+- [sparse integer linear model](https://link.springer.com/article/10.1007/s10994-015-5528-6) (simple implementation with cvxpy)
+- greedy rule list (based on [this implementation](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea)) - basically a CART decision tree that only learns rules down one path
 - [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9) (based on [this implementation](https://github.com/pan5431333/pyoptree))
-- greedy rule list (based on [this impelemntation](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea)) - basically just a decision tree that only goes down one side
 
 The interpretable models within the [imodels](imodels) folder can be easily installed and used.
 

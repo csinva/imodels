@@ -8,8 +8,13 @@ class SLIM():
         self.predict = self.model.predict
     
     
-    def fit(self, X, y, lambda_reg=0):
+    def fit(self, X, y, lambda_reg=0.1, sample_weight=None):
         '''fit a linear model with integer coefficient and L1 regularization
+        
+        Params
+        ------
+        sample_weight: np.ndarray (n,)
+            weight for each individual sample
         '''
         if 'pandas' in str(type(X)):
             X = X.values
@@ -23,7 +28,11 @@ class SLIM():
         
 
         # set up the minimization problem
-        mse = cp.sum_squares(X @ w - y)
+        residuals = X @ w - y
+        if sample_weight is not None:
+            print('shapes', residuals.shape, sample_weight.shape)
+            residuals = cp.multiply(sample_weight, residuals)
+        mse = cp.sum_squares(residuals)
         l1_penalty = lambda_reg * cp.norm(w, 1)
         obj = cp.Minimize(mse + l1_penalty)
         prob = cp.Problem(obj)
