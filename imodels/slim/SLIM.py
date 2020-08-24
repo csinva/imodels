@@ -30,7 +30,7 @@ class SLIM():
         # set up the minimization problem
         residuals = X @ w - y
         if sample_weight is not None:
-            print('shapes', residuals.shape, sample_weight.shape)
+            # print('shapes', residuals.shape, sample_weight.shape)
             residuals = cp.multiply(sample_weight, residuals)
         mse = cp.sum_squares(residuals)
         l1_penalty = lambda_reg * cp.norm(w, 1)

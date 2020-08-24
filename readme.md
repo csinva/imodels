@@ -9,6 +9,7 @@ Provides scikit-learn style wrappers/implementations of different interpretable 
 - [rulefit](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf) (based on [this implementation](https://github.com/christophM/rulefit))
 - [sparse integer linear model](https://link.springer.com/article/10.1007/s10994-015-5528-6) (simple implementation with cvxpy)
 - greedy rule list (based on [this implementation](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea)) - basically a CART decision tree that only learns rules down one path
+- [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) (based on [this implementation](https://github.com/scikit-learn-contrib/skope-rules))
 - [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9) (based on [this implementation](https://github.com/pan5431333/pyoptree))
 
 The interpretable models within the [imodels](imodels) folder can be easily installed and used.
@@ -16,7 +17,7 @@ The interpretable models within the [imodels](imodels) folder can be easily inst
 `pip install git+https://github.com/csinva/interpretability-implementations-demos`
 
 ```python
-from imodels import RuleListClassifier, RuleFit, GreedyRuleList, SLIM
+from imodels import RuleListClassifier, RuleFit, GreedyRuleList, SkopeRules, SLIM
 model = RuleListClassifier() # Bayesian Rule List
 model.fit(X_train, y_train)
 model.score(X_test, y_test)
