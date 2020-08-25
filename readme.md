@@ -11,13 +11,14 @@ Provides scikit-learn style wrappers/implementations of different interpretable 
 - greedy rule list (based on [this implementation](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea)) - uses CART to learn a list (only a single path), rather than a decision tree
 - [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) (based on [this implementation](https://github.com/scikit-learn-contrib/skope-rules))
 - [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9) (based on [this implementation](https://github.com/pan5431333/pyoptree))
+- [iterative random forest](https://www.pnas.org/content/115/8/1943) (based on [this implementation](https://github.com/Yu-Group/iterative-Random-Forest))
 
 The interpretable models within the [imodels](imodels) folder can be easily installed and used.
 
 `pip install git+https://github.com/csinva/interpretability-implementations-demos`
 
 ```python
-from imodels import RuleListClassifier, RuleFit, GreedyRuleList, SkopeRules, SLIM
+from imodels import RuleListClassifier, RuleFit, GreedyRuleList, SkopeRules, SLIM, IRFClassifier
 model = RuleListClassifier() # Bayesian Rule List
 model.fit(X_train, y_train)
 model.score(X_test, y_test)
