@@ -1,9 +1,12 @@
-<h1 align="center">Interpretable machine learning models (imodels)</h1>
-<a href="#implementations-of-interpretable-models">imodels implementations</a> • <a href="#demo-notebooks">demo notebooks</a>
+<h1 align="center"> Interpretable machine learning models (imodels)</h1>
+<p align="center"> Straightforward implementations of interpretable ML models + demos of how to use various interpretability techniques (accompanying slides [here](https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present)). Code is optimized for readability. *Pull requests welcome!*
+</p>
 
-# Interpretability demos + implementations
+<p align="center">
+  <a href="#implementations-of-interpretable-models"> Implementations of imodels </a> •
+  <a href="#demo-notebooks">Demo notebooks</a>
+</p>
 
-Demos of how to use various interpretability techniques (accompanying slides [here](https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present)) and code for implementations of interpretable machine learning models. Code is optimized for readability. *Pull requests welcome!*
 
 ### Implementations of interpretable models
 Provides scikit-learn style wrappers/implementations of different interpretable models (see readmes in individual folders within [imodels](imodels) for details)
