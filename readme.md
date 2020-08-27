@@ -1,14 +1,15 @@
 <h1 align="center"> Interpretable machine learning models (imodels)</h1>
-<p align="center"> Straightforward implementations of interpretable ML models + demos of how to use various interpretability techniques (accompanying slides [here](https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present)). Code is optimized for readability. *Pull requests welcome!*
+<p align="center"> Straightforward implementations of interpretable ML models + demos of how to use various interpretability techniques. Code is optimized for readability. Pull requests welcome!
 </p>
 
 <p align="center">
   <a href="#implementations-of-interpretable-models"> Implementations of imodels </a> •
-  <a href="#demo-notebooks">Demo notebooks</a>
+  <a href="#demo-notebooks">Demo notebooks</a> •
+  <a href="https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present">Accompanying slides</a>
 </p>
 
 
-### Implementations of interpretable models
+## Implementations of interpretable models
 Provides scikit-learn style wrappers/implementations of different interpretable models (see readmes in individual folders within [imodels](imodels) for details)
 
 - [bayesian rule list](https://arxiv.org/abs/1602.08610) (based on [this implementation](https://github.com/tmadl/sklearn-expertsys)) - learn a compact rule list
@@ -31,7 +32,7 @@ preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 ```
 
-### Demo notebooks
+## Demo notebooks
 The demos are contained in 3 main [notebooks](notebooks), following this cheat-sheet:![cheat_sheet](cheat_sheet.png)
 
 1. [model_based.ipynb](notebooks/1_model_based.ipynb) - how to use different interpretable models
@@ -40,7 +41,7 @@ The demos are contained in 3 main [notebooks](notebooks), following this cheat-s
 
 
 
-### References / further reading
+## References / further reading
 
 - [high-level review on interpretable machine learning](https://arxiv.org/abs/1901.04592)
 - [book on interpretable machine learning](https://christophm.github.io/interpretable-ml-book/)
