@@ -1,28 +1,31 @@
+<h1 align="center">Interpretable machine learning models (imodels)</h1>
+<a href="#implementations-of-interpretable-models">imodels implementations</a> • <a href="#demo-notebooks">demo notebooks</a>
+
 # Interpretability demos + implementations
 
-Demos of how to use various interpretability techniques (accompanying slides [here](https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present)) and code for implementations of interpretable machine learning models. Code is optimized for readability.
+Demos of how to use various interpretability techniques (accompanying slides [here](https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present)) and code for implementations of interpretable machine learning models. Code is optimized for readability. *Pull requests welcome!*
 
 ### Implementations of interpretable models
 Provides scikit-learn style wrappers/implementations of different interpretable models (see readmes in individual folders within [imodels](imodels) for details)
 
-- [bayesian rule list](https://arxiv.org/abs/1602.08610) (based on [this implementation](https://github.com/tmadl/sklearn-expertsys))
-- [rulefit](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf) (based on [this implementation](https://github.com/christophM/rulefit))
+- [bayesian rule list](https://arxiv.org/abs/1602.08610) (based on [this implementation](https://github.com/tmadl/sklearn-expertsys)) - learn a compact rule list
+- [rulefit](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf) (based on [this implementation](https://github.com/christophM/rulefit)) - find rules from a decision tree and build a linear model with them
 - [sparse integer linear model](https://link.springer.com/article/10.1007/s10994-015-5528-6) (simple implementation with cvxpy)
 - greedy rule list (based on [this implementation](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea)) - uses CART to learn a list (only a single path), rather than a decision tree
 - [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) (based on [this implementation](https://github.com/scikit-learn-contrib/skope-rules))
-- [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9) (based on [this implementation](https://github.com/pan5431333/pyoptree))
+- [optimal classification tree](https://link.springer.com/article/10.1007/s10994-017-5633-9) (based on [this implementation](https://github.com/pan5431333/pyoptree)) - learns succinct trees using global optimization rather than greedy heuristics
 - [iterative random forest](https://www.pnas.org/content/115/8/1943) (based on [this implementation](https://github.com/Yu-Group/iterative-Random-Forest))
 
-The interpretable models within the [imodels](imodels) folder can be easily installed and used.
+The interpretable models within the [imodels](imodels) folder can be easily installed and used:
 
 `pip install git+https://github.com/csinva/interpretability-implementations-demos`
 
 ```python
 from imodels import RuleListClassifier, RuleFit, GreedyRuleList, SkopeRules, SLIM, IRFClassifier
-model = RuleListClassifier() # Bayesian Rule List
-model.fit(X_train, y_train)
-model.score(X_test, y_test)
-preds = model.predict(X_test)
+model = RuleListClassifier()  # initialize Bayesian Rule List
+model.fit(X_train, y_train)   # fit model
+preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
+preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 ```
 
 ### Demo notebooks

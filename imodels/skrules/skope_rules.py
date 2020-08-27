@@ -540,6 +540,10 @@ class SkopeRules(BaseEstimator):
                 scores[list(df.query(r[0]).index)])
 
         return scores
+    
+    def predict_proba(self, X):
+        y = self.score_top_rules(X)
+        return np.vstack((1 - y, y)).transpose()
 
     def predict_top_rules(self, X, n_rules):
         """Predict if a particular sample is an outlier or not,

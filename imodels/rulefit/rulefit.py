@@ -480,6 +480,10 @@ class RuleFit(BaseEstimator, TransformerMixin):
                 if X_rules.shape[0] >0:
                     X_concat = np.concatenate((X_concat, X_rules), axis=1)
         return self.lscv.predict(X_concat)
+    
+    def predict_proba(self, X):
+        y = self.predict(X)
+        return np.vstack((1 - y, y)).transpose()
 
     def transform(self, X=None, y=None):
         """Transform dataset.

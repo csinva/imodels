@@ -42,4 +42,8 @@ class SLIM():
         self.model.coef_ = w.value.astype(np.int)
         self.model.intercept_ = 0
         
+    def predict_proba(self, X):
+        preds = self.predict(X)
+        preds_proba = np.array([1 / (1 + np.exp(-y)) for y in preds])
+        return np.vstack((1 - preds_proba, preds_proba)).transpose()
         
