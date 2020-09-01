@@ -3,6 +3,8 @@ import numpy as np
 import cvxpy as cp # package for optimization
 
 class SLIM():
+    '''Sparse integer linear model
+    '''
     def __init__(self):
         self.model = LinearRegression()
         self.predict = self.model.predict

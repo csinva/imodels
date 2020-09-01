@@ -11,8 +11,8 @@ import numpy as np
 from abc import abstractmethod, ABCMeta
 from sklearn.tree import DecisionTreeClassifier
 from inspect import getmembers
-from pyoptree.tree import TreeModel, WholeTree, Tree
-from pyoptree.localsearch import OptimalTreeModelOptimizer, OptimalHyperTreeModelOptimizer
+from .tree import TreeModel, WholeTree, Tree
+from .localsearch import OptimalTreeModelOptimizer, OptimalHyperTreeModelOptimizer
 import multiprocessing
 
 

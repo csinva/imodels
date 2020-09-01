@@ -1,6 +1,7 @@
 import numpy as np
 from abc import abstractmethod, ABCMeta
-from pyoptree.tree import Tree, TreeModel
+from .tree import Tree, TreeModel
+# from pyoptree.tree import Tree, TreeModel
 import logging
 import random
 import multiprocessing

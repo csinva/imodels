@@ -1,3 +1,9 @@
+"""
+Python `imodels` package for interpretable models compatible with scikit-learn.
+Github repo available [here](https://github.com/csinva/interpretability-implementations-demos).
+.. include:: ./documentation.md
+"""
+
 from .bayesian_rule_list.RuleListClassifier import RuleListClassifier
 from .rulefit.rulefit import RuleFit
 from .slim.SLIM import SLIM

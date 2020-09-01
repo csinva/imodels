@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.datasets import load_breast_cancer as load_data
 from sklearn.tree import DecisionTreeClassifier
 
-from pyoptree.optree import OptimalHyperTreeModel
+from .optree import OptimalHyperTreeModel
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s', )

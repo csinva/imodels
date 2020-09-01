@@ -1,0 +1,1490 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>imodels.optimal_classification_tree.pyoptree.localsearch API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>imodels.optimal_classification_tree.pyoptree.localsearch</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import numpy as np
+from abc import abstractmethod, ABCMeta
+from .tree import Tree, TreeModel
+# from pyoptree.tree import Tree, TreeModel
+import logging
+import random
+import multiprocessing
+from tqdm import tqdm
+
+# compress &#34;Invalid Value Encountered Error &#34;
+np.seterr(divide=&#39;ignore&#39;, invalid=&#39;ignore&#39;)
+
+
+class AbstractOptimalTreeModelOptimizer(metaclass=ABCMeta):
+    def __init__(self, Nmin: int):
+        self.Nmin = Nmin
+        self.sorted_x = None
+        self.pool = multiprocessing.Pool()
+
+    @staticmethod
+    def shuffle(index_set: list):
+        index_set_bk = index_set.copy()
+        np.random.shuffle(index_set_bk)
+        return index_set_bk
+
+    @staticmethod
+    def sort_x(x):
+        res = []
+        for j in range(x.shape[1]):
+            xj = x[::, j]
+            res.append(sorted(xj))
+        res = np.array(res)
+        return res.T
+
+    def local_search(self, tree: Tree, x, y):
+        self.sorted_x = self.sort_x(x)
+        tree = tree.copy()
+        error_previous = tree.loss(x, y)
+        error_current = np.inf
+
+        logging.info(&#34;Current error of the whole tree: {0}&#34;.format(error_previous))
+        i = 1
+        while True:
+            for t in AbstractOptimalTreeModelOptimizer.shuffle(tree.get_parent_nodes()):
+                subtree = tree.subtree(t)
+                res = tree.evaluate(x)
+                L = []
+                for tt in subtree.get_leaf_nodes():
+                    L.extend(res[tt])
+                if len(L) &gt; 0:
+                    logging.info(&#34;Visiting node {0}, there are {1} data points in this subtree.&#34;.format(t, len(L)))
+                    logging.info(&#34;Training in {0}th iteration...&#34;.format(i))
+                    i += 1
+                    new_subtree = self.optimize_node(subtree, x, y, L)
+                    tree.a[t] = new_subtree.a[t]
+                    tree.b[t] = new_subtree.b[t]
+
+                    error_current = tree.loss(x, y)
+
+                    logging.info(&#34;Current error of the whole tree: {0}&#34;.format(error_current))
+
+            if round(error_current, 5) == round(error_previous, 5):
+                tree.generate_majority_leaf_class(x, y)
+                return tree
+
+            error_previous = error_current
+
+    @abstractmethod
+    def optimize_node(self, subtree: Tree, x, y, L):
+        pass
+
+    @abstractmethod
+    def best_split(self, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+        pass
+
+    @staticmethod
+    def _check_best_split_input(lower_tree: Tree, upper_tree: Tree):
+        assert lower_tree.root_node % 2 == 0, &#34;Illegal lower tree! (root node: {0})&#34;.format(lower_tree.root_node)
+        assert upper_tree.root_node == lower_tree.root_node + 1, &#34;Illegal upper tree! (lower tree root node: {0}, &#34; \
+                                                                 &#34;upper tree root node: {1})&#34;.format(
+            lower_tree.root_node,
+            upper_tree.root_node)
+        assert lower_tree.depth == upper_tree.depth, &#34;Unequal depth of lower tree and upper tree! ({0} != {1})&#34;.format(
+            lower_tree.depth, upper_tree.depth
+        )
+
+
+class OptimalTreeModelOptimizer(AbstractOptimalTreeModelOptimizer):
+    def optimize_node(self, subtree: Tree, x, y, L):
+        new_sub_tree = subtree.copy()
+        sub_x = x[L, ::]
+        sub_y = y[L]
+
+        p = sub_x.shape[1]
+
+        lower_tree, upper_tree = new_sub_tree.children()
+        error_best = new_sub_tree.loss(sub_x, sub_y)
+
+        logging.debug(&#34;Current best error of the subtree: {0}&#34;.format(error_best))
+
+        updated = False
+
+        error_lower = lower_tree.loss(sub_x, sub_y)
+        if error_lower &lt; error_best and lower_tree.depth &gt; 0:
+            logging.info(&#34;Updated by replacing by lower child tree&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+            new_sub_tree.b[new_sub_tree.root_node] = 1
+            error_best = error_lower
+            updated = True
+            return new_sub_tree
+
+        error_upper = upper_tree.loss(sub_x, sub_y)
+        if error_upper &lt; error_best and upper_tree.depth &gt; 0:
+            logging.info(&#34;Updated by replacing by upper child tree&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+            new_sub_tree.b[new_sub_tree.root_node] = 0
+            error_best = error_upper
+            updated = True
+            return new_sub_tree
+
+        para_tree, error_para = self.best_split(lower_tree, upper_tree, sub_x, sub_y, L)
+        error_para = para_tree.loss(sub_x, sub_y)
+        if error_para &lt; error_best:
+            logging.info(&#34;Updated by parallel split&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = para_tree.a[para_tree.root_node]
+            new_sub_tree.b[new_sub_tree.root_node] = para_tree.b[para_tree.root_node]
+            error_best = error_para
+            updated = True
+
+        if not updated:
+            logging.info(&#34;No update, return the original tree&#34;)
+
+        return new_sub_tree
+
+    @staticmethod
+    def parallel_split_criteria_scan(start: int, end: int, values, parent_tree: Tree, parent_node: int,
+                                     x, y, Nmin: int):
+        best_error = np.inf
+        best_b = None
+
+        for i in range(start, end):
+            b = (values[i] + values[i + 1]) / 2
+            parent_tree.b[parent_node] = b
+            error, min_leaf_size = parent_tree.loss_and_min_leaf_size(x, y)
+            if min_leaf_size &gt;= Nmin:
+                if error &lt; best_error:
+                    best_error = error
+                    best_b = b
+
+        return {&#34;error&#34;: best_error, &#34;b&#34;: best_b}
+
+    def best_split(self, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+        self._check_best_split_input(lower_tree, upper_tree)
+
+        n, p = x.shape
+        error_best = np.inf
+
+        parent_node = int(round(lower_tree.root_node / 2))
+        parent_node_a = np.zeros(p)
+        parent_a = {**{parent_node: parent_node_a}, **lower_tree.a, **upper_tree.a}
+        parent_b = {**{parent_node: 0}, **lower_tree.b, **upper_tree.b}
+        parent_tree = Tree(parent_node, lower_tree.depth + 1, parent_a, parent_b)
+        best_tree = parent_tree.copy()
+
+        logging.debug(&#34;Calculating best parallel split for {0} points with dimension {1}&#34;.format(n, p))
+        sorted_sub_x = self.sorted_x[L, ::]
+        cpu_count = multiprocessing.cpu_count()
+        num_jobs = cpu_count * 3
+        chunk_size = int(n / num_jobs)
+
+        for j in tqdm(self.shuffle([i for i in range(p)])):
+            logging.debug(&#34;Visiting {0}th dimension. Current best error of the subtree: {1}&#34;.format(j, error_best))
+            values = sorted_sub_x[::, j]
+            parent_tree.a[parent_node] = np.zeros(p)
+            parent_tree.a[parent_node][j] = 1
+
+            return_list = []
+
+            for chunk_number in range(num_jobs):
+                start = chunk_size * chunk_number
+                end = min(chunk_size * (chunk_number + 1), n - 1)
+                return_list.append(self.pool.apply_async(OptimalTreeModelOptimizer.parallel_split_criteria_scan,
+                                                         args=(start, end, values, parent_tree, parent_node, x, y,
+                                                               self.Nmin)))
+
+            return_list = [res.get() for res in return_list]
+
+            for res in return_list:
+                error = res[&#34;error&#34;]
+                b = res[&#34;b&#34;]
+                if error &lt; error_best:
+                    error_best = error
+                    best_tree.a[parent_node] = np.zeros(p)
+                    best_tree.a[parent_node][j] = 1
+                    best_tree.b[parent_node] = b
+
+        logging.debug(&#34;Complete calculating best parallel split&#34;)
+
+        return best_tree, error_best
+
+
+class OptimalHyperTreeModelOptimizer(OptimalTreeModelOptimizer):
+    def __init__(self, Nmin: int, num_random_tree_restart: int = 4):
+        self.H = num_random_tree_restart
+        super(OptimalHyperTreeModelOptimizer, self).__init__(Nmin)
+
+    def best_split(self, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+        self.static_best_split(self.Nmin, lower_tree, upper_tree, x, y, L)
+
+    def optimize_node(self, subtree: Tree, x, y, L):
+        new_sub_tree = subtree.copy()
+        sub_x = x[L, ::]
+        sub_y = y[L]
+
+        p = sub_x.shape[1]
+
+        lower_tree, upper_tree = new_sub_tree.children()
+        error_best = new_sub_tree.loss(sub_x, sub_y)
+
+        logging.debug(&#34;Current best error of the subtree: {0}&#34;.format(error_best))
+
+        updated = False
+
+        error_lower = lower_tree.loss(sub_x, sub_y)
+        if error_lower &lt; error_best and lower_tree.depth &gt; 0:
+            logging.info(&#34;Updated by replacing by lower child tree&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+            new_sub_tree.b[new_sub_tree.root_node] = 1
+            error_best = error_lower
+            updated = True
+            return new_sub_tree
+
+        error_upper = upper_tree.loss(sub_x, sub_y)
+        if error_upper &lt; error_best and upper_tree.depth &gt; 0:
+            logging.info(&#34;Updated by replacing by upper child tree&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+            new_sub_tree.b[new_sub_tree.root_node] = 0
+            error_best = error_upper
+            updated = True
+            return new_sub_tree
+
+        para_tree, error_para = super(OptimalHyperTreeModelOptimizer, self).best_split(lower_tree, upper_tree, sub_x,
+                                                                                       sub_y, L)
+        error_para = para_tree.loss(sub_x, sub_y)
+        if error_para &lt; error_best:
+            logging.info(&#34;Updated by parallel split&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = para_tree.a[para_tree.root_node]
+            new_sub_tree.b[new_sub_tree.root_node] = para_tree.b[para_tree.root_node]
+            error_best = error_para
+            updated = True
+            return new_sub_tree
+
+        for h in range(self.H):
+            res = self.parallel_random_tree_restart(h, self.Nmin, lower_tree, upper_tree, x, y,
+                                                    L, sub_x, sub_y)
+            if res[&#34;error&#34;] &lt; error_best:
+                logging.info(&#34;Updated by hyperplane split&#34;)
+                new_sub_tree.a[new_sub_tree.root_node] = res[&#34;a&#34;]
+                new_sub_tree.b[new_sub_tree.root_node] = res[&#34;b&#34;]
+                error_best = res[&#34;error&#34;]
+                updated = True
+                return new_sub_tree
+
+        if not updated:
+            logging.info(&#34;No update, return the original tree&#34;)
+
+        return new_sub_tree
+
+    def parallel_random_tree_restart(self, h: int, Nmin: int, lower_tree: Tree, upper_tree: Tree, x, y, L: list, sub_x,
+                                     sub_y):
+        logging.info(&#34;Randomly restarting tree {0}&#34;.format(h))
+        hyper_tree, error_hyper = self.static_best_split(Nmin, lower_tree, upper_tree,
+                                                         sub_x, sub_y, L)
+        error_hyper = hyper_tree.loss(sub_x, sub_y)
+        return {&#34;error&#34;: error_hyper, &#34;a&#34;: hyper_tree.a[hyper_tree.root_node],
+                &#34;b&#34;: hyper_tree.b[hyper_tree.root_node]}
+
+    @staticmethod
+    def parallel_u_scan(start: int, end: int, values, parent_tree: Tree, parent_node: int, j: int, x, y,
+                        Nmin: int):
+        best_c = None
+        best_error = np.inf
+        for i in range(start, end):
+            c = (values[i] + values[i + 1]) / 2
+            # c = max(c, -1)
+            # c = min(c, 1)
+            parent_tree.a[parent_node][j] = c
+            error, min_leaf_size = parent_tree.loss_and_min_leaf_size(x, y)
+            if min_leaf_size &gt;= Nmin:
+                if error &lt; best_error:
+                    best_error = error
+                    best_c = c
+        return {&#34;error&#34;: best_error, &#34;c&#34;: best_c}
+
+    @staticmethod
+    def parallel_w_scan(start: int, end: int, values, parent_tree: Tree, parent_node: int, j: int, x, y,
+                        Nmin: int):
+        best_b = None
+        best_error = np.inf
+        for i in range(start, end):
+            b = (values[i] + values[i + 1]) / 2
+            parent_tree.a[parent_node][j] = 0
+            parent_tree.b[parent_node] = b
+            error, min_leaf_size = parent_tree.loss_and_min_leaf_size(x, y)
+            if min_leaf_size &gt;= Nmin:
+                if error &lt; best_error:
+                    best_error = error
+                    best_b = b
+        return {&#34;error&#34;: best_error, &#34;b&#34;: best_b}
+
+    def static_best_split(self, Nmin, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+        AbstractOptimalTreeModelOptimizer._check_best_split_input(lower_tree, upper_tree)
+
+        n, p = x.shape
+
+        parent_node = int(round(lower_tree.root_node / 2))
+        parent_node_a = np.random.rand(p) - 0.5
+        parent_node_b = random.random() - 0.5
+        parent_a = {**{parent_node: parent_node_a}, **lower_tree.a, **upper_tree.a}
+        parent_b = {**{parent_node: parent_node_b}, **lower_tree.b, **upper_tree.b}
+        parent_tree = Tree(parent_node, lower_tree.depth + 1, parent_a, parent_b)
+        best_tree = parent_tree.copy()
+
+        error_previous = best_tree.loss(x, y)
+        error_best = error_previous
+
+        parameter_updated = True
+
+        logging.debug(&#34;Calculating best hyperplane split for {0} points with dimension {1}&#34;.format(n, p))
+
+        while True:
+            for j in tqdm(AbstractOptimalTreeModelOptimizer.shuffle([i for i in range(p)])):
+                logging.debug(&#34;Visiting {0}th dimension. Current best error of the subtree: {1}&#34;.format(j, error_best))
+
+                # Calculate V and U
+                if parameter_updated:
+                    vi = x.dot(parent_tree.a[parent_node].T) - parent_tree.b[parent_node]
+                    uik = np.zeros([n, p])
+                    for ii in range(n):
+                        for kk in range(p):
+                            if x[ii, kk] &gt; 1e-5:
+                                uik[ii, kk] = float(parent_tree.a[parent_node][kk] * x[ii, kk] - vi[ii]) / x[ii, kk]
+                            elif vi[ii] &gt;= 0:
+                                uik[ii, kk] = -np.inf
+                            else:
+                                uik[ii, kk] = np.inf
+                    parameter_updated = False
+                    values = sorted(uik[::, j])
+
+                # Scan U in parallel
+                cpu_count = multiprocessing.cpu_count()
+                num_jobs = cpu_count * 3
+                chunk_size = int(n / num_jobs)
+
+                return_list = []
+                for chunk_number in range(num_jobs):
+                    start = chunk_size * chunk_number
+                    end = min(chunk_size * (chunk_number + 1), n - 1)
+                    return_list.append(self.pool.apply_async(OptimalHyperTreeModelOptimizer.parallel_u_scan,
+                                                             args=(
+                                                                 start, end, values, parent_tree, parent_node, j, x, y,
+                                                                 Nmin)))
+
+                return_list = [res.get() for res in return_list]
+
+                for res in return_list:
+                    error = res[&#34;error&#34;]
+                    c = res[&#34;c&#34;]
+                    if error &lt; error_best:
+                        error_best = error
+                        best_tree.a[parent_node][j] = c
+                        parameter_updated = True
+
+                parent_tree.a[parent_node] = best_tree.a[parent_node].copy()
+
+                # Scan W in parallel
+                if best_tree.a[parent_node][j] != 0:
+                    wik = vi.reshape([n, 1]) + parent_tree.b[parent_node] - x * parent_tree.a[parent_node]
+
+                    values = sorted(wik[::, j])
+
+                    return_list = []
+
+                    for chunk_number in range(num_jobs):
+                        start = chunk_size * chunk_number
+                        end = min(chunk_size * (chunk_number + 1), n - 1)
+                        return_list.append(self.pool.apply_async(OptimalHyperTreeModelOptimizer.parallel_w_scan,
+                                                                 args=(
+                                                                     start, end, values, parent_tree, parent_node, j, x,
+                                                                     y,
+                                                                     Nmin)))
+
+                    return_list = [res.get() for res in return_list]
+
+                    for res in return_list:
+                        error = res[&#34;error&#34;]
+                        b = res[&#34;b&#34;]
+                        if error &lt; error_best:
+                            error_best = error
+                            best_tree.a[parent_node][j] = 0
+                            best_tree.b[parent_node] = b
+                            parameter_updated = True
+
+                    parent_tree.a[parent_node] = best_tree.a[parent_node].copy()
+                    parent_tree.b[parent_node] = best_tree.b[parent_node]
+
+            # Update current best error or stop the iteration
+            if round(error_previous, 5) == round(error_best, 5):
+                logging.debug(&#34;Complete calculating best parallel split&#34;)
+                return best_tree, error_best
+
+            if error_previous &gt; error_best:
+                error_previous = error_best</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer"><code class="flex name class">
+<span>class <span class="ident">AbstractOptimalTreeModelOptimizer</span></span>
+<span>(</span><span>Nmin)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AbstractOptimalTreeModelOptimizer(metaclass=ABCMeta):
+    def __init__(self, Nmin: int):
+        self.Nmin = Nmin
+        self.sorted_x = None
+        self.pool = multiprocessing.Pool()
+
+    @staticmethod
+    def shuffle(index_set: list):
+        index_set_bk = index_set.copy()
+        np.random.shuffle(index_set_bk)
+        return index_set_bk
+
+    @staticmethod
+    def sort_x(x):
+        res = []
+        for j in range(x.shape[1]):
+            xj = x[::, j]
+            res.append(sorted(xj))
+        res = np.array(res)
+        return res.T
+
+    def local_search(self, tree: Tree, x, y):
+        self.sorted_x = self.sort_x(x)
+        tree = tree.copy()
+        error_previous = tree.loss(x, y)
+        error_current = np.inf
+
+        logging.info(&#34;Current error of the whole tree: {0}&#34;.format(error_previous))
+        i = 1
+        while True:
+            for t in AbstractOptimalTreeModelOptimizer.shuffle(tree.get_parent_nodes()):
+                subtree = tree.subtree(t)
+                res = tree.evaluate(x)
+                L = []
+                for tt in subtree.get_leaf_nodes():
+                    L.extend(res[tt])
+                if len(L) &gt; 0:
+                    logging.info(&#34;Visiting node {0}, there are {1} data points in this subtree.&#34;.format(t, len(L)))
+                    logging.info(&#34;Training in {0}th iteration...&#34;.format(i))
+                    i += 1
+                    new_subtree = self.optimize_node(subtree, x, y, L)
+                    tree.a[t] = new_subtree.a[t]
+                    tree.b[t] = new_subtree.b[t]
+
+                    error_current = tree.loss(x, y)
+
+                    logging.info(&#34;Current error of the whole tree: {0}&#34;.format(error_current))
+
+            if round(error_current, 5) == round(error_previous, 5):
+                tree.generate_majority_leaf_class(x, y)
+                return tree
+
+            error_previous = error_current
+
+    @abstractmethod
+    def optimize_node(self, subtree: Tree, x, y, L):
+        pass
+
+    @abstractmethod
+    def best_split(self, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+        pass
+
+    @staticmethod
+    def _check_best_split_input(lower_tree: Tree, upper_tree: Tree):
+        assert lower_tree.root_node % 2 == 0, &#34;Illegal lower tree! (root node: {0})&#34;.format(lower_tree.root_node)
+        assert upper_tree.root_node == lower_tree.root_node + 1, &#34;Illegal upper tree! (lower tree root node: {0}, &#34; \
+                                                                 &#34;upper tree root node: {1})&#34;.format(
+            lower_tree.root_node,
+            upper_tree.root_node)
+        assert lower_tree.depth == upper_tree.depth, &#34;Unequal depth of lower tree and upper tree! ({0} != {1})&#34;.format(
+            lower_tree.depth, upper_tree.depth
+        )</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer">OptimalTreeModelOptimizer</a></li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.shuffle"><code class="name flex">
+<span>def <span class="ident">shuffle</span></span>(<span>index_set)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def shuffle(index_set: list):
+    index_set_bk = index_set.copy()
+    np.random.shuffle(index_set_bk)
+    return index_set_bk</code></pre>
+</details>
+</dd>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.sort_x"><code class="name flex">
+<span>def <span class="ident">sort_x</span></span>(<span>x)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def sort_x(x):
+    res = []
+    for j in range(x.shape[1]):
+        xj = x[::, j]
+        res.append(sorted(xj))
+    res = np.array(res)
+    return res.T</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.best_split"><code class="name flex">
+<span>def <span class="ident">best_split</span></span>(<span>self, lower_tree, upper_tree, x, y, L)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def best_split(self, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.local_search"><code class="name flex">
+<span>def <span class="ident">local_search</span></span>(<span>self, tree, x, y)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def local_search(self, tree: Tree, x, y):
+    self.sorted_x = self.sort_x(x)
+    tree = tree.copy()
+    error_previous = tree.loss(x, y)
+    error_current = np.inf
+
+    logging.info(&#34;Current error of the whole tree: {0}&#34;.format(error_previous))
+    i = 1
+    while True:
+        for t in AbstractOptimalTreeModelOptimizer.shuffle(tree.get_parent_nodes()):
+            subtree = tree.subtree(t)
+            res = tree.evaluate(x)
+            L = []
+            for tt in subtree.get_leaf_nodes():
+                L.extend(res[tt])
+            if len(L) &gt; 0:
+                logging.info(&#34;Visiting node {0}, there are {1} data points in this subtree.&#34;.format(t, len(L)))
+                logging.info(&#34;Training in {0}th iteration...&#34;.format(i))
+                i += 1
+                new_subtree = self.optimize_node(subtree, x, y, L)
+                tree.a[t] = new_subtree.a[t]
+                tree.b[t] = new_subtree.b[t]
+
+                error_current = tree.loss(x, y)
+
+                logging.info(&#34;Current error of the whole tree: {0}&#34;.format(error_current))
+
+        if round(error_current, 5) == round(error_previous, 5):
+            tree.generate_majority_leaf_class(x, y)
+            return tree
+
+        error_previous = error_current</code></pre>
+</details>
+</dd>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.optimize_node"><code class="name flex">
+<span>def <span class="ident">optimize_node</span></span>(<span>self, subtree, x, y, L)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def optimize_node(self, subtree: Tree, x, y, L):
+    pass</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer"><code class="flex name class">
+<span>class <span class="ident">OptimalHyperTreeModelOptimizer</span></span>
+<span>(</span><span>Nmin, num_random_tree_restart=4)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class OptimalHyperTreeModelOptimizer(OptimalTreeModelOptimizer):
+    def __init__(self, Nmin: int, num_random_tree_restart: int = 4):
+        self.H = num_random_tree_restart
+        super(OptimalHyperTreeModelOptimizer, self).__init__(Nmin)
+
+    def best_split(self, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+        self.static_best_split(self.Nmin, lower_tree, upper_tree, x, y, L)
+
+    def optimize_node(self, subtree: Tree, x, y, L):
+        new_sub_tree = subtree.copy()
+        sub_x = x[L, ::]
+        sub_y = y[L]
+
+        p = sub_x.shape[1]
+
+        lower_tree, upper_tree = new_sub_tree.children()
+        error_best = new_sub_tree.loss(sub_x, sub_y)
+
+        logging.debug(&#34;Current best error of the subtree: {0}&#34;.format(error_best))
+
+        updated = False
+
+        error_lower = lower_tree.loss(sub_x, sub_y)
+        if error_lower &lt; error_best and lower_tree.depth &gt; 0:
+            logging.info(&#34;Updated by replacing by lower child tree&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+            new_sub_tree.b[new_sub_tree.root_node] = 1
+            error_best = error_lower
+            updated = True
+            return new_sub_tree
+
+        error_upper = upper_tree.loss(sub_x, sub_y)
+        if error_upper &lt; error_best and upper_tree.depth &gt; 0:
+            logging.info(&#34;Updated by replacing by upper child tree&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+            new_sub_tree.b[new_sub_tree.root_node] = 0
+            error_best = error_upper
+            updated = True
+            return new_sub_tree
+
+        para_tree, error_para = super(OptimalHyperTreeModelOptimizer, self).best_split(lower_tree, upper_tree, sub_x,
+                                                                                       sub_y, L)
+        error_para = para_tree.loss(sub_x, sub_y)
+        if error_para &lt; error_best:
+            logging.info(&#34;Updated by parallel split&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = para_tree.a[para_tree.root_node]
+            new_sub_tree.b[new_sub_tree.root_node] = para_tree.b[para_tree.root_node]
+            error_best = error_para
+            updated = True
+            return new_sub_tree
+
+        for h in range(self.H):
+            res = self.parallel_random_tree_restart(h, self.Nmin, lower_tree, upper_tree, x, y,
+                                                    L, sub_x, sub_y)
+            if res[&#34;error&#34;] &lt; error_best:
+                logging.info(&#34;Updated by hyperplane split&#34;)
+                new_sub_tree.a[new_sub_tree.root_node] = res[&#34;a&#34;]
+                new_sub_tree.b[new_sub_tree.root_node] = res[&#34;b&#34;]
+                error_best = res[&#34;error&#34;]
+                updated = True
+                return new_sub_tree
+
+        if not updated:
+            logging.info(&#34;No update, return the original tree&#34;)
+
+        return new_sub_tree
+
+    def parallel_random_tree_restart(self, h: int, Nmin: int, lower_tree: Tree, upper_tree: Tree, x, y, L: list, sub_x,
+                                     sub_y):
+        logging.info(&#34;Randomly restarting tree {0}&#34;.format(h))
+        hyper_tree, error_hyper = self.static_best_split(Nmin, lower_tree, upper_tree,
+                                                         sub_x, sub_y, L)
+        error_hyper = hyper_tree.loss(sub_x, sub_y)
+        return {&#34;error&#34;: error_hyper, &#34;a&#34;: hyper_tree.a[hyper_tree.root_node],
+                &#34;b&#34;: hyper_tree.b[hyper_tree.root_node]}
+
+    @staticmethod
+    def parallel_u_scan(start: int, end: int, values, parent_tree: Tree, parent_node: int, j: int, x, y,
+                        Nmin: int):
+        best_c = None
+        best_error = np.inf
+        for i in range(start, end):
+            c = (values[i] + values[i + 1]) / 2
+            # c = max(c, -1)
+            # c = min(c, 1)
+            parent_tree.a[parent_node][j] = c
+            error, min_leaf_size = parent_tree.loss_and_min_leaf_size(x, y)
+            if min_leaf_size &gt;= Nmin:
+                if error &lt; best_error:
+                    best_error = error
+                    best_c = c
+        return {&#34;error&#34;: best_error, &#34;c&#34;: best_c}
+
+    @staticmethod
+    def parallel_w_scan(start: int, end: int, values, parent_tree: Tree, parent_node: int, j: int, x, y,
+                        Nmin: int):
+        best_b = None
+        best_error = np.inf
+        for i in range(start, end):
+            b = (values[i] + values[i + 1]) / 2
+            parent_tree.a[parent_node][j] = 0
+            parent_tree.b[parent_node] = b
+            error, min_leaf_size = parent_tree.loss_and_min_leaf_size(x, y)
+            if min_leaf_size &gt;= Nmin:
+                if error &lt; best_error:
+                    best_error = error
+                    best_b = b
+        return {&#34;error&#34;: best_error, &#34;b&#34;: best_b}
+
+    def static_best_split(self, Nmin, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+        AbstractOptimalTreeModelOptimizer._check_best_split_input(lower_tree, upper_tree)
+
+        n, p = x.shape
+
+        parent_node = int(round(lower_tree.root_node / 2))
+        parent_node_a = np.random.rand(p) - 0.5
+        parent_node_b = random.random() - 0.5
+        parent_a = {**{parent_node: parent_node_a}, **lower_tree.a, **upper_tree.a}
+        parent_b = {**{parent_node: parent_node_b}, **lower_tree.b, **upper_tree.b}
+        parent_tree = Tree(parent_node, lower_tree.depth + 1, parent_a, parent_b)
+        best_tree = parent_tree.copy()
+
+        error_previous = best_tree.loss(x, y)
+        error_best = error_previous
+
+        parameter_updated = True
+
+        logging.debug(&#34;Calculating best hyperplane split for {0} points with dimension {1}&#34;.format(n, p))
+
+        while True:
+            for j in tqdm(AbstractOptimalTreeModelOptimizer.shuffle([i for i in range(p)])):
+                logging.debug(&#34;Visiting {0}th dimension. Current best error of the subtree: {1}&#34;.format(j, error_best))
+
+                # Calculate V and U
+                if parameter_updated:
+                    vi = x.dot(parent_tree.a[parent_node].T) - parent_tree.b[parent_node]
+                    uik = np.zeros([n, p])
+                    for ii in range(n):
+                        for kk in range(p):
+                            if x[ii, kk] &gt; 1e-5:
+                                uik[ii, kk] = float(parent_tree.a[parent_node][kk] * x[ii, kk] - vi[ii]) / x[ii, kk]
+                            elif vi[ii] &gt;= 0:
+                                uik[ii, kk] = -np.inf
+                            else:
+                                uik[ii, kk] = np.inf
+                    parameter_updated = False
+                    values = sorted(uik[::, j])
+
+                # Scan U in parallel
+                cpu_count = multiprocessing.cpu_count()
+                num_jobs = cpu_count * 3
+                chunk_size = int(n / num_jobs)
+
+                return_list = []
+                for chunk_number in range(num_jobs):
+                    start = chunk_size * chunk_number
+                    end = min(chunk_size * (chunk_number + 1), n - 1)
+                    return_list.append(self.pool.apply_async(OptimalHyperTreeModelOptimizer.parallel_u_scan,
+                                                             args=(
+                                                                 start, end, values, parent_tree, parent_node, j, x, y,
+                                                                 Nmin)))
+
+                return_list = [res.get() for res in return_list]
+
+                for res in return_list:
+                    error = res[&#34;error&#34;]
+                    c = res[&#34;c&#34;]
+                    if error &lt; error_best:
+                        error_best = error
+                        best_tree.a[parent_node][j] = c
+                        parameter_updated = True
+
+                parent_tree.a[parent_node] = best_tree.a[parent_node].copy()
+
+                # Scan W in parallel
+                if best_tree.a[parent_node][j] != 0:
+                    wik = vi.reshape([n, 1]) + parent_tree.b[parent_node] - x * parent_tree.a[parent_node]
+
+                    values = sorted(wik[::, j])
+
+                    return_list = []
+
+                    for chunk_number in range(num_jobs):
+                        start = chunk_size * chunk_number
+                        end = min(chunk_size * (chunk_number + 1), n - 1)
+                        return_list.append(self.pool.apply_async(OptimalHyperTreeModelOptimizer.parallel_w_scan,
+                                                                 args=(
+                                                                     start, end, values, parent_tree, parent_node, j, x,
+                                                                     y,
+                                                                     Nmin)))
+
+                    return_list = [res.get() for res in return_list]
+
+                    for res in return_list:
+                        error = res[&#34;error&#34;]
+                        b = res[&#34;b&#34;]
+                        if error &lt; error_best:
+                            error_best = error
+                            best_tree.a[parent_node][j] = 0
+                            best_tree.b[parent_node] = b
+                            parameter_updated = True
+
+                    parent_tree.a[parent_node] = best_tree.a[parent_node].copy()
+                    parent_tree.b[parent_node] = best_tree.b[parent_node]
+
+            # Update current best error or stop the iteration
+            if round(error_previous, 5) == round(error_best, 5):
+                logging.debug(&#34;Complete calculating best parallel split&#34;)
+                return best_tree, error_best
+
+            if error_previous &gt; error_best:
+                error_previous = error_best</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer">OptimalTreeModelOptimizer</a></li>
+<li><a title="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer" href="#imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer">AbstractOptimalTreeModelOptimizer</a></li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.parallel_u_scan"><code class="name flex">
+<span>def <span class="ident">parallel_u_scan</span></span>(<span>start, end, values, parent_tree, parent_node, j, x, y, Nmin)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def parallel_u_scan(start: int, end: int, values, parent_tree: Tree, parent_node: int, j: int, x, y,
+                    Nmin: int):
+    best_c = None
+    best_error = np.inf
+    for i in range(start, end):
+        c = (values[i] + values[i + 1]) / 2
+        # c = max(c, -1)
+        # c = min(c, 1)
+        parent_tree.a[parent_node][j] = c
+        error, min_leaf_size = parent_tree.loss_and_min_leaf_size(x, y)
+        if min_leaf_size &gt;= Nmin:
+            if error &lt; best_error:
+                best_error = error
+                best_c = c
+    return {&#34;error&#34;: best_error, &#34;c&#34;: best_c}</code></pre>
+</details>
+</dd>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.parallel_w_scan"><code class="name flex">
+<span>def <span class="ident">parallel_w_scan</span></span>(<span>start, end, values, parent_tree, parent_node, j, x, y, Nmin)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def parallel_w_scan(start: int, end: int, values, parent_tree: Tree, parent_node: int, j: int, x, y,
+                    Nmin: int):
+    best_b = None
+    best_error = np.inf
+    for i in range(start, end):
+        b = (values[i] + values[i + 1]) / 2
+        parent_tree.a[parent_node][j] = 0
+        parent_tree.b[parent_node] = b
+        error, min_leaf_size = parent_tree.loss_and_min_leaf_size(x, y)
+        if min_leaf_size &gt;= Nmin:
+            if error &lt; best_error:
+                best_error = error
+                best_b = b
+    return {&#34;error&#34;: best_error, &#34;b&#34;: best_b}</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.best_split"><code class="name flex">
+<span>def <span class="ident">best_split</span></span>(<span>self, lower_tree, upper_tree, x, y, L)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def best_split(self, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+    self.static_best_split(self.Nmin, lower_tree, upper_tree, x, y, L)</code></pre>
+</details>
+</dd>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.optimize_node"><code class="name flex">
+<span>def <span class="ident">optimize_node</span></span>(<span>self, subtree, x, y, L)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def optimize_node(self, subtree: Tree, x, y, L):
+    new_sub_tree = subtree.copy()
+    sub_x = x[L, ::]
+    sub_y = y[L]
+
+    p = sub_x.shape[1]
+
+    lower_tree, upper_tree = new_sub_tree.children()
+    error_best = new_sub_tree.loss(sub_x, sub_y)
+
+    logging.debug(&#34;Current best error of the subtree: {0}&#34;.format(error_best))
+
+    updated = False
+
+    error_lower = lower_tree.loss(sub_x, sub_y)
+    if error_lower &lt; error_best and lower_tree.depth &gt; 0:
+        logging.info(&#34;Updated by replacing by lower child tree&#34;)
+        new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+        new_sub_tree.b[new_sub_tree.root_node] = 1
+        error_best = error_lower
+        updated = True
+        return new_sub_tree
+
+    error_upper = upper_tree.loss(sub_x, sub_y)
+    if error_upper &lt; error_best and upper_tree.depth &gt; 0:
+        logging.info(&#34;Updated by replacing by upper child tree&#34;)
+        new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+        new_sub_tree.b[new_sub_tree.root_node] = 0
+        error_best = error_upper
+        updated = True
+        return new_sub_tree
+
+    para_tree, error_para = super(OptimalHyperTreeModelOptimizer, self).best_split(lower_tree, upper_tree, sub_x,
+                                                                                   sub_y, L)
+    error_para = para_tree.loss(sub_x, sub_y)
+    if error_para &lt; error_best:
+        logging.info(&#34;Updated by parallel split&#34;)
+        new_sub_tree.a[new_sub_tree.root_node] = para_tree.a[para_tree.root_node]
+        new_sub_tree.b[new_sub_tree.root_node] = para_tree.b[para_tree.root_node]
+        error_best = error_para
+        updated = True
+        return new_sub_tree
+
+    for h in range(self.H):
+        res = self.parallel_random_tree_restart(h, self.Nmin, lower_tree, upper_tree, x, y,
+                                                L, sub_x, sub_y)
+        if res[&#34;error&#34;] &lt; error_best:
+            logging.info(&#34;Updated by hyperplane split&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = res[&#34;a&#34;]
+            new_sub_tree.b[new_sub_tree.root_node] = res[&#34;b&#34;]
+            error_best = res[&#34;error&#34;]
+            updated = True
+            return new_sub_tree
+
+    if not updated:
+        logging.info(&#34;No update, return the original tree&#34;)
+
+    return new_sub_tree</code></pre>
+</details>
+</dd>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.parallel_random_tree_restart"><code class="name flex">
+<span>def <span class="ident">parallel_random_tree_restart</span></span>(<span>self, h, Nmin, lower_tree, upper_tree, x, y, L, sub_x, sub_y)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parallel_random_tree_restart(self, h: int, Nmin: int, lower_tree: Tree, upper_tree: Tree, x, y, L: list, sub_x,
+                                 sub_y):
+    logging.info(&#34;Randomly restarting tree {0}&#34;.format(h))
+    hyper_tree, error_hyper = self.static_best_split(Nmin, lower_tree, upper_tree,
+                                                     sub_x, sub_y, L)
+    error_hyper = hyper_tree.loss(sub_x, sub_y)
+    return {&#34;error&#34;: error_hyper, &#34;a&#34;: hyper_tree.a[hyper_tree.root_node],
+            &#34;b&#34;: hyper_tree.b[hyper_tree.root_node]}</code></pre>
+</details>
+</dd>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.static_best_split"><code class="name flex">
+<span>def <span class="ident">static_best_split</span></span>(<span>self, Nmin, lower_tree, upper_tree, x, y, L)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def static_best_split(self, Nmin, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+    AbstractOptimalTreeModelOptimizer._check_best_split_input(lower_tree, upper_tree)
+
+    n, p = x.shape
+
+    parent_node = int(round(lower_tree.root_node / 2))
+    parent_node_a = np.random.rand(p) - 0.5
+    parent_node_b = random.random() - 0.5
+    parent_a = {**{parent_node: parent_node_a}, **lower_tree.a, **upper_tree.a}
+    parent_b = {**{parent_node: parent_node_b}, **lower_tree.b, **upper_tree.b}
+    parent_tree = Tree(parent_node, lower_tree.depth + 1, parent_a, parent_b)
+    best_tree = parent_tree.copy()
+
+    error_previous = best_tree.loss(x, y)
+    error_best = error_previous
+
+    parameter_updated = True
+
+    logging.debug(&#34;Calculating best hyperplane split for {0} points with dimension {1}&#34;.format(n, p))
+
+    while True:
+        for j in tqdm(AbstractOptimalTreeModelOptimizer.shuffle([i for i in range(p)])):
+            logging.debug(&#34;Visiting {0}th dimension. Current best error of the subtree: {1}&#34;.format(j, error_best))
+
+            # Calculate V and U
+            if parameter_updated:
+                vi = x.dot(parent_tree.a[parent_node].T) - parent_tree.b[parent_node]
+                uik = np.zeros([n, p])
+                for ii in range(n):
+                    for kk in range(p):
+                        if x[ii, kk] &gt; 1e-5:
+                            uik[ii, kk] = float(parent_tree.a[parent_node][kk] * x[ii, kk] - vi[ii]) / x[ii, kk]
+                        elif vi[ii] &gt;= 0:
+                            uik[ii, kk] = -np.inf
+                        else:
+                            uik[ii, kk] = np.inf
+                parameter_updated = False
+                values = sorted(uik[::, j])
+
+            # Scan U in parallel
+            cpu_count = multiprocessing.cpu_count()
+            num_jobs = cpu_count * 3
+            chunk_size = int(n / num_jobs)
+
+            return_list = []
+            for chunk_number in range(num_jobs):
+                start = chunk_size * chunk_number
+                end = min(chunk_size * (chunk_number + 1), n - 1)
+                return_list.append(self.pool.apply_async(OptimalHyperTreeModelOptimizer.parallel_u_scan,
+                                                         args=(
+                                                             start, end, values, parent_tree, parent_node, j, x, y,
+                                                             Nmin)))
+
+            return_list = [res.get() for res in return_list]
+
+            for res in return_list:
+                error = res[&#34;error&#34;]
+                c = res[&#34;c&#34;]
+                if error &lt; error_best:
+                    error_best = error
+                    best_tree.a[parent_node][j] = c
+                    parameter_updated = True
+
+            parent_tree.a[parent_node] = best_tree.a[parent_node].copy()
+
+            # Scan W in parallel
+            if best_tree.a[parent_node][j] != 0:
+                wik = vi.reshape([n, 1]) + parent_tree.b[parent_node] - x * parent_tree.a[parent_node]
+
+                values = sorted(wik[::, j])
+
+                return_list = []
+
+                for chunk_number in range(num_jobs):
+                    start = chunk_size * chunk_number
+                    end = min(chunk_size * (chunk_number + 1), n - 1)
+                    return_list.append(self.pool.apply_async(OptimalHyperTreeModelOptimizer.parallel_w_scan,
+                                                             args=(
+                                                                 start, end, values, parent_tree, parent_node, j, x,
+                                                                 y,
+                                                                 Nmin)))
+
+                return_list = [res.get() for res in return_list]
+
+                for res in return_list:
+                    error = res[&#34;error&#34;]
+                    b = res[&#34;b&#34;]
+                    if error &lt; error_best:
+                        error_best = error
+                        best_tree.a[parent_node][j] = 0
+                        best_tree.b[parent_node] = b
+                        parameter_updated = True
+
+                parent_tree.a[parent_node] = best_tree.a[parent_node].copy()
+                parent_tree.b[parent_node] = best_tree.b[parent_node]
+
+        # Update current best error or stop the iteration
+        if round(error_previous, 5) == round(error_best, 5):
+            logging.debug(&#34;Complete calculating best parallel split&#34;)
+            return best_tree, error_best
+
+        if error_previous &gt; error_best:
+            error_previous = error_best</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer"><code class="flex name class">
+<span>class <span class="ident">OptimalTreeModelOptimizer</span></span>
+<span>(</span><span>Nmin)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class OptimalTreeModelOptimizer(AbstractOptimalTreeModelOptimizer):
+    def optimize_node(self, subtree: Tree, x, y, L):
+        new_sub_tree = subtree.copy()
+        sub_x = x[L, ::]
+        sub_y = y[L]
+
+        p = sub_x.shape[1]
+
+        lower_tree, upper_tree = new_sub_tree.children()
+        error_best = new_sub_tree.loss(sub_x, sub_y)
+
+        logging.debug(&#34;Current best error of the subtree: {0}&#34;.format(error_best))
+
+        updated = False
+
+        error_lower = lower_tree.loss(sub_x, sub_y)
+        if error_lower &lt; error_best and lower_tree.depth &gt; 0:
+            logging.info(&#34;Updated by replacing by lower child tree&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+            new_sub_tree.b[new_sub_tree.root_node] = 1
+            error_best = error_lower
+            updated = True
+            return new_sub_tree
+
+        error_upper = upper_tree.loss(sub_x, sub_y)
+        if error_upper &lt; error_best and upper_tree.depth &gt; 0:
+            logging.info(&#34;Updated by replacing by upper child tree&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+            new_sub_tree.b[new_sub_tree.root_node] = 0
+            error_best = error_upper
+            updated = True
+            return new_sub_tree
+
+        para_tree, error_para = self.best_split(lower_tree, upper_tree, sub_x, sub_y, L)
+        error_para = para_tree.loss(sub_x, sub_y)
+        if error_para &lt; error_best:
+            logging.info(&#34;Updated by parallel split&#34;)
+            new_sub_tree.a[new_sub_tree.root_node] = para_tree.a[para_tree.root_node]
+            new_sub_tree.b[new_sub_tree.root_node] = para_tree.b[para_tree.root_node]
+            error_best = error_para
+            updated = True
+
+        if not updated:
+            logging.info(&#34;No update, return the original tree&#34;)
+
+        return new_sub_tree
+
+    @staticmethod
+    def parallel_split_criteria_scan(start: int, end: int, values, parent_tree: Tree, parent_node: int,
+                                     x, y, Nmin: int):
+        best_error = np.inf
+        best_b = None
+
+        for i in range(start, end):
+            b = (values[i] + values[i + 1]) / 2
+            parent_tree.b[parent_node] = b
+            error, min_leaf_size = parent_tree.loss_and_min_leaf_size(x, y)
+            if min_leaf_size &gt;= Nmin:
+                if error &lt; best_error:
+                    best_error = error
+                    best_b = b
+
+        return {&#34;error&#34;: best_error, &#34;b&#34;: best_b}
+
+    def best_split(self, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+        self._check_best_split_input(lower_tree, upper_tree)
+
+        n, p = x.shape
+        error_best = np.inf
+
+        parent_node = int(round(lower_tree.root_node / 2))
+        parent_node_a = np.zeros(p)
+        parent_a = {**{parent_node: parent_node_a}, **lower_tree.a, **upper_tree.a}
+        parent_b = {**{parent_node: 0}, **lower_tree.b, **upper_tree.b}
+        parent_tree = Tree(parent_node, lower_tree.depth + 1, parent_a, parent_b)
+        best_tree = parent_tree.copy()
+
+        logging.debug(&#34;Calculating best parallel split for {0} points with dimension {1}&#34;.format(n, p))
+        sorted_sub_x = self.sorted_x[L, ::]
+        cpu_count = multiprocessing.cpu_count()
+        num_jobs = cpu_count * 3
+        chunk_size = int(n / num_jobs)
+
+        for j in tqdm(self.shuffle([i for i in range(p)])):
+            logging.debug(&#34;Visiting {0}th dimension. Current best error of the subtree: {1}&#34;.format(j, error_best))
+            values = sorted_sub_x[::, j]
+            parent_tree.a[parent_node] = np.zeros(p)
+            parent_tree.a[parent_node][j] = 1
+
+            return_list = []
+
+            for chunk_number in range(num_jobs):
+                start = chunk_size * chunk_number
+                end = min(chunk_size * (chunk_number + 1), n - 1)
+                return_list.append(self.pool.apply_async(OptimalTreeModelOptimizer.parallel_split_criteria_scan,
+                                                         args=(start, end, values, parent_tree, parent_node, x, y,
+                                                               self.Nmin)))
+
+            return_list = [res.get() for res in return_list]
+
+            for res in return_list:
+                error = res[&#34;error&#34;]
+                b = res[&#34;b&#34;]
+                if error &lt; error_best:
+                    error_best = error
+                    best_tree.a[parent_node] = np.zeros(p)
+                    best_tree.a[parent_node][j] = 1
+                    best_tree.b[parent_node] = b
+
+        logging.debug(&#34;Complete calculating best parallel split&#34;)
+
+        return best_tree, error_best</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer" href="#imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer">AbstractOptimalTreeModelOptimizer</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer">OptimalHyperTreeModelOptimizer</a></li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer.parallel_split_criteria_scan"><code class="name flex">
+<span>def <span class="ident">parallel_split_criteria_scan</span></span>(<span>start, end, values, parent_tree, parent_node, x, y, Nmin)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def parallel_split_criteria_scan(start: int, end: int, values, parent_tree: Tree, parent_node: int,
+                                 x, y, Nmin: int):
+    best_error = np.inf
+    best_b = None
+
+    for i in range(start, end):
+        b = (values[i] + values[i + 1]) / 2
+        parent_tree.b[parent_node] = b
+        error, min_leaf_size = parent_tree.loss_and_min_leaf_size(x, y)
+        if min_leaf_size &gt;= Nmin:
+            if error &lt; best_error:
+                best_error = error
+                best_b = b
+
+    return {&#34;error&#34;: best_error, &#34;b&#34;: best_b}</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer.best_split"><code class="name flex">
+<span>def <span class="ident">best_split</span></span>(<span>self, lower_tree, upper_tree, x, y, L)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def best_split(self, lower_tree: Tree, upper_tree: Tree, x, y, L: list):
+    self._check_best_split_input(lower_tree, upper_tree)
+
+    n, p = x.shape
+    error_best = np.inf
+
+    parent_node = int(round(lower_tree.root_node / 2))
+    parent_node_a = np.zeros(p)
+    parent_a = {**{parent_node: parent_node_a}, **lower_tree.a, **upper_tree.a}
+    parent_b = {**{parent_node: 0}, **lower_tree.b, **upper_tree.b}
+    parent_tree = Tree(parent_node, lower_tree.depth + 1, parent_a, parent_b)
+    best_tree = parent_tree.copy()
+
+    logging.debug(&#34;Calculating best parallel split for {0} points with dimension {1}&#34;.format(n, p))
+    sorted_sub_x = self.sorted_x[L, ::]
+    cpu_count = multiprocessing.cpu_count()
+    num_jobs = cpu_count * 3
+    chunk_size = int(n / num_jobs)
+
+    for j in tqdm(self.shuffle([i for i in range(p)])):
+        logging.debug(&#34;Visiting {0}th dimension. Current best error of the subtree: {1}&#34;.format(j, error_best))
+        values = sorted_sub_x[::, j]
+        parent_tree.a[parent_node] = np.zeros(p)
+        parent_tree.a[parent_node][j] = 1
+
+        return_list = []
+
+        for chunk_number in range(num_jobs):
+            start = chunk_size * chunk_number
+            end = min(chunk_size * (chunk_number + 1), n - 1)
+            return_list.append(self.pool.apply_async(OptimalTreeModelOptimizer.parallel_split_criteria_scan,
+                                                     args=(start, end, values, parent_tree, parent_node, x, y,
+                                                           self.Nmin)))
+
+        return_list = [res.get() for res in return_list]
+
+        for res in return_list:
+            error = res[&#34;error&#34;]
+            b = res[&#34;b&#34;]
+            if error &lt; error_best:
+                error_best = error
+                best_tree.a[parent_node] = np.zeros(p)
+                best_tree.a[parent_node][j] = 1
+                best_tree.b[parent_node] = b
+
+    logging.debug(&#34;Complete calculating best parallel split&#34;)
+
+    return best_tree, error_best</code></pre>
+</details>
+</dd>
+<dt id="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer.optimize_node"><code class="name flex">
+<span>def <span class="ident">optimize_node</span></span>(<span>self, subtree, x, y, L)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def optimize_node(self, subtree: Tree, x, y, L):
+    new_sub_tree = subtree.copy()
+    sub_x = x[L, ::]
+    sub_y = y[L]
+
+    p = sub_x.shape[1]
+
+    lower_tree, upper_tree = new_sub_tree.children()
+    error_best = new_sub_tree.loss(sub_x, sub_y)
+
+    logging.debug(&#34;Current best error of the subtree: {0}&#34;.format(error_best))
+
+    updated = False
+
+    error_lower = lower_tree.loss(sub_x, sub_y)
+    if error_lower &lt; error_best and lower_tree.depth &gt; 0:
+        logging.info(&#34;Updated by replacing by lower child tree&#34;)
+        new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+        new_sub_tree.b[new_sub_tree.root_node] = 1
+        error_best = error_lower
+        updated = True
+        return new_sub_tree
+
+    error_upper = upper_tree.loss(sub_x, sub_y)
+    if error_upper &lt; error_best and upper_tree.depth &gt; 0:
+        logging.info(&#34;Updated by replacing by upper child tree&#34;)
+        new_sub_tree.a[new_sub_tree.root_node] = np.zeros(p)
+        new_sub_tree.b[new_sub_tree.root_node] = 0
+        error_best = error_upper
+        updated = True
+        return new_sub_tree
+
+    para_tree, error_para = self.best_split(lower_tree, upper_tree, sub_x, sub_y, L)
+    error_para = para_tree.loss(sub_x, sub_y)
+    if error_para &lt; error_best:
+        logging.info(&#34;Updated by parallel split&#34;)
+        new_sub_tree.a[new_sub_tree.root_node] = para_tree.a[para_tree.root_node]
+        new_sub_tree.b[new_sub_tree.root_node] = para_tree.b[para_tree.root_node]
+        error_best = error_para
+        updated = True
+
+    if not updated:
+        logging.info(&#34;No update, return the original tree&#34;)
+
+    return new_sub_tree</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree" href="index.html">imodels.optimal_classification_tree.pyoptree</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer" href="#imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer">AbstractOptimalTreeModelOptimizer</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.best_split" href="#imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.best_split">best_split</a></code></li>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.local_search" href="#imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.local_search">local_search</a></code></li>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.optimize_node" href="#imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.optimize_node">optimize_node</a></code></li>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.shuffle" href="#imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.shuffle">shuffle</a></code></li>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.sort_x" href="#imodels.optimal_classification_tree.pyoptree.localsearch.AbstractOptimalTreeModelOptimizer.sort_x">sort_x</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer">OptimalHyperTreeModelOptimizer</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.best_split" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.best_split">best_split</a></code></li>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.optimize_node" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.optimize_node">optimize_node</a></code></li>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.parallel_random_tree_restart" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.parallel_random_tree_restart">parallel_random_tree_restart</a></code></li>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.parallel_u_scan" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.parallel_u_scan">parallel_u_scan</a></code></li>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.parallel_w_scan" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.parallel_w_scan">parallel_w_scan</a></code></li>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.static_best_split" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalHyperTreeModelOptimizer.static_best_split">static_best_split</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer">OptimalTreeModelOptimizer</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer.best_split" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer.best_split">best_split</a></code></li>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer.optimize_node" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer.optimize_node">optimize_node</a></code></li>
+<li><code><a title="imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer.parallel_split_criteria_scan" href="#imodels.optimal_classification_tree.pyoptree.localsearch.OptimalTreeModelOptimizer.parallel_split_criteria_scan">parallel_split_criteria_scan</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
