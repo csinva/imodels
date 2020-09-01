@@ -1,16 +1,16 @@
-<h1 align="center"> Interpretable machine learning models (imodels)</h1>
+<h1 align="center"> Interpretable machine learning models (imodels) <img src='https://svgshare.com/i/PDf.svg' style="height:1em;"/> </h1>
 <p align="center"> Straightforward implementations of interpretable ML models + demos of how to use various interpretability techniques. Code is optimized for readability. Pull requests welcome!
 </p>
 
 <p align="center">
   <a href="#implementations-of-interpretable-models"> Implementations of imodels </a> •
-  <a href="#demo-notebooks">Demo notebooks</a> •
+  <a href="#demo-notebook">Demo notebook</a> •
   <a href="https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present">Accompanying slides</a>
 </p>
 
 
 ## Implementations of interpretable models
-Provides scikit-learn style wrappers/implementations of different interpretable models (see readmes in individual folders within [imodels](imodels) for details). The interpretable models within the [imodels](imodels) folder can be easily installed and used:
+Provides scikit-learn style wrappers/implementations of different interpretable models - can be easily installed and used:
 
 `pip install git+https://github.com/csinva/interpretability-implementations-demos`
 
@@ -32,8 +32,9 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 
 
 
-## Demo notebooks
-Demo on all usage is contained in this [notebooks](https://github.com/csinva/interpretability-implementations-demos/blob/master/notebooks/1_model_based.ipynb), following this cheat-sheet: ![cheat_sheet](https://csinva.github.io/interpretability-implementations-demos/cheat_sheet.png)
+## Demo notebook
+Demo on all usage is contained in this [notebook](https://github.com/csinva/interpretability-implementations-demos/blob/master/notebooks/1_model_based.ipynb), focusing on the model-based interpretability part of this cheat-sheet: ![cheat_sheet](https://csinva.github.io/interpretability-implementations-demos/cheat_sheet.png)
+For post-hoc interpretability, see the [<img src='https://csinva.github.io/assets/github.svg' style="height:1em;" /> github repo](https://github.com/csinva/interpretability-implementations-demos).
 
 
 

@@ -23,17 +23,17 @@ Github repo available …" />
 <section id="section-intro">
 <p>Python <a title="imodels" href="#imodels"><code>imodels</code></a> package for interpretable models compatible with scikit-learn.
 Github repo available <a href="https://github.com/csinva/interpretability-implementations-demos">here</a>.
-<h1 align="center"> Interpretable machine learning models (imodels)</h1>
+<h1 align="center"> Interpretable machine learning models (imodels) <img src='https://svgshare.com/i/PDf.svg' style="height:1em;"/> </h1>
 <p align="center"> Straightforward implementations of interpretable ML models + demos of how to use various interpretability techniques. Code is optimized for readability. Pull requests welcome!
 </p></p>
 <p align="center">
 <a href="#implementations-of-interpretable-models"> Implementations of imodels </a> •
-<a href="#demo-notebooks">Demo notebooks</a> •
+<a href="#demo-notebook">Demo notebook</a> •
 <a href="https://docs.google.com/presentation/d/1RIdbV279r20marRrN0b1bu2z9STkrivsMDa_Dauk8kE/present">Accompanying slides</a>
 </p>
 <h2 id="implementations-of-interpretable-models">Implementations of interpretable models</h2>
-<p>Provides scikit-learn style wrappers/implementations of different interpretable models (see readmes in individual folders within <a href="imodels">imodels</a> for details). The interpretable models within the <a href="imodels">imodels</a> folder can be easily installed and used:</p>
-<p><code>pip install git+&lt;https://github.com/csinva/interpretability-implementations-demos</code>&gt;</p>
+<p>Provides scikit-learn style wrappers/implementations of different interpretable models - can be easily installed and used:</p>
+<p><code>pip install git+https://github.com/csinva/interpretability-implementations-demos</code></p>
 <pre><code class="python">from imodels import RuleListClassifier, RuleFit, GreedyRuleList, SkopeRules, SLIM, IRFClassifier
 model = RuleListClassifier()  # initialize Bayesian Rule List
 model.fit(X_train, y_train)   # fit model
@@ -49,8 +49,9 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 <li>(in progress) <a href="https://link.springer.com/article/10.1007/s10994-017-5633-9">optimal classification tree</a> (based on <a href="https://github.com/pan5431333/pyoptree">this implementation</a>) - learns succinct trees using global optimization rather than greedy heuristics</li>
 <li><a href="https://www.pnas.org/content/115/8/1943">iterative random forest</a> (based on <a href="https://github.com/Yu-Group/iterative-Random-Forest">this implementation</a>)</li>
 </ul>
-<h2 id="demo-notebooks">Demo notebooks</h2>
-<p>Demo on all usage is contained in this <a href="https://github.com/csinva/interpretability-implementations-demos/blob/master/notebooks/1_model_based.ipynb">notebooks</a>, following this cheat-sheet: <img alt="cheat_sheet" src="https://csinva.github.io/interpretability-implementations-demos/cheat_sheet.png"></p>
+<h2 id="demo-notebook">Demo notebook</h2>
+<p>Demo on all usage is contained in this <a href="https://github.com/csinva/interpretability-implementations-demos/blob/master/notebooks/1_model_based.ipynb">notebook</a>, focusing on the model-based interpretability part of this cheat-sheet: <img alt="cheat_sheet" src="https://csinva.github.io/interpretability-implementations-demos/cheat_sheet.png">
+For post-hoc interpretability, see the <a href="https://github.com/csinva/interpretability-implementations-demos"><img src='https://csinva.github.io/assets/github.svg' style="height:1em;" /> github repo</a>.</p>
 <h2 id="references-further-reading">References / further reading</h2>
 <ul>
 <li><a href="https://arxiv.org/abs/1901.04592">high-level review on interpretable machine learning</a></li>
@@ -83,11 +84,11 @@ from .irf.irf import IRFClassifier
 <dl>
 <dt><code class="name"><a title="imodels.bayesian_rule_list" href="bayesian_rule_list/index.html">imodels.bayesian_rule_list</a></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p><a href="https://arxiv.org/abs/1602.08610">bayesian rule list</a> (based on <a href="https://github.com/tmadl/sklearn-expertsys">this implementation</a>) - learn a compact …</p></section>
 </dd>
 <dt><code class="name"><a title="imodels.greedy_rule_list" href="greedy_rule_list/index.html">imodels.greedy_rule_list</a></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>greedy rule list (based on <a href="https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea">this implementation</a>) - …</p></section>
 </dd>
 <dt><code class="name"><a title="imodels.irf" href="irf/index.html">imodels.irf</a></code></dt>
 <dd>
@@ -95,19 +96,19 @@ from .irf.irf import IRFClassifier
 </dd>
 <dt><code class="name"><a title="imodels.optimal_classification_tree" href="optimal_classification_tree/index.html">imodels.optimal_classification_tree</a></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>(in progress) <a href="https://link.springer.com/article/10.1007/s10994-017-5633-9">optimal classification tree</a> (based on [this …</p></section>
 </dd>
 <dt><code class="name"><a title="imodels.rulefit" href="rulefit/index.html">imodels.rulefit</a></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p><a href="http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf">rulefit</a> (based on <a href="https://github.com/christophM/rulefit">this implementation</a>) - find rules from …</p></section>
 </dd>
 <dt><code class="name"><a title="imodels.skrules" href="skrules/index.html">imodels.skrules</a></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p><a href="https://github.com/scikit-learn-contrib/skope-rules">skope-rules</a> (based on <a href="https://github.com/scikit-learn-contrib/skope-rules">this implementation</a>)</p></section>
 </dd>
 <dt><code class="name"><a title="imodels.slim" href="slim/index.html">imodels.slim</a></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p><a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">sparse integer linear model</a> (simple implementation with cvxpy)</p></section>
 </dd>
 </dl>
 </section>
@@ -123,7 +124,7 @@ from .irf.irf import IRFClassifier
 <div class="toc">
 <ul>
 <li><a href="#implementations-of-interpretable-models">Implementations of interpretable models</a></li>
-<li><a href="#demo-notebooks">Demo notebooks</a></li>
+<li><a href="#demo-notebook">Demo notebook</a></li>
 <li><a href="#references-further-reading">References / further reading</a></li>
 </ul>
 </div>
@@ -148,4 +149,4 @@ from .irf.irf import IRFClassifier
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>
 </body>
-</html>
+</html><a href="https://github.com/csinva/interpretability-implementations-demos" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
