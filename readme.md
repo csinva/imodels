@@ -1,4 +1,4 @@
-<h1 align="center"> Interpretable machine learning models (imodels) <img src='https://svgshare.com/i/PDf.svg' title='glass' style="height:1em;"/></h1>
+<h1 align="center"> Interpretable machine learning models (imodels) 🔍</h1>
 <p align="center"> Straightforward implementations of interpretable ML models + demos of how to use various interpretability techniques. Code is optimized for readability. Pull requests welcome!
 </p>
 
