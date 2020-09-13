@@ -40,7 +40,7 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 ## Demo notebooks
 The demos are contained in 3 main [notebooks](notebooks), following this cheat-sheet:![cheat_sheet](docs/cheat_sheet.png)
 
-1. [model_based.ipynb](notebooks/1_model_based.ipynb) - how to use different interpretable models
+1. [model_based.ipynb](notebooks/1_model_based.ipynb) - how to use different interpretable models and examples with the **imodels** package
 2. [posthoc.ipynb](notebooks/2_posthoc.ipynb) - different simple analyses to interpret a trained model
 3. [uncertainty.ipynb](notebooks/3_uncertainty.ipynb) - code to get uncertainty estimates for a model
 
