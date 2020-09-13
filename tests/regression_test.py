@@ -14,7 +14,7 @@ class TestClassRegression:
     def test_regression(self):
         '''Test imodels on basic binary classification task
         '''
-        for model_type in [RuleFit, SLIM]:
+        for model_type in [RuleFit]:
             m = model_type()
             m.fit(self.X_regression, self.y_regression)
             
