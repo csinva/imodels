@@ -53,3 +53,18 @@ The demos are contained in 3 main [notebooks](notebooks), following this cheat-s
 - [review on black-blox explanation methods](https://hal.inria.fr/hal-02131174v2/document)
 - [review on variable importance](https://www.sciencedirect.com/science/article/pii/S0951832015001672)
 - for updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@chandan_singh96](https://twitter.com/chandan_singh96)
+
+
+Feel free to cite the following but make sure to give authors of original methods / base implementations credit:
+```r
+@software{
+    singh2020,
+    title        = {imodels python package for interpretable modeling},
+    publisher    = {Zenodo},
+    year         = 2020,
+    author       = {Chandan Singh},
+    version      = {v0.2.2},
+    doi          = {10.5281/zenodo.4026887},
+    url          = {https://doi.org/10.5281/zenodo.4026887}
+}
+```
