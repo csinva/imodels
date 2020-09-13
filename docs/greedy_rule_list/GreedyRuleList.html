@@ -129,7 +129,7 @@ class GreedyRuleList(object):
         return np.vstack((1 - probs, probs)).transpose() # probs (n, 2)
     
     def predict(self, X):
-        return self.predict_proba(X) &gt; 0.5
+        return (self.predict_proba(X) &gt; 0.5).argmax(axis=1)
     
     def __str__(self):
         s = &#39;&#39;
@@ -470,7 +470,7 @@ c2: count of another class</p></section>
         return np.vstack((1 - probs, probs)).transpose() # probs (n, 2)
     
     def predict(self, X):
-        return self.predict_proba(X) &gt; 0.5
+        return (self.predict_proba(X) &gt; 0.5).argmax(axis=1)
     
     def __str__(self):
         s = &#39;&#39;
@@ -891,7 +891,7 @@ y must be binary</p></section>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict(self, X):
-    return self.predict_proba(X) &gt; 0.5</code></pre>
+    return (self.predict_proba(X) &gt; 0.5).argmax(axis=1)</code></pre>
 </details>
 </dd>
 <dt id="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.predict_proba"><code class="name flex">

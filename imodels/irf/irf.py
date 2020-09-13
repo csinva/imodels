@@ -1,6 +1,5 @@
-from irf import irf_utils # installed from https://github.com/Yu-Group/iterative-Random-Forest
-from irf.ensemble import wrf, RandomForestClassifierWithWeights # https://github.com/Yu-Group/iterative-Random-Forest
 import numpy as np
+from irf.ensemble import wrf
 
 class IRFClassifier():
     def __init__(self):

@@ -4,7 +4,7 @@ from copy import deepcopy
 from functools import partial
 
 class GreedyRuleList(object):
-    def __init__(self, max_depth=1e3, class_weight=None, criterion='gini'):
+    def __init__(self, max_depth=5, class_weight=None, criterion='gini'):
         self.depth = 0
         self.max_depth = max_depth
         self.feature_names = None
