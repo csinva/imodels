@@ -27,6 +27,7 @@
 <pre><code class="python">import numpy as np
 import math
 from copy import deepcopy
+from functools import partial
 
 class GreedyRuleList(object):
     def __init__(self, max_depth=1e3, class_weight=None, criterion=&#39;gini&#39;):
@@ -47,6 +48,8 @@ class GreedyRuleList(object):
         depth
             the depth of the current layer
         &#34;&#34;&#34;
+        
+        # set self.feature_names and make sure x, y are not pandas type
         if &#39;pandas&#39; in str(type(x)):
             self.feature_names = x.columns
             x = x.values
@@ -55,7 +58,6 @@ class GreedyRuleList(object):
                 self.feature_names = [&#39;feat &#39; + str(i) for i in range(x.shape[1])]
         if feature_names is not None:
             self.feature_names = feature_names
-        
         if &#39;pandas&#39; in str(type(y)):
             y = y.values
         
@@ -71,15 +73,14 @@ class GreedyRuleList(object):
         elif depth &gt;= self.max_depth:   
             return []
         
-        # Recursively generate rule list! 
+        # recursively generate rule list 
         else:   
             
-            # find one split given an information gain 
+            # find a split with the best value for the criterion
             col, cutoff, criterion_val = self.find_best_split(x, y)  
-            if verbose:
-                print(&#39;mean&#39;, (100 * np.mean(y)).round(3))
             
-            y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
+            # put higher probability of class 1 on the right-hand side
+            y_left = y[x[:, col] &lt; cutoff]    # left-hand side data
             y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
             if np.mean(y_left) &gt; np.mean(y_right):
                 flip = True
@@ -90,6 +91,10 @@ class GreedyRuleList(object):
             else:
                 flip = False
                 x_left = x[x[:, col] &lt; cutoff]
+            if verbose:
+                print(f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
+                
+            # save info
             par_node = [{
                 &#39;col&#39;: self.feature_names[col],
                 &#39;index_col&#39;: col,
@@ -99,7 +104,7 @@ class GreedyRuleList(object):
                 &#39;val_right&#39;: np.mean(y_right),
                 &#39;num_pts&#39;: y.size, 
                 &#39;num_pts_right&#39;: y_right.size
-            }]  # save the information 
+            }]  
             
             # generate tree for the left hand side data
             par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)   
@@ -195,6 +200,7 @@ class GreedyRuleList(object):
         y: target var
         &#34;&#34;&#34;
         min_criterion_val = 1e10    
+        cutoff = 0.5
         n = len(y)
         
         # iterate through each value in the column
@@ -206,30 +212,33 @@ class GreedyRuleList(object):
             # get criterion val of this split
             criterion_val = self.weighted_criterion(y_predict, y)
 
-            # check if it&#39;s the best one so far
+            # check if it&#39;s the smallest one so far
             if criterion_val &lt;= min_criterion_val:
                 min_criterion_val = criterion_val
                 cutoff = value
         return min_criterion_val, cutoff    
 
-    def weighted_criterion(self, y_predict, y_real):
+    def weighted_criterion(self, split_decision, y_real):
         &#34;&#34;&#34;Returns criterion calculated over a split
-        y_predict is the split decision, True/False, and y_true can be multi class
+        split decision, True/False, and y_true can be multi class
         &#34;&#34;&#34;
-        if len(y_predict) != len(y_real):
+        if len(split_decision) != len(y_real):
             print(&#39;They have to be the same length&#39;)
             return None
 
+        # choose the splitting criterion
         if self.criterion == &#39;entropy&#39;:
-            criterion_func = self.entropy_one_node
+            criterion_func = self.entropy_criterion
         elif self.criterion == &#39;gini&#39;:
-            criterion_func = self.gini_one_node
+            criterion_func = self.gini_criterion
+        elif self.criterion == &#39;neg_corr&#39;:
+            return self.neg_corr_criterion(split_decision, y_real)
         
         # left-hand side criterion
-        s_left = criterion_func(y_real[y_predict])
-        
+        s_left = criterion_func(y_real[split_decision])
+
         # right-hand side criterion
-        s_right = criterion_func(y_real[~y_predict])
+        s_right = criterion_func(y_real[~split_decision])
         
         # overall criterion, again weighted average
         n = len(y_real)
@@ -239,24 +248,24 @@ class GreedyRuleList(object):
                 idxs_c = y_real == c
                 sample_weights[idxs_c] = self.class_weight[c]
         tot_weight = np.sum(sample_weights)
-        weight_left = np.sum(sample_weights[y_predict]) / tot_weight
-        weight_right = np.sum(sample_weights[~y_predict]) / tot_weight
+        weight_left = np.sum(sample_weights[split_decision]) / tot_weight
+        weight_right = np.sum(sample_weights[~split_decision]) / tot_weight
         s =  weight_left * s_left + weight_right * s_right
         return s
 
-    def gini_one_node(self, division):
+    def gini_criterion(self, y):
         &#39;&#39;&#39;Returns gini index for one node
         = sum(pc * (1 – pc))
         &#39;&#39;&#39;
         s = 0
-        n = len(division)
-        classes = set(division)
+        n = len(y)
+        classes = set(y)
         
         # for each class, get entropy
         for c in classes:   
             
             # weights for each class
-            n_c = sum(division==c)
+            n_c = sum(y==c)
             p_c = n_c / n
             
             # weighted avg
@@ -264,23 +273,39 @@ class GreedyRuleList(object):
 
         return s
     
-    def entropy_one_node(self, division): 
+    def entropy_criterion(self, y): 
         &#34;&#34;&#34;Returns entropy of a divided group of data
         Data may have multiple classes
         &#34;&#34;&#34;
         s = 0
-        n = len(division)
-        classes = set(division)
+        n = len(y)
+        classes = set(y)
         
         # for each class, get entropy
         for c in classes:   
             
             # weights for each class
-            weight = sum(division==c) / n
+            weight = sum(y==c) / n
                 
             # weighted avg
-            s += weight * entropy_from_counts(sum(division==c), sum(division!=c))
+            s += weight * entropy_from_counts(sum(y==c), sum(y!=c))
         return s
+    
+    def neg_corr_criterion(self, split_decision, y):
+        &#39;&#39;&#39;Returns negative correlation between y
+        and the binary spltting variable split_decision
+        y must be binary
+        &#39;&#39;&#39;
+        if np.unique(y).size &lt; 2:
+            return 0
+        elif np.unique(y).size != 2:
+            print(&#39;y must be binary output for corr criterion&#39;)
+        
+        # y should be 1 more often on the &#34;right side&#34; of the split
+        if y.sum() &lt; y.size / 2:
+            y = 1 - y
+
+        return -1 * np.corrcoef(split_decision.astype(np.int), y)[0, 1]
 
 def entropy_from_counts(c1, c2):
     &#34;&#34;&#34;Returns entropy of a group of data
@@ -364,6 +389,8 @@ c2: count of another class</p></section>
         depth
             the depth of the current layer
         &#34;&#34;&#34;
+        
+        # set self.feature_names and make sure x, y are not pandas type
         if &#39;pandas&#39; in str(type(x)):
             self.feature_names = x.columns
             x = x.values
@@ -372,7 +399,6 @@ c2: count of another class</p></section>
                 self.feature_names = [&#39;feat &#39; + str(i) for i in range(x.shape[1])]
         if feature_names is not None:
             self.feature_names = feature_names
-        
         if &#39;pandas&#39; in str(type(y)):
             y = y.values
         
@@ -388,15 +414,14 @@ c2: count of another class</p></section>
         elif depth &gt;= self.max_depth:   
             return []
         
-        # Recursively generate rule list! 
+        # recursively generate rule list 
         else:   
             
-            # find one split given an information gain 
+            # find a split with the best value for the criterion
             col, cutoff, criterion_val = self.find_best_split(x, y)  
-            if verbose:
-                print(&#39;mean&#39;, (100 * np.mean(y)).round(3))
             
-            y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
+            # put higher probability of class 1 on the right-hand side
+            y_left = y[x[:, col] &lt; cutoff]    # left-hand side data
             y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
             if np.mean(y_left) &gt; np.mean(y_right):
                 flip = True
@@ -407,6 +432,10 @@ c2: count of another class</p></section>
             else:
                 flip = False
                 x_left = x[x[:, col] &lt; cutoff]
+            if verbose:
+                print(f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
+                
+            # save info
             par_node = [{
                 &#39;col&#39;: self.feature_names[col],
                 &#39;index_col&#39;: col,
@@ -416,7 +445,7 @@ c2: count of another class</p></section>
                 &#39;val_right&#39;: np.mean(y_right),
                 &#39;num_pts&#39;: y.size, 
                 &#39;num_pts_right&#39;: y_right.size
-            }]  # save the information 
+            }]  
             
             # generate tree for the left hand side data
             par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)   
@@ -512,6 +541,7 @@ c2: count of another class</p></section>
         y: target var
         &#34;&#34;&#34;
         min_criterion_val = 1e10    
+        cutoff = 0.5
         n = len(y)
         
         # iterate through each value in the column
@@ -523,30 +553,33 @@ c2: count of another class</p></section>
             # get criterion val of this split
             criterion_val = self.weighted_criterion(y_predict, y)
 
-            # check if it&#39;s the best one so far
+            # check if it&#39;s the smallest one so far
             if criterion_val &lt;= min_criterion_val:
                 min_criterion_val = criterion_val
                 cutoff = value
         return min_criterion_val, cutoff    
 
-    def weighted_criterion(self, y_predict, y_real):
+    def weighted_criterion(self, split_decision, y_real):
         &#34;&#34;&#34;Returns criterion calculated over a split
-        y_predict is the split decision, True/False, and y_true can be multi class
+        split decision, True/False, and y_true can be multi class
         &#34;&#34;&#34;
-        if len(y_predict) != len(y_real):
+        if len(split_decision) != len(y_real):
             print(&#39;They have to be the same length&#39;)
             return None
 
+        # choose the splitting criterion
         if self.criterion == &#39;entropy&#39;:
-            criterion_func = self.entropy_one_node
+            criterion_func = self.entropy_criterion
         elif self.criterion == &#39;gini&#39;:
-            criterion_func = self.gini_one_node
+            criterion_func = self.gini_criterion
+        elif self.criterion == &#39;neg_corr&#39;:
+            return self.neg_corr_criterion(split_decision, y_real)
         
         # left-hand side criterion
-        s_left = criterion_func(y_real[y_predict])
-        
+        s_left = criterion_func(y_real[split_decision])
+
         # right-hand side criterion
-        s_right = criterion_func(y_real[~y_predict])
+        s_right = criterion_func(y_real[~split_decision])
         
         # overall criterion, again weighted average
         n = len(y_real)
@@ -556,24 +589,24 @@ c2: count of another class</p></section>
                 idxs_c = y_real == c
                 sample_weights[idxs_c] = self.class_weight[c]
         tot_weight = np.sum(sample_weights)
-        weight_left = np.sum(sample_weights[y_predict]) / tot_weight
-        weight_right = np.sum(sample_weights[~y_predict]) / tot_weight
+        weight_left = np.sum(sample_weights[split_decision]) / tot_weight
+        weight_right = np.sum(sample_weights[~split_decision]) / tot_weight
         s =  weight_left * s_left + weight_right * s_right
         return s
 
-    def gini_one_node(self, division):
+    def gini_criterion(self, y):
         &#39;&#39;&#39;Returns gini index for one node
         = sum(pc * (1 – pc))
         &#39;&#39;&#39;
         s = 0
-        n = len(division)
-        classes = set(division)
+        n = len(y)
+        classes = set(y)
         
         # for each class, get entropy
         for c in classes:   
             
             # weights for each class
-            n_c = sum(division==c)
+            n_c = sum(y==c)
             p_c = n_c / n
             
             # weighted avg
@@ -581,23 +614,39 @@ c2: count of another class</p></section>
 
         return s
     
-    def entropy_one_node(self, division): 
+    def entropy_criterion(self, y): 
         &#34;&#34;&#34;Returns entropy of a divided group of data
         Data may have multiple classes
         &#34;&#34;&#34;
         s = 0
-        n = len(division)
-        classes = set(division)
+        n = len(y)
+        classes = set(y)
         
         # for each class, get entropy
         for c in classes:   
             
             # weights for each class
-            weight = sum(division==c) / n
+            weight = sum(y==c) / n
                 
             # weighted avg
-            s += weight * entropy_from_counts(sum(division==c), sum(division!=c))
-        return s</code></pre>
+            s += weight * entropy_from_counts(sum(y==c), sum(y!=c))
+        return s
+    
+    def neg_corr_criterion(self, split_decision, y):
+        &#39;&#39;&#39;Returns negative correlation between y
+        and the binary spltting variable split_decision
+        y must be binary
+        &#39;&#39;&#39;
+        if np.unique(y).size &lt; 2:
+            return 0
+        elif np.unique(y).size != 2:
+            print(&#39;y must be binary output for corr criterion&#39;)
+        
+        # y should be 1 more often on the &#34;right side&#34; of the split
+        if y.sum() &lt; y.size / 2:
+            y = 1 - y
+
+        return -1 * np.corrcoef(split_decision.astype(np.int), y)[0, 1]</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -614,8 +663,8 @@ c2: count of another class</p></section>
     return all(x == items[0] for x in items)</code></pre>
 </details>
 </dd>
-<dt id="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.entropy_one_node"><code class="name flex">
-<span>def <span class="ident">entropy_one_node</span></span>(<span>self, division)</span>
+<dt id="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.entropy_criterion"><code class="name flex">
+<span>def <span class="ident">entropy_criterion</span></span>(<span>self, y)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Returns entropy of a divided group of data
@@ -624,22 +673,22 @@ Data may have multiple classes</p></section>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def entropy_one_node(self, division): 
+<pre><code class="python">def entropy_criterion(self, y): 
     &#34;&#34;&#34;Returns entropy of a divided group of data
     Data may have multiple classes
     &#34;&#34;&#34;
     s = 0
-    n = len(division)
-    classes = set(division)
+    n = len(y)
+    classes = set(y)
     
     # for each class, get entropy
     for c in classes:   
         
         # weights for each class
-        weight = sum(division==c) / n
+        weight = sum(y==c) / n
             
         # weighted avg
-        s += weight * entropy_from_counts(sum(division==c), sum(division!=c))
+        s += weight * entropy_from_counts(sum(y==c), sum(y!=c))
     return s</code></pre>
 </details>
 </dd>
@@ -707,6 +756,8 @@ the depth of the current layer</p></section>
     depth
         the depth of the current layer
     &#34;&#34;&#34;
+    
+    # set self.feature_names and make sure x, y are not pandas type
     if &#39;pandas&#39; in str(type(x)):
         self.feature_names = x.columns
         x = x.values
@@ -715,7 +766,6 @@ the depth of the current layer</p></section>
             self.feature_names = [&#39;feat &#39; + str(i) for i in range(x.shape[1])]
     if feature_names is not None:
         self.feature_names = feature_names
-    
     if &#39;pandas&#39; in str(type(y)):
         y = y.values
     
@@ -731,15 +781,14 @@ the depth of the current layer</p></section>
     elif depth &gt;= self.max_depth:   
         return []
     
-    # Recursively generate rule list! 
+    # recursively generate rule list 
     else:   
         
-        # find one split given an information gain 
+        # find a split with the best value for the criterion
         col, cutoff, criterion_val = self.find_best_split(x, y)  
-        if verbose:
-            print(&#39;mean&#39;, (100 * np.mean(y)).round(3))
         
-        y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
+        # put higher probability of class 1 on the right-hand side
+        y_left = y[x[:, col] &lt; cutoff]    # left-hand side data
         y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
         if np.mean(y_left) &gt; np.mean(y_right):
             flip = True
@@ -750,6 +799,10 @@ the depth of the current layer</p></section>
         else:
             flip = False
             x_left = x[x[:, col] &lt; cutoff]
+        if verbose:
+            print(f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
+            
+        # save info
         par_node = [{
             &#39;col&#39;: self.feature_names[col],
             &#39;index_col&#39;: col,
@@ -759,7 +812,7 @@ the depth of the current layer</p></section>
             &#39;val_right&#39;: np.mean(y_right),
             &#39;num_pts&#39;: y.size, 
             &#39;num_pts_right&#39;: y_right.size
-        }]  # save the information 
+        }]  
         
         # generate tree for the left hand side data
         par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)   
@@ -769,8 +822,8 @@ the depth of the current layer</p></section>
         return par_node</code></pre>
 </details>
 </dd>
-<dt id="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.gini_one_node"><code class="name flex">
-<span>def <span class="ident">gini_one_node</span></span>(<span>self, division)</span>
+<dt id="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.gini_criterion"><code class="name flex">
+<span>def <span class="ident">gini_criterion</span></span>(<span>self, y)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Returns gini index for one node
@@ -779,25 +832,53 @@ the depth of the current layer</p></section>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def gini_one_node(self, division):
+<pre><code class="python">def gini_criterion(self, y):
     &#39;&#39;&#39;Returns gini index for one node
     = sum(pc * (1 – pc))
     &#39;&#39;&#39;
     s = 0
-    n = len(division)
-    classes = set(division)
+    n = len(y)
+    classes = set(y)
     
     # for each class, get entropy
     for c in classes:   
         
         # weights for each class
-        n_c = sum(division==c)
+        n_c = sum(y==c)
         p_c = n_c / n
         
         # weighted avg
         s += p_c * (1 - p_c)
 
     return s</code></pre>
+</details>
+</dd>
+<dt id="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.neg_corr_criterion"><code class="name flex">
+<span>def <span class="ident">neg_corr_criterion</span></span>(<span>self, split_decision, y)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Returns negative correlation between y
+and the binary spltting variable split_decision
+y must be binary</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def neg_corr_criterion(self, split_decision, y):
+    &#39;&#39;&#39;Returns negative correlation between y
+    and the binary spltting variable split_decision
+    y must be binary
+    &#39;&#39;&#39;
+    if np.unique(y).size &lt; 2:
+        return 0
+    elif np.unique(y).size != 2:
+        print(&#39;y must be binary output for corr criterion&#39;)
+    
+    # y should be 1 more often on the &#34;right side&#34; of the split
+    if y.sum() &lt; y.size / 2:
+        y = 1 - y
+
+    return -1 * np.corrcoef(split_decision.astype(np.int), y)[0, 1]</code></pre>
 </details>
 </dd>
 <dt id="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.predict"><code class="name flex">
@@ -890,6 +971,7 @@ y: target var</p></section>
     y: target var
     &#34;&#34;&#34;
     min_criterion_val = 1e10    
+    cutoff = 0.5
     n = len(y)
     
     # iterate through each value in the column
@@ -901,7 +983,7 @@ y: target var</p></section>
         # get criterion val of this split
         criterion_val = self.weighted_criterion(y_predict, y)
 
-        # check if it&#39;s the best one so far
+        # check if it&#39;s the smallest one so far
         if criterion_val &lt;= min_criterion_val:
             min_criterion_val = criterion_val
             cutoff = value
@@ -909,33 +991,36 @@ y: target var</p></section>
 </details>
 </dd>
 <dt id="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.weighted_criterion"><code class="name flex">
-<span>def <span class="ident">weighted_criterion</span></span>(<span>self, y_predict, y_real)</span>
+<span>def <span class="ident">weighted_criterion</span></span>(<span>self, split_decision, y_real)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Returns criterion calculated over a split
-y_predict is the split decision, True/False, and y_true can be multi class</p></section>
+split decision, True/False, and y_true can be multi class</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def weighted_criterion(self, y_predict, y_real):
+<pre><code class="python">def weighted_criterion(self, split_decision, y_real):
     &#34;&#34;&#34;Returns criterion calculated over a split
-    y_predict is the split decision, True/False, and y_true can be multi class
+    split decision, True/False, and y_true can be multi class
     &#34;&#34;&#34;
-    if len(y_predict) != len(y_real):
+    if len(split_decision) != len(y_real):
         print(&#39;They have to be the same length&#39;)
         return None
 
+    # choose the splitting criterion
     if self.criterion == &#39;entropy&#39;:
-        criterion_func = self.entropy_one_node
+        criterion_func = self.entropy_criterion
     elif self.criterion == &#39;gini&#39;:
-        criterion_func = self.gini_one_node
+        criterion_func = self.gini_criterion
+    elif self.criterion == &#39;neg_corr&#39;:
+        return self.neg_corr_criterion(split_decision, y_real)
     
     # left-hand side criterion
-    s_left = criterion_func(y_real[y_predict])
-    
+    s_left = criterion_func(y_real[split_decision])
+
     # right-hand side criterion
-    s_right = criterion_func(y_real[~y_predict])
+    s_right = criterion_func(y_real[~split_decision])
     
     # overall criterion, again weighted average
     n = len(y_real)
@@ -945,8 +1030,8 @@ y_predict is the split decision, True/False, and y_true can be multi class</p></
             idxs_c = y_real == c
             sample_weights[idxs_c] = self.class_weight[c]
     tot_weight = np.sum(sample_weights)
-    weight_left = np.sum(sample_weights[y_predict]) / tot_weight
-    weight_right = np.sum(sample_weights[~y_predict]) / tot_weight
+    weight_left = np.sum(sample_weights[split_decision]) / tot_weight
+    weight_right = np.sum(sample_weights[~split_decision]) / tot_weight
     s =  weight_left * s_left + weight_right * s_right
     return s</code></pre>
 </details>
@@ -978,10 +1063,11 @@ y_predict is the split decision, True/False, and y_true can be multi class</p></
 <h4><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList">GreedyRuleList</a></code></h4>
 <ul class="two-column">
 <li><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.all_same" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.all_same">all_same</a></code></li>
-<li><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.entropy_one_node" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.entropy_one_node">entropy_one_node</a></code></li>
+<li><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.entropy_criterion" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.entropy_criterion">entropy_criterion</a></code></li>
 <li><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.find_best_split" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.find_best_split">find_best_split</a></code></li>
 <li><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.fit" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.fit">fit</a></code></li>
-<li><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.gini_one_node" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.gini_one_node">gini_one_node</a></code></li>
+<li><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.gini_criterion" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.gini_criterion">gini_criterion</a></code></li>
+<li><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.neg_corr_criterion" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.neg_corr_criterion">neg_corr_criterion</a></code></li>
 <li><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.predict" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.predict">predict</a></code></li>
 <li><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.predict_proba" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.print_list" href="#imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList.print_list">print_list</a></code></li>

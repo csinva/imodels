@@ -21,7 +21,7 @@ from sklearn.utils.testing import assert_greater
 from sklearn.utils.testing import ignore_warnings
 
 
-from skrules import SkopeRules
+from imodels import SkopeRules
 
 rng = check_random_state(0)
 

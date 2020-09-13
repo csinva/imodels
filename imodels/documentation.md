@@ -33,7 +33,7 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 
 
 ## Demo notebook
-Demo on all usage is contained in this [notebook](https://github.com/csinva/interpretability-implementations-demos/blob/master/notebooks/1_model_based.ipynb), focusing on the model-based interpretability part of this cheat-sheet: ![cheat_sheet](https://csinva.github.io/interpretability-implementations-demos/cheat_sheet.png)
+Demo on all usage is contained in this [notebook](https://github.com/csinva/interpretability-implementations-demos/blob/master/notebooks/1_model_based.ipynb), focusing on the model-based interpretability part of this cheat-sheet: ![cheat_sheet](https://csinva.github.io/interpretability-implementations-demos/docs/cheat_sheet.png)
 For post-hoc interpretability, see the [<img src='https://csinva.github.io/assets/github.svg' style="height:1em;" /> github repo](https://github.com/csinva/interpretability-implementations-demos).
 
 

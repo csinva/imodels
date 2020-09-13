@@ -103,7 +103,7 @@ class GreedyRuleList(object):
         return np.vstack((1 - probs, probs)).transpose() # probs (n, 2)
     
     def predict(self, X):
-        return self.predict_proba(X) > 0.5
+        return (self.predict_proba(X) > 0.5).argmax(axis=1)
     
     def __str__(self):
         s = ''
