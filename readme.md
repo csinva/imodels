@@ -8,6 +8,11 @@
   <a href="https://csinva.github.io/interpretability-implementations-demos/docs/">Docs</a>
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg">
+  <a href="https://github.com/csinva/interpretability-implementations-demos/actions"><img src="https://github.com/csinva/interpretability-implementations-demos/workflows/tests/badge.svg"></a>
+</p>  
+
 
 ## Implementations of interpretable models
 Scikit-learn style wrappers/implementations of different interpretable models. Docs available [here](https://csinva.github.io/interpretability-implementations-demos/docs/). The interpretable models within the [imodels](imodels) folder can be easily installed and used:
