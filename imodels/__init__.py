@@ -9,5 +9,5 @@ from .rulefit.rulefit import RuleFit
 from .slim.SLIM import SLIM
 from .greedy_rule_list.GreedyRuleList import GreedyRuleList
 from .skrules.skope_rules import SkopeRules
-from .irf.irf import IRFClassifier
+from .iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .optimal_classification_tree import OptimalTreeModel

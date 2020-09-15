@@ -30,7 +30,7 @@ from copy import deepcopy
 from functools import partial
 
 class GreedyRuleList(object):
-    def __init__(self, max_depth=1e3, class_weight=None, criterion=&#39;gini&#39;):
+    def __init__(self, max_depth=5, class_weight=None, criterion=&#39;gini&#39;):
         self.depth = 0
         self.max_depth = max_depth
         self.feature_names = None
@@ -362,7 +362,7 @@ c2: count of another class</p></section>
 <dl>
 <dt id="imodels.greedy_rule_list.GreedyRuleList.GreedyRuleList"><code class="flex name class">
 <span>class <span class="ident">GreedyRuleList</span></span>
-<span>(</span><span>max_depth=1000.0, class_weight=None, criterion='gini')</span>
+<span>(</span><span>max_depth=5, class_weight=None, criterion='gini')</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
@@ -371,7 +371,7 @@ c2: count of another class</p></section>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GreedyRuleList(object):
-    def __init__(self, max_depth=1e3, class_weight=None, criterion=&#39;gini&#39;):
+    def __init__(self, max_depth=5, class_weight=None, criterion=&#39;gini&#39;):
         self.depth = 0
         self.max_depth = max_depth
         self.feature_names = None
