@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
 <title>imodels.skrules.skope_rules API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Code adapted with only minor changes from [here](https://github.com/scikit-learn-contrib/skope-rules). Full credit to the authors …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,11 +20,243 @@
 <h1 class="title">Module <code>imodels.skrules.skope_rules</code></h1>
 </header>
 <section id="section-intro">
+<p>Code adapted with only minor changes from <a href="https://github.com/scikit-learn-contrib/skope-rules">here</a>. Full credit to the authors.</p>
+<h1 id="skope-rules">skope-rules</h1>
+<p>Skope-rules is a Python machine learning module built on top of
+scikit-learn and distributed under the 3-Clause BSD license.</p>
+<p>Skope-rules aims at learning logical, interpretable rules for "scoping" a target
+class, i.e. detecting with high precision instances of this class.</p>
+<p>Skope-rules is a trade off between the interpretability of a Decision Tree
+and the modelization power of a Random Forest.</p>
+<p>See the <code>AUTHORS.rst &lt;AUTHORS.rst&gt;</code>_ file for a list of contributors.</p>
+<p><img alt="" src="schema.png"></p>
+<h2 id="installation">Installation</h2>
+<p>You can get the latest sources with pip :</p>
+<pre><code>pip install skope-rules
+</code></pre>
+<h2 id="quick-start">Quick Start</h2>
+<p>SkopeRules can be used to describe classes with logical rules :</p>
+<div class="admonition code">
+<p class="admonition-title">Code:&ensp;python</p>
+<p>from sklearn.datasets import load_iris
+from skrules import SkopeRules</p>
+<p>dataset = load_iris()
+feature_names = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
+clf = SkopeRules(max_depth_duplication=2,
+n_estimators=30,
+precision_min=0.3,
+recall_min=0.1,
+feature_names=feature_names)</p>
+<p>for idx, species in enumerate(dataset.target_names):
+X, y = dataset.data, dataset.target
+clf.fit(X, y == idx)
+rules = clf.rules_[0:3]
+print("Rules for iris", species)
+for rule in rules:
+print(rule)
+print()
+print(20*'=')
+print()</p>
+</div>
+<p>::</p>
+<p>SkopeRules can also be used as a predictor if you use the "score_top_rules" method :</p>
+<div class="admonition code">
+<p class="admonition-title">Code:&ensp;python</p>
+<p>from sklearn.datasets import load_boston
+from sklearn.metrics import precision_recall_curve
+from matplotlib import pyplot as plt
+from skrules import SkopeRules</p>
+<p>dataset = load_boston()
+clf = SkopeRules(max_depth_duplication=None,
+n_estimators=30,
+precision_min=0.2,
+recall_min=0.01,
+feature_names=dataset.feature_names)</p>
+<p>X, y = dataset.data, dataset.target &gt; 25
+X_train, y_train = X[:len(y)//2], y[:len(y)//2]
+X_test, y_test = X[len(y)//2:], y[len(y)//2:]
+clf.fit(X_train, y_train)
+y_score = clf.score_top_rules(X_test) # Get a risk score for each test example
+precision, recall, _ = precision_recall_curve(y_test, y_score)
+plt.plot(recall, precision)
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.title('Precision Recall curve')
+plt.show()</p>
+</div>
+<p>::</p>
+<p>For more examples and use cases please check our <code>documentation &lt;http://skope-rules.readthedocs.io/en/latest/&gt;</code><em>.
+You can also check the <code>demonstration notebooks &lt;notebooks/&gt;</code></em>.</p>
+<h2 id="links-with-existing-literature">Links with existing literature</h2>
+<p>The main advantage of decision rules is that they are offering interpretable models. The problem of generating such rules has been widely considered in machine learning, see e.g. RuleFit [1], Slipper [2], LRI [3], MLRules[4].</p>
+<p>A decision rule is a logical expression of the form "IF conditions THEN response". In a binary classification setting, if an instance satisfies conditions of the rule, then it is assigned to one of the two classes. If this instance does not satisfy conditions, it remains unassigned.</p>
+<p>1) In [2, 3, 4], rules induction is done by considering each single decision rule as a base classifier in an ensemble, which is built by greedily minimizing some loss function.</p>
+<p>2) In [1], rules are extracted from an ensemble of trees; a weighted combination of these rules is then built by solving a L1-regularized optimization problem over the weights as described in [5].</p>
+<p>In this package, we use the second approach. Rules are extracted from tree ensemble, which allow us to take advantage of existing fast algorithms (such as bagged decision trees, or gradient boosting) to produce such tree ensemble. Too similar or duplicated rules are then removed, based on a similarity threshold of their supports..
+The main goal of this package is to provide rules verifying precision and recall conditions. It still implement a score (<code>decision_function</code>) method, but which does not solve the L1-regularized optimization problem as in [1]. Instead, weights are simply proportional to the OOB associated precision of the rule.</p>
+<p>This package also offers convenient methods to compute predictions with the k most precise rules (cf score_top_rules() and predict_top_rules() functions).</p>
+<p>[1] Friedman and Popescu, Predictive learning via rule ensembles,Technical Report, 2005.</p>
+<p>[2] Cohen and Singer, A simple, fast, and effective rule learner, National Conference on Artificial Intelligence, 1999.</p>
+<p>[3] Weiss and Indurkhya, Lightweight rule induction, ICML, 2000.</p>
+<p>[4] Dembczyński, Kotłowski and Słowiński, Maximum Likelihood Rule Ensembles, ICML, 2008.</p>
+<p>[5] Friedman and Popescu, Gradient directed regularization, Technical Report, 2004.</p>
+<h2 id="dependencies">Dependencies</h2>
+<p>skope-rules requires:</p>
+<ul>
+<li>Python (&gt;= 2.7 or &gt;= 3.3)</li>
+<li>NumPy (&gt;= 1.10.4)</li>
+<li>SciPy (&gt;= 0.17.0)</li>
+<li>Pandas (&gt;= 0.18.1)</li>
+<li>Scikit-Learn (&gt;= 0.17.1)</li>
+</ul>
+<p>For running the examples Matplotlib &gt;= 1.1.1 is required.</p>
+<h2 id="documentation">Documentation</h2>
+<p>You can access the full project documentation <code>here &lt;http://skope-rules.readthedocs.io/en/latest/&gt;</code>_</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import numpy as np
+<pre><code class="python">&#39;&#39;&#39;
+Code adapted with only minor changes from [here](https://github.com/scikit-learn-contrib/skope-rules). Full credit to the authors.
+
+
+
+skope-rules
+===========
+
+Skope-rules is a Python machine learning module built on top of
+scikit-learn and distributed under the 3-Clause BSD license.
+
+Skope-rules aims at learning logical, interpretable rules for &#34;scoping&#34; a target
+class, i.e. detecting with high precision instances of this class.
+
+Skope-rules is a trade off between the interpretability of a Decision Tree
+and the modelization power of a Random Forest.
+
+See the `AUTHORS.rst &lt;AUTHORS.rst&gt;`_ file for a list of contributors.
+
+.. image:: schema.png
+
+
+Installation
+------------
+
+You can get the latest sources with pip :
+
+    pip install skope-rules
+
+   
+Quick Start
+------------
+
+SkopeRules can be used to describe classes with logical rules :
+
+.. code:: python
+
+    from sklearn.datasets import load_iris
+    from skrules import SkopeRules
+    
+    dataset = load_iris()
+    feature_names = [&#39;sepal_length&#39;, &#39;sepal_width&#39;, &#39;petal_length&#39;, &#39;petal_width&#39;]
+    clf = SkopeRules(max_depth_duplication=2,
+                     n_estimators=30,
+                     precision_min=0.3,
+                     recall_min=0.1,
+                     feature_names=feature_names)
+    
+    for idx, species in enumerate(dataset.target_names):
+        X, y = dataset.data, dataset.target
+        clf.fit(X, y == idx)
+        rules = clf.rules_[0:3]
+        print(&#34;Rules for iris&#34;, species)
+        for rule in rules:
+            print(rule)
+        print()
+        print(20*&#39;=&#39;)
+        print()
+::
+
+SkopeRules can also be used as a predictor if you use the &#34;score_top_rules&#34; method :
+
+.. code:: python
+
+    from sklearn.datasets import load_boston
+    from sklearn.metrics import precision_recall_curve
+    from matplotlib import pyplot as plt
+    from skrules import SkopeRules
+    
+    dataset = load_boston()
+    clf = SkopeRules(max_depth_duplication=None,
+                     n_estimators=30,
+                     precision_min=0.2,
+                     recall_min=0.01,
+                     feature_names=dataset.feature_names)
+    
+    X, y = dataset.data, dataset.target &gt; 25
+    X_train, y_train = X[:len(y)//2], y[:len(y)//2]
+    X_test, y_test = X[len(y)//2:], y[len(y)//2:]
+    clf.fit(X_train, y_train)
+    y_score = clf.score_top_rules(X_test) # Get a risk score for each test example
+    precision, recall, _ = precision_recall_curve(y_test, y_score)
+    plt.plot(recall, precision)
+    plt.xlabel(&#39;Recall&#39;)
+    plt.ylabel(&#39;Precision&#39;)
+    plt.title(&#39;Precision Recall curve&#39;)
+    plt.show()
+::
+
+
+For more examples and use cases please check our `documentation &lt;http://skope-rules.readthedocs.io/en/latest/&gt;`_.
+You can also check the `demonstration notebooks &lt;notebooks/&gt;`_.
+
+Links with existing literature
+-------------------------------
+
+The main advantage of decision rules is that they are offering interpretable models. The problem of generating such rules has been widely considered in machine learning, see e.g. RuleFit [1], Slipper [2], LRI [3], MLRules[4].
+
+A decision rule is a logical expression of the form &#34;IF conditions THEN response&#34;. In a binary classification setting, if an instance satisfies conditions of the rule, then it is assigned to one of the two classes. If this instance does not satisfy conditions, it remains unassigned.
+
+1) In [2, 3, 4], rules induction is done by considering each single decision rule as a base classifier in an ensemble, which is built by greedily minimizing some loss function.
+
+2) In [1], rules are extracted from an ensemble of trees; a weighted combination of these rules is then built by solving a L1-regularized optimization problem over the weights as described in [5].
+
+In this package, we use the second approach. Rules are extracted from tree ensemble, which allow us to take advantage of existing fast algorithms (such as bagged decision trees, or gradient boosting) to produce such tree ensemble. Too similar or duplicated rules are then removed, based on a similarity threshold of their supports..
+The main goal of this package is to provide rules verifying precision and recall conditions. It still implement a score (`decision_function`) method, but which does not solve the L1-regularized optimization problem as in [1]. Instead, weights are simply proportional to the OOB associated precision of the rule.
+
+This package also offers convenient methods to compute predictions with the k most precise rules (cf score_top_rules() and predict_top_rules() functions).
+
+
+[1] Friedman and Popescu, Predictive learning via rule ensembles,Technical Report, 2005.
+
+[2] Cohen and Singer, A simple, fast, and effective rule learner, National Conference on Artificial Intelligence, 1999.
+
+[3] Weiss and Indurkhya, Lightweight rule induction, ICML, 2000.
+
+[4] Dembczyński, Kotłowski and Słowiński, Maximum Likelihood Rule Ensembles, ICML, 2008.
+
+[5] Friedman and Popescu, Gradient directed regularization, Technical Report, 2004.
+
+Dependencies
+------------
+
+skope-rules requires:
+
+- Python (&gt;= 2.7 or &gt;= 3.3)
+- NumPy (&gt;= 1.10.4)
+- SciPy (&gt;= 0.17.0)
+- Pandas (&gt;= 0.18.1)
+- Scikit-Learn (&gt;= 0.17.1)
+
+For running the examples Matplotlib &gt;= 1.1.1 is required.
+
+    
+Documentation
+--------------
+
+You can access the full project documentation `here &lt;http://skope-rules.readthedocs.io/en/latest/&gt;`_
+&#39;&#39;&#39;
+
+import numpy as np
 from collections import Counter, Iterable
 import pandas
 import numbers
@@ -2125,7 +2357,16 @@ Positive scores represent outliers, null scores represent inliers.</dd>
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#skope-rules">skope-rules</a><ul>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#links-with-existing-literature">Links with existing literature</a></li>
+<li><a href="#dependencies">Dependencies</a></li>
+<li><a href="#documentation">Documentation</a></li>
+</ul>
+</li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>

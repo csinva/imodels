@@ -9,7 +9,7 @@ data = data.replace('&lt;https://github.com/csinva/interpretability-implementati
 data = data.replace('<h1>Index</h1>',
                     '<h1>Index 🔍</h1>')
 
-data = data.replace('/index.html">imodels.', '/index.html">')
+data = data.replace('.html">imodels.', '.html">')
 
 
 

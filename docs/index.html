@@ -54,11 +54,11 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 <li><a href="https://www.pnas.org/content/115/8/1943">iterative random forest</a> (based on <a href="https://github.com/Yu-Group/iterative-Random-Forest">this implementation</a>)</li>
 </ul>
 <h2 id="demo-notebook">Demo notebook</h2>
-<p>Demo on all usage is contained in this <a href="https://github.com/csinva/interpretability-implementations-demos/blob/master/notebooks/1_model_based.ipynb">notebook</a>, focusing on the model-based interpretability part of this cheat-sheet: <img alt="cheat_sheet" src="https://csinva.github.io/interpretability-implementations-demos/docs/cheat_sheet.png">
+<p>Demo on all usage is contained in this <a href="https://github.com/csinva/interpretability-implementations-demos/blob/master/notebooks/1_model_based.ipynb">notebook</a>, focusing on the model-based interpretability part of this cheat-sheet: <img alt="cheat_sheet" src="https://csinva.github.io/imodels/docs/cheat_sheet.png">
 For post-hoc interpretability, see the <a href="https://github.com/csinva/interpretability-implementations-demos"><img src='https://csinva.github.io/assets/github.svg' style="height:1em;" /> github repo</a>.</p>
 <h2 id="references-further-reading">References / further reading</h2>
 <ul>
-<li>Stop Explaining Black Box Machine Learning Models for High Stakes Decisions and Use Interpretable Models Instead (rudin 2019, <a href="https://arxiv.org/pdf/1811.10154.pdf">pdf</a> - expounds why one should use interpretable models</li>
+<li>Stop Explaining Black Box Machine Learning Models for High Stakes Decisions and Use Interpretable Models Instead (rudin 2019, <a href="https://arxiv.org/pdf/1811.10154.pdf">pdf</a>) - expounds why one should use interpretable models</li>
 <li>Interpretable machine learning: definitions, methods, and applications (murdoch et al. 2019, <a href="https://arxiv.org/pdf/1901.04592.pdf">pdf</a>) - good quick review on interpretable ML </li>
 <li>Interpretable Machine Learning: A Guide for Making Black Box Models Explainable (molnar 2019, <a href="https://christophm.github.io/interpretable-ml-book/">pdf</a>) - book on interpretable ML</li>
 <li>Review on evaluating interpretability (doshi-velez &amp; kim 2017, <a href="https://arxiv.org/pdf/1702.08608.pdf">pdf</a>)</li>
@@ -87,9 +87,9 @@ Github repo available [here](https://github.com/csinva/interpretability-implemen
 &#34;&#34;&#34;
 
 from .bayesian_rule_list.RuleListClassifier import RuleListClassifier
-from .rulefit.rulefit import RuleFit
-from .slim.SLIM import SLIM
-from .greedy_rule_list.GreedyRuleList import GreedyRuleList
+from .rule_fit import RuleFit
+from .slim import SLIM
+from .greedy_rule_list import GreedyRuleList
 from .skrules.skope_rules import SkopeRules
 from .iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .optimal_classification_tree import OptimalTreeModel</code></pre>
@@ -102,7 +102,7 @@ from .iterative_random_forest.iterative_random_forest import IRFClassifier
 <dd>
 <section class="desc"><p><a href="https://arxiv.org/abs/1602.08610">bayesian rule list</a> (based on <a href="https://github.com/tmadl/sklearn-expertsys">this implementation</a>) - learn a compact …</p></section>
 </dd>
-<dt><code class="name"><a title="imodels.greedy_rule_list" href="greedy_rule_list/index.html">greedy_rule_list</a></code></dt>
+<dt><code class="name"><a title="imodels.greedy_rule_list" href="greedy_rule_list.html">greedy_rule_list</a></code></dt>
 <dd>
 <section class="desc"><p>greedy rule list (based on <a href="https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea">this implementation</a>) - …</p></section>
 </dd>
@@ -114,17 +114,21 @@ from .iterative_random_forest.iterative_random_forest import IRFClassifier
 <dd>
 <section class="desc"></section>
 </dd>
-<dt><code class="name"><a title="imodels.rulefit" href="rulefit/index.html">rulefit</a></code></dt>
+<dt><code class="name"><a title="imodels.rule_fit" href="rule_fit.html">rule_fit</a></code></dt>
 <dd>
-<section class="desc"><p><a href="http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf">rulefit</a> (based on <a href="https://github.com/christophM/rulefit">this implementation</a>) - find rules from …</p></section>
+<section class="desc"><p>Linear model of tree-based decision rules …</p></section>
 </dd>
 <dt><code class="name"><a title="imodels.skrules" href="skrules/index.html">skrules</a></code></dt>
 <dd>
 <section class="desc"><p><a href="https://github.com/scikit-learn-contrib/skope-rules">skope-rules</a> (based on <a href="https://github.com/scikit-learn-contrib/skope-rules">this implementation</a>)</p></section>
 </dd>
-<dt><code class="name"><a title="imodels.slim" href="slim/index.html">slim</a></code></dt>
+<dt><code class="name"><a title="imodels.slim" href="slim.html">slim</a></code></dt>
 <dd>
-<section class="desc"><p><a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">sparse integer linear model</a> (simple implementation with cvxpy)</p></section>
+<section class="desc"><p>wrapper for sparse, integer linear models …</p></section>
+</dd>
+<dt><code class="name"><a title="imodels.util" href="util/index.html">util</a></code></dt>
+<dd>
+<section class="desc"></section>
 </dd>
 </dl>
 </section>
@@ -148,12 +152,13 @@ from .iterative_random_forest.iterative_random_forest import IRFClassifier
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="imodels.bayesian_rule_list" href="bayesian_rule_list/index.html">bayesian_rule_list</a></code></li>
-<li><code><a title="imodels.greedy_rule_list" href="greedy_rule_list/index.html">greedy_rule_list</a></code></li>
+<li><code><a title="imodels.greedy_rule_list" href="greedy_rule_list.html">greedy_rule_list</a></code></li>
 <li><code><a title="imodels.iterative_random_forest" href="iterative_random_forest/index.html">iterative_random_forest</a></code></li>
 <li><code><a title="imodels.optimal_classification_tree" href="optimal_classification_tree/index.html">optimal_classification_tree</a></code></li>
-<li><code><a title="imodels.rulefit" href="rulefit/index.html">rulefit</a></code></li>
+<li><code><a title="imodels.rule_fit" href="rule_fit.html">rule_fit</a></code></li>
 <li><code><a title="imodels.skrules" href="skrules/index.html">skrules</a></code></li>
-<li><code><a title="imodels.slim" href="slim/index.html">slim</a></code></li>
+<li><code><a title="imodels.slim" href="slim.html">slim</a></code></li>
+<li><code><a title="imodels.util" href="util/index.html">util</a></code></li>
 </ul>
 </li>
 </ul>

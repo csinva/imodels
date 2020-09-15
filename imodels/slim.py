@@ -1,3 +1,10 @@
+'''
+# wrapper for sparse, integer linear models
+
+minimizes norm(X * w - y, 2) + lambda_reg * norm(w, 1)
+
+with integer coefficients in w
+'''
 from sklearn.linear_model import LinearRegression
 import numpy as np
 import cvxpy as cp # package for optimization

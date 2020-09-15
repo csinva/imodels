@@ -41,6 +41,7 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 The demos are contained in 3 main [notebooks](notebooks), following this cheat-sheet:![cheat_sheet](docs/cheat_sheet.png)
 
 1. [model_based.ipynb](notebooks/1_model_based.ipynb) - how to use different interpretable models and examples with the **imodels** package
+    - see an example of using this package for deriving a clinical decision rule in [this nb](https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/04_fit_interpretable_models.ipynb)
 2. [posthoc.ipynb](notebooks/2_posthoc.ipynb) - different simple analyses to interpret a trained model
 3. [uncertainty.ipynb](notebooks/3_uncertainty.ipynb) - code to get uncertainty estimates for a model
 
@@ -48,7 +49,7 @@ The demos are contained in 3 main [notebooks](notebooks), following this cheat-s
 
 ## References / further reading
 
-- Stop Explaining Black Box Machine Learning Models for High Stakes Decisions and Use Interpretable Models Instead (rudin 2019, [pdf](https://arxiv.org/pdf/1811.10154.pdf) - expounds why one should use interpretable models
+- Stop Explaining Black Box Machine Learning Models for High Stakes Decisions and Use Interpretable Models Instead (rudin 2019, [pdf](https://arxiv.org/pdf/1811.10154.pdf)) - expounds why one should use interpretable models
 - Interpretable machine learning: definitions, methods, and applications (murdoch et al. 2019, [pdf](https://arxiv.org/pdf/1901.04592.pdf)) - good quick review on interpretable ML 
 - Interpretable Machine Learning: A Guide for Making Black Box Models Explainable (molnar 2019, [pdf](https://christophm.github.io/interpretable-ml-book/)) - book on interpretable ML
 - Review on evaluating interpretability (doshi-velez & kim 2017, [pdf](https://arxiv.org/pdf/1702.08608.pdf))
