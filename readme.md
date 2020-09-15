@@ -5,19 +5,19 @@
 <p align="center">
   <a href="#implementations-of-interpretable-models"> Implementations of imodels </a> •
   <a href="#demo-notebooks">Demo notebooks</a> •
-  <a href="https://csinva.github.io/interpretability-implementations-demos/docs/">Docs</a>
+  <a href="https://csinva.github.io/imodels/docs/">Docs</a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg">
-  <a href="https://github.com/csinva/interpretability-implementations-demos/actions"><img src="https://github.com/csinva/interpretability-implementations-demos/workflows/tests/badge.svg"></a>
+  <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
 </p>  
 
 
 ## Implementations of interpretable models
-Scikit-learn style wrappers/implementations of different interpretable models. Docs available [here](https://csinva.github.io/interpretability-implementations-demos/docs/). The interpretable models within the [imodels](imodels) folder can be easily installed and used:
+Scikit-learn style wrappers/implementations of different interpretable models. The interpretable models within the [imodels](imodels) folder can be easily installed and used:
 
-`pip install git+https://github.com/csinva/interpretability-implementations-demos`
+`pip install git+https://github.com/csinva/imodels`
 
 ```python
 from imodels import RuleListClassifier, RuleFit, GreedyRuleList, SkopeRules, SLIM, IRFClassifier
@@ -48,14 +48,14 @@ The demos are contained in 3 main [notebooks](notebooks), following this cheat-s
 
 ## References / further reading
 
-- [high-level review on interpretable machine learning](https://arxiv.org/abs/1901.04592)
-- [book on interpretable machine learning](https://christophm.github.io/interpretable-ml-book/)
-- [review on black-blox explanation methods](https://hal.inria.fr/hal-02131174v2/document)
-- [review on variable importance](https://www.sciencedirect.com/science/article/pii/S0951832015001672)
-- for updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@chandan_singh96](https://twitter.com/chandan_singh96)
+- Stop Explaining Black Box Machine Learning Models for High Stakes Decisions and Use Interpretable Models Instead (rudin 2019, [pdf](https://arxiv.org/pdf/1811.10154.pdf) - expounds why one should use interpretable models
+- Interpretable machine learning: definitions, methods, and applications (murdoch et al. 2019, [pdf](https://arxiv.org/pdf/1901.04592.pdf)) - good quick review on interpretable ML 
+- Interpretable Machine Learning: A Guide for Making Black Box Models Explainable (molnar 2019, [pdf](https://christophm.github.io/interpretable-ml-book/)) - book on interpretable ML
+- Review on evaluating interpretability (doshi-velez & kim 2017, [pdf](https://arxiv.org/pdf/1702.08608.pdf))
+- For updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@chandan_singh96](https://twitter.com/chandan_singh96)
 
 
-Feel free to cite the following but make sure to give authors of original methods / base implementations credit:
+Feel free to cite the following but definitely make sure to give authors of original methods / base implementations credit:
 ```r
 @software{
     singh2020,
