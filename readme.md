@@ -1,11 +1,11 @@
 <h1 align="center"> Interpretable machine learning models (imodels) 🔍</h1>
-<p align="center"> Straightforward implementations of interpretable ML models + demos of how to use various interpretability techniques. Code is optimized for readability. Pull requests welcome!
+<p align="center"> Straightforward implementations of interpretable ML models + demos of how to use various interpretability techniques. Code is optimized for readability. [Pull requests welcome](contributing.md)!
 </p>
 
 <p align="center">
+  <a href="https://csinva.github.io/imodels/docs/">Docs</a> •
   <a href="#implementations-of-interpretable-models"> Implementations of imodels </a> •
-  <a href="#demo-notebooks">Demo notebooks</a> •
-  <a href="https://csinva.github.io/imodels/docs/">Docs</a>
+  <a href="#demo-notebooks">Demo notebooks</a>
 </p>
 
 <p align="center">

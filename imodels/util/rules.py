@@ -23,6 +23,7 @@ class Rule():
         self.support = min([x.support for x in rule_conditions])
         self.prediction_value=prediction_value
         self.rule_direction=None
+        
     def transform(self, X):
         """Transform dataset.
 

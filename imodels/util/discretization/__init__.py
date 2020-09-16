@@ -1,3 +1,4 @@
+'''
 # Discretization MDLP
 Python implementation of Fayyad and Irani's MDLP criterion discretiation algorithm
 
@@ -23,3 +24,4 @@ script options:
 
 1. Pandas
 2. Numpy
+'''

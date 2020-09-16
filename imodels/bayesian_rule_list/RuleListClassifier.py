@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import pandas as pd
 from .brl import *
-from .discretization.MDLP import *
+from ..util.discretization.mdlp import *
 import numbers
 import random
 
