@@ -5,9 +5,12 @@ Github repo available [here](https://github.com/csinva/interpretability-implemen
 """
 
 from .bayesian_rule_list.RuleListClassifier import RuleListClassifier
-from .rule_fit import RuleFit
-from .slim import SLIM
-from .greedy_rule_list import GreedyRuleList
-from .skrules.skope_rules import SkopeRules
+from .greedy_rule_list import GreedyRuleListClassifier
 from .iterative_random_forest.iterative_random_forest import IRFClassifier
+from .rule_fit import RuleFitRegressor
+from .skope_rules import SkopeRulesClassifier
+from .slim import SLIMRegressor
+
+CLASSIFIERS = RuleListClassifier, GreedyRuleListClassifier, IRFClassifier
+REGRESSORS = RuleFitRegressor, SkopeRulesClassifier, SLIMRegressor
 # from .optimal_classification_tree import OptimalTreeModel

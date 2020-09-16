@@ -5,19 +5,20 @@ minimizes norm(X * w - y, 2) + lambda_reg * norm(w, 1)
 
 with integer coefficients in w
 '''
-from sklearn.linear_model import LinearRegression
+import cvxpy as cp  # package for optimization
 import numpy as np
-import cvxpy as cp # package for optimization
+from sklearn.linear_model import LinearRegression
 
-class SLIM():
+
+class SLIMRegressor():
     '''Sparse integer linear model
     '''
+
     def __init__(self):
         self.model = LinearRegression()
         self.predict = self.model.predict
-    
-    
-    def fit(self, X, y, lambda_reg=0.1, sample_weight=None):
+
+    def fit(self, X, y, lambda_reg=10, sample_weight=None):
         '''fit a linear model with integer coefficient and L1 regularization
         
         Params
@@ -31,10 +32,9 @@ class SLIM():
             y = y.values
         assert type(X) == np.ndarray, 'inputs should be ndarrays'
         assert type(y) == np.ndarray, 'inputs should be ndarrays'
-        
+
         # declare the integer-valued optimization variable
         w = cp.Variable(X.shape[1], integer=True)
-        
 
         # set up the minimization problem
         residuals = X @ w - y
@@ -47,12 +47,11 @@ class SLIM():
         prob = cp.Problem(obj)
 
         # solve the problem using an appropriate solver
-        sol = prob.solve()
+        prob.solve()
         self.model.coef_ = w.value.astype(np.int)
         self.model.intercept_ = 0
-        
+
     def predict_proba(self, X):
         preds = self.predict(X)
         preds_proba = np.array([1 / (1 + np.exp(-y)) for y in preds])
         return np.vstack((1 - preds_proba, preds_proba)).transpose()
-        

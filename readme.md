@@ -17,10 +17,12 @@
 ## Implementations of interpretable models
 Scikit-learn style wrappers/implementations of different interpretable models. The interpretable models within the [imodels](imodels) folder can be easily installed and used:
 
-`pip install git+https://github.com/csinva/imodels`
+`pip install git+https://github.com/csinva/imodels` (see [here](csinva.io/docs/troubleshooting.md) for more help)
 
 ```python
-from imodels import RuleListClassifier, RuleFit, GreedyRuleList, SkopeRules, SLIM, IRFClassifier
+from imodels import RuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, IRFClassifier
+from imodels import SLIMRegressor, RuleFitRegressor
+
 model = RuleListClassifier()  # initialize Bayesian Rule List
 model.fit(X_train, y_train)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)

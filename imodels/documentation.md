@@ -20,7 +20,9 @@ Provides scikit-learn style wrappers/implementations of different interpretable 
 `pip install git+https://github.com/csinva/imodels`
 
 ```python
-from imodels import RuleListClassifier, RuleFit, GreedyRuleList, SkopeRules, SLIM, IRFClassifier
+from imodels import RuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, IRFClassifier
+from imodels import SLIMRegressor, RuleFitRegressor
+
 model = RuleListClassifier()  # initialize Bayesian Rule List
 model.fit(X_train, y_train)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)

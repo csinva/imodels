@@ -29,7 +29,7 @@
 <p>The module structure is the following:</p>
 <ul>
 <li><code>&lt;a title="imodels.rule_fit.RuleEnsemble" href="#imodels.rule_fit.RuleEnsemble"&gt;</code>RuleEnsemble<code>&lt;/a&gt;</code> implements an ensemble of <code>Rules</code></li>
-<li><code>&lt;a title="imodels.rule_fit.RuleFit" href="#imodels.rule_fit.RuleFit"&gt;</code>RuleFit<code>&lt;/a&gt;</code> implements the RuleFit algorithm</li>
+<li><code>RuleFit</code> implements the RuleFit algorithm</li>
 </ul>
 <details class="source">
 <summary>
@@ -53,15 +53,16 @@ The module structure is the following:
 - ``RuleFit`` implements the RuleFit algorithm
 
 &#34;&#34;&#34;
-import pandas as pd
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.base import TransformerMixin
-from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier, RandomForestRegressor, RandomForestClassifier
-from sklearn.linear_model import LassoCV,LogisticRegressionCV
-from functools import reduce
-from .util.transforms import Winsorizer, FriedScale
+from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier, RandomForestRegressor, \
+    RandomForestClassifier
+from sklearn.linear_model import LassoCV, LogisticRegressionCV
+
 from .util.rules import RuleCondition, Rule
+from .util.transforms import Winsorizer, FriedScale
 
 
 def extract_rules_from_tree(tree, feature_names=None):
@@ -82,33 +83,32 @@ def extract_rules_from_tree(tree, feature_names=None):
             rule_condition = RuleCondition(feature_index=feature,
                                            threshold=threshold,
                                            operator=operator,
-                                           support = tree.n_node_samples[node_id] / float(tree.n_node_samples[0]),
+                                           support=tree.n_node_samples[node_id] / float(tree.n_node_samples[0]),
                                            feature_name=feature_name)
             new_conditions = conditions + [rule_condition]
         else:
             new_conditions = []
         ## if not terminal node
-        if tree.children_left[node_id] != tree.children_right[node_id]: 
+        if tree.children_left[node_id] != tree.children_right[node_id]:
             feature = tree.feature[node_id]
             threshold = tree.threshold[node_id]
-            
+
             left_node_id = tree.children_left[node_id]
             traverse_nodes(left_node_id, &#34;&lt;=&#34;, threshold, feature, new_conditions)
-            
+
             right_node_id = tree.children_right[node_id]
             traverse_nodes(right_node_id, &#34;&gt;&#34;, threshold, feature, new_conditions)
-        else: # a leaf node
-            if len(new_conditions)&gt;0:
-                new_rule = Rule(new_conditions,tree.value[node_id][0][0])
+        else:  # a leaf node
+            if len(new_conditions) &gt; 0:
+                new_rule = Rule(new_conditions, tree.value[node_id][0][0])
                 rules.update([new_rule])
             else:
-                pass #tree only has a root node!
+                pass  # tree only has a root node!
             return None
 
     traverse_nodes()
-    
-    return rules
 
+    return rules
 
 
 class RuleEnsemble():
@@ -130,6 +130,7 @@ class RuleEnsemble():
     rules: List of Rule
         The ensemble of rules extracted from the trees
     &#34;&#34;&#34;
+
     def __init__(self,
                  tree_list,
                  feature_names=None):
@@ -138,14 +139,14 @@ class RuleEnsemble():
         self.rules = set()
         ## TODO: Move this out of __init__
         self._extract_rules()
-        self.rules=list(self.rules)
+        self.rules = list(self.rules)
 
     def _extract_rules(self):
         &#34;&#34;&#34;Recursively extract rules from each tree in the ensemble
 
         &#34;&#34;&#34;
         for tree in self.tree_list:
-            rules = extract_rules_from_tree(tree[0].tree_,feature_names=self.feature_names)
+            rules = extract_rules_from_tree(tree[0].tree_, feature_names=self.feature_names)
             self.rules.update(rules)
 
     def filter_rules(self, func):
@@ -154,7 +155,7 @@ class RuleEnsemble():
     def filter_short_rules(self, k):
         self.filter_rules(lambda x: len(x.conditions) &gt; k)
 
-    def transform(self, X,coefs=None):
+    def transform(self, X, coefs=None):
         &#34;&#34;&#34;Transform dataset.
 
         Parameters
@@ -168,21 +169,21 @@ class RuleEnsemble():
         X_transformed: array-like matrix, shape=(n_samples, n_out)
             Transformed dataset. Each column represents one rule.
         &#34;&#34;&#34;
-        rule_list=list(self.rules) 
-        if   coefs is None :
+        rule_list = list(self.rules)
+        if coefs is None:
             return np.array([rule.transform(X) for rule in rule_list]).T
-        else: # else use the coefs to filter the rules we bother to interpret
-            res= np.array([rule_list[i_rule].transform(X) for i_rule in np.arange(len(rule_list)) if coefs[i_rule]!=0]).T
-            res_=np.zeros([X.shape[0],len(rule_list)])
-            res_[:,coefs!=0]=res
+        else:  # else use the coefs to filter the rules we bother to interpret
+            res = np.array(
+                [rule_list[i_rule].transform(X) for i_rule in np.arange(len(rule_list)) if coefs[i_rule] != 0]).T
+            res_ = np.zeros([X.shape[0], len(rule_list)])
+            res_[:, coefs != 0] = res
             return res_
+
     def __str__(self):
         return (map(lambda x: x.__str__(), self.rules)).__str__()
 
 
-
-
-class RuleFit(BaseEstimator, TransformerMixin):
+class RuleFitRegressor(BaseEstimator, TransformerMixin):
     &#34;&#34;&#34;Rulefit class
 
 
@@ -219,31 +220,32 @@ class RuleFit(BaseEstimator, TransformerMixin):
         The names of the features (columns)
 
     &#34;&#34;&#34;
-    def __init__(self,tree_size=4,sample_fract=&#39;default&#39;,max_rules=2000,
+
+    def __init__(self, tree_size=4, sample_fract=&#39;default&#39;, max_rules=2000,
                  memory_par=0.01,
                  tree_generator=None,
-                rfmode=&#39;regress&#39;,lin_trim_quantile=0.025,
-                lin_standardise=True, exp_rand_tree_size=True,
-                model_type=&#39;rl&#39;,Cs=None,cv=3,random_state=None):
+                 rfmode=&#39;regress&#39;, lin_trim_quantile=0.025,
+                 lin_standardise=True, exp_rand_tree_size=True,
+                 model_type=&#39;rl&#39;, Cs=None, cv=3, random_state=None):
         self.tree_generator = tree_generator
-        self.rfmode=rfmode
-        self.lin_trim_quantile=lin_trim_quantile
-        self.lin_standardise=lin_standardise
-        self.winsorizer=Winsorizer(trim_quantile=lin_trim_quantile)
-        self.friedscale=FriedScale(self.winsorizer)
+        self.rfmode = rfmode
+        self.lin_trim_quantile = lin_trim_quantile
+        self.lin_standardise = lin_standardise
+        self.winsorizer = Winsorizer(trim_quantile=lin_trim_quantile)
+        self.friedscale = FriedScale(self.winsorizer)
         self.stddev = None
         self.mean = None
-        self.exp_rand_tree_size=exp_rand_tree_size
-        self.max_rules=max_rules
-        self.sample_fract=sample_fract 
-        self.max_rules=max_rules
-        self.memory_par=memory_par
-        self.tree_size=tree_size
-        self.random_state=random_state
-        self.model_type=model_type
-        self.cv=cv
-        self.Cs=Cs
-        
+        self.exp_rand_tree_size = exp_rand_tree_size
+        self.max_rules = max_rules
+        self.sample_fract = sample_fract
+        self.max_rules = max_rules
+        self.memory_par = memory_par
+        self.tree_size = tree_size
+        self.random_state = random_state
+        self.model_type = model_type
+        self.cv = cv
+        self.Cs = Cs
+
     def fit(self, X, y=None, feature_names=None, verbose=False):
         &#34;&#34;&#34;Fit and estimate linear combination of rule ensemble
 
@@ -252,111 +254,121 @@ class RuleFit(BaseEstimator, TransformerMixin):
             X = X.values
         if type(y) in [pd.DataFrame, pd.Series]:
             y = y.values
-            
+
         ## Enumerate features if feature names not provided
-        N=X.shape[0]
+        N = X.shape[0]
         if feature_names is None:
             self.feature_names = [&#39;feature_&#39; + str(x) for x in range(0, X.shape[1])]
         else:
-            self.feature_names=feature_names
+            self.feature_names = feature_names
         if &#39;r&#39; in self.model_type:
             ## initialise tree generator
             if self.tree_generator is None:
-                n_estimators_default=int(np.ceil(self.max_rules/self.tree_size))
-                self.sample_fract_=min(0.5,(100+6*np.sqrt(N))/N)
-                if   self.rfmode==&#39;regress&#39;:
-                    self.tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default, max_leaf_nodes=self.tree_size, learning_rate=self.memory_par,subsample=self.sample_fract_,random_state=self.random_state,max_depth=100)
+                n_estimators_default = int(np.ceil(self.max_rules / self.tree_size))
+                self.sample_fract_ = min(0.5, (100 + 6 * np.sqrt(N)) / N)
+                if self.rfmode == &#39;regress&#39;:
+                    self.tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default,
+                                                                    max_leaf_nodes=self.tree_size,
+                                                                    learning_rate=self.memory_par,
+                                                                    subsample=self.sample_fract_,
+                                                                    random_state=self.random_state, max_depth=100)
                 else:
-                    self.tree_generator =GradientBoostingClassifier(n_estimators=n_estimators_default, max_leaf_nodes=self.tree_size, learning_rate=self.memory_par,subsample=self.sample_fract_,random_state=self.random_state,max_depth=100)
-    
-            if   self.rfmode==&#39;regress&#39;:
-                if type(self.tree_generator) not in [GradientBoostingRegressor,RandomForestRegressor]:
+                    self.tree_generator = GradientBoostingClassifier(n_estimators=n_estimators_default,
+                                                                     max_leaf_nodes=self.tree_size,
+                                                                     learning_rate=self.memory_par,
+                                                                     subsample=self.sample_fract_,
+                                                                     random_state=self.random_state, max_depth=100)
+
+            if self.rfmode == &#39;regress&#39;:
+                if type(self.tree_generator) not in [GradientBoostingRegressor, RandomForestRegressor]:
                     raise ValueError(&#34;RuleFit only works with RandomForest and BoostingRegressor&#34;)
             else:
-                if type(self.tree_generator) not in [GradientBoostingClassifier,RandomForestClassifier]:
+                if type(self.tree_generator) not in [GradientBoostingClassifier, RandomForestClassifier]:
                     raise ValueError(&#34;RuleFit only works with RandomForest and BoostingClassifier&#34;)
-    
+
             ## fit tree generator
-            if not self.exp_rand_tree_size: # simply fit with constant tree size
+            if not self.exp_rand_tree_size:  # simply fit with constant tree size
                 self.tree_generator.fit(X, y)
-            else: # randomise tree size as per Friedman 2005 Sec 3.3
+            else:  # randomise tree size as per Friedman 2005 Sec 3.3
                 np.random.seed(self.random_state)
-                tree_sizes=np.random.exponential(scale=self.tree_size-2,size=int(np.ceil(self.max_rules*2/self.tree_size)))
-                tree_sizes=np.asarray([2+np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))],dtype=int)
-                i=int(len(tree_sizes)/4)
-                while np.sum(tree_sizes[0:i])&lt;self.max_rules:
-                    i=i+1
-                tree_sizes=tree_sizes[0:i]
-                self.tree_generator.set_params(warm_start=True) 
-                curr_est_=0
+                tree_sizes = np.random.exponential(scale=self.tree_size - 2,
+                                                   size=int(np.ceil(self.max_rules * 2 / self.tree_size)))
+                tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
+                i = int(len(tree_sizes) / 4)
+                while np.sum(tree_sizes[0:i]) &lt; self.max_rules:
+                    i = i + 1
+                tree_sizes = tree_sizes[0:i]
+                self.tree_generator.set_params(warm_start=True)
+                curr_est_ = 0
                 for i_size in np.arange(len(tree_sizes)):
-                    size=tree_sizes[i_size]
-                    self.tree_generator.set_params(n_estimators=curr_est_+1)
+                    size = tree_sizes[i_size]
+                    self.tree_generator.set_params(n_estimators=curr_est_ + 1)
                     self.tree_generator.set_params(max_leaf_nodes=size)
                     random_state_add = self.random_state if self.random_state else 0
-                    self.tree_generator.set_params(random_state=i_size+random_state_add) # warm_state=True seems to reset random_state, such that the trees are highly correlated, unless we manually change the random_sate here.
+                    self.tree_generator.set_params(
+                        random_state=i_size + random_state_add)  # warm_state=True seems to reset random_state, such that the trees are highly correlated, unless we manually change the random_sate here.
                     self.tree_generator.get_params()[&#39;n_estimators&#39;]
                     self.tree_generator.fit(np.copy(X, order=&#39;C&#39;), np.copy(y, order=&#39;C&#39;))
-                    curr_est_=curr_est_+1
-                self.tree_generator.set_params(warm_start=False) 
+                    curr_est_ = curr_est_ + 1
+                self.tree_generator.set_params(warm_start=False)
             tree_list = self.tree_generator.estimators_
-            if isinstance(self.tree_generator, RandomForestRegressor) or isinstance(self.tree_generator, RandomForestClassifier):
-                 tree_list = [[x] for x in self.tree_generator.estimators_]
-                 
+            if isinstance(self.tree_generator, RandomForestRegressor) or isinstance(self.tree_generator,
+                                                                                    RandomForestClassifier):
+                tree_list = [[x] for x in self.tree_generator.estimators_]
+
             ## extract rules
-            self.rule_ensemble = RuleEnsemble(tree_list = tree_list,
+            self.rule_ensemble = RuleEnsemble(tree_list=tree_list,
                                               feature_names=self.feature_names)
 
             ## concatenate original features and rules
             X_rules = self.rule_ensemble.transform(X)
-        
+
         ## standardise linear variables if requested (for regression model only)
-        if &#39;l&#39; in self.model_type: 
+        if &#39;l&#39; in self.model_type:
 
             ## standard deviation and mean of winsorized features
             self.winsorizer.train(X)
             winsorized_X = self.winsorizer.trim(X)
-            self.stddev = np.std(winsorized_X, axis = 0)
-            self.mean = np.mean(winsorized_X, axis = 0)
+            self.stddev = np.std(winsorized_X, axis=0)
+            self.mean = np.mean(winsorized_X, axis=0)
 
             if self.lin_standardise:
                 self.friedscale.train(X)
-                X_regn=self.friedscale.scale(X)
+                X_regn = self.friedscale.scale(X)
             else:
-                X_regn=X.copy()            
-        
-        ## Compile Training data
-        X_concat=np.zeros([X.shape[0],0])
+                X_regn = X.copy()
+
+                ## Compile Training data
+        X_concat = np.zeros([X.shape[0], 0])
         if &#39;l&#39; in self.model_type:
-            X_concat = np.concatenate((X_concat,X_regn), axis=1)
+            X_concat = np.concatenate((X_concat, X_regn), axis=1)
         if &#39;r&#39; in self.model_type:
-            if X_rules.shape[0] &gt;0:
+            if X_rules.shape[0] &gt; 0:
                 X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
         ## fit Lasso
-        if self.rfmode==&#39;regress&#39;:
-            if self.Cs is None: # use defaultshasattr(self.Cs, &#34;__len__&#34;):
-                n_alphas= 100
-                alphas=None
+        if self.rfmode == &#39;regress&#39;:
+            if self.Cs is None:  # use defaultshasattr(self.Cs, &#34;__len__&#34;):
+                n_alphas = 100
+                alphas = None
             elif hasattr(self.Cs, &#34;__len__&#34;):
-                n_alphas= None
-                alphas=1./self.Cs
+                n_alphas = None
+                alphas = 1. / self.Cs
             else:
-                n_alphas= self.Cs
-                alphas=None
-            self.lscv = LassoCV(n_alphas=n_alphas,alphas=alphas,cv=self.cv,random_state=self.random_state)
+                n_alphas = self.Cs
+                alphas = None
+            self.lscv = LassoCV(n_alphas=n_alphas, alphas=alphas, cv=self.cv, random_state=self.random_state)
             self.lscv.fit(X_concat, y)
-            self.coef_=self.lscv.coef_
-            self.intercept_=self.lscv.intercept_
+            self.coef_ = self.lscv.coef_
+            self.intercept_ = self.lscv.intercept_
         else:
-            Cs=10 if self.Cs is None else self.Cs
-            self.lscv=LogisticRegressionCV(Cs=Cs,cv=self.cv,penalty=&#39;l1&#39;,random_state=self.random_state,solver=&#39;liblinear&#39;)
+            Cs = 10 if self.Cs is None else self.Cs
+            self.lscv = LogisticRegressionCV(Cs=Cs, cv=self.cv, penalty=&#39;l1&#39;, random_state=self.random_state,
+                                             solver=&#39;liblinear&#39;)
             self.lscv.fit(X_concat, y)
-            self.coef_=self.lscv.coef_[0]
-            self.intercept_=self.lscv.intercept_[0]
-        
-        
-        
+            self.coef_ = self.lscv.coef_[0]
+            self.intercept_ = self.lscv.intercept_[0]
+
         return self
 
     def predict(self, X):
@@ -365,21 +377,21 @@ class RuleFit(BaseEstimator, TransformerMixin):
         &#34;&#34;&#34;
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
-        
-        X_concat=np.zeros([X.shape[0],0])
+
+        X_concat = np.zeros([X.shape[0], 0])
         if &#39;l&#39; in self.model_type:
             if self.lin_standardise:
-                X_concat = np.concatenate((X_concat,self.friedscale.scale(X)), axis=1)
+                X_concat = np.concatenate((X_concat, self.friedscale.scale(X)), axis=1)
             else:
-                X_concat = np.concatenate((X_concat,X), axis=1)
+                X_concat = np.concatenate((X_concat, X), axis=1)
         if &#39;r&#39; in self.model_type:
-            rule_coefs=self.coef_[-len(self.rule_ensemble.rules):] 
-            if len(rule_coefs)&gt;0:
-                X_rules = self.rule_ensemble.transform(X,coefs=rule_coefs)
-                if X_rules.shape[0] &gt;0:
+            rule_coefs = self.coef_[-len(self.rule_ensemble.rules):]
+            if len(rule_coefs) &gt; 0:
+                X_rules = self.rule_ensemble.transform(X, coefs=rule_coefs)
+                if X_rules.shape[0] &gt; 0:
                     X_concat = np.concatenate((X_concat, X_rules), axis=1)
         return self.lscv.predict(X_concat)
-    
+
     def predict_proba(self, X):
         y = self.predict(X)
         return np.vstack((1 - y, y)).transpose()
@@ -418,35 +430,36 @@ class RuleFit(BaseEstimator, TransformerMixin):
                data set (X)
         &#34;&#34;&#34;
 
-        n_features= len(self.coef_) - len(self.rule_ensemble.rules)
+        n_features = len(self.coef_) - len(self.rule_ensemble.rules)
         rule_ensemble = list(self.rule_ensemble.rules)
         output_rules = []
         ## Add coefficients for linear effects
         for i in range(0, n_features):
             if self.lin_standardise:
-                coef=self.coef_[i]*self.friedscale.scale_multipliers[i]
+                coef = self.coef_[i] * self.friedscale.scale_multipliers[i]
             else:
-                coef=self.coef_[i]
+                coef = self.coef_[i]
             if subregion is None:
-                importance = abs(coef)*self.stddev[i]
+                importance = abs(coef) * self.stddev[i]
             else:
                 subregion = np.array(subregion)
-                importance = sum(abs(coef)* abs([ x[i] for x in self.winsorizer.trim(subregion) ] - self.mean[i]))/len(subregion)
-            output_rules += [(self.feature_names[i], &#39;linear&#39;,coef, 1, importance)]
+                importance = sum(abs(coef) * abs([x[i] for x in self.winsorizer.trim(subregion)] - self.mean[i])) / len(
+                    subregion)
+            output_rules += [(self.feature_names[i], &#39;linear&#39;, coef, 1, importance)]
 
         ## Add rules
         for i in range(0, len(self.rule_ensemble.rules)):
             rule = rule_ensemble[i]
-            coef=self.coef_[i + n_features]
+            coef = self.coef_[i + n_features]
 
             if subregion is None:
-                importance = abs(coef)*(rule.support * (1-rule.support))**(1/2)
+                importance = abs(coef) * (rule.support * (1 - rule.support)) ** (1 / 2)
             else:
                 rkx = rule.transform(subregion)
-                importance = sum(abs(coef) * abs(rkx - rule.support))/len(subregion)
+                importance = sum(abs(coef) * abs(rkx - rule.support)) / len(subregion)
 
-            output_rules += [(rule.__str__(), &#39;rule&#39;, coef,  rule.support, importance)]
-        rules = pd.DataFrame(output_rules, columns=[&#34;rule&#34;, &#34;type&#34;,&#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
+            output_rules += [(rule.__str__(), &#39;rule&#39;, coef, rule.support, importance)]
+        rules = pd.DataFrame(output_rules, columns=[&#34;rule&#34;, &#34;type&#34;, &#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
         if exclude_zero_coef:
             rules = rules.ix[rules.coef != 0]
         return rules</code></pre>
@@ -486,31 +499,31 @@ class RuleFit(BaseEstimator, TransformerMixin):
             rule_condition = RuleCondition(feature_index=feature,
                                            threshold=threshold,
                                            operator=operator,
-                                           support = tree.n_node_samples[node_id] / float(tree.n_node_samples[0]),
+                                           support=tree.n_node_samples[node_id] / float(tree.n_node_samples[0]),
                                            feature_name=feature_name)
             new_conditions = conditions + [rule_condition]
         else:
             new_conditions = []
         ## if not terminal node
-        if tree.children_left[node_id] != tree.children_right[node_id]: 
+        if tree.children_left[node_id] != tree.children_right[node_id]:
             feature = tree.feature[node_id]
             threshold = tree.threshold[node_id]
-            
+
             left_node_id = tree.children_left[node_id]
             traverse_nodes(left_node_id, &#34;&lt;=&#34;, threshold, feature, new_conditions)
-            
+
             right_node_id = tree.children_right[node_id]
             traverse_nodes(right_node_id, &#34;&gt;&#34;, threshold, feature, new_conditions)
-        else: # a leaf node
-            if len(new_conditions)&gt;0:
-                new_rule = Rule(new_conditions,tree.value[node_id][0][0])
+        else:  # a leaf node
+            if len(new_conditions) &gt; 0:
+                new_rule = Rule(new_conditions, tree.value[node_id][0][0])
                 rules.update([new_rule])
             else:
-                pass #tree only has a root node!
+                pass  # tree only has a root node!
             return None
 
     traverse_nodes()
-    
+
     return rules</code></pre>
 </details>
 </dd>
@@ -562,6 +575,7 @@ an ensemble of decision trees.</p>
     rules: List of Rule
         The ensemble of rules extracted from the trees
     &#34;&#34;&#34;
+
     def __init__(self,
                  tree_list,
                  feature_names=None):
@@ -570,14 +584,14 @@ an ensemble of decision trees.</p>
         self.rules = set()
         ## TODO: Move this out of __init__
         self._extract_rules()
-        self.rules=list(self.rules)
+        self.rules = list(self.rules)
 
     def _extract_rules(self):
         &#34;&#34;&#34;Recursively extract rules from each tree in the ensemble
 
         &#34;&#34;&#34;
         for tree in self.tree_list:
-            rules = extract_rules_from_tree(tree[0].tree_,feature_names=self.feature_names)
+            rules = extract_rules_from_tree(tree[0].tree_, feature_names=self.feature_names)
             self.rules.update(rules)
 
     def filter_rules(self, func):
@@ -586,7 +600,7 @@ an ensemble of decision trees.</p>
     def filter_short_rules(self, k):
         self.filter_rules(lambda x: len(x.conditions) &gt; k)
 
-    def transform(self, X,coefs=None):
+    def transform(self, X, coefs=None):
         &#34;&#34;&#34;Transform dataset.
 
         Parameters
@@ -600,14 +614,16 @@ an ensemble of decision trees.</p>
         X_transformed: array-like matrix, shape=(n_samples, n_out)
             Transformed dataset. Each column represents one rule.
         &#34;&#34;&#34;
-        rule_list=list(self.rules) 
-        if   coefs is None :
+        rule_list = list(self.rules)
+        if coefs is None:
             return np.array([rule.transform(X) for rule in rule_list]).T
-        else: # else use the coefs to filter the rules we bother to interpret
-            res= np.array([rule_list[i_rule].transform(X) for i_rule in np.arange(len(rule_list)) if coefs[i_rule]!=0]).T
-            res_=np.zeros([X.shape[0],len(rule_list)])
-            res_[:,coefs!=0]=res
+        else:  # else use the coefs to filter the rules we bother to interpret
+            res = np.array(
+                [rule_list[i_rule].transform(X) for i_rule in np.arange(len(rule_list)) if coefs[i_rule] != 0]).T
+            res_ = np.zeros([X.shape[0], len(rule_list)])
+            res_[:, coefs != 0] = res
             return res_
+
     def __str__(self):
         return (map(lambda x: x.__str__(), self.rules)).__str__()</code></pre>
 </details>
@@ -662,7 +678,7 @@ coefficients to zero without calling Rule.transform().</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def transform(self, X,coefs=None):
+<pre><code class="python">def transform(self, X, coefs=None):
     &#34;&#34;&#34;Transform dataset.
 
     Parameters
@@ -676,20 +692,21 @@ coefficients to zero without calling Rule.transform().</dd>
     X_transformed: array-like matrix, shape=(n_samples, n_out)
         Transformed dataset. Each column represents one rule.
     &#34;&#34;&#34;
-    rule_list=list(self.rules) 
-    if   coefs is None :
+    rule_list = list(self.rules)
+    if coefs is None:
         return np.array([rule.transform(X) for rule in rule_list]).T
-    else: # else use the coefs to filter the rules we bother to interpret
-        res= np.array([rule_list[i_rule].transform(X) for i_rule in np.arange(len(rule_list)) if coefs[i_rule]!=0]).T
-        res_=np.zeros([X.shape[0],len(rule_list)])
-        res_[:,coefs!=0]=res
+    else:  # else use the coefs to filter the rules we bother to interpret
+        res = np.array(
+            [rule_list[i_rule].transform(X) for i_rule in np.arange(len(rule_list)) if coefs[i_rule] != 0]).T
+        res_ = np.zeros([X.shape[0], len(rule_list)])
+        res_[:, coefs != 0] = res
         return res_</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
-<dt id="imodels.rule_fit.RuleFit"><code class="flex name class">
-<span>class <span class="ident">RuleFit</span></span>
+<dt id="imodels.rule_fit.RuleFitRegressor"><code class="flex name class">
+<span>class <span class="ident">RuleFitRegressor</span></span>
 <span>(</span><span>tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, rfmode='regress', lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, model_type='rl', Cs=None, cv=3, random_state=None)</span>
 </code></dt>
 <dd>
@@ -728,7 +745,7 @@ tree_generator: Optional: this object will be used as provided to generate the r
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RuleFit(BaseEstimator, TransformerMixin):
+<pre><code class="python">class RuleFitRegressor(BaseEstimator, TransformerMixin):
     &#34;&#34;&#34;Rulefit class
 
 
@@ -765,31 +782,32 @@ tree_generator: Optional: this object will be used as provided to generate the r
         The names of the features (columns)
 
     &#34;&#34;&#34;
-    def __init__(self,tree_size=4,sample_fract=&#39;default&#39;,max_rules=2000,
+
+    def __init__(self, tree_size=4, sample_fract=&#39;default&#39;, max_rules=2000,
                  memory_par=0.01,
                  tree_generator=None,
-                rfmode=&#39;regress&#39;,lin_trim_quantile=0.025,
-                lin_standardise=True, exp_rand_tree_size=True,
-                model_type=&#39;rl&#39;,Cs=None,cv=3,random_state=None):
+                 rfmode=&#39;regress&#39;, lin_trim_quantile=0.025,
+                 lin_standardise=True, exp_rand_tree_size=True,
+                 model_type=&#39;rl&#39;, Cs=None, cv=3, random_state=None):
         self.tree_generator = tree_generator
-        self.rfmode=rfmode
-        self.lin_trim_quantile=lin_trim_quantile
-        self.lin_standardise=lin_standardise
-        self.winsorizer=Winsorizer(trim_quantile=lin_trim_quantile)
-        self.friedscale=FriedScale(self.winsorizer)
+        self.rfmode = rfmode
+        self.lin_trim_quantile = lin_trim_quantile
+        self.lin_standardise = lin_standardise
+        self.winsorizer = Winsorizer(trim_quantile=lin_trim_quantile)
+        self.friedscale = FriedScale(self.winsorizer)
         self.stddev = None
         self.mean = None
-        self.exp_rand_tree_size=exp_rand_tree_size
-        self.max_rules=max_rules
-        self.sample_fract=sample_fract 
-        self.max_rules=max_rules
-        self.memory_par=memory_par
-        self.tree_size=tree_size
-        self.random_state=random_state
-        self.model_type=model_type
-        self.cv=cv
-        self.Cs=Cs
-        
+        self.exp_rand_tree_size = exp_rand_tree_size
+        self.max_rules = max_rules
+        self.sample_fract = sample_fract
+        self.max_rules = max_rules
+        self.memory_par = memory_par
+        self.tree_size = tree_size
+        self.random_state = random_state
+        self.model_type = model_type
+        self.cv = cv
+        self.Cs = Cs
+
     def fit(self, X, y=None, feature_names=None, verbose=False):
         &#34;&#34;&#34;Fit and estimate linear combination of rule ensemble
 
@@ -798,111 +816,121 @@ tree_generator: Optional: this object will be used as provided to generate the r
             X = X.values
         if type(y) in [pd.DataFrame, pd.Series]:
             y = y.values
-            
+
         ## Enumerate features if feature names not provided
-        N=X.shape[0]
+        N = X.shape[0]
         if feature_names is None:
             self.feature_names = [&#39;feature_&#39; + str(x) for x in range(0, X.shape[1])]
         else:
-            self.feature_names=feature_names
+            self.feature_names = feature_names
         if &#39;r&#39; in self.model_type:
             ## initialise tree generator
             if self.tree_generator is None:
-                n_estimators_default=int(np.ceil(self.max_rules/self.tree_size))
-                self.sample_fract_=min(0.5,(100+6*np.sqrt(N))/N)
-                if   self.rfmode==&#39;regress&#39;:
-                    self.tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default, max_leaf_nodes=self.tree_size, learning_rate=self.memory_par,subsample=self.sample_fract_,random_state=self.random_state,max_depth=100)
+                n_estimators_default = int(np.ceil(self.max_rules / self.tree_size))
+                self.sample_fract_ = min(0.5, (100 + 6 * np.sqrt(N)) / N)
+                if self.rfmode == &#39;regress&#39;:
+                    self.tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default,
+                                                                    max_leaf_nodes=self.tree_size,
+                                                                    learning_rate=self.memory_par,
+                                                                    subsample=self.sample_fract_,
+                                                                    random_state=self.random_state, max_depth=100)
                 else:
-                    self.tree_generator =GradientBoostingClassifier(n_estimators=n_estimators_default, max_leaf_nodes=self.tree_size, learning_rate=self.memory_par,subsample=self.sample_fract_,random_state=self.random_state,max_depth=100)
-    
-            if   self.rfmode==&#39;regress&#39;:
-                if type(self.tree_generator) not in [GradientBoostingRegressor,RandomForestRegressor]:
+                    self.tree_generator = GradientBoostingClassifier(n_estimators=n_estimators_default,
+                                                                     max_leaf_nodes=self.tree_size,
+                                                                     learning_rate=self.memory_par,
+                                                                     subsample=self.sample_fract_,
+                                                                     random_state=self.random_state, max_depth=100)
+
+            if self.rfmode == &#39;regress&#39;:
+                if type(self.tree_generator) not in [GradientBoostingRegressor, RandomForestRegressor]:
                     raise ValueError(&#34;RuleFit only works with RandomForest and BoostingRegressor&#34;)
             else:
-                if type(self.tree_generator) not in [GradientBoostingClassifier,RandomForestClassifier]:
+                if type(self.tree_generator) not in [GradientBoostingClassifier, RandomForestClassifier]:
                     raise ValueError(&#34;RuleFit only works with RandomForest and BoostingClassifier&#34;)
-    
+
             ## fit tree generator
-            if not self.exp_rand_tree_size: # simply fit with constant tree size
+            if not self.exp_rand_tree_size:  # simply fit with constant tree size
                 self.tree_generator.fit(X, y)
-            else: # randomise tree size as per Friedman 2005 Sec 3.3
+            else:  # randomise tree size as per Friedman 2005 Sec 3.3
                 np.random.seed(self.random_state)
-                tree_sizes=np.random.exponential(scale=self.tree_size-2,size=int(np.ceil(self.max_rules*2/self.tree_size)))
-                tree_sizes=np.asarray([2+np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))],dtype=int)
-                i=int(len(tree_sizes)/4)
-                while np.sum(tree_sizes[0:i])&lt;self.max_rules:
-                    i=i+1
-                tree_sizes=tree_sizes[0:i]
-                self.tree_generator.set_params(warm_start=True) 
-                curr_est_=0
+                tree_sizes = np.random.exponential(scale=self.tree_size - 2,
+                                                   size=int(np.ceil(self.max_rules * 2 / self.tree_size)))
+                tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
+                i = int(len(tree_sizes) / 4)
+                while np.sum(tree_sizes[0:i]) &lt; self.max_rules:
+                    i = i + 1
+                tree_sizes = tree_sizes[0:i]
+                self.tree_generator.set_params(warm_start=True)
+                curr_est_ = 0
                 for i_size in np.arange(len(tree_sizes)):
-                    size=tree_sizes[i_size]
-                    self.tree_generator.set_params(n_estimators=curr_est_+1)
+                    size = tree_sizes[i_size]
+                    self.tree_generator.set_params(n_estimators=curr_est_ + 1)
                     self.tree_generator.set_params(max_leaf_nodes=size)
                     random_state_add = self.random_state if self.random_state else 0
-                    self.tree_generator.set_params(random_state=i_size+random_state_add) # warm_state=True seems to reset random_state, such that the trees are highly correlated, unless we manually change the random_sate here.
+                    self.tree_generator.set_params(
+                        random_state=i_size + random_state_add)  # warm_state=True seems to reset random_state, such that the trees are highly correlated, unless we manually change the random_sate here.
                     self.tree_generator.get_params()[&#39;n_estimators&#39;]
                     self.tree_generator.fit(np.copy(X, order=&#39;C&#39;), np.copy(y, order=&#39;C&#39;))
-                    curr_est_=curr_est_+1
-                self.tree_generator.set_params(warm_start=False) 
+                    curr_est_ = curr_est_ + 1
+                self.tree_generator.set_params(warm_start=False)
             tree_list = self.tree_generator.estimators_
-            if isinstance(self.tree_generator, RandomForestRegressor) or isinstance(self.tree_generator, RandomForestClassifier):
-                 tree_list = [[x] for x in self.tree_generator.estimators_]
-                 
+            if isinstance(self.tree_generator, RandomForestRegressor) or isinstance(self.tree_generator,
+                                                                                    RandomForestClassifier):
+                tree_list = [[x] for x in self.tree_generator.estimators_]
+
             ## extract rules
-            self.rule_ensemble = RuleEnsemble(tree_list = tree_list,
+            self.rule_ensemble = RuleEnsemble(tree_list=tree_list,
                                               feature_names=self.feature_names)
 
             ## concatenate original features and rules
             X_rules = self.rule_ensemble.transform(X)
-        
+
         ## standardise linear variables if requested (for regression model only)
-        if &#39;l&#39; in self.model_type: 
+        if &#39;l&#39; in self.model_type:
 
             ## standard deviation and mean of winsorized features
             self.winsorizer.train(X)
             winsorized_X = self.winsorizer.trim(X)
-            self.stddev = np.std(winsorized_X, axis = 0)
-            self.mean = np.mean(winsorized_X, axis = 0)
+            self.stddev = np.std(winsorized_X, axis=0)
+            self.mean = np.mean(winsorized_X, axis=0)
 
             if self.lin_standardise:
                 self.friedscale.train(X)
-                X_regn=self.friedscale.scale(X)
+                X_regn = self.friedscale.scale(X)
             else:
-                X_regn=X.copy()            
-        
-        ## Compile Training data
-        X_concat=np.zeros([X.shape[0],0])
+                X_regn = X.copy()
+
+                ## Compile Training data
+        X_concat = np.zeros([X.shape[0], 0])
         if &#39;l&#39; in self.model_type:
-            X_concat = np.concatenate((X_concat,X_regn), axis=1)
+            X_concat = np.concatenate((X_concat, X_regn), axis=1)
         if &#39;r&#39; in self.model_type:
-            if X_rules.shape[0] &gt;0:
+            if X_rules.shape[0] &gt; 0:
                 X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
         ## fit Lasso
-        if self.rfmode==&#39;regress&#39;:
-            if self.Cs is None: # use defaultshasattr(self.Cs, &#34;__len__&#34;):
-                n_alphas= 100
-                alphas=None
+        if self.rfmode == &#39;regress&#39;:
+            if self.Cs is None:  # use defaultshasattr(self.Cs, &#34;__len__&#34;):
+                n_alphas = 100
+                alphas = None
             elif hasattr(self.Cs, &#34;__len__&#34;):
-                n_alphas= None
-                alphas=1./self.Cs
+                n_alphas = None
+                alphas = 1. / self.Cs
             else:
-                n_alphas= self.Cs
-                alphas=None
-            self.lscv = LassoCV(n_alphas=n_alphas,alphas=alphas,cv=self.cv,random_state=self.random_state)
+                n_alphas = self.Cs
+                alphas = None
+            self.lscv = LassoCV(n_alphas=n_alphas, alphas=alphas, cv=self.cv, random_state=self.random_state)
             self.lscv.fit(X_concat, y)
-            self.coef_=self.lscv.coef_
-            self.intercept_=self.lscv.intercept_
+            self.coef_ = self.lscv.coef_
+            self.intercept_ = self.lscv.intercept_
         else:
-            Cs=10 if self.Cs is None else self.Cs
-            self.lscv=LogisticRegressionCV(Cs=Cs,cv=self.cv,penalty=&#39;l1&#39;,random_state=self.random_state,solver=&#39;liblinear&#39;)
+            Cs = 10 if self.Cs is None else self.Cs
+            self.lscv = LogisticRegressionCV(Cs=Cs, cv=self.cv, penalty=&#39;l1&#39;, random_state=self.random_state,
+                                             solver=&#39;liblinear&#39;)
             self.lscv.fit(X_concat, y)
-            self.coef_=self.lscv.coef_[0]
-            self.intercept_=self.lscv.intercept_[0]
-        
-        
-        
+            self.coef_ = self.lscv.coef_[0]
+            self.intercept_ = self.lscv.intercept_[0]
+
         return self
 
     def predict(self, X):
@@ -911,21 +939,21 @@ tree_generator: Optional: this object will be used as provided to generate the r
         &#34;&#34;&#34;
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
-        
-        X_concat=np.zeros([X.shape[0],0])
+
+        X_concat = np.zeros([X.shape[0], 0])
         if &#39;l&#39; in self.model_type:
             if self.lin_standardise:
-                X_concat = np.concatenate((X_concat,self.friedscale.scale(X)), axis=1)
+                X_concat = np.concatenate((X_concat, self.friedscale.scale(X)), axis=1)
             else:
-                X_concat = np.concatenate((X_concat,X), axis=1)
+                X_concat = np.concatenate((X_concat, X), axis=1)
         if &#39;r&#39; in self.model_type:
-            rule_coefs=self.coef_[-len(self.rule_ensemble.rules):] 
-            if len(rule_coefs)&gt;0:
-                X_rules = self.rule_ensemble.transform(X,coefs=rule_coefs)
-                if X_rules.shape[0] &gt;0:
+            rule_coefs = self.coef_[-len(self.rule_ensemble.rules):]
+            if len(rule_coefs) &gt; 0:
+                X_rules = self.rule_ensemble.transform(X, coefs=rule_coefs)
+                if X_rules.shape[0] &gt; 0:
                     X_concat = np.concatenate((X_concat, X_rules), axis=1)
         return self.lscv.predict(X_concat)
-    
+
     def predict_proba(self, X):
         y = self.predict(X)
         return np.vstack((1 - y, y)).transpose()
@@ -964,35 +992,36 @@ tree_generator: Optional: this object will be used as provided to generate the r
                data set (X)
         &#34;&#34;&#34;
 
-        n_features= len(self.coef_) - len(self.rule_ensemble.rules)
+        n_features = len(self.coef_) - len(self.rule_ensemble.rules)
         rule_ensemble = list(self.rule_ensemble.rules)
         output_rules = []
         ## Add coefficients for linear effects
         for i in range(0, n_features):
             if self.lin_standardise:
-                coef=self.coef_[i]*self.friedscale.scale_multipliers[i]
+                coef = self.coef_[i] * self.friedscale.scale_multipliers[i]
             else:
-                coef=self.coef_[i]
+                coef = self.coef_[i]
             if subregion is None:
-                importance = abs(coef)*self.stddev[i]
+                importance = abs(coef) * self.stddev[i]
             else:
                 subregion = np.array(subregion)
-                importance = sum(abs(coef)* abs([ x[i] for x in self.winsorizer.trim(subregion) ] - self.mean[i]))/len(subregion)
-            output_rules += [(self.feature_names[i], &#39;linear&#39;,coef, 1, importance)]
+                importance = sum(abs(coef) * abs([x[i] for x in self.winsorizer.trim(subregion)] - self.mean[i])) / len(
+                    subregion)
+            output_rules += [(self.feature_names[i], &#39;linear&#39;, coef, 1, importance)]
 
         ## Add rules
         for i in range(0, len(self.rule_ensemble.rules)):
             rule = rule_ensemble[i]
-            coef=self.coef_[i + n_features]
+            coef = self.coef_[i + n_features]
 
             if subregion is None:
-                importance = abs(coef)*(rule.support * (1-rule.support))**(1/2)
+                importance = abs(coef) * (rule.support * (1 - rule.support)) ** (1 / 2)
             else:
                 rkx = rule.transform(subregion)
-                importance = sum(abs(coef) * abs(rkx - rule.support))/len(subregion)
+                importance = sum(abs(coef) * abs(rkx - rule.support)) / len(subregion)
 
-            output_rules += [(rule.__str__(), &#39;rule&#39;, coef,  rule.support, importance)]
-        rules = pd.DataFrame(output_rules, columns=[&#34;rule&#34;, &#34;type&#34;,&#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
+            output_rules += [(rule.__str__(), &#39;rule&#39;, coef, rule.support, importance)]
+        rules = pd.DataFrame(output_rules, columns=[&#34;rule&#34;, &#34;type&#34;, &#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
         if exclude_zero_coef:
             rules = rules.ix[rules.coef != 0]
         return rules</code></pre>
@@ -1004,7 +1033,7 @@ tree_generator: Optional: this object will be used as provided to generate the r
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.rule_fit.RuleFit.fit"><code class="name flex">
+<dt id="imodels.rule_fit.RuleFitRegressor.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=False)</span>
 </code></dt>
 <dd>
@@ -1021,115 +1050,125 @@ tree_generator: Optional: this object will be used as provided to generate the r
         X = X.values
     if type(y) in [pd.DataFrame, pd.Series]:
         y = y.values
-        
+
     ## Enumerate features if feature names not provided
-    N=X.shape[0]
+    N = X.shape[0]
     if feature_names is None:
         self.feature_names = [&#39;feature_&#39; + str(x) for x in range(0, X.shape[1])]
     else:
-        self.feature_names=feature_names
+        self.feature_names = feature_names
     if &#39;r&#39; in self.model_type:
         ## initialise tree generator
         if self.tree_generator is None:
-            n_estimators_default=int(np.ceil(self.max_rules/self.tree_size))
-            self.sample_fract_=min(0.5,(100+6*np.sqrt(N))/N)
-            if   self.rfmode==&#39;regress&#39;:
-                self.tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default, max_leaf_nodes=self.tree_size, learning_rate=self.memory_par,subsample=self.sample_fract_,random_state=self.random_state,max_depth=100)
+            n_estimators_default = int(np.ceil(self.max_rules / self.tree_size))
+            self.sample_fract_ = min(0.5, (100 + 6 * np.sqrt(N)) / N)
+            if self.rfmode == &#39;regress&#39;:
+                self.tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default,
+                                                                max_leaf_nodes=self.tree_size,
+                                                                learning_rate=self.memory_par,
+                                                                subsample=self.sample_fract_,
+                                                                random_state=self.random_state, max_depth=100)
             else:
-                self.tree_generator =GradientBoostingClassifier(n_estimators=n_estimators_default, max_leaf_nodes=self.tree_size, learning_rate=self.memory_par,subsample=self.sample_fract_,random_state=self.random_state,max_depth=100)
+                self.tree_generator = GradientBoostingClassifier(n_estimators=n_estimators_default,
+                                                                 max_leaf_nodes=self.tree_size,
+                                                                 learning_rate=self.memory_par,
+                                                                 subsample=self.sample_fract_,
+                                                                 random_state=self.random_state, max_depth=100)
 
-        if   self.rfmode==&#39;regress&#39;:
-            if type(self.tree_generator) not in [GradientBoostingRegressor,RandomForestRegressor]:
+        if self.rfmode == &#39;regress&#39;:
+            if type(self.tree_generator) not in [GradientBoostingRegressor, RandomForestRegressor]:
                 raise ValueError(&#34;RuleFit only works with RandomForest and BoostingRegressor&#34;)
         else:
-            if type(self.tree_generator) not in [GradientBoostingClassifier,RandomForestClassifier]:
+            if type(self.tree_generator) not in [GradientBoostingClassifier, RandomForestClassifier]:
                 raise ValueError(&#34;RuleFit only works with RandomForest and BoostingClassifier&#34;)
 
         ## fit tree generator
-        if not self.exp_rand_tree_size: # simply fit with constant tree size
+        if not self.exp_rand_tree_size:  # simply fit with constant tree size
             self.tree_generator.fit(X, y)
-        else: # randomise tree size as per Friedman 2005 Sec 3.3
+        else:  # randomise tree size as per Friedman 2005 Sec 3.3
             np.random.seed(self.random_state)
-            tree_sizes=np.random.exponential(scale=self.tree_size-2,size=int(np.ceil(self.max_rules*2/self.tree_size)))
-            tree_sizes=np.asarray([2+np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))],dtype=int)
-            i=int(len(tree_sizes)/4)
-            while np.sum(tree_sizes[0:i])&lt;self.max_rules:
-                i=i+1
-            tree_sizes=tree_sizes[0:i]
-            self.tree_generator.set_params(warm_start=True) 
-            curr_est_=0
+            tree_sizes = np.random.exponential(scale=self.tree_size - 2,
+                                               size=int(np.ceil(self.max_rules * 2 / self.tree_size)))
+            tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
+            i = int(len(tree_sizes) / 4)
+            while np.sum(tree_sizes[0:i]) &lt; self.max_rules:
+                i = i + 1
+            tree_sizes = tree_sizes[0:i]
+            self.tree_generator.set_params(warm_start=True)
+            curr_est_ = 0
             for i_size in np.arange(len(tree_sizes)):
-                size=tree_sizes[i_size]
-                self.tree_generator.set_params(n_estimators=curr_est_+1)
+                size = tree_sizes[i_size]
+                self.tree_generator.set_params(n_estimators=curr_est_ + 1)
                 self.tree_generator.set_params(max_leaf_nodes=size)
                 random_state_add = self.random_state if self.random_state else 0
-                self.tree_generator.set_params(random_state=i_size+random_state_add) # warm_state=True seems to reset random_state, such that the trees are highly correlated, unless we manually change the random_sate here.
+                self.tree_generator.set_params(
+                    random_state=i_size + random_state_add)  # warm_state=True seems to reset random_state, such that the trees are highly correlated, unless we manually change the random_sate here.
                 self.tree_generator.get_params()[&#39;n_estimators&#39;]
                 self.tree_generator.fit(np.copy(X, order=&#39;C&#39;), np.copy(y, order=&#39;C&#39;))
-                curr_est_=curr_est_+1
-            self.tree_generator.set_params(warm_start=False) 
+                curr_est_ = curr_est_ + 1
+            self.tree_generator.set_params(warm_start=False)
         tree_list = self.tree_generator.estimators_
-        if isinstance(self.tree_generator, RandomForestRegressor) or isinstance(self.tree_generator, RandomForestClassifier):
-             tree_list = [[x] for x in self.tree_generator.estimators_]
-             
+        if isinstance(self.tree_generator, RandomForestRegressor) or isinstance(self.tree_generator,
+                                                                                RandomForestClassifier):
+            tree_list = [[x] for x in self.tree_generator.estimators_]
+
         ## extract rules
-        self.rule_ensemble = RuleEnsemble(tree_list = tree_list,
+        self.rule_ensemble = RuleEnsemble(tree_list=tree_list,
                                           feature_names=self.feature_names)
 
         ## concatenate original features and rules
         X_rules = self.rule_ensemble.transform(X)
-    
+
     ## standardise linear variables if requested (for regression model only)
-    if &#39;l&#39; in self.model_type: 
+    if &#39;l&#39; in self.model_type:
 
         ## standard deviation and mean of winsorized features
         self.winsorizer.train(X)
         winsorized_X = self.winsorizer.trim(X)
-        self.stddev = np.std(winsorized_X, axis = 0)
-        self.mean = np.mean(winsorized_X, axis = 0)
+        self.stddev = np.std(winsorized_X, axis=0)
+        self.mean = np.mean(winsorized_X, axis=0)
 
         if self.lin_standardise:
             self.friedscale.train(X)
-            X_regn=self.friedscale.scale(X)
+            X_regn = self.friedscale.scale(X)
         else:
-            X_regn=X.copy()            
-    
-    ## Compile Training data
-    X_concat=np.zeros([X.shape[0],0])
+            X_regn = X.copy()
+
+            ## Compile Training data
+    X_concat = np.zeros([X.shape[0], 0])
     if &#39;l&#39; in self.model_type:
-        X_concat = np.concatenate((X_concat,X_regn), axis=1)
+        X_concat = np.concatenate((X_concat, X_regn), axis=1)
     if &#39;r&#39; in self.model_type:
-        if X_rules.shape[0] &gt;0:
+        if X_rules.shape[0] &gt; 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
     ## fit Lasso
-    if self.rfmode==&#39;regress&#39;:
-        if self.Cs is None: # use defaultshasattr(self.Cs, &#34;__len__&#34;):
-            n_alphas= 100
-            alphas=None
+    if self.rfmode == &#39;regress&#39;:
+        if self.Cs is None:  # use defaultshasattr(self.Cs, &#34;__len__&#34;):
+            n_alphas = 100
+            alphas = None
         elif hasattr(self.Cs, &#34;__len__&#34;):
-            n_alphas= None
-            alphas=1./self.Cs
+            n_alphas = None
+            alphas = 1. / self.Cs
         else:
-            n_alphas= self.Cs
-            alphas=None
-        self.lscv = LassoCV(n_alphas=n_alphas,alphas=alphas,cv=self.cv,random_state=self.random_state)
+            n_alphas = self.Cs
+            alphas = None
+        self.lscv = LassoCV(n_alphas=n_alphas, alphas=alphas, cv=self.cv, random_state=self.random_state)
         self.lscv.fit(X_concat, y)
-        self.coef_=self.lscv.coef_
-        self.intercept_=self.lscv.intercept_
+        self.coef_ = self.lscv.coef_
+        self.intercept_ = self.lscv.intercept_
     else:
-        Cs=10 if self.Cs is None else self.Cs
-        self.lscv=LogisticRegressionCV(Cs=Cs,cv=self.cv,penalty=&#39;l1&#39;,random_state=self.random_state,solver=&#39;liblinear&#39;)
+        Cs = 10 if self.Cs is None else self.Cs
+        self.lscv = LogisticRegressionCV(Cs=Cs, cv=self.cv, penalty=&#39;l1&#39;, random_state=self.random_state,
+                                         solver=&#39;liblinear&#39;)
         self.lscv.fit(X_concat, y)
-        self.coef_=self.lscv.coef_[0]
-        self.intercept_=self.lscv.intercept_[0]
-    
-    
-    
+        self.coef_ = self.lscv.coef_[0]
+        self.intercept_ = self.lscv.intercept_[0]
+
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_fit.RuleFit.get_rules"><code class="name flex">
+<dt id="imodels.rule_fit.RuleFitRegressor.get_rules"><code class="name flex">
 <span>def <span class="ident">get_rules</span></span>(<span>self, exclude_zero_coef=False, subregion=None)</span>
 </code></dt>
 <dd>
@@ -1170,41 +1209,42 @@ data set (X)</dd>
            data set (X)
     &#34;&#34;&#34;
 
-    n_features= len(self.coef_) - len(self.rule_ensemble.rules)
+    n_features = len(self.coef_) - len(self.rule_ensemble.rules)
     rule_ensemble = list(self.rule_ensemble.rules)
     output_rules = []
     ## Add coefficients for linear effects
     for i in range(0, n_features):
         if self.lin_standardise:
-            coef=self.coef_[i]*self.friedscale.scale_multipliers[i]
+            coef = self.coef_[i] * self.friedscale.scale_multipliers[i]
         else:
-            coef=self.coef_[i]
+            coef = self.coef_[i]
         if subregion is None:
-            importance = abs(coef)*self.stddev[i]
+            importance = abs(coef) * self.stddev[i]
         else:
             subregion = np.array(subregion)
-            importance = sum(abs(coef)* abs([ x[i] for x in self.winsorizer.trim(subregion) ] - self.mean[i]))/len(subregion)
-        output_rules += [(self.feature_names[i], &#39;linear&#39;,coef, 1, importance)]
+            importance = sum(abs(coef) * abs([x[i] for x in self.winsorizer.trim(subregion)] - self.mean[i])) / len(
+                subregion)
+        output_rules += [(self.feature_names[i], &#39;linear&#39;, coef, 1, importance)]
 
     ## Add rules
     for i in range(0, len(self.rule_ensemble.rules)):
         rule = rule_ensemble[i]
-        coef=self.coef_[i + n_features]
+        coef = self.coef_[i + n_features]
 
         if subregion is None:
-            importance = abs(coef)*(rule.support * (1-rule.support))**(1/2)
+            importance = abs(coef) * (rule.support * (1 - rule.support)) ** (1 / 2)
         else:
             rkx = rule.transform(subregion)
-            importance = sum(abs(coef) * abs(rkx - rule.support))/len(subregion)
+            importance = sum(abs(coef) * abs(rkx - rule.support)) / len(subregion)
 
-        output_rules += [(rule.__str__(), &#39;rule&#39;, coef,  rule.support, importance)]
-    rules = pd.DataFrame(output_rules, columns=[&#34;rule&#34;, &#34;type&#34;,&#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
+        output_rules += [(rule.__str__(), &#39;rule&#39;, coef, rule.support, importance)]
+    rules = pd.DataFrame(output_rules, columns=[&#34;rule&#34;, &#34;type&#34;, &#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
     if exclude_zero_coef:
         rules = rules.ix[rules.coef != 0]
     return rules</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_fit.RuleFit.predict"><code class="name flex">
+<dt id="imodels.rule_fit.RuleFitRegressor.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1219,23 +1259,23 @@ data set (X)</dd>
     &#34;&#34;&#34;
     if type(X) == pd.DataFrame:
         X = X.values.astype(np.float32)
-    
-    X_concat=np.zeros([X.shape[0],0])
+
+    X_concat = np.zeros([X.shape[0], 0])
     if &#39;l&#39; in self.model_type:
         if self.lin_standardise:
-            X_concat = np.concatenate((X_concat,self.friedscale.scale(X)), axis=1)
+            X_concat = np.concatenate((X_concat, self.friedscale.scale(X)), axis=1)
         else:
-            X_concat = np.concatenate((X_concat,X), axis=1)
+            X_concat = np.concatenate((X_concat, X), axis=1)
     if &#39;r&#39; in self.model_type:
-        rule_coefs=self.coef_[-len(self.rule_ensemble.rules):] 
-        if len(rule_coefs)&gt;0:
-            X_rules = self.rule_ensemble.transform(X,coefs=rule_coefs)
-            if X_rules.shape[0] &gt;0:
+        rule_coefs = self.coef_[-len(self.rule_ensemble.rules):]
+        if len(rule_coefs) &gt; 0:
+            X_rules = self.rule_ensemble.transform(X, coefs=rule_coefs)
+            if X_rules.shape[0] &gt; 0:
                 X_concat = np.concatenate((X_concat, X_rules), axis=1)
     return self.lscv.predict(X_concat)</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_fit.RuleFit.predict_proba"><code class="name flex">
+<dt id="imodels.rule_fit.RuleFitRegressor.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1249,7 +1289,7 @@ data set (X)</dd>
     return np.vstack((1 - y, y)).transpose()</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_fit.RuleFit.transform"><code class="name flex">
+<dt id="imodels.rule_fit.RuleFitRegressor.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, X=None, y=None)</span>
 </code></dt>
 <dd>
@@ -1318,13 +1358,13 @@ efficiency.</dd>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.rule_fit.RuleFit" href="#imodels.rule_fit.RuleFit">RuleFit</a></code></h4>
+<h4><code><a title="imodels.rule_fit.RuleFitRegressor" href="#imodels.rule_fit.RuleFitRegressor">RuleFitRegressor</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.rule_fit.RuleFit.fit" href="#imodels.rule_fit.RuleFit.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_fit.RuleFit.get_rules" href="#imodels.rule_fit.RuleFit.get_rules">get_rules</a></code></li>
-<li><code><a title="imodels.rule_fit.RuleFit.predict" href="#imodels.rule_fit.RuleFit.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_fit.RuleFit.predict_proba" href="#imodels.rule_fit.RuleFit.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.rule_fit.RuleFit.transform" href="#imodels.rule_fit.RuleFit.transform">transform</a></code></li>
+<li><code><a title="imodels.rule_fit.RuleFitRegressor.fit" href="#imodels.rule_fit.RuleFitRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_fit.RuleFitRegressor.get_rules" href="#imodels.rule_fit.RuleFitRegressor.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.rule_fit.RuleFitRegressor.predict" href="#imodels.rule_fit.RuleFitRegressor.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_fit.RuleFitRegressor.predict_proba" href="#imodels.rule_fit.RuleFitRegressor.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.rule_fit.RuleFitRegressor.transform" href="#imodels.rule_fit.RuleFitRegressor.transform">transform</a></code></li>
 </ul>
 </li>
 </ul>

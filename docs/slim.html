@@ -34,19 +34,20 @@ minimizes norm(X * w - y, 2) + lambda_reg * norm(w, 1)
 
 with integer coefficients in w
 &#39;&#39;&#39;
-from sklearn.linear_model import LinearRegression
+import cvxpy as cp  # package for optimization
 import numpy as np
-import cvxpy as cp # package for optimization
+from sklearn.linear_model import LinearRegression
 
-class SLIM():
+
+class SLIMRegressor():
     &#39;&#39;&#39;Sparse integer linear model
     &#39;&#39;&#39;
+
     def __init__(self):
         self.model = LinearRegression()
         self.predict = self.model.predict
-    
-    
-    def fit(self, X, y, lambda_reg=0.1, sample_weight=None):
+
+    def fit(self, X, y, lambda_reg=10, sample_weight=None):
         &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization
         
         Params
@@ -60,10 +61,9 @@ class SLIM():
             y = y.values
         assert type(X) == np.ndarray, &#39;inputs should be ndarrays&#39;
         assert type(y) == np.ndarray, &#39;inputs should be ndarrays&#39;
-        
+
         # declare the integer-valued optimization variable
         w = cp.Variable(X.shape[1], integer=True)
-        
 
         # set up the minimization problem
         residuals = X @ w - y
@@ -76,15 +76,14 @@ class SLIM():
         prob = cp.Problem(obj)
 
         # solve the problem using an appropriate solver
-        sol = prob.solve()
+        prob.solve()
         self.model.coef_ = w.value.astype(np.int)
         self.model.intercept_ = 0
-        
+
     def predict_proba(self, X):
         preds = self.predict(X)
         preds_proba = np.array([1 / (1 + np.exp(-y)) for y in preds])
-        return np.vstack((1 - preds_proba, preds_proba)).transpose()
-        </code></pre>
+        return np.vstack((1 - preds_proba, preds_proba)).transpose()</code></pre>
 </details>
 </section>
 <section>
@@ -96,8 +95,8 @@ class SLIM():
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.slim.SLIM"><code class="flex name class">
-<span>class <span class="ident">SLIM</span></span>
+<dt id="imodels.slim.SLIMRegressor"><code class="flex name class">
+<span>class <span class="ident">SLIMRegressor</span></span>
 </code></dt>
 <dd>
 <section class="desc"><p>Sparse integer linear model</p></section>
@@ -105,15 +104,15 @@ class SLIM():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SLIM():
+<pre><code class="python">class SLIMRegressor():
     &#39;&#39;&#39;Sparse integer linear model
     &#39;&#39;&#39;
+
     def __init__(self):
         self.model = LinearRegression()
         self.predict = self.model.predict
-    
-    
-    def fit(self, X, y, lambda_reg=0.1, sample_weight=None):
+
+    def fit(self, X, y, lambda_reg=10, sample_weight=None):
         &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization
         
         Params
@@ -127,10 +126,9 @@ class SLIM():
             y = y.values
         assert type(X) == np.ndarray, &#39;inputs should be ndarrays&#39;
         assert type(y) == np.ndarray, &#39;inputs should be ndarrays&#39;
-        
+
         # declare the integer-valued optimization variable
         w = cp.Variable(X.shape[1], integer=True)
-        
 
         # set up the minimization problem
         residuals = X @ w - y
@@ -143,10 +141,10 @@ class SLIM():
         prob = cp.Problem(obj)
 
         # solve the problem using an appropriate solver
-        sol = prob.solve()
+        prob.solve()
         self.model.coef_ = w.value.astype(np.int)
         self.model.intercept_ = 0
-        
+
     def predict_proba(self, X):
         preds = self.predict(X)
         preds_proba = np.array([1 / (1 + np.exp(-y)) for y in preds])
@@ -154,8 +152,8 @@ class SLIM():
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.slim.SLIM.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y, lambda_reg=0.1, sample_weight=None)</span>
+<dt id="imodels.slim.SLIMRegressor.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, lambda_reg=10, sample_weight=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>fit a linear model with integer coefficient and L1 regularization</p>
@@ -168,7 +166,7 @@ class SLIM():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y, lambda_reg=0.1, sample_weight=None):
+<pre><code class="python">def fit(self, X, y, lambda_reg=10, sample_weight=None):
     &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization
     
     Params
@@ -182,10 +180,9 @@ class SLIM():
         y = y.values
     assert type(X) == np.ndarray, &#39;inputs should be ndarrays&#39;
     assert type(y) == np.ndarray, &#39;inputs should be ndarrays&#39;
-    
+
     # declare the integer-valued optimization variable
     w = cp.Variable(X.shape[1], integer=True)
-    
 
     # set up the minimization problem
     residuals = X @ w - y
@@ -198,12 +195,12 @@ class SLIM():
     prob = cp.Problem(obj)
 
     # solve the problem using an appropriate solver
-    sol = prob.solve()
+    prob.solve()
     self.model.coef_ = w.value.astype(np.int)
     self.model.intercept_ = 0</code></pre>
 </details>
 </dd>
-<dt id="imodels.slim.SLIM.predict_proba"><code class="name flex">
+<dt id="imodels.slim.SLIMRegressor.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -239,10 +236,10 @@ class SLIM():
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.slim.SLIM" href="#imodels.slim.SLIM">SLIM</a></code></h4>
+<h4><code><a title="imodels.slim.SLIMRegressor" href="#imodels.slim.SLIMRegressor">SLIMRegressor</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.slim.SLIM.fit" href="#imodels.slim.SLIM.fit">fit</a></code></li>
-<li><code><a title="imodels.slim.SLIM.predict_proba" href="#imodels.slim.SLIM.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.slim.SLIMRegressor.fit" href="#imodels.slim.SLIMRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.slim.SLIMRegressor.predict_proba" href="#imodels.slim.SLIMRegressor.predict_proba">predict_proba</a></code></li>
 </ul>
 </li>
 </ul>

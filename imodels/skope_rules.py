@@ -36,11 +36,10 @@ SkopeRules can be used to describe classes with logical rules :
 .. code:: python
 
     from sklearn.datasets import load_iris
-    from skrules import SkopeRules
-    
+
     dataset = load_iris()
     feature_names = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
-    clf = SkopeRules(max_depth_duplication=2,
+    clf = SkopeRulesClassifier(max_depth_duplication=2,
                      n_estimators=30,
                      precision_min=0.3,
                      recall_min=0.1,
@@ -58,17 +57,17 @@ SkopeRules can be used to describe classes with logical rules :
         print()
 ::
 
-SkopeRules can also be used as a predictor if you use the "score_top_rules" method :
+SkopeRulesClassifier can also be used as a predictor if you use the "score_top_rules" method :
 
 .. code:: python
 
     from sklearn.datasets import load_boston
     from sklearn.metrics import precision_recall_curve
     from matplotlib import pyplot as plt
-    from skrules import SkopeRules
+    from skrules import SkopeRulesClassifier
     
     dataset = load_boston()
-    clf = SkopeRules(max_depth_duplication=None,
+    clf = SkopeRulesClassifier(max_depth_duplication=None,
                      n_estimators=30,
                      precision_min=0.2,
                      recall_min=0.01,
@@ -138,28 +137,28 @@ Documentation
 You can access the full project documentation `here <http://skope-rules.readthedocs.io/en/latest/>`_
 '''
 
-import numpy as np
-from collections import Counter, Iterable
-import pandas
 import numbers
+from collections import Counter
+from collections.abc import Iterable
 from warnings import warn
 
-from sklearn.base import BaseEstimator
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
-from sklearn.utils.multiclass import check_classification_targets
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.ensemble import BaggingClassifier, BaggingRegressor
-# from sklearn.externals import six
+import numpy as np
+import pandas
 import six
+from sklearn.base import BaseEstimator
+from sklearn.ensemble import BaggingClassifier, BaggingRegressor
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree import _tree
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
-from .rule import Rule, replace_feature_name
+from .util.rule import Rule, replace_feature_name
 
 INTEGER_TYPES = (numbers.Integral, np.integer)
 BASE_FEATURE_NAME = "__C__"
 
 
-class SkopeRules(BaseEstimator):
+class SkopeRulesClassifier(BaseEstimator):
     """An easy-interpretable classifier optimizing simple logical rules.
 
     Parameters
@@ -451,8 +450,8 @@ class SkopeRules(BaseEstimator):
             weights = sample_weight - sample_weight.min()
             contamination = float(sum(y)) / len(y)
             y_reg = (
-                pow(weights, 0.5) * 0.5 / contamination * (y > 0) -
-                pow((weights).mean(), 0.5) * (y == 0))
+                    pow(weights, 0.5) * 0.5 / contamination * (y > 0) -
+                    pow((weights).mean(), 0.5) * (y == 0))
             y_reg = 1. / (1 + np.exp(-y_reg))  # sigmoid
         else:
             y_reg = y  # same as an other classification bagging
@@ -512,9 +511,9 @@ class SkopeRules(BaseEstimator):
                     # update the score to the new mean
                     c = self.rules_[rule][2] + 1
                     b = self.rules_[rule][1] + 1. / c * (
-                        score[1] - self.rules_[rule][1])
+                            score[1] - self.rules_[rule][1])
                     a = self.rules_[rule][0] + 1. / c * (
-                        score[0] - self.rules_[rule][0])
+                            score[0] - self.rules_[rule][0])
 
                     self.rules_[rule] = (a, b, c)
                 else:
@@ -553,6 +552,13 @@ class SkopeRules(BaseEstimator):
         """
 
         return np.array((self.decision_function(X) > 0), dtype=int)
+
+    def predict_proba(self, X):
+        '''Predict probability of a particular sample being an outlier or not
+
+        '''
+        y = self.rules_vote(X) / len(self.rules_without_feature_names_)
+        return np.vstack((1 - y, y)).transpose()
 
     def decision_function(self, X):
         """Average anomaly score of X of the base classifiers (rules).
@@ -680,10 +686,6 @@ class SkopeRules(BaseEstimator):
                 scores[list(df.query(r[0]).index)])
 
         return scores
-    
-    def predict_proba(self, X):
-        y = self.score_top_rules(X)
-        return np.vstack((1 - y, y)).transpose()
 
     def predict_top_rules(self, X, n_rules):
         """Predict if a particular sample is an outlier or not,
@@ -786,6 +788,7 @@ class SkopeRules(BaseEstimator):
                 The different set of rules. Each set should be homogeneous
 
         """
+
         def split_with_best_feature(rules, depth, exceptions=[]):
             """
             Method to find a split of rules given most represented feature
@@ -813,10 +816,10 @@ class SkopeRules(BaseEstimator):
                     rules_splitted[1].append(rule)
                 else:
                     rules_splitted[2].append(rule)
-            new_exceptions = exceptions+[most_represented_term]
+            new_exceptions = exceptions + [most_represented_term]
             # Choose best term
             return [split_with_best_feature(ruleset,
-                                            depth-1,
+                                            depth - 1,
                                             exceptions=new_exceptions)
                     for ruleset in rules_splitted]
 
@@ -828,6 +831,7 @@ class SkopeRules(BaseEstimator):
                 for rules_child in rules:
                     breadth_first_search(rules_child, leaves=leaves)
             return leaves
+
         leaves = []
         res = split_with_best_feature(rules, self.max_depth_duplication)
         breadth_first_search(res, leaves=leaves)
