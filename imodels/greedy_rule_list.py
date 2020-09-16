@@ -6,9 +6,10 @@ import math
 from copy import deepcopy
 
 import numpy as np
+from sklearn.base import BaseEstimator
 
 
-class GreedyRuleListClassifier(object):
+class GreedyRuleListClassifier(BaseEstimator):
     def __init__(self, max_depth=5, class_weight=None, criterion='gini'):
         self.depth = 0
         self.max_depth = max_depth

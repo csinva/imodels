@@ -35,9 +35,10 @@ import math
 from copy import deepcopy
 
 import numpy as np
+from sklearn.base import BaseEstimator
 
 
-class GreedyRuleListClassifier(object):
+class GreedyRuleListClassifier(BaseEstimator):
     def __init__(self, max_depth=5, class_weight=None, criterion=&#39;gini&#39;):
         self.depth = 0
         self.max_depth = max_depth
@@ -377,12 +378,16 @@ c2: count of another class</p></section>
 <span>(</span><span>max_depth=5, class_weight=None, criterion='gini')</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Base class for all estimators in scikit-learn</p>
+<h2 id="notes">Notes</h2>
+<p>All estimators should specify all the parameters that can be set
+at the class level in their <code>__init__</code> as explicit keyword
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GreedyRuleListClassifier(object):
+<pre><code class="python">class GreedyRuleListClassifier(BaseEstimator):
     def __init__(self, max_depth=5, class_weight=None, criterion=&#39;gini&#39;):
         self.depth = 0
         self.max_depth = max_depth
@@ -663,6 +668,10 @@ c2: count of another class</p></section>
 
         return -1 * np.corrcoef(split_decision.astype(np.int), y)[0, 1]</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="sklearn.base.BaseEstimator" href="/sklearn.base.BaseEstimator.ext">sklearn.base.BaseEstimator</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.greedy_rule_list.GreedyRuleListClassifier.all_same"><code class="name flex">

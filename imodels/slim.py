@@ -7,10 +7,11 @@ with integer coefficients in w
 '''
 import cvxpy as cp  # package for optimization
 import numpy as np
+from sklearn.base import BaseEstimator
 from sklearn.linear_model import LinearRegression
 
 
-class SLIMRegressor():
+class SLIMRegressor(BaseEstimator):
     '''Sparse integer linear model
     '''
 

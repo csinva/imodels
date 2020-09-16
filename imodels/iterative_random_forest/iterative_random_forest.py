@@ -1,8 +1,9 @@
 import numpy as np
 from irf.ensemble import wrf
+from sklearn.base import BaseEstimator
 
 
-class IRFClassifier():
+class IRFClassifier(BaseEstimator):
     def __init__(self):
         self.model = wrf()
         self.predict = self.model.predict
@@ -16,6 +17,7 @@ class IRFClassifier():
         sample_weight: np.ndarray (n,)
             weight for each individual sample
         '''
+
         if 'pandas' in str(type(X)):
             X = X.values
         if 'pandas' in str(type(y)):

@@ -1,7 +1,7 @@
 """
 Python `imodels` package for interpretable models compatible with scikit-learn.
 Github repo available [here](https://github.com/csinva/interpretability-implementations-demos).
-.. include:: ./documentation.md
+.. include:: ../readme.md
 """
 
 from .bayesian_rule_list.RuleListClassifier import RuleListClassifier

@@ -36,10 +36,11 @@ with integer coefficients in w
 &#39;&#39;&#39;
 import cvxpy as cp  # package for optimization
 import numpy as np
+from sklearn.base import BaseEstimator
 from sklearn.linear_model import LinearRegression
 
 
-class SLIMRegressor():
+class SLIMRegressor(BaseEstimator):
     &#39;&#39;&#39;Sparse integer linear model
     &#39;&#39;&#39;
 
@@ -104,7 +105,7 @@ class SLIMRegressor():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SLIMRegressor():
+<pre><code class="python">class SLIMRegressor(BaseEstimator):
     &#39;&#39;&#39;Sparse integer linear model
     &#39;&#39;&#39;
 
@@ -150,6 +151,10 @@ class SLIMRegressor():
         preds_proba = np.array([1 / (1 + np.exp(-y)) for y in preds])
         return np.vstack((1 - preds_proba, preds_proba)).transpose()</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="sklearn.base.BaseEstimator" href="/sklearn.base.BaseEstimator.ext">sklearn.base.BaseEstimator</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.slim.SLIMRegressor.fit"><code class="name flex">
