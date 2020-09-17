@@ -24,13 +24,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import numbers
-import random
-import sys
+<pre><code class="python">import random
 
-import numpy as np
-import pandas as pd
-import sklearn.metrics
 from sklearn.base import BaseEstimator
 
 from .brl import *
@@ -119,9 +114,10 @@ class RuleListClassifier(BaseEstimator):
         self.discretized_features = []
         for fi in range(len(X[0])):
             # if not string, and not specified as undiscretized
-            if isinstance(X[0][fi], numbers.Number) and (
-                    len(self.feature_labels) == 0 or len(undiscretized_features) == 0 or self.feature_labels[
-                fi] not in undiscretized_features):
+            if isinstance(X[0][fi], numbers.Number) \
+                    and (len(self.feature_labels) == 0 or \
+                         len(undiscretized_features) == 0 or \
+                         self.feature_labels[fi] not in undiscretized_features):
                 self.discretized_features.append(self.feature_labels[fi])
 
         if len(self.discretized_features) &gt; 0:
@@ -212,7 +208,7 @@ class RuleListClassifier(BaseEstimator):
         itemsets_all.extend(itemsets)
 
         Xtrain, Ytrain, nruleslen, lhs_len, self.itemsets = (
-        X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all)
+            X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all)
 
         # Do MCMC
         res, Rhat = run_bdl_multichain_serial(self.max_iter, self.thinning, self.alpha, self.listlengthprior,
@@ -340,10 +336,7 @@ class RuleListClassifier(BaseEstimator):
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
 
-        return 1 * (self.predict_proba(X)[:, 1] &gt;= 0.5)
-
-    def score(self, X, y, sample_weight=None):
-        return sklearn.metrics.accuracy_score(y, self.predict(X), sample_weight=sample_weight)</code></pre>
+        return 1 * (self.predict_proba(X)[:, 1] &gt;= 0.5)</code></pre>
 </details>
 </section>
 <section>
@@ -473,9 +466,10 @@ an expert system. </p>
         self.discretized_features = []
         for fi in range(len(X[0])):
             # if not string, and not specified as undiscretized
-            if isinstance(X[0][fi], numbers.Number) and (
-                    len(self.feature_labels) == 0 or len(undiscretized_features) == 0 or self.feature_labels[
-                fi] not in undiscretized_features):
+            if isinstance(X[0][fi], numbers.Number) \
+                    and (len(self.feature_labels) == 0 or \
+                         len(undiscretized_features) == 0 or \
+                         self.feature_labels[fi] not in undiscretized_features):
                 self.discretized_features.append(self.feature_labels[fi])
 
         if len(self.discretized_features) &gt; 0:
@@ -566,7 +560,7 @@ an expert system. </p>
         itemsets_all.extend(itemsets)
 
         Xtrain, Ytrain, nruleslen, lhs_len, self.itemsets = (
-        X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all)
+            X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all)
 
         # Do MCMC
         res, Rhat = run_bdl_multichain_serial(self.max_iter, self.thinning, self.alpha, self.listlengthprior,
@@ -694,10 +688,7 @@ an expert system. </p>
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
 
-        return 1 * (self.predict_proba(X)[:, 1] &gt;= 0.5)
-
-    def score(self, X, y, sample_weight=None):
-        return sklearn.metrics.accuracy_score(y, self.predict(X), sample_weight=sample_weight)</code></pre>
+        return 1 * (self.predict_proba(X)[:, 1] &gt;= 0.5)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -835,7 +826,7 @@ simply enumerated</dd>
     itemsets_all.extend(itemsets)
 
     Xtrain, Ytrain, nruleslen, lhs_len, self.itemsets = (
-    X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all)
+        X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all)
 
     # Do MCMC
     res, Rhat = run_bdl_multichain_serial(self.max_iter, self.thinning, self.alpha, self.listlengthprior,
@@ -948,19 +939,6 @@ order, as they appear in the attribute <code>classes_</code>.</dd>
     return np.vstack((1 - P, P)).T</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.score"><code class="name flex">
-<span>def <span class="ident">score</span></span>(<span>self, X, y, sample_weight=None)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def score(self, X, y, sample_weight=None):
-    return sklearn.metrics.accuracy_score(y, self.predict(X), sample_weight=sample_weight)</code></pre>
-</details>
-</dd>
 <dt id="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.seed"><code class="name flex">
 <span>def <span class="ident">seed</span></span>(<span>self)</span>
 </code></dt>
@@ -1033,7 +1011,6 @@ order, as they appear in the attribute <code>classes_</code>.</dd>
 <li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.fit" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.fit">fit</a></code></li>
 <li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.predict" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.predict">predict</a></code></li>
 <li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.predict_proba" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.score" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.score">score</a></code></li>
 <li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.seed" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.seed">seed</a></code></li>
 <li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.tostring" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.tostring">tostring</a></code></li>
 </ul>

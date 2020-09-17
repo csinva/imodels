@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<link rel='icon' href='https://csinva.io/imodels/docs/favicon.ico' type='image/x-icon'/>
+<link rel='icon' href='https://csinva.io/imodels/docs/favicon.ico' type='image/x-icon'/ >
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
@@ -51,7 +51,7 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 <ul>
 <li>bayesian rule list (<a href="https://csinva.io/imodels/docs/bayesian_rule_list/RuleListClassifier.html">docs</a>, <a href="https://github.com/tmadl/sklearn-expertsys">ref implementation</a>, <a href="https://arxiv.org/abs/1602.08610">paper</a>) - learn a compact rule list</li>
 <li>rulefit (<a href="https://csinva.io/imodels/docs/rule_fit.html">docs</a>, <a href="https://github.com/christophM/rulefit">ref implementation</a>, <a href="http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf">paper</a>) - find rules from a decision tree and build a linear model with them</li>
-<li>skope-rules (<a href="https://csinva.io/imodels/docs/skope_rules.html">docs</a>, <a href="https://github.com/scikit-learn-contrib/skope-rules">ref implementation</a>, <a href="(&lt;https://github.com/scikit-learn-contrib/skope-rules&gt;)">paper</a>) - extracts rules from base estimators (e.g. decision trees) then tries to deduplicate them</li>
+<li>skope-rules (<a href="https://csinva.io/imodels/docs/skope_rules.html">docs</a>, <a href="https://github.com/scikit-learn-contrib/skope-rules">ref implementation</a>) - extracts rules from base estimators (e.g. decision trees) then tries to deduplicate them</li>
 <li>sparse integer linear model (<a href="https://csinva.io/imodels/docs/slim.html">docs</a>, cvxpy implementation, <a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">paper</a>)</li>
 <li>greedy rule list (<a href="https://csinva.io/imodels/docs/greedy_rule_list.html">docs</a>, <a href="https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea">ref implementation</a>) - uses CART to learn a list (only a single path), rather than a decision tree</li>
 <li>(in progress) iterative random forest (<a href="https://csinva.io/imodels/docs/iterative_random_forest/iterative_random_forest.html">docs</a>, <a href="https://github.com/Yu-Group/iterative-Random-Forest">ref implementation</a>, <a href="https://www.pnas.org/content/115/8/1943">paper</a>)</li>
@@ -59,7 +59,6 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 <li>(coming soon) rule ensembles - e.g. SLIPPER, Lightweight Rule Induction, MLRules</li>
 <li>(coming soon) gams</li>
 <li>(coming soon) symbolic regression</li>
-<li>see readmes in individual folders within <a href="imodels">imodels</a> for details</li>
 </ul>
 <h2 id="demo-notebooks">Demo notebooks</h2>
 <p>The demos are contained in 3 main <a href="notebooks">notebooks</a>, following this cheat-sheet:<img alt="cheat_sheet" src="https://csinva.github.io/imodels/docs/cheat_sheet.png"></p>
@@ -85,24 +84,13 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 </ul>
 </li>
 <li>Reference implementations (also linked above): the code here heavily derives from (and in some case is just a wrapper for) the wonderful work of previous projects. We seek to to extract out, combine, and maintain select relevant parts of these projects.<ul>
-<li><a href="https://github.com/tmadl/sklearn-expertsys">sklearn-expertsys</a> - by @tmadl and others based on original code by <a href="http://lethalletham.com/">Ben Letham</a></li>
+<li><a href="https://github.com/tmadl/sklearn-expertsys">sklearn-expertsys</a> - by <a href="https://github.com/tmadl">@tmadl</a> and others based on original code by <a href="http://lethalletham.com/">Ben Letham</a></li>
 <li><a href="https://github.com/christophM/rulefit">rulefit</a> - by @christophM</li>
 <li><a href="https://github.com/scikit-learn-contrib/skope-rules">skope-rules</a> - by the <a href="https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst">skope-rules team</a></li>
 </ul>
 </li>
 </ul>
-<p>For updates, star the repo, <a href="https://github.com/csinva/csinva.github.io">see this related repo</a>, or follow <a href="https://twitter.com/chandan_singh96">@chandan_singh96</a>. Feel free to cite the package using the below, but more importantly make sure to give authors of original methods / base implementations credit:</p>
-<pre><code class="r">@software{
-    singh2020,
-    title        = {imodels python package for interpretable modeling},
-    publisher    = {Zenodo},
-    year         = 2020,
-    author       = {Chandan Singh},
-    version      = {v0.2.2},
-    doi          = {10.5281/zenodo.4026887},
-    url          = {https://doi.org/10.5281/zenodo.4026887}
-}
-</code></pre>
+<p>For updates, star the repo, <a href="https://github.com/csinva/csinva.github.io">see this related repo</a>, or follow <a href="https://twitter.com/chandan_singh96">@chandan_singh96</a>. Please make sure to give authors of original methods / base implementations appropriate credit!</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>

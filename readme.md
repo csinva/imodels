@@ -29,10 +29,10 @@ preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 ```
 
-- bayesian rule list ([docs](https://csinva.io/imodels/docs/bayesian_rule_list/RuleListClassifier.html), [ref implementation](https://github.com/tmadl/sklearn-expertsys), [paper](https://arxiv.org/abs/1602.08610)) - learn a compact rule list
-- rulefit ([docs](https://csinva.io/imodels/docs/rule_fit.html), [ref implementation](https://github.com/christophM/rulefit), [paper](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf)) - find rules from a decision tree and build a linear model with them
-- skope-rules ([docs](https://csinva.io/imodels/docs/skope_rules.html), [ref implementation](https://github.com/scikit-learn-contrib/skope-rules)) - extracts rules from base estimators (e.g. decision trees) then tries to deduplicate them
-- sparse integer linear model ([docs](https://csinva.io/imodels/docs/slim.html), cvxpy implementation, [paper](https://link.springer.com/article/10.1007/s10994-015-5528-6))
+- bayesian rule list ([docs](https://csinva.io/imodels/docs/bayesian_rule_list/RuleListClassifier.html), [ref implementation](https://github.com/tmadl/sklearn-expertsys), [paper](https://arxiv.org/abs/1602.08610)) - learns a compact rule list by sampling rule lists (rather than using a greedy heuristic)
+- rulefit ([docs](https://csinva.io/imodels/docs/rule_fit.html), [ref implementation](https://github.com/christophM/rulefit), [paper](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf)) - extracts rules from a decision tree then builds a sparse linear model with them
+- skope-rules ([docs](https://csinva.io/imodels/docs/skope_rules.html), [ref implementation](https://github.com/scikit-learn-contrib/skope-rules)) - extracts rules from gradient-boosted trees, deduplicates them, then forms a linear combination of them based on their OOB precision
+- sparse integer linear model ([docs](https://csinva.io/imodels/docs/slim.html), cvxpy implementation, [paper](https://link.springer.com/article/10.1007/s10994-015-5528-6)) - forces coefficients to be integers
 - greedy rule list ([docs](https://csinva.io/imodels/docs/greedy_rule_list.html), [ref implementation](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea)) - uses CART to learn a list (only a single path), rather than a decision tree
 - (in progress) iterative random forest ([docs](https://csinva.io/imodels/docs/iterative_random_forest/iterative_random_forest.html), [ref implementation](https://github.com/Yu-Group/iterative-Random-Forest), [paper](https://www.pnas.org/content/115/8/1943))
 - (in progress) optimal classification tree ([docs](https://csinva.io/imodels/docs/optimal_classification_tree/index.html), [ref implementation](https://github.com/pan5431333/pyoptree), [paper](https://link.springer.com/article/10.1007/s10994-017-5633-9)) - learns succinct trees using global optimization rather than greedy heuristics
@@ -60,8 +60,8 @@ After fitting models, we can also do posthoc analysis as shown in these two note
     - Stop Explaining Black Box Machine Learning Models for High Stakes Decisions and Use Interpretable Models Instead (rudin 2019, [pdf](https://arxiv.org/pdf/1811.10154.pdf)) - good explanation of why one should use interpretable models 
     - Review on evaluating interpretability (doshi-velez & kim 2017, [pdf](https://arxiv.org/pdf/1702.08608.pdf))
 - Reference implementations (also linked above): the code here heavily derives from (and in some case is just a wrapper for) the wonderful work of previous projects. We seek to to extract out, combine, and maintain select relevant parts of these projects.
-    - [sklearn-expertsys](https://github.com/tmadl/sklearn-expertsys) - by @tmadl and others based on original code by [Ben Letham](http://lethalletham.com/)
-    - [rulefit](https://github.com/christophM/rulefit) - by @christophM
-    - [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) - by the [skope-rules team](https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst)
+    - [sklearn-expertsys](https://github.com/tmadl/sklearn-expertsys) - by [@tmadl](https://github.com/tmadl) and [@kenben](https://github.com/kenben) based on original code by [Ben Letham](http://lethalletham.com/)
+    - [rulefit](https://github.com/christophM/rulefit) - by [@christophM](https://github.com/christophM)
+    - [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) - by the [skope-rules team](https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst) (including [@ngoix](https://github.com/ngoix), [@floriangardin](https://github.com/floriangardin), [@datajms](https://github.com/datajms), [Bibi Ndiaye](), [Ronan Gautier]())
 
 For updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@chandan_singh96](https://twitter.com/chandan_singh96). Please make sure to give authors of original methods / base implementations appropriate credit!

@@ -20,3 +20,6 @@ python
 > import imodels
 ```
 
+To develop locally, clone the repo then run
+
+`python setup.py develop`

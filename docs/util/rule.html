@@ -37,7 +37,7 @@ def replace_feature_name(rule, replace_dict):
 
 
 class Rule:
-    &#34;&#34;&#34; An object modelling a logical rule and add factorization methods.
+    &#34;&#34;&#34; An object modeling a logical rule and add factorization methods.
     It is used to simplify rules and deduplicate them.
 
     Parameters
@@ -76,12 +76,12 @@ class Rule:
             else:
                 if symbol[0] == &#39;&lt;&#39;:
                     self.agg_dict[(feature, symbol)] = str(min(
-                                float(self.agg_dict[(feature, symbol)]),
-                                float(value)))
+                        float(self.agg_dict[(feature, symbol)]),
+                        float(value)))
                 elif symbol[0] == &#39;&gt;&#39;:
                     self.agg_dict[(feature, symbol)] = str(max(
-                                float(self.agg_dict[(feature, symbol)]),
-                                float(value)))
+                        float(self.agg_dict[(feature, symbol)]),
+                        float(value)))
                 else:  # Handle the c0 == c0 case
                     self.agg_dict[(feature, symbol)] = value
 
@@ -91,9 +91,9 @@ class Rule:
 
     def __repr__(self):
         return &#39; and &#39;.join([&#39; &#39;.join(
-                [feature, symbol, str(self.agg_dict[(feature, symbol)])])
-                for feature, symbol in sorted(self.agg_dict.keys())
-                ])</code></pre>
+            [feature, symbol, str(self.agg_dict[(feature, symbol)])])
+            for feature, symbol in sorted(self.agg_dict.keys())
+        ])</code></pre>
 </details>
 </section>
 <section>
@@ -131,7 +131,7 @@ class Rule:
 <span>(</span><span>rule, args=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>An object modelling a logical rule and add factorization methods.
+<section class="desc"><p>An object modeling a logical rule and add factorization methods.
 It is used to simplify rules and deduplicate them.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -146,7 +146,7 @@ but it takes part of the output when the rule is converted to an array.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Rule:
-    &#34;&#34;&#34; An object modelling a logical rule and add factorization methods.
+    &#34;&#34;&#34; An object modeling a logical rule and add factorization methods.
     It is used to simplify rules and deduplicate them.
 
     Parameters
@@ -185,12 +185,12 @@ but it takes part of the output when the rule is converted to an array.</dd>
             else:
                 if symbol[0] == &#39;&lt;&#39;:
                     self.agg_dict[(feature, symbol)] = str(min(
-                                float(self.agg_dict[(feature, symbol)]),
-                                float(value)))
+                        float(self.agg_dict[(feature, symbol)]),
+                        float(value)))
                 elif symbol[0] == &#39;&gt;&#39;:
                     self.agg_dict[(feature, symbol)] = str(max(
-                                float(self.agg_dict[(feature, symbol)]),
-                                float(value)))
+                        float(self.agg_dict[(feature, symbol)]),
+                        float(value)))
                 else:  # Handle the c0 == c0 case
                     self.agg_dict[(feature, symbol)] = value
 
@@ -200,9 +200,9 @@ but it takes part of the output when the rule is converted to an array.</dd>
 
     def __repr__(self):
         return &#39; and &#39;.join([&#39; &#39;.join(
-                [feature, symbol, str(self.agg_dict[(feature, symbol)])])
-                for feature, symbol in sorted(self.agg_dict.keys())
-                ])</code></pre>
+            [feature, symbol, str(self.agg_dict[(feature, symbol)])])
+            for feature, symbol in sorted(self.agg_dict.keys())
+        ])</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -225,12 +225,12 @@ but it takes part of the output when the rule is converted to an array.</dd>
         else:
             if symbol[0] == &#39;&lt;&#39;:
                 self.agg_dict[(feature, symbol)] = str(min(
-                            float(self.agg_dict[(feature, symbol)]),
-                            float(value)))
+                    float(self.agg_dict[(feature, symbol)]),
+                    float(value)))
             elif symbol[0] == &#39;&gt;&#39;:
                 self.agg_dict[(feature, symbol)] = str(max(
-                            float(self.agg_dict[(feature, symbol)]),
-                            float(value)))
+                    float(self.agg_dict[(feature, symbol)]),
+                    float(value)))
             else:  # Handle the c0 == c0 case
                 self.agg_dict[(feature, symbol)] = value</code></pre>
 </details>
