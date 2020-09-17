@@ -186,7 +186,6 @@ class GreedyRuleListClassifier(BaseEstimator):
         """
         min_criterion_val = 1e10
         cutoff = 0.5
-        n = len(y)
 
         # iterate through each value in the column
         for value in set(col):

@@ -38,29 +38,6 @@
 # It is specific to binary classification with binary features (although could
 # easily be extended to multiclass).
 #
-# ##INPUT
-#
-# The main code to be run by the user is the function "topscript". In addition to
-# the parameters described in the paper, in this function you must specify a
-# variable "fname" that will specify which data to load.
-# The following files must be present and must be formatted as described (see
-# titanic data included for an example):
-#
-# - fname_train.tab : This is the file containing the training X data, for which 
-# all features are binary. Each line is a data entry in which all of the features
-# with value "1" are simply listed, with spaces delimiting different features. For
-# example, in the Titanic dataset, "1st_class adult male" is a line in
-# titanic.tab.
-#
-# - fname_train.Y : This file contains the training Y data (labels), and 
-# contains a line corresponding to each line in fname.tab. Each of the possible
-# labels (two for binary classification) is listed (space delimited) and "1" is
-# put for the label of that point, and 0 for others. For instance, a data entry
-# with label "0" would have "1 0" in its line in fname.Y, and a data entry with
-# label "1" would have "0 1" in its line in fname.
-#
-# - fname_test.tab and fname_test.Y, formatted with the same formatting as the 
-# training data.
 #
 # ##OUTPUT
 #
@@ -86,18 +63,10 @@
 # - accur_fullpost - The accuracy of the BRL-post predictions, decision boundary 
 # at 0.5.
 #
-
-# ##CODE:
-
-import json
-import os
 import pickle as Pickle
-import sys
 import time
-import traceback
-from collections import defaultdict, Counter
+from collections import defaultdict
 
-from fim import fpgrowth  # this is PyFIM, available from http://www.borgelt.net/pyfim.html
 from numpy import *
 from scipy.special import gammaln
 from scipy.stats import poisson, beta
@@ -239,6 +208,7 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
 
         listlens.extend([len(d_t)] * int(permsdic[perm][1]))
         rulesizes.extend([lhs_len[j] for j in d_t[:-1]] * int(permsdic[perm][1]))
+
     # Now compute average
     avglistlen = average(listlens)
     if verbose:
@@ -260,12 +230,15 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
         for perm in permsdic:
             if permsdic[perm][1] > 0:
                 d_t = Pickle.loads(perm)  # this is the antecedent list
+
                 # Check the list length
                 if len(d_t) >= minlen and len(d_t) <= maxlen:
+
                     # Check the rule size
                     rulesize = average([lhs_len[j] for j in d_t[:-1]])
                     if rulesize >= minrulesize and rulesize <= maxrulesize:
                         d_ts.append(d_t)
+
                         # Compute the likelihood
                         R_t = d_t.index(0)
                         N_t = compute_rule_usage(d_t, R_t, X, Y)
@@ -312,45 +285,6 @@ def preds_d_t(X, Y, d_t, theta):
     if preds.min() < 0:
         raise Exception  # this means some observation wasn't given a prediction - shouldn't happen
     return preds
-
-
-# Make predictions using the full posterior
-def preds_full_posterior(X, Y, Xtrain, Ytrain, permsdic, alpha):
-    # this is binary only. The score is the Prob of 1.
-    preds = zeros(Y.shape[0])
-    postcount = 0.  # total number of posterior samples
-    for perm, vals in permsdic.items():
-        # We will compute probabilities for this antecedent list d.
-        d_t = Pickle.loads(perm)
-        permcount = float(vals[1])  # number of copies of this perm in the posterior
-        postcount += float(vals[1])
-        # We will get the posterior E[theta]'s for this list
-        theta, jnk = get_rule_rhs(Xtrain, Ytrain, d_t, alpha, False)
-        # And assign observations a score
-        unused = set(range(Y.shape[0]))
-        for i, j in enumerate(d_t):
-            usedj = unused.intersection(X[j])  # these are the observations in X that make it to rule j
-            preds[list(usedj)] += theta[i] * permcount
-            unused = unused.difference(set(usedj))
-        if unused:
-            raise Exception  # all observations should have been given predictions
-        # Done with this list, move on to the next one.
-    # Done with all lists. Normalize.
-    preds /= float(postcount)
-    return preds
-
-
-# Compute accuracy
-def preds_to_acc(y_score, y_true):
-    thr = 0.5  # we take label = 1 if y_score >= 0.5
-    accur = 0.
-    for i, prob in enumerate(y_score):
-        if prob >= thr and y_true[i] == 1:
-            accur += 1
-        elif prob < thr and y_true[i] == 0:
-            accur += 1
-    accur = accur / float(len(y_score))
-    return accur
 
 
 ##############MCMC core
@@ -440,8 +374,9 @@ def initialize_d(X, Y, lbda, eta, lhs_len, maxlhs, nruleslen):
     return d_t, R_t, N_t
 
 
-# Propose a new d_star
 def proposal(d_t, R_t, X, Y, alpha):
+    '''Propose a new d_star
+    '''
     d_star = list(d_t)
     R_star = int(R_t)
     move_probs_default = array([0.3333333333, 0.3333333333,
@@ -545,8 +480,9 @@ def fn_logposterior(d_t, R_t, N_t, alpha, logalpha_pmf, logbeta_pmf, maxlhs, bet
     return logliklihood + logprior
 
 
-# Compute log likelihood
 def fn_logliklihood(d_t, N_t, R_t, alpha):
+    '''Compute log likelihood
+    '''
     gammaln_Nt_jk = gammaln(N_t + alpha)
     gammaln_Nt_j = gammaln(sum(N_t + alpha, 1))
     logliklihood = sum(gammaln_Nt_jk) - sum(gammaln_Nt_j)
@@ -599,42 +535,3 @@ def compute_rule_usage(d_star, R_star, X, Y):
     if int(sum(N_star)) != Y.shape[0]:
         raise Exception  # bug check
     return N_star
-
-
-####Data loading
-
-# Frequent itemset mining
-def get_freqitemsets(fname, minsupport, maxlhs, verbose=True):
-    # minsupport is an integer percentage (e.g. 10 for 10%)
-    # maxlhs is the maximum size of the lhs
-    # first load the data
-    data, Y = load_data(fname)
-    # Now find frequent itemsets
-    # Mine separately for each class
-    data_pos = [x for i, x in enumerate(data) if Y[i, 0] == 0]
-    data_neg = [x for i, x in enumerate(data) if Y[i, 0] == 1]
-    assert len(data_pos) + len(data_neg) == len(data)
-    try:
-        itemsets = [r[0] for r in fpgrowth(data_pos, supp=minsupport, zmax=maxlhs)]
-        itemsets.extend([r[0] for r in fpgrowth(data_neg, supp=minsupport, zmax=maxlhs)])
-    except TypeError:
-        itemsets = [r[0] for r in fpgrowth(data_pos, supp=minsupport, max=maxlhs)]
-        itemsets.extend([r[0] for r in fpgrowth(data_neg, supp=minsupport, max=maxlhs)])
-    itemsets = list(set(itemsets))
-    if verbose:
-        print(len(itemsets), 'rules mined')
-    # Now form the data-vs.-lhs set
-    # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
-    X = [set() for j in range(len(itemsets) + 1)]
-    X[0] = set(range(len(data)))  # the default rule satisfies all data
-    for (j, lhs) in enumerate(itemsets):
-        X[j + 1] = set([i for (i, xi) in enumerate(data) if set(lhs).issubset(xi)])
-    # now form lhs_len
-    lhs_len = [0]
-    for lhs in itemsets:
-        lhs_len.append(len(lhs))
-    nruleslen = Counter(lhs_len)
-    lhs_len = array(lhs_len)
-    itemsets_all = ['null']
-    itemsets_all.extend(itemsets)
-    return X, Y, nruleslen, lhs_len, itemsets_all

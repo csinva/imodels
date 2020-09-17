@@ -11,7 +11,7 @@ def replace_feature_name(rule, replace_dict):
 
 
 class Rule:
-    """ An object modelling a logical rule and add factorization methods.
+    """ An object modeling a logical rule and add factorization methods.
     It is used to simplify rules and deduplicate them.
 
     Parameters
@@ -50,12 +50,12 @@ class Rule:
             else:
                 if symbol[0] == '<':
                     self.agg_dict[(feature, symbol)] = str(min(
-                                float(self.agg_dict[(feature, symbol)]),
-                                float(value)))
+                        float(self.agg_dict[(feature, symbol)]),
+                        float(value)))
                 elif symbol[0] == '>':
                     self.agg_dict[(feature, symbol)] = str(max(
-                                float(self.agg_dict[(feature, symbol)]),
-                                float(value)))
+                        float(self.agg_dict[(feature, symbol)]),
+                        float(value)))
                 else:  # Handle the c0 == c0 case
                     self.agg_dict[(feature, symbol)] = value
 
@@ -65,6 +65,6 @@ class Rule:
 
     def __repr__(self):
         return ' and '.join([' '.join(
-                [feature, symbol, str(self.agg_dict[(feature, symbol)])])
-                for feature, symbol in sorted(self.agg_dict.keys())
-                ])
+            [feature, symbol, str(self.agg_dict[(feature, symbol)])])
+            for feature, symbol in sorted(self.agg_dict.keys())
+        ])

@@ -1,10 +1,5 @@
-import numbers
 import random
-import sys
 
-import numpy as np
-import pandas as pd
-import sklearn.metrics
 from sklearn.base import BaseEstimator
 
 from .brl import *
@@ -93,9 +88,10 @@ class RuleListClassifier(BaseEstimator):
         self.discretized_features = []
         for fi in range(len(X[0])):
             # if not string, and not specified as undiscretized
-            if isinstance(X[0][fi], numbers.Number) and (
-                    len(self.feature_labels) == 0 or len(undiscretized_features) == 0 or self.feature_labels[
-                fi] not in undiscretized_features):
+            if isinstance(X[0][fi], numbers.Number) \
+                    and (len(self.feature_labels) == 0 or \
+                         len(undiscretized_features) == 0 or \
+                         self.feature_labels[fi] not in undiscretized_features):
                 self.discretized_features.append(self.feature_labels[fi])
 
         if len(self.discretized_features) > 0:
@@ -186,7 +182,7 @@ class RuleListClassifier(BaseEstimator):
         itemsets_all.extend(itemsets)
 
         Xtrain, Ytrain, nruleslen, lhs_len, self.itemsets = (
-        X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all)
+            X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all)
 
         # Do MCMC
         res, Rhat = run_bdl_multichain_serial(self.max_iter, self.thinning, self.alpha, self.listlengthprior,
@@ -315,6 +311,3 @@ class RuleListClassifier(BaseEstimator):
             X = X.values
 
         return 1 * (self.predict_proba(X)[:, 1] >= 0.5)
-
-    def score(self, X, y, sample_weight=None):
-        return sklearn.metrics.accuracy_score(y, self.predict(X), sample_weight=sample_weight)

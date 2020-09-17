@@ -13,8 +13,7 @@ class Rule():
     Warning: this class should not be used directly.
     """
 
-    def __init__(self,
-                 rule_conditions, prediction_value):
+    def __init__(self, rule_conditions, prediction_value):
         self.conditions = set(rule_conditions)
         self.support = min([x.support for x in rule_conditions])
         self.prediction_value = prediction_value

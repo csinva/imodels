@@ -1,63 +1,13 @@
 '''
 Code adapted with only minor changes from [here](https://github.com/scikit-learn-contrib/skope-rules). Full credit to the authors.
 
-
-
-skope-rules
-===========
-
-Skope-rules is a Python machine learning module built on top of
-scikit-learn and distributed under the 3-Clause BSD license.
-
 Skope-rules aims at learning logical, interpretable rules for "scoping" a target
 class, i.e. detecting with high precision instances of this class.
 
 Skope-rules is a trade off between the interpretability of a Decision Tree
 and the modelization power of a Random Forest.
 
-See the `AUTHORS.rst <AUTHORS.rst>`_ file for a list of contributors.
-
-.. image:: schema.png
-
-
-Installation
-------------
-
-You can get the latest sources with pip :
-
-    pip install skope-rules
-
-   
-Quick Start
-------------
-
-SkopeRules can be used to describe classes with logical rules :
-
-.. code:: python
-
-    from sklearn.datasets import load_iris
-
-    dataset = load_iris()
-    feature_names = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
-    clf = SkopeRulesClassifier(max_depth_duplication=2,
-                     n_estimators=30,
-                     precision_min=0.3,
-                     recall_min=0.1,
-                     feature_names=feature_names)
-    
-    for idx, species in enumerate(dataset.target_names):
-        X, y = dataset.data, dataset.target
-        clf.fit(X, y == idx)
-        rules = clf.rules_[0:3]
-        print("Rules for iris", species)
-        for rule in rules:
-            print(rule)
-        print()
-        print(20*'=')
-        print()
-::
-
-SkopeRulesClassifier can also be used as a predictor if you use the "score_top_rules" method :
+SkopeRulesClassifier can also be used as a predictor
 
 .. code:: python
 
@@ -138,7 +88,6 @@ You can access the full project documentation `here <http://skope-rules.readthed
 '''
 
 import numbers
-from collections import Counter
 from collections.abc import Iterable
 from warnings import warn
 
@@ -152,6 +101,7 @@ from sklearn.tree import _tree
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
+from .util.deduplicate import find_similar_rulesets
 from .util.rule import Rule, replace_feature_name
 
 INTEGER_TYPES = (numbers.Integral, np.integer)
@@ -500,9 +450,9 @@ class SkopeRulesClassifier(BaseEstimator):
 
         # Factorize rules before semantic tree filtering
         rules_ = [
-            tuple(rule)
-            for rule in
-            [Rule(r, args=args) for r, args in rules_]]
+            tuple(rule) for rule in
+            [Rule(r, args=args) for r, args in rules_]
+        ]
 
         # keep only rules verifying precision_min and recall_min:
         for rule, score in rules_:
@@ -771,71 +721,7 @@ class SkopeRulesClassifier(BaseEstimator):
 
     def deduplicate(self, rules):
         return [max(rules_set, key=self.f1_score)
-                for rules_set in self._find_similar_rulesets(rules)]
-
-    def _find_similar_rulesets(self, rules):
-        """Create clusters of rules using a decision tree based
-        on the terms of the rules
-
-        Parameters
-        ----------
-        rules : List, List of rules
-                The rules that should be splitted in subsets of similar rules
-
-        Returns
-        -------
-        rules : List of list of rules
-                The different set of rules. Each set should be homogeneous
-
-        """
-
-        def split_with_best_feature(rules, depth, exceptions=[]):
-            """
-            Method to find a split of rules given most represented feature
-            """
-            if depth == 0:
-                return rules
-
-            rulelist = [rule.split(' and ') for rule, score in rules]
-            terms = [t.split(' ')[0] for term in rulelist for t in term]
-            counter = Counter(terms)
-            # Drop exception list
-            for exception in exceptions:
-                del counter[exception]
-
-            if len(counter) == 0:
-                return rules
-
-            most_represented_term = counter.most_common()[0][0]
-            # Proceed to split
-            rules_splitted = [[], [], []]
-            for rule in rules:
-                if (most_represented_term + ' <=') in rule[0]:
-                    rules_splitted[0].append(rule)
-                elif (most_represented_term + ' >') in rule[0]:
-                    rules_splitted[1].append(rule)
-                else:
-                    rules_splitted[2].append(rule)
-            new_exceptions = exceptions + [most_represented_term]
-            # Choose best term
-            return [split_with_best_feature(ruleset,
-                                            depth - 1,
-                                            exceptions=new_exceptions)
-                    for ruleset in rules_splitted]
-
-        def breadth_first_search(rules, leaves=None):
-            if len(rules) == 0 or not isinstance(rules[0], list):
-                if len(rules) > 0:
-                    return leaves.append(rules)
-            else:
-                for rules_child in rules:
-                    breadth_first_search(rules_child, leaves=leaves)
-            return leaves
-
-        leaves = []
-        res = split_with_best_feature(rules, self.max_depth_duplication)
-        breadth_first_search(res, leaves=leaves)
-        return leaves
+                for rules_set in find_similar_rulesets(rules, self.max_depth_duplication)]
 
     def f1_score(self, x):
         return 2 * x[1][0] * x[1][1] / \

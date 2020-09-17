@@ -31,7 +31,7 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 
 - bayesian rule list ([docs](https://csinva.io/imodels/docs/bayesian_rule_list/RuleListClassifier.html), [ref implementation](https://github.com/tmadl/sklearn-expertsys), [paper](https://arxiv.org/abs/1602.08610)) - learn a compact rule list
 - rulefit ([docs](https://csinva.io/imodels/docs/rule_fit.html), [ref implementation](https://github.com/christophM/rulefit), [paper](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf)) - find rules from a decision tree and build a linear model with them
-- skope-rules ([docs](https://csinva.io/imodels/docs/skope_rules.html), [ref implementation](https://github.com/scikit-learn-contrib/skope-rules), [paper]((https://github.com/scikit-learn-contrib/skope-rules))) - extracts rules from base estimators (e.g. decision trees) then tries to deduplicate them
+- skope-rules ([docs](https://csinva.io/imodels/docs/skope_rules.html), [ref implementation](https://github.com/scikit-learn-contrib/skope-rules)) - extracts rules from base estimators (e.g. decision trees) then tries to deduplicate them
 - sparse integer linear model ([docs](https://csinva.io/imodels/docs/slim.html), cvxpy implementation, [paper](https://link.springer.com/article/10.1007/s10994-015-5528-6))
 - greedy rule list ([docs](https://csinva.io/imodels/docs/greedy_rule_list.html), [ref implementation](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea)) - uses CART to learn a list (only a single path), rather than a decision tree
 - (in progress) iterative random forest ([docs](https://csinva.io/imodels/docs/iterative_random_forest/iterative_random_forest.html), [ref implementation](https://github.com/Yu-Group/iterative-Random-Forest), [paper](https://www.pnas.org/content/115/8/1943))
@@ -39,8 +39,6 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 - (coming soon) rule ensembles - e.g. SLIPPER, Lightweight Rule Induction, MLRules
 - (coming soon) gams
 - (coming soon) symbolic regression
--  see readmes in individual folders within [imodels](imodels) for details
-
 
 ## Demo notebooks
 The demos are contained in 3 main [notebooks](notebooks), following this cheat-sheet:![cheat_sheet](https://csinva.github.io/imodels/docs/cheat_sheet.png)
@@ -66,16 +64,4 @@ After fitting models, we can also do posthoc analysis as shown in these two note
     - [rulefit](https://github.com/christophM/rulefit) - by @christophM
     - [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) - by the [skope-rules team](https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst)
 
-For updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@chandan_singh96](https://twitter.com/chandan_singh96). Feel free to cite the package using the below, but more importantly make sure to give authors of original methods / base implementations credit:
-```r
-@software{
-    singh2020,
-    title        = {imodels python package for interpretable modeling},
-    publisher    = {Zenodo},
-    year         = 2020,
-    author       = {Chandan Singh},
-    version      = {v0.2.2},
-    doi          = {10.5281/zenodo.4026887},
-    url          = {https://doi.org/10.5281/zenodo.4026887}
-}
-```
+For updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@chandan_singh96](https://twitter.com/chandan_singh96). Please make sure to give authors of original methods / base implementations appropriate credit!
