@@ -2,10 +2,9 @@ from __future__ import division
 
 __author__ = 'Victor Ruiz, vmr11@pitt.edu'
 
-import pandas as pd
-import numpy as np
 from math import log
-import random
+
+import pandas as pd
 
 
 def entropy(data_classes, base=2):
@@ -25,10 +24,11 @@ def entropy(data_classes, base=2):
     for c in classes:
         partition = data_classes[data_classes == c]  # data with class = c
         proportion = len(partition) / N
-        #update entropy
+        # update entropy
         ent -= proportion * log(proportion, base)
 
     return ent
+
 
 def cut_point_information_gain(dataset, cut_point, feature_label, class_label):
     '''
@@ -44,12 +44,12 @@ def cut_point_information_gain(dataset, cut_point, feature_label, class_label):
 
     entropy_full = entropy(dataset[class_label])  # compute entropy of full dataset (w/o split)
 
-    #split data at cut_point
+    # split data at cut_point
     data_left = dataset[dataset[feature_label] <= cut_point]
     data_right = dataset[dataset[feature_label] > cut_point]
     (N, N_left, N_right) = (len(dataset), len(data_left), len(data_right))
 
     gain = entropy_full - (N_left / N) * entropy(data_left[class_label]) - \
-        (N_right / N) * entropy(data_right[class_label])
+           (N_right / N) * entropy(data_right[class_label])
 
     return gain

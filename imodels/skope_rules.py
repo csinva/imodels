@@ -97,10 +97,10 @@ import six
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.tree import _tree
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
+from .util.convert import tree_to_rules
 from .util.deduplicate import find_similar_rulesets
 from .util.rule import Rule, replace_feature_name
 
@@ -431,7 +431,7 @@ class SkopeRulesClassifier(BaseEstimator):
                      " (overfitting) and selected rules are likely to"
                      " not perform well! Please use max_samples < 1.")
                 mask = samples
-            rules_from_tree = self._tree_to_rules(
+            rules_from_tree = tree_to_rules(
                 estimator, np.array(self.feature_names_)[features])
 
             # XXX todo: idem without dataframe
@@ -661,52 +661,6 @@ class SkopeRulesClassifier(BaseEstimator):
 
         return np.array((self.score_top_rules(X) > len(self.rules_) - n_rules),
                         dtype=int)
-
-    def _tree_to_rules(self, tree, feature_names):
-        """
-        Return a list of rules from a tree
-
-        Parameters
-        ----------
-            tree : Decision Tree Classifier/Regressor
-            feature_names: list of variable names
-
-        Returns
-        -------
-        rules : list of rules.
-        """
-        # XXX todo: check the case where tree is build on subset of features,
-        # ie max_features != None
-
-        tree_ = tree.tree_
-        feature_name = [
-            feature_names[i] if i != _tree.TREE_UNDEFINED else "undefined!"
-            for i in tree_.feature
-        ]
-        rules = []
-
-        def recurse(node, base_name):
-            if tree_.feature[node] != _tree.TREE_UNDEFINED:
-                name = feature_name[node]
-                symbol = '<='
-                symbol2 = '>'
-                threshold = tree_.threshold[node]
-                text = base_name + ["{} {} {}".format(name, symbol, threshold)]
-                recurse(tree_.children_left[node], text)
-
-                text = base_name + ["{} {} {}".format(name, symbol2,
-                                                      threshold)]
-                recurse(tree_.children_right[node], text)
-            else:
-                rule = str.join(' and ', base_name)
-                rule = (rule if rule != ''
-                        else ' == '.join([feature_names[0]] * 2))
-                # a rule selecting all is set to "c0==c0"
-                rules.append(rule)
-
-        recurse(0, [])
-
-        return rules if len(rules) > 0 else 'True'
 
     def _eval_rule_perf(self, rule, X, y):
         detected_index = list(X.query(rule).index)

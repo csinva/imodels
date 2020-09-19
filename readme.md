@@ -41,12 +41,12 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 - (coming soon) symbolic regression
 
 ## Demo notebooks
-The demos are contained in 3 main [notebooks](notebooks), following this cheat-sheet:![cheat_sheet](https://csinva.github.io/imodels/docs/cheat_sheet.png)
+The demos are contained in 3 main [notebooks](notebooks). The first notebook demos the imodels package:
 
 - [model_based.ipynb](notebooks/1_model_based.ipynb) - how to use different interpretable models and examples with the **imodels** package
     - see an example of using this package for deriving a clinical decision rule in [this nb](https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/04_fit_interpretable_models.ipynb)
 
-After fitting models, we can also do posthoc analysis as shown in these two notebooks:     
+After fitting models, we can also do posthoc analysis, following this cheat-sheet:![cheat_sheet](https://csinva.github.io/imodels/docs/cheat_sheet.png):     
 
 - [posthoc.ipynb](notebooks/2_posthoc.ipynb) - different simple analyses to interpret a trained model
 - [uncertainty.ipynb](notebooks/3_uncertainty.ipynb) - code to get uncertainty estimates for a model

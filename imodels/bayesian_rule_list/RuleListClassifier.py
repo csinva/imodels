@@ -1,9 +1,10 @@
 import random
 
+import pandas as pd
 from sklearn.base import BaseEstimator
-
+import numpy as np
 from .brl import *
-from ..util.discretization.mdlp import *
+from ..util.discretization.mdlp import MDLP_Discretizer
 
 
 class RuleListClassifier(BaseEstimator):
@@ -230,10 +231,7 @@ class RuleListClassifier(BaseEstimator):
                 Xl[i][j] = self.feature_labels[j] + " : " + Xl[i][j]
         return Xl
 
-    def __str__(self):
-        return self.tostring(decimals=1)
-
-    def tostring(self, decimals=1):
+    def __str__(self, decimals=1):
         if self.d_star:
             detect = ""
             if self.class1label != "class 1":
