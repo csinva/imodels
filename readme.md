@@ -4,7 +4,7 @@
 
 
 <p align="center">
-  <a href="https://csinva.github.io/imodels/docs/">Docs</a> •
+  <a href="https://csinva.github.io/imodels/">Docs</a> •
   <a href="#implementations-of-interpretable-models"> Implementations of imodels </a> •
   <a href="#demo-notebooks">Demo notebooks</a>
 </p>
@@ -33,13 +33,13 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 
 Supported models:
 
-- bayesian rule list ([docs](https://csinva.io/imodels/docs/bayesian_rule_list/RuleListClassifier.html), [ref implementation](https://github.com/tmadl/sklearn-expertsys), [paper](https://arxiv.org/abs/1602.08610)) - learns a compact rule list by sampling rule lists (rather than using a greedy heuristic)
-- rulefit ([docs](https://csinva.io/imodels/docs/rule_fit.html), [ref implementation](https://github.com/christophM/rulefit), [paper](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf)) - extracts rules from a decision tree then builds a sparse linear model with them
-- skope-rules ([docs](https://csinva.io/imodels/docs/skope_rules.html), [ref implementation](https://github.com/scikit-learn-contrib/skope-rules)) - extracts rules from gradient-boosted trees, deduplicates them, then forms a linear combination of them based on their OOB precision
-- sparse integer linear model ([docs](https://csinva.io/imodels/docs/slim.html), cvxpy implementation, [paper](https://link.springer.com/article/10.1007/s10994-015-5528-6)) - forces coefficients to be integers
-- greedy rule list ([docs](https://csinva.io/imodels/docs/greedy_rule_list.html), [ref implementation](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea)) - uses CART to learn a list (only a single path), rather than a decision tree
-- (in progress) iterative random forest ([docs](https://csinva.io/imodels/docs/iterative_random_forest/iterative_random_forest.html), [ref implementation](https://github.com/Yu-Group/iterative-Random-Forest), [paper](https://www.pnas.org/content/115/8/1943))
-- (in progress) optimal classification tree ([docs](https://csinva.io/imodels/docs/optimal_classification_tree/index.html), [ref implementation](https://github.com/pan5431333/pyoptree), [paper](https://link.springer.com/article/10.1007/s10994-017-5633-9)) - learns succinct trees using global optimization rather than greedy heuristics
+- bayesian rule list ([docs](https://csinva.io/imodels/bayesian_rule_list/RuleListClassifier.html), [ref implementation](https://github.com/tmadl/sklearn-expertsys), [paper](https://arxiv.org/abs/1602.08610)) - learns a compact rule list by sampling rule lists (rather than using a greedy heuristic)
+- rulefit ([docs](https://csinva.io/imodels/rule_fit.html), [ref implementation](https://github.com/christophM/rulefit), [paper](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf)) - extracts rules from a decision tree then builds a sparse linear model with them
+- skope-rules ([docs](https://csinva.io/imodels/skope_rules.html), [ref implementation](https://github.com/scikit-learn-contrib/skope-rules)) - extracts rules from gradient-boosted trees, deduplicates them, then forms a linear combination of them based on their OOB precision
+- sparse integer linear model ([docs](https://csinva.io/imodels/slim.html), cvxpy implementation, [paper](https://link.springer.com/article/10.1007/s10994-015-5528-6)) - forces coefficients to be integers
+- greedy rule list ([docs](https://csinva.io/imodels/greedy_rule_list.html), [ref implementation](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea)) - uses CART to learn a list (only a single path), rather than a decision tree
+- (in progress) iterative random forest ([docs](https://csinva.io/imodels/iterative_random_forest/iterative_random_forest.html), [ref implementation](https://github.com/Yu-Group/iterative-Random-Forest), [paper](https://www.pnas.org/content/115/8/1943))
+- (in progress) optimal classification tree ([docs](https://csinva.io/imodels/optimal_classification_tree/index.html), [ref implementation](https://github.com/pan5431333/pyoptree), [paper](https://link.springer.com/article/10.1007/s10994-017-5633-9)) - learns succinct trees using global optimization rather than greedy heuristics
 - (coming soon) rule ensembles - e.g. SLIPPER, Lightweight Rule Induction, MLRules
 - (coming soon) gams
 - (coming soon) symbolic regression
@@ -48,15 +48,14 @@ The models generally fall into the following categories. The code is optimized f
 
 |           Rule set            |        Rule list        |  (Decision) Rule tree   |        Algebraic models        |
 | :---------------------------: | :---------------------: | :---------------------: | :----------------------------: |
-| <img src="https://csinva.io/imodels/docs/rule_set.jpg" width="100%"> | <img src="https://csinva.io/imodels/docs/rule_list.jpg"> | <img src="https://csinva.io/imodels/docs/rule_tree.jpg"> | <img src="https://csinva.io/imodels/docs/algebraic_models.jpg"> |
+| <img src="https://csinva.io/imodels/rule_set.jpg" width="100%"> | <img src="https://csinva.io/imodels/rule_list.jpg"> | <img src="https://csinva.io/imodels/rule_tree.jpg"> | <img src="https://csinva.io/imodels/algebraic_models.jpg"> |
 
 ## Demo notebooks
-The demos are contained in 3 main [notebooks](notebooks). The first notebook demos the imodels package:
+The demos are contained in 3 main [notebooks](notebooks). The first notebook, [model_based.ipynb](notebooks/1_model_based.ipynb), demos the imodels package. It shows how to fit, predict, and visualize with different interpretable models. 
 
-- [model_based.ipynb](notebooks/1_model_based.ipynb) - how to use different interpretable models and examples with the **imodels** package
-    - see an example of using this package for deriving a clinical decision rule in [this nb](https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/04_fit_interpretable_models.ipynb)
+*See an example of using this package for deriving a clinical decision rule in [this nb](https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/04_fit_interpretable_models.ipynb)*
 
-After fitting models, we can also do posthoc analysis, following this cheat-sheet:![cheat_sheet](https://csinva.github.io/imodels/docs/cheat_sheet.png)     
+After fitting models, we can also do posthoc analysis, following this cheat-sheet:![cheat_sheet](https://csinva.github.io/imodels/cheat_sheet.png)     
 
 - [posthoc.ipynb](notebooks/2_posthoc.ipynb) - different simple analyses to interpret a trained model
 - [uncertainty.ipynb](notebooks/3_uncertainty.ipynb) - code to get uncertainty estimates for a model
