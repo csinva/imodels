@@ -48,7 +48,7 @@ The models generally fall into the following categories. The code is optimized f
 
 |           Rule set            |        Rule list        |  (Decision) Rule tree   |        Algebraic models        |
 | :---------------------------: | :---------------------: | :---------------------: | :----------------------------: |
-| <img src="https://csinva.io/imodels/docs/rule_set.png" width="100%"> | <img src="https://csinva.io/imodels/docs/rule_list.png"> | <img src="https://csinva.io/imodels/docs/rule_tree.png"> | <img src="https://csinva.io/imodels/docs/algebraic_models.png"> |
+| <img src="https://csinva.io/imodels/docs/rule_set.jpg" width="100%"> | <img src="https://csinva.io/imodels/docs/rule_list.jpg"> | <img src="https://csinva.io/imodels/docs/rule_tree.jpg"> | <img src="https://csinva.io/imodels/docs/algebraic_models.jpg"> |
 
 ## Demo notebooks
 The demos are contained in 3 main [notebooks](notebooks). The first notebook demos the imodels package:
