@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>imodels.util.evaluate.compare API documentation</title>
+<meta name="description" content="Compare different estimators on public datasets
+Code modified from https://github.com/tmadl/sklearn-random-bits-forest" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>imodels.util.evaluate.compare</code></h1>
+</header>
+<section id="section-intro">
+<p>Compare different estimators on public datasets
+Code modified from <a href="https://github.com/tmadl/sklearn-random-bits-forest">https://github.com/tmadl/sklearn-random-bits-forest</a></p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#39;&#39;&#39;Compare different estimators on public datasets
+Code modified from https://github.com/tmadl/sklearn-random-bits-forest
+&#39;&#39;&#39;
+import numpy as np
+from imodels import *
+from sklearn.ensemble.forest import RandomForestClassifier, ExtraTreesClassifier
+from sklearn.metrics.classification import accuracy_score, f1_score
+import re, string
+from sklearn.model_selection import KFold
+from sklearn.datasets import fetch_openml
+from sklearn.preprocessing import OneHotEncoder
+from scipy.stats.stats import mannwhitneyu, ttest_ind
+
+
+
+def dshape(X):
+    if len(X.shape) == 1:
+        return X.reshape(-1,1)
+    else:
+        return X if X.shape[0]&gt;X.shape[1] else X.T
+
+def unpack(t):
+    while type(t) == list or type(t) == np.ndarray:
+        t = t[0]
+    return t
+
+def tonumeric(lst):
+    lbls = {}
+    for t in lst.flatten():
+        if unpack(t) not in lbls:
+            lbls[unpack(t)] = len(lbls.keys())
+    return np.array([lbls[unpack(t)] for t in lst.flatten()])
+
+def getdataset(datasetname, onehot_encode_strings=True):
+    # load
+    dataset = fetch_openml(datasetname)
+    # get X and y
+    X = dshape(dataset.data)
+    try:
+        target = dshape(dataset.target)
+    except:
+        print(&#34;WARNING: No target found. Taking last column of data matrix as target&#34;)
+        target = X[:, -1]
+        X = X[:, :-1]
+    if len(target.shape)&gt;1 and target.shape[1]&gt;X.shape[1]: # some mldata sets are mixed up...
+        X = target
+        target = dshape(dataset.data)
+    if len(X.shape) == 1 or X.shape[1] &lt;= 1:
+        for k in dataset.keys():
+            if k != &#39;data&#39; and k != &#39;target&#39; and len(dataset[k]) == X.shape[1]:
+                X = np.hstack((X, dshape(dataset[k])))
+    # one-hot for categorical values
+    if onehot_encode_strings:
+        cat_ft=[i for i in range(X.shape[1]) if &#39;str&#39; in str(type(unpack(X[0,i]))) or &#39;unicode&#39; in str(type(unpack(X[0,i])))]
+        if len(cat_ft): 
+            for i in cat_ft:
+                X[:,i] = tonumeric(X[:,i]) 
+            X = OneHotEncoder(categorical_features=cat_ft).fit_transform(X)
+    # if sparse, make dense
+    try:
+        X = X.toarray()
+    except:
+        pass
+    # convert y to monotonically increasing ints
+    y = tonumeric(target).astype(int)
+    return np.nan_to_num(X.astype(float)),y
+
+def shorten(d):
+    return &#34;&#34;.join(re.findall(&#34;[^\W\d_]&#34;, d.lower().replace(&#39;datasets-&#39;, &#39;&#39;).replace(&#39;uci&#39;, &#39;&#39;)))
+
+def print_results_table(results, rows, cols, cellsize=20):
+    row_format =(&#34;{:&gt;&#34;+str(cellsize)+&#34;}&#34;) * (len(cols) + 1)
+    print(row_format.format(&#34;&#34;, *cols))
+    print(&#34;&#34;.join([&#34;=&#34;]*cellsize*(len(cols)+1)))
+    for rh, row in zip(rows, results):
+        print(row_format.format(rh, *row))
+
+def compare_estimators(estimators,
+                       datasets,
+                       metrics,
+                       n_cv_folds = 10, decimals = 3, cellsize = 22):
+    if type(estimators) != dict:
+        raise Exception(&#34;First argument needs to be a dict containing &#39;name&#39;: Estimator pairs&#34;)
+    if type(metrics) != dict:
+        raise Exception(&#34;Argument metrics needs to be a dict containing &#39;name&#39;: scoring function pairs&#34;)
+    cols = []
+    for e in range(len(estimators)):
+        for mname in metrics.keys():
+            cols.append(sorted(estimators.keys())[e]+&#34; &#34;+mname)
+    
+    rows = []
+    mean_results = []
+    std_results = []
+    for d in datasets:
+        print(&#34;comparing on dataset&#34;,d)
+        mean_result = []
+        std_result = []
+        X, y = getdataset(d)
+        rows.append(shorten(d)+&#34; (n=&#34;+str(len(y))+&#34;)&#34;)
+        for e in range(len(estimators.keys())):
+            est = estimators[sorted(estimators.keys())[e]]
+            mresults = [[] for i in range(len(metrics))]
+            kf = KFold(n_splits=n_cv_folds)
+            for train_idx, test_idx in kf.split(X): #(len(y), n_splits=n_cv_folds):
+                est.fit(X[train_idx, :], y[train_idx])
+                y_pred = est.predict(X[test_idx, :])
+                for i, k in enumerate(sorted(metrics)):
+                    try:
+                        mresults[i].append(metrics[k](y[test_idx], y_pred))
+                    except:
+                        mresults[i].append(metrics[k](tonumeric(y[test_idx]), tonumeric(y_pred)))
+
+            for i in range(len(metrics)):
+                mean_result.append(np.mean(mresults[i]))
+                std_result.append(np.std(mresults[i])/n_cv_folds)
+        mean_results.append(mean_result)
+        std_results.append(std_result)
+    
+    results = []
+    for i in range(len(datasets)):
+        result = []
+        
+        sigstars = [&#34;*&#34;]*(len(estimators)*len(metrics))
+        for j in range(len(estimators)):
+            for k in range(len(metrics)):
+                for l in range(len(estimators)):
+                    #if j != l and mean_results[i][j*len(metrics)+k] &lt; mean_results[i][l*len(metrics)+k] + 2*(std_results[i][j*len(metrics)+k] + std_results[i][l*len(metrics)+k]):
+                    if j != l and mean_results[i][j*len(metrics)+k] &lt; mean_results[i][l*len(metrics)+k]:
+                        sigstars[j*len(metrics)+k] = &#34;&#34;
+        
+        for j in range(len(estimators)):
+            for k in range(len(metrics)):
+                result.append((sigstars[j*len(metrics)+k]+&#34;%.&#34;+str(decimals)+&#34;f (SE=%.&#34;+str(decimals)+&#34;f)&#34;) % (mean_results[i][j*len(metrics)+k], std_results[i][j*len(metrics)+k]))
+        results.append(result)
+
+    print_results_table(results, rows, cols, cellsize)
+        
+    return mean_results, std_results, results
+
+if __name__ == &#39;__main__&#39;:
+
+
+    comparison_datasets = [
+            &#34;breast-cancer&#34;,
+    #         &#34;datasets-UCI breast-w&#34;,
+    #         &#34;datasets-UCI credit-g&#34;,
+    #         &#34;uci-20070111 haberman&#34;,
+            &#34;heart&#34;,
+            &#34;ionosphere&#34;,
+    #         &#34;uci-20070111 labor&#34;,
+    #         &#34;liver-disorders&#34;,
+    #         &#34;uci-20070111 tic-tac-toe&#34;,
+    #         &#34;datasets-UCI vote&#34;
+        ]
+
+    metrics = {
+               &#39;Acc.&#39;: accuracy_score, 
+               &#39;F1score&#39;: f1_score
+            }
+    
+    
+    estimators = {
+                  &#39;RandomForest&#39;: RandomForestClassifier(n_estimators=200),
+                  &#39;ExtraTrees&#39;: ExtraTreesClassifier(n_estimators=200),
+    #               &#39;RandomBitsForest&#39;: RandomBitsForest(number_of_trees=200)
+                }
+
+    # optionally, pass a list of UCI dataset identifiers as the datasets parameter, e.g. datasets=[&#39;iris&#39;, &#39;diabetes&#39;]
+    # optionally, pass a dict of scoring functions as the metric parameter, e.g. metrics={&#39;F1-score&#39;: f1_score}
+    compare_estimators(estimators=estimators, datasets=comparison_datasets, metrics=metrics)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="imodels.util.evaluate.compare.compare_estimators"><code class="name flex">
+<span>def <span class="ident">compare_estimators</span></span>(<span>estimators, datasets, metrics, n_cv_folds=10, decimals=3, cellsize=22)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare_estimators(estimators,
+                       datasets,
+                       metrics,
+                       n_cv_folds = 10, decimals = 3, cellsize = 22):
+    if type(estimators) != dict:
+        raise Exception(&#34;First argument needs to be a dict containing &#39;name&#39;: Estimator pairs&#34;)
+    if type(metrics) != dict:
+        raise Exception(&#34;Argument metrics needs to be a dict containing &#39;name&#39;: scoring function pairs&#34;)
+    cols = []
+    for e in range(len(estimators)):
+        for mname in metrics.keys():
+            cols.append(sorted(estimators.keys())[e]+&#34; &#34;+mname)
+    
+    rows = []
+    mean_results = []
+    std_results = []
+    for d in datasets:
+        print(&#34;comparing on dataset&#34;,d)
+        mean_result = []
+        std_result = []
+        X, y = getdataset(d)
+        rows.append(shorten(d)+&#34; (n=&#34;+str(len(y))+&#34;)&#34;)
+        for e in range(len(estimators.keys())):
+            est = estimators[sorted(estimators.keys())[e]]
+            mresults = [[] for i in range(len(metrics))]
+            kf = KFold(n_splits=n_cv_folds)
+            for train_idx, test_idx in kf.split(X): #(len(y), n_splits=n_cv_folds):
+                est.fit(X[train_idx, :], y[train_idx])
+                y_pred = est.predict(X[test_idx, :])
+                for i, k in enumerate(sorted(metrics)):
+                    try:
+                        mresults[i].append(metrics[k](y[test_idx], y_pred))
+                    except:
+                        mresults[i].append(metrics[k](tonumeric(y[test_idx]), tonumeric(y_pred)))
+
+            for i in range(len(metrics)):
+                mean_result.append(np.mean(mresults[i]))
+                std_result.append(np.std(mresults[i])/n_cv_folds)
+        mean_results.append(mean_result)
+        std_results.append(std_result)
+    
+    results = []
+    for i in range(len(datasets)):
+        result = []
+        
+        sigstars = [&#34;*&#34;]*(len(estimators)*len(metrics))
+        for j in range(len(estimators)):
+            for k in range(len(metrics)):
+                for l in range(len(estimators)):
+                    #if j != l and mean_results[i][j*len(metrics)+k] &lt; mean_results[i][l*len(metrics)+k] + 2*(std_results[i][j*len(metrics)+k] + std_results[i][l*len(metrics)+k]):
+                    if j != l and mean_results[i][j*len(metrics)+k] &lt; mean_results[i][l*len(metrics)+k]:
+                        sigstars[j*len(metrics)+k] = &#34;&#34;
+        
+        for j in range(len(estimators)):
+            for k in range(len(metrics)):
+                result.append((sigstars[j*len(metrics)+k]+&#34;%.&#34;+str(decimals)+&#34;f (SE=%.&#34;+str(decimals)+&#34;f)&#34;) % (mean_results[i][j*len(metrics)+k], std_results[i][j*len(metrics)+k]))
+        results.append(result)
+
+    print_results_table(results, rows, cols, cellsize)
+        
+    return mean_results, std_results, results</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.evaluate.compare.dshape"><code class="name flex">
+<span>def <span class="ident">dshape</span></span>(<span>X)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dshape(X):
+    if len(X.shape) == 1:
+        return X.reshape(-1,1)
+    else:
+        return X if X.shape[0]&gt;X.shape[1] else X.T</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.evaluate.compare.getdataset"><code class="name flex">
+<span>def <span class="ident">getdataset</span></span>(<span>datasetname, onehot_encode_strings=True)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getdataset(datasetname, onehot_encode_strings=True):
+    # load
+    dataset = fetch_openml(datasetname)
+    # get X and y
+    X = dshape(dataset.data)
+    try:
+        target = dshape(dataset.target)
+    except:
+        print(&#34;WARNING: No target found. Taking last column of data matrix as target&#34;)
+        target = X[:, -1]
+        X = X[:, :-1]
+    if len(target.shape)&gt;1 and target.shape[1]&gt;X.shape[1]: # some mldata sets are mixed up...
+        X = target
+        target = dshape(dataset.data)
+    if len(X.shape) == 1 or X.shape[1] &lt;= 1:
+        for k in dataset.keys():
+            if k != &#39;data&#39; and k != &#39;target&#39; and len(dataset[k]) == X.shape[1]:
+                X = np.hstack((X, dshape(dataset[k])))
+    # one-hot for categorical values
+    if onehot_encode_strings:
+        cat_ft=[i for i in range(X.shape[1]) if &#39;str&#39; in str(type(unpack(X[0,i]))) or &#39;unicode&#39; in str(type(unpack(X[0,i])))]
+        if len(cat_ft): 
+            for i in cat_ft:
+                X[:,i] = tonumeric(X[:,i]) 
+            X = OneHotEncoder(categorical_features=cat_ft).fit_transform(X)
+    # if sparse, make dense
+    try:
+        X = X.toarray()
+    except:
+        pass
+    # convert y to monotonically increasing ints
+    y = tonumeric(target).astype(int)
+    return np.nan_to_num(X.astype(float)),y</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.evaluate.compare.print_results_table"><code class="name flex">
+<span>def <span class="ident">print_results_table</span></span>(<span>results, rows, cols, cellsize=20)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_results_table(results, rows, cols, cellsize=20):
+    row_format =(&#34;{:&gt;&#34;+str(cellsize)+&#34;}&#34;) * (len(cols) + 1)
+    print(row_format.format(&#34;&#34;, *cols))
+    print(&#34;&#34;.join([&#34;=&#34;]*cellsize*(len(cols)+1)))
+    for rh, row in zip(rows, results):
+        print(row_format.format(rh, *row))</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.evaluate.compare.shorten"><code class="name flex">
+<span>def <span class="ident">shorten</span></span>(<span>d)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def shorten(d):
+    return &#34;&#34;.join(re.findall(&#34;[^\W\d_]&#34;, d.lower().replace(&#39;datasets-&#39;, &#39;&#39;).replace(&#39;uci&#39;, &#39;&#39;)))</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.evaluate.compare.tonumeric"><code class="name flex">
+<span>def <span class="ident">tonumeric</span></span>(<span>lst)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tonumeric(lst):
+    lbls = {}
+    for t in lst.flatten():
+        if unpack(t) not in lbls:
+            lbls[unpack(t)] = len(lbls.keys())
+    return np.array([lbls[unpack(t)] for t in lst.flatten()])</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.evaluate.compare.unpack"><code class="name flex">
+<span>def <span class="ident">unpack</span></span>(<span>t)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unpack(t):
+    while type(t) == list or type(t) == np.ndarray:
+        t = t[0]
+    return t</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.util.evaluate" href="index.html">imodels.util.evaluate</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="two-column">
+<li><code><a title="imodels.util.evaluate.compare.compare_estimators" href="#imodels.util.evaluate.compare.compare_estimators">compare_estimators</a></code></li>
+<li><code><a title="imodels.util.evaluate.compare.dshape" href="#imodels.util.evaluate.compare.dshape">dshape</a></code></li>
+<li><code><a title="imodels.util.evaluate.compare.getdataset" href="#imodels.util.evaluate.compare.getdataset">getdataset</a></code></li>
+<li><code><a title="imodels.util.evaluate.compare.print_results_table" href="#imodels.util.evaluate.compare.print_results_table">print_results_table</a></code></li>
+<li><code><a title="imodels.util.evaluate.compare.shorten" href="#imodels.util.evaluate.compare.shorten">shorten</a></code></li>
+<li><code><a title="imodels.util.evaluate.compare.tonumeric" href="#imodels.util.evaluate.compare.tonumeric">tonumeric</a></code></li>
+<li><code><a title="imodels.util.evaluate.compare.unpack" href="#imodels.util.evaluate.compare.unpack">unpack</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
