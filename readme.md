@@ -44,7 +44,7 @@ Supported models:
 - (coming soon) gams
 - (coming soon) symbolic regression
 
-The models generally fall into the following categories. The code is optimized for readability and different helper functions (e.g. rule deduplication, rule screening) can be in conjunction with any of these models: 
+The models generally fall into the following categories. The code is optimized for readability and different helper functions (e.g. rule deduplication, rule screening, converting between trees, rulesets, and pytorch neural nets) can be in conjunction with any of these models: 
 
 |           Rule set            |        Rule list        |  (Decision) Rule tree   |        Algebraic models        |
 | :---------------------------: | :---------------------: | :---------------------: | :----------------------------: |

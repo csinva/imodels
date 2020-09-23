@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.util.discretization API documentation</title>
-<meta name="description" content="Discretization MDLP
-Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation algorithm …" />
+<title>imodels.util.convert API documentation</title>
+<meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -18,76 +17,133 @@ Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation alg
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.util.discretization</code></h1>
+<h1 class="title">Module <code>imodels.util.convert</code></h1>
 </header>
 <section id="section-intro">
-<h1 id="discretization-mdlp">Discretization MDLP</h1>
-<p>Python implementation of Fayyad and Irani's MDLP criterion discretiation algorithm</p>
-<p><strong>Reference:</strong></p>
-<p>Irani, Keki B. "Multi-interval discretization of continuous-valued attributes for classiﬁcation learning." (1993).</p>
-<p><strong>Instructions:</strong></p>
-<ol>
-<li>Download Entropy.py and MDLPC.py</li>
-<li>In a terminal, cd into the directory where the .py files were saved</li>
-<li>run the following command:
-python MDLPC.py &ndash;options=&hellip;</li>
-</ol>
-<p>script options:
-* in_path (required): Path to dataset in .csv format (must include header)
-* out_path (required): Path where the discretized dataset will be saved
-* features (optional): comma-separated list of attribute names to be discretized, e.g., features=attr1,attr2,attr3
-* class_label (required): label of class column in .csv dataset
-* return_bins (optional): Doesn't take on values. If specified (&ndash;return_bins), a text file will be saved in the same directory as out_path. This file will include the description of the bins computed by the algorighm.</p>
-<p><strong>Dependencies:</strong></p>
-<ol>
-<li>Pandas</li>
-<li>Numpy</li>
-</ol>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#39;&#39;&#39;
-# Discretization MDLP
-Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation algorithm
+<pre><code class="python">from sklearn.tree import _tree
 
-**Reference:**
 
-Irani, Keki B. &#34;Multi-interval discretization of continuous-valued attributes for classiﬁcation learning.&#34; (1993).
+def tree_to_rules(tree, feature_names):
+    &#34;&#34;&#34;
+    Return a list of rules from a tree
 
-**Instructions:**
+    Parameters
+    ----------
+        tree : Decision Tree Classifier/Regressor
+        feature_names: list of variable names
 
-1. Download Entropy.py and MDLPC.py
-2. In a terminal, cd into the directory where the .py files were saved
-3. run the following command:
-  python MDLPC.py --options=...
-  
-script options:
-* in_path (required): Path to dataset in .csv format (must include header)
-* out_path (required): Path where the discretized dataset will be saved
-* features (optional): comma-separated list of attribute names to be discretized, e.g., features=attr1,attr2,attr3
-* class_label (required): label of class column in .csv dataset
-* return_bins (optional): Doesn&#39;t take on values. If specified (--return_bins), a text file will be saved in the same directory as out_path. This file will include the description of the bins computed by the algorighm.
+    Returns
+    -------
+    rules : list of rules.
+    &#34;&#34;&#34;
+    # XXX todo: check the case where tree is build on subset of features,
+    # ie max_features != None
 
-**Dependencies:**
+    tree_ = tree.tree_
+    feature_name = [
+        feature_names[i] if i != _tree.TREE_UNDEFINED else &#34;undefined!&#34;
+        for i in tree_.feature
+    ]
+    rules = []
 
-1. Pandas
-2. Numpy
-&#39;&#39;&#39;</code></pre>
+    def recurse(node, base_name):
+        if tree_.feature[node] != _tree.TREE_UNDEFINED:
+            name = feature_name[node]
+            symbol = &#39;&lt;=&#39;
+            symbol2 = &#39;&gt;&#39;
+            threshold = tree_.threshold[node]
+            text = base_name + [&#34;{} {} {}&#34;.format(name, symbol, threshold)]
+            recurse(tree_.children_left[node], text)
+
+            text = base_name + [&#34;{} {} {}&#34;.format(name, symbol2,
+                                                  threshold)]
+            recurse(tree_.children_right[node], text)
+        else:
+            rule = str.join(&#39; and &#39;, base_name)
+            rule = (rule if rule != &#39;&#39;
+                    else &#39; == &#39;.join([feature_names[0]] * 2))
+            # a rule selecting all is set to &#34;c0==c0&#34;
+            rules.append(rule)
+
+    recurse(0, [])
+
+    return rules if len(rules) &gt; 0 else &#39;True&#39;</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="imodels.util.discretization.mdlp" href="mdlp.html">imodels.util.discretization.mdlp</a></code></dt>
+<dt id="imodels.util.convert.tree_to_rules"><code class="name flex">
+<span>def <span class="ident">tree_to_rules</span></span>(<span>tree, feature_names)</span>
+</code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Return a list of rules from a tree</p>
+<h2 id="parameters">Parameters</h2>
+<pre><code>tree : Decision Tree Classifier/Regressor
+feature_names: list of variable names
+</code></pre>
+<h2 id="returns">Returns</h2>
+<p>rules : list of rules.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tree_to_rules(tree, feature_names):
+    &#34;&#34;&#34;
+    Return a list of rules from a tree
+
+    Parameters
+    ----------
+        tree : Decision Tree Classifier/Regressor
+        feature_names: list of variable names
+
+    Returns
+    -------
+    rules : list of rules.
+    &#34;&#34;&#34;
+    # XXX todo: check the case where tree is build on subset of features,
+    # ie max_features != None
+
+    tree_ = tree.tree_
+    feature_name = [
+        feature_names[i] if i != _tree.TREE_UNDEFINED else &#34;undefined!&#34;
+        for i in tree_.feature
+    ]
+    rules = []
+
+    def recurse(node, base_name):
+        if tree_.feature[node] != _tree.TREE_UNDEFINED:
+            name = feature_name[node]
+            symbol = &#39;&lt;=&#39;
+            symbol2 = &#39;&gt;&#39;
+            threshold = tree_.threshold[node]
+            text = base_name + [&#34;{} {} {}&#34;.format(name, symbol, threshold)]
+            recurse(tree_.children_left[node], text)
+
+            text = base_name + [&#34;{} {} {}&#34;.format(name, symbol2,
+                                                  threshold)]
+            recurse(tree_.children_right[node], text)
+        else:
+            rule = str.join(&#39; and &#39;, base_name)
+            rule = (rule if rule != &#39;&#39;
+                    else &#39; == &#39;.join([feature_names[0]] * 2))
+            # a rule selecting all is set to &#34;c0==c0&#34;
+            rules.append(rule)
+
+    recurse(0, [])
+
+    return rules if len(rules) &gt; 0 else &#39;True&#39;</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -95,19 +151,17 @@ script options:
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul>
-<li><a href="#discretization-mdlp">Discretization MDLP</a></li>
-</ul>
+<ul></ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.util" href="../index.html">imodels.util</a></code></li>
+<li><code><a title="imodels.util" href="index.html">imodels.util</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="imodels.util.discretization.mdlp" href="mdlp.html">imodels.util.discretization.mdlp</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.util.convert.tree_to_rules" href="#imodels.util.convert.tree_to_rules">tree_to_rules</a></code></li>
 </ul>
 </li>
 </ul>

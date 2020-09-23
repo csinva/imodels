@@ -25,20 +25,20 @@
 class, i.e. detecting with high precision instances of this class.</p>
 <p>Skope-rules is a trade off between the interpretability of a Decision Tree
 and the modelization power of a Random Forest.</p>
-<p>SkopeRulesClassifier can also be used as a predictor</p>
-<div class="admonition code">
-<p class="admonition-title">Code:&ensp;python</p>
-<p>from sklearn.datasets import load_boston
+<h2 id="example">Example</h2>
+<pre><code>from sklearn.datasets import load_boston
 from sklearn.metrics import precision_recall_curve
 from matplotlib import pyplot as plt
-from skrules import SkopeRulesClassifier</p>
-<p>dataset = load_boston()
+from skrules import SkopeRulesClassifier
+
+dataset = load_boston()
 clf = SkopeRulesClassifier(max_depth_duplication=None,
-n_estimators=30,
-precision_min=0.2,
-recall_min=0.01,
-feature_names=dataset.feature_names)</p>
-<p>X, y = dataset.data, dataset.target &gt; 25
+                 n_estimators=30,
+                 precision_min=0.2,
+                 recall_min=0.01,
+                 feature_names=dataset.feature_names)
+
+X, y = dataset.data, dataset.target &gt; 25
 X_train, y_train = X[:len(y)//2], y[:len(y)//2]
 X_test, y_test = X[len(y)//2:], y[len(y)//2:]
 clf.fit(X_train, y_train)
@@ -48,9 +48,8 @@ plt.plot(recall, precision)
 plt.xlabel('Recall')
 plt.ylabel('Precision')
 plt.title('Precision Recall curve')
-plt.show()</p>
-</div>
-<p>::</p>
+plt.show()
+</code></pre>
 <p>For more examples and use cases please check our <code>documentation &lt;http://skope-rules.readthedocs.io/en/latest/&gt;</code><em>.
 You can also check the <code>demonstration notebooks &lt;notebooks/&gt;</code></em>.</p>
 <h2 id="links-with-existing-literature">Links with existing literature</h2>
@@ -91,9 +90,8 @@ class, i.e. detecting with high precision instances of this class.
 Skope-rules is a trade off between the interpretability of a Decision Tree
 and the modelization power of a Random Forest.
 
-SkopeRulesClassifier can also be used as a predictor
-
-.. code:: python
+Example
+-------
 
     from sklearn.datasets import load_boston
     from sklearn.metrics import precision_recall_curve
@@ -118,8 +116,6 @@ SkopeRulesClassifier can also be used as a predictor
     plt.ylabel(&#39;Precision&#39;)
     plt.title(&#39;Precision Recall curve&#39;)
     plt.show()
-::
-
 
 For more examples and use cases please check our `documentation &lt;http://skope-rules.readthedocs.io/en/latest/&gt;`_.
 You can also check the `demonstration notebooks &lt;notebooks/&gt;`_.
@@ -181,10 +177,10 @@ import six
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.tree import _tree
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
+from .util.convert import tree_to_rules
 from .util.deduplicate import find_similar_rulesets
 from .util.rule import Rule, replace_feature_name
 
@@ -515,7 +511,7 @@ class SkopeRulesClassifier(BaseEstimator):
                      &#34; (overfitting) and selected rules are likely to&#34;
                      &#34; not perform well! Please use max_samples &lt; 1.&#34;)
                 mask = samples
-            rules_from_tree = self._tree_to_rules(
+            rules_from_tree = tree_to_rules(
                 estimator, np.array(self.feature_names_)[features])
 
             # XXX todo: idem without dataframe
@@ -745,52 +741,6 @@ class SkopeRulesClassifier(BaseEstimator):
 
         return np.array((self.score_top_rules(X) &gt; len(self.rules_) - n_rules),
                         dtype=int)
-
-    def _tree_to_rules(self, tree, feature_names):
-        &#34;&#34;&#34;
-        Return a list of rules from a tree
-
-        Parameters
-        ----------
-            tree : Decision Tree Classifier/Regressor
-            feature_names: list of variable names
-
-        Returns
-        -------
-        rules : list of rules.
-        &#34;&#34;&#34;
-        # XXX todo: check the case where tree is build on subset of features,
-        # ie max_features != None
-
-        tree_ = tree.tree_
-        feature_name = [
-            feature_names[i] if i != _tree.TREE_UNDEFINED else &#34;undefined!&#34;
-            for i in tree_.feature
-        ]
-        rules = []
-
-        def recurse(node, base_name):
-            if tree_.feature[node] != _tree.TREE_UNDEFINED:
-                name = feature_name[node]
-                symbol = &#39;&lt;=&#39;
-                symbol2 = &#39;&gt;&#39;
-                threshold = tree_.threshold[node]
-                text = base_name + [&#34;{} {} {}&#34;.format(name, symbol, threshold)]
-                recurse(tree_.children_left[node], text)
-
-                text = base_name + [&#34;{} {} {}&#34;.format(name, symbol2,
-                                                      threshold)]
-                recurse(tree_.children_right[node], text)
-            else:
-                rule = str.join(&#39; and &#39;, base_name)
-                rule = (rule if rule != &#39;&#39;
-                        else &#39; == &#39;.join([feature_names[0]] * 2))
-                # a rule selecting all is set to &#34;c0==c0&#34;
-                rules.append(rule)
-
-        recurse(0, [])
-
-        return rules if len(rules) &gt; 0 else &#39;True&#39;
 
     def _eval_rule_perf(self, rule, X, y):
         detected_index = list(X.query(rule).index)
@@ -1254,7 +1204,7 @@ estimator.</dd>
                      &#34; (overfitting) and selected rules are likely to&#34;
                      &#34; not perform well! Please use max_samples &lt; 1.&#34;)
                 mask = samples
-            rules_from_tree = self._tree_to_rules(
+            rules_from_tree = tree_to_rules(
                 estimator, np.array(self.feature_names_)[features])
 
             # XXX todo: idem without dataframe
@@ -1484,52 +1434,6 @@ estimator.</dd>
 
         return np.array((self.score_top_rules(X) &gt; len(self.rules_) - n_rules),
                         dtype=int)
-
-    def _tree_to_rules(self, tree, feature_names):
-        &#34;&#34;&#34;
-        Return a list of rules from a tree
-
-        Parameters
-        ----------
-            tree : Decision Tree Classifier/Regressor
-            feature_names: list of variable names
-
-        Returns
-        -------
-        rules : list of rules.
-        &#34;&#34;&#34;
-        # XXX todo: check the case where tree is build on subset of features,
-        # ie max_features != None
-
-        tree_ = tree.tree_
-        feature_name = [
-            feature_names[i] if i != _tree.TREE_UNDEFINED else &#34;undefined!&#34;
-            for i in tree_.feature
-        ]
-        rules = []
-
-        def recurse(node, base_name):
-            if tree_.feature[node] != _tree.TREE_UNDEFINED:
-                name = feature_name[node]
-                symbol = &#39;&lt;=&#39;
-                symbol2 = &#39;&gt;&#39;
-                threshold = tree_.threshold[node]
-                text = base_name + [&#34;{} {} {}&#34;.format(name, symbol, threshold)]
-                recurse(tree_.children_left[node], text)
-
-                text = base_name + [&#34;{} {} {}&#34;.format(name, symbol2,
-                                                      threshold)]
-                recurse(tree_.children_right[node], text)
-            else:
-                rule = str.join(&#39; and &#39;, base_name)
-                rule = (rule if rule != &#39;&#39;
-                        else &#39; == &#39;.join([feature_names[0]] * 2))
-                # a rule selecting all is set to &#34;c0==c0&#34;
-                rules.append(rule)
-
-        recurse(0, [])
-
-        return rules if len(rules) &gt; 0 else &#39;True&#39;
 
     def _eval_rule_perf(self, rule, X, y):
         detected_index = list(X.query(rule).index)
@@ -1851,7 +1755,7 @@ If not provided, then each sample is given unit weight.</dd>
                  &#34; (overfitting) and selected rules are likely to&#34;
                  &#34; not perform well! Please use max_samples &lt; 1.&#34;)
             mask = samples
-        rules_from_tree = self._tree_to_rules(
+        rules_from_tree = tree_to_rules(
             estimator, np.array(self.feature_names_)[features])
 
         # XXX todo: idem without dataframe
@@ -2158,6 +2062,7 @@ Positive scores represent outliers, null scores represent inliers.</dd>
 <h1>Index</h1>
 <div class="toc">
 <ul>
+<li><a href="#example">Example</a></li>
 <li><a href="#links-with-existing-literature">Links with existing literature</a></li>
 <li><a href="#dependencies">Dependencies</a></li>
 <li><a href="#documentation">Documentation</a></li>

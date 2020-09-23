@@ -26,10 +26,11 @@
 </summary>
 <pre><code class="python">import random
 
+import pandas as pd
 from sklearn.base import BaseEstimator
-
+import numpy as np
 from .brl import *
-from ..util.discretization.mdlp import *
+from ..util.discretization.mdlp import MDLP_Discretizer
 
 
 class RuleListClassifier(BaseEstimator):
@@ -256,10 +257,7 @@ class RuleListClassifier(BaseEstimator):
                 Xl[i][j] = self.feature_labels[j] + &#34; : &#34; + Xl[i][j]
         return Xl
 
-    def __str__(self):
-        return self.tostring(decimals=1)
-
-    def tostring(self, decimals=1):
+    def __str__(self, decimals=1):
         if self.d_star:
             detect = &#34;&#34;
             if self.class1label != &#34;class 1&#34;:
@@ -608,10 +606,7 @@ an expert system. </p>
                 Xl[i][j] = self.feature_labels[j] + &#34; : &#34; + Xl[i][j]
         return Xl
 
-    def __str__(self):
-        return self.tostring(decimals=1)
-
-    def tostring(self, decimals=1):
+    def __str__(self, decimals=1):
         if self.d_star:
             detect = &#34;&#34;
             if self.class1label != &#34;class 1&#34;:
@@ -954,38 +949,6 @@ order, as they appear in the attribute <code>classes_</code>.</dd>
         np.random.seed(self.random_state)</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.tostring"><code class="name flex">
-<span>def <span class="ident">tostring</span></span>(<span>self, decimals=1)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def tostring(self, decimals=1):
-    if self.d_star:
-        detect = &#34;&#34;
-        if self.class1label != &#34;class 1&#34;:
-            detect = &#34;for detecting &#34; + self.class1label
-        header = &#34;Trained RuleListClassifier &#34; + detect + &#34;\n&#34;
-        separator = &#34;&#34;.join([&#34;=&#34;] * len(header)) + &#34;\n&#34;
-        s = &#34;&#34;
-        for i, j in enumerate(self.d_star):
-            if self.itemsets[j] != &#39;null&#39;:
-                condition = &#34;ELSE IF &#34; + (
-                    &#34; AND &#34;.join([str(self.itemsets[j][k]) for k in range(len(self.itemsets[j]))])) + &#34; THEN&#34;
-            else:
-                condition = &#34;ELSE&#34;
-            s += condition + &#34; probability of &#34; + self.class1label + &#34;: &#34; + str(
-                np.round(self.theta[i] * 100, decimals)) + &#34;% (&#34; + str(
-                np.round(self.ci_theta[i][0] * 100, decimals)) + &#34;%-&#34; + str(
-                np.round(self.ci_theta[i][1] * 100, decimals)) + &#34;%)\n&#34;
-        return header + separator + s[5:] + separator[1:]
-    else:
-        return &#34;(Untrained RuleListClassifier)&#34;</code></pre>
-</details>
-</dd>
 </dl>
 </dd>
 </dl>
@@ -1006,13 +969,12 @@ order, as they appear in the attribute <code>classes_</code>.</dd>
 <ul>
 <li>
 <h4><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier">RuleListClassifier</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.discretize" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.discretize">discretize</a></code></li>
 <li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.fit" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.fit">fit</a></code></li>
 <li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.predict" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.predict">predict</a></code></li>
 <li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.predict_proba" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.seed" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.seed">seed</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.tostring" href="#imodels.bayesian_rule_list.RuleListClassifier.RuleListClassifier.tostring">tostring</a></code></li>
 </ul>
 </li>
 </ul>
