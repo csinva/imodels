@@ -7,9 +7,8 @@ class, i.e. detecting with high precision instances of this class.
 Skope-rules is a trade off between the interpretability of a Decision Tree
 and the modelization power of a Random Forest.
 
-SkopeRulesClassifier can also be used as a predictor
-
-.. code:: python
+Example
+-------
 
     from sklearn.datasets import load_boston
     from sklearn.metrics import precision_recall_curve
@@ -34,8 +33,6 @@ SkopeRulesClassifier can also be used as a predictor
     plt.ylabel('Precision')
     plt.title('Precision Recall curve')
     plt.show()
-::
-
 
 For more examples and use cases please check our `documentation <http://skope-rules.readthedocs.io/en/latest/>`_.
 You can also check the `demonstration notebooks <notebooks/>`_.

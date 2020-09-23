@@ -190,12 +190,9 @@ if __name__ == &#39;__main__&#39;:
     
     estimators = {
                   &#39;RandomForest&#39;: RandomForestClassifier(n_estimators=200),
-                  &#39;ExtraTrees&#39;: ExtraTreesClassifier(n_estimators=200),
-    #               &#39;RandomBitsForest&#39;: RandomBitsForest(number_of_trees=200)
+#                   &#39;ExtraTrees&#39;: ExtraTreesClassifier(n_estimators=200),
+                  &#39;SkopeRulesClassifier&#39;: SkopeRulesClassifier(),
                 }
-
-    # optionally, pass a list of UCI dataset identifiers as the datasets parameter, e.g. datasets=[&#39;iris&#39;, &#39;diabetes&#39;]
-    # optionally, pass a dict of scoring functions as the metric parameter, e.g. metrics={&#39;F1-score&#39;: f1_score}
     compare_estimators(estimators=estimators, datasets=comparison_datasets, metrics=metrics)</code></pre>
 </details>
 </section>

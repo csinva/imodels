@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>imodels.util.neural_nets API documentation</title>
+<meta name="description" content="Bridging random forests and deep neural networks. Code to convert a sklearn decision tree to a pytorch neural network
+following &#34;Neural Random …" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>imodels.util.neural_nets</code></h1>
+</header>
+<section id="section-intro">
+<p>Bridging random forests and deep neural networks. Code to convert a sklearn decision tree to a pytorch neural network
+following "Neural Random Forests" <a href="https://arxiv.org/abs/1604.07143">https://arxiv.org/abs/1604.07143</a></p>
+<h2 id="example">Example</h2>
+<pre><code>from sklearn.tree import DecisionTreeClassifier
+import numpy as np
+np.random.seed(13)
+
+
+num_features = 4
+N = 1000
+max_depth = 100
+
+# prepare data
+X = np.random.rand(N, num_features)
+y = np.random.rand(N)
+X_t = torch.Tensor(X)
+
+# train rf
+dt = DecisionTreeRegressor(max_depth=max_depth)
+dt.fit(X, y)
+
+
+# pepare net
+net = Net(dt)
+
+
+# check if preds are close
+preds_dt = dt.predict(X).flatten()
+preds_net = net(X_t).detach().numpy().flatten()
+
+assert np.isclose(preds_dt, preds_net).all(), 'preds are not close'
+</code></pre>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Bridging random forests and deep neural networks. Code to convert a sklearn decision tree to a pytorch neural network
+following &#34;Neural Random Forests&#34; https://arxiv.org/abs/1604.07143
+
+
+Example
+-------
+
+    from sklearn.tree import DecisionTreeClassifier
+    import numpy as np
+    np.random.seed(13)
+
+
+    num_features = 4
+    N = 1000
+    max_depth = 100
+
+    # prepare data
+    X = np.random.rand(N, num_features)
+    y = np.random.rand(N)
+    X_t = torch.Tensor(X)
+
+    # train rf
+    dt = DecisionTreeRegressor(max_depth=max_depth)
+    dt.fit(X, y)
+
+
+    # pepare net
+    net = Net(dt)
+
+
+    # check if preds are close
+    preds_dt = dt.predict(X).flatten()
+    preds_net = net(X_t).detach().numpy().flatten()
+
+    assert np.isclose(preds_dt, preds_net).all(), &#39;preds are not close&#39;
+
+&#34;&#34;&#34;
+import time
+from copy import deepcopy
+
+import numpy as np
+from torch import nn
+
+
+class Net(nn.Module):
+    &#39;&#39;&#39;
+    class which converts estimator (decision tree type) to a dnn
+    &#39;&#39;&#39;
+
+    def __init__(self, estimator):
+        super(Net, self).__init__()
+
+        n_nodes = estimator.tree_.node_count
+        children_left = estimator.tree_.children_left  # left_child, id of the left child of the node
+        children_right = estimator.tree_.children_right  # right_child, id of the right child of the node
+        feature = estimator.tree_.feature  # feature, feature used for splitting the node
+        threshold = estimator.tree_.threshold  # threshold, threshold value at the node
+        num_leaves = estimator.tree_.n_leaves
+        num_non_leaves = estimator.tree_.node_count - num_leaves
+        node_depth, is_leaves = self.calc_depths_and_leaves(n_nodes, children_left, children_right)
+        self.values = estimator.tree_.value
+        self.all_leaf_paths = {}
+        self.calc_all_leaf_paths(0, n_nodes, children_left, children_right, running_list=[])  # set all_leaf_paths
+
+        # initialize layers to zero
+        self.layers = nn.Sequential(
+            nn.Linear(estimator.n_features_, num_non_leaves),
+            nn.Linear(num_non_leaves, num_leaves),
+            nn.Linear(num_leaves, 1, bias=False)
+        )
+        for i in range(2):
+            self.layers[i].weight.data *= 0
+            self.layers[i].bias.data *= 0
+
+        # set the first layer
+        nonleaf_node_to_nonleaf_neuron_num = {}  # np.zeros(num_non_leaves)
+        nonleaf_neuron_num = 0
+        for i in range(n_nodes):
+            if not is_leaves[i]:
+                self.layers[0].weight.data[nonleaf_neuron_num, feature[i]] = 1
+                self.layers[0].bias.data[nonleaf_neuron_num] = -threshold[i]
+                nonleaf_node_to_nonleaf_neuron_num[i] = nonleaf_neuron_num
+                nonleaf_neuron_num += 1
+
+                # set the 2nd + 3rd layer
+        for leaf_neuron_num, leaf_idx in enumerate(sorted(self.all_leaf_paths.keys())):
+            path = self.all_leaf_paths[leaf_idx]
+
+            # 2nd lay
+            for (nonleaf_node, sign) in path:
+                self.layers[1].weight.data[leaf_neuron_num,
+                                           nonleaf_node_to_nonleaf_neuron_num[
+                                               nonleaf_node]] = sign  # num_leaves x num_non_leaves
+                self.layers[1].bias.data[leaf_neuron_num] = -1 * float(node_depth[leaf_idx])
+
+            # 3rd lay
+            self.layers[2].weight.data[0, leaf_neuron_num] = self.values[leaf_idx][
+                0, 0]  # note, this will be multivariate for classification!
+
+    # placeholder so class compiles
+    def forward(self, x):
+        #     t0 = time.perf_counter()
+        x = x.reshape(x.shape[0], -1)
+        x = self.layers[0](x)
+        t1 = time.perf_counter()
+        x[x &lt; 0] = -1
+        x[x &gt;= 0] = 1
+
+        #     t2 = time.perf_counter()
+        x = self.layers[1](x)
+        x = (x == 0).float()
+
+        x = self.layers[2](x)
+        #     t3 = time.perf_counter()
+        #     print(f&#39;t1: {t1-t0:0.2e}, t2: {t2-t1:0.2e} t3: {t3-t2:0.2e}&#39;)
+        return x
+
+    def calc_depths_and_leaves(self, n_nodes, children_left, children_right):
+        &#39;&#39;&#39;
+        calculate numpy arrays representing the depth of each node and whether they are leaves or not
+        &#39;&#39;&#39;
+        # The tree structure can be traversed to compute various properties such
+        # as the depth of each node and whether or not it is a leaf.
+        node_depth = np.zeros(shape=n_nodes, dtype=np.int64)
+        is_leaves = np.zeros(shape=n_nodes, dtype=bool)
+
+        # calculate node_depth and is_leaves
+        stack = [(0, -1)]  # seed is the root node id and its parent depth
+        while len(stack) &gt; 0:
+            node_id, parent_depth = stack.pop()
+            node_depth[node_id] = parent_depth + 1
+
+            # If we have a test node
+            if (children_left[node_id] != children_right[node_id]):
+                stack.append((children_left[node_id], parent_depth + 1))
+                stack.append((children_right[node_id], parent_depth + 1))
+            else:
+                is_leaves[node_id] = True
+
+        return node_depth, is_leaves
+
+    def calc_all_leaf_paths(self, node_idx, n_nodes, children_left, children_right, running_list):
+        &#39;&#39;&#39;
+        recursively store all leaf paths into a dictionary as tuples of (node_idxs, weight)
+        weight is -1/+1 depending on if it left/right
+        running_list is a reference to one list which is shared by all calls!
+        &#39;&#39;&#39;
+        # check if we are at a leaf
+        if children_left[node_idx] == children_right[node_idx]:
+            self.all_leaf_paths[node_idx] = deepcopy(running_list)
+        else:
+            running_list.append((node_idx, -1))  # assign weight of -1 to left
+            self.calc_all_leaf_paths(children_left[node_idx], n_nodes, children_left, children_right, running_list)
+            running_list.pop()
+            running_list.append((node_idx, +1))  # assign weight of +1 to right
+            self.calc_all_leaf_paths(children_right[node_idx], n_nodes, children_left, children_right, running_list)
+            running_list.pop()
+
+    def extract_util_np(self):
+        b0 = self.layers[0].bias.data.numpy()
+        idxs0 = self.layers[0].weight.data.argmax(dim=1).numpy()
+        w1 = self.layers[1].weight.data.numpy().T
+        b1 = self.layers[1].bias.data.numpy()
+        num_leaves = self.layers[2].weight.shape[1]
+        idxs2 = np.zeros(num_leaves)  # leaf_neuron_num_to_val
+        # iterate over leaves and map to values
+        for leaf_neuron_num, i in enumerate(sorted(self.all_leaf_paths.keys())):
+            idxs2[leaf_neuron_num] = self.values[i, 0, 0]
+        return b0, idxs0, w1, b1, idxs2</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.util.neural_nets.Net"><code class="flex name class">
+<span>class <span class="ident">Net</span></span>
+<span>(</span><span>estimator)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>class which converts estimator (decision tree type) to a dnn</p>
+<p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Net(nn.Module):
+    &#39;&#39;&#39;
+    class which converts estimator (decision tree type) to a dnn
+    &#39;&#39;&#39;
+
+    def __init__(self, estimator):
+        super(Net, self).__init__()
+
+        n_nodes = estimator.tree_.node_count
+        children_left = estimator.tree_.children_left  # left_child, id of the left child of the node
+        children_right = estimator.tree_.children_right  # right_child, id of the right child of the node
+        feature = estimator.tree_.feature  # feature, feature used for splitting the node
+        threshold = estimator.tree_.threshold  # threshold, threshold value at the node
+        num_leaves = estimator.tree_.n_leaves
+        num_non_leaves = estimator.tree_.node_count - num_leaves
+        node_depth, is_leaves = self.calc_depths_and_leaves(n_nodes, children_left, children_right)
+        self.values = estimator.tree_.value
+        self.all_leaf_paths = {}
+        self.calc_all_leaf_paths(0, n_nodes, children_left, children_right, running_list=[])  # set all_leaf_paths
+
+        # initialize layers to zero
+        self.layers = nn.Sequential(
+            nn.Linear(estimator.n_features_, num_non_leaves),
+            nn.Linear(num_non_leaves, num_leaves),
+            nn.Linear(num_leaves, 1, bias=False)
+        )
+        for i in range(2):
+            self.layers[i].weight.data *= 0
+            self.layers[i].bias.data *= 0
+
+        # set the first layer
+        nonleaf_node_to_nonleaf_neuron_num = {}  # np.zeros(num_non_leaves)
+        nonleaf_neuron_num = 0
+        for i in range(n_nodes):
+            if not is_leaves[i]:
+                self.layers[0].weight.data[nonleaf_neuron_num, feature[i]] = 1
+                self.layers[0].bias.data[nonleaf_neuron_num] = -threshold[i]
+                nonleaf_node_to_nonleaf_neuron_num[i] = nonleaf_neuron_num
+                nonleaf_neuron_num += 1
+
+                # set the 2nd + 3rd layer
+        for leaf_neuron_num, leaf_idx in enumerate(sorted(self.all_leaf_paths.keys())):
+            path = self.all_leaf_paths[leaf_idx]
+
+            # 2nd lay
+            for (nonleaf_node, sign) in path:
+                self.layers[1].weight.data[leaf_neuron_num,
+                                           nonleaf_node_to_nonleaf_neuron_num[
+                                               nonleaf_node]] = sign  # num_leaves x num_non_leaves
+                self.layers[1].bias.data[leaf_neuron_num] = -1 * float(node_depth[leaf_idx])
+
+            # 3rd lay
+            self.layers[2].weight.data[0, leaf_neuron_num] = self.values[leaf_idx][
+                0, 0]  # note, this will be multivariate for classification!
+
+    # placeholder so class compiles
+    def forward(self, x):
+        #     t0 = time.perf_counter()
+        x = x.reshape(x.shape[0], -1)
+        x = self.layers[0](x)
+        t1 = time.perf_counter()
+        x[x &lt; 0] = -1
+        x[x &gt;= 0] = 1
+
+        #     t2 = time.perf_counter()
+        x = self.layers[1](x)
+        x = (x == 0).float()
+
+        x = self.layers[2](x)
+        #     t3 = time.perf_counter()
+        #     print(f&#39;t1: {t1-t0:0.2e}, t2: {t2-t1:0.2e} t3: {t3-t2:0.2e}&#39;)
+        return x
+
+    def calc_depths_and_leaves(self, n_nodes, children_left, children_right):
+        &#39;&#39;&#39;
+        calculate numpy arrays representing the depth of each node and whether they are leaves or not
+        &#39;&#39;&#39;
+        # The tree structure can be traversed to compute various properties such
+        # as the depth of each node and whether or not it is a leaf.
+        node_depth = np.zeros(shape=n_nodes, dtype=np.int64)
+        is_leaves = np.zeros(shape=n_nodes, dtype=bool)
+
+        # calculate node_depth and is_leaves
+        stack = [(0, -1)]  # seed is the root node id and its parent depth
+        while len(stack) &gt; 0:
+            node_id, parent_depth = stack.pop()
+            node_depth[node_id] = parent_depth + 1
+
+            # If we have a test node
+            if (children_left[node_id] != children_right[node_id]):
+                stack.append((children_left[node_id], parent_depth + 1))
+                stack.append((children_right[node_id], parent_depth + 1))
+            else:
+                is_leaves[node_id] = True
+
+        return node_depth, is_leaves
+
+    def calc_all_leaf_paths(self, node_idx, n_nodes, children_left, children_right, running_list):
+        &#39;&#39;&#39;
+        recursively store all leaf paths into a dictionary as tuples of (node_idxs, weight)
+        weight is -1/+1 depending on if it left/right
+        running_list is a reference to one list which is shared by all calls!
+        &#39;&#39;&#39;
+        # check if we are at a leaf
+        if children_left[node_idx] == children_right[node_idx]:
+            self.all_leaf_paths[node_idx] = deepcopy(running_list)
+        else:
+            running_list.append((node_idx, -1))  # assign weight of -1 to left
+            self.calc_all_leaf_paths(children_left[node_idx], n_nodes, children_left, children_right, running_list)
+            running_list.pop()
+            running_list.append((node_idx, +1))  # assign weight of +1 to right
+            self.calc_all_leaf_paths(children_right[node_idx], n_nodes, children_left, children_right, running_list)
+            running_list.pop()
+
+    def extract_util_np(self):
+        b0 = self.layers[0].bias.data.numpy()
+        idxs0 = self.layers[0].weight.data.argmax(dim=1).numpy()
+        w1 = self.layers[1].weight.data.numpy().T
+        b1 = self.layers[1].bias.data.numpy()
+        num_leaves = self.layers[2].weight.shape[1]
+        idxs2 = np.zeros(num_leaves)  # leaf_neuron_num_to_val
+        # iterate over leaves and map to values
+        for leaf_neuron_num, i in enumerate(sorted(self.all_leaf_paths.keys())):
+            idxs2[leaf_neuron_num] = self.values[i, 0, 0]
+        return b0, idxs0, w1, b1, idxs2</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>torch.nn.modules.module.Module</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.util.neural_nets.Net.calc_all_leaf_paths"><code class="name flex">
+<span>def <span class="ident">calc_all_leaf_paths</span></span>(<span>self, node_idx, n_nodes, children_left, children_right, running_list)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>recursively store all leaf paths into a dictionary as tuples of (node_idxs, weight)
+weight is -1/+1 depending on if it left/right
+running_list is a reference to one list which is shared by all calls!</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calc_all_leaf_paths(self, node_idx, n_nodes, children_left, children_right, running_list):
+    &#39;&#39;&#39;
+    recursively store all leaf paths into a dictionary as tuples of (node_idxs, weight)
+    weight is -1/+1 depending on if it left/right
+    running_list is a reference to one list which is shared by all calls!
+    &#39;&#39;&#39;
+    # check if we are at a leaf
+    if children_left[node_idx] == children_right[node_idx]:
+        self.all_leaf_paths[node_idx] = deepcopy(running_list)
+    else:
+        running_list.append((node_idx, -1))  # assign weight of -1 to left
+        self.calc_all_leaf_paths(children_left[node_idx], n_nodes, children_left, children_right, running_list)
+        running_list.pop()
+        running_list.append((node_idx, +1))  # assign weight of +1 to right
+        self.calc_all_leaf_paths(children_right[node_idx], n_nodes, children_left, children_right, running_list)
+        running_list.pop()</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.neural_nets.Net.calc_depths_and_leaves"><code class="name flex">
+<span>def <span class="ident">calc_depths_and_leaves</span></span>(<span>self, n_nodes, children_left, children_right)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>calculate numpy arrays representing the depth of each node and whether they are leaves or not</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calc_depths_and_leaves(self, n_nodes, children_left, children_right):
+    &#39;&#39;&#39;
+    calculate numpy arrays representing the depth of each node and whether they are leaves or not
+    &#39;&#39;&#39;
+    # The tree structure can be traversed to compute various properties such
+    # as the depth of each node and whether or not it is a leaf.
+    node_depth = np.zeros(shape=n_nodes, dtype=np.int64)
+    is_leaves = np.zeros(shape=n_nodes, dtype=bool)
+
+    # calculate node_depth and is_leaves
+    stack = [(0, -1)]  # seed is the root node id and its parent depth
+    while len(stack) &gt; 0:
+        node_id, parent_depth = stack.pop()
+        node_depth[node_id] = parent_depth + 1
+
+        # If we have a test node
+        if (children_left[node_id] != children_right[node_id]):
+            stack.append((children_left[node_id], parent_depth + 1))
+            stack.append((children_right[node_id], parent_depth + 1))
+        else:
+            is_leaves[node_id] = True
+
+    return node_depth, is_leaves</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.neural_nets.Net.extract_util_np"><code class="name flex">
+<span>def <span class="ident">extract_util_np</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extract_util_np(self):
+    b0 = self.layers[0].bias.data.numpy()
+    idxs0 = self.layers[0].weight.data.argmax(dim=1).numpy()
+    w1 = self.layers[1].weight.data.numpy().T
+    b1 = self.layers[1].bias.data.numpy()
+    num_leaves = self.layers[2].weight.shape[1]
+    idxs2 = np.zeros(num_leaves)  # leaf_neuron_num_to_val
+    # iterate over leaves and map to values
+    for leaf_neuron_num, i in enumerate(sorted(self.all_leaf_paths.keys())):
+        idxs2[leaf_neuron_num] = self.values[i, 0, 0]
+    return b0, idxs0, w1, b1, idxs2</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.neural_nets.Net.forward"><code class="name flex">
+<span>def <span class="ident">forward</span></span>(<span>self, x)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the :class:<code>Module</code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def forward(self, x):
+    #     t0 = time.perf_counter()
+    x = x.reshape(x.shape[0], -1)
+    x = self.layers[0](x)
+    t1 = time.perf_counter()
+    x[x &lt; 0] = -1
+    x[x &gt;= 0] = 1
+
+    #     t2 = time.perf_counter()
+    x = self.layers[1](x)
+    x = (x == 0).float()
+
+    x = self.layers[2](x)
+    #     t3 = time.perf_counter()
+    #     print(f&#39;t1: {t1-t0:0.2e}, t2: {t2-t1:0.2e} t3: {t3-t2:0.2e}&#39;)
+    return x</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#example">Example</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.util" href="index.html">imodels.util</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.util.neural_nets.Net" href="#imodels.util.neural_nets.Net">Net</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.util.neural_nets.Net.calc_all_leaf_paths" href="#imodels.util.neural_nets.Net.calc_all_leaf_paths">calc_all_leaf_paths</a></code></li>
+<li><code><a title="imodels.util.neural_nets.Net.calc_depths_and_leaves" href="#imodels.util.neural_nets.Net.calc_depths_and_leaves">calc_depths_and_leaves</a></code></li>
+<li><code><a title="imodels.util.neural_nets.Net.extract_util_np" href="#imodels.util.neural_nets.Net.extract_util_np">extract_util_np</a></code></li>
+<li><code><a title="imodels.util.neural_nets.Net.forward" href="#imodels.util.neural_nets.Net.forward">forward</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

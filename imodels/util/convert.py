@@ -1,5 +1,6 @@
 from sklearn.tree import _tree
 
+
 def tree_to_rules(tree, feature_names):
     """
     Return a list of rules from a tree
