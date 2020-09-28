@@ -41,8 +41,6 @@ Supported models:
 - (in progress) iterative random forest ([docs](https://csinva.io/imodels/iterative_random_forest/iterative_random_forest.html), [ref implementation](https://github.com/Yu-Group/iterative-Random-Forest), [paper](https://www.pnas.org/content/115/8/1943))
 - (in progress) optimal classification tree ([docs](https://csinva.io/imodels/optimal_classification_tree/index.html), [ref implementation](https://github.com/pan5431333/pyoptree), [paper](https://link.springer.com/article/10.1007/s10994-017-5633-9)) - learns succinct trees using global optimization rather than greedy heuristics
 - (coming soon) rule ensembles - e.g. SLIPPER, Lightweight Rule Induction, MLRules
-- (coming soon) gams
-- (coming soon) symbolic regression
 
 The models generally fall into the following categories. The code is optimized for readability and different helper functions (e.g. rule deduplication, rule screening, converting between trees, rulesets, and pytorch neural nets) can be in conjunction with any of these models: 
 
@@ -72,5 +70,8 @@ After fitting models, we can also do posthoc analysis, following this cheat-shee
     - [sklearn-expertsys](https://github.com/tmadl/sklearn-expertsys) - by [@tmadl](https://github.com/tmadl) and [@kenben](https://github.com/kenben) based on original code by [Ben Letham](http://lethalletham.com/)
     - [rulefit](https://github.com/christophM/rulefit) - by [@christophM](https://github.com/christophM)
     - [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) - by the [skope-rules team](https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst) (including [@ngoix](https://github.com/ngoix), [@floriangardin](https://github.com/floriangardin), [@datajms](https://github.com/datajms), [Bibi Ndiaye](), [Ronan Gautier]())
+- Related packages
+    - [gplearn](https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e) for symbolic regression/classification
+    - [pygam](https://github.com/dswah/pyGAM) for generative additive models
 
 For updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@chandan_singh96](https://twitter.com/chandan_singh96). Please make sure to give authors of original methods / base implementations appropriate credit!
