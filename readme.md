@@ -1,5 +1,5 @@
 <h1 align="center"> Interpretable machine learning models (imodels) 🔍</h1>
-<p align="center"> Python package for concise and accurate predictive modling. implementations of interpretable ML models + demos of how to use various interpretability techniques. Pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!
+<p align="center"> Python package for concise and accurate predictive modeling. Contains sklearn-compatible implementations of various interpretable ML models + demos of how to use post-hoc interpretability techniques. Pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!
 </p>
 
 
