@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
 <title>imodels API documentation</title>
-<meta name="description" content="Python `imodels` package for interpretable models compatible with scikit-learn.
-Github repo available …" />
+<meta name="description" content="&lt;h1 align=&#34;center&#34;&gt; Interpretable machine learning models (imodels) 🔍&lt;/h1&gt;
+&lt;p align=&#34;center&#34;&gt; Python package for concise, transparent, and accurate …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,26 +20,24 @@ Github repo available …" />
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels</code></h1>
+
 </header>
 <section id="section-intro">
-<p>Python <a title="imodels" href="#imodels"><code>imodels</code></a> package for interpretable models compatible with scikit-learn.
-Github repo available <a href="https://github.com/csinva/interpretability-implementations-demos">here</a>.
 <h1 align="center"> Interpretable machine learning models (imodels) 🔍</h1>
-<p align="center"> Python package for concise and accurate predictive modling. implementations of interpretable ML models + demos of how to use various interpretability techniques. Pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!
-</p></p>
+<p align="center"> Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easily understandable. Pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!
+</p>
 <p align="center">
 <a href="https://csinva.github.io/imodels/">Docs</a> •
-<a href="#implementations-of-interpretable-models"> Implementations of imodels </a> •
+<a href="#popular-interpretable-models"> Popular imodels </a> •
+<a href="#custom-interpretable-models"> Custom imodels </a> •
 <a href="#demo-notebooks">Demo notebooks</a>
 </p>
 <p align="center">
 <img src="https://img.shields.io/badge/License-MIT-yellow.svg">
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
 </p>
-<h2 id="implementations-of-interpretable-models">Implementations of interpretable models</h2>
-<p>Implementations of different interpretable models, all compatible with scikit-learn. The interpretable models can be easily installed and used:</p>
-<p><code>pip install git+https://github.com/csinva/imodels</code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for more help)</p>
+<h2 id="popular-interpretable-models">Popular interpretable models</h2>
+<p>Implementations of different interpretable models, all compatible with scikit-learn. The interpretable models can be easily used and installed:</p>
 <pre><code class="python">from imodels import RuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, IRFClassifier
 from imodels import SLIMRegressor, RuleFitRegressor
 
@@ -48,20 +46,63 @@ model.fit(X_train, y_train)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 </code></pre>
-<p>Supported models:</p>
-<ul>
-<li>bayesian rule list (<a href="https://csinva.io/imodels/bayesian_rule_list/RuleListClassifier.html">docs</a>, <a href="https://github.com/tmadl/sklearn-expertsys">ref implementation</a>, <a href="https://arxiv.org/abs/1602.08610">paper</a>) - learns a compact rule list by sampling rule lists (rather than using a greedy heuristic)</li>
-<li>rulefit (<a href="https://csinva.io/imodels/rule_fit.html">docs</a>, <a href="https://github.com/christophM/rulefit">ref implementation</a>, <a href="http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf">paper</a>) - extracts rules from a decision tree then builds a sparse linear model with them</li>
-<li>skope-rules (<a href="https://csinva.io/imodels/skope_rules.html">docs</a>, <a href="https://github.com/scikit-learn-contrib/skope-rules">ref implementation</a>) - extracts rules from gradient-boosted trees, deduplicates them, then forms a linear combination of them based on their OOB precision</li>
-<li>sparse integer linear model (<a href="https://csinva.io/imodels/slim.html">docs</a>, cvxpy implementation, <a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">paper</a>) - forces coefficients to be integers</li>
-<li>greedy rule list (<a href="https://csinva.io/imodels/greedy_rule_list.html">docs</a>, <a href="https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea">ref implementation</a>) - uses CART to learn a list (only a single path), rather than a decision tree</li>
-<li>(in progress) iterative random forest (<a href="https://csinva.io/imodels/iterative_random_forest/iterative_random_forest.html">docs</a>, <a href="https://github.com/Yu-Group/iterative-Random-Forest">ref implementation</a>, <a href="https://www.pnas.org/content/115/8/1943">paper</a>)</li>
-<li>(in progress) optimal classification tree (<a href="https://csinva.io/imodels/optimal_classification_tree/index.html">docs</a>, <a href="https://github.com/pan5431333/pyoptree">ref implementation</a>, <a href="https://link.springer.com/article/10.1007/s10994-017-5633-9">paper</a>) - learns succinct trees using global optimization rather than greedy heuristics</li>
-<li>(coming soon) rule ensembles - e.g. SLIPPER, Lightweight Rule Induction, MLRules</li>
-<li>(coming soon) gams</li>
-<li>(coming soon) symbolic regression</li>
-</ul>
-<p>The models generally fall into the following categories. The code is optimized for readability and different helper functions (e.g. rule deduplication, rule screening, converting between trees, rulesets, and pytorch neural nets) can be in conjunction with any of these models: </p>
+<p>Install with <code>pip install git+https://github.com/csinva/imodels</code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help). Contains the following models:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Model</th>
+<th>Reference</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">Bayesian rule list</td>
+<td><a href="https://csinva.io/imodels/bayesian_rule_list/RuleListClassifier.html">🗂️</a>, <a href="https://github.com/tmadl/sklearn-expertsys">🔗</a>, <a href="https://arxiv.org/abs/1602.08610">📄</a></td>
+<td>Learns a compact rule list by sampling rule lists (rather than using a greedy heuristic)</td>
+</tr>
+<tr>
+<td align="left">Rulefit</td>
+<td><a href="https://csinva.io/imodels/rule_fit.html">🗂️</a>, <a href="https://github.com/christophM/rulefit">🔗</a>, <a href="http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf">📄</a></td>
+<td>Extracts rules from a decision tree then builds a sparse linear model with them</td>
+</tr>
+<tr>
+<td align="left">Skope rules</td>
+<td><a href="https://csinva.io/imodels/skope_rules.html">🗂️</a>, <a href="https://github.com/scikit-learn-contrib/skope-rules">🔗</a></td>
+<td>Extracts rules from gradient-boosted trees, deduplicates them, then forms a linear combination of them based on their OOB precision</td>
+</tr>
+<tr>
+<td align="left">Sparse integer linear model</td>
+<td><a href="https://csinva.io/imodels/slim.html">🗂️</a>, <a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">📄</a></td>
+<td>Forces coefficients to be integers</td>
+</tr>
+<tr>
+<td align="left">Greedy rule list</td>
+<td><a href="https://csinva.io/imodels/greedy_rule_list.html">🗂️</a>, <a href="https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea">🔗</a></td>
+<td>Uses CART to learn a list (only a single path), rather than a decision tree</td>
+</tr>
+<tr>
+<td align="left">Iterative random forest</td>
+<td><a href="https://csinva.io/imodels/iterative_random_forest/iterative_random_forest.html">🗂️</a>, <a href="https://github.com/Yu-Group/iterative-Random-Forest">🔗</a>, <a href="https://www.pnas.org/content/115/8/1943">📄</a></td>
+<td>(In progress) Repeatedly fit random forest, giving features with high importance a higher chance of being selected.</td>
+</tr>
+<tr>
+<td align="left">Optimal classification tree</td>
+<td><a href="https://csinva.io/imodels/optimal_classification_tree/index.html">🗂️</a>, <a href="https://github.com/pan5431333/pyoptree">🔗</a>, <a href="https://link.springer.com/article/10.1007/s10994-017-5633-9">📄</a></td>
+<td>(In progress) Learns succinct trees using global optimization rather than greedy heuristics</td>
+</tr>
+<tr>
+<td align="left">Rule sets</td>
+<td></td>
+<td>(Coming soon) Many popular rule sets including SLIPPER, Lightweight Rule Induction, MLRules</td>
+</tr>
+</tbody>
+</table>
+<p align="center">
+Reference includes docs <a href="https://csinva.io/imodels/">🗂️</a>, reference code implementation 🔗, and research paper 📄
+</p>
+<h2 id="custom-interpretable-models">Custom interpretable models</h2>
+<p>The code here contains many useful and readable functions for a variety of rule-based models, contained in the <a href="https://csinva.io/imodels/util/index.html">util folder</a>. This includes functions and simple classes for rule deduplication, rule screening, converting between trees, rulesets, and pytorch neural nets. The final derived rules easily allows for extending any of the following general classes of models:</p>
 <table>
 <thead>
 <tr>
@@ -81,13 +122,15 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 </tbody>
 </table>
 <h2 id="demo-notebooks">Demo notebooks</h2>
-<p>The demos are contained in 3 main <a href="notebooks">notebooks</a>. The first notebook, <a href="notebooks/1_model_based.ipynb">model_based.ipynb</a>, demos the imodels package. It shows how to fit, predict, and visualize with different interpretable models. </p>
-<p><em>See an example of using this package for deriving a clinical decision rule in <a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/04_fit_interpretable_models.ipynb">this nb</a></em></p>
-<p>After fitting models, we can also do posthoc analysis, following this cheat-sheet:<img alt="cheat_sheet" src="https://csinva.github.io/imodels/cheat_sheet.png">
-</p>
+<p>Demos are contained in the <a href="notebooks">notebooks</a> folder.</p>
 <ul>
-<li><a href="notebooks/2_posthoc.ipynb">posthoc.ipynb</a> - different simple analyses to interpret a trained model</li>
-<li><a href="notebooks/3_uncertainty.ipynb">uncertainty.ipynb</a> - code to get uncertainty estimates for a model</li>
+<li><a href="notebooks/1_model_based.ipynb">model_based.ipynb</a>, demos the imodels package. It shows how to fit, predict, and visualize with different interpretable models</li>
+<li><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/04_fit_interpretable_models.ipynb">this notebook</a> shows an example of using <code>imodels</code> for deriving a clinical decision rule</li>
+<li>After fitting models, we can also do posthoc analysis, following this cheat-sheet:
+<img alt="cheat_sheet" src="https://csinva.github.io/imodels/cheat_sheet.png">
+</li>
+<li><a href="notebooks/2_posthoc.ipynb">posthoc.ipynb</a> - shows different simple analyses to interpret a trained model</li>
+<li><a href="notebooks/3_uncertainty.ipynb">uncertainty.ipynb</a> - basic code to get uncertainty estimates for a model</li>
 </ul>
 <h2 id="references">References</h2>
 <ul>
@@ -104,6 +147,11 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 <li><a href="https://github.com/scikit-learn-contrib/skope-rules">skope-rules</a> - by the <a href="https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst">skope-rules team</a> (including <a href="https://github.com/ngoix">@ngoix</a>, <a href="https://github.com/floriangardin">@floriangardin</a>, <a href="https://github.com/datajms">@datajms</a>, <a href="">Bibi Ndiaye</a>, <a href="">Ronan Gautier</a>)</li>
 </ul>
 </li>
+<li>Related packages<ul>
+<li><a href="https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e">gplearn</a> for symbolic regression/classification</li>
+<li><a href="https://github.com/dswah/pyGAM">pygam</a> for generative additive models</li>
+</ul>
+</li>
 </ul>
 <p>For updates, star the repo, <a href="https://github.com/csinva/csinva.github.io">see this related repo</a>, or follow <a href="https://twitter.com/chandan_singh96">@chandan_singh96</a>. Please make sure to give authors of original methods / base implementations appropriate credit!</p>
 <details class="source">
@@ -111,10 +159,10 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-Python `imodels` package for interpretable models compatible with scikit-learn.
-Github repo available [here](https://github.com/csinva/interpretability-implementations-demos).
 .. include:: ../readme.md
 &#34;&#34;&#34;
+# Python `imodels` package for interpretable models compatible with scikit-learn.
+# Github repo available [here](https://github.com/csinva/interpretability-implementations-demos).
 
 from .bayesian_rule_list.RuleListClassifier import RuleListClassifier
 from .greedy_rule_list import GreedyRuleListClassifier
@@ -177,7 +225,8 @@ REGRESSORS = RuleFitRegressor, SkopeRulesClassifier, SLIMRegressor
 <h1>Index 🔍</h1>
 <div class="toc">
 <ul>
-<li><a href="#implementations-of-interpretable-models">Implementations of interpretable models</a></li>
+<li><a href="#popular-interpretable-models">Popular interpretable models</a></li>
+<li><a href="#custom-interpretable-models">Custom interpretable models</a></li>
 <li><a href="#demo-notebooks">Demo notebooks</a></li>
 <li><a href="#references">References</a></li>
 </ul>
@@ -204,4 +253,4 @@ REGRESSORS = RuleFitRegressor, SkopeRulesClassifier, SLIMRegressor
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script>
 </body>
-</html><a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+</html><a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style><link rel="stylesheet" href="github.css">
