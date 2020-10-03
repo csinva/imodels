@@ -63,13 +63,13 @@ Demos are contained in the [notebooks](notebooks) folder.
 - After fitting models, we can also do posthoc analysis, following the cheat-sheet below 
   - [posthoc.ipynb](notebooks/2_posthoc.ipynb) - shows different simple analyses to interpret a trained model
   - [uncertainty.ipynb](notebooks/3_uncertainty.ipynb) - basic code to get uncertainty estimates for a model
-<img src="https://csinva.github.io/imodels/cheat_sheet.svg?sanitize=True">    
+<img src="https://csinva.io/notes/cheat_sheets/interp.svg?sanitize=True">
 
 ## References
 - Readings
-    - Interpretable machine learning: definitions, methods, and applications (murdoch et al. 2019, [pdf](https://arxiv.org/pdf/1901.04592.pdf)) - good quick review on interpretable ML
-    - Interpretable Machine Learning: A Guide for Making Black Box Models Explainable (molnar 2019, [pdf](https://christophm.github.io/interpretable-ml-book/)) - book on interpretable ML
-    - Stop Explaining Black Box Machine Learning Models for High Stakes Decisions and Use Interpretable Models Instead (rudin 2019, [pdf](https://arxiv.org/pdf/1811.10154.pdf)) - good explanation of why one should use interpretable models 
+    - Interpretable ML good quick overview: (murdoch et al. 2019, [pdf](https://arxiv.org/pdf/1901.04592.pdf))
+    - Interpretable ML book: (molnar 2019, [pdf](https://christophm.github.io/interpretable-ml-book/))
+    - Case for interpretable models rather than post-hoc explanation: (rudin 2019, [pdf](https://arxiv.org/pdf/1811.10154.pdf)) - good explanation of why one should use interpretable models 
     - Review on evaluating interpretability (doshi-velez & kim 2017, [pdf](https://arxiv.org/pdf/1702.08608.pdf))
 - Reference implementations (also linked above): the code here heavily derives from (and in some case is just a wrapper for) the wonderful work of previous projects. We seek to to extract out, combine, and maintain select relevant parts of these projects.
     - [sklearn-expertsys](https://github.com/tmadl/sklearn-expertsys) - by [@tmadl](https://github.com/tmadl) and [@kenben](https://github.com/kenben) based on original code by [Ben Letham](http://lethalletham.com/)
@@ -79,5 +79,5 @@ Demos are contained in the [notebooks](notebooks) folder.
     - [gplearn](https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e) for symbolic regression/classification
     - [pygam](https://github.com/dswah/pyGAM) for generative additive models
 
-For updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@chandan_singh96](https://twitter.com/chandan_singh96). Please make sure to give authors of original methods / base implementations appropriate credit!
+For updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@csinva_](https://twitter.com/csinva_). Please make sure to give authors of original methods / base implementations appropriate credit!
 
