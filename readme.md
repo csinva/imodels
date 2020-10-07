@@ -21,10 +21,10 @@
 Implementations of different interpretable models, all compatible with scikit-learn. The interpretable models can be easily used and installed:
 
 ```python
-from imodels import RuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, IRFClassifier
+from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, IRFClassifier
 from imodels import SLIMRegressor, RuleFitRegressor
 
-model = RuleListClassifier()  # initialize a model
+model = BayesianRuleListClassifier()  # initialize a model
 model.fit(X_train, y_train)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
@@ -34,7 +34,7 @@ Install with `pip install git+https://github.com/csinva/imodels` (see [here](htt
 
 | Model                       | Reference                                                    | Description                                                  |
 | :--------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Bayesian rule list          | [🗂️](https://csinva.io/imodels/bayesian_rule_list/RuleListClassifier.html), [🔗](https://github.com/tmadl/sklearn-expertsys), [📄](https://arxiv.org/abs/1602.08610) | Learns a compact rule list by sampling rule lists (rather than using a greedy heuristic) |
+| Bayesian rule list          | [🗂️](https://csinva.io/imodels/bayesian_rule_list/bayesian_rule_list.html), [🔗](https://github.com/tmadl/sklearn-expertsys), [📄](https://arxiv.org/abs/1602.08610) | Learns a compact rule list by sampling rule lists (rather than using a greedy heuristic) |
 | Rulefit                     | [🗂️](https://csinva.io/imodels/rule_fit.html), [🔗](https://github.com/christophM/rulefit), [📄](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf) | Extracts rules from a decision tree then builds a sparse linear model with them |
 | Skope rules                 | [🗂️](https://csinva.io/imodels/skope_rules.html), [🔗](https://github.com/scikit-learn-contrib/skope-rules) | Extracts rules from gradient-boosted trees, deduplicates them, then forms a linear combination of them based on their OOB precision |
 | Sparse integer linear model | [🗂️](https://csinva.io/imodels/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Forces coefficients to be integers                           |
@@ -59,7 +59,7 @@ The code here contains many useful and readable functions for a variety of rule-
 Demos are contained in the [notebooks](notebooks) folder.
 
 - [model_based.ipynb](notebooks/1_model_based.ipynb), demos the imodels package. It shows how to fit, predict, and visualize with different interpretable models
-- [this notebook](https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/04_fit_interpretable_models.ipynb) shows an example of using `imodels` for deriving a clinical decision rule
+- [this notebook](https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb) shows an example of using `imodels` for deriving a clinical decision rule
 - After fitting models, we can also do posthoc analysis, following the cheat-sheet below 
   - [posthoc.ipynb](notebooks/2_posthoc.ipynb) - shows different simple analyses to interpret a trained model
   - [uncertainty.ipynb](notebooks/3_uncertainty.ipynb) - basic code to get uncertainty estimates for a model

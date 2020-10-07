@@ -38,10 +38,10 @@
 </p>
 <h2 id="popular-interpretable-models">Popular interpretable models</h2>
 <p>Implementations of different interpretable models, all compatible with scikit-learn. The interpretable models can be easily used and installed:</p>
-<pre><code class="python">from imodels import RuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, IRFClassifier
+<pre><code class="python">from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, IRFClassifier
 from imodels import SLIMRegressor, RuleFitRegressor
 
-model = RuleListClassifier()  # initialize a model
+model = BayesianRuleListClassifier()  # initialize a model
 model.fit(X_train, y_train)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
@@ -58,7 +58,7 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 <tbody>
 <tr>
 <td align="left">Bayesian rule list</td>
-<td><a href="https://csinva.io/imodels/bayesian_rule_list/RuleListClassifier.html">🗂️</a>, <a href="https://github.com/tmadl/sklearn-expertsys">🔗</a>, <a href="https://arxiv.org/abs/1602.08610">📄</a></td>
+<td><a href="https://csinva.io/imodels/bayesian_rule_list/bayesian_rule_list.html">🗂️</a>, <a href="https://github.com/tmadl/sklearn-expertsys">🔗</a>, <a href="https://arxiv.org/abs/1602.08610">📄</a></td>
 <td>Learns a compact rule list by sampling rule lists (rather than using a greedy heuristic)</td>
 </tr>
 <tr>
@@ -125,19 +125,18 @@ Reference includes docs <a href="https://csinva.io/imodels/">🗂️</a>, refere
 <p>Demos are contained in the <a href="notebooks">notebooks</a> folder.</p>
 <ul>
 <li><a href="notebooks/1_model_based.ipynb">model_based.ipynb</a>, demos the imodels package. It shows how to fit, predict, and visualize with different interpretable models</li>
-<li><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/04_fit_interpretable_models.ipynb">this notebook</a> shows an example of using <code>imodels</code> for deriving a clinical decision rule</li>
+<li><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">this notebook</a> shows an example of using <code>imodels</code> for deriving a clinical decision rule</li>
 <li>After fitting models, we can also do posthoc analysis, following the cheat-sheet below </li>
 <li><a href="notebooks/2_posthoc.ipynb">posthoc.ipynb</a> - shows different simple analyses to interpret a trained model</li>
 <li><a href="notebooks/3_uncertainty.ipynb">uncertainty.ipynb</a> - basic code to get uncertainty estimates for a model
-<img src="https://csinva.github.io/imodels/cheat_sheet.svg?sanitize=True">
-</li>
+<img src="https://csinva.io/notes/cheat_sheets/interp.svg?sanitize=True"></li>
 </ul>
 <h2 id="references">References</h2>
 <ul>
 <li>Readings<ul>
-<li>Interpretable machine learning: definitions, methods, and applications (murdoch et al. 2019, <a href="https://arxiv.org/pdf/1901.04592.pdf">pdf</a>) - good quick review on interpretable ML</li>
-<li>Interpretable Machine Learning: A Guide for Making Black Box Models Explainable (molnar 2019, <a href="https://christophm.github.io/interpretable-ml-book/">pdf</a>) - book on interpretable ML</li>
-<li>Stop Explaining Black Box Machine Learning Models for High Stakes Decisions and Use Interpretable Models Instead (rudin 2019, <a href="https://arxiv.org/pdf/1811.10154.pdf">pdf</a>) - good explanation of why one should use interpretable models </li>
+<li>Interpretable ML good quick overview: (murdoch et al. 2019, <a href="https://arxiv.org/pdf/1901.04592.pdf">pdf</a>)</li>
+<li>Interpretable ML book: (molnar 2019, <a href="https://christophm.github.io/interpretable-ml-book/">pdf</a>)</li>
+<li>Case for interpretable models rather than post-hoc explanation: (rudin 2019, <a href="https://arxiv.org/pdf/1811.10154.pdf">pdf</a>) - good explanation of why one should use interpretable models </li>
 <li>Review on evaluating interpretability (doshi-velez &amp; kim 2017, <a href="https://arxiv.org/pdf/1702.08608.pdf">pdf</a>)</li>
 </ul>
 </li>
@@ -153,7 +152,7 @@ Reference includes docs <a href="https://csinva.io/imodels/">🗂️</a>, refere
 </ul>
 </li>
 </ul>
-<p>For updates, star the repo, <a href="https://github.com/csinva/csinva.github.io">see this related repo</a>, or follow <a href="https://twitter.com/chandan_singh96">@chandan_singh96</a>. Please make sure to give authors of original methods / base implementations appropriate credit!</p>
+<p>For updates, star the repo, <a href="https://github.com/csinva/csinva.github.io">see this related repo</a>, or follow <a href="https://twitter.com/csinva_">@csinva_</a>. Please make sure to give authors of original methods / base implementations appropriate credit!</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -164,14 +163,14 @@ Reference includes docs <a href="https://csinva.io/imodels/">🗂️</a>, refere
 # Python `imodels` package for interpretable models compatible with scikit-learn.
 # Github repo available [here](https://github.com/csinva/interpretability-implementations-demos).
 
-from .bayesian_rule_list.RuleListClassifier import RuleListClassifier
+from .bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
 from .greedy_rule_list import GreedyRuleListClassifier
 from .iterative_random_forest.iterative_random_forest import IRFClassifier
 from .rule_fit import RuleFitRegressor
 from .skope_rules import SkopeRulesClassifier
 from .slim import SLIMRegressor
 
-CLASSIFIERS = RuleListClassifier, GreedyRuleListClassifier, IRFClassifier
+CLASSIFIERS = BayesianRuleListClassifier, GreedyRuleListClassifier, IRFClassifier
 REGRESSORS = RuleFitRegressor, SkopeRulesClassifier, SLIMRegressor
 # from .optimal_classification_tree import OptimalTreeModel</code></pre>
 </details>

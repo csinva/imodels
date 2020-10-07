@@ -1,6 +1,6 @@
 import numpy as np
 
-from imodels import GreedyRuleListClassifier, IRFClassifier, SkopeRulesClassifier
+from imodels import GreedyRuleListClassifier, IRFClassifier, SkopeRulesClassifier, BayesianRuleListClassifier
 
 
 class TestClassClassification:
@@ -20,6 +20,7 @@ class TestClassClassification:
 
             # if not model_type in [SkopeRulesClassifier]:
             preds_proba = m.predict_proba(self.X_classification_binary)
+            print('preds_proba', preds_proba)
             assert len(preds_proba.shape) == 2, 'preds_proba has columns'
             assert np.max(preds_proba) < 1.1, 'preds_proba has no values over 1'
 

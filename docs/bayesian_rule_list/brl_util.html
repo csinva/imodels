@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.bayesian_rule_list.brl API documentation</title>
+<title>imodels.bayesian_rule_list.brl_util API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,7 +17,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.bayesian_rule_list.brl</code></h1>
+<h1 class="title">Module <code>imodels.bayesian_rule_list.brl_util</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -570,7 +570,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="imodels.bayesian_rule_list.brl.bayesdl_mcmc"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.bayesdl_mcmc"><code class="name flex">
 <span>def <span class="ident">bayesdl_mcmc</span></span>(<span>numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, rseed, d_init)</span>
 </code></dt>
 <dd>
@@ -628,7 +628,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return permsdic, perms</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.compute_rule_usage"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.compute_rule_usage"><code class="name flex">
 <span>def <span class="ident">compute_rule_usage</span></span>(<span>d_star, R_star, X, Y)</span>
 </code></dt>
 <dd>
@@ -652,7 +652,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return N_star</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.default_permsdic"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.default_permsdic"><code class="name flex">
 <span>def <span class="ident">default_permsdic</span></span>(<span>)</span>
 </code></dt>
 <dd>
@@ -665,7 +665,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return [0., 0.]</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.fn_logliklihood"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.fn_logliklihood"><code class="name flex">
 <span>def <span class="ident">fn_logliklihood</span></span>(<span>d_t, N_t, R_t, alpha)</span>
 </code></dt>
 <dd>
@@ -683,7 +683,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return logliklihood</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.fn_logposterior"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.fn_logposterior"><code class="name flex">
 <span>def <span class="ident">fn_logposterior</span></span>(<span>d_t, R_t, N_t, alpha, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len)</span>
 </code></dt>
 <dd>
@@ -698,7 +698,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return logliklihood + logprior</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.fn_logprior"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.fn_logprior"><code class="name flex">
 <span>def <span class="ident">fn_logprior</span></span>(<span>d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len)</span>
 </code></dt>
 <dd>
@@ -738,7 +738,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return logprior</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.gelmanrubin"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.gelmanrubin"><code class="name flex">
 <span>def <span class="ident">gelmanrubin</span></span>(<span>res)</span>
 </code></dt>
 <dd>
@@ -789,7 +789,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return Rhat</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.get_point_estimate"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.get_point_estimate"><code class="name flex">
 <span>def <span class="ident">get_point_estimate</span></span>(<span>permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, eta, verbose=True)</span>
 </code></dt>
 <dd>
@@ -858,7 +858,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return d_star</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.get_rule_rhs"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.get_rule_rhs"><code class="name flex">
 <span>def <span class="ident">get_rule_rhs</span></span>(<span>Xtrain, Ytrain, d_t, alpha, intervals)</span>
 </code></dt>
 <dd>
@@ -883,7 +883,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return theta, ci_theta</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.initialize_d"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.initialize_d"><code class="name flex">
 <span>def <span class="ident">initialize_d</span></span>(<span>X, Y, lbda, eta, lhs_len, maxlhs, nruleslen)</span>
 </code></dt>
 <dd>
@@ -926,7 +926,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return d_t, R_t, N_t</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.mcmcchain"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.mcmcchain"><code class="name flex">
 <span>def <span class="ident">mcmcchain</span></span>(<span>numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, nchains, d_init)</span>
 </code></dt>
 <dd>
@@ -947,7 +947,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return res</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.merge_chains"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.merge_chains"><code class="name flex">
 <span>def <span class="ident">merge_chains</span></span>(<span>res)</span>
 </code></dt>
 <dd>
@@ -965,7 +965,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return permsdic</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.plot_chains"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.plot_chains"><code class="name flex">
 <span>def <span class="ident">plot_chains</span></span>(<span>res)</span>
 </code></dt>
 <dd>
@@ -981,7 +981,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.preds_d_t"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.preds_d_t"><code class="name flex">
 <span>def <span class="ident">preds_d_t</span></span>(<span>X, Y, d_t, theta)</span>
 </code></dt>
 <dd>
@@ -1003,7 +1003,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return preds</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.prior_calculations"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.prior_calculations"><code class="name flex">
 <span>def <span class="ident">prior_calculations</span></span>(<span>lbda, maxlen, eta, maxlhs)</span>
 </code></dt>
 <dd>
@@ -1028,7 +1028,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return beta_Z, logalpha_pmf, logbeta_pmf</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.proposal"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.proposal"><code class="name flex">
 <span>def <span class="ident">proposal</span></span>(<span>d_t, R_t, X, Y, alpha)</span>
 </code></dt>
 <dd>
@@ -1119,7 +1119,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return d_star, log(Jratio), R_star, step</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.reset_permsdic"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.reset_permsdic"><code class="name flex">
 <span>def <span class="ident">reset_permsdic</span></span>(<span>permsdic)</span>
 </code></dt>
 <dd>
@@ -1134,7 +1134,7 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return permsdic</code></pre>
 </details>
 </dd>
-<dt id="imodels.bayesian_rule_list.brl.run_bdl_multichain_serial"><code class="name flex">
+<dt id="imodels.bayesian_rule_list.brl_util.run_bdl_multichain_serial"><code class="name flex">
 <span>def <span class="ident">run_bdl_multichain_serial</span></span>(<span>numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, nchains, d_inits, verbose=True, seed=42)</span>
 </code></dt>
 <dd>
@@ -1188,24 +1188,24 @@ def compute_rule_usage(d_star, R_star, X, Y):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="imodels.bayesian_rule_list.brl.bayesdl_mcmc" href="#imodels.bayesian_rule_list.brl.bayesdl_mcmc">bayesdl_mcmc</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.compute_rule_usage" href="#imodels.bayesian_rule_list.brl.compute_rule_usage">compute_rule_usage</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.default_permsdic" href="#imodels.bayesian_rule_list.brl.default_permsdic">default_permsdic</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.fn_logliklihood" href="#imodels.bayesian_rule_list.brl.fn_logliklihood">fn_logliklihood</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.fn_logposterior" href="#imodels.bayesian_rule_list.brl.fn_logposterior">fn_logposterior</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.fn_logprior" href="#imodels.bayesian_rule_list.brl.fn_logprior">fn_logprior</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.gelmanrubin" href="#imodels.bayesian_rule_list.brl.gelmanrubin">gelmanrubin</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.get_point_estimate" href="#imodels.bayesian_rule_list.brl.get_point_estimate">get_point_estimate</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.get_rule_rhs" href="#imodels.bayesian_rule_list.brl.get_rule_rhs">get_rule_rhs</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.initialize_d" href="#imodels.bayesian_rule_list.brl.initialize_d">initialize_d</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.mcmcchain" href="#imodels.bayesian_rule_list.brl.mcmcchain">mcmcchain</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.merge_chains" href="#imodels.bayesian_rule_list.brl.merge_chains">merge_chains</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.plot_chains" href="#imodels.bayesian_rule_list.brl.plot_chains">plot_chains</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.preds_d_t" href="#imodels.bayesian_rule_list.brl.preds_d_t">preds_d_t</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.prior_calculations" href="#imodels.bayesian_rule_list.brl.prior_calculations">prior_calculations</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.proposal" href="#imodels.bayesian_rule_list.brl.proposal">proposal</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.reset_permsdic" href="#imodels.bayesian_rule_list.brl.reset_permsdic">reset_permsdic</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl.run_bdl_multichain_serial" href="#imodels.bayesian_rule_list.brl.run_bdl_multichain_serial">run_bdl_multichain_serial</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.bayesdl_mcmc" href="#imodels.bayesian_rule_list.brl_util.bayesdl_mcmc">bayesdl_mcmc</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.compute_rule_usage" href="#imodels.bayesian_rule_list.brl_util.compute_rule_usage">compute_rule_usage</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.default_permsdic" href="#imodels.bayesian_rule_list.brl_util.default_permsdic">default_permsdic</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.fn_logliklihood" href="#imodels.bayesian_rule_list.brl_util.fn_logliklihood">fn_logliklihood</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.fn_logposterior" href="#imodels.bayesian_rule_list.brl_util.fn_logposterior">fn_logposterior</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.fn_logprior" href="#imodels.bayesian_rule_list.brl_util.fn_logprior">fn_logprior</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.gelmanrubin" href="#imodels.bayesian_rule_list.brl_util.gelmanrubin">gelmanrubin</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.get_point_estimate" href="#imodels.bayesian_rule_list.brl_util.get_point_estimate">get_point_estimate</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.get_rule_rhs" href="#imodels.bayesian_rule_list.brl_util.get_rule_rhs">get_rule_rhs</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.initialize_d" href="#imodels.bayesian_rule_list.brl_util.initialize_d">initialize_d</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.mcmcchain" href="#imodels.bayesian_rule_list.brl_util.mcmcchain">mcmcchain</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.merge_chains" href="#imodels.bayesian_rule_list.brl_util.merge_chains">merge_chains</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.plot_chains" href="#imodels.bayesian_rule_list.brl_util.plot_chains">plot_chains</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.preds_d_t" href="#imodels.bayesian_rule_list.brl_util.preds_d_t">preds_d_t</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.prior_calculations" href="#imodels.bayesian_rule_list.brl_util.prior_calculations">prior_calculations</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.proposal" href="#imodels.bayesian_rule_list.brl_util.proposal">proposal</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.reset_permsdic" href="#imodels.bayesian_rule_list.brl_util.reset_permsdic">reset_permsdic</a></code></li>
+<li><code><a title="imodels.bayesian_rule_list.brl_util.run_bdl_multichain_serial" href="#imodels.bayesian_rule_list.brl_util.run_bdl_multichain_serial">run_bdl_multichain_serial</a></code></li>
 </ul>
 </li>
 </ul>
