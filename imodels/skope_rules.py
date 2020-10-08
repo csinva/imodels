@@ -40,18 +40,29 @@ You can also check the `demonstration notebooks <notebooks/>`_.
 Links with existing literature
 -------------------------------
 
-The main advantage of decision rules is that they are offering interpretable models. The problem of generating such rules has been widely considered in machine learning, see e.g. RuleFit [1], Slipper [2], LRI [3], MLRules[4].
+The main advantage of decision rules is that they are offering interpretable models. The problem of generating such
+rules has been widely considered in machine learning, see e.g. RuleFit [1], Slipper [2], LRI [3], MLRules[4].
 
-A decision rule is a logical expression of the form "IF conditions THEN response". In a binary classification setting, if an instance satisfies conditions of the rule, then it is assigned to one of the two classes. If this instance does not satisfy conditions, it remains unassigned.
+A decision rule is a logical expression of the form "IF conditions THEN response". In a binary classification setting,
+if an instance satisfies conditions of the rule, then it is assigned to one of the two classes. If this instance does
+not satisfy conditions, it remains unassigned.
 
-1) In [2, 3, 4], rules induction is done by considering each single decision rule as a base classifier in an ensemble, which is built by greedily minimizing some loss function.
+1) In [2, 3, 4], rules induction is done by considering each single decision rule as a base classifier in an ensemble,
+which is built by greedily minimizing some loss function.
 
-2) In [1], rules are extracted from an ensemble of trees; a weighted combination of these rules is then built by solving a L1-regularized optimization problem over the weights as described in [5].
+2) In [1], rules are extracted from an ensemble of trees; a weighted combination of these rules is then built by solving
+a L1-regularized optimization problem over the weights as described in [5].
 
-In this package, we use the second approach. Rules are extracted from tree ensemble, which allow us to take advantage of existing fast algorithms (such as bagged decision trees, or gradient boosting) to produce such tree ensemble. Too similar or duplicated rules are then removed, based on a similarity threshold of their supports..
-The main goal of this package is to provide rules verifying precision and recall conditions. It still implement a score (`decision_function`) method, but which does not solve the L1-regularized optimization problem as in [1]. Instead, weights are simply proportional to the OOB associated precision of the rule.
+In this package, we use the second approach. Rules are extracted from tree ensemble, which allow us to take advantage of
+existing fast algorithms (such as bagged decision trees, or gradient boosting) to produce such tree ensemble. Too
+similar or duplicated rules are then removed, based on a similarity threshold of their supports..
 
-This package also offers convenient methods to compute predictions with the k most precise rules (cf score_top_rules() and predict_top_rules() functions).
+The main goal of this package is to provide rules verifying precision and recall conditions. It still implement a score
+(`decision_function`) method, but which does not solve the L1-regularized optimization problem as in [1]. Instead,
+weights are simply proportional to the OOB associated precision of the rule.
+
+This package also offers convenient methods to compute predictions with the k most precise rules (cf score_top_rules()
+and predict_top_rules() functions).
 
 
 [1] Friedman and Popescu, Predictive learning via rule ensembles,Technical Report, 2005.
@@ -83,16 +94,16 @@ Documentation
 
 You can access the full project documentation `here <http://skope-rules.readthedocs.io/en/latest/>`_
 '''
-
 import numbers
 from collections.abc import Iterable
 from warnings import warn
+from typing import Union, List, Tuple
 
 import numpy as np
 import pandas
 import six
 from sklearn.base import BaseEstimator
-from sklearn.ensemble import BaggingClassifier, BaggingRegressor
+from sklearn.ensemble import BaggingClassifier, BaggingRegressor, GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
@@ -256,7 +267,7 @@ class SkopeRulesClassifier(BaseEstimator):
         self.random_state = random_state
         self.verbose = verbose
 
-    def fit(self, X, y, sample_weight=None):
+    def fit(self, X, y, sample_weight=None) -> 'SkopeRulesClassifier':
         """Fit the model according to the given training data.
 
         Parameters
@@ -289,51 +300,51 @@ class SkopeRulesClassifier(BaseEstimator):
         n_classes = len(self.classes_)
 
         if n_classes < 2:
-            raise ValueError("This method needs samples of at least 2 classes"
-                             " in the data, but the data contains only one"
-                             " class: %r" % self.classes_[0])
+            raise ValueError(
+                "This method needs samples of at least 2 classes"
+                " in the data, but the data contains only one"
+                " class: %r" % self.classes_[0]
+            )
 
-        if not isinstance(self.max_depth_duplication, int) \
-                and self.max_depth_duplication is not None:
-            raise ValueError("max_depth_duplication should be an integer"
-                             )
-        if not set(self.classes_) == set([0, 1]):
-            warn("Found labels %s. This method assumes target class to be"
-                 " labeled as 1 and normal data to be labeled as 0. Any label"
-                 " different from 0 will be considered as being from the"
-                 " target class."
-                 % set(self.classes_))
+        if not isinstance(self.max_depth_duplication, int) and self.max_depth_duplication is not None:
+            raise ValueError("max_depth_duplication should be an integer")
+
+        if not set(self.classes_) == {0, 1}:
+            warn(
+                "Found labels %s. This method assumes target class to be"
+                " labeled as 1 and normal data to be labeled as 0. Any label"
+                " different from 0 will be considered as being from the"
+                " target class."
+                % set(self.classes_)
+            )
             y = (y > 0)
 
         # ensure that max_samples is in [1, n_samples]:
         n_samples = X.shape[0]
 
         if isinstance(self.max_samples, six.string_types):
-            raise ValueError('max_samples (%s) is not supported.'
-                             'Valid choices are: "auto", int or'
-                             'float' % self.max_samples)
+            raise ValueError(
+                'max_samples (%s) is not supported.'
+                'Valid choices are: "auto", int or'
+                'float' % self.max_samples
+            )
 
         elif isinstance(self.max_samples, INTEGER_TYPES):
             if self.max_samples > n_samples:
-                warn("max_samples (%s) is greater than the "
-                     "total number of samples (%s). max_samples "
-                     "will be set to n_samples for estimation."
-                     % (self.max_samples, n_samples))
+                warn(
+                    "max_samples (%s) is greater than the "
+                    "total number of samples (%s). max_samples "
+                    "will be set to n_samples for estimation."
+                    % (self.max_samples, n_samples)
+                )
                 max_samples = n_samples
             else:
                 max_samples = self.max_samples
         else:  # float
             if not (0. < self.max_samples <= 1.):
-                raise ValueError("max_samples must be in (0, 1], got %r"
-                                 % self.max_samples)
+                raise ValueError("max_samples must be in (0, 1], got %r" % self.max_samples)
             max_samples = int(self.max_samples * X.shape[0])
-
         self.max_samples_ = max_samples
-
-        self.rules_ = {}
-        self.estimators_ = []
-        self.estimators_samples_ = []
-        self.estimators_features_ = []
 
         # default columns names :
         feature_names_ = [BASE_FEATURE_NAME + x for x in
@@ -346,62 +357,28 @@ class SkopeRulesClassifier(BaseEstimator):
                                   for i, feat in enumerate(feature_names_)}
         self.feature_names_ = feature_names_
 
-        clfs = []
-        regs = []
-
         self._max_depths = self.max_depth \
             if isinstance(self.max_depth, Iterable) else [self.max_depth]
 
-        for max_depth in self._max_depths:
-            bagging_clf = BaggingClassifier(
-                base_estimator=DecisionTreeClassifier(
-                    max_depth=max_depth,
-                    max_features=self.max_features,
-                    min_samples_split=self.min_samples_split),
-                n_estimators=self.n_estimators,
-                max_samples=self.max_samples_,
-                max_features=self.max_samples_features,
-                bootstrap=self.bootstrap,
-                bootstrap_features=self.bootstrap_features,
-                # oob_score=... XXX may be added
-                # if selection on tree perf needed.
-                # warm_start=... XXX may be added to increase computation perf.
-                n_jobs=self.n_jobs,
-                random_state=self.random_state,
-                verbose=self.verbose)
-
-            bagging_reg = BaggingRegressor(
-                base_estimator=DecisionTreeRegressor(
-                    max_depth=max_depth,
-                    max_features=self.max_features,
-                    min_samples_split=self.min_samples_split),
-                n_estimators=self.n_estimators,
-                max_samples=self.max_samples_,
-                max_features=self.max_samples_features,
-                bootstrap=self.bootstrap,
-                bootstrap_features=self.bootstrap_features,
-                # oob_score=... XXX may be added
-                # if selection on tree perf needed.
-                # warm_start=... XXX may be added to increase computation perf.
-                n_jobs=self.n_jobs,
-                random_state=self.random_state,
-                verbose=self.verbose)
-
-            clfs.append(bagging_clf)
-            regs.append(bagging_reg)
-
         # define regression target:
         if sample_weight is not None:
-            if sample_weight is not None:
-                sample_weight = check_array(sample_weight, ensure_2d=False)
+            sample_weight = check_array(sample_weight, ensure_2d=False)
             weights = sample_weight - sample_weight.min()
             contamination = float(sum(y)) / len(y)
             y_reg = (
                     pow(weights, 0.5) * 0.5 / contamination * (y > 0) -
-                    pow((weights).mean(), 0.5) * (y == 0))
+                    pow((weights).mean(), 0.5) * (y == 0)
+            )
             y_reg = 1. / (1 + np.exp(-y_reg))  # sigmoid
         else:
             y_reg = y  # same as an other classification bagging
+
+        clfs = self._get_tree_ensemble(classify=True)
+        regs = self._get_tree_ensemble(classify=False)
+
+        self.estimators_ = []
+        self.estimators_samples_ = []
+        self.estimators_features_ = []
 
         for clf in clfs:
             clf.fit(X, y)
@@ -419,14 +396,15 @@ class SkopeRulesClassifier(BaseEstimator):
         for estimator, samples, features in zip(self.estimators_,
                                                 self.estimators_samples_,
                                                 self.estimators_features_):
-
             # Create mask for OOB samples
             mask = ~samples
             if sum(mask) == 0:
-                warn("OOB evaluation not possible: doing it in-bag."
+                warn(
+                    "OOB evaluation not possible: doing it in-bag."
                      " Performance evaluation is likely to be wrong"
                      " (overfitting) and selected rules are likely to"
-                     " not perform well! Please use max_samples < 1.")
+                     " not perform well! Please use max_samples < 1."
+                )
                 mask = samples
             rules_from_tree = tree_to_rules(
                 estimator, np.array(self.feature_names_)[features])
@@ -450,6 +428,8 @@ class SkopeRulesClassifier(BaseEstimator):
             tuple(rule) for rule in
             [Rule(r, args=args) for r, args in rules_]
         ]
+
+        self.rules_ = {}
 
         # keep only rules verifying precision_min and recall_min:
         for rule, score in rules_:
@@ -479,10 +459,9 @@ class SkopeRulesClassifier(BaseEstimator):
         # Replace generic feature names by real feature names
         self.rules_ = [(replace_feature_name(rule, self.feature_dict_), perf)
                        for rule, perf in self.rules_]
-
         return self
 
-    def predict(self, X):
+    def predict(self, X) -> np.ndarray:
         """Predict if a particular sample is an outlier or not.
 
         Parameters
@@ -500,14 +479,14 @@ class SkopeRulesClassifier(BaseEstimator):
 
         return np.array((self.decision_function(X) > 0), dtype=int)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X) -> np.ndarray:
         '''Predict probability of a particular sample being an outlier or not
 
         '''
         y = self.rules_vote(X) / len(self.rules_without_feature_names_)
         return np.vstack((1 - y, y)).transpose()
 
-    def decision_function(self, X):
+    def decision_function(self, X) -> np.ndarray:
         """Average anomaly score of X of the base classifiers (rules).
 
         The anomaly score of an input sample is computed as
@@ -549,7 +528,7 @@ class SkopeRulesClassifier(BaseEstimator):
 
         return scores
 
-    def rules_vote(self, X):
+    def rules_vote(self, X) -> np.ndarray:
         """Score representing a vote of the base classifiers (rules).
 
         The score of an input sample is computed as the sum of the binary
@@ -590,7 +569,7 @@ class SkopeRulesClassifier(BaseEstimator):
 
         return scores
 
-    def score_top_rules(self, X):
+    def score_top_rules(self, X) -> np.ndarray:
         """Score representing an ordering between the base classifiers (rules).
 
         The score is high when the instance is detected by a performing rule.
@@ -634,7 +613,7 @@ class SkopeRulesClassifier(BaseEstimator):
 
         return scores
 
-    def predict_top_rules(self, X, n_rules):
+    def predict_top_rules(self, X, n_rules) -> np.ndarray:
         """Predict if a particular sample is an outlier or not,
         using the n_rules most performing rules.
 
@@ -659,7 +638,7 @@ class SkopeRulesClassifier(BaseEstimator):
         return np.array((self.score_top_rules(X) > len(self.rules_) - n_rules),
                         dtype=int)
 
-    def _eval_rule_perf(self, rule, X, y):
+    def _eval_rule_perf(self, rule, X, y) -> Tuple[float, float]:
         detected_index = list(X.query(rule).index)
         if len(detected_index) <= 1:
             return (0, 0)
@@ -670,10 +649,42 @@ class SkopeRulesClassifier(BaseEstimator):
         pos = y[y > 0].sum()
         return y_detected.mean(), float(true_pos) / pos
 
+    def _get_tree_ensemble(self, classify: bool) -> Union[List[BaggingClassifier], List[BaggingRegressor]]:
+
+        if classify:
+            ensemble_class, tree_class = BaggingClassifier, DecisionTreeClassifier
+        else:
+            ensemble_class, tree_class = BaggingRegressor, DecisionTreeRegressor
+
+        ensembles = []
+
+        for max_depth in self._max_depths:
+            bagging_clf = ensemble_class(
+                base_estimator=tree_class(
+                    max_depth=max_depth,
+                    max_features=self.max_features,
+                    min_samples_split=self.min_samples_split
+                ),
+                n_estimators=self.n_estimators,
+                max_samples=self.max_samples_,
+                max_features=self.max_samples_features,
+                bootstrap=self.bootstrap,
+                bootstrap_features=self.bootstrap_features,
+                # oob_score=... XXX may be added
+                # if selection on tree perf needed.
+                # warm_start=... XXX may be added to increase computation perf.
+                n_jobs=self.n_jobs,
+                random_state=self.random_state,
+                verbose=self.verbose
+            )
+            ensembles.append(bagging_clf)
+
+        return ensembles
+
     def deduplicate(self, rules):
         return [max(rules_set, key=self.f1_score)
                 for rules_set in find_similar_rulesets(rules, self.max_depth_duplication)]
 
-    def f1_score(self, x):
+    def f1_score(self, x) -> float:
         return 2 * x[1][0] * x[1][1] / \
                (x[1][0] + x[1][1]) if (x[1][0] + x[1][1]) > 0 else 0
