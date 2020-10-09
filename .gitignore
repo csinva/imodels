@@ -4,7 +4,6 @@
 **.zip
 **.npy
 **.pkl
-**.txt
 **slurm*
 **logs*
 env

@@ -1,12 +1,19 @@
 """Linear model of tree-based decision rules
 
-Clone of code from https://github.com/christophM/rulefit with minor modifications to fit better into an existing project with different requirements / functions needed.
+Clone of code from https://github.com/christophM/rulefit with minor modifications to fit better into an existing project
+with different requirements / functions needed.
 
 Implementation of a rule based prediction algorithm based on the rulefit algorithm from Friedman and Popescu (PDF)
 
-The algorithm can be used for predicting an output vector y given an input matrix X. In the first step a tree ensemble is generated with gradient boosting. The trees are then used to form rules, where the paths to each node in each tree form one rule. A rule is a binary decision if an observation is in a given node, which is dependent on the input features that were used in the splits. The ensemble of rules together with the original input features are then being input in a L1-regularized linear model, also called Lasso, which estimates the effects of each rule on the output target but at the same time estimating many of those effects to zero.
+The algorithm can be used for predicting an output vector y given an input matrix X. In the first step a tree ensemble
+is generated with gradient boosting. The trees are then used to form rules, where the paths to each node in each tree
+form one rule. A rule is a binary decision if an observation is in a given node, which is dependent on the input features
+that were used in the splits. The ensemble of rules together with the original input features are then being input in a
+L1-regularized linear model, also called Lasso, which estimates the effects of each rule on the output target but at the
+same time estimating many of those effects to zero.
 
-You can use rulefit for predicting a numeric response (categorial not yet implemented). The input has to be a numpy matrix with only numeric values.
+You can use rulefit for predicting a numeric response (categorial not yet implemented). The input has to be a numpy
+matrix with only numeric values.
 
 This method implement the RuleFit algorithm
 
@@ -24,8 +31,8 @@ from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifi
     RandomForestClassifier
 from sklearn.linear_model import LassoCV, LogisticRegressionCV
 
-from .util.rules import RuleCondition, Rule
-from .util.transforms import Winsorizer, FriedScale
+from imodels.util.rules import RuleCondition, Rule
+from imodels.util.transforms import Winsorizer, FriedScale
 
 
 def extract_rules_from_tree(tree, feature_names=None):
@@ -184,12 +191,20 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, tree_size=4, sample_fract='default', max_rules=2000,
+    def __init__(self,
+                 tree_size=4,
+                 sample_fract='default',
+                 max_rules=2000,
                  memory_par=0.01,
                  tree_generator=None,
-                 rfmode='regress', lin_trim_quantile=0.025,
-                 lin_standardise=True, exp_rand_tree_size=True,
-                 model_type='rl', Cs=None, cv=3, random_state=None):
+                 rfmode='regress',
+                 lin_trim_quantile=0.025,
+                 lin_standardise=True,
+                 exp_rand_tree_size=True,
+                 model_type='rl',
+                 Cs=None,
+                 cv=3,
+                 random_state=None):
         self.tree_generator = tree_generator
         self.rfmode = rfmode
         self.lin_trim_quantile = lin_trim_quantile

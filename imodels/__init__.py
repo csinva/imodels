@@ -7,8 +7,8 @@
 from .bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
 from .greedy_rule_list import GreedyRuleListClassifier
 from .iterative_random_forest.iterative_random_forest import IRFClassifier
-from .rule_fit import RuleFitRegressor
-from .skope_rules import SkopeRulesClassifier
+from .skulefit.rule_fit import RuleFitRegressor
+from .skulefit.skope_rules import SkopeRulesClassifier
 from .slim import SLIMRegressor
 
 CLASSIFIERS = BayesianRuleListClassifier, GreedyRuleListClassifier, IRFClassifier

@@ -1,7 +1,12 @@
+from typing import Union, List
+
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree import _tree
 
 
-def tree_to_rules(tree, feature_names):
+def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
+                  feature_names: List[str]) -> List[str]:
+
     """
     Return a list of rules from a tree
 
