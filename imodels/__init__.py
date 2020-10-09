@@ -7,8 +7,8 @@ Github repo available [here](https://github.com/csinva/interpretability-implemen
 from .bayesian_rule_list.RuleListClassifier import RuleListClassifier
 from .greedy_rule_list import GreedyRuleListClassifier
 from .iterative_random_forest.iterative_random_forest import IRFClassifier
-from .rule_fit import RuleFitRegressor
-from .skope_rules import SkopeRulesClassifier
+from .skulefit.rule_fit import RuleFitRegressor
+from .skulefit.skope_rules import SkopeRulesClassifier
 from .slim import SLIMRegressor
 
 CLASSIFIERS = RuleListClassifier, GreedyRuleListClassifier, IRFClassifier

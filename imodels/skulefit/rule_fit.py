@@ -31,8 +31,8 @@ from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifi
     RandomForestClassifier
 from sklearn.linear_model import LassoCV, LogisticRegressionCV
 
-from .util.rules import RuleCondition, Rule
-from .util.transforms import Winsorizer, FriedScale
+from imodels.util.rules import RuleCondition, Rule
+from imodels.util.transforms import Winsorizer, FriedScale
 
 
 def extract_rules_from_tree(tree, feature_names=None):
