@@ -163,12 +163,12 @@ Reference includes docs <a href="https://csinva.io/imodels/">🗂️</a>, refere
 # Python `imodels` package for interpretable models compatible with scikit-learn.
 # Github repo available [here](https://github.com/csinva/interpretability-implementations-demos).
 
-from .bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
-from .greedy_rule_list import GreedyRuleListClassifier
-from .iterative_random_forest.iterative_random_forest import IRFClassifier
-from .skulefit.rule_fit import RuleFitRegressor
-from .skulefit.skope_rules import SkopeRulesClassifier
-from .slim import SLIMRegressor
+from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
+from .rule_list.greedy_rule_list import GreedyRuleListClassifier
+from .rule_set.rule_fit import RuleFitRegressor
+from .rule_set.skope_rules import SkopeRulesClassifier
+from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
+from .algebraic.slim import SLIMRegressor
 
 CLASSIFIERS = BayesianRuleListClassifier, GreedyRuleListClassifier, IRFClassifier
 REGRESSORS = RuleFitRegressor, SkopeRulesClassifier, SLIMRegressor
@@ -178,30 +178,21 @@ REGRESSORS = RuleFitRegressor, SkopeRulesClassifier, SLIMRegressor
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="imodels.bayesian_rule_list" href="bayesian_rule_list/index.html">bayesian_rule_list</a></code></dt>
-<dd>
-<section class="desc"><p><a href="https://arxiv.org/abs/1602.08610">bayesian rule list</a> (based on <a href="https://github.com/tmadl/sklearn-expertsys">this implementation</a>) - learn a compact …</p></section>
-</dd>
-<dt><code class="name"><a title="imodels.greedy_rule_list" href="greedy_rule_list.html">greedy_rule_list</a></code></dt>
-<dd>
-<section class="desc"><p>greedy rule list (based on <a href="https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea">this implementation</a>).
-…</p></section>
-</dd>
-<dt><code class="name"><a title="imodels.iterative_random_forest" href="iterative_random_forest/index.html">iterative_random_forest</a></code></dt>
-<dd>
-<section class="desc"><p>Repeatedly fit random forest, giving features with high importance a higher chance of being selected.</p></section>
-</dd>
-<dt><code class="name"><a title="imodels.optimal_classification_tree" href="optimal_classification_tree/index.html">optimal_classification_tree</a></code></dt>
-<dd>
-<section class="desc"><p>Still in progress - should optimize globally over all possible splits rather than use greedy 1-by-1 splits</p></section>
-</dd>
-<dt><code class="name"><a title="imodels.skulefit" href="skulefit/index.html">skulefit</a></code></dt>
+<dt><code class="name"><a title="imodels.algebraic" href="algebraic/index.html">algebraic</a></code></dt>
 <dd>
 <section class="desc"></section>
 </dd>
-<dt><code class="name"><a title="imodels.slim" href="slim.html">slim</a></code></dt>
+<dt><code class="name"><a title="imodels.rule_list" href="rule_list/index.html">rule_list</a></code></dt>
 <dd>
-<section class="desc"><p>wrapper for sparse, integer linear models …</p></section>
+<section class="desc"></section>
+</dd>
+<dt><code class="name"><a title="imodels.rule_set" href="rule_set/index.html">rule_set</a></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt><code class="name"><a title="imodels.tree" href="tree/index.html">tree</a></code></dt>
+<dd>
+<section class="desc"></section>
 </dd>
 <dt><code class="name"><a title="imodels.util" href="util/index.html">util</a></code></dt>
 <dd>
@@ -229,12 +220,10 @@ REGRESSORS = RuleFitRegressor, SkopeRulesClassifier, SLIMRegressor
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="imodels.bayesian_rule_list" href="bayesian_rule_list/index.html">bayesian_rule_list</a></code></li>
-<li><code><a title="imodels.greedy_rule_list" href="greedy_rule_list.html">greedy_rule_list</a></code></li>
-<li><code><a title="imodels.iterative_random_forest" href="iterative_random_forest/index.html">iterative_random_forest</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree" href="optimal_classification_tree/index.html">optimal_classification_tree</a></code></li>
-<li><code><a title="imodels.skulefit" href="skulefit/index.html">skulefit</a></code></li>
-<li><code><a title="imodels.slim" href="slim.html">slim</a></code></li>
+<li><code><a title="imodels.algebraic" href="algebraic/index.html">algebraic</a></code></li>
+<li><code><a title="imodels.rule_list" href="rule_list/index.html">rule_list</a></code></li>
+<li><code><a title="imodels.rule_set" href="rule_set/index.html">rule_set</a></code></li>
+<li><code><a title="imodels.tree" href="tree/index.html">tree</a></code></li>
 <li><code><a title="imodels.util" href="util/index.html">util</a></code></li>
 </ul>
 </li>

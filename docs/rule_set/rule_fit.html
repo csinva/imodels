@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.skulefit.rule_fit API documentation</title>
+<title>imodels.rule_set.rule_fit API documentation</title>
 <meta name="description" content="Linear model of tree-based decision rules …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,7 +17,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.skulefit.rule_fit</code></h1>
+<h1 class="title">Module <code>imodels.rule_set.rule_fit</code></h1>
 </header>
 <section id="section-intro">
 <p>Linear model of tree-based decision rules</p>
@@ -35,7 +35,7 @@ matrix with only numeric values.</p>
 <p>This method implement the RuleFit algorithm</p>
 <p>The module structure is the following:</p>
 <ul>
-<li><code>&lt;a title="imodels.skulefit.rule_fit.RuleEnsemble" href="#imodels.skulefit.rule_fit.RuleEnsemble"&gt;</code>RuleEnsemble<code>&lt;/a&gt;</code> implements an ensemble of <code>Rules</code></li>
+<li><code>&lt;a title="imodels.rule_set.rule_fit.RuleEnsemble" href="#imodels.rule_set.rule_fit.RuleEnsemble"&gt;</code>RuleEnsemble<code>&lt;/a&gt;</code> implements an ensemble of <code>Rules</code></li>
 <li><code>RuleFit</code> implements the RuleFit algorithm</li>
 </ul>
 <details class="source">
@@ -500,7 +500,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="imodels.skulefit.rule_fit.extract_rules_from_tree"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.extract_rules_from_tree"><code class="name flex">
 <span>def <span class="ident">extract_rules_from_tree</span></span>(<span>tree, feature_names=None)</span>
 </code></dt>
 <dd>
@@ -560,7 +560,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.skulefit.rule_fit.RuleEnsemble"><code class="flex name class">
+<dt id="imodels.rule_set.rule_fit.RuleEnsemble"><code class="flex name class">
 <span>class <span class="ident">RuleEnsemble</span></span>
 <span>(</span><span>tree_list, feature_names=None)</span>
 </code></dt>
@@ -657,7 +657,7 @@ an ensemble of decision trees.</p>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.skulefit.rule_fit.RuleEnsemble.filter_rules"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleEnsemble.filter_rules"><code class="name flex">
 <span>def <span class="ident">filter_rules</span></span>(<span>self, func)</span>
 </code></dt>
 <dd>
@@ -670,7 +670,7 @@ an ensemble of decision trees.</p>
     self.rules = filter(lambda x: func(x), self.rules)</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.rule_fit.RuleEnsemble.filter_short_rules"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleEnsemble.filter_short_rules"><code class="name flex">
 <span>def <span class="ident">filter_short_rules</span></span>(<span>self, k)</span>
 </code></dt>
 <dd>
@@ -683,7 +683,7 @@ an ensemble of decision trees.</p>
     self.filter_rules(lambda x: len(x.conditions) &gt; k)</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.rule_fit.RuleEnsemble.transform"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleEnsemble.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, X, coefs=None)</span>
 </code></dt>
 <dd>
@@ -733,7 +733,7 @@ coefficients to zero without calling Rule.transform().</dd>
 </dd>
 </dl>
 </dd>
-<dt id="imodels.skulefit.rule_fit.RuleFitRegressor"><code class="flex name class">
+<dt id="imodels.rule_set.rule_fit.RuleFitRegressor"><code class="flex name class">
 <span>class <span class="ident">RuleFitRegressor</span></span>
 <span>(</span><span>tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, rfmode='regress', lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, model_type='rl', Cs=None, cv=3, random_state=None)</span>
 </code></dt>
@@ -773,7 +773,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
 </dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>rule_ensemble</code></strong> :&ensp;<a title="imodels.skulefit.rule_fit.RuleEnsemble" href="#imodels.skulefit.rule_fit.RuleEnsemble"><code>RuleEnsemble</code></a></dt>
+<dt><strong><code>rule_ensemble</code></strong> :&ensp;<a title="imodels.rule_set.rule_fit.RuleEnsemble" href="#imodels.rule_set.rule_fit.RuleEnsemble"><code>RuleEnsemble</code></a></dt>
 <dd>The rule ensemble</dd>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>strings</code>, optional (default=<code>None</code>)</dt>
 <dd>The names of the features (columns)</dd>
@@ -1083,7 +1083,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.fit"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=False)</span>
 </code></dt>
 <dd>
@@ -1218,7 +1218,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.get_rules"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.get_rules"><code class="name flex">
 <span>def <span class="ident">get_rules</span></span>(<span>self, exclude_zero_coef=False, subregion=None)</span>
 </code></dt>
 <dd>
@@ -1294,7 +1294,7 @@ data set (X)</dd>
     return rules</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.predict"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1325,7 +1325,7 @@ data set (X)</dd>
     return self.lscv.predict(X_concat)</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.predict_proba"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1339,7 +1339,7 @@ data set (X)</dd>
     return np.vstack((1 - y, y)).transpose()</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.transform"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, X=None, y=None)</span>
 </code></dt>
 <dd>
@@ -1376,7 +1376,7 @@ efficiency.</dd>
     return self.rule_ensemble.transform(X)</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.visualize"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.visualize"><code class="name flex">
 <span>def <span class="ident">visualize</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1405,33 +1405,33 @@ efficiency.</dd>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.skulefit" href="index.html">imodels.skulefit</a></code></li>
+<li><code><a title="imodels.rule_set" href="index.html">imodels.rule_set</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="imodels.skulefit.rule_fit.extract_rules_from_tree" href="#imodels.skulefit.rule_fit.extract_rules_from_tree">extract_rules_from_tree</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.extract_rules_from_tree" href="#imodels.rule_set.rule_fit.extract_rules_from_tree">extract_rules_from_tree</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.skulefit.rule_fit.RuleEnsemble" href="#imodels.skulefit.rule_fit.RuleEnsemble">RuleEnsemble</a></code></h4>
+<h4><code><a title="imodels.rule_set.rule_fit.RuleEnsemble" href="#imodels.rule_set.rule_fit.RuleEnsemble">RuleEnsemble</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.skulefit.rule_fit.RuleEnsemble.filter_rules" href="#imodels.skulefit.rule_fit.RuleEnsemble.filter_rules">filter_rules</a></code></li>
-<li><code><a title="imodels.skulefit.rule_fit.RuleEnsemble.filter_short_rules" href="#imodels.skulefit.rule_fit.RuleEnsemble.filter_short_rules">filter_short_rules</a></code></li>
-<li><code><a title="imodels.skulefit.rule_fit.RuleEnsemble.transform" href="#imodels.skulefit.rule_fit.RuleEnsemble.transform">transform</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleEnsemble.filter_rules" href="#imodels.rule_set.rule_fit.RuleEnsemble.filter_rules">filter_rules</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleEnsemble.filter_short_rules" href="#imodels.rule_set.rule_fit.RuleEnsemble.filter_short_rules">filter_short_rules</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleEnsemble.transform" href="#imodels.rule_set.rule_fit.RuleEnsemble.transform">transform</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor" href="#imodels.skulefit.rule_fit.RuleFitRegressor">RuleFitRegressor</a></code></h4>
+<h4><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor" href="#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></code></h4>
 <ul class="two-column">
-<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.fit" href="#imodels.skulefit.rule_fit.RuleFitRegressor.fit">fit</a></code></li>
-<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.get_rules" href="#imodels.skulefit.rule_fit.RuleFitRegressor.get_rules">get_rules</a></code></li>
-<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.predict" href="#imodels.skulefit.rule_fit.RuleFitRegressor.predict">predict</a></code></li>
-<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.predict_proba" href="#imodels.skulefit.rule_fit.RuleFitRegressor.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.transform" href="#imodels.skulefit.rule_fit.RuleFitRegressor.transform">transform</a></code></li>
-<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.visualize" href="#imodels.skulefit.rule_fit.RuleFitRegressor.visualize">visualize</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.fit" href="#imodels.rule_set.rule_fit.RuleFitRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.get_rules" href="#imodels.rule_set.rule_fit.RuleFitRegressor.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.predict" href="#imodels.rule_set.rule_fit.RuleFitRegressor.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.predict_proba" href="#imodels.rule_set.rule_fit.RuleFitRegressor.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.transform" href="#imodels.rule_set.rule_fit.RuleFitRegressor.transform">transform</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.visualize" href="#imodels.rule_set.rule_fit.RuleFitRegressor.visualize">visualize</a></code></li>
 </ul>
 </li>
 </ul>

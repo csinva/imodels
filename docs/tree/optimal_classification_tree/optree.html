@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.optimal_classification_tree.optree API documentation</title>
+<title>imodels.tree.optimal_classification_tree.optree API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,7 +17,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.optimal_classification_tree.optree</code></h1>
+<h1 class="title">Module <code>imodels.tree.optimal_classification_tree.optree</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -1101,7 +1101,7 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel"><code class="flex name class">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel"><code class="flex name class">
 <span>class <span class="ident">AbstractOptimalTreeModel</span></span>
 <span>(</span><span>tree_depth=3, N_min=1, alpha=0, x_cols=['x1', 'x2'], y_col='y', M=10, epsilon=0.0001, solver_name='gurobi')</span>
 </code></dt>
@@ -1562,12 +1562,12 @@ if __name__ == &#34;__main__&#34;:
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="imodels.optimal_classification_tree.optree.OptimalTreeModel" href="#imodels.optimal_classification_tree.optree.OptimalTreeModel">OptimalTreeModel</a></li>
-<li><a title="imodels.optimal_classification_tree.optree.OptimalHyperTreeModel" href="#imodels.optimal_classification_tree.optree.OptimalHyperTreeModel">OptimalHyperTreeModel</a></li>
+<li><a title="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel" href="#imodels.tree.optimal_classification_tree.optree.OptimalTreeModel">OptimalTreeModel</a></li>
+<li><a title="imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel" href="#imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel">OptimalHyperTreeModel</a></li>
 </ul>
 <h3>Static methods</h3>
 <dl>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.convert_to_complete_tree"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.convert_to_complete_tree"><code class="name flex">
 <span>def <span class="ident">convert_to_complete_tree</span></span>(<span>incomplete_tree)</span>
 </code></dt>
 <dd>
@@ -1597,7 +1597,7 @@ def convert_to_complete_tree(incomplete_tree: dict):
     return mapping</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_nodes"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_nodes"><code class="name flex">
 <span>def <span class="ident">generate_nodes</span></span>(<span>tree_depth)</span>
 </code></dt>
 <dd>
@@ -1614,7 +1614,7 @@ def generate_nodes(tree_depth: int):
     return parent_nodes, leaf_ndoes</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_leaf_mapping"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_leaf_mapping"><code class="name flex">
 <span>def <span class="ident">get_leaf_mapping</span></span>(<span>tree_nodes_mapping)</span>
 </code></dt>
 <dd>
@@ -1642,7 +1642,7 @@ def get_leaf_mapping(tree_nodes_mapping: dict):
     return leaf_nodes_mapping</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.positive_or_zero"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.positive_or_zero"><code class="name flex">
 <span>def <span class="ident">positive_or_zero</span></span>(<span>i)</span>
 </code></dt>
 <dd>
@@ -1662,7 +1662,7 @@ def positive_or_zero(i: float):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.exact_train"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.exact_train"><code class="name flex">
 <span>def <span class="ident">exact_train</span></span>(<span>self, data, show_training_process=True, warm_start=True)</span>
 </code></dt>
 <dd>
@@ -1724,7 +1724,7 @@ def positive_or_zero(i: float):
     logging.info(&#34;Training done(Contd.): training accuracy: {0}&#34;.format(1 - sum(self.Lt.values()) / data.shape[0]))</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train"><code class="name flex">
 <span>def <span class="ident">fast_train</span></span>(<span>self, data, num_initialize_trees=10)</span>
 </code></dt>
 <dd>
@@ -1786,7 +1786,7 @@ def positive_or_zero(i: float):
         self.c[t] = ct</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train_helper"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train_helper"><code class="name flex">
 <span>def <span class="ident">fast_train_helper</span></span>(<span>self, train_x, train_y, tree, Nmin, return_tree_list)</span>
 </code></dt>
 <dd>
@@ -1800,7 +1800,7 @@ def fast_train_helper(self, train_x, train_y, tree: Tree, Nmin: int, return_tree
     pass</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.fit"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, **kwargs)</span>
 </code></dt>
 <dd>
@@ -1817,7 +1817,7 @@ def fast_train_helper(self, train_x, train_y, tree: Tree, Nmin: int, return_tree
     self.train(data, train_method=&#34;ls&#34;, warm_start=False, show_training_process=False, **kwargs)         </code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model"><code class="name flex">
 <span>def <span class="ident">generate_model</span></span>(<span>self, data, parent_nodes, leaf_nodes, warm_start_params=None)</span>
 </code></dt>
 <dd>
@@ -1832,7 +1832,7 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
     pass</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_feature_importance"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_feature_importance"><code class="name flex">
 <span>def <span class="ident">get_feature_importance</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1848,7 +1848,7 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
     return self._feature_importance()</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.initialize_tree_for_fast_train"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.initialize_tree_for_fast_train"><code class="name flex">
 <span>def <span class="ident">initialize_tree_for_fast_train</span></span>(<span>self, data, alpha)</span>
 </code></dt>
 <dd>
@@ -1895,7 +1895,7 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
     return tree</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.normalize_data"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.normalize_data"><code class="name flex">
 <span>def <span class="ident">normalize_data</span></span>(<span>self, data)</span>
 </code></dt>
 <dd>
@@ -1917,7 +1917,7 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
     return data</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.pprint"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.pprint"><code class="name flex">
 <span>def <span class="ident">pprint</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1937,7 +1937,7 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
     logging.info(&#34;Nt: {0}&#34;.format(self.Nt))</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.predict"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, data)</span>
 </code></dt>
 <dd>
@@ -1999,7 +1999,7 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
     return prediction</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.print_tree"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.print_tree"><code class="name flex">
 <span>def <span class="ident">print_tree</span></span>(<span>self, feature_names)</span>
 </code></dt>
 <dd>
@@ -2021,7 +2021,7 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
         print()        </code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.train"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.train"><code class="name flex">
 <span>def <span class="ident">train</span></span>(<span>self, data, train_method='ls', show_training_process=True, warm_start=True, num_initialize_trees=10)</span>
 </code></dt>
 <dd>
@@ -2045,7 +2045,7 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
 </dd>
 </dl>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.OptimalHyperTreeModel"><code class="flex name class">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel"><code class="flex name class">
 <span>class <span class="ident">OptimalHyperTreeModel</span></span>
 <span>(</span><span>x_cols, y_col, tree_depth, N_min, alpha=0, num_random_tree_restart=2, M=10, epsilon=0.0001, solver_name='gurobi')</span>
 </code></dt>
@@ -2311,11 +2311,11 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel">AbstractOptimalTreeModel</a></li>
+<li><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel">AbstractOptimalTreeModel</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.optimal_classification_tree.optree.OptimalHyperTreeModel.extract_solution_s"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel.extract_solution_s"><code class="name flex">
 <span>def <span class="ident">extract_solution_s</span></span>(<span>self, members, nodes_mapping, j, t)</span>
 </code></dt>
 <dd>
@@ -2340,7 +2340,7 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
         return 0</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.OptimalHyperTreeModel.fast_train_helper"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel.fast_train_helper"><code class="name flex">
 <span>def <span class="ident">fast_train_helper</span></span>(<span>self, train_x, train_y, tree, Nmin, return_tree_list)</span>
 </code></dt>
 <dd>
@@ -2355,7 +2355,7 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
     return_tree_list.append(optimized_tree)</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.OptimalHyperTreeModel.train"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel.train"><code class="name flex">
 <span>def <span class="ident">train</span></span>(<span>self, data, train_method='ls', show_training_process=True, warm_start=True, num_initialize_trees=1)</span>
 </code></dt>
 <dd>
@@ -2374,14 +2374,14 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel">AbstractOptimalTreeModel</a></b></code>:
+<li><code><b><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel">AbstractOptimalTreeModel</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model">generate_model</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model">generate_model</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.OptimalTreeModel"><code class="flex name class">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel"><code class="flex name class">
 <span>class <span class="ident">OptimalTreeModel</span></span>
 <span>(</span><span>tree_depth=3, N_min=1, alpha=0, x_cols=['x1', 'x2'], y_col='y', M=10, epsilon=0.0001, solver_name='gurobi')</span>
 </code></dt>
@@ -2717,11 +2717,11 @@ def generate_model(self, data: pd.DataFrame, parent_nodes: list, leaf_nodes: lis
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel">AbstractOptimalTreeModel</a></li>
+<li><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel">AbstractOptimalTreeModel</a></li>
 </ul>
 <h3>Static methods</h3>
 <dl>
-<dt id="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Lt"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Lt"><code class="name flex">
 <span>def <span class="ident">extract_solution_Lt</span></span>(<span>members, t, nodes_mapping, leaf_nodes_mapping)</span>
 </code></dt>
 <dd>
@@ -2763,7 +2763,7 @@ def extract_solution_Lt(members: dict, t, nodes_mapping: dict, leaf_nodes_mappin
                 return 0</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nkt"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nkt"><code class="name flex">
 <span>def <span class="ident">extract_solution_Nkt</span></span>(<span>members, t, kk, nodes_mapping, leaf_nodes_mapping)</span>
 </code></dt>
 <dd>
@@ -2792,7 +2792,7 @@ def extract_solution_Nkt(members: dict, t: int, kk: int, nodes_mapping: dict, le
                 return 0</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nt"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nt"><code class="name flex">
 <span>def <span class="ident">extract_solution_Nt</span></span>(<span>members, t, nodes_mapping, leaf_nodes_mapping)</span>
 </code></dt>
 <dd>
@@ -2821,7 +2821,7 @@ def extract_solution_Nt(members: dict, t: int, nodes_mapping: dict, leaf_nodes_m
                 return 0</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_bt"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_bt"><code class="name flex">
 <span>def <span class="ident">extract_solution_bt</span></span>(<span>members, t, nodes_mapping)</span>
 </code></dt>
 <dd>
@@ -2841,7 +2841,7 @@ def extract_solution_bt(members: dict, t: int, nodes_mapping: dict):
     return abs(members[&#34;threshold&#34;][original_node])</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_c"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_c"><code class="name flex">
 <span>def <span class="ident">extract_solution_c</span></span>(<span>K_range, members, t, nodes_mapping, leaf_nodes_mapping)</span>
 </code></dt>
 <dd>
@@ -2881,7 +2881,7 @@ def extract_solution_c(K_range, members: dict, t: int, nodes_mapping: dict, leaf
                 return [0 for i in K_range]</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_l"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_l"><code class="name flex">
 <span>def <span class="ident">extract_solution_l</span></span>(<span>nodes_mapping, t)</span>
 </code></dt>
 <dd>
@@ -2913,7 +2913,7 @@ def extract_solution_l(nodes_mapping: dict, t: int):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_a"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_a"><code class="name flex">
 <span>def <span class="ident">extract_solution_a</span></span>(<span>self, members, nodes_mapping, j, t)</span>
 </code></dt>
 <dd>
@@ -2936,7 +2936,7 @@ def extract_solution_l(nodes_mapping: dict, t: int):
         return 0</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.optree.OptimalTreeModel.fast_train_helper"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.fast_train_helper"><code class="name flex">
 <span>def <span class="ident">fast_train_helper</span></span>(<span>self, train_x, train_y, tree, Nmin, return_tree_list)</span>
 </code></dt>
 <dd>
@@ -2954,9 +2954,9 @@ def extract_solution_l(nodes_mapping: dict, t: int):
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel">AbstractOptimalTreeModel</a></b></code>:
+<li><code><b><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel">AbstractOptimalTreeModel</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model">generate_model</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model">generate_model</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2972,51 +2972,51 @@ def extract_solution_l(nodes_mapping: dict, t: int):
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.optimal_classification_tree" href="index.html">imodels.optimal_classification_tree</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree" href="index.html">imodels.tree.optimal_classification_tree</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel">AbstractOptimalTreeModel</a></code></h4>
+<h4><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel">AbstractOptimalTreeModel</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.convert_to_complete_tree" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.convert_to_complete_tree">convert_to_complete_tree</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.exact_train" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.exact_train">exact_train</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train">fast_train</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train_helper" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train_helper">fast_train_helper</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.fit" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.fit">fit</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model">generate_model</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_nodes" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_nodes">generate_nodes</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_feature_importance" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_feature_importance">get_feature_importance</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_leaf_mapping" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_leaf_mapping">get_leaf_mapping</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.initialize_tree_for_fast_train" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.initialize_tree_for_fast_train">initialize_tree_for_fast_train</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.normalize_data" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.normalize_data">normalize_data</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.positive_or_zero" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.positive_or_zero">positive_or_zero</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.pprint" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.pprint">pprint</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.predict" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.predict">predict</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.print_tree" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.print_tree">print_tree</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.train" href="#imodels.optimal_classification_tree.optree.AbstractOptimalTreeModel.train">train</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.convert_to_complete_tree" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.convert_to_complete_tree">convert_to_complete_tree</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.exact_train" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.exact_train">exact_train</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train">fast_train</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train_helper" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.fast_train_helper">fast_train_helper</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.fit" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_model">generate_model</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_nodes" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.generate_nodes">generate_nodes</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_feature_importance" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_feature_importance">get_feature_importance</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_leaf_mapping" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.get_leaf_mapping">get_leaf_mapping</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.initialize_tree_for_fast_train" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.initialize_tree_for_fast_train">initialize_tree_for_fast_train</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.normalize_data" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.normalize_data">normalize_data</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.positive_or_zero" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.positive_or_zero">positive_or_zero</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.pprint" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.pprint">pprint</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.predict" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.predict">predict</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.print_tree" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.print_tree">print_tree</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.train" href="#imodels.tree.optimal_classification_tree.optree.AbstractOptimalTreeModel.train">train</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.optimal_classification_tree.optree.OptimalHyperTreeModel" href="#imodels.optimal_classification_tree.optree.OptimalHyperTreeModel">OptimalHyperTreeModel</a></code></h4>
+<h4><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel" href="#imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel">OptimalHyperTreeModel</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.optimal_classification_tree.optree.OptimalHyperTreeModel.extract_solution_s" href="#imodels.optimal_classification_tree.optree.OptimalHyperTreeModel.extract_solution_s">extract_solution_s</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.OptimalHyperTreeModel.fast_train_helper" href="#imodels.optimal_classification_tree.optree.OptimalHyperTreeModel.fast_train_helper">fast_train_helper</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.OptimalHyperTreeModel.train" href="#imodels.optimal_classification_tree.optree.OptimalHyperTreeModel.train">train</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel.extract_solution_s" href="#imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel.extract_solution_s">extract_solution_s</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel.fast_train_helper" href="#imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel.fast_train_helper">fast_train_helper</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel.train" href="#imodels.tree.optimal_classification_tree.optree.OptimalHyperTreeModel.train">train</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.optimal_classification_tree.optree.OptimalTreeModel" href="#imodels.optimal_classification_tree.optree.OptimalTreeModel">OptimalTreeModel</a></code></h4>
+<h4><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel" href="#imodels.tree.optimal_classification_tree.optree.OptimalTreeModel">OptimalTreeModel</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Lt" href="#imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Lt">extract_solution_Lt</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nkt" href="#imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nkt">extract_solution_Nkt</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nt" href="#imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nt">extract_solution_Nt</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_a" href="#imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_a">extract_solution_a</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_bt" href="#imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_bt">extract_solution_bt</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_c" href="#imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_c">extract_solution_c</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_l" href="#imodels.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_l">extract_solution_l</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.optree.OptimalTreeModel.fast_train_helper" href="#imodels.optimal_classification_tree.optree.OptimalTreeModel.fast_train_helper">fast_train_helper</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Lt" href="#imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Lt">extract_solution_Lt</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nkt" href="#imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nkt">extract_solution_Nkt</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nt" href="#imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_Nt">extract_solution_Nt</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_a" href="#imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_a">extract_solution_a</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_bt" href="#imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_bt">extract_solution_bt</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_c" href="#imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_c">extract_solution_c</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_l" href="#imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.extract_solution_l">extract_solution_l</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.fast_train_helper" href="#imodels.tree.optimal_classification_tree.optree.OptimalTreeModel.fast_train_helper">fast_train_helper</a></code></li>
 </ul>
 </li>
 </ul>

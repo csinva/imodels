@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.optimal_classification_tree.tree API documentation</title>
+<title>imodels.tree.optimal_classification_tree.tree API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,7 +17,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.optimal_classification_tree.tree</code></h1>
+<h1 class="title">Module <code>imodels.tree.optimal_classification_tree.tree</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -217,7 +217,7 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.optimal_classification_tree.tree.Tree"><code class="flex name class">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree"><code class="flex name class">
 <span>class <span class="ident">Tree</span></span>
 <span>(</span><span>root_node, depth, a, b, alpha=0.0)</span>
 </code></dt>
@@ -376,12 +376,12 @@ if __name__ == &#34;__main__&#34;:
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="imodels.optimal_classification_tree.tree.WholeTree" href="#imodels.optimal_classification_tree.tree.WholeTree">WholeTree</a></li>
-<li><a title="imodels.optimal_classification_tree.tree.TreeModel" href="#imodels.optimal_classification_tree.tree.TreeModel">TreeModel</a></li>
+<li><a title="imodels.tree.optimal_classification_tree.tree.WholeTree" href="#imodels.tree.optimal_classification_tree.tree.WholeTree">WholeTree</a></li>
+<li><a title="imodels.tree.optimal_classification_tree.tree.TreeModel" href="#imodels.tree.optimal_classification_tree.tree.TreeModel">TreeModel</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.optimal_classification_tree.tree.Tree.children"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.children"><code class="name flex">
 <span>def <span class="ident">children</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -397,7 +397,7 @@ if __name__ == &#34;__main__&#34;:
     return self.subtree(self.root_node * 2), self.subtree(self.root_node * 2 + 1)</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.Tree.copy"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.copy"><code class="name flex">
 <span>def <span class="ident">copy</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -410,7 +410,7 @@ if __name__ == &#34;__main__&#34;:
     return Tree(self.root_node, self.depth, self.a.copy(), self.b.copy(), self.alpha)</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.Tree.evaluate"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.evaluate"><code class="name flex">
 <span>def <span class="ident">evaluate</span></span>(<span>self, x)</span>
 </code></dt>
 <dd>
@@ -438,7 +438,7 @@ if __name__ == &#34;__main__&#34;:
     return leaf_samples_mapping</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.Tree.generate_majority_leaf_class"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.generate_majority_leaf_class"><code class="name flex">
 <span>def <span class="ident">generate_majority_leaf_class</span></span>(<span>self, x, y)</span>
 </code></dt>
 <dd>
@@ -463,7 +463,7 @@ if __name__ == &#34;__main__&#34;:
     self.c = predict_leaf_value</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.Tree.get_leaf_nodes"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.get_leaf_nodes"><code class="name flex">
 <span>def <span class="ident">get_leaf_nodes</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -480,7 +480,7 @@ if __name__ == &#34;__main__&#34;:
     return [node for node in nodes if node &gt;= lower_node_index]</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.Tree.get_nodes"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.get_nodes"><code class="name flex">
 <span>def <span class="ident">get_nodes</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -505,7 +505,7 @@ if __name__ == &#34;__main__&#34;:
     return nodes</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.Tree.get_parent_nodes"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.get_parent_nodes"><code class="name flex">
 <span>def <span class="ident">get_parent_nodes</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -522,7 +522,7 @@ if __name__ == &#34;__main__&#34;:
     return [node for node in nodes if node &lt; lower_node_index]</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.Tree.loss"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.loss"><code class="name flex">
 <span>def <span class="ident">loss</span></span>(<span>self, x, y)</span>
 </code></dt>
 <dd>
@@ -536,7 +536,7 @@ if __name__ == &#34;__main__&#34;:
     return loss</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size"><code class="name flex">
 <span>def <span class="ident">loss_and_min_leaf_size</span></span>(<span>self, x, y)</span>
 </code></dt>
 <dd>
@@ -553,7 +553,7 @@ if __name__ == &#34;__main__&#34;:
     return self.loss_and_min_leaf_size_helper(res, y)</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size_helper"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size_helper"><code class="name flex">
 <span>def <span class="ident">loss_and_min_leaf_size_helper</span></span>(<span>self, res, y)</span>
 </code></dt>
 <dd>
@@ -587,7 +587,7 @@ if __name__ == &#34;__main__&#34;:
     return loss, min_leaf_size</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.Tree.min_leaf_size"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.min_leaf_size"><code class="name flex">
 <span>def <span class="ident">min_leaf_size</span></span>(<span>self, x)</span>
 </code></dt>
 <dd>
@@ -602,7 +602,7 @@ if __name__ == &#34;__main__&#34;:
     return min_leaf_size</code></pre>
 </details>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.Tree.subtree"><code class="name flex">
+<dt id="imodels.tree.optimal_classification_tree.tree.Tree.subtree"><code class="name flex">
 <span>def <span class="ident">subtree</span></span>(<span>self, root_node)</span>
 </code></dt>
 <dd>
@@ -632,7 +632,7 @@ if __name__ == &#34;__main__&#34;:
 </dd>
 </dl>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.TreeModel"><code class="flex name class">
+<dt id="imodels.tree.optimal_classification_tree.tree.TreeModel"><code class="flex name class">
 <span>class <span class="ident">TreeModel</span></span>
 <span>(</span><span>depth, p, alpha=0.1)</span>
 </code></dt>
@@ -658,10 +658,10 @@ if __name__ == &#34;__main__&#34;:
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.optimal_classification_tree.tree.Tree" href="#imodels.optimal_classification_tree.tree.Tree">Tree</a></li>
+<li><a title="imodels.tree.optimal_classification_tree.tree.Tree" href="#imodels.tree.optimal_classification_tree.tree.Tree">Tree</a></li>
 </ul>
 </dd>
-<dt id="imodels.optimal_classification_tree.tree.WholeTree"><code class="flex name class">
+<dt id="imodels.tree.optimal_classification_tree.tree.WholeTree"><code class="flex name class">
 <span>class <span class="ident">WholeTree</span></span>
 <span>(</span><span>depth, a, b, alpha=0.1)</span>
 </code></dt>
@@ -677,7 +677,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.optimal_classification_tree.tree.Tree" href="#imodels.optimal_classification_tree.tree.Tree">Tree</a></li>
+<li><a title="imodels.tree.optimal_classification_tree.tree.Tree" href="#imodels.tree.optimal_classification_tree.tree.Tree">Tree</a></li>
 </ul>
 </dd>
 </dl>
@@ -691,33 +691,33 @@ if __name__ == &#34;__main__&#34;:
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.optimal_classification_tree" href="index.html">imodels.optimal_classification_tree</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree" href="index.html">imodels.tree.optimal_classification_tree</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.optimal_classification_tree.tree.Tree" href="#imodels.optimal_classification_tree.tree.Tree">Tree</a></code></h4>
+<h4><code><a title="imodels.tree.optimal_classification_tree.tree.Tree" href="#imodels.tree.optimal_classification_tree.tree.Tree">Tree</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.children" href="#imodels.optimal_classification_tree.tree.Tree.children">children</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.copy" href="#imodels.optimal_classification_tree.tree.Tree.copy">copy</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.evaluate" href="#imodels.optimal_classification_tree.tree.Tree.evaluate">evaluate</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.generate_majority_leaf_class" href="#imodels.optimal_classification_tree.tree.Tree.generate_majority_leaf_class">generate_majority_leaf_class</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.get_leaf_nodes" href="#imodels.optimal_classification_tree.tree.Tree.get_leaf_nodes">get_leaf_nodes</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.get_nodes" href="#imodels.optimal_classification_tree.tree.Tree.get_nodes">get_nodes</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.get_parent_nodes" href="#imodels.optimal_classification_tree.tree.Tree.get_parent_nodes">get_parent_nodes</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.loss" href="#imodels.optimal_classification_tree.tree.Tree.loss">loss</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size" href="#imodels.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size">loss_and_min_leaf_size</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size_helper" href="#imodels.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size_helper">loss_and_min_leaf_size_helper</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.min_leaf_size" href="#imodels.optimal_classification_tree.tree.Tree.min_leaf_size">min_leaf_size</a></code></li>
-<li><code><a title="imodels.optimal_classification_tree.tree.Tree.subtree" href="#imodels.optimal_classification_tree.tree.Tree.subtree">subtree</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.children" href="#imodels.tree.optimal_classification_tree.tree.Tree.children">children</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.copy" href="#imodels.tree.optimal_classification_tree.tree.Tree.copy">copy</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.evaluate" href="#imodels.tree.optimal_classification_tree.tree.Tree.evaluate">evaluate</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.generate_majority_leaf_class" href="#imodels.tree.optimal_classification_tree.tree.Tree.generate_majority_leaf_class">generate_majority_leaf_class</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.get_leaf_nodes" href="#imodels.tree.optimal_classification_tree.tree.Tree.get_leaf_nodes">get_leaf_nodes</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.get_nodes" href="#imodels.tree.optimal_classification_tree.tree.Tree.get_nodes">get_nodes</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.get_parent_nodes" href="#imodels.tree.optimal_classification_tree.tree.Tree.get_parent_nodes">get_parent_nodes</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.loss" href="#imodels.tree.optimal_classification_tree.tree.Tree.loss">loss</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size" href="#imodels.tree.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size">loss_and_min_leaf_size</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size_helper" href="#imodels.tree.optimal_classification_tree.tree.Tree.loss_and_min_leaf_size_helper">loss_and_min_leaf_size_helper</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.min_leaf_size" href="#imodels.tree.optimal_classification_tree.tree.Tree.min_leaf_size">min_leaf_size</a></code></li>
+<li><code><a title="imodels.tree.optimal_classification_tree.tree.Tree.subtree" href="#imodels.tree.optimal_classification_tree.tree.Tree.subtree">subtree</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.optimal_classification_tree.tree.TreeModel" href="#imodels.optimal_classification_tree.tree.TreeModel">TreeModel</a></code></h4>
+<h4><code><a title="imodels.tree.optimal_classification_tree.tree.TreeModel" href="#imodels.tree.optimal_classification_tree.tree.TreeModel">TreeModel</a></code></h4>
 </li>
 <li>
-<h4><code><a title="imodels.optimal_classification_tree.tree.WholeTree" href="#imodels.optimal_classification_tree.tree.WholeTree">WholeTree</a></code></h4>
+<h4><code><a title="imodels.tree.optimal_classification_tree.tree.WholeTree" href="#imodels.tree.optimal_classification_tree.tree.WholeTree">WholeTree</a></code></h4>
 </li>
 </ul>
 </li>

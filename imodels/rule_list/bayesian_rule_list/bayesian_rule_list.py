@@ -3,8 +3,8 @@ import random
 import pandas as pd
 from sklearn.base import BaseEstimator
 import numpy as np
-from .brl_util import *
-from ..util.discretization.mdlp import MDLP_Discretizer
+from imodels.rule_list.bayesian_rule_list.brl_util import *
+from imodels.util.discretization.mdlp import MDLP_Discretizer
 import numbers
 from fim import fpgrowth
 from collections import Counter

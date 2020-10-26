@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.bayesian_rule_list API documentation</title>
-<meta name="description" content="[bayesian rule list](https://arxiv.org/abs/1602.08610) (based on [this implementation](https://github.com/tmadl/sklearn-expertsys)) - learn a compact …" />
+<title>imodels.tree.iterative_random_forest.iterative_random_forest API documentation</title>
+<meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -17,36 +17,131 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.bayesian_rule_list</code></h1>
+<h1 class="title">Module <code>imodels.tree.iterative_random_forest.iterative_random_forest</code></h1>
 </header>
 <section id="section-intro">
-<p><a href="https://arxiv.org/abs/1602.08610">bayesian rule list</a> (based on <a href="https://github.com/tmadl/sklearn-expertsys">this implementation</a>) - learn a compact rule list</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#39;&#39;&#39;[bayesian rule list](https://arxiv.org/abs/1602.08610) (based on [this implementation](https://github.com/tmadl/sklearn-expertsys)) - learn a compact rule list
-&#39;&#39;&#39;</code></pre>
+<pre><code class="python">import numpy as np
+from irf.ensemble import wrf
+from sklearn.base import BaseEstimator
+
+
+class IRFClassifier(BaseEstimator):
+    def __init__(self):
+        self.model = wrf()
+        self.predict = self.model.predict
+        self.predict_proba = self.model.predict_proba
+
+    def fit(self, X, y, lambda_reg=0.1, sample_weight=None):
+        &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization
+        
+        Params
+        ------
+        sample_weight: np.ndarray (n,)
+            weight for each individual sample
+        &#39;&#39;&#39;
+
+        if &#39;pandas&#39; in str(type(X)):
+            X = X.values
+        if &#39;pandas&#39; in str(type(y)):
+            y = y.values
+        assert type(X) == np.ndarray, &#39;inputs should be ndarrays&#39;
+        assert type(y) == np.ndarray, &#39;inputs should be ndarrays&#39;
+
+        self.model.fit(X, y, keep_record=False)</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="imodels.bayesian_rule_list.bayesian_rule_list" href="bayesian_rule_list.html">imodels.bayesian_rule_list.bayesian_rule_list</a></code></dt>
+<dt id="imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier"><code class="flex name class">
+<span>class <span class="ident">IRFClassifier</span></span>
+</code></dt>
 <dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="imodels.bayesian_rule_list.brl_util" href="brl_util.html">imodels.bayesian_rule_list.brl_util</a></code></dt>
+<section class="desc"><p>Base class for all estimators in scikit-learn</p>
+<h2 id="notes">Notes</h2>
+<p>All estimators should specify all the parameters that can be set
+at the class level in their <code>__init__</code> as explicit keyword
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IRFClassifier(BaseEstimator):
+    def __init__(self):
+        self.model = wrf()
+        self.predict = self.model.predict
+        self.predict_proba = self.model.predict_proba
+
+    def fit(self, X, y, lambda_reg=0.1, sample_weight=None):
+        &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization
+        
+        Params
+        ------
+        sample_weight: np.ndarray (n,)
+            weight for each individual sample
+        &#39;&#39;&#39;
+
+        if &#39;pandas&#39; in str(type(X)):
+            X = X.values
+        if &#39;pandas&#39; in str(type(y)):
+            y = y.values
+        assert type(X) == np.ndarray, &#39;inputs should be ndarrays&#39;
+        assert type(y) == np.ndarray, &#39;inputs should be ndarrays&#39;
+
+        self.model.fit(X, y, keep_record=False)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, lambda_reg=0.1, sample_weight=None)</span>
+</code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>fit a linear model with integer coefficient and L1 regularization</p>
+<h2 id="params">Params</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>np.ndarray</code> (<code>n</code>,)</dt>
+<dd>weight for each individual sample</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, lambda_reg=0.1, sample_weight=None):
+    &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization
+    
+    Params
+    ------
+    sample_weight: np.ndarray (n,)
+        weight for each individual sample
+    &#39;&#39;&#39;
+
+    if &#39;pandas&#39; in str(type(X)):
+        X = X.values
+    if &#39;pandas&#39; in str(type(y)):
+        y = y.values
+    assert type(X) == np.ndarray, &#39;inputs should be ndarrays&#39;
+    assert type(y) == np.ndarray, &#39;inputs should be ndarrays&#39;
+
+    self.model.fit(X, y, keep_record=False)</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -57,13 +152,17 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels" href="../index.html">imodels</a></code></li>
+<li><code><a title="imodels.tree.iterative_random_forest" href="index.html">imodels.tree.iterative_random_forest</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li><code><a title="imodels.bayesian_rule_list.bayesian_rule_list" href="bayesian_rule_list.html">imodels.bayesian_rule_list.bayesian_rule_list</a></code></li>
-<li><code><a title="imodels.bayesian_rule_list.brl_util" href="brl_util.html">imodels.bayesian_rule_list.brl_util</a></code></li>
+<li>
+<h4><code><a title="imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier" href="#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier.fit" href="#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier.fit">fit</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

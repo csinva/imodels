@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import ParameterGrid
 from sklearn.utils import check_random_state
 
-from imodels.skulefit.skope_rules import SkopeRulesClassifier
+from imodels.rule_set.skope_rules import SkopeRulesClassifier
 
 rng = check_random_state(0)
 

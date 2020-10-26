@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.skulefit.skope_rules API documentation</title>
+<title>imodels.rule_set.skope_rules API documentation</title>
 <meta name="description" content="Code adapted with only minor changes from [here](https://github.com/scikit-learn-contrib/skope-rules). Full credit to
 the authors …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -18,7 +18,7 @@ the authors …" />
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.skulefit.skope_rules</code></h1>
+<h1 class="title">Module <code>imodels.rule_set.skope_rules</code></h1>
 </header>
 <section id="section-intro">
 <p>Code adapted with only minor changes from <a href="https://github.com/scikit-learn-contrib/skope-rules">here</a>. Full credit to
@@ -792,7 +792,7 @@ class SkopeRulesClassifier(BaseEstimator):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.skulefit.skope_rules.SkopeRulesClassifier"><code class="flex name class">
+<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier"><code class="flex name class">
 <span>class <span class="ident">SkopeRulesClassifier</span></span>
 <span>(</span><span>feature_names=None, precision_min=0.5, recall_min=0.01, n_estimators=10, max_samples=0.8, max_samples_features=1.0, bootstrap=False, bootstrap_features=False, max_depth=3, max_depth_duplication=None, max_features=1.0, min_samples_split=2, n_jobs=1, random_state=None, verbose=0)</span>
 </code></dt>
@@ -1478,7 +1478,7 @@ estimator.</dd>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.skulefit.skope_rules.SkopeRulesClassifier.decision_function"><code class="name flex">
+<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.decision_function"><code class="name flex">
 <span>def <span class="ident">decision_function</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1545,7 +1545,7 @@ null scores represent inliers.</dd>
     return scores</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.skope_rules.SkopeRulesClassifier.deduplicate"><code class="name flex">
+<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.deduplicate"><code class="name flex">
 <span>def <span class="ident">deduplicate</span></span>(<span>self, rules)</span>
 </code></dt>
 <dd>
@@ -1559,7 +1559,7 @@ null scores represent inliers.</dd>
             for rules_set in find_similar_rulesets(rules, self.max_depth_duplication)]</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.skope_rules.SkopeRulesClassifier.f1_score"><code class="name flex">
+<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.f1_score"><code class="name flex">
 <span>def <span class="ident">f1_score</span></span>(<span>self, x)</span>
 </code></dt>
 <dd>
@@ -1573,7 +1573,7 @@ null scores represent inliers.</dd>
            (x[1][0] + x[1][1]) if (x[1][0] + x[1][1]) &gt; 0 else 0</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.skope_rules.SkopeRulesClassifier.fit"><code class="name flex">
+<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
 </code></dt>
 <dd>
@@ -1732,7 +1732,7 @@ If not provided, then each sample is given unit weight.</dd>
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.skope_rules.SkopeRulesClassifier.predict"><code class="name flex">
+<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1772,7 +1772,7 @@ be considered as an outlier according to the selected rules.</dd>
     return np.array((self.decision_function(X) &gt; 0), dtype=int)</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.skope_rules.SkopeRulesClassifier.predict_proba"><code class="name flex">
+<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1789,7 +1789,7 @@ be considered as an outlier according to the selected rules.</dd>
     return np.vstack((1 - y, y)).transpose()</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.skope_rules.SkopeRulesClassifier.predict_top_rules"><code class="name flex">
+<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_top_rules"><code class="name flex">
 <span>def <span class="ident">predict_top_rules</span></span>(<span>self, X, n_rules)</span>
 </code></dt>
 <dd>
@@ -1841,7 +1841,7 @@ be considered as an outlier according to the selected rules.</dd>
                     dtype=int)</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.skope_rules.SkopeRulesClassifier.rules_vote"><code class="name flex">
+<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.rules_vote"><code class="name flex">
 <span>def <span class="ident">rules_vote</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1906,7 +1906,7 @@ null scores represent inliers.</dd>
     return scores</code></pre>
 </details>
 </dd>
-<dt id="imodels.skulefit.skope_rules.SkopeRulesClassifier.score_top_rules"><code class="name flex">
+<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.score_top_rules"><code class="name flex">
 <span>def <span class="ident">score_top_rules</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1993,23 +1993,23 @@ Positive scores represent outliers, null scores represent inliers.</dd>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.skulefit" href="index.html">imodels.skulefit</a></code></li>
+<li><code><a title="imodels.rule_set" href="index.html">imodels.rule_set</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.skulefit.skope_rules.SkopeRulesClassifier" href="#imodels.skulefit.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></code></h4>
+<h4><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></code></h4>
 <ul class="two-column">
-<li><code><a title="imodels.skulefit.skope_rules.SkopeRulesClassifier.decision_function" href="#imodels.skulefit.skope_rules.SkopeRulesClassifier.decision_function">decision_function</a></code></li>
-<li><code><a title="imodels.skulefit.skope_rules.SkopeRulesClassifier.deduplicate" href="#imodels.skulefit.skope_rules.SkopeRulesClassifier.deduplicate">deduplicate</a></code></li>
-<li><code><a title="imodels.skulefit.skope_rules.SkopeRulesClassifier.f1_score" href="#imodels.skulefit.skope_rules.SkopeRulesClassifier.f1_score">f1_score</a></code></li>
-<li><code><a title="imodels.skulefit.skope_rules.SkopeRulesClassifier.fit" href="#imodels.skulefit.skope_rules.SkopeRulesClassifier.fit">fit</a></code></li>
-<li><code><a title="imodels.skulefit.skope_rules.SkopeRulesClassifier.predict" href="#imodels.skulefit.skope_rules.SkopeRulesClassifier.predict">predict</a></code></li>
-<li><code><a title="imodels.skulefit.skope_rules.SkopeRulesClassifier.predict_proba" href="#imodels.skulefit.skope_rules.SkopeRulesClassifier.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.skulefit.skope_rules.SkopeRulesClassifier.predict_top_rules" href="#imodels.skulefit.skope_rules.SkopeRulesClassifier.predict_top_rules">predict_top_rules</a></code></li>
-<li><code><a title="imodels.skulefit.skope_rules.SkopeRulesClassifier.rules_vote" href="#imodels.skulefit.skope_rules.SkopeRulesClassifier.rules_vote">rules_vote</a></code></li>
-<li><code><a title="imodels.skulefit.skope_rules.SkopeRulesClassifier.score_top_rules" href="#imodels.skulefit.skope_rules.SkopeRulesClassifier.score_top_rules">score_top_rules</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.decision_function" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.decision_function">decision_function</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.deduplicate" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.deduplicate">deduplicate</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.f1_score" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.f1_score">f1_score</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.fit" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_proba" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_top_rules" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_top_rules">predict_top_rules</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.rules_vote" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.rules_vote">rules_vote</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.score_top_rules" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.score_top_rules">score_top_rules</a></code></li>
 </ul>
 </li>
 </ul>
