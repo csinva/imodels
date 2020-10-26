@@ -166,8 +166,8 @@ Reference includes docs <a href="https://csinva.io/imodels/">🗂️</a>, refere
 from .bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
 from .greedy_rule_list import GreedyRuleListClassifier
 from .iterative_random_forest.iterative_random_forest import IRFClassifier
-from .rule_fit import RuleFitRegressor
-from .skope_rules import SkopeRulesClassifier
+from .skulefit.rule_fit import RuleFitRegressor
+from .skulefit.skope_rules import SkopeRulesClassifier
 from .slim import SLIMRegressor
 
 CLASSIFIERS = BayesianRuleListClassifier, GreedyRuleListClassifier, IRFClassifier
@@ -195,13 +195,9 @@ REGRESSORS = RuleFitRegressor, SkopeRulesClassifier, SLIMRegressor
 <dd>
 <section class="desc"><p>Still in progress - should optimize globally over all possible splits rather than use greedy 1-by-1 splits</p></section>
 </dd>
-<dt><code class="name"><a title="imodels.rule_fit" href="rule_fit.html">rule_fit</a></code></dt>
+<dt><code class="name"><a title="imodels.skulefit" href="skulefit/index.html">skulefit</a></code></dt>
 <dd>
-<section class="desc"><p>Linear model of tree-based decision rules …</p></section>
-</dd>
-<dt><code class="name"><a title="imodels.skope_rules" href="skope_rules.html">skope_rules</a></code></dt>
-<dd>
-<section class="desc"><p>Code adapted with only minor changes from <a href="https://github.com/scikit-learn-contrib/skope-rules">here</a>. Full credit to the authors …</p></section>
+<section class="desc"></section>
 </dd>
 <dt><code class="name"><a title="imodels.slim" href="slim.html">slim</a></code></dt>
 <dd>
@@ -237,8 +233,7 @@ REGRESSORS = RuleFitRegressor, SkopeRulesClassifier, SLIMRegressor
 <li><code><a title="imodels.greedy_rule_list" href="greedy_rule_list.html">greedy_rule_list</a></code></li>
 <li><code><a title="imodels.iterative_random_forest" href="iterative_random_forest/index.html">iterative_random_forest</a></code></li>
 <li><code><a title="imodels.optimal_classification_tree" href="optimal_classification_tree/index.html">optimal_classification_tree</a></code></li>
-<li><code><a title="imodels.rule_fit" href="rule_fit.html">rule_fit</a></code></li>
-<li><code><a title="imodels.skope_rules" href="skope_rules.html">skope_rules</a></code></li>
+<li><code><a title="imodels.skulefit" href="skulefit/index.html">skulefit</a></code></li>
 <li><code><a title="imodels.slim" href="slim.html">slim</a></code></li>
 <li><code><a title="imodels.util" href="util/index.html">util</a></code></li>
 </ul>

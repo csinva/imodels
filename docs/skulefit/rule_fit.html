@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.rule_fit API documentation</title>
+<title>imodels.skulefit.rule_fit API documentation</title>
 <meta name="description" content="Linear model of tree-based decision rules …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,18 +17,25 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.rule_fit</code></h1>
+<h1 class="title">Module <code>imodels.skulefit.rule_fit</code></h1>
 </header>
 <section id="section-intro">
 <p>Linear model of tree-based decision rules</p>
-<p>Clone of code from <a href="https://github.com/christophM/rulefit">https://github.com/christophM/rulefit</a> with minor modifications to fit better into an existing project with different requirements / functions needed.</p>
+<p>Clone of code from <a href="https://github.com/christophM/rulefit">https://github.com/christophM/rulefit</a> with minor modifications to fit better into an existing project
+with different requirements / functions needed.</p>
 <p>Implementation of a rule based prediction algorithm based on the rulefit algorithm from Friedman and Popescu (PDF)</p>
-<p>The algorithm can be used for predicting an output vector y given an input matrix X. In the first step a tree ensemble is generated with gradient boosting. The trees are then used to form rules, where the paths to each node in each tree form one rule. A rule is a binary decision if an observation is in a given node, which is dependent on the input features that were used in the splits. The ensemble of rules together with the original input features are then being input in a L1-regularized linear model, also called Lasso, which estimates the effects of each rule on the output target but at the same time estimating many of those effects to zero.</p>
-<p>You can use rulefit for predicting a numeric response (categorial not yet implemented). The input has to be a numpy matrix with only numeric values.</p>
+<p>The algorithm can be used for predicting an output vector y given an input matrix X. In the first step a tree ensemble
+is generated with gradient boosting. The trees are then used to form rules, where the paths to each node in each tree
+form one rule. A rule is a binary decision if an observation is in a given node, which is dependent on the input features
+that were used in the splits. The ensemble of rules together with the original input features are then being input in a
+L1-regularized linear model, also called Lasso, which estimates the effects of each rule on the output target but at the
+same time estimating many of those effects to zero.</p>
+<p>You can use rulefit for predicting a numeric response (categorial not yet implemented). The input has to be a numpy
+matrix with only numeric values.</p>
 <p>This method implement the RuleFit algorithm</p>
 <p>The module structure is the following:</p>
 <ul>
-<li><code>&lt;a title="imodels.rule_fit.RuleEnsemble" href="#imodels.rule_fit.RuleEnsemble"&gt;</code>RuleEnsemble<code>&lt;/a&gt;</code> implements an ensemble of <code>Rules</code></li>
+<li><code>&lt;a title="imodels.skulefit.rule_fit.RuleEnsemble" href="#imodels.skulefit.rule_fit.RuleEnsemble"&gt;</code>RuleEnsemble<code>&lt;/a&gt;</code> implements an ensemble of <code>Rules</code></li>
 <li><code>RuleFit</code> implements the RuleFit algorithm</li>
 </ul>
 <details class="source">
@@ -37,13 +44,20 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Linear model of tree-based decision rules
 
-Clone of code from https://github.com/christophM/rulefit with minor modifications to fit better into an existing project with different requirements / functions needed.
+Clone of code from https://github.com/christophM/rulefit with minor modifications to fit better into an existing project
+with different requirements / functions needed.
 
 Implementation of a rule based prediction algorithm based on the rulefit algorithm from Friedman and Popescu (PDF)
 
-The algorithm can be used for predicting an output vector y given an input matrix X. In the first step a tree ensemble is generated with gradient boosting. The trees are then used to form rules, where the paths to each node in each tree form one rule. A rule is a binary decision if an observation is in a given node, which is dependent on the input features that were used in the splits. The ensemble of rules together with the original input features are then being input in a L1-regularized linear model, also called Lasso, which estimates the effects of each rule on the output target but at the same time estimating many of those effects to zero.
+The algorithm can be used for predicting an output vector y given an input matrix X. In the first step a tree ensemble
+is generated with gradient boosting. The trees are then used to form rules, where the paths to each node in each tree
+form one rule. A rule is a binary decision if an observation is in a given node, which is dependent on the input features
+that were used in the splits. The ensemble of rules together with the original input features are then being input in a
+L1-regularized linear model, also called Lasso, which estimates the effects of each rule on the output target but at the
+same time estimating many of those effects to zero.
 
-You can use rulefit for predicting a numeric response (categorial not yet implemented). The input has to be a numpy matrix with only numeric values.
+You can use rulefit for predicting a numeric response (categorial not yet implemented). The input has to be a numpy
+matrix with only numeric values.
 
 This method implement the RuleFit algorithm
 
@@ -61,8 +75,8 @@ from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifi
     RandomForestClassifier
 from sklearn.linear_model import LassoCV, LogisticRegressionCV
 
-from .util.rules import RuleCondition, Rule
-from .util.transforms import Winsorizer, FriedScale
+from imodels.util.rules import RuleCondition, Rule
+from imodels.util.transforms import Winsorizer, FriedScale
 
 
 def extract_rules_from_tree(tree, feature_names=None):
@@ -189,27 +203,27 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-        tree_size:      Number of terminal nodes in generated trees. If exp_rand_tree_size=True, 
-                        this will be the mean number of terminal nodes.
-        sample_fract:   fraction of randomly chosen training observations used to produce each tree. 
-                        FP 2004 (Sec. 2)
-        max_rules:      approximate total number of rules generated for fitting. Note that actual
-                        number of rules will usually be lower than this due to duplicates.
-        memory_par:     scale multiplier (shrinkage factor) applied to each new tree when 
-                        sequentially induced. FP 2004 (Sec. 2)
-        rfmode:         &#39;regress&#39; for regression or &#39;classify&#39; for binary classification.
-        lin_standardise: If True, the linear terms will be standardised as per Friedman Sec 3.2
-                        by multiplying the winsorised variable by 0.4/stdev.
-        lin_trim_quantile: If lin_standardise is True, this quantile will be used to trim linear 
-                        terms before standardisation.
-        exp_rand_tree_size: If True, each boosted tree will have a different maximum number of 
-                        terminal nodes based on an exponential distribution about tree_size. 
-                        (Friedman Sec 3.3)
-        model_type:     &#39;r&#39;: rules only; &#39;l&#39;: linear terms only; &#39;rl&#39;: both rules and linear terms
-        random_state:   Integer to initialise random objects and provide repeatability.
-        tree_generator: Optional: this object will be used as provided to generate the rules. 
-                        This will override almost all the other properties above. 
-                        Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (default=None)
+    tree_size:      Number of terminal nodes in generated trees. If exp_rand_tree_size=True, 
+                    this will be the mean number of terminal nodes.
+    sample_fract:   fraction of randomly chosen training observations used to produce each tree. 
+                    FP 2004 (Sec. 2)
+    max_rules:      approximate total number of rules generated for fitting. Note that actual
+                    number of rules will usually be lower than this due to duplicates.
+    memory_par:     scale multiplier (shrinkage factor) applied to each new tree when 
+                    sequentially induced. FP 2004 (Sec. 2)
+    rfmode:         &#39;regress&#39; for regression or &#39;classify&#39; for binary classification.
+    lin_standardise: If True, the linear terms will be standardised as per Friedman Sec 3.2
+                    by multiplying the winsorised variable by 0.4/stdev.
+    lin_trim_quantile: If lin_standardise is True, this quantile will be used to trim linear 
+                    terms before standardisation.
+    exp_rand_tree_size: If True, each boosted tree will have a different maximum number of 
+                    terminal nodes based on an exponential distribution about tree_size. 
+                    (Friedman Sec 3.3)
+    model_type:     &#39;r&#39;: rules only; &#39;l&#39;: linear terms only; &#39;rl&#39;: both rules and linear terms
+    random_state:   Integer to initialise random objects and provide repeatability.
+    tree_generator: Optional: this object will be used as provided to generate the rules. 
+                    This will override almost all the other properties above. 
+                    Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (default=None)
 
     Attributes
     ----------
@@ -221,12 +235,20 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
 
     &#34;&#34;&#34;
 
-    def __init__(self, tree_size=4, sample_fract=&#39;default&#39;, max_rules=2000,
+    def __init__(self,
+                 tree_size=4,
+                 sample_fract=&#39;default&#39;,
+                 max_rules=2000,
                  memory_par=0.01,
                  tree_generator=None,
-                 rfmode=&#39;regress&#39;, lin_trim_quantile=0.025,
-                 lin_standardise=True, exp_rand_tree_size=True,
-                 model_type=&#39;rl&#39;, Cs=None, cv=3, random_state=None):
+                 rfmode=&#39;regress&#39;,
+                 lin_trim_quantile=0.025,
+                 lin_standardise=True,
+                 exp_rand_tree_size=True,
+                 model_type=&#39;rl&#39;,
+                 Cs=None,
+                 cv=3,
+                 random_state=None):
         self.tree_generator = tree_generator
         self.rfmode = rfmode
         self.lin_trim_quantile = lin_trim_quantile
@@ -238,7 +260,6 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
         self.exp_rand_tree_size = exp_rand_tree_size
         self.max_rules = max_rules
         self.sample_fract = sample_fract
-        self.max_rules = max_rules
         self.memory_par = memory_par
         self.tree_size = tree_size
         self.random_state = random_state
@@ -462,7 +483,14 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
         rules = pd.DataFrame(output_rules, columns=[&#34;rule&#34;, &#34;type&#34;, &#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
         if exclude_zero_coef:
             rules = rules.ix[rules.coef != 0]
-        return rules</code></pre>
+        return rules
+
+    def visualize(self):
+        rules = self.get_rules()
+        rules = rules[rules.coef != 0].sort_values(&#34;support&#34;, ascending=False)
+        pd.set_option(&#39;display.max_colwidth&#39;, -1)
+        return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(3)
+        </code></pre>
 </details>
 </section>
 <section>
@@ -472,7 +500,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="imodels.rule_fit.extract_rules_from_tree"><code class="name flex">
+<dt id="imodels.skulefit.rule_fit.extract_rules_from_tree"><code class="name flex">
 <span>def <span class="ident">extract_rules_from_tree</span></span>(<span>tree, feature_names=None)</span>
 </code></dt>
 <dd>
@@ -532,7 +560,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.rule_fit.RuleEnsemble"><code class="flex name class">
+<dt id="imodels.skulefit.rule_fit.RuleEnsemble"><code class="flex name class">
 <span>class <span class="ident">RuleEnsemble</span></span>
 <span>(</span><span>tree_list, feature_names=None)</span>
 </code></dt>
@@ -629,7 +657,7 @@ an ensemble of decision trees.</p>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.rule_fit.RuleEnsemble.filter_rules"><code class="name flex">
+<dt id="imodels.skulefit.rule_fit.RuleEnsemble.filter_rules"><code class="name flex">
 <span>def <span class="ident">filter_rules</span></span>(<span>self, func)</span>
 </code></dt>
 <dd>
@@ -642,7 +670,7 @@ an ensemble of decision trees.</p>
     self.rules = filter(lambda x: func(x), self.rules)</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_fit.RuleEnsemble.filter_short_rules"><code class="name flex">
+<dt id="imodels.skulefit.rule_fit.RuleEnsemble.filter_short_rules"><code class="name flex">
 <span>def <span class="ident">filter_short_rules</span></span>(<span>self, k)</span>
 </code></dt>
 <dd>
@@ -655,7 +683,7 @@ an ensemble of decision trees.</p>
     self.filter_rules(lambda x: len(x.conditions) &gt; k)</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_fit.RuleEnsemble.transform"><code class="name flex">
+<dt id="imodels.skulefit.rule_fit.RuleEnsemble.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, X, coefs=None)</span>
 </code></dt>
 <dd>
@@ -705,38 +733,47 @@ coefficients to zero without calling Rule.transform().</dd>
 </dd>
 </dl>
 </dd>
-<dt id="imodels.rule_fit.RuleFitRegressor"><code class="flex name class">
+<dt id="imodels.skulefit.rule_fit.RuleFitRegressor"><code class="flex name class">
 <span>class <span class="ident">RuleFitRegressor</span></span>
 <span>(</span><span>tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, rfmode='regress', lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, model_type='rl', Cs=None, cv=3, random_state=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Rulefit class</p>
 <h2 id="parameters">Parameters</h2>
-<pre><code>tree_size:      Number of terminal nodes in generated trees. If exp_rand_tree_size=True, 
-                this will be the mean number of terminal nodes.
-sample_fract:   fraction of randomly chosen training observations used to produce each tree. 
-                FP 2004 (Sec. 2)
-max_rules:      approximate total number of rules generated for fitting. Note that actual
-                number of rules will usually be lower than this due to duplicates.
-memory_par:     scale multiplier (shrinkage factor) applied to each new tree when 
-                sequentially induced. FP 2004 (Sec. 2)
-rfmode:         'regress' for regression or 'classify' for binary classification.
-lin_standardise: If True, the linear terms will be standardised as per Friedman Sec 3.2
-                by multiplying the winsorised variable by 0.4/stdev.
-lin_trim_quantile: If lin_standardise is True, this quantile will be used to trim linear 
-                terms before standardisation.
-exp_rand_tree_size: If True, each boosted tree will have a different maximum number of 
-                terminal nodes based on an exponential distribution about tree_size. 
-                (Friedman Sec 3.3)
-model_type:     'r': rules only; 'l': linear terms only; 'rl': both rules and linear terms
-random_state:   Integer to initialise random objects and provide repeatability.
-tree_generator: Optional: this object will be used as provided to generate the rules. 
-                This will override almost all the other properties above. 
-                Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (default=None)
-</code></pre>
+<dl>
+<dt><strong><code>tree_size</code></strong> :&ensp;
+<code>Number</code> of <code>terminal</code> <code>nodes</code> <code>in</code> <code>generated</code> <code>trees.</code> <code>If</code> <code>exp_rand_tree_size</code>=<code>True</code>,</dt>
+<dd>this will be the mean number of terminal nodes.</dd>
+<dt><strong><code>sample_fract</code></strong> :&ensp;
+<code>fraction</code> of <code>randomly</code> <code>chosen</code> <code>training</code> <code>observations</code> <code>used</code> <code>to</code> <code>produce</code> <code>each</code> <code>tree.</code></dt>
+<dd>FP 2004 (Sec. 2)</dd>
+<dt><strong><code>max_rules</code></strong> :&ensp;
+<code>approximate</code> <code>total</code> <code>number</code> of <code>rules</code> <code>generated</code> <code>for</code> <code>fitting.</code> <code>Note</code> <code>that</code> <code>actual</code></dt>
+<dd>number of rules will usually be lower than this due to duplicates.</dd>
+<dt><strong><code>memory_par</code></strong> :&ensp;
+<code>scale</code> <code>multiplier</code> (<code>shrinkage</code> <code>factor</code>) <code>applied</code> <code>to</code> <code>each</code> <code>new</code> <code>tree</code> <code>when</code></dt>
+<dd>sequentially induced. FP 2004 (Sec. 2)</dd>
+<dt>rfmode:
+'regress' for regression or 'classify' for binary classification.</dt>
+<dt><strong><code>lin_standardise</code></strong> :&ensp;<code>If</code> <code>True</code>, <code>the</code> <code>linear</code> <code>terms</code> <code>will</code> <code>be</code> <code>standardised</code> <code>as</code> <code>per</code> <code>Friedman</code> <code>Sec</code> <code>3.2</code></dt>
+<dd>by multiplying the winsorised variable by 0.4/stdev.</dd>
+<dt><strong><code>lin_trim_quantile</code></strong> :&ensp;<code>If</code> <code>lin_standardise</code> <code>is</code> <code>True</code>, <code>this</code> <code>quantile</code> <code>will</code> <code>be</code> <code>used</code> <code>to</code> <code>trim</code> <code>linear</code></dt>
+<dd>terms before standardisation.</dd>
+<dt><strong><code>exp_rand_tree_size</code></strong> :&ensp;<code>If</code> <code>True</code>, <code>each</code> <code>boosted</code> <code>tree</code> <code>will</code> <code>have</code> <code>a</code> <code>different</code> <code>maximum</code> <code>number</code> of</dt>
+<dd>terminal nodes based on an exponential distribution about tree_size.
+(Friedman Sec 3.3)</dd>
+<dt><strong><code>model_type</code></strong> :&ensp;
+<code>'r'</code>: <code>rules</code> <code>only</code>; <code>'l'</code>: <code>linear</code> <code>terms</code> <code>only</code>; <code>'rl'</code>: <code>both</code> <code>rules</code> <code>and</code> <code>linear</code> <code>terms</code></dt>
+<dd>&nbsp;</dd>
+<dt>random_state:
+Integer to initialise random objects and provide repeatability.</dt>
+<dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional</code>: <code>this</code> <code>object</code> <code>will</code> <code>be</code> <code>used</code> <code>as</code> <code>provided</code> <code>to</code> <code>generate</code> <code>the</code> <code>rules.</code></dt>
+<dd>This will override almost all the other properties above.
+Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (default=None)</dd>
+</dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>rule_ensemble</code></strong> :&ensp;<a title="imodels.rule_fit.RuleEnsemble" href="#imodels.rule_fit.RuleEnsemble"><code>RuleEnsemble</code></a></dt>
+<dt><strong><code>rule_ensemble</code></strong> :&ensp;<a title="imodels.skulefit.rule_fit.RuleEnsemble" href="#imodels.skulefit.rule_fit.RuleEnsemble"><code>RuleEnsemble</code></a></dt>
 <dd>The rule ensemble</dd>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>strings</code>, optional (default=<code>None</code>)</dt>
 <dd>The names of the features (columns)</dd>
@@ -751,27 +788,27 @@ tree_generator: Optional: this object will be used as provided to generate the r
 
     Parameters
     ----------
-        tree_size:      Number of terminal nodes in generated trees. If exp_rand_tree_size=True, 
-                        this will be the mean number of terminal nodes.
-        sample_fract:   fraction of randomly chosen training observations used to produce each tree. 
-                        FP 2004 (Sec. 2)
-        max_rules:      approximate total number of rules generated for fitting. Note that actual
-                        number of rules will usually be lower than this due to duplicates.
-        memory_par:     scale multiplier (shrinkage factor) applied to each new tree when 
-                        sequentially induced. FP 2004 (Sec. 2)
-        rfmode:         &#39;regress&#39; for regression or &#39;classify&#39; for binary classification.
-        lin_standardise: If True, the linear terms will be standardised as per Friedman Sec 3.2
-                        by multiplying the winsorised variable by 0.4/stdev.
-        lin_trim_quantile: If lin_standardise is True, this quantile will be used to trim linear 
-                        terms before standardisation.
-        exp_rand_tree_size: If True, each boosted tree will have a different maximum number of 
-                        terminal nodes based on an exponential distribution about tree_size. 
-                        (Friedman Sec 3.3)
-        model_type:     &#39;r&#39;: rules only; &#39;l&#39;: linear terms only; &#39;rl&#39;: both rules and linear terms
-        random_state:   Integer to initialise random objects and provide repeatability.
-        tree_generator: Optional: this object will be used as provided to generate the rules. 
-                        This will override almost all the other properties above. 
-                        Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (default=None)
+    tree_size:      Number of terminal nodes in generated trees. If exp_rand_tree_size=True, 
+                    this will be the mean number of terminal nodes.
+    sample_fract:   fraction of randomly chosen training observations used to produce each tree. 
+                    FP 2004 (Sec. 2)
+    max_rules:      approximate total number of rules generated for fitting. Note that actual
+                    number of rules will usually be lower than this due to duplicates.
+    memory_par:     scale multiplier (shrinkage factor) applied to each new tree when 
+                    sequentially induced. FP 2004 (Sec. 2)
+    rfmode:         &#39;regress&#39; for regression or &#39;classify&#39; for binary classification.
+    lin_standardise: If True, the linear terms will be standardised as per Friedman Sec 3.2
+                    by multiplying the winsorised variable by 0.4/stdev.
+    lin_trim_quantile: If lin_standardise is True, this quantile will be used to trim linear 
+                    terms before standardisation.
+    exp_rand_tree_size: If True, each boosted tree will have a different maximum number of 
+                    terminal nodes based on an exponential distribution about tree_size. 
+                    (Friedman Sec 3.3)
+    model_type:     &#39;r&#39;: rules only; &#39;l&#39;: linear terms only; &#39;rl&#39;: both rules and linear terms
+    random_state:   Integer to initialise random objects and provide repeatability.
+    tree_generator: Optional: this object will be used as provided to generate the rules. 
+                    This will override almost all the other properties above. 
+                    Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (default=None)
 
     Attributes
     ----------
@@ -783,12 +820,20 @@ tree_generator: Optional: this object will be used as provided to generate the r
 
     &#34;&#34;&#34;
 
-    def __init__(self, tree_size=4, sample_fract=&#39;default&#39;, max_rules=2000,
+    def __init__(self,
+                 tree_size=4,
+                 sample_fract=&#39;default&#39;,
+                 max_rules=2000,
                  memory_par=0.01,
                  tree_generator=None,
-                 rfmode=&#39;regress&#39;, lin_trim_quantile=0.025,
-                 lin_standardise=True, exp_rand_tree_size=True,
-                 model_type=&#39;rl&#39;, Cs=None, cv=3, random_state=None):
+                 rfmode=&#39;regress&#39;,
+                 lin_trim_quantile=0.025,
+                 lin_standardise=True,
+                 exp_rand_tree_size=True,
+                 model_type=&#39;rl&#39;,
+                 Cs=None,
+                 cv=3,
+                 random_state=None):
         self.tree_generator = tree_generator
         self.rfmode = rfmode
         self.lin_trim_quantile = lin_trim_quantile
@@ -800,7 +845,6 @@ tree_generator: Optional: this object will be used as provided to generate the r
         self.exp_rand_tree_size = exp_rand_tree_size
         self.max_rules = max_rules
         self.sample_fract = sample_fract
-        self.max_rules = max_rules
         self.memory_par = memory_par
         self.tree_size = tree_size
         self.random_state = random_state
@@ -1024,7 +1068,13 @@ tree_generator: Optional: this object will be used as provided to generate the r
         rules = pd.DataFrame(output_rules, columns=[&#34;rule&#34;, &#34;type&#34;, &#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
         if exclude_zero_coef:
             rules = rules.ix[rules.coef != 0]
-        return rules</code></pre>
+        return rules
+
+    def visualize(self):
+        rules = self.get_rules()
+        rules = rules[rules.coef != 0].sort_values(&#34;support&#34;, ascending=False)
+        pd.set_option(&#39;display.max_colwidth&#39;, -1)
+        return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(3)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1033,7 +1083,7 @@ tree_generator: Optional: this object will be used as provided to generate the r
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.rule_fit.RuleFitRegressor.fit"><code class="name flex">
+<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=False)</span>
 </code></dt>
 <dd>
@@ -1168,7 +1218,7 @@ tree_generator: Optional: this object will be used as provided to generate the r
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_fit.RuleFitRegressor.get_rules"><code class="name flex">
+<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.get_rules"><code class="name flex">
 <span>def <span class="ident">get_rules</span></span>(<span>self, exclude_zero_coef=False, subregion=None)</span>
 </code></dt>
 <dd>
@@ -1244,7 +1294,7 @@ data set (X)</dd>
     return rules</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_fit.RuleFitRegressor.predict"><code class="name flex">
+<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1275,7 +1325,7 @@ data set (X)</dd>
     return self.lscv.predict(X_concat)</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_fit.RuleFitRegressor.predict_proba"><code class="name flex">
+<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1289,7 +1339,7 @@ data set (X)</dd>
     return np.vstack((1 - y, y)).transpose()</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_fit.RuleFitRegressor.transform"><code class="name flex">
+<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, X=None, y=None)</span>
 </code></dt>
 <dd>
@@ -1326,6 +1376,22 @@ efficiency.</dd>
     return self.rule_ensemble.transform(X)</code></pre>
 </details>
 </dd>
+<dt id="imodels.skulefit.rule_fit.RuleFitRegressor.visualize"><code class="name flex">
+<span>def <span class="ident">visualize</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def visualize(self):
+    rules = self.get_rules()
+    rules = rules[rules.coef != 0].sort_values(&#34;support&#34;, ascending=False)
+    pd.set_option(&#39;display.max_colwidth&#39;, -1)
+    return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(3)</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -1339,32 +1405,33 @@ efficiency.</dd>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels" href="index.html">imodels</a></code></li>
+<li><code><a title="imodels.skulefit" href="index.html">imodels.skulefit</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="imodels.rule_fit.extract_rules_from_tree" href="#imodels.rule_fit.extract_rules_from_tree">extract_rules_from_tree</a></code></li>
+<li><code><a title="imodels.skulefit.rule_fit.extract_rules_from_tree" href="#imodels.skulefit.rule_fit.extract_rules_from_tree">extract_rules_from_tree</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.rule_fit.RuleEnsemble" href="#imodels.rule_fit.RuleEnsemble">RuleEnsemble</a></code></h4>
+<h4><code><a title="imodels.skulefit.rule_fit.RuleEnsemble" href="#imodels.skulefit.rule_fit.RuleEnsemble">RuleEnsemble</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.rule_fit.RuleEnsemble.filter_rules" href="#imodels.rule_fit.RuleEnsemble.filter_rules">filter_rules</a></code></li>
-<li><code><a title="imodels.rule_fit.RuleEnsemble.filter_short_rules" href="#imodels.rule_fit.RuleEnsemble.filter_short_rules">filter_short_rules</a></code></li>
-<li><code><a title="imodels.rule_fit.RuleEnsemble.transform" href="#imodels.rule_fit.RuleEnsemble.transform">transform</a></code></li>
+<li><code><a title="imodels.skulefit.rule_fit.RuleEnsemble.filter_rules" href="#imodels.skulefit.rule_fit.RuleEnsemble.filter_rules">filter_rules</a></code></li>
+<li><code><a title="imodels.skulefit.rule_fit.RuleEnsemble.filter_short_rules" href="#imodels.skulefit.rule_fit.RuleEnsemble.filter_short_rules">filter_short_rules</a></code></li>
+<li><code><a title="imodels.skulefit.rule_fit.RuleEnsemble.transform" href="#imodels.skulefit.rule_fit.RuleEnsemble.transform">transform</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.rule_fit.RuleFitRegressor" href="#imodels.rule_fit.RuleFitRegressor">RuleFitRegressor</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.rule_fit.RuleFitRegressor.fit" href="#imodels.rule_fit.RuleFitRegressor.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_fit.RuleFitRegressor.get_rules" href="#imodels.rule_fit.RuleFitRegressor.get_rules">get_rules</a></code></li>
-<li><code><a title="imodels.rule_fit.RuleFitRegressor.predict" href="#imodels.rule_fit.RuleFitRegressor.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_fit.RuleFitRegressor.predict_proba" href="#imodels.rule_fit.RuleFitRegressor.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.rule_fit.RuleFitRegressor.transform" href="#imodels.rule_fit.RuleFitRegressor.transform">transform</a></code></li>
+<h4><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor" href="#imodels.skulefit.rule_fit.RuleFitRegressor">RuleFitRegressor</a></code></h4>
+<ul class="two-column">
+<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.fit" href="#imodels.skulefit.rule_fit.RuleFitRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.get_rules" href="#imodels.skulefit.rule_fit.RuleFitRegressor.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.predict" href="#imodels.skulefit.rule_fit.RuleFitRegressor.predict">predict</a></code></li>
+<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.predict_proba" href="#imodels.skulefit.rule_fit.RuleFitRegressor.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.transform" href="#imodels.skulefit.rule_fit.RuleFitRegressor.transform">transform</a></code></li>
+<li><code><a title="imodels.skulefit.rule_fit.RuleFitRegressor.visualize" href="#imodels.skulefit.rule_fit.RuleFitRegressor.visualize">visualize</a></code></li>
 </ul>
 </li>
 </ul>

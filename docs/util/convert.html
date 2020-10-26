@@ -24,10 +24,15 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from sklearn.tree import _tree
+<pre><code class="python">from typing import Union, List
+
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.tree import _tree
 
 
-def tree_to_rules(tree, feature_names):
+def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
+                  feature_names: List[str]) -&gt; List[str]:
+
     &#34;&#34;&#34;
     Return a list of rules from a tree
 
@@ -96,7 +101,9 @@ feature_names: list of variable names
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def tree_to_rules(tree, feature_names):
+<pre><code class="python">def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
+                  feature_names: List[str]) -&gt; List[str]:
+
     &#34;&#34;&#34;
     Return a list of rules from a tree
 
