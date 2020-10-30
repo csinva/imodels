@@ -222,6 +222,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
         self.model_type = model_type
         self.cv = cv
         self.Cs = Cs
+        np.random.seed(self.random_state)
 
     def fit(self, X, y=None, feature_names=None, verbose=False):
         """Fit and estimate linear combination of rule ensemble
@@ -294,8 +295,8 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
                 tree_list = [[x] for x in self.tree_generator.estimators_]
 
             ## extract rules
-            self.rule_ensemble = RuleEnsemble(tree_list=tree_list,
-                                              feature_names=self.feature_names)
+            self.rule_ensemble = RuleEnsemble(tree_list=tree_list, feature_names=self.feature_names)
+            self.rule_ensemble.rules = sorted(self.rule_ensemble.rules,  key=lambda x: x.prediction_value)
 
             ## concatenate original features and rules
             X_rules = self.rule_ensemble.transform(X)
