@@ -108,10 +108,13 @@ from sklearn.ensemble import BaggingClassifier, BaggingRegressor, GradientBoosti
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from sklearn.utils import indices_to_mask
 
 from imodels.util.convert import tree_to_rules
 from imodels.util.deduplicate import find_similar_rulesets
 from imodels.util.rule import Rule, replace_feature_name
+from imodels.util.score import score_oob
+from imodels.util.prune import prune_mins
 
 INTEGER_TYPES = (numbers.Integral, np.integer)
 BASE_FEATURE_NAME = "__C__"
@@ -376,19 +379,20 @@ class SkopeRulesClassifier(BaseEstimator):
         self._fit_tree_ensemble(regs, X, y_reg)
 
         self.estimators_, self.estimators_samples_, self.estimators_features_ = [], [], []
-
         for ensemble in clfs + regs:
             self.estimators_ += ensemble.estimators_
             self.estimators_samples_ += ensemble.estimators_samples_
             self.estimators_features_ += ensemble.estimators_features_
 
-        rules_ = []
-        for estimator, samples, features in zip(self.estimators_, self.estimators_samples_, self.estimators_features_):
+        extracted_rules = []
+        for estimator, features in zip(self.estimators_, self.estimators_features_):
+            extracted_rules.append(tree_to_rules(estimator, np.array(self.feature_names_)[features]))
 
-            rules_from_tree = tree_to_rules(estimator, np.array(self.feature_names_)[features])
-            rules_ += self._add_OOB_scores_to_rules(X, y, rules_from_tree, samples, features)
+        scored_rules = score_oob(X, y, extracted_rules, self.estimators_samples_, self.estimators_features_,
+                                 self.feature_names_)
+        pruned_rules = prune_mins(scored_rules, self.precision_min, self.recall_min)
+        self.rules_ = self.deduplicate(pruned_rules)
 
-        self.rules_ = self._filter_rules(rules_)
         self.rules_ = sorted(self.rules_, key=lambda x: - self.f1_score(x))
         self.rules_without_feature_names_ = self.rules_
 
@@ -622,67 +626,13 @@ class SkopeRulesClassifier(BaseEstimator):
         for e in ensembles:
             e.fit(X, y)
 
-    def _add_OOB_scores_to_rules(self, X, y, rules_from_tree, in_bag_samples, features):
-
-        # Create mask for OOB samples
-        mask = ~in_bag_samples
-        if sum(mask) == 0:
-            warn(
-                "OOB evaluation not possible: doing it in-bag. Performance evaluation is likely to be wrong"
-                " (overfitting) and selected rules are likely to not perform well! Please use max_samples < 1."
-            )
-            mask = in_bag_samples
-
-        # XXX todo: idem without dataframe
-        X_oob = pandas.DataFrame(
-            (X[mask, :])[:, features],
-            columns=np.array(self.feature_names_)[features]
-        )
-
-        if X_oob.shape[1] <= 1:  # otherwise pandas bug (cf. issue #16363)
-            return []
-
-        y_oob = y[mask]
-        y_oob = np.array((y_oob != 0))
-
-        # Add OOB performances to rules:
-        rules_from_tree = [
-            Rule(r, args=self._eval_rule_perf(r, X_oob, y_oob)) for r in set(rules_from_tree)
-        ]
-        return rules_from_tree
-
-    def _filter_rules(self, rules_):
-        # Factorize rules before semantic tree filtering
-        rules_ = [tuple(rule) for rule in rules_]
-        rules_dict = {}
-
-        # keep only rules verifying precision_min and recall_min:
-        for rule, score in rules_:
-            if score[0] >= self.precision_min and score[1] >= self.recall_min:
-                if rule in rules_dict:
-                    # update the score to the new mean
-                    c = rules_dict[rule][2] + 1
-                    b = rules_dict[rule][1] + 1. / c * (
-                            score[1] - rules_dict[rule][1])
-                    a = rules_dict[rule][0] + 1. / c * (
-                            score[0] - rules_dict[rule][0])
-
-                    rules_dict[rule] = (a, b, c)
-                else:
-                    rules_dict[rule] = (score[0], score[1], 1)
-
-        rules_dict = sorted(rules_dict.items(), key=lambda x: (x[1][0], x[1][1]), reverse=True)
-
-        # Deduplicate the rule using semantic tree
-        if self.max_depth_duplication is not None:
-            rules_dict = self.deduplicate(rules_dict)
-
-        return rules_dict
-
     def deduplicate(self, rules):
-        return [max(rules_set, key=self.f1_score)
-                for rules_set in find_similar_rulesets(rules, self.max_depth_duplication)]
+        if self.max_depth_duplication is not None:
+            return [max(rules_set, key=self.f1_score)
+                    for rules_set in find_similar_rulesets(rules, self.max_depth_duplication)]
+        return rules
 
-    def f1_score(self, x) -> float:
+    @staticmethod
+    def f1_score(x) -> float:
         return 2 * x[1][0] * x[1][1] / \
                (x[1][0] + x[1][1]) if (x[1][0] + x[1][1]) > 0 else 0
