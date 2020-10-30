@@ -15,7 +15,7 @@ class TestClassRegression:
         '''Test imodels on basic binary classification task
         '''
         for model_type in [RuleFitRegressor]:
-            m = model_type()
+            m = model_type(model_type='r')
             m.fit(self.X_regression, self.y_regression)
 
             preds = m.predict(self.X_regression)

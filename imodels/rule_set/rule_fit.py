@@ -29,10 +29,11 @@ from sklearn.base import BaseEstimator
 from sklearn.base import TransformerMixin
 from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier, RandomForestRegressor, \
     RandomForestClassifier
-from sklearn.linear_model import LassoCV, LogisticRegressionCV
 
+from imodels.rule_set.rule_set import RuleSet
 from imodels.util.rules import RuleCondition, Rule
 from imodels.util.transforms import Winsorizer, FriedScale
+from imodels.util.score import score_lasso
 
 
 def extract_rules_from_tree(tree, feature_names=None):
@@ -105,7 +106,7 @@ class RuleEnsemble():
                  tree_list,
                  feature_names=None):
         self.tree_list = tree_list
-        self.feature_names = feature_names
+        self.feature_names_ = feature_names
         self.rules = set()
         ## TODO: Move this out of __init__
         self._extract_rules()
@@ -116,7 +117,7 @@ class RuleEnsemble():
 
         """
         for tree in self.tree_list:
-            rules = extract_rules_from_tree(tree[0].tree_, feature_names=self.feature_names)
+            rules = extract_rules_from_tree(tree[0].tree_, feature_names=self.feature_names_)
             self.rules.update(rules)
 
     def filter_rules(self, func):
@@ -153,7 +154,7 @@ class RuleEnsemble():
         return (map(lambda x: x.__str__(), self.rules)).__str__()
 
 
-class RuleFitRegressor(BaseEstimator, TransformerMixin):
+class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
     """Rulefit class
 
 
@@ -204,7 +205,8 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
                  model_type='rl',
                  Cs=None,
                  cv=3,
-                 random_state=None):
+                 random_state=None,
+                 test=False):
         self.tree_generator = tree_generator
         self.rfmode = rfmode
         self.lin_trim_quantile = lin_trim_quantile
@@ -222,7 +224,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
         self.model_type = model_type
         self.cv = cv
         self.Cs = Cs
-        np.random.seed(self.random_state)
+        self.test = test
 
     def fit(self, X, y=None, feature_names=None, verbose=False):
         """Fit and estimate linear combination of rule ensemble
@@ -233,12 +235,14 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
         if type(y) in [pd.DataFrame, pd.Series]:
             y = y.values
 
+        self.n_features_ = X.shape[1]
+
         ## Enumerate features if feature names not provided
         N = X.shape[0]
         if feature_names is None:
-            self.feature_names = ['feature_' + str(x) for x in range(0, X.shape[1])]
+            self.feature_names_ = ['feature_' + str(x) for x in range(0, X.shape[1])]
         else:
-            self.feature_names = feature_names
+            self.feature_names_ = feature_names
         if 'r' in self.model_type:
             ## initialise tree generator
             if self.tree_generator is None:
@@ -295,8 +299,12 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
                 tree_list = [[x] for x in self.tree_generator.estimators_]
 
             ## extract rules
-            self.rule_ensemble = RuleEnsemble(tree_list=tree_list, feature_names=self.feature_names)
-            self.rule_ensemble.rules = sorted(self.rule_ensemble.rules,  key=lambda x: x.prediction_value)
+            self.rule_ensemble = RuleEnsemble(tree_list=tree_list, feature_names=self.feature_names_)
+
+            if self.test:
+                self.rule_ensemble.rules = sorted(self.rule_ensemble.rules,  key=lambda x: x.prediction_value)
+
+            extracted_rules = [rule.__str__() for rule in self.rule_ensemble.rules]
 
             ## concatenate original features and rules
             X_rules = self.rule_ensemble.transform(X)
@@ -316,7 +324,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
             else:
                 X_regn = X.copy()
 
-                ## Compile Training data
+        ## Compile Training data
         X_concat = np.zeros([X.shape[0], 0])
         if 'l' in self.model_type:
             X_concat = np.concatenate((X_concat, X_regn), axis=1)
@@ -324,28 +332,8 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
             if X_rules.shape[0] > 0:
                 X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
-        ## fit Lasso
-        if self.rfmode == 'regress':
-            if self.Cs is None:  # use defaultshasattr(self.Cs, "__len__"):
-                n_alphas = 100
-                alphas = None
-            elif hasattr(self.Cs, "__len__"):
-                n_alphas = None
-                alphas = 1. / self.Cs
-            else:
-                n_alphas = self.Cs
-                alphas = None
-            self.lscv = LassoCV(n_alphas=n_alphas, alphas=alphas, cv=self.cv, random_state=self.random_state)
-            self.lscv.fit(X_concat, y)
-            self.coef_ = self.lscv.coef_
-            self.intercept_ = self.lscv.intercept_
-        else:
-            Cs = 10 if self.Cs is None else self.Cs
-            self.lscv = LogisticRegressionCV(Cs=Cs, cv=self.cv, penalty='l1', random_state=self.random_state,
-                                             solver='liblinear')
-            self.lscv.fit(X_concat, y)
-            self.coef_ = self.lscv.coef_[0]
-            self.intercept_ = self.lscv.intercept_[0]
+        self.rules_without_feature_names_, self.lscv = score_lasso(X_concat, y, extracted_rules,
+                                                                   self.rfmode, self.Cs, self.cv, self.random_state)
 
         return self
 
@@ -356,19 +344,21 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
 
-        X_concat = np.zeros([X.shape[0], 0])
-        if 'l' in self.model_type:
-            if self.lin_standardise:
-                X_concat = np.concatenate((X_concat, self.friedscale.scale(X)), axis=1)
-            else:
-                X_concat = np.concatenate((X_concat, X), axis=1)
-        if 'r' in self.model_type:
-            rule_coefs = self.coef_[-len(self.rule_ensemble.rules):]
-            if len(rule_coefs) > 0:
-                X_rules = self.rule_ensemble.transform(X, coefs=rule_coefs)
-                if X_rules.shape[0] > 0:
-                    X_concat = np.concatenate((X_concat, X_rules), axis=1)
-        return self.lscv.predict(X_concat)
+        # X_concat = np.zeros([X.shape[0], 0])
+        # if 'l' in self.model_type:
+        #     if self.lin_standardise:
+        #         X_concat = np.concatenate((X_concat, self.friedscale.scale(X)), axis=1)
+        #     else:
+        #         X_concat = np.concatenate((X_concat, X), axis=1)
+        # if 'r' in self.model_type:
+        #     rule_coefs = self.coef_[-len(self.rule_ensemble.rules):]
+        #     if len(rule_coefs) > 0:
+        #         X_rules = self.rule_ensemble.transform(X, coefs=rule_coefs)
+        #         if X_rules.shape[0] > 0:
+        #             X_concat = np.concatenate((X_concat, X_rules), axis=1)
+
+        y_pred_rules = self.decision_function(X)
+        return y_pred_rules + self.lscv.intercept_
 
     def predict_proba(self, X):
         y = self.predict(X)
@@ -423,7 +413,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin):
                 subregion = np.array(subregion)
                 importance = sum(abs(coef) * abs([x[i] for x in self.winsorizer.trim(subregion)] - self.mean[i])) / len(
                     subregion)
-            output_rules += [(self.feature_names[i], 'linear', coef, 1, importance)]
+            output_rules += [(self.feature_names_[i], 'linear', coef, 1, importance)]
 
         ## Add rules
         for i in range(0, len(self.rule_ensemble.rules)):

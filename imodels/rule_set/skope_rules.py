@@ -110,6 +110,7 @@ from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils import indices_to_mask
 
+from imodels.rule_set.rule_set import RuleSet
 from imodels.util.convert import tree_to_rules
 from imodels.util.deduplicate import find_similar_rulesets
 from imodels.util.rule import Rule, replace_feature_name
@@ -120,7 +121,7 @@ INTEGER_TYPES = (numbers.Integral, np.integer)
 BASE_FEATURE_NAME = "__C__"
 
 
-class SkopeRulesClassifier(BaseEstimator):
+class SkopeRulesClassifier(BaseEstimator, RuleSet):
     """An easy-interpretable classifier optimizing simple logical rules.
 
     Parameters
@@ -427,48 +428,6 @@ class SkopeRulesClassifier(BaseEstimator):
         y = self.rules_vote(X) / len(self.rules_without_feature_names_)
         return np.vstack((1 - y, y)).transpose()
 
-    def decision_function(self, X) -> np.ndarray:
-        """Average anomaly score of X of the base classifiers (rules).
-
-        The anomaly score of an input sample is computed as
-        the weighted sum of the binary rules outputs, the weight being
-        the respective precision of each rule.
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The training input samples.
-
-        Returns
-        -------
-        scores : array, shape (n_samples,)
-            The anomaly score of the input samples.
-            The higher, the more abnormal. Positive scores represent outliers,
-            null scores represent inliers.
-
-        """
-        # Check if fit had been called
-        check_is_fitted(self, ['rules_', 'estimators_', 'estimators_samples_',
-                               'max_samples_'])
-
-        # Input validation
-        X = check_array(X)
-
-        if X.shape[1] != self.n_features_:
-            raise ValueError("X.shape[1] = %d should be equal to %d, "
-                             "the number of features at training time."
-                             " Please reshape your data."
-                             % (X.shape[1], self.n_features_))
-
-        df = pandas.DataFrame(X, columns=self.feature_names_)
-        selected_rules = self.rules_without_feature_names_
-
-        scores = np.zeros(X.shape[0])
-        for (r, w) in selected_rules:
-            scores[list(df.query(r).index)] += w[0]
-
-        return scores
-
     def rules_vote(self, X) -> np.ndarray:
         """Score representing a vote of the base classifiers (rules).
 
@@ -578,17 +537,6 @@ class SkopeRulesClassifier(BaseEstimator):
 
         return np.array((self.score_top_rules(X) > len(self.rules_) - n_rules),
                         dtype=int)
-
-    def _eval_rule_perf(self, rule, X, y) -> Tuple[float, float]:
-        detected_index = list(X.query(rule).index)
-        if len(detected_index) <= 1:
-            return (0, 0)
-        y_detected = y[detected_index]
-        true_pos = y_detected[y_detected > 0].sum()
-        if true_pos == 0:
-            return (0, 0)
-        pos = y[y > 0].sum()
-        return y_detected.mean(), float(true_pos) / pos
 
     def _get_tree_ensemble(self, classify: bool) -> Union[List[BaggingClassifier], List[BaggingRegressor]]:
 
