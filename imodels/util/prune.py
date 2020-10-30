@@ -1,11 +1,4 @@
-from typing import List, Tuple
-from warnings import warn
-
-import pandas as pd
-import numpy as np
-from sklearn.utils import indices_to_mask
-
-from imodels.util.rule import Rule
+from typing import List
 
 
 def prune_mins(rules: List[str], precision_min: float, recall_min: float):
