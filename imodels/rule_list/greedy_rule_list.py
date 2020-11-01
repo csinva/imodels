@@ -80,7 +80,7 @@ class GreedyRuleListClassifier(BaseEstimator):
                 'col': self.feature_names[col],
                 'index_col': col,
                 'cutoff': cutoff,
-                'val': np.mean(y),
+                'val': np.mean(y), # values before splitting
                 'flip': flip,
                 'val_right': np.mean(y_right),
                 'num_pts': y.size,
@@ -105,7 +105,7 @@ class GreedyRuleListClassifier(BaseEstimator):
                 if j == len(self.rules_) - 1:
                     probs[i] = rule['val']
                 elif x[rule['index_col']] >= rule['cutoff']:
-                    probs[i] = rule['val']
+                    probs[i] = rule['val_right']
                     break
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
 

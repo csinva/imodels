@@ -335,8 +335,9 @@ class BayesianRuleListClassifier(BaseEstimator):
         # deal with pandas data
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
-
-        return 1 * (self.predict_proba(X)[:, 1] &gt;= 0.5)</code></pre>
+        print(&#39;predicting!&#39;)
+        print(&#39;preds_proba&#39;, self.predict_proba(X)[:, 1])
+        return 1 * (self.predict_proba(X)[:, 1] &gt;= 0.1)</code></pre>
 </details>
 </section>
 <section>
@@ -684,8 +685,9 @@ an expert system. </p>
         # deal with pandas data
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
-
-        return 1 * (self.predict_proba(X)[:, 1] &gt;= 0.5)</code></pre>
+        print(&#39;predicting!&#39;)
+        print(&#39;preds_proba&#39;, self.predict_proba(X)[:, 1])
+        return 1 * (self.predict_proba(X)[:, 1] &gt;= 0.1)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -880,8 +882,9 @@ simply enumerated</dd>
     # deal with pandas data
     if type(X) in [pd.DataFrame, pd.Series]:
         X = X.values
-
-    return 1 * (self.predict_proba(X)[:, 1] &gt;= 0.5)</code></pre>
+    print(&#39;predicting!&#39;)
+    print(&#39;preds_proba&#39;, self.predict_proba(X)[:, 1])
+    return 1 * (self.predict_proba(X)[:, 1] &gt;= 0.1)</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier.predict_proba"><code class="name flex">

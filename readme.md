@@ -44,7 +44,7 @@ Install with `pip install git+https://github.com/csinva/imodels` (see [here](htt
 | Rule sets                   |                                                              | (Coming soon) Many popular rule sets including SLIPPER, Lightweight Rule Induction, MLRules |
 
 <p align="center">
-Reference includes docs <a href="https://csinva.io/imodels/">🗂️</a>, reference code implementation 🔗, and research paper 📄
+Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementation 🔗, Research paper 📄
 </p>
 
 ## Custom interpretable models
@@ -67,14 +67,17 @@ Demos are contained in the [notebooks](notebooks) folder.
 
 ## References
 - Readings
-    - Interpretable ML good quick overview: (murdoch et al. 2019, [pdf](https://arxiv.org/pdf/1901.04592.pdf))
-    - Interpretable ML book: (molnar 2019, [pdf](https://christophm.github.io/interpretable-ml-book/))
-    - Case for interpretable models rather than post-hoc explanation: (rudin 2019, [pdf](https://arxiv.org/pdf/1811.10154.pdf)) - good explanation of why one should use interpretable models 
-    - Review on evaluating interpretability (doshi-velez & kim 2017, [pdf](https://arxiv.org/pdf/1702.08608.pdf))
+    - Interpretable ML good quick overview: murdoch et al. 2019, [pdf](https://arxiv.org/pdf/1901.04592.pdf)
+    - Interpretable ML book: molnar 2019, [pdf](https://christophm.github.io/interpretable-ml-book/)
+    - Case for interpretable models rather than post-hoc explanation: rudin 2019, [pdf](https://arxiv.org/pdf/1811.10154.pdf)
+    - Review on evaluating interpretability: doshi-velez & kim 2017, [pdf](https://arxiv.org/pdf/1702.08608.pdf)
 - Reference implementations (also linked above): the code here heavily derives from (and in some case is just a wrapper for) the wonderful work of previous projects. We seek to to extract out, combine, and maintain select relevant parts of these projects.
     - [sklearn-expertsys](https://github.com/tmadl/sklearn-expertsys) - by [@tmadl](https://github.com/tmadl) and [@kenben](https://github.com/kenben) based on original code by [Ben Letham](http://lethalletham.com/)
     - [rulefit](https://github.com/christophM/rulefit) - by [@christophM](https://github.com/christophM)
     - [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) - by the [skope-rules team](https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst) (including [@ngoix](https://github.com/ngoix), [@floriangardin](https://github.com/floriangardin), [@datajms](https://github.com/datajms), [Bibi Ndiaye](), [Ronan Gautier]())
+- Compatible packages
+    - [sklearn](https://github.com/scikit-learn/scikit-learn)
+    - [dtreeviz](https://github.com/parrt/dtreeviz)
 - Related packages
     - [gplearn](https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e) for symbolic regression/classification
     - [pygam](https://github.com/dswah/pyGAM) for generative additive models

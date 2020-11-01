@@ -309,5 +309,6 @@ class BayesianRuleListClassifier(BaseEstimator):
         # deal with pandas data
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
-
-        return 1 * (self.predict_proba(X)[:, 1] >= 0.5)
+        print('predicting!')
+        print('preds_proba', self.predict_proba(X)[:, 1])
+        return 1 * (self.predict_proba(X)[:, 1] >= 0.1)

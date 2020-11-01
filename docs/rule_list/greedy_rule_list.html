@@ -109,7 +109,7 @@ class GreedyRuleListClassifier(BaseEstimator):
                 &#39;col&#39;: self.feature_names[col],
                 &#39;index_col&#39;: col,
                 &#39;cutoff&#39;: cutoff,
-                &#39;val&#39;: np.mean(y),
+                &#39;val&#39;: np.mean(y), # values before splitting
                 &#39;flip&#39;: flip,
                 &#39;val_right&#39;: np.mean(y_right),
                 &#39;num_pts&#39;: y.size,
@@ -134,7 +134,7 @@ class GreedyRuleListClassifier(BaseEstimator):
                 if j == len(self.rules_) - 1:
                     probs[i] = rule[&#39;val&#39;]
                 elif x[rule[&#39;index_col&#39;]] &gt;= rule[&#39;cutoff&#39;]:
-                    probs[i] = rule[&#39;val&#39;]
+                    probs[i] = rule[&#39;val_right&#39;]
                     break
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
 
@@ -457,7 +457,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
                 &#39;col&#39;: self.feature_names[col],
                 &#39;index_col&#39;: col,
                 &#39;cutoff&#39;: cutoff,
-                &#39;val&#39;: np.mean(y),
+                &#39;val&#39;: np.mean(y), # values before splitting
                 &#39;flip&#39;: flip,
                 &#39;val_right&#39;: np.mean(y_right),
                 &#39;num_pts&#39;: y.size,
@@ -482,7 +482,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
                 if j == len(self.rules_) - 1:
                     probs[i] = rule[&#39;val&#39;]
                 elif x[rule[&#39;index_col&#39;]] &gt;= rule[&#39;cutoff&#39;]:
-                    probs[i] = rule[&#39;val&#39;]
+                    probs[i] = rule[&#39;val_right&#39;]
                     break
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
 
@@ -829,7 +829,7 @@ the depth of the current layer</p></section>
             &#39;col&#39;: self.feature_names[col],
             &#39;index_col&#39;: col,
             &#39;cutoff&#39;: cutoff,
-            &#39;val&#39;: np.mean(y),
+            &#39;val&#39;: np.mean(y), # values before splitting
             &#39;flip&#39;: flip,
             &#39;val_right&#39;: np.mean(y_right),
             &#39;num_pts&#39;: y.size,
@@ -935,7 +935,7 @@ y must be binary</p></section>
             if j == len(self.rules_) - 1:
                 probs[i] = rule[&#39;val&#39;]
             elif x[rule[&#39;index_col&#39;]] &gt;= rule[&#39;cutoff&#39;]:
-                probs[i] = rule[&#39;val&#39;]
+                probs[i] = rule[&#39;val_right&#39;]
                 break
     return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)</code></pre>
 </details>
