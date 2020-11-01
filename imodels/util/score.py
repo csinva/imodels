@@ -63,27 +63,19 @@ def _eval_rule_perf(rule, X, y) -> Tuple[float, float]:
     return y_detected.mean(), float(true_pos) / pos
 
 
-def score_lasso(X, y, rules: List[str], rfmode, Cs, cv, random_state) -> List[Rule]:
-    ## fit Lasso
-    if rfmode == 'regress':
-        if Cs is None:
-            n_alphas = 100
-            alphas = None
-        elif hasattr(Cs, "__len__"):
-            n_alphas = None
-            alphas = 1. / Cs
-        else:
-            n_alphas = Cs
-            alphas = None
-        lscv = LassoCV(n_alphas=n_alphas, alphas=alphas, cv=cv, random_state=random_state)
-        lscv.fit(X, y)
+def score_lasso(X, y, rules: List[str], Cs, cv, random_state) -> Tuple[List[Rule], LassoCV]:
+    if Cs is None:
+        n_alphas = 100
+        alphas = None
+    elif hasattr(Cs, "__len__"):
+        n_alphas = None
+        alphas = 1. / Cs
     else:
-        Cs = 10 if Cs is None else Cs
-        lscv = LogisticRegressionCV(Cs=Cs, cv=cv, penalty='l1', random_state=random_state,
-                                         solver='liblinear')
-        lscv.fit(X, y)
+        n_alphas = Cs
+        alphas = None
+    lscv = LassoCV(n_alphas=n_alphas, alphas=alphas, cv=cv, random_state=random_state)
+    lscv.fit(X, y)
 
-    assert len(rules) == len(lscv.coef_)
-    rules = [Rule(r, args=[w]) for r, w in zip(rules, lscv.coef_)]
-
+    rules = [Rule(r, args=[w]) for r, w in zip(rules, lscv.coef_[-len(rules):])]
     return rules, lscv
+

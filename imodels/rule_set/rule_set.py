@@ -26,8 +26,7 @@ class RuleSet:
 
         """
         # Check if fit had been called
-        # check_is_fitted(self, ['rules_', 'estimators_', 'estimators_samples_',
-        #                        'max_samples_'])
+        check_is_fitted(self, ['rules_without_feature_names_'])
 
         # Input validation
         X = check_array(X)

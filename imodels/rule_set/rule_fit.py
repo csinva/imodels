@@ -198,7 +198,6 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
                  max_rules=2000,
                  memory_par=0.01,
                  tree_generator=None,
-                 rfmode='regress',
                  lin_trim_quantile=0.025,
                  lin_standardise=True,
                  exp_rand_tree_size=True,
@@ -208,7 +207,6 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
                  random_state=None,
                  test=False):
         self.tree_generator = tree_generator
-        self.rfmode = rfmode
         self.lin_trim_quantile = lin_trim_quantile
         self.lin_standardise = lin_standardise
         self.winsorizer = Winsorizer(trim_quantile=lin_trim_quantile)
@@ -248,25 +246,15 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
             if self.tree_generator is None:
                 n_estimators_default = int(np.ceil(self.max_rules / self.tree_size))
                 self.sample_fract_ = min(0.5, (100 + 6 * np.sqrt(N)) / N)
-                if self.rfmode == 'regress':
-                    self.tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default,
-                                                                    max_leaf_nodes=self.tree_size,
-                                                                    learning_rate=self.memory_par,
-                                                                    subsample=self.sample_fract_,
-                                                                    random_state=self.random_state, max_depth=100)
-                else:
-                    self.tree_generator = GradientBoostingClassifier(n_estimators=n_estimators_default,
-                                                                     max_leaf_nodes=self.tree_size,
-                                                                     learning_rate=self.memory_par,
-                                                                     subsample=self.sample_fract_,
-                                                                     random_state=self.random_state, max_depth=100)
 
-            if self.rfmode == 'regress':
-                if type(self.tree_generator) not in [GradientBoostingRegressor, RandomForestRegressor]:
-                    raise ValueError("RuleFit only works with RandomForest and BoostingRegressor")
-            else:
-                if type(self.tree_generator) not in [GradientBoostingClassifier, RandomForestClassifier]:
-                    raise ValueError("RuleFit only works with RandomForest and BoostingClassifier")
+                self.tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default,
+                                                                max_leaf_nodes=self.tree_size,
+                                                                learning_rate=self.memory_par,
+                                                                subsample=self.sample_fract_,
+                                                                random_state=self.random_state, max_depth=100)
+
+            if type(self.tree_generator) not in [GradientBoostingRegressor, RandomForestRegressor]:
+                raise ValueError("RuleFit only works with RandomForest and BoostingRegressor")
 
             ## fit tree generator
             if not self.exp_rand_tree_size:  # simply fit with constant tree size
@@ -332,8 +320,8 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
             if X_rules.shape[0] > 0:
                 X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
-        self.rules_without_feature_names_, self.lscv = score_lasso(X_concat, y, extracted_rules,
-                                                                   self.rfmode, self.Cs, self.cv, self.random_state)
+        self.rules_without_feature_names_, self.lscv = score_lasso(X_concat, y, extracted_rules, self.Cs, self.cv,
+                                                                   self.random_state)
 
         return self
 
@@ -344,21 +332,15 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
 
-        # X_concat = np.zeros([X.shape[0], 0])
-        # if 'l' in self.model_type:
-        #     if self.lin_standardise:
-        #         X_concat = np.concatenate((X_concat, self.friedscale.scale(X)), axis=1)
-        #     else:
-        #         X_concat = np.concatenate((X_concat, X), axis=1)
-        # if 'r' in self.model_type:
-        #     rule_coefs = self.coef_[-len(self.rule_ensemble.rules):]
-        #     if len(rule_coefs) > 0:
-        #         X_rules = self.rule_ensemble.transform(X, coefs=rule_coefs)
-        #         if X_rules.shape[0] > 0:
-        #             X_concat = np.concatenate((X_concat, X_rules), axis=1)
+        y_pred = np.zeros(X.shape[0])
+        y_pred += self.decision_function(X)
 
-        y_pred_rules = self.decision_function(X)
-        return y_pred_rules + self.lscv.intercept_
+        if 'l' in self.model_type:
+            if self.lin_standardise:
+                X = self.friedscale.scale(X)
+            y_pred += X @ self.lscv.coef_[:X.shape[1]]
+
+        return y_pred + self.lscv.intercept_
 
     def predict_proba(self, X):
         y = self.predict(X)
