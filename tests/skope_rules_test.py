@@ -36,7 +36,6 @@ def test_skope_rules():
     X_test = np.array([[2, 1], [1, 1]])
 
     grid = ParameterGrid({
-        "feature_names": [None, ['a', 'b']],
         "precision_min": [0.],
         "recall_min": [0.],
         "n_estimators": [1],
@@ -52,7 +51,7 @@ def test_skope_rules():
     with suppress_warnings():
         for params in grid:
             SkopeRulesClassifier(random_state=rng,
-                                 **params).fit(X_train, y_train).predict(X_test)
+                                 **params).fit(X_train, y_train, feature_names=['a', 'b']).predict(X_test)
 
     # additional parameters:
     SkopeRulesClassifier(n_estimators=50,
@@ -171,15 +170,3 @@ def test_performances():
     assert decision.shape == (n_samples,)
     dec_pred = (decision.ravel() < 0).astype(np.int)
     assert_array_equal(dec_pred, y_pred)
-
-
-
-def test_f1_score():
-    clf = SkopeRulesClassifier()
-    rule0 = ('a > 0', (0, 0, 0))
-    rule1 = ('a > 0', (0.5, 0.5, 0))
-    rule2 = ('a > 0', (0.5, 0, 0))
-
-    assert clf.f1_score(rule0) == 0
-    assert clf.f1_score(rule1) == 0.5
-    assert clf.f1_score(rule2) == 0

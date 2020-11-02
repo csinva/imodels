@@ -1,5 +1,5 @@
 from imodels import SkopeRulesClassifier
-from imodels.util.deduplicate import find_similar_rulesets
+from imodels.util.prune import deduplicate, find_similar_rulesets, f1_score
 
 
 def test_similarity_tree():
@@ -27,7 +27,17 @@ def test_similarity_tree():
     assert idx_bags_rules[0] == idx_bags_rules[1]
     assert not idx_bags_rules[0] == idx_bags_rules[2]
     # Assert the best rules are kept
-    final_rules = sk.deduplicate(rules)
+    final_rules = deduplicate(rules, sk.max_depth_duplication)
     assert rules[0] in final_rules
     assert rules[2] in final_rules
     assert not rules[3] in final_rules
+
+
+def test_f1_score():
+    rule0 = ('a > 0', (0, 0, 0))
+    rule1 = ('a > 0', (0.5, 0.5, 0))
+    rule2 = ('a > 0', (0.5, 0, 0))
+
+    assert f1_score(rule0) == 0
+    assert f1_score(rule1) == 0.5
+    assert f1_score(rule2) == 0
