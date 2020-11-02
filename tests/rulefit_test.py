@@ -87,12 +87,12 @@ def test_integration():
                   [0, 53, 40, 34]])
     y = np.array([1, 0, 1, 1, 0])
 
-    rfr = RuleFitRegressor(exp_rand_tree_size=False, random_state=1, model_type='r', test=True)
+    rfr = RuleFitRegressor(exp_rand_tree_size=False, random_state=1, include_linear=False, test=True)
     rfr.fit(X, y)
     expected = np.array([0.95400972, 0.06898542, 0.95400972, 0.95400972, 0.06898542])
     assert np.allclose(rfr.predict(X), expected, atol=1.0e-04)
 
-    rfr = RuleFitRegressor(exp_rand_tree_size=False, max_rules=20, model_type='rl', random_state=0, test=True)
+    rfr = RuleFitRegressor(exp_rand_tree_size=False, max_rules=20, random_state=0, test=True)
     rfr.fit(X, y)
     expected = np.array([0.70206613, 0.5601362, 0.60333227, 0.70206613, 0.43239927])
     assert np.allclose(rfr.predict(X), expected)
