@@ -11,6 +11,9 @@ data = data.replace('&lt;https://doi.org/10.5281/zenodo.4026887}&gt;',
 data = data.replace('<h1>Index</h1>',
                     '<h1>Index 🔍</h1>')
 
+data = data.replace('<a href="https://csinva.github.io/imodels/">Docs</a>',
+                    '<a href="https://github.com/csinva/imodels">Github</a>')
+
 data = data.replace('.html">imodels.', '.html">')
 data = data.replace('<h1 class="title">Module <code>imodels</code></h1>', '') # remove header
 # data = data.replace('<th>Reference</th>', '<th white-space: nowrap>Reference</th>')

@@ -27,7 +27,7 @@
 <p align="center"> Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easily understandable. Pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!
 </p>
 <p align="center">
-<a href="https://csinva.github.io/imodels/">Docs</a> •
+<a href="https://github.com/csinva/imodels">Github</a> •
 <a href="#popular-interpretable-models"> Popular imodels </a> •
 <a href="#custom-interpretable-models"> Custom imodels </a> •
 <a href="#demo-notebooks">Demo notebooks</a>
@@ -38,7 +38,7 @@
 </p>
 <h2 id="popular-interpretable-models">Popular interpretable models</h2>
 <p>Implementations of different interpretable models, all compatible with scikit-learn. The interpretable models can be easily used and installed:</p>
-<pre><code class="python">from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, IRFClassifier
+<pre><code class="python">from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier
 from imodels import SLIMRegressor, RuleFitRegressor
 
 model = BayesianRuleListClassifier()  # initialize a model
@@ -172,12 +172,12 @@ from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListCla
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_set.rule_fit import RuleFitRegressor
 from .rule_set.skope_rules import SkopeRulesClassifier
-from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
+# from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
+# from .tree.optimal_classification_tree import OptimalTreeModel
 from .algebraic.slim import SLIMRegressor
 
-CLASSIFIERS = BayesianRuleListClassifier, GreedyRuleListClassifier, IRFClassifier
-REGRESSORS = RuleFitRegressor, SkopeRulesClassifier, SLIMRegressor
-# from .optimal_classification_tree import OptimalTreeModel</code></pre>
+CLASSIFIERS = BayesianRuleListClassifier, GreedyRuleListClassifier #, IRFClassifier
+REGRESSORS = RuleFitRegressor, SkopeRulesClassifier, SLIMRegressor</code></pre>
 </details>
 </section>
 <section>

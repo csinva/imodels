@@ -21,7 +21,7 @@
 Implementations of different interpretable models, all compatible with scikit-learn. The interpretable models can be easily used and installed:
 
 ```python
-from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, IRFClassifier
+from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier
 from imodels import SLIMRegressor, RuleFitRegressor
 
 model = BayesianRuleListClassifier()  # initialize a model

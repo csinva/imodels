@@ -18,7 +18,7 @@ setuptools.setup(
         'scikit-learn',
         'cvxpy',
         'fim @ git+https://github.com/csinva/pyfim-clone',
-        'irf @ git+https://github.com/Yu-Group/iterative-Random-Forest',
+#         'irf @ git+https://github.com/Yu-Group/iterative-Random-Forest',
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

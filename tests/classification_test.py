@@ -1,21 +1,21 @@
 import numpy as np
-
-from imodels import GreedyRuleListClassifier, IRFClassifier, SkopeRulesClassifier, BayesianRuleListClassifier
+import pandas as pd
+from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRuleListClassifier # IRFClassifier
 
 
 class TestClassClassification:
     def setup(self):
         np.random.seed(13)
         self.n = 30
-        self.p = 5
+        self.p = 2
         self.X_classification_binary = np.random.randn(self.n, self.p)
-        self.X_classification_binary_brl = (self.X_classification_binary > 0).astype(int)
+        self.X_classification_binary_brl = pd.DataFrame((self.X_classification_binary > 0).astype(str), columns=[f'X{i}' for i in range(self.p)])
         self.y_classification_binary = (self.X_classification_binary[:, 0] > 0).astype(int)
 
     def test_classification_binary(self):
         '''Test imodels on basic binary classification task
         '''
-        for model_type in [GreedyRuleListClassifier, IRFClassifier, SkopeRulesClassifier]:
+        for model_type in [GreedyRuleListClassifier, SkopeRulesClassifier]: # IRFClassifier
             if model_type == BayesianRuleListClassifier:
                 X = self.X_classification_binary_brl
             else:
@@ -24,7 +24,6 @@ class TestClassClassification:
             m = model_type()
             m.fit(X, self.y_classification_binary)
 
-            # if not model_type in [SkopeRulesClassifier]:
             preds_proba = m.predict_proba(X)
 #             for i in range(20):
 #                 print(i, self.X_classification_binary[i], preds_proba[i])
