@@ -34,7 +34,7 @@ class Rule():
         return reduce(lambda x, y: x * y, rule_applies)
 
     def __str__(self):
-        return " & ".join([x.__str__() for x in self.conditions])
+        return " and ".join([x.__str__() for x in self.conditions])
 
     def __repr__(self):
         return self.__str__()
