@@ -36,9 +36,9 @@ from copy import deepcopy
 
 import numpy as np
 from sklearn.base import BaseEstimator
+from imodels.rule_list.rule_list import RuleList
 
-
-class GreedyRuleListClassifier(BaseEstimator):
+class GreedyRuleListClassifier(BaseEstimator, RuleList):
     def __init__(self, max_depth=5, class_weight=None, criterion=&#39;gini&#39;):
         self.depth = 0
         self.max_depth = max_depth
@@ -386,7 +386,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GreedyRuleListClassifier(BaseEstimator):
+<pre><code class="python">class GreedyRuleListClassifier(BaseEstimator, RuleList):
     def __init__(self, max_depth=5, class_weight=None, criterion=&#39;gini&#39;):
         self.depth = 0
         self.max_depth = max_depth
@@ -669,6 +669,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
+<li><a title="imodels.rule_list.rule_list.RuleList" href="rule_list.html#imodels.rule_list.rule_list.RuleList">RuleList</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1061,6 +1062,14 @@ split decision, True/False, and y_true can be multi class</p></section>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.rule_list.rule_list.RuleList" href="rule_list.html#imodels.rule_list.rule_list.RuleList">RuleList</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.rule_list.rule_list.RuleList.rules" href="rule_list.html#imodels.rule_list.rule_list.RuleList.rules">rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>

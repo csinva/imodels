@@ -5,11 +5,12 @@ from sklearn.base import BaseEstimator
 import numpy as np
 from imodels.rule_list.bayesian_rule_list.brl_util import *
 from imodels.util.discretization.mdlp import MDLP_Discretizer
+from imodels.rule_list.rule_list import RuleList
 import numbers
 from fim import fpgrowth
 from collections import Counter
 
-class BayesianRuleListClassifier(BaseEstimator):
+class BayesianRuleListClassifier(BaseEstimator, RuleList):
     """
     This is a scikit-learn compatible wrapper for the Bayesian Rule List
     classifier developed by Benjamin Letham. It produces a highly
@@ -152,6 +153,8 @@ class BayesianRuleListClassifier(BaseEstimator):
         permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
 
         data = list(X[:])
+        
+        
         # Now find frequent itemsets
         # Mine separately for each class
         data_pos = [x for i, x in enumerate(data) if y[i] == 0]
@@ -169,12 +172,16 @@ class BayesianRuleListClassifier(BaseEstimator):
         itemsets = list(set(itemsets))
         if self.verbose:
             print(len(itemsets), 'rules mined')
+            
+        
         # Now form the data-vs.-lhs set
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
         X = [set() for j in range(len(itemsets) + 1)]
         X[0] = set(range(len(data)))  # the default rule satisfies all data
         for (j, lhs) in enumerate(itemsets):
             X[j + 1] = set([i for (i, xi) in enumerate(data) if set(lhs).issubset(xi)])
+        
+        
         # now form lhs_len
         lhs_len = [0]
         for lhs in itemsets:
@@ -309,6 +316,6 @@ class BayesianRuleListClassifier(BaseEstimator):
         # deal with pandas data
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
-        print('predicting!')
-        print('preds_proba', self.predict_proba(X)[:, 1])
+        # print('predicting!')
+        # print('preds_proba', self.predict_proba(X)[:, 1])
         return 1 * (self.predict_proba(X)[:, 1] >= 0.1)

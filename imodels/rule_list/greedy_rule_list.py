@@ -7,9 +7,9 @@ from copy import deepcopy
 
 import numpy as np
 from sklearn.base import BaseEstimator
+from imodels.rule_list.rule_list import RuleList
 
-
-class GreedyRuleListClassifier(BaseEstimator):
+class GreedyRuleListClassifier(BaseEstimator, RuleList):
     def __init__(self, max_depth=5, class_weight=None, criterion='gini'):
         self.depth = 0
         self.max_depth = max_depth

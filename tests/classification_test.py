@@ -4,25 +4,30 @@ from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRule
 
 
 class TestClassClassification:
+    '''Tests simple classification for different models. Note: still doesn't test BRL!
+    '''
     def setup(self):
         np.random.seed(13)
         self.n = 30
         self.p = 2
         self.X_classification_binary = np.random.randn(self.n, self.p)
-        self.X_classification_binary_brl = pd.DataFrame((self.X_classification_binary > 0).astype(str), columns=[f'X{i}' for i in range(self.p)])
+        self.X_classification_binary_brl = (self.X_classification_binary > 0).astype(str)
         self.y_classification_binary = (self.X_classification_binary[:, 0] > 0).astype(int)
 
     def test_classification_binary(self):
         '''Test imodels on basic binary classification task
         '''
         for model_type in [GreedyRuleListClassifier, SkopeRulesClassifier]: # IRFClassifier
+            
+            m = model_type()
+            
             if model_type == BayesianRuleListClassifier:
                 X = self.X_classification_binary_brl
+                m.fit(X, self.y_classification_binary,
+                      feature_labels=[f'X{i}' for i in range(self.p)])
             else:
                 X = self.X_classification_binary
-#             print(model_type, X)
-            m = model_type()
-            m.fit(X, self.y_classification_binary)
+                m.fit(X, self.y_classification_binary)
 
             preds_proba = m.predict_proba(X)
 #             for i in range(20):

@@ -65,7 +65,7 @@ class Rule():
         return reduce(lambda x, y: x * y, rule_applies)
 
     def __str__(self):
-        return &#34; &amp; &#34;.join([x.__str__() for x in self.conditions])
+        return &#34; and &#34;.join([x.__str__() for x in self.conditions])
 
     def __repr__(self):
         return self.__str__()
@@ -176,7 +176,7 @@ class RuleCondition():
         return reduce(lambda x, y: x * y, rule_applies)
 
     def __str__(self):
-        return &#34; &amp; &#34;.join([x.__str__() for x in self.conditions])
+        return &#34; and &#34;.join([x.__str__() for x in self.conditions])
 
     def __repr__(self):
         return self.__str__()

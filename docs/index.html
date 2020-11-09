@@ -57,11 +57,6 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 </thead>
 <tbody>
 <tr>
-<td align="left">Bayesian rule list</td>
-<td><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html">🗂️</a>, <a href="https://github.com/tmadl/sklearn-expertsys">🔗</a>, <a href="https://arxiv.org/abs/1602.08610">📄</a></td>
-<td>Learns a compact rule list by sampling rule lists (rather than using a greedy heuristic)</td>
-</tr>
-<tr>
 <td align="left">Rulefit</td>
 <td><a href="https://csinva.io/imodels/rule_set/rule_fit.html">🗂️</a>, <a href="https://github.com/christophM/rulefit">🔗</a>, <a href="http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf">📄</a></td>
 <td>Extracts rules from a decision tree then builds a sparse linear model with them</td>
@@ -72,9 +67,9 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 <td>Extracts rules from gradient-boosted trees, deduplicates them, then forms a linear combination of them based on their OOB precision</td>
 </tr>
 <tr>
-<td align="left">Sparse integer linear model</td>
-<td><a href="https://csinva.io/imodels/algebraic/slim.html">🗂️</a>, <a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">📄</a></td>
-<td>Forces coefficients to be integers</td>
+<td align="left">Bayesian rule list</td>
+<td><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html">🗂️</a>, <a href="https://github.com/tmadl/sklearn-expertsys">🔗</a>, <a href="https://arxiv.org/abs/1602.08610">📄</a></td>
+<td>Learns a compact rule list by sampling rule lists (rather than using a greedy heuristic)</td>
 </tr>
 <tr>
 <td align="left">Greedy rule list</td>
@@ -90,6 +85,11 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 <td align="left">Optimal classification tree</td>
 <td><a href="https://csinva.io/imodels/tree/optimal_classification_tree/index.html">🗂️</a>, <a href="https://github.com/pan5431333/pyoptree">🔗</a>, <a href="https://link.springer.com/article/10.1007/s10994-017-5633-9">📄</a></td>
 <td>(In progress) Learns succinct trees using global optimization rather than greedy heuristics</td>
+</tr>
+<tr>
+<td align="left">Sparse integer linear model</td>
+<td><a href="https://csinva.io/imodels/algebraic/slim.html">🗂️</a>, <a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">📄</a></td>
+<td>Forces coefficients to be integers</td>
 </tr>
 <tr>
 <td align="left">Rule sets</td>
