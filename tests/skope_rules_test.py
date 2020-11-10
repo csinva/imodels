@@ -81,7 +81,7 @@ def test_skope_rules_error():
     assert_raises(ValueError, SkopeRulesClassifier(max_samples=1.5).fit, X, y)
     assert_raises(ValueError, SkopeRulesClassifier(max_depth_duplication=1.5).fit, X, y)
     assert_raises(ValueError, SkopeRulesClassifier().fit(X, y).predict, X[:, 1:])
-    assert_raises(ValueError, SkopeRulesClassifier().fit(X, y).decision_function,
+    assert_raises(ValueError, SkopeRulesClassifier().fit(X, y).eval_weighted_rule_sum,
                   X[:, 1:])
     assert_raises(ValueError, SkopeRulesClassifier().fit(X, y).rules_vote, X[:, 1:])
     assert_raises(ValueError, SkopeRulesClassifier().fit(X, y).score_top_rules,
@@ -114,7 +114,7 @@ def test_skope_rules_works():
     # Test LOF
     clf = SkopeRulesClassifier(random_state=rng, max_samples=1.)
     clf.fit(X, y)
-    decision_func = clf.decision_function(X_test)
+    decision_func = clf.eval_weighted_rule_sum(X_test)
     rules_vote = clf.rules_vote(X_test)
     score_top_rules = clf.score_top_rules(X_test)
     pred = clf.predict(X_test)
@@ -136,7 +136,7 @@ def test_deduplication_works():
     # Test LOF
     clf = SkopeRulesClassifier(random_state=rng, max_samples=1., max_depth_duplication=3)
     clf.fit(X, y)
-    decision_func = clf.decision_function(X_test)
+    decision_func = clf.eval_weighted_rule_sum(X_test)
     rules_vote = clf.rules_vote(X_test)
     score_top_rules = clf.score_top_rules(X_test)
     pred = clf.predict(X_test)
@@ -165,8 +165,8 @@ def test_performances():
     # training set performance
     assert accuracy_score(y, y_pred) > 0.83
 
-    # decision_function agrees with predict
-    decision = -clf.decision_function(X)
+    # eval_weighted_rule_sum agrees with predict
+    decision = -clf.eval_weighted_rule_sum(X)
     assert decision.shape == (n_samples,)
     dec_pred = (decision.ravel() < 0).astype(np.int)
     assert_array_equal(dec_pred, y_pred)

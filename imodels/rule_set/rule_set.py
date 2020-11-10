@@ -30,35 +30,13 @@ class RuleSet:
     def _prune_rules(self, rules):
         pass
 
-    def decision_function(self, X) -> np.ndarray:
-        """Average anomaly score of X of the base classifiers (rules).
+    def eval_weighted_rule_sum(self, X) -> np.ndarray:
 
-        The anomaly score of an input sample is computed as
-        the weighted sum of the binary rules outputs, the weight being
-        the respective precision of each rule.
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The training input samples.
-
-        Returns
-        -------
-        scores : array, shape (n_samples,)
-            The anomaly score of the input samples.
-            The higher, the more abnormal. Positive scores represent outliers,
-            null scores represent inliers.
-
-        """
-        # Check if fit had been called
-        check_is_fitted(self, ['rules_without_feature_names_'])
-
-        # Input validation
+        check_is_fitted(self, ['rules_without_feature_names_', 'n_features_', 'feature_names_'])
         X = check_array(X)
 
         if X.shape[1] != self.n_features_:
-            raise ValueError("X.shape[1] = %d should be equal to %d, "
-                             "the number of features at training time."
+            raise ValueError("X.shape[1] = %d should be equal to %d, the number of features at training time."
                              " Please reshape your data."
                              % (X.shape[1], self.n_features_))
 

@@ -252,7 +252,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
             X = X.values.astype(np.float32)
 
         y_pred = np.zeros(self.n_obs)
-        y_pred += self.decision_function(X)
+        y_pred += self.eval_weighted_rule_sum(X)
 
         if self.include_linear:
             if self.lin_standardise:
