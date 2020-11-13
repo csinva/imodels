@@ -18,7 +18,7 @@ setuptools.setup(
         'scikit-learn',
         'cvxpy',
         'mlxtend',
-#        'irf @ git+https://github.com/Yu-Group/iterative-Random-Forest',
+        'pytest',
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
