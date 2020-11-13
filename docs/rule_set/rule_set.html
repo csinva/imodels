@@ -56,35 +56,13 @@ class RuleSet:
     def _prune_rules(self, rules):
         pass
 
-    def decision_function(self, X) -&gt; np.ndarray:
-        &#34;&#34;&#34;Average anomaly score of X of the base classifiers (rules).
+    def eval_weighted_rule_sum(self, X) -&gt; np.ndarray:
 
-        The anomaly score of an input sample is computed as
-        the weighted sum of the binary rules outputs, the weight being
-        the respective precision of each rule.
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The training input samples.
-
-        Returns
-        -------
-        scores : array, shape (n_samples,)
-            The anomaly score of the input samples.
-            The higher, the more abnormal. Positive scores represent outliers,
-            null scores represent inliers.
-
-        &#34;&#34;&#34;
-        # Check if fit had been called
-        check_is_fitted(self, [&#39;rules_without_feature_names_&#39;])
-
-        # Input validation
+        check_is_fitted(self, [&#39;rules_without_feature_names_&#39;, &#39;n_features_&#39;, &#39;feature_names_&#39;])
         X = check_array(X)
 
         if X.shape[1] != self.n_features_:
-            raise ValueError(&#34;X.shape[1] = %d should be equal to %d, &#34;
-                             &#34;the number of features at training time.&#34;
+            raise ValueError(&#34;X.shape[1] = %d should be equal to %d, the number of features at training time.&#34;
                              &#34; Please reshape your data.&#34;
                              % (X.shape[1], self.n_features_))
 
@@ -142,35 +120,13 @@ class RuleSet:
     def _prune_rules(self, rules):
         pass
 
-    def decision_function(self, X) -&gt; np.ndarray:
-        &#34;&#34;&#34;Average anomaly score of X of the base classifiers (rules).
+    def eval_weighted_rule_sum(self, X) -&gt; np.ndarray:
 
-        The anomaly score of an input sample is computed as
-        the weighted sum of the binary rules outputs, the weight being
-        the respective precision of each rule.
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The training input samples.
-
-        Returns
-        -------
-        scores : array, shape (n_samples,)
-            The anomaly score of the input samples.
-            The higher, the more abnormal. Positive scores represent outliers,
-            null scores represent inliers.
-
-        &#34;&#34;&#34;
-        # Check if fit had been called
-        check_is_fitted(self, [&#39;rules_without_feature_names_&#39;])
-
-        # Input validation
+        check_is_fitted(self, [&#39;rules_without_feature_names_&#39;, &#39;n_features_&#39;, &#39;feature_names_&#39;])
         X = check_array(X)
 
         if X.shape[1] != self.n_features_:
-            raise ValueError(&#34;X.shape[1] = %d should be equal to %d, &#34;
-                             &#34;the number of features at training time.&#34;
+            raise ValueError(&#34;X.shape[1] = %d should be equal to %d, the number of features at training time.&#34;
                              &#34; Please reshape your data.&#34;
                              % (X.shape[1], self.n_features_))
 
@@ -190,59 +146,22 @@ class RuleSet:
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.rule_set.rule_set.RuleSet.decision_function"><code class="name flex">
-<span>def <span class="ident">decision_function</span></span>(<span>self, X)</span>
+<dt id="imodels.rule_set.rule_set.RuleSet.eval_weighted_rule_sum"><code class="name flex">
+<span>def <span class="ident">eval_weighted_rule_sum</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Average anomaly score of X of the base classifiers (rules).</p>
-<p>The anomaly score of an input sample is computed as
-the weighted sum of the binary rules outputs, the weight being
-the respective precision of each rule.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>array</code>-<code>like</code>, <code>shape</code> (<code>n_samples</code>, <code>n_features</code>)</dt>
-<dd>The training input samples.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>scores</code></strong> :&ensp;<code>array</code>, <code>shape</code> (<code>n_samples</code>,)</dt>
-<dd>The anomaly score of the input samples.
-The higher, the more abnormal. Positive scores represent outliers,
-null scores represent inliers.</dd>
-</dl></section>
+<section class="desc"></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def decision_function(self, X) -&gt; np.ndarray:
-    &#34;&#34;&#34;Average anomaly score of X of the base classifiers (rules).
+<pre><code class="python">def eval_weighted_rule_sum(self, X) -&gt; np.ndarray:
 
-    The anomaly score of an input sample is computed as
-    the weighted sum of the binary rules outputs, the weight being
-    the respective precision of each rule.
-
-    Parameters
-    ----------
-    X : array-like, shape (n_samples, n_features)
-        The training input samples.
-
-    Returns
-    -------
-    scores : array, shape (n_samples,)
-        The anomaly score of the input samples.
-        The higher, the more abnormal. Positive scores represent outliers,
-        null scores represent inliers.
-
-    &#34;&#34;&#34;
-    # Check if fit had been called
-    check_is_fitted(self, [&#39;rules_without_feature_names_&#39;])
-
-    # Input validation
+    check_is_fitted(self, [&#39;rules_without_feature_names_&#39;, &#39;n_features_&#39;, &#39;feature_names_&#39;])
     X = check_array(X)
 
     if X.shape[1] != self.n_features_:
-        raise ValueError(&#34;X.shape[1] = %d should be equal to %d, &#34;
-                         &#34;the number of features at training time.&#34;
+        raise ValueError(&#34;X.shape[1] = %d should be equal to %d, the number of features at training time.&#34;
                          &#34; Please reshape your data.&#34;
                          % (X.shape[1], self.n_features_))
 
@@ -277,7 +196,7 @@ null scores represent inliers.</dd>
 <li>
 <h4><code><a title="imodels.rule_set.rule_set.RuleSet" href="#imodels.rule_set.rule_set.RuleSet">RuleSet</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.rule_set.rule_set.RuleSet.decision_function" href="#imodels.rule_set.rule_set.RuleSet.decision_function">decision_function</a></code></li>
+<li><code><a title="imodels.rule_set.rule_set.RuleSet.eval_weighted_rule_sum" href="#imodels.rule_set.rule_set.RuleSet.eval_weighted_rule_sum">eval_weighted_rule_sum</a></code></li>
 </ul>
 </li>
 </ul>

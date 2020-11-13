@@ -296,7 +296,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
             X = X.values.astype(np.float32)
 
         y_pred = np.zeros(self.n_obs)
-        y_pred += self.decision_function(X)
+        y_pred += self.eval_weighted_rule_sum(X)
 
         if self.include_linear:
             if self.lin_standardise:
@@ -846,7 +846,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
             X = X.values.astype(np.float32)
 
         y_pred = np.zeros(self.n_obs)
-        y_pred += self.decision_function(X)
+        y_pred += self.eval_weighted_rule_sum(X)
 
         if self.include_linear:
             if self.lin_standardise:
@@ -1143,7 +1143,7 @@ data set (X)</dd>
         X = X.values.astype(np.float32)
 
     y_pred = np.zeros(self.n_obs)
-    y_pred += self.decision_function(X)
+    y_pred += self.eval_weighted_rule_sum(X)
 
     if self.include_linear:
         if self.lin_standardise:
@@ -1221,14 +1221,6 @@ efficiency.</dd>
 </details>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></b></code>:
-<ul class="hlist">
-<li><code><a title="imodels.rule_set.rule_set.RuleSet.decision_function" href="rule_set.html#imodels.rule_set.rule_set.RuleSet.decision_function">decision_function</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 </dl>
 </section>

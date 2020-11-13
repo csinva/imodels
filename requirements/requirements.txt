@@ -1,8 +1,0 @@
-pytest
-numpy
-scipy
-matplotlib
-pandas
-scikit-learn
-cvxpy
-mlxtend

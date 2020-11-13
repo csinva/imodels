@@ -468,7 +468,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
             be considered as an outlier according to the selected rules.
         &#34;&#34;&#34;
 
-        return np.array((self.decision_function(X) &gt; 0), dtype=int)
+        return np.array((self.eval_weighted_rule_sum(X) &gt; 0), dtype=int)
 
     def predict_proba(self, X) -&gt; np.ndarray:
         &#39;&#39;&#39;Predict probability of a particular sample being an outlier or not
@@ -1031,7 +1031,7 @@ estimator.</dd>
             be considered as an outlier according to the selected rules.
         &#34;&#34;&#34;
 
-        return np.array((self.decision_function(X) &gt; 0), dtype=int)
+        return np.array((self.eval_weighted_rule_sum(X) &gt; 0), dtype=int)
 
     def predict_proba(self, X) -&gt; np.ndarray:
         &#39;&#39;&#39;Predict probability of a particular sample being an outlier or not
@@ -1382,7 +1382,7 @@ be considered as an outlier according to the selected rules.</dd>
         be considered as an outlier according to the selected rules.
     &#34;&#34;&#34;
 
-    return np.array((self.decision_function(X) &gt; 0), dtype=int)</code></pre>
+    return np.array((self.eval_weighted_rule_sum(X) &gt; 0), dtype=int)</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_proba"><code class="name flex">
@@ -1589,14 +1589,6 @@ Positive scores represent outliers, null scores represent inliers.</dd>
 </details>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></b></code>:
-<ul class="hlist">
-<li><code><a title="imodels.rule_set.rule_set.RuleSet.decision_function" href="rule_set.html#imodels.rule_set.rule_set.RuleSet.decision_function">decision_function</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 </dl>
 </section>

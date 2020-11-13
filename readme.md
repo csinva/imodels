@@ -60,10 +60,9 @@ Demos are contained in the [notebooks](notebooks) folder.
 
 - [model_based.ipynb](notebooks/1_model_based.ipynb), demos the imodels package. It shows how to fit, predict, and visualize with different interpretable models
 - [this notebook](https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb) shows an example of using `imodels` for deriving a clinical decision rule
-- After fitting models, we can also do posthoc analysis, following the cheat-sheet below 
+- we also include some demos of posthoc analysis, which occurs after fitting models
   - [posthoc.ipynb](notebooks/2_posthoc.ipynb) - shows different simple analyses to interpret a trained model
   - [uncertainty.ipynb](notebooks/3_uncertainty.ipynb) - basic code to get uncertainty estimates for a model
-<img src="https://csinva.io/notes/cheat_sheets/interp.svg?sanitize=True">
 
 ## References
 - Readings
