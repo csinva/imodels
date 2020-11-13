@@ -379,13 +379,14 @@ def proposal(d_t, R_t, X, Y, alpha):
     '''
     d_star = list(d_t)
     R_star = int(R_t)
-    move_probs_default = array([0.3333333333, 0.3333333333,
-                                0.3333333333])  # We begin with these as the move probabilities, but will renormalize as needed if certain moves are unavailable.
+    # We begin with these as the move probabilities, but will renormalize as needed if certain moves are unavailable.
+    move_probs_default = array([0.3333333333, 0.3333333333, 0.3333333333])
     # We have 3 moves: move, add, cut. Define the pdf for the probabilities of the moves, in that order:
     if R_t == 0:
         # List is empty. We must add.
         move_probs = array([0., 1., 0.])
-        # This is an add transition. The probability of the reverse cut move is the prob of a list of len 1 having a cut (other option for list of len 1 is an add).
+        # This is an add transition. The probability of the reverse cut move is the prob of a list of len 1 having
+        # a cut (other option for list of len 1 is an add).
         Jratios = array([0., move_probs_default[2] / float(move_probs_default[1] + move_probs_default[2]), 0.])
     elif R_t == 1:
         # List has one rule on it. We cannot move, must add or cut.
