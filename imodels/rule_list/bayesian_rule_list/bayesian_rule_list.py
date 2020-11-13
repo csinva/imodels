@@ -1,14 +1,16 @@
+from collections import Counter
+import numbers
 import random
 
 import pandas as pd
-from sklearn.base import BaseEstimator
 import numpy as np
+from mlxtend.frequent_patterns import fpgrowth
+from sklearn.base import BaseEstimator
+
 from imodels.rule_list.bayesian_rule_list.brl_util import *
 from imodels.util.discretization.mdlp import MDLP_Discretizer
 from imodels.rule_list.rule_list import RuleList
-import numbers
-from fim import fpgrowth
-from collections import Counter
+
 
 class BayesianRuleListClassifier(BaseEstimator, RuleList):
     """
@@ -101,7 +103,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         if len(self.discretized_features) > 0:
             if self.verbose:
                 print(
-                    "Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to strings, and/or specify the argument 'undiscretized_features', to avoid this.)")
+                    "Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to "
+                    "strings, and/or specify the argument 'undiscretized_features', to avoid this.)")
             X = self.discretize(X, y)
 
         return X
@@ -154,32 +157,29 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
 
         data = list(X[:])
         
-        
         # Now find frequent itemsets
         # Mine separately for each class
         data_pos = [x for i, x in enumerate(data) if y[i] == 0]
         data_neg = [x for i, x in enumerate(data) if y[i] == 1]
         assert len(data_pos) + len(data_neg) == len(data)
-        try:
-            itemsets = [r[0] for r in
-                        fpgrowth(data_pos, supp=self.minsupport, zmin=self._zmin, zmax=self.maxcardinality)]
-            itemsets.extend(
-                [r[0] for r in fpgrowth(data_neg, supp=self.minsupport, zmin=self._zmin, zmax=self.maxcardinality)])
-        except TypeError:
-            itemsets = [r[0] for r in fpgrowth(data_pos, supp=self.minsupport, min=self._zmin, max=self.maxcardinality)]
-            itemsets.extend(
-                [r[0] for r in fpgrowth(data_neg, supp=self.minsupport, min=self._zmin, max=self.maxcardinality)])
-        itemsets = list(set(itemsets))
+
+        X_df = pd.DataFrame(X, columns=feature_labels)
+        itemsets_df = fpgrowth(X_df, min_support=(self.minsupport / len(X)), max_len=self.maxcardinality)
+        itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
+        itemsets = [np.array(feature_labels)[list(inds)] for inds in itemsets_indices]
+        itemsets = list(map(tuple, itemsets))
         if self.verbose:
             print(len(itemsets), 'rules mined')
-            
-        
+
+
         # Now form the data-vs.-lhs set
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
-        X = [set() for j in range(len(itemsets) + 1)]
+        for c in X_df.columns:
+            X_df[c] = [c if x == 1 else '' for x in list(X_df[c])]
+        X = [{}] * (len(itemsets) + 1)
         X[0] = set(range(len(data)))  # the default rule satisfies all data
         for (j, lhs) in enumerate(itemsets):
-            X[j + 1] = set([i for (i, xi) in enumerate(data) if set(lhs).issubset(xi)])
+            X[j + 1] = set([i for (i, xi) in enumerate(X_df.values) if set(lhs).issubset(xi)])
         
         
         # now form lhs_len
@@ -192,7 +192,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         itemsets_all.extend(itemsets)
 
         Xtrain, Ytrain, nruleslen, lhs_len, self.itemsets = (
-            X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all)
+            X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all
+        )
 
         # Do MCMC
         res, Rhat = run_bdl_multichain_serial(self.max_iter, self.thinning, self.alpha, self.listlengthprior,
@@ -264,11 +265,14 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
 
     def _to_itemset_indices(self, data):
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
+        X_df = pd.DataFrame(data, columns=self.feature_labels)
+        for c in X_df.columns:
+            X_df[c] = [c if x == 1 else '' for x in list(X_df[c])]
         X = [set() for j in range(len(self.itemsets))]
         X[0] = set(range(len(data)))  # the default rule satisfies all data
         for (j, lhs) in enumerate(self.itemsets):
             if j > 0:
-                X[j] = set([i for (i, xi) in enumerate(data) if set(lhs).issubset(xi)])
+                X[j] = set([i for (i, xi) in enumerate(X_df.values) if set(lhs).issubset(xi)])
         return X
 
     def predict_proba(self, X):
@@ -289,7 +293,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
 
-        if self.discretizer != None:
+        if self.discretizer:
             self.discretizer._data = pd.DataFrame(X, columns=self.feature_labels)
             self.discretizer.apply_cutpoints()
             D = self._prepend_feature_labels(np.array(self.discretizer._data)[:, :-1])
@@ -301,7 +305,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         P = preds_d_t(X2, np.zeros((N, 1), dtype=int), self.d_star, self.theta)
         return np.vstack((1 - P, P)).T
 
-    def predict(self, X):
+    def predict(self, X, threshold=0.1):
         """Perform classification on samples in X.
 
         Parameters
@@ -318,4 +322,4 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             X = X.values
         # print('predicting!')
         # print('preds_proba', self.predict_proba(X)[:, 1])
-        return 1 * (self.predict_proba(X)[:, 1] >= 0.1)
+        return 1 * (self.predict_proba(X)[:, 1] >= threshold)
