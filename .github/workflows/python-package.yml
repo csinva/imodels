@@ -26,7 +26,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install git+https://github.com/csinva/imodels
+        pip install numpy scipy matplotlib pandas scikit-learn cvxpy mlxtend pytest
     - name: Test with pytest
       run: |
         pytest
