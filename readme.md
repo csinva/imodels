@@ -30,7 +30,7 @@ preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 ```
 
-Install with `pip install git+https://github.com/csinva/imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help). Contains the following models:
+Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help). Contains the following models:
 
 | Model                       | Reference                                                    | Description                                                  |
 | :--------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -70,7 +70,7 @@ Demos are contained in the [notebooks](notebooks) folder.
     - Interpretable ML book: molnar 2019, [pdf](https://christophm.github.io/interpretable-ml-book/)
     - Case for interpretable models rather than post-hoc explanation: rudin 2019, [pdf](https://arxiv.org/pdf/1811.10154.pdf)
     - Review on evaluating interpretability: doshi-velez & kim 2017, [pdf](https://arxiv.org/pdf/1702.08608.pdf)
-- Reference implementations (also linked above): the code here heavily derives from (and in some case is just a wrapper for) the wonderful work of previous projects. We seek to to extract out, combine, and maintain select relevant parts of these projects.
+- Reference implementations (also linked above): the code here heavily derives from the wonderful work of previous projects. We seek to to extract out, unify, and maintain key parts of these projects.
     - [sklearn-expertsys](https://github.com/tmadl/sklearn-expertsys) - by [@tmadl](https://github.com/tmadl) and [@kenben](https://github.com/kenben) based on original code by [Ben Letham](http://lethalletham.com/)
     - [rulefit](https://github.com/christophM/rulefit) - by [@christophM](https://github.com/christophM)
     - [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) - by the [skope-rules team](https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst) (including [@ngoix](https://github.com/ngoix), [@floriangardin](https://github.com/floriangardin), [@datajms](https://github.com/datajms), [Bibi Ndiaye](), [Ronan Gautier]())

@@ -178,21 +178,22 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             y = y.values
 
         X, y = self._setdata(X, y, feature_labels, undiscretized_features)
-
         permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
-
         data = list(X[:])
-        
-        # Now find frequent itemsets
-        # Mine separately for each class
-        data_pos = [x for i, x in enumerate(data) if y[i] == 0]
-        data_neg = [x for i, x in enumerate(data) if y[i] == 1]
-        assert len(data_pos) + len(data_neg) == len(data)
 
-        X_df = pd.DataFrame(X, columns=feature_labels)
-        itemsets_df = fpgrowth(X_df, min_support=(self.minsupport / len(X)), max_len=self.maxcardinality)
+        # Now find frequent itemsets
+
+        X_colname_removed = data.copy()
+        for i in range(len(data)):
+            X_colname_removed[i] = list(map(lambda s: s.split(&#39; : &#39;)[1], X_colname_removed[i]))
+
+        X_df_categorical = pd.DataFrame(X_colname_removed, columns=feature_labels)
+        X_df_onehot = pd.get_dummies(X_df_categorical)
+        onehot_features = X_df_onehot.columns
+
+        itemsets_df = fpgrowth(X_df_onehot, min_support=(self.minsupport / len(X)), max_len=self.maxcardinality)
         itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
-        itemsets = [np.array(feature_labels)[list(inds)] for inds in itemsets_indices]
+        itemsets = [np.array(onehot_features)[list(inds)] for inds in itemsets_indices]
         itemsets = list(map(tuple, itemsets))
         if self.verbose:
             print(len(itemsets), &#39;rules mined&#39;)
@@ -200,12 +201,13 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
 
         # Now form the data-vs.-lhs set
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
-        for c in X_df.columns:
-            X_df[c] = [c if x == 1 else &#39;&#39; for x in list(X_df[c])]
+        for c in X_df_onehot.columns:
+            X_df_onehot[c] = [c if x == 1 else &#39;&#39; for x in list(X_df_onehot[c])]
         X = [{}] * (len(itemsets) + 1)
         X[0] = set(range(len(data)))  # the default rule satisfies all data
         for (j, lhs) in enumerate(itemsets):
-            X[j + 1] = set([i for (i, xi) in enumerate(X_df.values) if set(lhs).issubset(xi)])
+            X[j + 1] = set([i for (i, xi) in enumerate(X_df_onehot.values) if set(lhs).issubset(xi)])
+
         
         
         # now form lhs_len
@@ -290,15 +292,20 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             return &#34;(Untrained RuleListClassifier)&#34;
 
     def _to_itemset_indices(self, data):
+        X_colname_removed = data.copy()
+        for i in range(len(data)):
+            X_colname_removed[i] = list(map(lambda s: s.split(&#39; : &#39;)[1], X_colname_removed[i]))
+        X_df_categorical = pd.DataFrame(X_colname_removed, columns=self.feature_labels)
+        X_df_onehot = pd.get_dummies(X_df_categorical)
+
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
-        X_df = pd.DataFrame(data, columns=self.feature_labels)
-        for c in X_df.columns:
-            X_df[c] = [c if x == 1 else &#39;&#39; for x in list(X_df[c])]
+        for c in X_df_onehot.columns:
+            X_df_onehot[c] = [c if x == 1 else &#39;&#39; for x in list(X_df_onehot[c])]
         X = [set() for j in range(len(self.itemsets))]
         X[0] = set(range(len(data)))  # the default rule satisfies all data
         for (j, lhs) in enumerate(self.itemsets):
             if j &gt; 0:
-                X[j] = set([i for (i, xi) in enumerate(X_df.values) if set(lhs).issubset(xi)])
+                X[j] = set([i for (i, xi) in enumerate(X_df_onehot.values) if set(lhs).issubset(xi)])
         return X
 
     def predict_proba(self, X):
@@ -322,7 +329,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         if self.discretizer:
             self.discretizer._data = pd.DataFrame(X, columns=self.feature_labels)
             self.discretizer.apply_cutpoints()
-            D = self._prepend_feature_labels(np.array(self.discretizer._data)[:, :-1])
+            D = self._prepend_feature_labels(np.array(self.discretizer._data))
         else:
             D = X
 
@@ -536,21 +543,22 @@ an expert system. </p>
             y = y.values
 
         X, y = self._setdata(X, y, feature_labels, undiscretized_features)
-
         permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
-
         data = list(X[:])
-        
-        # Now find frequent itemsets
-        # Mine separately for each class
-        data_pos = [x for i, x in enumerate(data) if y[i] == 0]
-        data_neg = [x for i, x in enumerate(data) if y[i] == 1]
-        assert len(data_pos) + len(data_neg) == len(data)
 
-        X_df = pd.DataFrame(X, columns=feature_labels)
-        itemsets_df = fpgrowth(X_df, min_support=(self.minsupport / len(X)), max_len=self.maxcardinality)
+        # Now find frequent itemsets
+
+        X_colname_removed = data.copy()
+        for i in range(len(data)):
+            X_colname_removed[i] = list(map(lambda s: s.split(&#39; : &#39;)[1], X_colname_removed[i]))
+
+        X_df_categorical = pd.DataFrame(X_colname_removed, columns=feature_labels)
+        X_df_onehot = pd.get_dummies(X_df_categorical)
+        onehot_features = X_df_onehot.columns
+
+        itemsets_df = fpgrowth(X_df_onehot, min_support=(self.minsupport / len(X)), max_len=self.maxcardinality)
         itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
-        itemsets = [np.array(feature_labels)[list(inds)] for inds in itemsets_indices]
+        itemsets = [np.array(onehot_features)[list(inds)] for inds in itemsets_indices]
         itemsets = list(map(tuple, itemsets))
         if self.verbose:
             print(len(itemsets), &#39;rules mined&#39;)
@@ -558,12 +566,13 @@ an expert system. </p>
 
         # Now form the data-vs.-lhs set
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
-        for c in X_df.columns:
-            X_df[c] = [c if x == 1 else &#39;&#39; for x in list(X_df[c])]
+        for c in X_df_onehot.columns:
+            X_df_onehot[c] = [c if x == 1 else &#39;&#39; for x in list(X_df_onehot[c])]
         X = [{}] * (len(itemsets) + 1)
         X[0] = set(range(len(data)))  # the default rule satisfies all data
         for (j, lhs) in enumerate(itemsets):
-            X[j + 1] = set([i for (i, xi) in enumerate(X_df.values) if set(lhs).issubset(xi)])
+            X[j + 1] = set([i for (i, xi) in enumerate(X_df_onehot.values) if set(lhs).issubset(xi)])
+
         
         
         # now form lhs_len
@@ -648,15 +657,20 @@ an expert system. </p>
             return &#34;(Untrained RuleListClassifier)&#34;
 
     def _to_itemset_indices(self, data):
+        X_colname_removed = data.copy()
+        for i in range(len(data)):
+            X_colname_removed[i] = list(map(lambda s: s.split(&#39; : &#39;)[1], X_colname_removed[i]))
+        X_df_categorical = pd.DataFrame(X_colname_removed, columns=self.feature_labels)
+        X_df_onehot = pd.get_dummies(X_df_categorical)
+
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
-        X_df = pd.DataFrame(data, columns=self.feature_labels)
-        for c in X_df.columns:
-            X_df[c] = [c if x == 1 else &#39;&#39; for x in list(X_df[c])]
+        for c in X_df_onehot.columns:
+            X_df_onehot[c] = [c if x == 1 else &#39;&#39; for x in list(X_df_onehot[c])]
         X = [set() for j in range(len(self.itemsets))]
         X[0] = set(range(len(data)))  # the default rule satisfies all data
         for (j, lhs) in enumerate(self.itemsets):
             if j &gt; 0:
-                X[j] = set([i for (i, xi) in enumerate(X_df.values) if set(lhs).issubset(xi)])
+                X[j] = set([i for (i, xi) in enumerate(X_df_onehot.values) if set(lhs).issubset(xi)])
         return X
 
     def predict_proba(self, X):
@@ -680,7 +694,7 @@ an expert system. </p>
         if self.discretizer:
             self.discretizer._data = pd.DataFrame(X, columns=self.feature_labels)
             self.discretizer.apply_cutpoints()
-            D = self._prepend_feature_labels(np.array(self.discretizer._data)[:, :-1])
+            D = self._prepend_feature_labels(np.array(self.discretizer._data))
         else:
             D = X
 
@@ -808,21 +822,22 @@ simply enumerated</dd>
         y = y.values
 
     X, y = self._setdata(X, y, feature_labels, undiscretized_features)
-
     permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
-
     data = list(X[:])
-    
-    # Now find frequent itemsets
-    # Mine separately for each class
-    data_pos = [x for i, x in enumerate(data) if y[i] == 0]
-    data_neg = [x for i, x in enumerate(data) if y[i] == 1]
-    assert len(data_pos) + len(data_neg) == len(data)
 
-    X_df = pd.DataFrame(X, columns=feature_labels)
-    itemsets_df = fpgrowth(X_df, min_support=(self.minsupport / len(X)), max_len=self.maxcardinality)
+    # Now find frequent itemsets
+
+    X_colname_removed = data.copy()
+    for i in range(len(data)):
+        X_colname_removed[i] = list(map(lambda s: s.split(&#39; : &#39;)[1], X_colname_removed[i]))
+
+    X_df_categorical = pd.DataFrame(X_colname_removed, columns=feature_labels)
+    X_df_onehot = pd.get_dummies(X_df_categorical)
+    onehot_features = X_df_onehot.columns
+
+    itemsets_df = fpgrowth(X_df_onehot, min_support=(self.minsupport / len(X)), max_len=self.maxcardinality)
     itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
-    itemsets = [np.array(feature_labels)[list(inds)] for inds in itemsets_indices]
+    itemsets = [np.array(onehot_features)[list(inds)] for inds in itemsets_indices]
     itemsets = list(map(tuple, itemsets))
     if self.verbose:
         print(len(itemsets), &#39;rules mined&#39;)
@@ -830,12 +845,13 @@ simply enumerated</dd>
 
     # Now form the data-vs.-lhs set
     # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
-    for c in X_df.columns:
-        X_df[c] = [c if x == 1 else &#39;&#39; for x in list(X_df[c])]
+    for c in X_df_onehot.columns:
+        X_df_onehot[c] = [c if x == 1 else &#39;&#39; for x in list(X_df_onehot[c])]
     X = [{}] * (len(itemsets) + 1)
     X[0] = set(range(len(data)))  # the default rule satisfies all data
     for (j, lhs) in enumerate(itemsets):
-        X[j + 1] = set([i for (i, xi) in enumerate(X_df.values) if set(lhs).issubset(xi)])
+        X[j + 1] = set([i for (i, xi) in enumerate(X_df_onehot.values) if set(lhs).issubset(xi)])
+
     
     
     # now form lhs_len
@@ -953,7 +969,7 @@ order, as they appear in the attribute <code>classes_</code>.</dd>
     if self.discretizer:
         self.discretizer._data = pd.DataFrame(X, columns=self.feature_labels)
         self.discretizer.apply_cutpoints()
-        D = self._prepend_feature_labels(np.array(self.discretizer._data)[:, :-1])
+        D = self._prepend_feature_labels(np.array(self.discretizer._data))
     else:
         D = X
 
