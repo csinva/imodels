@@ -241,6 +241,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         self.rule_ensemble = RuleEnsemble(tree_list=self.estimators_, feature_names=self.feature_names_)
         extracted_rules = self._extract_rules()
         self.rules_without_feature_names_, self.lscv = self._score_rules(X, y, extracted_rules)
+        self.coef_ = self.lscv.coef_
 
         return self
 
@@ -251,7 +252,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
 
-        y_pred = np.zeros(self.n_obs)
+        y_pred = np.zeros(X.shape[0])
         y_pred += self.eval_weighted_rule_sum(X)
 
         if self.include_linear:
@@ -392,7 +393,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         return [rule.__str__() for rule in self.rule_ensemble.rules]
 
     def _score_rules(self, X, y, rules):
-        X_concat = np.zeros([self.n_obs, 0])
+        X_concat = np.zeros([X.shape[0], 0])
 
         # standardise linear variables if requested (for regression model only)
         if self.include_linear:
