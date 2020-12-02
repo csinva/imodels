@@ -12,7 +12,10 @@ class RuleSet:
         enum_feature_names = [f'feature_{i}' for i in range(X.shape[1])]
         if feature_names is None:
             feature_names = enum_feature_names
+        else:
+            feature_names = list(map(lambda s: s.replace(' ', '_'), feature_names))
         feature_dict = {k: v for k, v in zip(enum_feature_names, feature_names)}
+
         return feature_names, feature_dict
 
     def _get_tree_ensemble(self):
