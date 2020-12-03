@@ -13,7 +13,7 @@ class RuleSet:
         if feature_names is None:
             feature_names = enum_feature_names
         else:
-            feature_names = list(map(lambda s: s.replace(' ', '_'), feature_names))
+            feature_names = list(map(lambda s: s.replace(' ', '_').replace('/', '_').replace('<', '_under_'), feature_names))
         feature_dict = {k: v for k, v in zip(enum_feature_names, feature_names)}
 
         return feature_names, feature_dict
@@ -45,6 +45,8 @@ class RuleSet:
 
         df = pd.DataFrame(X, columns=self.feature_names_)
         selected_rules = self.rules_without_feature_names_
+
+        print(selected_rules)
 
         scores = np.zeros(X.shape[0])
         for (r, w) in selected_rules:

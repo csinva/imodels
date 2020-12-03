@@ -415,4 +415,4 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         if X_rules.shape[0] > 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
-        return score_lasso(X_concat, y, rules, self.Cs, self.cv, self.random_state)
+        return score_lasso(X_concat, y, rules, alphas=self.Cs, cv=self.cv, max_rules=self.max_rules, random_state=self.random_state)

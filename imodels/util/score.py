@@ -4,8 +4,9 @@ from warnings import warn
 import pandas as pd
 import numpy as np
 from sklearn.utils import indices_to_mask
-from sklearn.linear_model import LassoCV
-from sklearn.linear_model import LogisticRegressionCV
+from sklearn.linear_model import Lasso
+from sklearn.linear_model._coordinate_descent import _alpha_grid
+from sklearn.model_selection import KFold
 
 from imodels.util.rule import Rule
 
@@ -63,19 +64,32 @@ def _eval_rule_perf(rule, X, y) -> Tuple[float, float]:
     return y_detected.mean(), float(true_pos) / pos
 
 
-def score_lasso(X, y, rules: List[str], Cs, cv, random_state) -> Tuple[List[Rule], LassoCV]:
-    if Cs is None:
-        n_alphas = 100
-        alphas = None
-    elif hasattr(Cs, "__len__"):
-        n_alphas = None
-        alphas = 1. / Cs
-    else:
-        n_alphas = Cs
-        alphas = None
-    lscv = LassoCV(n_alphas=n_alphas, alphas=alphas, cv=cv, random_state=random_state)
+def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, random_state=None) -> Tuple[List[Rule], Lasso]:
+    if alphas is None:
+        alphas = _alpha_grid(X, y) 
+
+    mse_scores = []
+    nonzero_rule_coefs_count = []
+    kf = KFold(cv)
+    for alpha in alphas:
+        m = Lasso(alpha=alpha, random_state=random_state)
+        mse = 0
+        for train_index, test_index in kf.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            m.fit(X_train, y_train)
+            mse += np.mean((m.predict(X_test) - y_test) ** 2)
+        
+        rule_count = sum(np.abs(m.coef_[-len(rules):]) > 0.001)
+        if rule_count > max_rules:
+            break
+        nonzero_rule_coefs_count.append(rule_count)
+        mse_scores.append(mse / cv)
+    
+    best_alpha = alphas[np.argmin(mse_scores)]
+    lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
     lscv.fit(X, y)
 
-    rules = [Rule(r, args=[w]) for r, w in zip(rules, lscv.coef_[-len(rules):])]
+    rules = [Rule(r, args=[w]) for r, w in zip(rules, lscv.coef_[-len(rules):]) if abs(w) > 0.001]
+    print(rules)
     return rules, lscv
-
