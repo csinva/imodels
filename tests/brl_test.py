@@ -1,6 +1,8 @@
 import unittest
+from urllib.request import urlretrieve
 
 import numpy as np
+from scipy.io.arff import loadarff
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 
@@ -30,9 +32,12 @@ class TestBRL(unittest.TestCase):
                           "Triceps skin fold thickness(mm)",
                           "2-Hour serum insulin (mu U/ml)", "Body mass index", "Diabetes pedigree function",
                           "Age (years)"]
-        data = fetch_openml("diabetes")  # get dataset
-        X = data.data
-        y = (data.target == 'tested_positive').astype(np.int)  # labels 0-1
+
+        dataset_path = urlretrieve("https://www.openml.org/data/v1/download/18482602/Diabetes.arff")
+        data = loadarff(dataset_path[0])
+        data_np = np.array(list(map(lambda x: np.array(list(x)), data[0])))
+        X, y_text = data_np[:, :-1].astype('float32'), data_np[:, -1].astype('str')
+        y = (y_text == 'tested_positive').astype(np.int)  # labels 0-1
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.75)  # split
 
