@@ -69,28 +69,27 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, rando
         alphas = _alpha_grid(X, y) 
 
     coef_zero_threshold = 1e-6 / np.mean(np.abs(y))
-
-    mse_scores = []
+    mse_cv_scores = []
     nonzero_rule_coefs_count = []
     kf = KFold(cv)
-    for alpha in alphas:
+    for alpha in alphas: # alphas are sorted from largest to smallest
         m = Lasso(alpha=alpha, random_state=random_state)
-        mse = 0
+        mse_cv = 0
         for train_index, test_index in kf.split(X):
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             m.fit(X_train, y_train)
-            mse += np.mean((m.predict(X_test) - y_test) ** 2)
+            mse_cv += np.mean((m.predict(X_test) - y_test) ** 2)
         
         m.fit(X, y)
         
-        rule_count = sum(np.abs(m.coef_[-len(rules):]) > coef_zero_threshold)
+        rule_count = sum(np.abs(m.coef_) > coef_zero_threshold)
         if rule_count > max_rules:
             break
         nonzero_rule_coefs_count.append(rule_count)
-        mse_scores.append(mse / cv)
+        mse_cv_scores.append(mse_cv / cv)
     
-    best_alpha = alphas[np.argmin(mse_scores)]
+    best_alpha = alphas[np.argmin(mse_cv_scores)]
     lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
     lscv.fit(X, y)
 

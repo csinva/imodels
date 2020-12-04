@@ -28,6 +28,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.base import TransformerMixin
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from scipy.special import softmax
 
 from imodels.rule_set.rule_set import RuleSet
 from imodels.util.rules import RuleCondition, Rule
@@ -263,7 +264,8 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
 
     def predict_proba(self, X):
         y = self.predict(X)
-        return np.vstack((1 - y, y)).transpose()
+        preds = np.vstack((1 - y, y)).transpose()
+        return softmax(preds, axis=1)
 
     def transform(self, X=None, y=None):
         """Transform dataset.
