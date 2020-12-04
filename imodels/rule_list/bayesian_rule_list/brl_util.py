@@ -99,7 +99,7 @@ def run_bdl_multichain_serial(numiters, thinning, alpha, lbda, eta, X, Y, nrules
     random.seed(seed)
 
     # Run each chain
-    t1 = time.clock()
+    t1 = time.process_time()
     if verbose:
         print('Starting mcmc chains')
     res = {}
@@ -108,7 +108,7 @@ def run_bdl_multichain_serial(numiters, thinning, alpha, lbda, eta, X, Y, nrules
                            nchains, d_inits[n])
 
     if verbose:
-        print('Elapsed CPU time', time.clock() - t1)
+        print('Elapsed CPU time', time.process_time() - t1)
 
     # Check convergence
     Rhat = gelmanrubin(res)
