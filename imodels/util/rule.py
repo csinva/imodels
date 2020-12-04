@@ -1,4 +1,5 @@
 import re
+from typing import List, Tuple, Dict
 
 
 def replace_feature_name(rule, replace_dict):
@@ -8,6 +9,21 @@ def replace_feature_name(rule, replace_dict):
     rule = re.sub('|'.join(r'\b%s\b' % re.escape(s) for s in replace_dict),
                   replace, rule)
     return rule
+
+def enum_features(X, feature_names: List[str]) -> Tuple[List[str], Dict[str, str]]:
+    """ Removes problematic characters in features; if none provided, 
+    returns placeholder feature names
+    """
+
+    enum_feature_names = [f'feature_{i}' for i in range(X.shape[1])]
+    if feature_names is None:
+        feature_names = enum_feature_names
+    else:
+        feature_clean_fn = lambda f: f.replace(' ', '_').replace('/', '_').replace('<', '_under_')
+        feature_names = list(map(feature_clean_fn, feature_names))
+    feature_dict = {k: v for k, v in zip(enum_feature_names, feature_names)}
+
+    return feature_names, feature_dict
 
 
 class Rule:

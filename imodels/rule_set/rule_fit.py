@@ -31,6 +31,7 @@ from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 
 from imodels.rule_set.rule_set import RuleSet
 from imodels.util.rules import RuleCondition, Rule
+from imodels.util.rule import enum_features
 from imodels.util.transforms import Winsorizer, FriedScale
 from imodels.util.score import score_lasso
 
@@ -200,10 +201,9 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
                  lin_standardise=True,
                  exp_rand_tree_size=True,
                  include_linear=True,
-                 Cs=None,
+                 alphas=None,
                  cv=3,
-                 random_state=None,
-                 test=False):
+                 random_state=None):
         self.tree_generator = tree_generator
         self.lin_trim_quantile = lin_trim_quantile
         self.lin_standardise = lin_standardise
@@ -219,8 +219,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         self.random_state = random_state
         self.include_linear = include_linear
         self.cv = cv
-        self.Cs = Cs
-        self.test = test
+        self.alphas = alphas
 
     def fit(self, X, y=None, feature_names=None):
         """Fit and estimate linear combination of rule ensemble
@@ -233,7 +232,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
 
         self.n_obs = X.shape[0]
         self.n_features_ = X.shape[1]
-        self.feature_names_, self.feature_dict_ = self._enum_features(X, feature_names)
+        self.feature_names_, self.feature_dict_ = enum_features(X, feature_names)
 
         self.tree_generator = self._get_tree_ensemble(classify=False)
         self._fit_tree_ensemble(X, y)
@@ -415,4 +414,4 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         if X_rules.shape[0] > 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
-        return score_lasso(X_concat, y, rules, alphas=self.Cs, cv=self.cv, max_rules=self.max_rules, random_state=self.random_state)
+        return score_lasso(X_concat, y, rules, alphas=self.alphas, cv=self.cv, max_rules=self.max_rules, random_state=self.random_state)
