@@ -33,8 +33,7 @@ class TestBRL(unittest.TestCase):
                           "2-Hour serum insulin (mu U/ml)", "Body mass index", "Diabetes pedigree function",
                           "Age (years)"]
 
-        dataset_path = urlretrieve("https://www.openml.org/data/v1/download/18482602/Diabetes.arff")
-        data = loadarff(dataset_path[0])
+        data = loadarff("tests/test_data/diabetes.arff")
         data_np = np.array(list(map(lambda x: np.array(list(x)), data[0])))
         X, y_text = data_np[:, :-1].astype('float32'), data_np[:, -1].astype('str')
         y = (y_text == 'tested_positive').astype(np.int)  # labels 0-1
