@@ -111,7 +111,7 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
 from imodels.util.convert import tree_to_rules
-from imodels.util.rule import replace_feature_name
+from imodels.util.rule import replace_feature_name, enum_features
 from imodels.util.score import score_oob
 from imodels.util.prune import prune_mins, deduplicate
 
@@ -342,7 +342,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
         self.max_samples_ = max_samples
         self._max_depths = self.max_depth if isinstance(self.max_depth, Iterable) else [self.max_depth]
 
-        self.feature_names_, self.feature_dict_ = self._enum_features(X, feature_names)
+        self.feature_names_, self.feature_dict_ = enum_features(X, feature_names)
 
         self.tree_generators = self._get_tree_ensemble()
         self._fit_tree_ensemble(X, y)
