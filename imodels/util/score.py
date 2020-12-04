@@ -68,6 +68,8 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, rando
     if alphas is None:
         alphas = _alpha_grid(X, y) 
 
+    coef_zero_threshold = 1e-6 / np.mean(np.abs(y))
+
     mse_scores = []
     nonzero_rule_coefs_count = []
     kf = KFold(cv)
@@ -80,7 +82,9 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, rando
             m.fit(X_train, y_train)
             mse += np.mean((m.predict(X_test) - y_test) ** 2)
         
-        rule_count = sum(np.abs(m.coef_[-len(rules):]) > 0.001)
+        m.fit(X, y)
+        
+        rule_count = sum(np.abs(m.coef_[-len(rules):]) > coef_zero_threshold)
         if rule_count > max_rules:
             break
         nonzero_rule_coefs_count.append(rule_count)
@@ -90,6 +94,5 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, rando
     lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
     lscv.fit(X, y)
 
-    rules = [Rule(r, args=[w]) for r, w in zip(rules, lscv.coef_[-len(rules):]) if abs(w) > 0.001]
-    print(rules)
+    rules = [Rule(r, args=[w]) for r, w in zip(rules, lscv.coef_[-len(rules):]) if abs(w) > coef_zero_threshold]
     return rules, lscv
