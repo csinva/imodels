@@ -11,8 +11,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg">
+  <img src="https://img.shields.io/badge/License-MIT-orange.svg">
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
+  <img src="https://img.shields.io/pypi/v/imodels?color=blue">
+  <img src="https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue">
 </p>  
 
 
