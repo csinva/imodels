@@ -93,5 +93,13 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, rando
     lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
     lscv.fit(X, y)
 
-    rules = [Rule(r, args=[w]) for r, w in zip(rules, lscv.coef_[-len(rules):]) if abs(w) > coef_zero_threshold]
-    return rules, lscv
+    coefs = list(lscv.coef_[:-len(rules)])
+    support = np.sum(X[:, -len(rules):], axis=0) / X.shape[0]
+
+    nonzero_rules = []
+    for r, w, s in zip(rules, lscv.coef_[-len(rules):], support):
+        if abs(w) > coef_zero_threshold:
+            nonzero_rules.append(Rule(r, args=[w], support=s))
+            coefs.append(w)
+    
+    return nonzero_rules, coefs, lscv.intercept_

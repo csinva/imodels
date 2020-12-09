@@ -31,128 +31,10 @@ from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from scipy.special import softmax
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.rules import RuleCondition, Rule
 from imodels.util.rule import enum_features
 from imodels.util.transforms import Winsorizer, FriedScale
 from imodels.util.score import score_lasso
-
-
-def extract_rules_from_tree(tree, feature_names=None):
-    """Helper to turn a tree into as set of rules
-    """
-    rules = set()
-
-    def traverse_nodes(node_id=0,
-                       operator=None,
-                       threshold=None,
-                       feature=None,
-                       conditions=[]):
-        if node_id != 0:
-            if feature_names is not None:
-                feature_name = feature_names[feature]
-            else:
-                feature_name = feature
-            rule_condition = RuleCondition(feature_index=feature,
-                                           threshold=threshold,
-                                           operator=operator,
-                                           support=tree.n_node_samples[node_id] / float(tree.n_node_samples[0]),
-                                           feature_name=feature_name)
-            new_conditions = conditions + [rule_condition]
-        else:
-            new_conditions = []
-        ## if not terminal node
-        if tree.children_left[node_id] != tree.children_right[node_id]:
-            feature = tree.feature[node_id]
-            threshold = tree.threshold[node_id]
-
-            left_node_id = tree.children_left[node_id]
-            traverse_nodes(left_node_id, "<=", threshold, feature, new_conditions)
-
-            right_node_id = tree.children_right[node_id]
-            traverse_nodes(right_node_id, ">", threshold, feature, new_conditions)
-        else:  # a leaf node
-            if len(new_conditions) > 0:
-                new_rule = Rule(new_conditions, tree.value[node_id][0][0])
-                rules.update([new_rule])
-            else:
-                pass  # tree only has a root node!
-            return None
-
-    traverse_nodes()
-
-    return rules
-
-
-class RuleEnsemble():
-    """Ensemble of binary decision rules
-
-    This class implements an ensemble of decision rules that extracts rules from
-    an ensemble of decision trees.
-
-    Parameters
-    ----------
-    tree_list: List or array of DecisionTreeClassifier or DecisionTreeRegressor
-        Trees from which the rules are created
-
-    feature_names: List of strings, optional (default=None)
-        Names of the features
-
-    Attributes
-    ----------
-    rules: List of Rule
-        The ensemble of rules extracted from the trees
-    """
-
-    def __init__(self,
-                 tree_list,
-                 feature_names=None):
-        self.tree_list = tree_list
-        self.feature_names_ = feature_names
-        self.rules = set()
-        ## TODO: Move this out of __init__
-        self._extract_rules()
-        self.rules = sorted(list(self.rules),  key=lambda x: x.prediction_value)
-
-    def _extract_rules(self):
-        """Recursively extract rules from each tree in the ensemble
-
-        """
-        for tree in self.tree_list:
-            rules = extract_rules_from_tree(tree[0].tree_, feature_names=self.feature_names_)
-            self.rules.update(rules)
-
-    def filter_rules(self, func):
-        self.rules = filter(lambda x: func(x), self.rules)
-
-    def filter_short_rules(self, k):
-        self.filter_rules(lambda x: len(x.conditions) > k)
-
-    def transform(self, X, coefs=None):
-        """Transform dataset.
-
-        Parameters
-        ----------
-        X:      array-like matrix, shape=(n_samples, n_features)
-        coefs:  (optional) if supplied, this makes the prediction
-                slightly more efficient by setting rules with zero 
-                coefficients to zero without calling Rule.transform().
-        Returns
-        -------
-        X_transformed: array-like matrix, shape=(n_samples, n_out)
-            Transformed dataset. Each column represents one rule.
-        """
-        rule_list = list(self.rules)
-        if coefs is None:
-            return np.array([rule.transform(X) for rule in rule_list]).T
-        else:  # else use the coefs to filter the rules we bother to interpret
-            res = np.array(
-                [rule_list[i_rule].transform(X) for i_rule in np.arange(len(rule_list)) if coefs[i_rule] != 0]).T
-            res_ = np.zeros([X.shape[0], len(rule_list)])
-            res_[:, coefs != 0] = res
-            return res_
-
-    def __str__(self):
-        return (map(lambda x: x.__str__(), self.rules)).__str__()
+from imodels.util.convert import tree_to_rules
 
 
 class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
@@ -238,10 +120,8 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         self.tree_generator = self._get_tree_ensemble(classify=False)
         self._fit_tree_ensemble(X, y)
 
-        self.rule_ensemble = RuleEnsemble(tree_list=self.estimators_, feature_names=self.feature_names_)
         extracted_rules = self._extract_rules()
-        self.rules_without_feature_names_, self.lscv = self._score_rules(X, y, extracted_rules)
-        self.coef_ = self.lscv.coef_
+        self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(X, y, extracted_rules)
 
         return self
 
@@ -258,16 +138,16 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         if self.include_linear:
             if self.lin_standardise:
                 X = self.friedscale.scale(X)
-            y_pred += X @ self.lscv.coef_[:X.shape[1]]
+            y_pred += X @ self.coef[:X.shape[1]]
 
-        return y_pred + self.lscv.intercept_
+        return y_pred + self.intercept
 
     def predict_proba(self, X):
         y = self.predict(X)
         preds = np.vstack((1 - y, y)).transpose()
         return softmax(preds, axis=1)
 
-    def transform(self, X=None, y=None):
+    def transform(self, X=None, rules=None):
         """Transform dataset.
 
         Parameters
@@ -280,8 +160,17 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         -------
         X_transformed: matrix, shape=(n_samples, n_out)
             Transformed data set
-        """
-        return self.rule_ensemble.transform(X)
+        """        
+        df = pd.DataFrame(X, columns=self.feature_names_)
+        X_transformed = np.zeros([X.shape[0], 0])
+
+        for r in rules:
+            curr_rule_feature = np.zeros(X.shape[0])
+            curr_rule_feature[list(df.query(r).index)] = 1
+            curr_rule_feature = np.expand_dims(curr_rule_feature, axis=1)
+            X_transformed = np.concatenate((X_transformed, curr_rule_feature), axis=1)
+        
+        return X_transformed
 
     def get_rules(self, exclude_zero_coef=False, subregion=None):
         """Return the estimated rules
@@ -301,15 +190,15 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
                data set (X)
         """
 
-        n_features = len(self.coef_) - len(self.rule_ensemble.rules)
-        rule_ensemble = list(self.rule_ensemble.rules)
+        n_features = len(self.coef) - len(self.rules_without_feature_names_)
+        rule_ensemble = list(self.rules_without_feature_names_)
         output_rules = []
         ## Add coefficients for linear effects
         for i in range(0, n_features):
             if self.lin_standardise:
-                coef = self.coef_[i] * self.friedscale.scale_multipliers[i]
+                coef = self.coef[i] * self.friedscale.scale_multipliers[i]
             else:
-                coef = self.coef_[i]
+                coef = self.coef[i]
             if subregion is None:
                 importance = abs(coef) * self.stddev[i]
             else:
@@ -319,14 +208,14 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
             output_rules += [(self.feature_names_[i], 'linear', coef, 1, importance)]
 
         ## Add rules
-        for i in range(0, len(self.rule_ensemble.rules)):
+        for i in range(0, len(self.rules_without_feature_names_)):
             rule = rule_ensemble[i]
-            coef = self.coef_[i + n_features]
+            coef = self.coef[i + n_features]
 
             if subregion is None:
                 importance = abs(coef) * (rule.support * (1 - rule.support)) ** (1 / 2)
             else:
-                rkx = rule.transform(subregion)
+                rkx = self.transform(subregion, [rule])[:, -1]
                 importance = sum(abs(coef) * abs(rkx - rule.support)) / len(subregion)
 
             output_rules += [(rule.__str__(), 'rule', coef, rule.support, importance)]
@@ -389,9 +278,19 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
             self.estimators_ = [[x] for x in self.tree_generator.estimators_]
         else:
             self.estimators_ = self.tree_generator.estimators_
-
+    
     def _extract_rules(self):
-        return [rule.__str__() for rule in self.rule_ensemble.rules]
+        seen_antecedents = set()
+        extracted_rules = [] 
+        for estimator in self.estimators_:
+            for rule_value_pair in tree_to_rules(estimator[0], np.array(self.feature_names_), prediction_values=True):
+                if rule_value_pair[0] not in seen_antecedents:
+                    extracted_rules.append(rule_value_pair)
+                    seen_antecedents.add(rule_value_pair[0])
+        
+        extracted_rules = sorted(extracted_rules, key=lambda x: x[1])
+        extracted_rules = list(map(lambda x: x[0], extracted_rules))
+        return extracted_rules
 
     def _score_rules(self, X, y, rules):
         X_concat = np.zeros([X.shape[0], 0])
@@ -412,7 +311,7 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
                 X_regn = X.copy()
             X_concat = np.concatenate((X_concat, X_regn), axis=1)
 
-        X_rules = self.rule_ensemble.transform(X)
+        X_rules = self.transform(X, rules)
         if X_rules.shape[0] > 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
 

@@ -1,63 +1,9 @@
 import numpy as np
+from sklearn.utils.testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
 
-from imodels.util.rules import RuleCondition, Rule
 from imodels.util.transforms import FriedScale
 from imodels.rule_set.rule_fit import RuleFitRegressor
-
-rule_condition_smaller = RuleCondition(1, 5, "<=", 0.4)
-rule_condition_greater = RuleCondition(0, 1, ">", 0.1)
-
-X = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-
-
-## Testing RuleCondition
-def test_rule_condition_hashing_equal1():
-    assert (RuleCondition(1, 5, "<=", 0.4) == RuleCondition(1, 5, "<=", 0.4))
-
-
-def test_rule_condition_hashing_equal2():
-    assert (RuleCondition(1, 5, "<=", 0.5) == RuleCondition(1, 5, "<=", 0.4))
-
-
-def test_rule_condition_hashing_different1():
-    assert (RuleCondition(1, 4, "<=", 0.4) != RuleCondition(1, 5, "<=", 0.4))
-
-
-def test_rule_condition_hashing_different2():
-    assert (RuleCondition(1, 5, ">", 0.4) != RuleCondition(1, 5, "<=", 0.4))
-
-
-def test_rule_condition_hashing_different3():
-    assert (RuleCondition(2, 5, ">", 0.4) != RuleCondition(1, 5, ">", 0.4))
-
-
-def test_rule_condition_smaller():
-    np.testing.assert_array_equal(rule_condition_smaller.transform(X),
-                                  np.array([1, 1, 0]))
-
-
-'''
-
-'''
-
-
-def test_rule_condition_greater():
-    np.testing.assert_array_equal(rule_condition_greater.transform(X),
-                                  np.array([0, 1, 1]))
-
-
-## Testing rule
-rule = Rule([rule_condition_smaller, rule_condition_greater], 0)
-
-
-def test_rule_transform():
-    np.testing.assert_array_equal(rule.transform(X),
-                                  np.array([0, 1, 0]))
-
-
-def test_rule_equality():
-    rule2 = Rule([rule_condition_greater, rule_condition_smaller], 0)
-    assert rule == rule2
 
 
 ## Testing FriedScale():
@@ -78,6 +24,7 @@ def test_fried_scale():
 '''
 
 
+@ignore_warnings(category=ConvergenceWarning)
 def test_integration():
 
     X = np.array([[1, 99, 43, 34],

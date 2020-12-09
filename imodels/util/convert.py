@@ -5,7 +5,8 @@ from sklearn.tree import _tree
 
 
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
-                  feature_names: List[str]) -> List[str]:
+                  feature_names: List[str],
+                  prediction_values: bool = False) -> List[str]:
 
     """
     Return a list of rules from a tree
@@ -46,7 +47,10 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
             rule = (rule if rule != ''
                     else ' == '.join([feature_names[0]] * 2))
             # a rule selecting all is set to "c0==c0"
-            rules.append(rule)
+            if prediction_values:
+                rules.append((rule, tree_.value[node][0][0]))
+            else:
+                rules.append(rule)
 
     recurse(0, [])
 
