@@ -41,9 +41,10 @@ class Rule:
         but it takes part of the output when the rule is converted to an array.
     """
 
-    def __init__(self, rule, args=None):
+    def __init__(self, rule, args=None, support=None):
         self.rule = rule
         self.args = args
+        self.support = support
         self.terms = [t.split(' ') for t in self.rule.split(' and ')]
         self.agg_dict = {}
         self.factorize()
