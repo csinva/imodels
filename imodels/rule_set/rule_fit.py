@@ -31,7 +31,6 @@ from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from scipy.special import softmax
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.rules import RuleCondition, Rule
 from imodels.util.rule import enum_features
 from imodels.util.transforms import Winsorizer, FriedScale
 from imodels.util.score import score_lasso
