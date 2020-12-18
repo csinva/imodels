@@ -16,8 +16,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
     """
     This is a scikit-learn compatible wrapper for the Bayesian Rule List
     classifier developed by Benjamin Letham. It produces a highly
-    interpretable model (a list of decision rules) of the same form as
-    an expert system. 
+    interpretable model (a list of decision rules) by sampling many different
+    rule lists, trying to optimize for compactness and predictive performance.
 
     Parameters
     ----------
@@ -30,8 +30,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
     maxcardinality : int, optional (default=2)
         Maximum cardinality of an itemset
         
-    minsupport : int, optional (default=10)
-        Minimum support (%) of an itemset
+    minsupport : float, optional (default=0.1)
+        Minimum support (fraction between 0 and 1) of an itemset
 
     alpha : array_like, shape = [n_classes]
         prior hyperparameter for multinomial pseudocounts
@@ -52,7 +52,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         Random seed
     """
 
-    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=10, alpha=np.array([1., 1.]),
+    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=0.1, alpha=np.array([1., 1.]),
                  n_chains=3, max_iter=50000, class1label="class 1", verbose=True, random_state=42):
         self.listlengthprior = listlengthprior
         self.listwidthprior = listwidthprior
@@ -114,7 +114,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         X = self._discretize_mixed_data(X, y, undiscretized_features)
         return X, y
 
-    def fit(self, X, y, feature_labels=[], undiscretized_features=[], verbose=False):
+    def fit(self, X, y, feature_labels: list=None, undiscretized_features=[], verbose=False):
         """Fit rule lists to data
 
         Parameters
@@ -126,9 +126,9 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             Labels
             
         feature_labels : array_like, shape = [n_features], optional (default: [])
-            String labels for each feature. If empty and X is a DataFrame, column 
-            labels are used. If empty and X is not a DataFrame, then features are  
-            simply enumerated
+            String labels for each feature.
+            If empty and X is a DataFrame, column labels are used.
+            If empty and X is not a DataFrame, then features are simply enumerated
             
         undiscretized_features : array_like, shape = [n_features], optional (default: [])
             String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized
@@ -147,10 +147,15 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
 
         # deal with pandas data
         if type(X) in [pd.DataFrame, pd.Series]:
+            if feature_labels is None:
+                feature_labels = X.columns
             X = X.values
         if type(y) in [pd.DataFrame, pd.Series]:
             y = y.values
 
+        if feature_labels is None:
+            feature_labels = [f'X{i}' for i in range(X.shape[1])]
+            
         X, y = self._setdata(X, y, feature_labels, undiscretized_features)
         permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
         data = list(X[:])
@@ -165,7 +170,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         X_df_onehot = pd.get_dummies(X_df_categorical)
         onehot_features = X_df_onehot.columns
 
-        itemsets_df = fpgrowth(X_df_onehot, min_support=(self.minsupport / len(X)), max_len=self.maxcardinality)
+        itemsets_df = fpgrowth(X_df_onehot, min_support=self.minsupport, max_len=self.maxcardinality)
         itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
         itemsets = [np.array(onehot_features)[list(inds)] for inds in itemsets_indices]
         itemsets = list(map(tuple, itemsets))
@@ -218,6 +223,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         return self
 
     def discretize(self, X, y):
+        '''Discretize the features specified in self.discretized_features
+        '''
         if self.verbose:
             print("Discretizing ", self.discretized_features, "...")
         D = pd.DataFrame(np.hstack((X, np.array(y).reshape((len(y), 1)))), columns=list(self.feature_labels) + ["y"])

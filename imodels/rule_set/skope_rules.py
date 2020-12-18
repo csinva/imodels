@@ -1,12 +1,11 @@
 '''
-Code adapted with only minor changes from [here](https://github.com/scikit-learn-contrib/skope-rules). Full credit to
-the authors.
-
 Skope-rules aims at learning logical, interpretable rules for "scoping" a target
 class, i.e. detecting with high precision instances of this class.
 
 Skope-rules is a trade off between the interpretability of a Decision Tree
-and the modelization power of a Random Forest.
+and the modelization power of a Random Forest. Code adapted with only minor changes
+from [here](https://github.com/scikit-learn-contrib/skope-rules). Full credit to
+the authors. You can access the original project and docs `here <http://skope-rules.readthedocs.io/en/latest/>`_
 
 Example
 -------
@@ -34,9 +33,6 @@ Example
     plt.ylabel('Precision')
     plt.title('Precision Recall curve')
     plt.show()
-
-For more examples and use cases please check our `documentation <http://skope-rules.readthedocs.io/en/latest/>`_.
-You can also check the `demonstration notebooks <notebooks/>`_.
 
 Links with existing literature
 -------------------------------
@@ -75,25 +71,6 @@ and predict_top_rules() functions).
 [4] Dembczyński, Kotłowski and Słowiński, Maximum Likelihood Rule Ensembles, ICML, 2008.
 
 [5] Friedman and Popescu, Gradient directed regularization, Technical Report, 2004.
-
-Dependencies
-------------
-
-skope-rules requires:
-
-- Python (>= 2.7 or >= 3.3)
-- NumPy (>= 1.10.4)
-- SciPy (>= 0.17.0)
-- Pandas (>= 0.18.1)
-- Scikit-Learn (>= 0.17.1)
-
-For running the examples Matplotlib >= 1.1.1 is required.
-
-    
-Documentation
---------------
-
-You can access the full project documentation `here <http://skope-rules.readthedocs.io/en/latest/>`_
 '''
 import numbers
 from collections.abc import Iterable

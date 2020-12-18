@@ -21,7 +21,7 @@ class TestBRL(unittest.TestCase):
              [0, 1, 1, 1, 1],
              [1, 0, 1, 1, 1]]
         y = [0, 0, 0, 0, 1, 1, 1, 1]
-        M = BayesianRuleListClassifier(minsupport=2)
+        M = BayesianRuleListClassifier(minsupport=0.02)
         feat = ['ft1', 'ft2', 'ft3', 'ft4', 'ft5']
         M.fit(X, y, feature_labels=feat)
         assert [M.predict([row], threshold=0.5) for row in X] == y

@@ -31,7 +31,8 @@ from sklearn.tree import _tree
 
 
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
-                  feature_names: List[str]) -&gt; List[str]:
+                  feature_names: List[str],
+                  prediction_values: bool = False) -&gt; List[str]:
 
     &#34;&#34;&#34;
     Return a list of rules from a tree
@@ -72,7 +73,10 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
             rule = (rule if rule != &#39;&#39;
                     else &#39; == &#39;.join([feature_names[0]] * 2))
             # a rule selecting all is set to &#34;c0==c0&#34;
-            rules.append(rule)
+            if prediction_values:
+                rules.append((rule, tree_.value[node][0][0]))
+            else:
+                rules.append(rule)
 
     recurse(0, [])
 
@@ -87,7 +91,7 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="imodels.util.convert.tree_to_rules"><code class="name flex">
-<span>def <span class="ident">tree_to_rules</span></span>(<span>tree, feature_names)</span>
+<span>def <span class="ident">tree_to_rules</span></span>(<span>tree, feature_names, prediction_values=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Return a list of rules from a tree</p>
@@ -102,7 +106,8 @@ feature_names: list of variable names
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
-                  feature_names: List[str]) -&gt; List[str]:
+                  feature_names: List[str],
+                  prediction_values: bool = False) -&gt; List[str]:
 
     &#34;&#34;&#34;
     Return a list of rules from a tree
@@ -143,7 +148,10 @@ feature_names: list of variable names
             rule = (rule if rule != &#39;&#39;
                     else &#39; == &#39;.join([feature_names[0]] * 2))
             # a rule selecting all is set to &#34;c0==c0&#34;
-            rules.append(rule)
+            if prediction_values:
+                rules.append((rule, tree_.value[node][0][0]))
+            else:
+                rules.append(rule)
 
     recurse(0, [])
 

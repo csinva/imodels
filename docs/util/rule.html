@@ -25,6 +25,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import re
+from typing import List, Tuple, Dict
 
 
 def replace_feature_name(rule, replace_dict):
@@ -34,6 +35,21 @@ def replace_feature_name(rule, replace_dict):
     rule = re.sub(&#39;|&#39;.join(r&#39;\b%s\b&#39; % re.escape(s) for s in replace_dict),
                   replace, rule)
     return rule
+
+def enum_features(X, feature_names: List[str]) -&gt; Tuple[List[str], Dict[str, str]]:
+    &#34;&#34;&#34; Removes problematic characters in features; if none provided, 
+    returns placeholder feature names
+    &#34;&#34;&#34;
+
+    enum_feature_names = [f&#39;feature_{i}&#39; for i in range(X.shape[1])]
+    if feature_names is None:
+        feature_names = enum_feature_names
+    else:
+        feature_clean_fn = lambda f: f.replace(&#39; &#39;, &#39;_&#39;).replace(&#39;/&#39;, &#39;_&#39;).replace(&#39;&lt;&#39;, &#39;_under_&#39;)
+        feature_names = list(map(feature_clean_fn, feature_names))
+    feature_dict = {k: v for k, v in zip(enum_feature_names, feature_names)}
+
+    return feature_names, feature_dict
 
 
 class Rule:
@@ -51,9 +67,10 @@ class Rule:
         but it takes part of the output when the rule is converted to an array.
     &#34;&#34;&#34;
 
-    def __init__(self, rule, args=None):
+    def __init__(self, rule, args=None, support=None):
         self.rule = rule
         self.args = args
+        self.support = support
         self.terms = [t.split(&#39; &#39;) for t in self.rule.split(&#39; and &#39;)]
         self.agg_dict = {}
         self.factorize()
@@ -103,6 +120,32 @@ class Rule:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="imodels.util.rule.enum_features"><code class="name flex">
+<span>def <span class="ident">enum_features</span></span>(<span>X, feature_names)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Removes problematic characters in features; if none provided,
+returns placeholder feature names</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def enum_features(X, feature_names: List[str]) -&gt; Tuple[List[str], Dict[str, str]]:
+    &#34;&#34;&#34; Removes problematic characters in features; if none provided, 
+    returns placeholder feature names
+    &#34;&#34;&#34;
+
+    enum_feature_names = [f&#39;feature_{i}&#39; for i in range(X.shape[1])]
+    if feature_names is None:
+        feature_names = enum_feature_names
+    else:
+        feature_clean_fn = lambda f: f.replace(&#39; &#39;, &#39;_&#39;).replace(&#39;/&#39;, &#39;_&#39;).replace(&#39;&lt;&#39;, &#39;_under_&#39;)
+        feature_names = list(map(feature_clean_fn, feature_names))
+    feature_dict = {k: v for k, v in zip(enum_feature_names, feature_names)}
+
+    return feature_names, feature_dict</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.rule.replace_feature_name"><code class="name flex">
 <span>def <span class="ident">replace_feature_name</span></span>(<span>rule, replace_dict)</span>
 </code></dt>
@@ -128,7 +171,7 @@ class Rule:
 <dl>
 <dt id="imodels.util.rule.Rule"><code class="flex name class">
 <span>class <span class="ident">Rule</span></span>
-<span>(</span><span>rule, args=None)</span>
+<span>(</span><span>rule, args=None, support=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>An object modeling a logical rule and add factorization methods.
@@ -160,9 +203,10 @@ but it takes part of the output when the rule is converted to an array.</dd>
         but it takes part of the output when the rule is converted to an array.
     &#34;&#34;&#34;
 
-    def __init__(self, rule, args=None):
+    def __init__(self, rule, args=None, support=None):
         self.rule = rule
         self.args = args
+        self.support = support
         self.terms = [t.split(&#39; &#39;) for t in self.rule.split(&#39; and &#39;)]
         self.agg_dict = {}
         self.factorize()
@@ -253,6 +297,7 @@ but it takes part of the output when the rule is converted to an array.</dd>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="imodels.util.rule.enum_features" href="#imodels.util.rule.enum_features">enum_features</a></code></li>
 <li><code><a title="imodels.util.rule.replace_feature_name" href="#imodels.util.rule.replace_feature_name">replace_feature_name</a></code></li>
 </ul>
 </li>

@@ -80,21 +80,26 @@ except:
 ###############BRL
 
 
-# For producing the defaultdict used for storing MCMC results
+
 def default_permsdic():
+    '''For producing the defaultdict used for storing MCMC results
+    '''
     return [0., 0.]
 
 
-# Resets the number of MCMC samples stored (value[1]) while maintaining the log-posterior value (so it doesn't need to be re-computed in future chains).
 def reset_permsdic(permsdic):
+    '''Resets the number of MCMC samples stored (value[1]) while maintaining the
+    log-posterior value (so it doesn't need to be re-computed in future chains).
+    '''
     for perm in permsdic:
         permsdic[perm][1] = 0.
     return permsdic
 
 
-# Run mcmc for each of the chains, IN SERIAL!
 def run_bdl_multichain_serial(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin,
                               nchains, d_inits, verbose=True, seed=42):
+    '''Run mcmc for each of the chains in serial
+    '''
     # random seed
     random.seed(seed)
 
@@ -122,6 +127,8 @@ def run_bdl_multichain_serial(numiters, thinning, alpha, lbda, eta, X, Y, nrules
 
 def mcmcchain(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, nchains,
               d_init):
+    '''Run and store mcmc chain
+    '''
     res = {}
     permsdic, res['perms'] = bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs,
                                           permsdic, burnin, None, d_init)
@@ -132,8 +139,10 @@ def mcmcchain(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, ma
     return res
 
 
-# Check convergence with GR diagnostic
+
 def gelmanrubin(res):
+    '''Check convergence with GR diagnostic
+    '''
     n = 0  # number of samples per chain - to be computed
     m = len(res)  # number of chains
     phi_bar_j = {}
@@ -174,17 +183,17 @@ def gelmanrubin(res):
         Rhat = 0.
     return Rhat
 
-
-# Plot the logposterior values for the samples in the chains.
 def plot_chains(res):
+    '''Plot the logposterior values for the samples in the chains.
+    '''
     for chain in res:
         plt.plot([res[chain]['permsdic'][a][0] for a in res[chain]['perms']])
     plt.show()
     return
 
-
-# Merge chains into a single collection of posterior samples
 def merge_chains(res):
+    '''Merge chains into a single collection of posterior samples
+    '''
     permsdic = defaultdict(default_permsdic)
     for n in res:
         for perm, vals in res[n]['permsdic'].items():
@@ -192,9 +201,9 @@ def merge_chains(res):
             permsdic[perm][1] += vals[1]
     return permsdic
 
-
-# Get a point estimate with length and width similar to the posterior average, with highest likelihood
 def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, eta, verbose=True):
+    '''Get a point estimate with length and width similar to the posterior average, with highest likelihood
+    '''
     # Figure out the posterior expected list length and average rule size
     listlens = []
     rulesizes = []
@@ -255,12 +264,13 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
 
 
 #################COMPUTING RESULTS
-
-# Compute the posterior consequent distributions
 def get_rule_rhs(Xtrain, Ytrain, d_t, alpha, intervals):
+    '''Compute the posterior consequent distributions
+    (Basically compute points in each part of rule)
+    '''
     N_t = compute_rule_usage(d_t, d_t.index(0), Xtrain, Ytrain)
-    theta = []
-    ci_theta = []
+    theta = []  # P(Y=1)
+    ci_theta = [] # confidence interval for Y=1
     for i, j in enumerate(d_t):
         # theta ~ Dirichlet(N[j,:] + alpha)
         # E[theta] = (N[j,:] + alpha)/float(sum(N[j,:] + alpha))
@@ -273,8 +283,9 @@ def get_rule_rhs(Xtrain, Ytrain, d_t, alpha, intervals):
     return theta, ci_theta
 
 
-# Get predictions from the list d_t
 def preds_d_t(X, Y, d_t, theta):
+    '''Get predictions from the list d_t
+    '''
     # this is binary only. The score is the Prob of 1.
     unused = set(range(Y.shape[0]))
     preds = -1 * ones(Y.shape[0])
@@ -287,15 +298,16 @@ def preds_d_t(X, Y, d_t, theta):
     return preds
 
 
-##############MCMC core
-
-# The Metropolis-Hastings algorithm
+##############MCMC core 
 def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, rseed,
                  d_init):
+    '''Run Metropolis-Hastings algorithm
+    '''
     # initialize
     perms = []
     if rseed:
         random.seed(rseed)
+        
     # Do some pre-computation for the prior
     beta_Z, logalpha_pmf, logbeta_pmf = prior_calculations(lbda, len(X), eta, maxlhs)
     if d_init:  # If we want to begin our chain at a specific place (e.g. to continue a chain)
@@ -306,6 +318,7 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
     else:
         d_t, R_t, N_t = initialize_d(X, Y, lbda, eta, lhs_len, maxlhs,
                                      nruleslen)  # Otherwise sample the initial value from the prior
+    
     # Add to dictionary which will store the sampling results
     a_t = Pickle.dumps(d_t[:R_t + 1])  # The antecedent list in string form
     if a_t not in permsdic:
@@ -313,6 +326,7 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
                                            lhs_len)  # Compute its logposterior
     if burnin == 0:
         permsdic[a_t][1] += 1  # store the initialization sample
+    
     # iterate!
     for itr in range(numiters):
         # Sample from proposal distribution
@@ -339,8 +353,9 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
     return permsdic, perms
 
 
-# Samples a list from the prior
 def initialize_d(X, Y, lbda, eta, lhs_len, maxlhs, nruleslen):
+    '''Samples a list from the prior
+    '''
     m = Inf
     while m >= len(X):
         m = poisson.rvs(lbda)  # sample the length of the list from Poisson(lbda), truncated at len(X)
@@ -457,8 +472,9 @@ def proposal(d_t, R_t, X, Y, alpha):
     return d_star, log(Jratio), R_star, step
 
 
-# Compute the normalization constants for the prior on rule cardinality
 def prior_calculations(lbda, maxlen, eta, maxlhs):
+    '''Compute the normalization constants for the prior on rule cardinality
+    '''
     # First normalization constants for beta
     beta_Z = poisson.cdf(maxlhs, eta) - poisson.pmf(0, eta)
     # Then the actual un-normalized pmfs
@@ -474,8 +490,9 @@ def prior_calculations(lbda, maxlen, eta, maxlhs):
     return beta_Z, logalpha_pmf, logbeta_pmf
 
 
-# Compute log posterior
 def fn_logposterior(d_t, R_t, N_t, alpha, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len):
+    '''# Compute log posterior
+    '''
     logliklihood = fn_logliklihood(d_t, N_t, R_t, alpha)
     logprior = fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len)
     return logliklihood + logprior
@@ -490,13 +507,15 @@ def fn_logliklihood(d_t, N_t, R_t, alpha):
     return logliklihood
 
 
-# Compute log prior
+
 def fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len):
-    # The prior will be _proportional_ to this -> we drop the normalization for alpha
-    # beta_Z is the normalization for beta, except the terms that need to be dropped due to running out of rules.
-    # log p(d_star) = log \alpha(m|lbda) + sum_{i=1...m} log beta(l_i | eta) + log gamma(r_i | l_i)
-    # The length of the list (m) is R_t
-    # Get logalpha (length of list) (overloaded notation in this code, unrelated to the prior hyperparameter alpha)
+    '''# Compute log prior
+    The prior will be _proportional_ to this -> we drop the normalization for alpha
+    beta_Z is the normalization for beta, except the terms that need to be dropped due to running out of rules.
+    log p(d_star) = log \alpha(m|lbda) + sum_{i=1...m} log beta(l_i | eta) + log gamma(r_i | l_i)
+    The length of the list (m) is R_t
+    Get logalpha (length of list) (overloaded notation in this code, unrelated to the prior hyperparameter alpha)
+    '''
     logprior = 0.
     logalpha = logalpha_pmf[
         R_t]  # this is proportional to logalpha - we have dropped the normalization for truncating based on total number of rules
@@ -522,8 +541,9 @@ def fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, 
     return logprior
 
 
-# Compute which rules are being used to classify data points with what labels
 def compute_rule_usage(d_star, R_star, X, Y):
+    '''Compute which rules are being used to classify data points with what labels
+    '''
     N_star = zeros((R_star + 1, Y.shape[1]))
     remaining_unused = set(range(Y.shape[0]))
     i = 0

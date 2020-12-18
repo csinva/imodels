@@ -56,8 +56,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
     maxcardinality : int, optional (default=2)
         Maximum cardinality of an itemset
         
-    minsupport : int, optional (default=10)
-        Minimum support (%) of an itemset
+    minsupport : float, optional (default=0.1)
+        Minimum support (fraction between 0 and 1) of an itemset
 
     alpha : array_like, shape = [n_classes]
         prior hyperparameter for multinomial pseudocounts
@@ -78,7 +78,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         Random seed
     &#34;&#34;&#34;
 
-    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=10, alpha=np.array([1., 1.]),
+    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=0.1, alpha=np.array([1., 1.]),
                  n_chains=3, max_iter=50000, class1label=&#34;class 1&#34;, verbose=True, random_state=42):
         self.listlengthprior = listlengthprior
         self.listwidthprior = listwidthprior
@@ -140,7 +140,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         X = self._discretize_mixed_data(X, y, undiscretized_features)
         return X, y
 
-    def fit(self, X, y, feature_labels=[], undiscretized_features=[], verbose=False):
+    def fit(self, X, y, feature_labels: list=None, undiscretized_features=[], verbose=False):
         &#34;&#34;&#34;Fit rule lists to data
 
         Parameters
@@ -152,9 +152,9 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             Labels
             
         feature_labels : array_like, shape = [n_features], optional (default: [])
-            String labels for each feature. If empty and X is a DataFrame, column 
-            labels are used. If empty and X is not a DataFrame, then features are  
-            simply enumerated
+            String labels for each feature.
+            If empty and X is a DataFrame, column labels are used.
+            If empty and X is not a DataFrame, then features are simply enumerated
             
         undiscretized_features : array_like, shape = [n_features], optional (default: [])
             String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized
@@ -173,10 +173,15 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
 
         # deal with pandas data
         if type(X) in [pd.DataFrame, pd.Series]:
+            if feature_labels is None:
+                feature_labels = X.columns
             X = X.values
         if type(y) in [pd.DataFrame, pd.Series]:
             y = y.values
 
+        if feature_labels is None:
+            feature_labels = [f&#39;X{i}&#39; for i in range(X.shape[1])]
+            
         X, y = self._setdata(X, y, feature_labels, undiscretized_features)
         permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
         data = list(X[:])
@@ -191,7 +196,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         X_df_onehot = pd.get_dummies(X_df_categorical)
         onehot_features = X_df_onehot.columns
 
-        itemsets_df = fpgrowth(X_df_onehot, min_support=(self.minsupport / len(X)), max_len=self.maxcardinality)
+        itemsets_df = fpgrowth(X_df_onehot, min_support=self.minsupport, max_len=self.maxcardinality)
         itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
         itemsets = [np.array(onehot_features)[list(inds)] for inds in itemsets_indices]
         itemsets = list(map(tuple, itemsets))
@@ -244,6 +249,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         return self
 
     def discretize(self, X, y):
+        &#39;&#39;&#39;Discretize the features specified in self.discretized_features
+        &#39;&#39;&#39;
         if self.verbose:
             print(&#34;Discretizing &#34;, self.discretized_features, &#34;...&#34;)
         D = pd.DataFrame(np.hstack((X, np.array(y).reshape((len(y), 1)))), columns=list(self.feature_labels) + [&#34;y&#34;])
@@ -369,7 +376,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
 <dl>
 <dt id="imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier"><code class="flex name class">
 <span>class <span class="ident">BayesianRuleListClassifier</span></span>
-<span>(</span><span>listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=10, alpha=array([1., 1.]), n_chains=3, max_iter=50000, class1label='class 1', verbose=True, random_state=42)</span>
+<span>(</span><span>listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=0.1, alpha=array([1., 1.]), n_chains=3, max_iter=50000, class1label='class 1', verbose=True, random_state=42)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>This is a scikit-learn compatible wrapper for the Bayesian Rule List
@@ -384,8 +391,8 @@ an expert system. </p>
 <dd>Prior hyperparameter for expected list width (excluding null rule)</dd>
 <dt><strong><code>maxcardinality</code></strong> :&ensp;<code>int</code>, optional (default=<code>2</code>)</dt>
 <dd>Maximum cardinality of an itemset</dd>
-<dt><strong><code>minsupport</code></strong> :&ensp;<code>int</code>, optional (default=<code>10</code>)</dt>
-<dd>Minimum support (%) of an itemset</dd>
+<dt><strong><code>minsupport</code></strong> :&ensp;<code>float</code>, optional (default=<code>0.1</code>)</dt>
+<dd>Minimum support (fraction between 0 and 1) of an itemset</dd>
 <dt><strong><code>alpha</code></strong> :&ensp;<code>array_like</code>, <code>shape</code> = [<code>n_classes</code>]</dt>
 <dd>prior hyperparameter for multinomial pseudocounts</dd>
 <dt><strong><code>n_chains</code></strong> :&ensp;<code>int</code>, optional (default=<code>3</code>)</dt>
@@ -421,8 +428,8 @@ an expert system. </p>
     maxcardinality : int, optional (default=2)
         Maximum cardinality of an itemset
         
-    minsupport : int, optional (default=10)
-        Minimum support (%) of an itemset
+    minsupport : float, optional (default=0.1)
+        Minimum support (fraction between 0 and 1) of an itemset
 
     alpha : array_like, shape = [n_classes]
         prior hyperparameter for multinomial pseudocounts
@@ -443,7 +450,7 @@ an expert system. </p>
         Random seed
     &#34;&#34;&#34;
 
-    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=10, alpha=np.array([1., 1.]),
+    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=0.1, alpha=np.array([1., 1.]),
                  n_chains=3, max_iter=50000, class1label=&#34;class 1&#34;, verbose=True, random_state=42):
         self.listlengthprior = listlengthprior
         self.listwidthprior = listwidthprior
@@ -505,7 +512,7 @@ an expert system. </p>
         X = self._discretize_mixed_data(X, y, undiscretized_features)
         return X, y
 
-    def fit(self, X, y, feature_labels=[], undiscretized_features=[], verbose=False):
+    def fit(self, X, y, feature_labels: list=None, undiscretized_features=[], verbose=False):
         &#34;&#34;&#34;Fit rule lists to data
 
         Parameters
@@ -517,9 +524,9 @@ an expert system. </p>
             Labels
             
         feature_labels : array_like, shape = [n_features], optional (default: [])
-            String labels for each feature. If empty and X is a DataFrame, column 
-            labels are used. If empty and X is not a DataFrame, then features are  
-            simply enumerated
+            String labels for each feature.
+            If empty and X is a DataFrame, column labels are used.
+            If empty and X is not a DataFrame, then features are simply enumerated
             
         undiscretized_features : array_like, shape = [n_features], optional (default: [])
             String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized
@@ -538,10 +545,15 @@ an expert system. </p>
 
         # deal with pandas data
         if type(X) in [pd.DataFrame, pd.Series]:
+            if feature_labels is None:
+                feature_labels = X.columns
             X = X.values
         if type(y) in [pd.DataFrame, pd.Series]:
             y = y.values
 
+        if feature_labels is None:
+            feature_labels = [f&#39;X{i}&#39; for i in range(X.shape[1])]
+            
         X, y = self._setdata(X, y, feature_labels, undiscretized_features)
         permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
         data = list(X[:])
@@ -556,7 +568,7 @@ an expert system. </p>
         X_df_onehot = pd.get_dummies(X_df_categorical)
         onehot_features = X_df_onehot.columns
 
-        itemsets_df = fpgrowth(X_df_onehot, min_support=(self.minsupport / len(X)), max_len=self.maxcardinality)
+        itemsets_df = fpgrowth(X_df_onehot, min_support=self.minsupport, max_len=self.maxcardinality)
         itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
         itemsets = [np.array(onehot_features)[list(inds)] for inds in itemsets_indices]
         itemsets = list(map(tuple, itemsets))
@@ -609,6 +621,8 @@ an expert system. </p>
         return self
 
     def discretize(self, X, y):
+        &#39;&#39;&#39;Discretize the features specified in self.discretized_features
+        &#39;&#39;&#39;
         if self.verbose:
             print(&#34;Discretizing &#34;, self.discretized_features, &#34;...&#34;)
         D = pd.DataFrame(np.hstack((X, np.array(y).reshape((len(y), 1)))), columns=list(self.feature_labels) + [&#34;y&#34;])
@@ -733,12 +747,14 @@ an expert system. </p>
 <span>def <span class="ident">discretize</span></span>(<span>self, X, y)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Discretize the features specified in self.discretized_features</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def discretize(self, X, y):
+    &#39;&#39;&#39;Discretize the features specified in self.discretized_features
+    &#39;&#39;&#39;
     if self.verbose:
         print(&#34;Discretizing &#34;, self.discretized_features, &#34;...&#34;)
     D = pd.DataFrame(np.hstack((X, np.array(y).reshape((len(y), 1)))), columns=list(self.feature_labels) + [&#34;y&#34;])
@@ -759,7 +775,7 @@ an expert system. </p>
 </details>
 </dd>
 <dt id="imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_labels=[], undiscretized_features=[], verbose=False)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_labels=None, undiscretized_features=[], verbose=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Fit rule lists to data</p>
@@ -770,9 +786,9 @@ an expert system. </p>
 <dt><strong><code>y</code></strong> :&ensp;<code>array_like</code>, <code>shape</code> = [<code>n_samples</code>]</dt>
 <dd>Labels</dd>
 <dt><strong><code>feature_labels</code></strong> :&ensp;<code>array_like</code>, <code>shape</code> = [<code>n_features</code>], optional (default: [])</dt>
-<dd>String labels for each feature. If empty and X is a DataFrame, column
-labels are used. If empty and X is not a DataFrame, then features are<br>
-simply enumerated</dd>
+<dd>String labels for each feature.
+If empty and X is a DataFrame, column labels are used.
+If empty and X is not a DataFrame, then features are simply enumerated</dd>
 <dt><strong><code>undiscretized_features</code></strong> :&ensp;<code>array_like</code>, <code>shape</code> = [<code>n_features</code>], optional (default: [])</dt>
 <dd>String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code></dt>
@@ -784,7 +800,7 @@ simply enumerated</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y, feature_labels=[], undiscretized_features=[], verbose=False):
+<pre><code class="python">def fit(self, X, y, feature_labels: list=None, undiscretized_features=[], verbose=False):
     &#34;&#34;&#34;Fit rule lists to data
 
     Parameters
@@ -796,9 +812,9 @@ simply enumerated</dd>
         Labels
         
     feature_labels : array_like, shape = [n_features], optional (default: [])
-        String labels for each feature. If empty and X is a DataFrame, column 
-        labels are used. If empty and X is not a DataFrame, then features are  
-        simply enumerated
+        String labels for each feature.
+        If empty and X is a DataFrame, column labels are used.
+        If empty and X is not a DataFrame, then features are simply enumerated
         
     undiscretized_features : array_like, shape = [n_features], optional (default: [])
         String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized
@@ -817,10 +833,15 @@ simply enumerated</dd>
 
     # deal with pandas data
     if type(X) in [pd.DataFrame, pd.Series]:
+        if feature_labels is None:
+            feature_labels = X.columns
         X = X.values
     if type(y) in [pd.DataFrame, pd.Series]:
         y = y.values
 
+    if feature_labels is None:
+        feature_labels = [f&#39;X{i}&#39; for i in range(X.shape[1])]
+        
     X, y = self._setdata(X, y, feature_labels, undiscretized_features)
     permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
     data = list(X[:])
@@ -835,7 +856,7 @@ simply enumerated</dd>
     X_df_onehot = pd.get_dummies(X_df_categorical)
     onehot_features = X_df_onehot.columns
 
-    itemsets_df = fpgrowth(X_df_onehot, min_support=(self.minsupport / len(X)), max_len=self.maxcardinality)
+    itemsets_df = fpgrowth(X_df_onehot, min_support=self.minsupport, max_len=self.maxcardinality)
     itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
     itemsets = [np.array(onehot_features)[list(inds)] for inds in itemsets_indices]
     itemsets = list(map(tuple, itemsets))
