@@ -14,6 +14,7 @@ env
 *.pth
 **Icon*
 venv
+.vscode/**
 # Compiled python modules.
 *.pyc
 
