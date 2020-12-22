@@ -1,7 +1,7 @@
 """
 Testing for SkopeRules algorithm
 """
-
+import pytest
 import numpy as np
 from numpy.testing import assert_array_equal, assert_no_warnings, assert_raises, suppress_warnings, assert_warns
 from sklearn.datasets import load_iris, load_boston, make_blobs
@@ -28,6 +28,7 @@ boston.data = boston.data[perm]
 boston.target = boston.target[perm]
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_skope_rules():
     """Check various parameter settings."""
     X_train = [[-2, -1], [-1, -1], [-1, -2], [1, 1], [1, 2], [2, 1],
@@ -88,6 +89,7 @@ def test_skope_rules_error():
                   X[:, 1:])
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_max_samples_attribute():
     X = iris.data
     y = iris.target
@@ -104,7 +106,7 @@ def test_max_samples_attribute():
     clf = SkopeRulesClassifier(max_samples=0.4).fit(X, y)
     assert clf.max_samples_ == 0.4 * X.shape[0]
 
-
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_skope_rules_works():
     # toy sample (the last two samples are outliers)
     X = [[-2, -1], [-1, -1], [-1, -2], [1, 1], [1, 2], [2, 1], [6, 3], [4, -7]]
@@ -127,6 +129,7 @@ def test_skope_rules_works():
     assert_array_equal(pred_score_top_rules, 6 * [0] + 2 * [1])
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_deduplication_works():
     # toy sample (the last two samples are outliers)
     X = [[-2, -1], [-1, -1], [-1, -2], [1, 1], [1, 2], [2, 1], [6, 3], [4, -7]]
