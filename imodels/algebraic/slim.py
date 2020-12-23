@@ -8,7 +8,7 @@ with integer coefficients in w
 import cvxpy as cp  # package for optimization
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Lasso
 
 
 class SLIMRegressor(BaseEstimator):
@@ -20,7 +20,8 @@ class SLIMRegressor(BaseEstimator):
         self.predict = self.model.predict
 
     def fit(self, X, y, lambda_reg=10, sample_weight=None):
-        '''fit a linear model with integer coefficient and L1 regularization
+        '''fit a linear model with integer coefficient and L1 regularization.
+        In case the optimization fails, fit lasso and round coefs.
         
         Params
         ------
@@ -42,15 +43,22 @@ class SLIMRegressor(BaseEstimator):
         if sample_weight is not None:
             # print('shapes', residuals.shape, sample_weight.shape)
             residuals = cp.multiply(sample_weight, residuals)
-        mse = cp.sum_squares(residuals)
-        l1_penalty = lambda_reg * cp.norm(w, 1)
-        obj = cp.Minimize(mse + l1_penalty)
-        prob = cp.Problem(obj)
+        
+        try:
+            mse = cp.sum_squares(residuals)
+            l1_penalty = lambda_reg * cp.norm(w, 1)
+            obj = cp.Minimize(mse + l1_penalty)
+            prob = cp.Problem(obj)
 
-        # solve the problem using an appropriate solver
-        prob.solve()
-        self.model.coef_ = w.value.astype(np.int)
-        self.model.intercept_ = 0
+            # solve the problem using an appropriate solver
+            prob.solve()
+            self.model.coef_ = w.value.astype(np.int)
+            self.model.intercept_ = 0
+
+        except:
+            m = Lasso(alpha=lambda_reg)
+            m.fit(X, y, sample_weight=sample_weight)
+            self.model.coef_ = np.round(m.coef_).astype(np.int)
 
     def predict_proba(self, X):
         preds = self.predict(X)
