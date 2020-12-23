@@ -1,6 +1,6 @@
 import numpy as np
 
-from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRuleListClassifier  # IRFClassifier
+from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRuleListClassifier, OneRClassifier  # IRFClassifier
 
 
 class TestClassClassification:
