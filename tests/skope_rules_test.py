@@ -1,8 +1,8 @@
 """
 Testing for SkopeRules algorithm
 """
-import pytest
 import numpy as np
+import pytest
 from numpy.testing import assert_array_equal, assert_no_warnings, assert_raises, suppress_warnings, assert_warns
 from sklearn.datasets import load_iris, load_boston, make_blobs
 from sklearn.metrics import accuracy_score
@@ -105,6 +105,7 @@ def test_max_samples_attribute():
 
     clf = SkopeRulesClassifier(max_samples=0.4).fit(X, y)
     assert clf.max_samples_ == 0.4 * X.shape[0]
+
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_skope_rules_works():

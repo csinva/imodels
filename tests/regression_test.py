@@ -1,6 +1,6 @@
 import numpy as np
 
-from imodels import RuleFitRegressor, SLIMRegressor
+from imodels import RuleFitRegressor
 
 
 class TestClassRegression:

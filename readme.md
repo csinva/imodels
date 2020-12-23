@@ -51,13 +51,22 @@ Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementa
 
 ## Custom interpretable models
 
-The code here contains many useful and readable functions for a variety of rule-based models, contained in the [util folder](https://csinva.io/imodels/util/index.html). This includes functions and simple classes for rule deduplication, rule screening, converting between trees, rulesets, and pytorch neural nets. The final derived rules easily allows for extending any of the following general classes of models:
+The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
 
-|           Rule set            |        Rule list        |  (Decision) Rule tree   |        Algebraic models        |
-| :---------------------------: | :---------------------: | :---------------------: | :----------------------------: |
-| <img src="https://csinva.io/imodels/rule_set.jpg" width="100%"> | <img src="https://csinva.io/imodels/rule_list.jpg"> | <img src="https://csinva.io/imodels/rule_tree.jpg"> | <img src="https://csinva.io/imodels/algebraic_models.jpg"> |
+|                           Rule set                           |                      Rule list                      |                      Rule tree                      |                      Algebraic models                      |
+| :----------------------------------------------------------: | :-------------------------------------------------: | :-------------------------------------------------: | :--------------------------------------------------------: |
+| <img src="https://csinva.io/imodels/img/rule_set.jpg" width="100%"> | <img src="https://csinva.io/imodels/img/rule_list.jpg"> | <img src="https://csinva.io/imodels/img/rule_tree.jpg"> | <img src="https://csinva.io/imodels/img/algebraic_models.jpg"> |
+
+Different models and algorithms vary not only in their final form but also in different choices made during modeling. In particular, many models differ in the 3 steps of the table below. For example, RuleFit and SkopeRules differ only in the way they prune rules: RuleFit uses a linear model whereas SkopeRules heuristically deduplicates rules sharing overlap. As another example, Bayesian rule lists and greedy rule lists differ in how they select rules; bayesian rule lists perform a global optimization over possible rule lists while Greedy rule lists pick splits sequentially to maximize a given criterion. See the docs for individual models for futher descriptions.
+
+|                  Rule candidate generation                   |                       Rule selection                       |                Rule pruning / combination                 |
+| :----------------------------------------------------------: | :--------------------------------------------------------: | :-------------------------------------------------------: |
+| <img src="https://csinva.io/imodels/img/rule_candidates.jpg" width="100%"> | <img src="https://csinva.io/imodels/img/rule_overfit.jpg"> | <img src="https://csinva.io/imodels/img/rule_pruned.jpg"> |
+
+The code here contains many useful and readable functions for rule-based learning in the [util folder](https://csinva.io/imodels/util/index.html). This includes functions / classes for rule deduplication, rule screening, converting between trees, rulesets, and neural networks.
 
 ## Demo notebooks
+
 Demos are contained in the [notebooks](notebooks) folder.
 
 - [model_based.ipynb](notebooks/1_model_based.ipynb), demos the imodels package. It shows how to fit, predict, and visualize with different interpretable models

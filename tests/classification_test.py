@@ -1,11 +1,12 @@
 import numpy as np
-import pandas as pd
-from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRuleListClassifier # IRFClassifier
+
+from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRuleListClassifier  # IRFClassifier
 
 
 class TestClassClassification:
     '''Tests simple classification for different models. Note: still doesn't test BRL!
     '''
+
     def setup(self):
         np.random.seed(13)
         self.n = 30
@@ -17,10 +18,10 @@ class TestClassClassification:
     def test_classification_binary(self):
         '''Test imodels on basic binary classification task
         '''
-        for model_type in [GreedyRuleListClassifier, SkopeRulesClassifier]: # IRFClassifier
-            
+        for model_type in [GreedyRuleListClassifier, SkopeRulesClassifier]:  # IRFClassifier
+
             m = model_type()
-            
+
             if model_type == BayesianRuleListClassifier:
                 X = self.X_classification_binary_brl
                 m.fit(X, self.y_classification_binary,
@@ -30,13 +31,13 @@ class TestClassClassification:
                 m.fit(X, self.y_classification_binary)
 
             preds_proba = m.predict_proba(X)
-#             for i in range(20):
-#                 print(i, self.X_classification_binary[i], preds_proba[i])
+            #             for i in range(20):
+            #                 print(i, self.X_classification_binary[i], preds_proba[i])
             # print('preds_proba', preds_proba)
             assert len(preds_proba.shape) == 2, 'preds_proba has columns'
             assert np.max(preds_proba) < 1.1, 'preds_proba has no values over 1'
 
-            preds = m.predict(X) # > 0.5).astype(int)
+            preds = m.predict(X)  # > 0.5).astype(int)
             assert preds.size == self.n, 'predictions are right size'
             #             print(model_type, preds, self.y_classification_binary)
             for i in range(20):
