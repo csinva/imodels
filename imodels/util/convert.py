@@ -2,11 +2,12 @@ from typing import Union, List
 
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree import _tree
+import numpy as np
 
 
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
                   feature_names: List[str],
-                  prediction_values: bool = False) -> List[str]:
+                  prediction_values: bool = False, round_thresholds=True) -> List[str]:
 
     """
     Return a list of rules from a tree
@@ -36,6 +37,8 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
             symbol = '<='
             symbol2 = '>'
             threshold = tree_.threshold[node]
+            if round_thresholds:
+                threshold = np.round(threshold, decimals=5)
             text = base_name + ["{} {} {}".format(name, symbol, threshold)]
             recurse(tree_.children_left[node], text)
 

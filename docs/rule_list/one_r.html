@@ -75,7 +75,7 @@ class OneRClassifier(GreedyRuleListClassifier):
             m.fit(x, y, feature_names=feat_names_single)
             accs[col_idx] = np.mean(m.predict(x) == y)
             ms.append(m)
-            print(&#39;acc&#39;, feat_names_single[0], f&#39;{accs[col_idx]:0.2f}&#39;)
+            # print(&#39;acc&#39;, feat_names_single[0], f&#39;{accs[col_idx]:0.2f}&#39;)
         col_idx_best = np.argmax(accs)
         self.rules_ = ms[col_idx_best].rules_
 
@@ -142,7 +142,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
             m.fit(x, y, feature_names=feat_names_single)
             accs[col_idx] = np.mean(m.predict(x) == y)
             ms.append(m)
-            print(&#39;acc&#39;, feat_names_single[0], f&#39;{accs[col_idx]:0.2f}&#39;)
+            # print(&#39;acc&#39;, feat_names_single[0], f&#39;{accs[col_idx]:0.2f}&#39;)
         col_idx_best = np.argmax(accs)
         self.rules_ = ms[col_idx_best].rules_
 
@@ -195,7 +195,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
         m.fit(x, y, feature_names=feat_names_single)
         accs[col_idx] = np.mean(m.predict(x) == y)
         ms.append(m)
-        print(&#39;acc&#39;, feat_names_single[0], f&#39;{accs[col_idx]:0.2f}&#39;)
+        # print(&#39;acc&#39;, feat_names_single[0], f&#39;{accs[col_idx]:0.2f}&#39;)
     col_idx_best = np.argmax(accs)
     self.rules_ = ms[col_idx_best].rules_
 

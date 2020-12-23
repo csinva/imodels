@@ -31,8 +31,9 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
                     this will be the mean number of terminal nodes.
     sample_fract:   fraction of randomly chosen training observations used to produce each tree. 
                     FP 2004 (Sec. 2)
-    max_rules:      approximate total number of rules generated for fitting. Note that actual
-                    number of rules will usually be lower than this due to duplicates.
+    max_rules:      total number of terms included in the final model (both linear and rules)
+                    approximate total number of rules generated for fitting also is based on this
+                    Note that actual number of rules will usually be lower than this due to duplicates.
     memory_par:     scale multiplier (shrinkage factor) applied to each new tree when 
                     sequentially induced. FP 2004 (Sec. 2)
     lin_standardise: If True, the linear terms will be standardised as per Friedman Sec 3.2

@@ -45,7 +45,7 @@ class OneRClassifier(GreedyRuleListClassifier):
             m.fit(x, y, feature_names=feat_names_single)
             accs[col_idx] = np.mean(m.predict(x) == y)
             ms.append(m)
-            print('acc', feat_names_single[0], f'{accs[col_idx]:0.2f}')
+            # print('acc', feat_names_single[0], f'{accs[col_idx]:0.2f}')
         col_idx_best = np.argmax(accs)
         self.rules_ = ms[col_idx_best].rules_
 

@@ -81,7 +81,7 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 <tr>
 <td align="left">OneR rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/one_r.html">🗂️</a>, <a href="https://link.springer.com/article/10.1023/A:1022631118932">📄</a></td>
-<td>(In progress) Learns greedy rule list using only one feature</td>
+<td>Learns rule list restricted to only one feature</td>
 </tr>
 <tr>
 <td align="left">Optimal rule tree</td>
@@ -149,7 +149,7 @@ Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementa
 <h2 id="demo-notebooks">Demo notebooks</h2>
 <p>Demos are contained in the <a href="notebooks">notebooks</a> folder.</p>
 <ul>
-<li><a href="notebooks/1_model_based.ipynb">model_based.ipynb</a>, demos the imodels package. It shows how to fit, predict, and visualize with different interpretable models</li>
+<li><a href="notebooks/imodels_demo.ipynb">imodels_demo.ipynb</a>, demos the imodels package. It shows how to fit, predict, and visualize with different interpretable models</li>
 <li><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">this notebook</a> shows an example of using <code>imodels</code> for deriving a clinical decision rule</li>
 <li>we also include some demos of posthoc analysis, which occurs after fitting models</li>
 <li><a href="notebooks/2_posthoc.ipynb">posthoc.ipynb</a> - shows different simple analyses to interpret a trained model</li>
