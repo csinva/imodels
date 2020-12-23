@@ -1,5 +1,4 @@
-'''greedy rule list
-Uses CART to learn a list (only a single path), rather than a decision tree.
+'''greedy rule list  using only one feature
 '''
 
 import math
@@ -10,13 +9,10 @@ from sklearn.base import BaseEstimator
 from imodels.rule_list.rule_list import RuleList
 
 
-class GreedyRuleListClassifier(BaseEstimator, RuleList):
+class OneRClassifier(BaseEstimator, RuleList):
     def __init__(self, max_depth=5, class_weight=None, criterion='gini'):
-        self.depth = 0
         self.max_depth = max_depth
         self.feature_names = None
-        self.class_weight = class_weight
-        self.criterion = criterion
 
     def fit(self, x, y, depth=0, feature_names=None, verbose=False):
         """
@@ -25,7 +21,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
         y
             target variable
         par_node
-            will be the tree generated for this x and y. 
+            will be the tree generated for this x and y.
         depth
             the depth of the current layer
         """
@@ -42,75 +38,15 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
         if 'pandas' in str(type(y)):
             y = y.values
 
-        # base case 1: no data in this group
-        if len(y) == 0:
-            return []
-
-        # base case 2: all y is the same in this group
-        elif self.all_same(y):
-            return [{'val': y[0], 'num_pts': y.size}]
-
-        # base case 4: max depth reached 
-        elif depth >= self.max_depth:
-            return []
-
-        # recursively generate rule list 
-        else:
-
-            # find a split with the best value for the criterion
-            col, cutoff, criterion_val = self.find_best_split(x, y)
-
-            # put higher probability of class 1 on the right-hand side
-            y_left = y[x[:, col] < cutoff]  # left-hand side data
-            y_right = y[x[:, col] >= cutoff]  # right-hand side data
-            if np.mean(y_left) > np.mean(y_right):
-                flip = True
-                tmp = deepcopy(y_left)
-                y_left = deepcopy(y_right)
-                y_right = tmp
-                x_left = x[x[:, col] >= cutoff]
-            else:
-                flip = False
-                x_left = x[x[:, col] < cutoff]
-            if verbose:
-                print(
-                    f'{np.mean(100 * y):.2f} -> {self.feature_names[col]} -> {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})')
-
-            # save info
-            par_node = [{
-                'col': self.feature_names[col],
-                'index_col': col,
-                'cutoff': cutoff,
-                'val': np.mean(y),  # values before splitting
-                'flip': flip,
-                'val_right': np.mean(y_right),
-                'num_pts': y.size,
-                'num_pts_right': y_right.size
-            }]
-
-            # generate tree for the left hand side data
-            par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)
-
-            self.depth += 1  # increase the depth since we call fit once
-            self.rules_ = par_node
-            return par_node
+        # should call greedyrule list for each feature here
 
     def predict_proba(self, X):
-        if 'pandas' in str(type(X)):
-            X = X.values
-        n = X.shape[0]
-        probs = np.zeros(n)
-        for i in range(n):
-            x = X[i]
-            for j, rule in enumerate(self.rules_):
-                if j == len(self.rules_) - 1:
-                    probs[i] = rule['val']
-                elif x[rule['index_col']] >= rule['cutoff']:
-                    probs[i] = rule['val_right']
-                    break
+
+        # should call model here
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
 
     def predict(self, X):
+        # should call internal model here
         return (self.predict_proba(X) > 0.5).argmax(axis=1)
 
     def __str__(self):

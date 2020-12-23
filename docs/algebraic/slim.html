@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
 <title>imodels.algebraic.slim API documentation</title>
-<meta name="description" content="wrapper for sparse, integer linear models …" />
+<meta name="description" content="Wrapper for sparse, integer linear models …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,7 +20,7 @@
 <h1 class="title">Module <code>imodels.algebraic.slim</code></h1>
 </header>
 <section id="section-intro">
-<h1 id="wrapper-for-sparse-integer-linear-models">wrapper for sparse, integer linear models</h1>
+<p>Wrapper for sparse, integer linear models.</p>
 <p>minimizes norm(X * w - y, 2) + lambda_reg * norm(w, 1)</p>
 <p>with integer coefficients in w</p>
 <details class="source">
@@ -28,7 +28,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#39;&#39;&#39;
-# wrapper for sparse, integer linear models
+Wrapper for sparse, integer linear models.
 
 minimizes norm(X * w - y, 2) + lambda_reg * norm(w, 1)
 
@@ -37,7 +37,7 @@ with integer coefficients in w
 import cvxpy as cp  # package for optimization
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Lasso
 
 
 class SLIMRegressor(BaseEstimator):
@@ -49,7 +49,8 @@ class SLIMRegressor(BaseEstimator):
         self.predict = self.model.predict
 
     def fit(self, X, y, lambda_reg=10, sample_weight=None):
-        &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization
+        &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization.
+        In case the optimization fails, fit lasso and round coefs.
         
         Params
         ------
@@ -71,15 +72,23 @@ class SLIMRegressor(BaseEstimator):
         if sample_weight is not None:
             # print(&#39;shapes&#39;, residuals.shape, sample_weight.shape)
             residuals = cp.multiply(sample_weight, residuals)
-        mse = cp.sum_squares(residuals)
-        l1_penalty = lambda_reg * cp.norm(w, 1)
-        obj = cp.Minimize(mse + l1_penalty)
-        prob = cp.Problem(obj)
+        
+        try:
+            mse = cp.sum_squares(residuals)
+            l1_penalty = lambda_reg * cp.norm(w, 1)
+            obj = cp.Minimize(mse + l1_penalty)
+            prob = cp.Problem(obj)
 
-        # solve the problem using an appropriate solver
-        prob.solve()
-        self.model.coef_ = w.value.astype(np.int)
-        self.model.intercept_ = 0
+            # solve the problem using an appropriate solver
+            prob.solve()
+            self.model.coef_ = w.value.astype(np.int)
+            self.model.intercept_ = 0
+
+        except:
+            m = Lasso(alpha=lambda_reg)
+            m.fit(X, y, sample_weight=sample_weight)
+            self.model.coef_ = np.round(m.coef_).astype(np.int)
+            self.model.intercept_ = m.intercept_
 
     def predict_proba(self, X):
         preds = self.predict(X)
@@ -114,7 +123,8 @@ class SLIMRegressor(BaseEstimator):
         self.predict = self.model.predict
 
     def fit(self, X, y, lambda_reg=10, sample_weight=None):
-        &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization
+        &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization.
+        In case the optimization fails, fit lasso and round coefs.
         
         Params
         ------
@@ -136,15 +146,23 @@ class SLIMRegressor(BaseEstimator):
         if sample_weight is not None:
             # print(&#39;shapes&#39;, residuals.shape, sample_weight.shape)
             residuals = cp.multiply(sample_weight, residuals)
-        mse = cp.sum_squares(residuals)
-        l1_penalty = lambda_reg * cp.norm(w, 1)
-        obj = cp.Minimize(mse + l1_penalty)
-        prob = cp.Problem(obj)
+        
+        try:
+            mse = cp.sum_squares(residuals)
+            l1_penalty = lambda_reg * cp.norm(w, 1)
+            obj = cp.Minimize(mse + l1_penalty)
+            prob = cp.Problem(obj)
 
-        # solve the problem using an appropriate solver
-        prob.solve()
-        self.model.coef_ = w.value.astype(np.int)
-        self.model.intercept_ = 0
+            # solve the problem using an appropriate solver
+            prob.solve()
+            self.model.coef_ = w.value.astype(np.int)
+            self.model.intercept_ = 0
+
+        except:
+            m = Lasso(alpha=lambda_reg)
+            m.fit(X, y, sample_weight=sample_weight)
+            self.model.coef_ = np.round(m.coef_).astype(np.int)
+            self.model.intercept_ = m.intercept_
 
     def predict_proba(self, X):
         preds = self.predict(X)
@@ -161,7 +179,8 @@ class SLIMRegressor(BaseEstimator):
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, lambda_reg=10, sample_weight=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>fit a linear model with integer coefficient and L1 regularization</p>
+<section class="desc"><p>fit a linear model with integer coefficient and L1 regularization.
+In case the optimization fails, fit lasso and round coefs.</p>
 <h2 id="params">Params</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>np.ndarray</code> (<code>n</code>,)</dt>
@@ -172,7 +191,8 @@ class SLIMRegressor(BaseEstimator):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fit(self, X, y, lambda_reg=10, sample_weight=None):
-    &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization
+    &#39;&#39;&#39;fit a linear model with integer coefficient and L1 regularization.
+    In case the optimization fails, fit lasso and round coefs.
     
     Params
     ------
@@ -194,15 +214,23 @@ class SLIMRegressor(BaseEstimator):
     if sample_weight is not None:
         # print(&#39;shapes&#39;, residuals.shape, sample_weight.shape)
         residuals = cp.multiply(sample_weight, residuals)
-    mse = cp.sum_squares(residuals)
-    l1_penalty = lambda_reg * cp.norm(w, 1)
-    obj = cp.Minimize(mse + l1_penalty)
-    prob = cp.Problem(obj)
+    
+    try:
+        mse = cp.sum_squares(residuals)
+        l1_penalty = lambda_reg * cp.norm(w, 1)
+        obj = cp.Minimize(mse + l1_penalty)
+        prob = cp.Problem(obj)
 
-    # solve the problem using an appropriate solver
-    prob.solve()
-    self.model.coef_ = w.value.astype(np.int)
-    self.model.intercept_ = 0</code></pre>
+        # solve the problem using an appropriate solver
+        prob.solve()
+        self.model.coef_ = w.value.astype(np.int)
+        self.model.intercept_ = 0
+
+    except:
+        m = Lasso(alpha=lambda_reg)
+        m.fit(X, y, sample_weight=sample_weight)
+        self.model.coef_ = np.round(m.coef_).astype(np.int)
+        self.model.intercept_ = m.intercept_</code></pre>
 </details>
 </dd>
 <dt id="imodels.algebraic.slim.SLIMRegressor.predict_proba"><code class="name flex">
@@ -228,9 +256,7 @@ class SLIMRegressor(BaseEstimator):
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul>
-<li><a href="#wrapper-for-sparse-integer-linear-models">wrapper for sparse, integer linear models</a></li>
-</ul>
+<ul></ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>

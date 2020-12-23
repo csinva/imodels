@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
 <title>imodels.rule_set.rule_fit API documentation</title>
-<meta name="description" content="Linear model of tree-based decision rules …" />
+<meta name="description" content="Linear model of tree-based decision rules based on the rulefit algorithm from Friedman and Popescu …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,34 +20,18 @@
 <h1 class="title">Module <code>imodels.rule_set.rule_fit</code></h1>
 </header>
 <section id="section-intro">
-<p>Linear model of tree-based decision rules</p>
-<p>Clone of code from <a href="https://github.com/christophM/rulefit">https://github.com/christophM/rulefit</a> with minor modifications to fit better into an existing project
-with different requirements / functions needed.</p>
-<p>Implementation of a rule based prediction algorithm based on the rulefit algorithm from Friedman and Popescu (PDF)</p>
+<p>Linear model of tree-based decision rules based on the rulefit algorithm from Friedman and Popescu.</p>
 <p>The algorithm can be used for predicting an output vector y given an input matrix X. In the first step a tree ensemble
 is generated with gradient boosting. The trees are then used to form rules, where the paths to each node in each tree
 form one rule. A rule is a binary decision if an observation is in a given node, which is dependent on the input features
 that were used in the splits. The ensemble of rules together with the original input features are then being input in a
 L1-regularized linear model, also called Lasso, which estimates the effects of each rule on the output target but at the
 same time estimating many of those effects to zero.</p>
-<p>You can use rulefit for predicting a numeric response (categorial not yet implemented). The input has to be a numpy
-matrix with only numeric values.</p>
-<p>This method implement the RuleFit algorithm</p>
-<p>The module structure is the following:</p>
-<ul>
-<li><code>RuleEnsemble</code> implements an ensemble of <code>Rules</code></li>
-<li><code>RuleFit</code> implements the RuleFit algorithm</li>
-</ul>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Linear model of tree-based decision rules
-
-Clone of code from https://github.com/christophM/rulefit with minor modifications to fit better into an existing project
-with different requirements / functions needed.
-
-Implementation of a rule based prediction algorithm based on the rulefit algorithm from Friedman and Popescu (PDF)
+<pre><code class="python">&#34;&#34;&#34;Linear model of tree-based decision rules based on the rulefit algorithm from Friedman and Popescu.
 
 The algorithm can be used for predicting an output vector y given an input matrix X. In the first step a tree ensemble
 is generated with gradient boosting. The trees are then used to form rules, where the paths to each node in each tree
@@ -55,17 +39,6 @@ form one rule. A rule is a binary decision if an observation is in a given node,
 that were used in the splits. The ensemble of rules together with the original input features are then being input in a
 L1-regularized linear model, also called Lasso, which estimates the effects of each rule on the output target but at the
 same time estimating many of those effects to zero.
-
-You can use rulefit for predicting a numeric response (categorial not yet implemented). The input has to be a numpy
-matrix with only numeric values.
-
-This method implement the RuleFit algorithm
-
-The module structure is the following:
-
-- ``RuleEnsemble`` implements an ensemble of ``Rules``
-- ``RuleFit`` implements the RuleFit algorithm
-
 &#34;&#34;&#34;
 import numpy as np
 import pandas as pd
