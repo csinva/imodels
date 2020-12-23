@@ -24,17 +24,16 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from typing import Union, List
-
+<pre><code class="python">import numpy as np
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree import _tree
-import numpy as np
+from sklearn.tree import _tree
+from typing import Union, List
 
 
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
                   feature_names: List[str],
                   prediction_values: bool = False, round_thresholds=True) -&gt; List[str]:
-
     &#34;&#34;&#34;
     Return a list of rules from a tree
 
@@ -83,7 +82,48 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
 
     recurse(0, [])
 
-    return rules if len(rules) &gt; 0 else &#39;True&#39;</code></pre>
+    return rules if len(rules) &gt; 0 else &#39;True&#39;
+
+
+def tree_to_code(clf, feature_names):
+    &#39;&#39;&#39;Prints a tree with a single split
+    &#39;&#39;&#39;
+    n_nodes = clf.tree_.node_count
+    children_left = clf.tree_.children_left
+    children_right = clf.tree_.children_right
+    feature = clf.tree_.feature
+    threshold = clf.tree_.threshold
+
+    node_depth = np.zeros(shape=n_nodes, dtype=np.int64)
+    is_leaves = np.zeros(shape=n_nodes, dtype=bool)
+    stack = [(0, 0)]  # start with the root node id (0) and its depth (0)
+    s = &#39;&#39;
+    while len(stack) &gt; 0:
+        # `pop` ensures each node is only visited once
+        node_id, depth = stack.pop()
+        node_depth[node_id] = depth
+
+        # If the left and right child of a node is not the same we have a split
+        # node
+        is_split_node = children_left[node_id] != children_right[node_id]
+        # If a split node, append left and right children and depth to `stack`
+        # so we can loop through them
+        if is_split_node:
+            stack.append((children_left[node_id], depth + 1))
+            stack.append((children_right[node_id], depth + 1))
+        else:
+            is_leaves[node_id] = True
+
+    # print(&#34;The binary tree structure has {n} nodes and has &#34;
+    #       &#34;the following tree structure:\n&#34;.format(n=n_nodes))
+    for i in range(n_nodes):
+        if is_leaves[i]:
+            pass
+        #     print(&#34;{space}node={node} is a leaf node.&#34;.format(
+        # space=node_depth[i] * &#34;\t&#34;, node=i))
+        else:
+            s += f&#34;{feature_names[feature[i]]} &lt;= {threshold[i]}&#34;
+    return s + &#39;\n&#39;</code></pre>
 </details>
 </section>
 <section>
@@ -93,6 +133,56 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="imodels.util.convert.tree_to_code"><code class="name flex">
+<span>def <span class="ident">tree_to_code</span></span>(<span>clf, feature_names)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Prints a tree with a single split</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tree_to_code(clf, feature_names):
+    &#39;&#39;&#39;Prints a tree with a single split
+    &#39;&#39;&#39;
+    n_nodes = clf.tree_.node_count
+    children_left = clf.tree_.children_left
+    children_right = clf.tree_.children_right
+    feature = clf.tree_.feature
+    threshold = clf.tree_.threshold
+
+    node_depth = np.zeros(shape=n_nodes, dtype=np.int64)
+    is_leaves = np.zeros(shape=n_nodes, dtype=bool)
+    stack = [(0, 0)]  # start with the root node id (0) and its depth (0)
+    s = &#39;&#39;
+    while len(stack) &gt; 0:
+        # `pop` ensures each node is only visited once
+        node_id, depth = stack.pop()
+        node_depth[node_id] = depth
+
+        # If the left and right child of a node is not the same we have a split
+        # node
+        is_split_node = children_left[node_id] != children_right[node_id]
+        # If a split node, append left and right children and depth to `stack`
+        # so we can loop through them
+        if is_split_node:
+            stack.append((children_left[node_id], depth + 1))
+            stack.append((children_right[node_id], depth + 1))
+        else:
+            is_leaves[node_id] = True
+
+    # print(&#34;The binary tree structure has {n} nodes and has &#34;
+    #       &#34;the following tree structure:\n&#34;.format(n=n_nodes))
+    for i in range(n_nodes):
+        if is_leaves[i]:
+            pass
+        #     print(&#34;{space}node={node} is a leaf node.&#34;.format(
+        # space=node_depth[i] * &#34;\t&#34;, node=i))
+        else:
+            s += f&#34;{feature_names[feature[i]]} &lt;= {threshold[i]}&#34;
+    return s + &#39;\n&#39;</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.convert.tree_to_rules"><code class="name flex">
 <span>def <span class="ident">tree_to_rules</span></span>(<span>tree, feature_names, prediction_values=False, round_thresholds=True)</span>
 </code></dt>
@@ -111,7 +201,6 @@ feature_names: list of variable names
 <pre><code class="python">def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
                   feature_names: List[str],
                   prediction_values: bool = False, round_thresholds=True) -&gt; List[str]:
-
     &#34;&#34;&#34;
     Return a list of rules from a tree
 
@@ -181,6 +270,7 @@ feature_names: list of variable names
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="imodels.util.convert.tree_to_code" href="#imodels.util.convert.tree_to_code">tree_to_code</a></code></li>
 <li><code><a title="imodels.util.convert.tree_to_rules" href="#imodels.util.convert.tree_to_rules">tree_to_rules</a></code></li>
 </ul>
 </li>

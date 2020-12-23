@@ -69,6 +69,11 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 <td>Extracts rules from gradient-boosted trees, deduplicates them, then forms a linear combination of them based on their OOB precision</td>
 </tr>
 <tr>
+<td align="left">Boosted rule set</td>
+<td><a href="https://csinva.io/imodels/rule_set/boosted_rules.html">🗂️</a>, <a href="https://github.com/jaimeps/adaboost-implementation">🔗</a>, <a href="https://www.sciencedirect.com/science/article/pii/S002200009791504X">📄</a></td>
+<td>Uses Adaboost to sequentially learn a set of rules</td>
+</tr>
+<tr>
 <td align="left">Bayesian rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html">🗂️</a>, <a href="https://github.com/tmadl/sklearn-expertsys">🔗</a>, <a href="https://arxiv.org/abs/1602.08610">📄</a></td>
 <td>Learns a compact rule list by sampling rule lists (rather than using a greedy heuristic)</td>
@@ -100,7 +105,7 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 </tr>
 <tr>
 <td align="left">Rule sets</td>
-<td></td>
+<td>⌛</td>
 <td>(Coming soon) Many popular rule sets including SLIPPER, Lightweight Rule Induction, MLRules</td>
 </tr>
 </tbody>
@@ -197,11 +202,12 @@ from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
 from .rule_set.rule_fit import RuleFitRegressor
 from .rule_set.skope_rules import SkopeRulesClassifier
+from .rule_set.boosted_rules import BoostedRulesClassifier
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
 from .algebraic.slim import SLIMRegressor
 
-CLASSIFIERS = BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier #, IRFClassifier
+CLASSIFIERS = BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, BoostedRulesClassifier #, IRFClassifier
 REGRESSORS = RuleFitRegressor, SLIMRegressor</code></pre>
 </details>
 </section>
