@@ -17,6 +17,7 @@ setuptools.setup(
         'pandas',
         'scikit-learn',
         'cvxpy',
+        'cvxopt',
         'mlxtend',
         'pytest',
     ],
