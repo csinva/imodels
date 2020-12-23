@@ -59,6 +59,7 @@ class SLIMRegressor(BaseEstimator):
             m = Lasso(alpha=lambda_reg)
             m.fit(X, y, sample_weight=sample_weight)
             self.model.coef_ = np.round(m.coef_).astype(np.int)
+            self.model.intercept_ = m.intercept_
 
     def predict_proba(self, X):
         preds = self.predict(X)
