@@ -8,4 +8,4 @@ Before contributing, it would be good to read the sklearn estimator [contributin
 
 [Tests](tests) are run with [pytest](https://docs.pytest.org/en/stable/) - make sure they pass before pushing code!
 
-Project is also on [pypi](https://pypi.org/project/imodels/), but is still a little unstable there, because it does not include the irf / fim dependencies.
+Project is also on [pypi](https://pypi.org/project/imodels/).
