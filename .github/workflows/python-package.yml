@@ -25,4 +25,4 @@ jobs:
         pip install . --no-cache-dir
     - name: Test with pytest
       run: |
-        pytest
+        python tests/test.py
