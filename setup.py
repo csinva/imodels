@@ -8,7 +8,7 @@ setuptools.setup(
     description="Implementations of various interpretable models",
     long_description="Interpretable ML package for concise, transparent, and accurate predictive modeling (sklearn-compatible).",
     long_description_content_type="text/markdown",
-    url="https://github.com/csinva/interpretability-implementations-demos",
+    url="https://github.com/csinva/imodels",
     packages=setuptools.find_packages(),
     install_requires=[
         'numpy',
