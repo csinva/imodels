@@ -11,8 +11,8 @@ setuptools.setup(
     url="https://github.com/csinva/imodels",
     packages=setuptools.find_packages(),
     install_requires=[
-        'numpy<1.20',
-        'scipy<1.6',
+        'numpy',
+        'scipy',
         'matplotlib',
         'pandas',
         'scikit-learn',
