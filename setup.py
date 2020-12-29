@@ -20,6 +20,7 @@ setuptools.setup(
         'cvxopt',
         'mlxtend',
         'pytest',
+        'pytest-cov'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

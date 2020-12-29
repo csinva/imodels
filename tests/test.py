@@ -12,7 +12,7 @@ from sklearn.exceptions import ConvergenceWarning
 @patch('pandas.DataFrame.style')
 @ignore_warnings(category=ConvergenceWarning)
 def run_tests(mock_pd_style, mock_plot_tree, mock_pyplot):
-    pytest.main(sys.argv[1:])
+    pytest.main(sys.argv[1:] + ['--cov=imodels'])
 
 def main():
     run_tests()
