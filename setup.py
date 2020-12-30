@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="imodels",
-    version="0.2.5",
+    version="0.2.6",
     author="Chandan Singh",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",
