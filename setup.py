@@ -15,13 +15,14 @@ setuptools.setup(
         'scipy',
         'matplotlib',
         'pandas',
-        'scikit-learn',
+        'scikit-learn>=0.23.0', # 0.23+ only works on py3.6+)
         'cvxpy',
         'cvxopt',
         'mlxtend',
         'pytest',
         'pytest-cov'
     ],
+    python_requires='>=3.6',
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
