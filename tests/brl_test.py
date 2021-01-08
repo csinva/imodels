@@ -12,6 +12,8 @@ from imodels.rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRule
 class TestBRL(unittest.TestCase):
 
     def test_integration_stability(self):
+        '''Test on synthetic dataset
+        '''
         X = [[0, 0, 1, 1, 0],
              [1, 0, 0, 0, 0],
              [0, 0, 1, 0, 0],
@@ -27,6 +29,8 @@ class TestBRL(unittest.TestCase):
         assert [M.predict([row], threshold=0.5) for row in X] == y
 
     def test_integration_fitting(self):
+        '''Test on a real (small) dataset
+        '''
         np.random.seed(13)
         feature_labels = ["#Pregnant", "Glucose concentration test", "Blood pressure(mmHg)",
                           "Triceps skin fold thickness(mm)",

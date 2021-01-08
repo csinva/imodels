@@ -1,5 +1,4 @@
-'''greedy rule list
-Uses CART to learn a list (only a single path), rather than a decision tree.
+'''Greedy rule list. Greedily splits on one feature at a time along a single path.
 '''
 
 import math
@@ -11,23 +10,37 @@ from imodels.rule_list.rule_list import RuleList
 
 
 class GreedyRuleListClassifier(BaseEstimator, RuleList):
-    def __init__(self, max_depth=5, class_weight=None, criterion='gini'):
-        self.depth = 0
+    def __init__(self, max_depth: int=5, class_weight=None, criterion: str='gini', strategy: str='max'):
+        '''
+        Params
+        ------
+        max_depth
+            Maximum depth the list can achieve
+        criterion: str
+            Criterion used to split
+            'gini', 'entropy', or 'neg_corr'
+        strategy: str
+            How to select which side of split becomes leaf node
+            Currently only supports 'max' - (higher risk side of split becomes leaf node)
+        '''
+        
         self.max_depth = max_depth
         self.feature_names = None
         self.class_weight = class_weight
         self.criterion = criterion
+        self.strategy = strategy
+        self.depth = 0 # tracks the fitted depth
 
-    def fit(self, x, y, depth=0, feature_names=None, verbose=False):
+    def fit(self, x, y, depth: int=0, feature_names=None, verbose=False):
         """
-        x
+        Params
+        ------
+        x: array_like
             Feature set
-        y
+        y: array_like
             target variable
-        par_node
-            will be the tree generated for this x and y. 
         depth
-            the depth of the current layer
+            the depth of the current layer (used to recurse)
         """
 
         # set self.feature_names and make sure x, y are not pandas type
@@ -41,6 +54,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             self.feature_names = feature_names
         if 'pandas' in str(type(y)):
             y = y.values
+        assert type(x) == np.ndarray, 'x is not numpy array'
+        assert type(y) == np.ndarray, 'y is not numpy array'
 
         # base case 1: no data in this group
         if len(y) == 0:
@@ -50,7 +65,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
         elif self.all_same(y):
             return [{'val': y[0], 'num_pts': y.size}]
 
-        # base case 4: max depth reached 
+        # base case 3: max depth reached 
         elif depth >= self.max_depth:
             return []
 
@@ -61,17 +76,23 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             col, cutoff, criterion_val = self.find_best_split(x, y)
 
             # put higher probability of class 1 on the right-hand side
-            y_left = y[x[:, col] < cutoff]  # left-hand side data
-            y_right = y[x[:, col] >= cutoff]  # right-hand side data
-            if np.mean(y_left) > np.mean(y_right):
-                flip = True
-                tmp = deepcopy(y_left)
-                y_left = deepcopy(y_right)
-                y_right = tmp
-                x_left = x[x[:, col] >= cutoff]
+            if self.strategy == 'max':
+                y_left = y[x[:, col] < cutoff]  # left-hand side data
+                y_right = y[x[:, col] >= cutoff]  # right-hand side data
+                if np.mean(y_left) > np.mean(y_right):
+                    flip = True
+                    tmp = deepcopy(y_left)
+                    y_left = deepcopy(y_right)
+                    y_right = tmp
+                    x_left = x[x[:, col] >= cutoff]
+                else:
+                    flip = False
+                    x_left = x[x[:, col] < cutoff]
             else:
-                flip = False
-                x_left = x[x[:, col] < cutoff]
+                print('strategy must be max!')
+                
+                
+            # print
             if verbose:
                 print(
                     f'{np.mean(100 * y):.2f} -> {self.feature_names[col]} -> {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})')
@@ -88,7 +109,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
                 'num_pts_right': y_right.size
             }]
 
-            # generate tree for the left hand side data
+            # generate tree for the non-leaf data
             par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)
 
             self.depth += 1  # increase the depth since we call fit once
@@ -270,13 +291,28 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             # weights for each class
             weight = sum(y == c) / n
 
+            
+            def entropy_from_counts(c1, c2):
+                """Returns entropy of a group of data
+                c1: count of one class
+                c2: count of another class
+                """
+                if c1 == 0 or c2 == 0:  # when there is only one class in the group, entropy is 0
+                    return 0
+
+                def entropy_func(p): return -p * math.log(p, 2)
+
+                p1 = c1 * 1.0 / (c1 + c2)
+                p2 = c2 * 1.0 / (c1 + c2)
+                return entropy_func(p1) + entropy_func(p2)
+            
             # weighted avg
             s += weight * entropy_from_counts(sum(y == c), sum(y != c))
         return s
 
     def neg_corr_criterion(self, split_decision, y):
         '''Returns negative correlation between y
-        and the binary spltting variable split_decision
+        and the binary splitting variable split_decision
         y must be binary
         '''
         if np.unique(y).size < 2:
@@ -289,18 +325,3 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             y = 1 - y
 
         return -1 * np.corrcoef(split_decision.astype(np.int), y)[0, 1]
-
-
-def entropy_from_counts(c1, c2):
-    """Returns entropy of a group of data
-    c1: count of one class
-    c2: count of another class
-    """
-    if c1 == 0 or c2 == 0:  # when there is only one class in the group, entropy is 0
-        return 0
-
-    def entropy_func(p): return -p * math.log(p, 2)
-
-    p1 = c1 * 1.0 / (c1 + c2)
-    p2 = c2 * 1.0 / (c1 + c2)
-    return entropy_func(p1) + entropy_func(p2)

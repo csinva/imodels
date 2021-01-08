@@ -16,7 +16,7 @@ class TestClassRegression:
         '''
         for model_type in [RuleFitRegressor, SLIMRegressor]:
             if model_type == RuleFitRegressor:
-                m = model_type(include_linear=False)
+                m = model_type(include_linear=False, max_rules=3)
             else:
                 m = model_type()
             m.fit(self.X_regression, self.y_regression)

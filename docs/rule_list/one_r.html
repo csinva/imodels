@@ -104,7 +104,18 @@ class OneRClassifier(GreedyRuleListClassifier):
 <h2 id="notes">Notes</h2>
 <p>All estimators should specify all the parameters that can be set
 at the class level in their <code>__init__</code> as explicit keyword
-arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="params">Params</h2>
+<dl>
+<dt><strong><code>max_depth</code></strong></dt>
+<dd>Maximum depth the list can achieve</dd>
+<dt><strong><code>criterion</code></strong> :&ensp;<code>str</code></dt>
+<dd>Criterion used to split
+'gini', 'entropy', or 'neg_corr'</dd>
+<dt><strong><code>strategy</code></strong> :&ensp;<code>str</code></dt>
+<dd>How to select which side of split becomes leaf node
+Currently only supports 'max' - (higher risk side of split becomes leaf node)</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>

@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
 <title>imodels.rule_list.greedy_rule_list API documentation</title>
-<meta name="description" content="greedy rule list
-Uses CART to learn a list (only a single path), rather than a decision tree." />
+<meta name="description" content="Greedy rule list. Greedily splits on one feature at a time along a single path." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -21,14 +20,12 @@ Uses CART to learn a list (only a single path), rather than a decision tree." />
 <h1 class="title">Module <code>imodels.rule_list.greedy_rule_list</code></h1>
 </header>
 <section id="section-intro">
-<p>greedy rule list
-Uses CART to learn a list (only a single path), rather than a decision tree.</p>
+<p>Greedy rule list. Greedily splits on one feature at a time along a single path.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#39;&#39;&#39;greedy rule list
-Uses CART to learn a list (only a single path), rather than a decision tree.
+<pre><code class="python">&#39;&#39;&#39;Greedy rule list. Greedily splits on one feature at a time along a single path.
 &#39;&#39;&#39;
 
 import math
@@ -40,23 +37,37 @@ from imodels.rule_list.rule_list import RuleList
 
 
 class GreedyRuleListClassifier(BaseEstimator, RuleList):
-    def __init__(self, max_depth=5, class_weight=None, criterion=&#39;gini&#39;):
-        self.depth = 0
+    def __init__(self, max_depth: int=5, class_weight=None, criterion: str=&#39;gini&#39;, strategy: str=&#39;max&#39;):
+        &#39;&#39;&#39;
+        Params
+        ------
+        max_depth
+            Maximum depth the list can achieve
+        criterion: str
+            Criterion used to split
+            &#39;gini&#39;, &#39;entropy&#39;, or &#39;neg_corr&#39;
+        strategy: str
+            How to select which side of split becomes leaf node
+            Currently only supports &#39;max&#39; - (higher risk side of split becomes leaf node)
+        &#39;&#39;&#39;
+        
         self.max_depth = max_depth
         self.feature_names = None
         self.class_weight = class_weight
         self.criterion = criterion
+        self.strategy = strategy
+        self.depth = 0 # tracks the fitted depth
 
-    def fit(self, x, y, depth=0, feature_names=None, verbose=False):
+    def fit(self, x, y, depth: int=0, feature_names=None, verbose=False):
         &#34;&#34;&#34;
-        x
+        Params
+        ------
+        x: array_like
             Feature set
-        y
+        y: array_like
             target variable
-        par_node
-            will be the tree generated for this x and y. 
         depth
-            the depth of the current layer
+            the depth of the current layer (used to recurse)
         &#34;&#34;&#34;
 
         # set self.feature_names and make sure x, y are not pandas type
@@ -70,6 +81,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             self.feature_names = feature_names
         if &#39;pandas&#39; in str(type(y)):
             y = y.values
+        assert type(x) == np.ndarray, &#39;x is not numpy array&#39;
+        assert type(y) == np.ndarray, &#39;y is not numpy array&#39;
 
         # base case 1: no data in this group
         if len(y) == 0:
@@ -79,7 +92,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
         elif self.all_same(y):
             return [{&#39;val&#39;: y[0], &#39;num_pts&#39;: y.size}]
 
-        # base case 4: max depth reached 
+        # base case 3: max depth reached 
         elif depth &gt;= self.max_depth:
             return []
 
@@ -90,17 +103,23 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             col, cutoff, criterion_val = self.find_best_split(x, y)
 
             # put higher probability of class 1 on the right-hand side
-            y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
-            y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
-            if np.mean(y_left) &gt; np.mean(y_right):
-                flip = True
-                tmp = deepcopy(y_left)
-                y_left = deepcopy(y_right)
-                y_right = tmp
-                x_left = x[x[:, col] &gt;= cutoff]
+            if self.strategy == &#39;max&#39;:
+                y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
+                y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
+                if np.mean(y_left) &gt; np.mean(y_right):
+                    flip = True
+                    tmp = deepcopy(y_left)
+                    y_left = deepcopy(y_right)
+                    y_right = tmp
+                    x_left = x[x[:, col] &gt;= cutoff]
+                else:
+                    flip = False
+                    x_left = x[x[:, col] &lt; cutoff]
             else:
-                flip = False
-                x_left = x[x[:, col] &lt; cutoff]
+                print(&#39;strategy must be max!&#39;)
+                
+                
+            # print
             if verbose:
                 print(
                     f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
@@ -117,7 +136,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
                 &#39;num_pts_right&#39;: y_right.size
             }]
 
-            # generate tree for the left hand side data
+            # generate tree for the non-leaf data
             par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)
 
             self.depth += 1  # increase the depth since we call fit once
@@ -299,13 +318,28 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             # weights for each class
             weight = sum(y == c) / n
 
+            
+            def entropy_from_counts(c1, c2):
+                &#34;&#34;&#34;Returns entropy of a group of data
+                c1: count of one class
+                c2: count of another class
+                &#34;&#34;&#34;
+                if c1 == 0 or c2 == 0:  # when there is only one class in the group, entropy is 0
+                    return 0
+
+                def entropy_func(p): return -p * math.log(p, 2)
+
+                p1 = c1 * 1.0 / (c1 + c2)
+                p2 = c2 * 1.0 / (c1 + c2)
+                return entropy_func(p1) + entropy_func(p2)
+            
             # weighted avg
             s += weight * entropy_from_counts(sum(y == c), sum(y != c))
         return s
 
     def neg_corr_criterion(self, split_decision, y):
         &#39;&#39;&#39;Returns negative correlation between y
-        and the binary spltting variable split_decision
+        and the binary splitting variable split_decision
         y must be binary
         &#39;&#39;&#39;
         if np.unique(y).size &lt; 2:
@@ -317,22 +351,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
         if y.sum() &lt; y.size / 2:
             y = 1 - y
 
-        return -1 * np.corrcoef(split_decision.astype(np.int), y)[0, 1]
-
-
-def entropy_from_counts(c1, c2):
-    &#34;&#34;&#34;Returns entropy of a group of data
-    c1: count of one class
-    c2: count of another class
-    &#34;&#34;&#34;
-    if c1 == 0 or c2 == 0:  # when there is only one class in the group, entropy is 0
-        return 0
-
-    def entropy_func(p): return -p * math.log(p, 2)
-
-    p1 = c1 * 1.0 / (c1 + c2)
-    p2 = c2 * 1.0 / (c1 + c2)
-    return entropy_func(p1) + entropy_func(p2)</code></pre>
+        return -1 * np.corrcoef(split_decision.astype(np.int), y)[0, 1]</code></pre>
 </details>
 </section>
 <section>
@@ -340,71 +359,67 @@ def entropy_from_counts(c1, c2):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="imodels.rule_list.greedy_rule_list.entropy_from_counts"><code class="name flex">
-<span>def <span class="ident">entropy_from_counts</span></span>(<span>c1, c2)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Returns entropy of a group of data
-c1: count of one class
-c2: count of another class</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def entropy_from_counts(c1, c2):
-    &#34;&#34;&#34;Returns entropy of a group of data
-    c1: count of one class
-    c2: count of another class
-    &#34;&#34;&#34;
-    if c1 == 0 or c2 == 0:  # when there is only one class in the group, entropy is 0
-        return 0
-
-    def entropy_func(p): return -p * math.log(p, 2)
-
-    p1 = c1 * 1.0 / (c1 + c2)
-    p2 = c2 * 1.0 / (c1 + c2)
-    return entropy_func(p1) + entropy_func(p2)</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
 <dt id="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier"><code class="flex name class">
 <span>class <span class="ident">GreedyRuleListClassifier</span></span>
-<span>(</span><span>max_depth=5, class_weight=None, criterion='gini')</span>
+<span>(</span><span>max_depth=5, class_weight=None, criterion='gini', strategy='max')</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Base class for all estimators in scikit-learn</p>
 <h2 id="notes">Notes</h2>
 <p>All estimators should specify all the parameters that can be set
 at the class level in their <code>__init__</code> as explicit keyword
-arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="params">Params</h2>
+<dl>
+<dt><strong><code>max_depth</code></strong></dt>
+<dd>Maximum depth the list can achieve</dd>
+<dt><strong><code>criterion</code></strong> :&ensp;<code>str</code></dt>
+<dd>Criterion used to split
+'gini', 'entropy', or 'neg_corr'</dd>
+<dt><strong><code>strategy</code></strong> :&ensp;<code>str</code></dt>
+<dd>How to select which side of split becomes leaf node
+Currently only supports 'max' - (higher risk side of split becomes leaf node)</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GreedyRuleListClassifier(BaseEstimator, RuleList):
-    def __init__(self, max_depth=5, class_weight=None, criterion=&#39;gini&#39;):
-        self.depth = 0
+    def __init__(self, max_depth: int=5, class_weight=None, criterion: str=&#39;gini&#39;, strategy: str=&#39;max&#39;):
+        &#39;&#39;&#39;
+        Params
+        ------
+        max_depth
+            Maximum depth the list can achieve
+        criterion: str
+            Criterion used to split
+            &#39;gini&#39;, &#39;entropy&#39;, or &#39;neg_corr&#39;
+        strategy: str
+            How to select which side of split becomes leaf node
+            Currently only supports &#39;max&#39; - (higher risk side of split becomes leaf node)
+        &#39;&#39;&#39;
+        
         self.max_depth = max_depth
         self.feature_names = None
         self.class_weight = class_weight
         self.criterion = criterion
+        self.strategy = strategy
+        self.depth = 0 # tracks the fitted depth
 
-    def fit(self, x, y, depth=0, feature_names=None, verbose=False):
+    def fit(self, x, y, depth: int=0, feature_names=None, verbose=False):
         &#34;&#34;&#34;
-        x
+        Params
+        ------
+        x: array_like
             Feature set
-        y
+        y: array_like
             target variable
-        par_node
-            will be the tree generated for this x and y. 
         depth
-            the depth of the current layer
+            the depth of the current layer (used to recurse)
         &#34;&#34;&#34;
 
         # set self.feature_names and make sure x, y are not pandas type
@@ -418,6 +433,8 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
             self.feature_names = feature_names
         if &#39;pandas&#39; in str(type(y)):
             y = y.values
+        assert type(x) == np.ndarray, &#39;x is not numpy array&#39;
+        assert type(y) == np.ndarray, &#39;y is not numpy array&#39;
 
         # base case 1: no data in this group
         if len(y) == 0:
@@ -427,7 +444,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
         elif self.all_same(y):
             return [{&#39;val&#39;: y[0], &#39;num_pts&#39;: y.size}]
 
-        # base case 4: max depth reached 
+        # base case 3: max depth reached 
         elif depth &gt;= self.max_depth:
             return []
 
@@ -438,17 +455,23 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
             col, cutoff, criterion_val = self.find_best_split(x, y)
 
             # put higher probability of class 1 on the right-hand side
-            y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
-            y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
-            if np.mean(y_left) &gt; np.mean(y_right):
-                flip = True
-                tmp = deepcopy(y_left)
-                y_left = deepcopy(y_right)
-                y_right = tmp
-                x_left = x[x[:, col] &gt;= cutoff]
+            if self.strategy == &#39;max&#39;:
+                y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
+                y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
+                if np.mean(y_left) &gt; np.mean(y_right):
+                    flip = True
+                    tmp = deepcopy(y_left)
+                    y_left = deepcopy(y_right)
+                    y_right = tmp
+                    x_left = x[x[:, col] &gt;= cutoff]
+                else:
+                    flip = False
+                    x_left = x[x[:, col] &lt; cutoff]
             else:
-                flip = False
-                x_left = x[x[:, col] &lt; cutoff]
+                print(&#39;strategy must be max!&#39;)
+                
+                
+            # print
             if verbose:
                 print(
                     f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
@@ -465,7 +488,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
                 &#39;num_pts_right&#39;: y_right.size
             }]
 
-            # generate tree for the left hand side data
+            # generate tree for the non-leaf data
             par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)
 
             self.depth += 1  # increase the depth since we call fit once
@@ -647,13 +670,28 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
             # weights for each class
             weight = sum(y == c) / n
 
+            
+            def entropy_from_counts(c1, c2):
+                &#34;&#34;&#34;Returns entropy of a group of data
+                c1: count of one class
+                c2: count of another class
+                &#34;&#34;&#34;
+                if c1 == 0 or c2 == 0:  # when there is only one class in the group, entropy is 0
+                    return 0
+
+                def entropy_func(p): return -p * math.log(p, 2)
+
+                p1 = c1 * 1.0 / (c1 + c2)
+                p2 = c2 * 1.0 / (c1 + c2)
+                return entropy_func(p1) + entropy_func(p2)
+            
             # weighted avg
             s += weight * entropy_from_counts(sum(y == c), sum(y != c))
         return s
 
     def neg_corr_criterion(self, split_decision, y):
         &#39;&#39;&#39;Returns negative correlation between y
-        and the binary spltting variable split_decision
+        and the binary splitting variable split_decision
         y must be binary
         &#39;&#39;&#39;
         if np.unique(y).size &lt; 2:
@@ -714,6 +752,21 @@ Data may have multiple classes</p></section>
         # weights for each class
         weight = sum(y == c) / n
 
+        
+        def entropy_from_counts(c1, c2):
+            &#34;&#34;&#34;Returns entropy of a group of data
+            c1: count of one class
+            c2: count of another class
+            &#34;&#34;&#34;
+            if c1 == 0 or c2 == 0:  # when there is only one class in the group, entropy is 0
+                return 0
+
+            def entropy_func(p): return -p * math.log(p, 2)
+
+            p1 = c1 * 1.0 / (c1 + c2)
+            p2 = c2 * 1.0 / (c1 + c2)
+            return entropy_func(p1) + entropy_func(p2)
+        
         # weighted avg
         s += weight * entropy_from_counts(sum(y == c), sum(y != c))
     return s</code></pre>
@@ -760,28 +813,29 @@ returns: the column to split on, the cutoff value, and the actual criterion_valu
 <span>def <span class="ident">fit</span></span>(<span>self, x, y, depth=0, feature_names=None, verbose=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>x
-Feature set
-y
-target variable
-par_node
-will be the tree generated for this x and y.
-depth
-the depth of the current layer</p></section>
+<section class="desc"><h2 id="params">Params</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>array_like</code></dt>
+<dd>Feature set</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array_like</code></dt>
+<dd>target variable</dd>
+<dt><strong><code>depth</code></strong></dt>
+<dd>the depth of the current layer (used to recurse)</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, x, y, depth=0, feature_names=None, verbose=False):
+<pre><code class="python">def fit(self, x, y, depth: int=0, feature_names=None, verbose=False):
     &#34;&#34;&#34;
-    x
+    Params
+    ------
+    x: array_like
         Feature set
-    y
+    y: array_like
         target variable
-    par_node
-        will be the tree generated for this x and y. 
     depth
-        the depth of the current layer
+        the depth of the current layer (used to recurse)
     &#34;&#34;&#34;
 
     # set self.feature_names and make sure x, y are not pandas type
@@ -795,6 +849,8 @@ the depth of the current layer</p></section>
         self.feature_names = feature_names
     if &#39;pandas&#39; in str(type(y)):
         y = y.values
+    assert type(x) == np.ndarray, &#39;x is not numpy array&#39;
+    assert type(y) == np.ndarray, &#39;y is not numpy array&#39;
 
     # base case 1: no data in this group
     if len(y) == 0:
@@ -804,7 +860,7 @@ the depth of the current layer</p></section>
     elif self.all_same(y):
         return [{&#39;val&#39;: y[0], &#39;num_pts&#39;: y.size}]
 
-    # base case 4: max depth reached 
+    # base case 3: max depth reached 
     elif depth &gt;= self.max_depth:
         return []
 
@@ -815,17 +871,23 @@ the depth of the current layer</p></section>
         col, cutoff, criterion_val = self.find_best_split(x, y)
 
         # put higher probability of class 1 on the right-hand side
-        y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
-        y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
-        if np.mean(y_left) &gt; np.mean(y_right):
-            flip = True
-            tmp = deepcopy(y_left)
-            y_left = deepcopy(y_right)
-            y_right = tmp
-            x_left = x[x[:, col] &gt;= cutoff]
+        if self.strategy == &#39;max&#39;:
+            y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
+            y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
+            if np.mean(y_left) &gt; np.mean(y_right):
+                flip = True
+                tmp = deepcopy(y_left)
+                y_left = deepcopy(y_right)
+                y_right = tmp
+                x_left = x[x[:, col] &gt;= cutoff]
+            else:
+                flip = False
+                x_left = x[x[:, col] &lt; cutoff]
         else:
-            flip = False
-            x_left = x[x[:, col] &lt; cutoff]
+            print(&#39;strategy must be max!&#39;)
+            
+            
+        # print
         if verbose:
             print(
                 f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
@@ -842,7 +904,7 @@ the depth of the current layer</p></section>
             &#39;num_pts_right&#39;: y_right.size
         }]
 
-        # generate tree for the left hand side data
+        # generate tree for the non-leaf data
         par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)
 
         self.depth += 1  # increase the depth since we call fit once
@@ -885,7 +947,7 @@ the depth of the current layer</p></section>
 </code></dt>
 <dd>
 <section class="desc"><p>Returns negative correlation between y
-and the binary spltting variable split_decision
+and the binary splitting variable split_decision
 y must be binary</p></section>
 <details class="source">
 <summary>
@@ -893,7 +955,7 @@ y must be binary</p></section>
 </summary>
 <pre><code class="python">def neg_corr_criterion(self, split_decision, y):
     &#39;&#39;&#39;Returns negative correlation between y
-    and the binary spltting variable split_decision
+    and the binary splitting variable split_decision
     y must be binary
     &#39;&#39;&#39;
     if np.unique(y).size &lt; 2:
@@ -1088,11 +1150,6 @@ split decision, True/False, and y_true can be multi class</p></section>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="imodels.rule_list" href="index.html">imodels.rule_list</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="imodels.rule_list.greedy_rule_list.entropy_from_counts" href="#imodels.rule_list.greedy_rule_list.entropy_from_counts">entropy_from_counts</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
