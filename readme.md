@@ -5,8 +5,7 @@
 
 <p align="center">
   <a href="https://csinva.github.io/imodels/">Docs</a> •
-  <a href="#popular-interpretable-models"> Popular imodels </a> •
-  <a href="#custom-interpretable-models"> Custom imodels </a> •
+  <a href="#imodels-overview">imodels overview</a> •
   <a href="#demo-notebooks">Demo notebooks</a>
 </p>
 
@@ -18,7 +17,7 @@
 </p>  
 
 
-## Popular interpretable models
+## imodels overview
 
 Implementations of different popular interpretable models can be easily used and installed:
 
@@ -52,8 +51,6 @@ Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementa
 </br>
   More models coming soon!
 </p>
-
-## Custom interpretable models
 
 The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
 
