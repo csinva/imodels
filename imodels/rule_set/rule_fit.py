@@ -20,9 +20,8 @@ from imodels.util.transforms import Winsorizer, FriedScale
 from imodels.util.score import score_lasso
 from imodels.util.convert import tree_to_rules
 
-
-class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
-    """Rulefit class
+class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
+    """Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier
 
 
     Parameters
@@ -88,6 +87,15 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         self.include_linear = include_linear
         self.cv = cv
         self.alphas = alphas
+        self._init_prediction_task()
+        
+    def _init_prediction_task(self):
+        """
+        RuleFitRegressor and RuleFitClassifier override this method
+        to alter the prediction task. When using this class directly,
+        it is equivalent to RuleFitRegressor
+        """
+        self.prediction_task = 'regression'
 
     def fit(self, X, y=None, feature_names=None):
         """Fit and estimate linear combination of rule ensemble
@@ -300,4 +308,14 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         if X_rules.shape[0] > 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
-        return score_lasso(X_concat, y, rules, alphas=self.alphas, cv=self.cv, max_rules=self.max_rules, random_state=self.random_state)
+        return score_lasso(X_concat, y, rules, alphas=self.alphas, cv=self.cv,
+                           prediction_task=self.prediction_task,
+                           max_rules=self.max_rules, random_state=self.random_state)
+
+class RuleFitRegressor(RuleFit):        
+    def _init_prediction_task(self):
+        self.prediction_task = 'regression'
+        
+class RuleFitClassifier(RuleFit):
+    def _init_prediction_task(self):
+        self.prediction_task = 'classification'

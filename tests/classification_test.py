@@ -1,7 +1,7 @@
 import numpy as np
 
 from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRuleListClassifier, \
-    OneRClassifier, BoostedRulesClassifier  # IRFClassifier
+    OneRClassifier, BoostedRulesClassifier, RuleFitClassifier  # IRFClassifier
 
 
 class TestClassClassification:
@@ -20,10 +20,14 @@ class TestClassClassification:
     def test_classification_binary(self):
         '''Test imodels on basic binary classification task
         '''
-        for model_type in [GreedyRuleListClassifier, SkopeRulesClassifier, BoostedRulesClassifier,
-                           OneRClassifier]:  # IRFClassifier
+        for model_type in [GreedyRuleListClassifier,
+                           SkopeRulesClassifier, BoostedRulesClassifier,
+                           OneRClassifier]:  # IRFClassifier, RuleFitClassifier
 
-            m = model_type()
+            init_kwargs = {}
+            if model_type == RuleFitClassifier:
+                init_kwargs['max_rules'] = 3
+            m = model_type(**init_kwargs)
 
             if model_type == BayesianRuleListClassifier:
                 X = self.X_classification_binary_brl

@@ -7,7 +7,8 @@ from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 
 from imodels.rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
-
+import os 
+path_to_tests = os.path.dirname(os.path.realpath(__file__))
 
 class TestBRL(unittest.TestCase):
 
@@ -37,7 +38,7 @@ class TestBRL(unittest.TestCase):
                           "2-Hour serum insulin (mu U/ml)", "Body mass index", "Diabetes pedigree function",
                           "Age (years)"]
 
-        data = loadarff("tests/test_data/diabetes.arff")
+        data = loadarff(os.path.join(path_to_tests, "test_data/diabetes.arff"))
         data_np = np.array(list(map(lambda x: np.array(list(x)), data[0])))
         X, y_text = data_np[:, :-1].astype('float32'), data_np[:, -1].astype('str')
         y = (y_text == 'tested_positive').astype(np.int)  # labels 0-1
