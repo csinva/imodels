@@ -69,13 +69,19 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
                 prediction_task='regression',
                 max_rules=2000, random_state=None) -> Tuple[List[Rule], Lasso]:
     if alphas is None:
-        alphas = _alpha_grid(X, y) 
+        if prediction_task == 'regression':
+            alphas = _alpha_grid(X, y)
+        elif prediction_task == 'classification':
+            alphas = [1 / alpha
+                     for alpha in np.logspace(-4, 4, num=10, base=10)]
 
     coef_zero_threshold = 1e-6 / np.mean(np.abs(y))
     mse_cv_scores = []
     nonzero_rule_coefs_count = []
     kf = KFold(cv)
-    for alpha in alphas: # alphas are sorted from largest to smallest
+    
+    # alphas are sorted from most reg. to least reg.
+    for alpha in alphas: 
         
         if prediction_task == 'regression':
             m = Lasso(alpha=alpha, random_state=random_state)
@@ -104,11 +110,12 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
                                   random_state=random_state, max_iter=200)
     lscv.fit(X, y)
 
-    coefs = list(lscv.coef_[:-len(rules)])
+    coef_ = lscv.coef_.flatten()
+    coefs = list(coef_[:-len(rules)])
     support = np.sum(X[:, -len(rules):], axis=0) / X.shape[0]
 
     nonzero_rules = []
-    for r, w, s in zip(rules, lscv.coef_[-len(rules):], support):
+    for r, w, s in zip(rules, coef_[-len(rules):], support):
         if abs(w) > coef_zero_threshold:
             nonzero_rules.append(Rule(r, args=[w], support=s))
             coefs.append(w)

@@ -118,9 +118,9 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
         return self
 
-    def predict(self, X):
-        """Predict outcome for X
-
+    
+    def predict_continuous_output(self, X):
+        """Predict outcome of linear model for X
         """
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
@@ -132,13 +132,22 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             if self.lin_standardise:
                 X = self.friedscale.scale(X)
             y_pred += X @ self.coef[:X.shape[1]]
-
         return y_pred + self.intercept
+            
+    def predict(self, X):
+        '''Predict. For regression returns continuous output.
+        For classification, returns discrete output.
+        '''
+        if self.prediction_task == 'regression':
+            return self.predict_continuous_output(X)
+        else:
+            return np.argmax(self.predict_proba(X), axis=1)
+        
 
     def predict_proba(self, X):
-        y = self.predict(X)
-        preds = np.vstack((1 - y, y)).transpose()
-        return softmax(preds, axis=1)
+        continuous_output = self.predict_continuous_output(X)
+        logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
+        return softmax(logits, axis=1)
 
     def transform(self, X=None, rules=None):
         """Transform dataset.

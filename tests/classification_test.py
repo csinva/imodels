@@ -14,19 +14,19 @@ class TestClassClassification:
         self.p = 2
         self.X_classification_binary = np.random.randn(self.n, self.p)
         self.X_classification_binary_brl = (self.X_classification_binary > 0).astype(str)
-        self.y_classification_binary = (self.X_classification_binary[:, 0] > 0).astype(int)
+        self.y_classification_binary = (self.X_classification_binary[:, 0] > 0).astype(int) # y = x0 > 0
         self.y_classification_binary[-2:] = 1 - self.y_classification_binary[-2:]  # flip labels for last few
 
     def test_classification_binary(self):
         '''Test imodels on basic binary classification task
         '''
-        for model_type in [GreedyRuleListClassifier,
+        for model_type in [RuleFitClassifier, GreedyRuleListClassifier,
                            SkopeRulesClassifier, BoostedRulesClassifier,
-                           OneRClassifier]:  # IRFClassifier, RuleFitClassifier
+                           OneRClassifier]:  # IRFClassifier, 
 
             init_kwargs = {}
             if model_type == RuleFitClassifier:
-                init_kwargs['max_rules'] = 3
+                init_kwargs['max_rules'] = 5
             m = model_type(**init_kwargs)
 
             if model_type == BayesianRuleListClassifier:
@@ -37,16 +37,20 @@ class TestClassClassification:
                 X = self.X_classification_binary
                 m.fit(X, self.y_classification_binary)
 
-            print('starting to test', type(m), '...')
+#             print('starting to test', type(m), '...')
+            # print(m.visualize())
             preds_proba = m.predict_proba(X)
             #             for i in range(20):
             #                 print(i, self.X_classification_binary[i], preds_proba[i])
             # print('preds_proba', preds_proba)
-            assert len(preds_proba.shape) == 2, 'preds_proba has columns'
+            assert len(preds_proba.shape) == 2, 'preds_proba has 2 columns'
+            assert preds_proba.shape[1] == 2, 'preds_proba has 2 columns'
             assert np.max(preds_proba) < 1.1, 'preds_proba has no values over 1'
 
             preds = m.predict(X)  # > 0.5).astype(int)
-            assert preds.size == self.n, 'predictions are right size'
+            assert preds.size == self.n, 'predict() yields right size'
+            assert (np.argmax(preds_proba, axis=1) == preds).all(), "predict_proba and predict correspond"
+            
             #             print(model_type, preds, self.y_classification_binary)
             # for i in range(20):
             #     print(i, self.y_classification_binary[i], preds_proba[i], preds[i])

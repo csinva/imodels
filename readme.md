@@ -87,7 +87,7 @@ Different models support different machine-learning tasks. Current support for d
 
 | Model                       | Binary classification | Multi-class classification | Regression |
 | :-------------------------- | :-------------------: | :------------------------: | :--------: |
-| Rulefit rule set            |                       |                            |     ✔️      |
+| Rulefit rule set            |           ✔️           |                            |     ✔️      |
 | Skope rule set              |           ✔️           |                            |            |
 | Boosted rule set            |           ✔️           |                            |            |
 | Bayesian rule list          |           ✔️           |                            |            |
