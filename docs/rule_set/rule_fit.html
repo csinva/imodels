@@ -53,9 +53,8 @@ from imodels.util.transforms import Winsorizer, FriedScale
 from imodels.util.score import score_lasso
 from imodels.util.convert import tree_to_rules
 
-
-class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
-    &#34;&#34;&#34;Rulefit class
+class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
+    &#34;&#34;&#34;Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier
 
 
     Parameters
@@ -121,6 +120,15 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         self.include_linear = include_linear
         self.cv = cv
         self.alphas = alphas
+        self._init_prediction_task()
+        
+    def _init_prediction_task(self):
+        &#34;&#34;&#34;
+        RuleFitRegressor and RuleFitClassifier override this method
+        to alter the prediction task. When using this class directly,
+        it is equivalent to RuleFitRegressor
+        &#34;&#34;&#34;
+        self.prediction_task = &#39;regression&#39;
 
     def fit(self, X, y=None, feature_names=None):
         &#34;&#34;&#34;Fit and estimate linear combination of rule ensemble
@@ -143,9 +151,9 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
 
         return self
 
-    def predict(self, X):
-        &#34;&#34;&#34;Predict outcome for X
-
+    
+    def predict_continuous_output(self, X):
+        &#34;&#34;&#34;Predict outcome of linear model for X
         &#34;&#34;&#34;
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
@@ -157,13 +165,22 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
             if self.lin_standardise:
                 X = self.friedscale.scale(X)
             y_pred += X @ self.coef[:X.shape[1]]
-
         return y_pred + self.intercept
+            
+    def predict(self, X):
+        &#39;&#39;&#39;Predict. For regression returns continuous output.
+        For classification, returns discrete output.
+        &#39;&#39;&#39;
+        if self.prediction_task == &#39;regression&#39;:
+            return self.predict_continuous_output(X)
+        else:
+            return np.argmax(self.predict_proba(X), axis=1)
+        
 
     def predict_proba(self, X):
-        y = self.predict(X)
-        preds = np.vstack((1 - y, y)).transpose()
-        return softmax(preds, axis=1)
+        continuous_output = self.predict_continuous_output(X)
+        logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
+        return softmax(logits, axis=1)
 
     def transform(self, X=None, rules=None):
         &#34;&#34;&#34;Transform dataset.
@@ -333,7 +350,17 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
         if X_rules.shape[0] &gt; 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
-        return score_lasso(X_concat, y, rules, alphas=self.alphas, cv=self.cv, max_rules=self.max_rules, random_state=self.random_state)</code></pre>
+        return score_lasso(X_concat, y, rules, alphas=self.alphas, cv=self.cv,
+                           prediction_task=self.prediction_task,
+                           max_rules=self.max_rules, random_state=self.random_state)
+
+class RuleFitRegressor(RuleFit):        
+    def _init_prediction_task(self):
+        self.prediction_task = &#39;regression&#39;
+        
+class RuleFitClassifier(RuleFit):
+    def _init_prediction_task(self):
+        self.prediction_task = &#39;classification&#39;</code></pre>
 </details>
 </section>
 <section>
@@ -345,12 +372,12 @@ class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.rule_set.rule_fit.RuleFitRegressor"><code class="flex name class">
-<span>class <span class="ident">RuleFitRegressor</span></span>
+<dt id="imodels.rule_set.rule_fit.RuleFit"><code class="flex name class">
+<span>class <span class="ident">RuleFit</span></span>
 <span>(</span><span>tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alphas=None, cv=3, random_state=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Rulefit class</p>
+<section class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>tree_size</code></strong> :&ensp;
@@ -392,8 +419,8 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RuleFitRegressor(BaseEstimator, TransformerMixin, RuleSet):
-    &#34;&#34;&#34;Rulefit class
+<pre><code class="python">class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
+    &#34;&#34;&#34;Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier
 
 
     Parameters
@@ -459,6 +486,15 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
         self.include_linear = include_linear
         self.cv = cv
         self.alphas = alphas
+        self._init_prediction_task()
+        
+    def _init_prediction_task(self):
+        &#34;&#34;&#34;
+        RuleFitRegressor and RuleFitClassifier override this method
+        to alter the prediction task. When using this class directly,
+        it is equivalent to RuleFitRegressor
+        &#34;&#34;&#34;
+        self.prediction_task = &#39;regression&#39;
 
     def fit(self, X, y=None, feature_names=None):
         &#34;&#34;&#34;Fit and estimate linear combination of rule ensemble
@@ -481,9 +517,9 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
 
         return self
 
-    def predict(self, X):
-        &#34;&#34;&#34;Predict outcome for X
-
+    
+    def predict_continuous_output(self, X):
+        &#34;&#34;&#34;Predict outcome of linear model for X
         &#34;&#34;&#34;
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
@@ -495,13 +531,22 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
             if self.lin_standardise:
                 X = self.friedscale.scale(X)
             y_pred += X @ self.coef[:X.shape[1]]
-
         return y_pred + self.intercept
+            
+    def predict(self, X):
+        &#39;&#39;&#39;Predict. For regression returns continuous output.
+        For classification, returns discrete output.
+        &#39;&#39;&#39;
+        if self.prediction_task == &#39;regression&#39;:
+            return self.predict_continuous_output(X)
+        else:
+            return np.argmax(self.predict_proba(X), axis=1)
+        
 
     def predict_proba(self, X):
-        y = self.predict(X)
-        preds = np.vstack((1 - y, y)).transpose()
-        return softmax(preds, axis=1)
+        continuous_output = self.predict_continuous_output(X)
+        logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
+        return softmax(logits, axis=1)
 
     def transform(self, X=None, rules=None):
         &#34;&#34;&#34;Transform dataset.
@@ -671,7 +716,9 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
         if X_rules.shape[0] &gt; 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
-        return score_lasso(X_concat, y, rules, alphas=self.alphas, cv=self.cv, max_rules=self.max_rules, random_state=self.random_state)</code></pre>
+        return score_lasso(X_concat, y, rules, alphas=self.alphas, cv=self.cv,
+                           prediction_task=self.prediction_task,
+                           max_rules=self.max_rules, random_state=self.random_state)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -679,9 +726,14 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
 <li>sklearn.base.TransformerMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 </ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.rule_set.rule_fit.RuleFitRegressor" href="#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></li>
+<li><a title="imodels.rule_set.rule_fit.RuleFitClassifier" href="#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.fit"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFit.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None)</span>
 </code></dt>
 <dd>
@@ -712,7 +764,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.get_rules"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFit.get_rules"><code class="name flex">
 <span>def <span class="ident">get_rules</span></span>(<span>self, exclude_zero_coef=False, subregion=None)</span>
 </code></dt>
 <dd>
@@ -788,18 +840,37 @@ data set (X)</dd>
     return rules</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.predict"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFit.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Predict outcome for X</p></section>
+<section class="desc"><p>Predict. For regression returns continuous output.
+For classification, returns discrete output.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict(self, X):
-    &#34;&#34;&#34;Predict outcome for X
-
+    &#39;&#39;&#39;Predict. For regression returns continuous output.
+    For classification, returns discrete output.
+    &#39;&#39;&#39;
+    if self.prediction_task == &#39;regression&#39;:
+        return self.predict_continuous_output(X)
+    else:
+        return np.argmax(self.predict_proba(X), axis=1)</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_set.rule_fit.RuleFit.predict_continuous_output"><code class="name flex">
+<span>def <span class="ident">predict_continuous_output</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Predict outcome of linear model for X</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_continuous_output(self, X):
+    &#34;&#34;&#34;Predict outcome of linear model for X
     &#34;&#34;&#34;
     if type(X) == pd.DataFrame:
         X = X.values.astype(np.float32)
@@ -811,11 +882,10 @@ data set (X)</dd>
         if self.lin_standardise:
             X = self.friedscale.scale(X)
         y_pred += X @ self.coef[:X.shape[1]]
-
     return y_pred + self.intercept</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.predict_proba"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFit.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -825,12 +895,12 @@ data set (X)</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
-    y = self.predict(X)
-    preds = np.vstack((1 - y, y)).transpose()
-    return softmax(preds, axis=1)</code></pre>
+    continuous_output = self.predict_continuous_output(X)
+    logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
+    return softmax(logits, axis=1)</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.transform"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFit.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, X=None, rules=None)</span>
 </code></dt>
 <dd>
@@ -876,7 +946,7 @@ efficiency.</dd>
     return X_transformed</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.visualize"><code class="name flex">
+<dt id="imodels.rule_set.rule_fit.RuleFit.visualize"><code class="name flex">
 <span>def <span class="ident">visualize</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -893,6 +963,148 @@ efficiency.</dd>
 </details>
 </dd>
 </dl>
+</dd>
+<dt id="imodels.rule_set.rule_fit.RuleFitClassifier"><code class="flex name class">
+<span>class <span class="ident">RuleFitClassifier</span></span>
+<span>(</span><span>tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alphas=None, cv=3, random_state=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tree_size</code></strong> :&ensp;
+<code>Number</code> of <code>terminal</code> <code>nodes</code> <code>in</code> <code>generated</code> <code>trees.</code> <code>If</code> <code>exp_rand_tree_size</code>=<code>True</code>,</dt>
+<dd>this will be the mean number of terminal nodes.</dd>
+<dt><strong><code>sample_fract</code></strong> :&ensp;
+<code>fraction</code> of <code>randomly</code> <code>chosen</code> <code>training</code> <code>observations</code> <code>used</code> <code>to</code> <code>produce</code> <code>each</code> <code>tree.</code></dt>
+<dd>FP 2004 (Sec. 2)</dd>
+<dt><strong><code>max_rules</code></strong> :&ensp;
+<code>total</code> <code>number</code> of <code>terms</code> <code>included</code> <code>in</code> <code>the</code> <code>final</code> <code>model</code> (<code>both</code> <code>linear</code> <code>and</code> <code>rules</code>)</dt>
+<dd>approximate total number of rules generated for fitting also is based on this
+Note that actual number of rules will usually be lower than this due to duplicates.</dd>
+<dt><strong><code>memory_par</code></strong> :&ensp;
+<code>scale</code> <code>multiplier</code> (<code>shrinkage</code> <code>factor</code>) <code>applied</code> <code>to</code> <code>each</code> <code>new</code> <code>tree</code> <code>when</code></dt>
+<dd>sequentially induced. FP 2004 (Sec. 2)</dd>
+<dt><strong><code>lin_standardise</code></strong> :&ensp;<code>If</code> <code>True</code>, <code>the</code> <code>linear</code> <code>terms</code> <code>will</code> <code>be</code> <code>standardised</code> <code>as</code> <code>per</code> <code>Friedman</code> <code>Sec</code> <code>3.2</code></dt>
+<dd>by multiplying the winsorised variable by 0.4/stdev.</dd>
+<dt><strong><code>lin_trim_quantile</code></strong> :&ensp;<code>If</code> <code>lin_standardise</code> <code>is</code> <code>True</code>, <code>this</code> <code>quantile</code> <code>will</code> <code>be</code> <code>used</code> <code>to</code> <code>trim</code> <code>linear</code></dt>
+<dd>terms before standardisation.</dd>
+<dt><strong><code>exp_rand_tree_size</code></strong> :&ensp;<code>If</code> <code>True</code>, <code>each</code> <code>boosted</code> <code>tree</code> <code>will</code> <code>have</code> <code>a</code> <code>different</code> <code>maximum</code> <code>number</code> of</dt>
+<dd>terminal nodes based on an exponential distribution about tree_size.
+(Friedman Sec 3.3)</dd>
+<dt><strong><code>include_linear</code></strong> :&ensp;<code>Include</code> <code>linear</code> <code>terms</code> <code>as</code> <code>opposed</code> <code>to</code> <code>only</code> <code>rules</code></dt>
+<dd>&nbsp;</dd>
+<dt>random_state:
+Integer to initialise random objects and provide repeatability.</dt>
+<dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional</code>: <code>this</code> <code>object</code> <code>will</code> <code>be</code> <code>used</code> <code>as</code> <code>provided</code> <code>to</code> <code>generate</code> <code>the</code> <code>rules.</code></dt>
+<dd>This will override almost all the other properties above.
+Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (default=None)</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>rule_ensemble</code></strong> :&ensp;<code>RuleEnsemble</code></dt>
+<dd>The rule ensemble</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>strings</code>, optional (default=<code>None</code>)</dt>
+<dd>The names of the features (columns)</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RuleFitClassifier(RuleFit):
+    def _init_prediction_task(self):
+        self.prediction_task = &#39;classification&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.base.TransformerMixin</li>
+<li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="#imodels.rule_set.rule_fit.RuleFit.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict_continuous_output" href="#imodels.rule_set.rule_fit.RuleFit.predict_continuous_output">predict_continuous_output</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.rule_set.rule_fit.RuleFitRegressor"><code class="flex name class">
+<span>class <span class="ident">RuleFitRegressor</span></span>
+<span>(</span><span>tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alphas=None, cv=3, random_state=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tree_size</code></strong> :&ensp;
+<code>Number</code> of <code>terminal</code> <code>nodes</code> <code>in</code> <code>generated</code> <code>trees.</code> <code>If</code> <code>exp_rand_tree_size</code>=<code>True</code>,</dt>
+<dd>this will be the mean number of terminal nodes.</dd>
+<dt><strong><code>sample_fract</code></strong> :&ensp;
+<code>fraction</code> of <code>randomly</code> <code>chosen</code> <code>training</code> <code>observations</code> <code>used</code> <code>to</code> <code>produce</code> <code>each</code> <code>tree.</code></dt>
+<dd>FP 2004 (Sec. 2)</dd>
+<dt><strong><code>max_rules</code></strong> :&ensp;
+<code>total</code> <code>number</code> of <code>terms</code> <code>included</code> <code>in</code> <code>the</code> <code>final</code> <code>model</code> (<code>both</code> <code>linear</code> <code>and</code> <code>rules</code>)</dt>
+<dd>approximate total number of rules generated for fitting also is based on this
+Note that actual number of rules will usually be lower than this due to duplicates.</dd>
+<dt><strong><code>memory_par</code></strong> :&ensp;
+<code>scale</code> <code>multiplier</code> (<code>shrinkage</code> <code>factor</code>) <code>applied</code> <code>to</code> <code>each</code> <code>new</code> <code>tree</code> <code>when</code></dt>
+<dd>sequentially induced. FP 2004 (Sec. 2)</dd>
+<dt><strong><code>lin_standardise</code></strong> :&ensp;<code>If</code> <code>True</code>, <code>the</code> <code>linear</code> <code>terms</code> <code>will</code> <code>be</code> <code>standardised</code> <code>as</code> <code>per</code> <code>Friedman</code> <code>Sec</code> <code>3.2</code></dt>
+<dd>by multiplying the winsorised variable by 0.4/stdev.</dd>
+<dt><strong><code>lin_trim_quantile</code></strong> :&ensp;<code>If</code> <code>lin_standardise</code> <code>is</code> <code>True</code>, <code>this</code> <code>quantile</code> <code>will</code> <code>be</code> <code>used</code> <code>to</code> <code>trim</code> <code>linear</code></dt>
+<dd>terms before standardisation.</dd>
+<dt><strong><code>exp_rand_tree_size</code></strong> :&ensp;<code>If</code> <code>True</code>, <code>each</code> <code>boosted</code> <code>tree</code> <code>will</code> <code>have</code> <code>a</code> <code>different</code> <code>maximum</code> <code>number</code> of</dt>
+<dd>terminal nodes based on an exponential distribution about tree_size.
+(Friedman Sec 3.3)</dd>
+<dt><strong><code>include_linear</code></strong> :&ensp;<code>Include</code> <code>linear</code> <code>terms</code> <code>as</code> <code>opposed</code> <code>to</code> <code>only</code> <code>rules</code></dt>
+<dd>&nbsp;</dd>
+<dt>random_state:
+Integer to initialise random objects and provide repeatability.</dt>
+<dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional</code>: <code>this</code> <code>object</code> <code>will</code> <code>be</code> <code>used</code> <code>as</code> <code>provided</code> <code>to</code> <code>generate</code> <code>the</code> <code>rules.</code></dt>
+<dd>This will override almost all the other properties above.
+Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (default=None)</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>rule_ensemble</code></strong> :&ensp;<code>RuleEnsemble</code></dt>
+<dd>The rule ensemble</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>strings</code>, optional (default=<code>None</code>)</dt>
+<dd>The names of the features (columns)</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RuleFitRegressor(RuleFit):        
+    def _init_prediction_task(self):
+        self.prediction_task = &#39;regression&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.base.TransformerMixin</li>
+<li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="#imodels.rule_set.rule_fit.RuleFit.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict_continuous_output" href="#imodels.rule_set.rule_fit.RuleFit.predict_continuous_output">predict_continuous_output</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -911,15 +1123,22 @@ efficiency.</dd>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor" href="#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></code></h4>
-<ul class="two-column">
-<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.fit" href="#imodels.rule_set.rule_fit.RuleFitRegressor.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.get_rules" href="#imodels.rule_set.rule_fit.RuleFitRegressor.get_rules">get_rules</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.predict" href="#imodels.rule_set.rule_fit.RuleFitRegressor.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.predict_proba" href="#imodels.rule_set.rule_fit.RuleFitRegressor.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.transform" href="#imodels.rule_set.rule_fit.RuleFitRegressor.transform">transform</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.visualize" href="#imodels.rule_set.rule_fit.RuleFitRegressor.visualize">visualize</a></code></li>
+<h4><code><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="#imodels.rule_set.rule_fit.RuleFit.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict_continuous_output" href="#imodels.rule_set.rule_fit.RuleFit.predict_continuous_output">predict_continuous_output</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict_proba" href="#imodels.rule_set.rule_fit.RuleFit.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.visualize" href="#imodels.rule_set.rule_fit.RuleFit.visualize">visualize</a></code></li>
 </ul>
+</li>
+<li>
+<h4><code><a title="imodels.rule_set.rule_fit.RuleFitClassifier" href="#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor" href="#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></code></h4>
 </li>
 </ul>
 </li>

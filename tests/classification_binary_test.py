@@ -4,7 +4,7 @@ from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRule
     OneRClassifier, BoostedRulesClassifier, RuleFitClassifier  # IRFClassifier
 
 
-class TestClassClassification:
+class TestClassClassificationBinary:
     '''Tests simple classification for different models. Note: still doesn't test BRL!
     '''
 

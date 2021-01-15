@@ -30,7 +30,7 @@ from warnings import warn
 import pandas as pd
 import numpy as np
 from sklearn.utils import indices_to_mask
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import Lasso, LogisticRegression
 from sklearn.linear_model._coordinate_descent import _alpha_grid
 from sklearn.model_selection import KFold
 
@@ -72,7 +72,8 @@ def score_oob(X,
 
         # Add OOB performances to rules:
         scored_rules += [
-            Rule(r, args=_eval_rule_perf(r, X_oob, y_oob)) for r in set(curr_rules)
+            Rule(r, args=_eval_rule_perf(r, X_oob, y_oob))
+            for r in set(curr_rules)
         ]
 
     return scored_rules
@@ -90,16 +91,28 @@ def _eval_rule_perf(rule, X, y) -&gt; Tuple[float, float]:
     return y_detected.mean(), float(true_pos) / pos
 
 
-def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, random_state=None) -&gt; Tuple[List[Rule], Lasso]:
+def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
+                prediction_task=&#39;regression&#39;,
+                max_rules=2000, random_state=None) -&gt; Tuple[List[Rule], Lasso]:
     if alphas is None:
-        alphas = _alpha_grid(X, y) 
+        if prediction_task == &#39;regression&#39;:
+            alphas = _alpha_grid(X, y)
+        elif prediction_task == &#39;classification&#39;:
+            alphas = [1 / alpha
+                     for alpha in np.logspace(-4, 4, num=10, base=10)]
 
     coef_zero_threshold = 1e-6 / np.mean(np.abs(y))
     mse_cv_scores = []
     nonzero_rule_coefs_count = []
     kf = KFold(cv)
-    for alpha in alphas: # alphas are sorted from largest to smallest
-        m = Lasso(alpha=alpha, random_state=random_state)
+    
+    # alphas are sorted from most reg. to least reg.
+    for alpha in alphas: 
+        
+        if prediction_task == &#39;regression&#39;:
+            m = Lasso(alpha=alpha, random_state=random_state)
+        else:
+            m = LogisticRegression(penalty=&#39;l1&#39;, C=1/alpha, solver=&#39;liblinear&#39;)
         mse_cv = 0
         for train_index, test_index in kf.split(X):
             X_train, X_test = X[train_index], X[test_index]
@@ -109,21 +122,26 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, rando
         
         m.fit(X, y)
         
-        rule_count = sum(np.abs(m.coef_) &gt; coef_zero_threshold)
+        rule_count = np.sum(np.abs(m.coef_.flatten()) &gt; coef_zero_threshold)
         if rule_count &gt; max_rules:
             break
         nonzero_rule_coefs_count.append(rule_count)
         mse_cv_scores.append(mse_cv / cv)
     
     best_alpha = alphas[np.argmin(mse_cv_scores)]
-    lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
+    if prediction_task == &#39;regression&#39;:
+        lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
+    else:
+        lscv = LogisticRegression(penalty=&#39;l1&#39;, C=1/best_alpha, solver=&#39;liblinear&#39;,
+                                  random_state=random_state, max_iter=200)
     lscv.fit(X, y)
 
-    coefs = list(lscv.coef_[:-len(rules)])
+    coef_ = lscv.coef_.flatten()
+    coefs = list(coef_[:-len(rules)])
     support = np.sum(X[:, -len(rules):], axis=0) / X.shape[0]
 
     nonzero_rules = []
-    for r, w, s in zip(rules, lscv.coef_[-len(rules):], support):
+    for r, w, s in zip(rules, coef_[-len(rules):], support):
         if abs(w) &gt; coef_zero_threshold:
             nonzero_rules.append(Rule(r, args=[w], support=s))
             coefs.append(w)
@@ -139,7 +157,7 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, rando
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="imodels.util.score.score_lasso"><code class="name flex">
-<span>def <span class="ident">score_lasso</span></span>(<span>X, y, rules, alphas=None, cv=3, max_rules=2000, random_state=None)</span>
+<span>def <span class="ident">score_lasso</span></span>(<span>X, y, rules, alphas=None, cv=3, prediction_task='regression', max_rules=2000, random_state=None)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
@@ -147,16 +165,28 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, rando
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, random_state=None) -&gt; Tuple[List[Rule], Lasso]:
+<pre><code class="python">def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
+                prediction_task=&#39;regression&#39;,
+                max_rules=2000, random_state=None) -&gt; Tuple[List[Rule], Lasso]:
     if alphas is None:
-        alphas = _alpha_grid(X, y) 
+        if prediction_task == &#39;regression&#39;:
+            alphas = _alpha_grid(X, y)
+        elif prediction_task == &#39;classification&#39;:
+            alphas = [1 / alpha
+                     for alpha in np.logspace(-4, 4, num=10, base=10)]
 
     coef_zero_threshold = 1e-6 / np.mean(np.abs(y))
     mse_cv_scores = []
     nonzero_rule_coefs_count = []
     kf = KFold(cv)
-    for alpha in alphas: # alphas are sorted from largest to smallest
-        m = Lasso(alpha=alpha, random_state=random_state)
+    
+    # alphas are sorted from most reg. to least reg.
+    for alpha in alphas: 
+        
+        if prediction_task == &#39;regression&#39;:
+            m = Lasso(alpha=alpha, random_state=random_state)
+        else:
+            m = LogisticRegression(penalty=&#39;l1&#39;, C=1/alpha, solver=&#39;liblinear&#39;)
         mse_cv = 0
         for train_index, test_index in kf.split(X):
             X_train, X_test = X[train_index], X[test_index]
@@ -166,21 +196,26 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, rando
         
         m.fit(X, y)
         
-        rule_count = sum(np.abs(m.coef_) &gt; coef_zero_threshold)
+        rule_count = np.sum(np.abs(m.coef_.flatten()) &gt; coef_zero_threshold)
         if rule_count &gt; max_rules:
             break
         nonzero_rule_coefs_count.append(rule_count)
         mse_cv_scores.append(mse_cv / cv)
     
     best_alpha = alphas[np.argmin(mse_cv_scores)]
-    lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
+    if prediction_task == &#39;regression&#39;:
+        lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
+    else:
+        lscv = LogisticRegression(penalty=&#39;l1&#39;, C=1/best_alpha, solver=&#39;liblinear&#39;,
+                                  random_state=random_state, max_iter=200)
     lscv.fit(X, y)
 
-    coefs = list(lscv.coef_[:-len(rules)])
+    coef_ = lscv.coef_.flatten()
+    coefs = list(coef_[:-len(rules)])
     support = np.sum(X[:, -len(rules):], axis=0) / X.shape[0]
 
     nonzero_rules = []
-    for r, w, s in zip(rules, lscv.coef_[-len(rules):], support):
+    for r, w, s in zip(rules, coef_[-len(rules):], support):
         if abs(w) &gt; coef_zero_threshold:
             nonzero_rules.append(Rule(r, args=[w], support=s))
             coefs.append(w)
@@ -232,7 +267,8 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3, max_rules=2000, rando
 
         # Add OOB performances to rules:
         scored_rules += [
-            Rule(r, args=_eval_rule_perf(r, X_oob, y_oob)) for r in set(curr_rules)
+            Rule(r, args=_eval_rule_perf(r, X_oob, y_oob))
+            for r in set(curr_rules)
         ]
 
     return scored_rules</code></pre>
