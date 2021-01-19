@@ -4,15 +4,16 @@
 
 
 <p align="center">
-  <a href="https://csinva.github.io/imodels/">Docs</a> •
+  <a href="https://csinva.github.io/imodels/">docs</a> •
   <a href="#imodels-overview">imodels overview</a> •
-  <a href="#demo-notebooks">Demo notebooks</a>
+  <a href="#demo-notebooks">demo notebooks</a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-mit-blue.svg">
-  <img src="https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue">
+  <img src="https://img.shields.io/badge/python-3.6--3.8-blue">
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
+  <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
   <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=grey&right_color=orange&left_text=downloads">
 </p>  
@@ -30,6 +31,12 @@ model = BayesianRuleListClassifier()  # initialize a model
 model.fit(X_train, y_train)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
+print(model) # print the rule-based model
+
+-----------------------------
+# if X1 > 5: then 80.5% risk
+# else if X2 > 5: then 40% risk
+# else: 10% risk
 ```
 
 Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help). Contains the following models:
