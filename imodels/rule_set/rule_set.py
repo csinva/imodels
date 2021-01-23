@@ -7,13 +7,7 @@ from sklearn.utils.validation import check_array, check_is_fitted
 
 class RuleSet:
 
-    def _get_tree_ensemble(self):
-        pass
-
-    def _fit_tree_ensemble(self, X, y):
-        pass
-
-    def _extract_rules(self):
+    def _extract_rules(self, X, y):
         pass
 
     def _score_rules(self, X, y, rules):

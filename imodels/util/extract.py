@@ -1,17 +1,81 @@
 from typing import Iterable
 
 import numpy as np
-from sklearn.ensemble import BaggingClassifier, BaggingRegressor
+from sklearn.ensemble import BaggingClassifier, BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.util.convert import tree_to_rules
 
+
 def extract_fpgrowth():
     pass
 
-def extract_rulefit():
-    pass
+
+def extract_rulefit(X, y, feature_names,
+                    tree_size=4,
+                    max_rules=2000,
+                    memory_par=0.01,
+                    tree_generator=None,
+                    exp_rand_tree_size=True,
+                    random_state=None):
+
+    if tree_generator is None:
+        n_estimators_default = int(np.ceil(max_rules / tree_size))
+        sample_fract_ = min(0.5, (100 + 6 * np.sqrt(X.shape[0])) / X.shape[0])
+
+        tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default,
+                                                    max_leaf_nodes=tree_size,
+                                                    learning_rate=memory_par,
+                                                    subsample=sample_fract_,
+                                                    random_state=random_state,
+                                                    max_depth=100)
+
+    if type(tree_generator) not in [GradientBoostingRegressor, RandomForestRegressor]:
+        raise ValueError("RuleFit only works with RandomForest and BoostingRegressor")
+
+    ## fit tree generator
+    if not exp_rand_tree_size:  # simply fit with constant tree size
+        tree_generator.fit(X, y)
+    else:  # randomise tree size as per Friedman 2005 Sec 3.3
+        np.random.seed(random_state)
+        tree_sizes = np.random.exponential(scale=tree_size - 2,
+                                            size=int(np.ceil(max_rules * 2 / tree_size)))
+        tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
+        i = int(len(tree_sizes) / 4)
+        while np.sum(tree_sizes[0:i]) < max_rules:
+            i = i + 1
+        tree_sizes = tree_sizes[0:i]
+        tree_generator.set_params(warm_start=True)
+        curr_est_ = 0
+        for i_size in np.arange(len(tree_sizes)):
+            size = tree_sizes[i_size]
+            tree_generator.set_params(n_estimators=curr_est_ + 1)
+            tree_generator.set_params(max_leaf_nodes=size)
+            random_state_add = random_state if random_state else 0
+            tree_generator.set_params(
+                random_state=i_size + random_state_add)  # warm_state=True seems to reset random_state, such that the trees are highly correlated, unless we manually change the random_sate here.
+            tree_generator.fit(np.copy(X, order='C'), np.copy(y, order='C'))
+            curr_est_ = curr_est_ + 1
+        tree_generator.set_params(warm_start=False)
+
+    if isinstance(tree_generator, RandomForestRegressor):
+        estimators_ = [[x] for x in tree_generator.estimators_]
+    else:
+        estimators_ = tree_generator.estimators_
+
+    seen_antecedents = set()
+    extracted_rules = [] 
+    for estimator in estimators_:
+        for rule_value_pair in tree_to_rules(estimator[0], np.array(feature_names), prediction_values=True):
+            if rule_value_pair[0] not in seen_antecedents:
+                extracted_rules.append(rule_value_pair)
+                seen_antecedents.add(rule_value_pair[0])
+    
+    extracted_rules = sorted(extracted_rules, key=lambda x: x[1])
+    extracted_rules = list(map(lambda x: x[0], extracted_rules))
+    return extracted_rules
+
 
 def extract_skope(X, y, feature_names, 
                   sample_weight=None,

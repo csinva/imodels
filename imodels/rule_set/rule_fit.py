@@ -19,6 +19,7 @@ from imodels.util.rule import enum_features
 from imodels.util.transforms import Winsorizer, FriedScale
 from imodels.util.score import score_lasso
 from imodels.util.convert import tree_to_rules
+from imodels.util.extract import extract_rulefit
 
 class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     """Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier
@@ -110,10 +111,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.n_features_ = X.shape[1]
         self.feature_names_, self.feature_dict_ = enum_features(X, feature_names)
 
-        self.tree_generator = self._get_tree_ensemble(classify=False)
-        self._fit_tree_ensemble(X, y)
-
-        extracted_rules = self._extract_rules()
+        extracted_rules = self._extract_rules(X, y)
         self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(X, y, extracted_rules)
 
         return self
@@ -231,68 +229,16 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         rules = rules[rules.coef != 0].sort_values("support", ascending=False)
         pd.set_option('display.max_colwidth', -1)
         return rules[['rule', 'coef']].round(3)
-
-    def _get_tree_ensemble(self, classify=False):
-
-        if self.tree_generator is None:
-            n_estimators_default = int(np.ceil(self.max_rules / self.tree_size))
-            self.sample_fract_ = min(0.5, (100 + 6 * np.sqrt(self.n_obs)) / self.n_obs)
-
-            tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default,
-                                                       max_leaf_nodes=self.tree_size,
-                                                       learning_rate=self.memory_par,
-                                                       subsample=self.sample_fract_,
-                                                       random_state=self.random_state,
-                                                       max_depth=100)
-
-        if type(tree_generator) not in [GradientBoostingRegressor, RandomForestRegressor]:
-            raise ValueError("RuleFit only works with RandomForest and BoostingRegressor")
-
-        return tree_generator
-
-    def _fit_tree_ensemble(self, X, y):
-        ## fit tree generator
-        if not self.exp_rand_tree_size:  # simply fit with constant tree size
-            self.tree_generator.fit(X, y)
-        else:  # randomise tree size as per Friedman 2005 Sec 3.3
-            np.random.seed(self.random_state)
-            tree_sizes = np.random.exponential(scale=self.tree_size - 2,
-                                               size=int(np.ceil(self.max_rules * 2 / self.tree_size)))
-            tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
-            i = int(len(tree_sizes) / 4)
-            while np.sum(tree_sizes[0:i]) < self.max_rules:
-                i = i + 1
-            tree_sizes = tree_sizes[0:i]
-            self.tree_generator.set_params(warm_start=True)
-            curr_est_ = 0
-            for i_size in np.arange(len(tree_sizes)):
-                size = tree_sizes[i_size]
-                self.tree_generator.set_params(n_estimators=curr_est_ + 1)
-                self.tree_generator.set_params(max_leaf_nodes=size)
-                random_state_add = self.random_state if self.random_state else 0
-                self.tree_generator.set_params(
-                    random_state=i_size + random_state_add)  # warm_state=True seems to reset random_state, such that the trees are highly correlated, unless we manually change the random_sate here.
-                self.tree_generator.fit(np.copy(X, order='C'), np.copy(y, order='C'))
-                curr_est_ = curr_est_ + 1
-            self.tree_generator.set_params(warm_start=False)
-
-        if isinstance(self.tree_generator, RandomForestRegressor):
-            self.estimators_ = [[x] for x in self.tree_generator.estimators_]
-        else:
-            self.estimators_ = self.tree_generator.estimators_
     
-    def _extract_rules(self):
-        seen_antecedents = set()
-        extracted_rules = [] 
-        for estimator in self.estimators_:
-            for rule_value_pair in tree_to_rules(estimator[0], np.array(self.feature_names_), prediction_values=True):
-                if rule_value_pair[0] not in seen_antecedents:
-                    extracted_rules.append(rule_value_pair)
-                    seen_antecedents.add(rule_value_pair[0])
-        
-        extracted_rules = sorted(extracted_rules, key=lambda x: x[1])
-        extracted_rules = list(map(lambda x: x[0], extracted_rules))
-        return extracted_rules
+    def _extract_rules(self, X, y):
+        return extract_rulefit(X, y, 
+                               feature_names=self.feature_names_,
+                               tree_size=self.tree_size,
+                               max_rules=self.max_rules,
+                               memory_par=self.memory_par,
+                               tree_generator=self.tree_generator,
+                               exp_rand_tree_size=self.exp_rand_tree_size,
+                               random_state=self.random_state)
 
     def _score_rules(self, X, y, rules):
         X_concat = np.zeros([X.shape[0], 0])
