@@ -482,7 +482,8 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
                     base_estimator=tree_class(
                         max_depth=max_depth,
                         max_features=self.max_features,
-                        min_samples_split=self.min_samples_split
+                        min_samples_split=self.min_samples_split,
+                        random_state=self.random_state
                     ),
                     n_estimators=self.n_estimators,
                     max_samples=self.max_samples_,
