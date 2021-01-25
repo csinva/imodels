@@ -10,6 +10,7 @@ from sklearn.base import BaseEstimator
 from imodels.rule_list.bayesian_rule_list.brl_util import *
 from imodels.util.discretization.mdlp import MDLP_Discretizer, BRLDiscretizer
 from imodels.rule_list.rule_list import RuleList
+from imodels.util.extract import extract_fpgrowth
 
 
 class BayesianRuleListClassifier(BaseEstimator, RuleList):
@@ -117,53 +118,25 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         if len(set(y)) != 2:
             raise Exception("Only binary classification is supported at this time!")
 
-        # deal with pandas data
-        if type(X) in [pd.DataFrame, pd.Series]:
-            if feature_labels is None:
-                feature_labels = X.columns
-            X = X.values
-        if type(y) in [pd.DataFrame, pd.Series]:
-            y = y.values
-
-        if feature_labels is None:
-            feature_labels = [f'X{i}' for i in range(X.shape[1])]
-        self.feature_labels = feature_labels
-            
-        self.discretizer = BRLDiscretizer(X, y, feature_labels=self.feature_labels, verbose=verbose)
-        X = self.discretizer.discretize_mixed_data(X, y, undiscretized_features)
-            
-        permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
-        data = list(X[:])
-
-        # Now find frequent itemsets
-
-        X_colname_removed = data.copy()
-        for i in range(len(data)):
-            X_colname_removed[i] = list(map(lambda s: s.split(' : ')[1], X_colname_removed[i]))
-
-        X_df_categorical = pd.DataFrame(X_colname_removed, columns=feature_labels)
-        X_df_onehot = pd.get_dummies(X_df_categorical)
-        onehot_features = X_df_onehot.columns
-
-        itemsets_df = fpgrowth(X_df_onehot, min_support=self.minsupport, max_len=self.maxcardinality)
-        itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
-        itemsets = [np.array(onehot_features)[list(inds)] for inds in itemsets_indices]
-        itemsets = list(map(tuple, itemsets))
-        if self.verbose:
-            print(len(itemsets), 'rules mined')
-
-
+        itemsets, self.discretizer = extract_fpgrowth(X, y, 
+                                                      feature_labels=feature_labels,
+                                                      minsupport=self.minsupport, 
+                                                      maxcardinality=self.maxcardinality,
+                                                      undiscretized_features=undiscretized_features,
+                                                      verbose=verbose)
+        
+        self.feature_labels = self.discretizer.feature_labels
+        X_df_onehot = self.discretizer.onehot_df
+        
         # Now form the data-vs.-lhs set
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
         for c in X_df_onehot.columns:
             X_df_onehot[c] = [c if x == 1 else '' for x in list(X_df_onehot[c])]
         X = [{}] * (len(itemsets) + 1)
-        X[0] = set(range(len(data)))  # the default rule satisfies all data
+        X[0] = set(range(len(X_df_onehot)))  # the default rule satisfies all data
         for (j, lhs) in enumerate(itemsets):
             X[j + 1] = set([i for (i, xi) in enumerate(X_df_onehot.values) if set(lhs).issubset(xi)])
 
-        
-        
         # now form lhs_len
         lhs_len = [0]
         for lhs in itemsets:
@@ -176,7 +149,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         Xtrain, Ytrain, nruleslen, lhs_len, self.itemsets = (
             X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all
         )
-
+        
+        permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
         # Do MCMC
         res, Rhat = run_bdl_multichain_serial(self.max_iter, self.thinning, self.alpha, self.listlengthprior,
                                               self.listwidthprior, Xtrain, Ytrain, nruleslen, lhs_len,

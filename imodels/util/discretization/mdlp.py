@@ -265,7 +265,7 @@ class BRLDiscretizer:
     def __init__(self, X, y, feature_labels, verbose=False):
         self.feature_labels = feature_labels
         self.verbose = verbose
-    
+ 
     def discretize_mixed_data(self, X, y, undiscretized_features=[]):
         if type(X) != list:
             X = np.array(X).tolist()
@@ -286,7 +286,8 @@ class BRLDiscretizer:
                     "Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to "
                     "strings, and/or specify the argument 'undiscretized_features', to avoid this.)")
             X = self.discretize(X, y)
-
+        
+        self.discretized_X = X
         return X
     
     def discretize(self, X, y):
@@ -310,6 +311,21 @@ class BRLDiscretizer:
 
         return np.array(cat_data).tolist()
 
+    @property
+    def onehot_df(self):
+        '''Create readable one-hot encoded DataFrame from discretized features
+        '''
+        assert hasattr(self, 'discretized_X')
+        data = list(self.discretized_X[:])
+
+        X_colname_removed = data.copy()
+        for i in range(len(data)):
+            X_colname_removed[i] = list(map(lambda s: s.split(' : ')[1], X_colname_removed[i]))
+
+        X_df_categorical = pd.DataFrame(X_colname_removed, columns=self.feature_labels)
+        X_df_onehot = pd.get_dummies(X_df_categorical)
+        return X_df_onehot
+    
     @property
     def data(self):
         return self.discretizer._data

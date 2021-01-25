@@ -1,15 +1,47 @@
-from typing import Iterable
+from typing import Iterable, Tuple, List
 
 import numpy as np
+import pandas as pd
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from mlxtend.frequent_patterns import fpgrowth
 
 from imodels.util.convert import tree_to_rules
+from imodels.util.discretization.mdlp import BRLDiscretizer
 
 
-def extract_fpgrowth():
-    pass
+def extract_fpgrowth(X, y,
+                     feature_labels=None,
+                     minsupport=0.1,
+                     maxcardinality=2,
+                     undiscretized_features=[],
+                     verbose=False) -> Tuple[List[Tuple], BRLDiscretizer]:
+
+    # deal with pandas data
+    if type(X) in [pd.DataFrame, pd.Series]:
+        if feature_labels is None:
+            feature_labels = X.columns
+        X = X.values
+    if type(y) in [pd.DataFrame, pd.Series]:
+        y = y.values
+
+    if feature_labels is None:
+        feature_labels = [f'X{i}' for i in range(X.shape[1])]
+        
+    discretizer = BRLDiscretizer(X, y, feature_labels=feature_labels, verbose=verbose)
+    X = discretizer.discretize_mixed_data(X, y, undiscretized_features)
+    X_df_onehot = discretizer.onehot_df
+    
+    # Now find frequent itemsets
+    itemsets_df = fpgrowth(X_df_onehot, min_support=minsupport, max_len=maxcardinality)
+    itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
+    itemsets = [np.array(X_df_onehot.columns)[list(inds)] for inds in itemsets_indices]
+    itemsets = list(map(tuple, itemsets))
+    if verbose:
+        print(len(itemsets), 'rules mined')
+
+    return itemsets, discretizer
 
 
 def extract_rulefit(X, y, feature_names,
