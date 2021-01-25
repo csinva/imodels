@@ -8,7 +8,7 @@ from mlxtend.frequent_patterns import fpgrowth
 from sklearn.base import BaseEstimator
 
 from imodels.rule_list.bayesian_rule_list.brl_util import *
-from imodels.util.discretization.mdlp import MDLP_Discretizer
+from imodels.util.discretization.mdlp import MDLP_Discretizer, BRLDiscretizer
 from imodels.rule_list.rule_list import RuleList
 
 
@@ -86,34 +86,6 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
                 feature_labels = ["ft" + str(i + 1) for i in range(len(X[0]))]
         self.feature_labels = feature_labels
 
-    def _discretize_mixed_data(self, X, y, undiscretized_features=[]):
-        if type(X) != list:
-            X = np.array(X).tolist()
-
-        # check which features are numeric (to be discretized)
-        self.discretized_features = []
-        for fi in range(len(X[0])):
-            # if not string, and not specified as undiscretized
-            if isinstance(X[0][fi], numbers.Number) \
-                    and (len(self.feature_labels) == 0 or \
-                         len(undiscretized_features) == 0 or \
-                         self.feature_labels[fi] not in undiscretized_features):
-                self.discretized_features.append(self.feature_labels[fi])
-
-        if len(self.discretized_features) > 0:
-            if self.verbose:
-                print(
-                    "Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to "
-                    "strings, and/or specify the argument 'undiscretized_features', to avoid this.)")
-            X = self.discretize(X, y)
-
-        return X
-
-    def _setdata(self, X, y, feature_labels=[], undiscretized_features=[]):
-        self._setlabels(X, feature_labels)
-        X = self._discretize_mixed_data(X, y, undiscretized_features)
-        return X, y
-
     def fit(self, X, y, feature_labels: list=None, undiscretized_features=[], verbose=False):
         """Fit rule lists to data
 
@@ -155,8 +127,11 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
 
         if feature_labels is None:
             feature_labels = [f'X{i}' for i in range(X.shape[1])]
+        self.feature_labels = feature_labels
             
-        X, y = self._setdata(X, y, feature_labels, undiscretized_features)
+        self.discretizer = BRLDiscretizer(X, y, feature_labels=self.feature_labels, verbose=verbose)
+        X = self.discretizer.discretize_mixed_data(X, y, undiscretized_features)
+            
         permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
         data = list(X[:])
 
@@ -221,27 +196,6 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             self.theta, self.ci_theta = get_rule_rhs(Xtrain, Ytrain, self.d_star, self.alpha, True)
 
         return self
-
-    def discretize(self, X, y):
-        '''Discretize the features specified in self.discretized_features
-        '''
-        if self.verbose:
-            print("Discretizing ", self.discretized_features, "...")
-        D = pd.DataFrame(np.hstack((X, np.array(y).reshape((len(y), 1)))), columns=list(self.feature_labels) + ["y"])
-        self.discretizer = MDLP_Discretizer(dataset=D, class_label="y", features=self.discretized_features)
-
-        cat_data = pd.DataFrame(np.zeros_like(X))
-        for i in range(len(self.feature_labels)):
-            label = self.feature_labels[i]
-            if label in self.discretized_features:
-                column = []
-                for j in range(len(self.discretizer._data[label])):
-                    column += [label + " : " + self.discretizer._data[label][j]]
-                cat_data.iloc[:, i] = np.array(column)
-            else:
-                cat_data.iloc[:, i] = D[label]
-
-        return np.array(cat_data).tolist()
 
     def _prepend_feature_labels(self, X):
         Xl = np.copy(X).astype(str).tolist()
@@ -308,9 +262,9 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             X = X.values
 
         if self.discretizer:
-            self.discretizer._data = pd.DataFrame(X, columns=self.feature_labels)
+            self.discretizer.data = pd.DataFrame(X, columns=self.feature_labels)
             self.discretizer.apply_cutpoints()
-            D = self._prepend_feature_labels(np.array(self.discretizer._data))
+            D = self._prepend_feature_labels(np.array(self.discretizer.data))
         else:
             D = X
 
