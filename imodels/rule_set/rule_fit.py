@@ -107,9 +107,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         if type(y) in [pd.DataFrame, pd.Series]:
             y = y.values
 
-        self.n_obs = X.shape[0]
         self.n_features_ = X.shape[1]
-        self.feature_names_, self.feature_dict_ = enum_features(X, feature_names)
+        self.feature_names_ = enum_features(X, feature_names)[0]
 
         extracted_rules = self._extract_rules(X, y)
         self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(X, y, extracted_rules)
