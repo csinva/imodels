@@ -52,8 +52,7 @@ class TestClassClassificationBinary:
 
             preds = m.predict(X)  # > 0.5).astype(int)
             assert preds.size == self.n, 'predict() yields right size'
-            if model_type != SkopeRulesClassifier:
-                assert (np.argmax(preds_proba, axis=1) == preds).all(), "predict_proba and predict correspond"
+            assert (np.argmax(preds_proba, axis=1) == preds).all(), "predict_proba and predict correspond"
             
             #             print(model_type, preds, self.y_classification_binary)
             # for i in range(20):

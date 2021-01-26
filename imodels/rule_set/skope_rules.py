@@ -350,13 +350,16 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
             be considered as an outlier according to the selected rules.
         """
 
-        return np.array((self.eval_weighted_rule_sum(X) > 0), dtype=int)
+        return np.argmax(self.predict_proba(X), axis=1)
 
     def predict_proba(self, X) -> np.ndarray:
         '''Predict probability of a particular sample being an outlier or not
 
         '''
-        y = self.rules_vote(X) / len(self.rules_without_feature_names_)
+        weight_sum = np.sum([w[0] for (r, w) in self.rules_without_feature_names_])
+        if weight_sum == 0:
+            return np.vstack((np.ones(X.shape[0]), np.zeros(X.shape[0]))).transpose()
+        y = self.eval_weighted_rule_sum(X) / weight_sum
         return np.vstack((1 - y, y)).transpose()
 
     def rules_vote(self, X) -> np.ndarray:
