@@ -311,12 +311,34 @@ class BRLDiscretizer:
 
         return np.array(cat_data).tolist()
 
+    def apply_discretization(self, X, return_onehot=False):
+        
+        if type(X) in [pd.DataFrame, pd.Series]:
+            X = X.values
+        
+        self.data = pd.DataFrame(X, columns=self.feature_labels)
+        self.apply_cutpoints()
+        D = np.array(self.data)
+
+        # prepend feature labels
+        Dl = np.copy(D).astype(str).tolist()
+        for i in range(len(Dl)):
+            for j in range(len(Dl[0])):
+                Dl[i][j] = self.feature_labels[j] + " : " + Dl[i][j]
+        
+        if not return_onehot:
+            return Dl
+        else:
+            return self.get_onehot_df(Dl)
+    
     @property
     def onehot_df(self):
+        return self.get_onehot_df(self.discretized_X)
+
+    def get_onehot_df(self, discretized_X):
         '''Create readable one-hot encoded DataFrame from discretized features
         '''
-        assert hasattr(self, 'discretized_X')
-        data = list(self.discretized_X[:])
+        data = list(discretized_X[:])
 
         X_colname_removed = data.copy()
         for i in range(len(data)):

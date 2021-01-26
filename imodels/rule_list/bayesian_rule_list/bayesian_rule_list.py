@@ -171,13 +171,6 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
 
         return self
 
-    def _prepend_feature_labels(self, X):
-        Xl = np.copy(X).astype(str).tolist()
-        for i in range(len(Xl)):
-            for j in range(len(Xl[0])):
-                Xl[i][j] = self.feature_labels[j] + " : " + Xl[i][j]
-        return Xl
-
     def __str__(self, decimals=1):
         if self.d_star:
             detect = ""
@@ -231,16 +224,14 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             the model. The columns correspond to the classes in sorted
             order, as they appear in the attribute `classes_`.
         """
-        # deal with pandas data
-        if type(X) in [pd.DataFrame, pd.Series]:
-            X = X.values
-
         if self.discretizer:
-            self.discretizer.data = pd.DataFrame(X, columns=self.feature_labels)
-            self.discretizer.apply_cutpoints()
-            D = self._prepend_feature_labels(np.array(self.discretizer.data))
+            D = self.discretizer.apply_discretization(X)
         else:
             D = X
+
+        # deal with pandas data
+        if type(D) in [pd.DataFrame, pd.Series]:
+            D = D.values
 
         N = len(D)
         X2 = self._to_itemset_indices(D[:])
