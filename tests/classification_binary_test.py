@@ -27,6 +27,9 @@ class TestClassClassificationBinary:
             init_kwargs = {}
             if model_type == RuleFitClassifier:
                 init_kwargs['max_rules'] = 5
+            if model_type == SkopeRulesClassifier:
+                init_kwargs['random_state'] = 0
+                init_kwargs['recall_min'] = 0.5
             m = model_type(**init_kwargs)
 
             if model_type == BayesianRuleListClassifier:

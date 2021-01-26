@@ -168,9 +168,3 @@ def test_performances():
     assert y_pred.shape == (n_samples,)
     # training set performance
     assert accuracy_score(y, y_pred) > 0.83
-
-    # eval_weighted_rule_sum agrees with predict
-    decision = -clf.eval_weighted_rule_sum(X)
-    assert decision.shape == (n_samples,)
-    dec_pred = (decision.ravel() < 0).astype(np.int)
-    assert_array_equal(dec_pred, y_pred)
