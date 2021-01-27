@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree import _tree
 from sklearn.tree import _tree
-from typing import Union, List
+from typing import Union, List, Tuple
 
 
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
@@ -98,3 +98,28 @@ def tree_to_code(clf, feature_names):
         else:
             s += f"{feature_names[feature[i]]} <= {threshold[i]}"
     return s + '\n'
+
+
+def itemsets_to_rules(itemsets: List[Tuple]) -> List[str]:
+    itemsets_without_all = [itemset for itemset in itemsets if 'All' not in ''.join(itemset)]
+    f = lambda itemset: ' and '.join([single_discretized_feature_to_rule(item) for item in itemset])
+    return list(map(f, itemsets_without_all))
+
+
+def single_discretized_feature_to_rule(feat: str) -> str:
+    
+    feat_split = feat.split('_to_')
+    upper_value = feat_split[-1]
+    lower_value = feat_split[-2].split('_')[-1]
+    
+    lower_to_upper_len = 1 + len(lower_value) + 4 + len(upper_value)
+    feature_name = feat[:-lower_to_upper_len]
+    
+    if lower_value == '-inf':
+        rule = f'{feature_name} <= {upper_value}'
+    elif upper_value == 'inf':
+        rule = f'{feature_name} > {lower_value}'
+    else:
+        rule = f'{feature_name} > {lower_value} and {feature_name} <= {upper_value}'
+    
+    return rule

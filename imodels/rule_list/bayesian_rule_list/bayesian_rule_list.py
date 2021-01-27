@@ -8,8 +8,9 @@ from mlxtend.frequent_patterns import fpgrowth
 from sklearn.base import BaseEstimator
 
 from imodels.rule_list.bayesian_rule_list.brl_util import *
-from imodels.util.discretization.mdlp import MDLP_Discretizer
+from imodels.util.discretization.mdlp import MDLP_Discretizer, BRLDiscretizer
 from imodels.rule_list.rule_list import RuleList
+from imodels.util.extract import extract_fpgrowth
 
 
 class BayesianRuleListClassifier(BaseEstimator, RuleList):
@@ -86,34 +87,6 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
                 feature_labels = ["ft" + str(i + 1) for i in range(len(X[0]))]
         self.feature_labels = feature_labels
 
-    def _discretize_mixed_data(self, X, y, undiscretized_features=[]):
-        if type(X) != list:
-            X = np.array(X).tolist()
-
-        # check which features are numeric (to be discretized)
-        self.discretized_features = []
-        for fi in range(len(X[0])):
-            # if not string, and not specified as undiscretized
-            if isinstance(X[0][fi], numbers.Number) \
-                    and (len(self.feature_labels) == 0 or \
-                         len(undiscretized_features) == 0 or \
-                         self.feature_labels[fi] not in undiscretized_features):
-                self.discretized_features.append(self.feature_labels[fi])
-
-        if len(self.discretized_features) > 0:
-            if self.verbose:
-                print(
-                    "Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to "
-                    "strings, and/or specify the argument 'undiscretized_features', to avoid this.)")
-            X = self.discretize(X, y)
-
-        return X
-
-    def _setdata(self, X, y, feature_labels=[], undiscretized_features=[]):
-        self._setlabels(X, feature_labels)
-        X = self._discretize_mixed_data(X, y, undiscretized_features)
-        return X, y
-
     def fit(self, X, y, feature_labels: list=None, undiscretized_features=[], verbose=False):
         """Fit rule lists to data
 
@@ -145,50 +118,25 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         if len(set(y)) != 2:
             raise Exception("Only binary classification is supported at this time!")
 
-        # deal with pandas data
-        if type(X) in [pd.DataFrame, pd.Series]:
-            if feature_labels is None:
-                feature_labels = X.columns
-            X = X.values
-        if type(y) in [pd.DataFrame, pd.Series]:
-            y = y.values
-
-        if feature_labels is None:
-            feature_labels = [f'X{i}' for i in range(X.shape[1])]
-            
-        X, y = self._setdata(X, y, feature_labels, undiscretized_features)
-        permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
-        data = list(X[:])
-
-        # Now find frequent itemsets
-
-        X_colname_removed = data.copy()
-        for i in range(len(data)):
-            X_colname_removed[i] = list(map(lambda s: s.split(' : ')[1], X_colname_removed[i]))
-
-        X_df_categorical = pd.DataFrame(X_colname_removed, columns=feature_labels)
-        X_df_onehot = pd.get_dummies(X_df_categorical)
-        onehot_features = X_df_onehot.columns
-
-        itemsets_df = fpgrowth(X_df_onehot, min_support=self.minsupport, max_len=self.maxcardinality)
-        itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
-        itemsets = [np.array(onehot_features)[list(inds)] for inds in itemsets_indices]
-        itemsets = list(map(tuple, itemsets))
-        if self.verbose:
-            print(len(itemsets), 'rules mined')
-
-
+        itemsets, self.discretizer = extract_fpgrowth(X, y, 
+                                                      feature_labels=feature_labels,
+                                                      minsupport=self.minsupport, 
+                                                      maxcardinality=self.maxcardinality,
+                                                      undiscretized_features=undiscretized_features,
+                                                      verbose=verbose)
+        
+        self.feature_labels = self.discretizer.feature_labels
+        X_df_onehot = self.discretizer.onehot_df
+        
         # Now form the data-vs.-lhs set
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
         for c in X_df_onehot.columns:
             X_df_onehot[c] = [c if x == 1 else '' for x in list(X_df_onehot[c])]
         X = [{}] * (len(itemsets) + 1)
-        X[0] = set(range(len(data)))  # the default rule satisfies all data
+        X[0] = set(range(len(X_df_onehot)))  # the default rule satisfies all data
         for (j, lhs) in enumerate(itemsets):
             X[j + 1] = set([i for (i, xi) in enumerate(X_df_onehot.values) if set(lhs).issubset(xi)])
 
-        
-        
         # now form lhs_len
         lhs_len = [0]
         for lhs in itemsets:
@@ -201,7 +149,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         Xtrain, Ytrain, nruleslen, lhs_len, self.itemsets = (
             X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all
         )
-
+        
+        permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
         # Do MCMC
         res, Rhat = run_bdl_multichain_serial(self.max_iter, self.thinning, self.alpha, self.listlengthprior,
                                               self.listwidthprior, Xtrain, Ytrain, nruleslen, lhs_len,
@@ -221,34 +170,6 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             self.theta, self.ci_theta = get_rule_rhs(Xtrain, Ytrain, self.d_star, self.alpha, True)
 
         return self
-
-    def discretize(self, X, y):
-        '''Discretize the features specified in self.discretized_features
-        '''
-        if self.verbose:
-            print("Discretizing ", self.discretized_features, "...")
-        D = pd.DataFrame(np.hstack((X, np.array(y).reshape((len(y), 1)))), columns=list(self.feature_labels) + ["y"])
-        self.discretizer = MDLP_Discretizer(dataset=D, class_label="y", features=self.discretized_features)
-
-        cat_data = pd.DataFrame(np.zeros_like(X))
-        for i in range(len(self.feature_labels)):
-            label = self.feature_labels[i]
-            if label in self.discretized_features:
-                column = []
-                for j in range(len(self.discretizer._data[label])):
-                    column += [label + " : " + self.discretizer._data[label][j]]
-                cat_data.iloc[:, i] = np.array(column)
-            else:
-                cat_data.iloc[:, i] = D[label]
-
-        return np.array(cat_data).tolist()
-
-    def _prepend_feature_labels(self, X):
-        Xl = np.copy(X).astype(str).tolist()
-        for i in range(len(Xl)):
-            for j in range(len(Xl[0])):
-                Xl[i][j] = self.feature_labels[j] + " : " + Xl[i][j]
-        return Xl
 
     def __str__(self, decimals=1):
         if self.d_star:
@@ -303,16 +224,14 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             the model. The columns correspond to the classes in sorted
             order, as they appear in the attribute `classes_`.
         """
-        # deal with pandas data
-        if type(X) in [pd.DataFrame, pd.Series]:
-            X = X.values
-
         if self.discretizer:
-            self.discretizer._data = pd.DataFrame(X, columns=self.feature_labels)
-            self.discretizer.apply_cutpoints()
-            D = self._prepend_feature_labels(np.array(self.discretizer._data))
+            D = self.discretizer.apply_discretization(X)
         else:
             D = X
+
+        # deal with pandas data
+        if type(D) in [pd.DataFrame, pd.Series]:
+            D = D.values
 
         N = len(D)
         X2 = self._to_itemset_indices(D[:])

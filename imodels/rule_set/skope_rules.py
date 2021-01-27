@@ -89,6 +89,7 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from imodels.rule_set.rule_set import RuleSet
 from imodels.util.convert import tree_to_rules
 from imodels.util.rule import replace_feature_name, enum_features
+from imodels.util.extract import extract_skope
 from imodels.util.score import score_oob
 from imodels.util.prune import prune_mins, deduplicate
 
@@ -317,14 +318,11 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
                 raise ValueError("max_samples must be in (0, 1], got %r" % self.max_samples)
             max_samples = int(self.max_samples * X.shape[0])
         self.max_samples_ = max_samples
-        self._max_depths = self.max_depth if isinstance(self.max_depth, Iterable) else [self.max_depth]
 
         self.feature_names_, self.feature_dict_ = enum_features(X, feature_names)
 
-        self.tree_generators = self._get_tree_ensemble()
-        self._fit_tree_ensemble(X, y)
+        extracted_rules, self.estimators_, self.estimators_samples_, self.estimators_features_ = self._extract_rules(X, y)
 
-        extracted_rules = self._extract_rules()
         scored_rules = self._score_rules(X, y, extracted_rules)
         self.rules_ = self._prune_rules(scored_rules)
 
@@ -472,67 +470,22 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
         return np.array((self.score_top_rules(X) > len(self.rules_) - n_rules),
                         dtype=int)
 
-    def _get_tree_ensemble(self) -> Union[List[BaggingClassifier], List[BaggingRegressor]]:
-
-        for ensemble_class, tree_class in [
-            (BaggingClassifier, DecisionTreeClassifier), (BaggingRegressor, DecisionTreeRegressor)
-        ]:
-
-            ensembles = []
-
-            for max_depth in self._max_depths:
-                bagging_clf = ensemble_class(
-                    base_estimator=tree_class(
-                        max_depth=max_depth,
-                        max_features=self.max_features,
-                        min_samples_split=self.min_samples_split,
-                        random_state=self.random_state
-                    ),
-                    n_estimators=self.n_estimators,
-                    max_samples=self.max_samples_,
-                    max_features=self.max_samples_features,
-                    bootstrap=self.bootstrap,
-                    bootstrap_features=self.bootstrap_features,
-                    # oob_score=... XXX may be added
-                    # if selection on tree perf needed.
-                    # warm_start=... XXX may be added to increase computation perf.
-                    n_jobs=self.n_jobs,
-                    random_state=self.random_state,
-                    verbose=self.verbose
-                )
-                ensembles.append(bagging_clf)
-
-        return ensembles
-
-    def _fit_tree_ensemble(self, X, y) -> None:
-        y_reg = y
-        if self.sample_weight is not None:
-            sample_weight = check_array(self.sample_weight, ensure_2d=False)
-            weights = sample_weight - sample_weight.min()
-            contamination = float(sum(y)) / len(y)
-            y_reg = (
-                    pow(weights, 0.5) * 0.5 / contamination * (y > 0) -
-                    pow((weights).mean(), 0.5) * (y == 0)
-            )
-            y_reg = 1. / (1 + np.exp(-y_reg))  # sigmoid
-
-        for e in self.tree_generators[:len(self.tree_generators) // 2]:
-            e.fit(X, y)
-
-        for e in self.tree_generators[len(self.tree_generators) // 2:]:
-            e.fit(X, y_reg)
-
-    def _extract_rules(self):
-        self.estimators_, self.estimators_samples_, self.estimators_features_ = [], [], []
-        for ensemble in self.tree_generators:
-            self.estimators_ += ensemble.estimators_
-            self.estimators_samples_ += ensemble.estimators_samples_
-            self.estimators_features_ += ensemble.estimators_features_
-
-        extracted_rules = []
-        for estimator, features in zip(self.estimators_, self.estimators_features_):
-            extracted_rules.append(tree_to_rules(estimator, np.array(self.feature_names_)[features]))
-        return extracted_rules
+    def _extract_rules(self, X, y):
+        return extract_skope(X, y,
+                             feature_names=self.feature_names_,
+                             sample_weight=self.sample_weight,
+                             n_estimators=self.n_estimators,
+                             max_samples=self.max_samples_,
+                             max_samples_features=self.max_samples_features,
+                             bootstrap=self.bootstrap,
+                             bootstrap_features=self.bootstrap_features,
+                             max_depths=self.max_depth,
+                             max_depth_duplication=self.max_depth_duplication,
+                             max_features=self.max_features,
+                             min_samples_split=self.min_samples_split,
+                             n_jobs=self.n_jobs,
+                             random_state=self.random_state,
+                             verbose=self.verbose)
 
     def _score_rules(self, X, y, rules):
         return score_oob(X, y, rules, self.estimators_samples_, self.estimators_features_, self.feature_names_)
