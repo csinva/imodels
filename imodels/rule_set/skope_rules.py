@@ -238,7 +238,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
         self.max_samples_features = max_samples_features
         self.bootstrap = bootstrap
         self.bootstrap_features = bootstrap_features
-        self.max_depths = max_depth
+        self.max_depth = max_depth
         self.max_depth_duplication = max_depth_duplication
         self.max_features = max_features
         self.min_samples_split = min_samples_split
@@ -479,7 +479,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
                              max_samples_features=self.max_samples_features,
                              bootstrap=self.bootstrap,
                              bootstrap_features=self.bootstrap_features,
-                             max_depths=self.max_depths,
+                             max_depths=self.max_depth,
                              max_depth_duplication=self.max_depth_duplication,
                              max_features=self.max_features,
                              min_samples_split=self.min_samples_split,
