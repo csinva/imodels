@@ -8,7 +8,7 @@ from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListCla
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
-from .rule_set.mixed import FPLassoRegressor, FPLassoClassifier
+from .rule_set.fplasso import FPLassoRegressor, FPLassoClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.boosted_rules import BoostedRulesClassifier
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
