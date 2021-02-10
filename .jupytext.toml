@@ -1,1 +1,1 @@
-default_jupytext_formats = "notebooks//imodels_demo.ipynb,tests/notebooks//test_imodels_demo.py:percent"
+default_jupytext_formats = "notebooks//imodels_demo.ipynb,tests/notebooks//imodels_demo.py:percent"
