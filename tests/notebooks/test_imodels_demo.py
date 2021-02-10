@@ -19,6 +19,7 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
+np.random.seed(13)
 from sklearn.datasets import fetch_openml, load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor, plot_tree, DecisionTreeClassifier
@@ -155,7 +156,6 @@ viz_classification_preds(probs, y_test)
 # ### scalable bayesian rule lists
 
 # %%
-np.random.seed(13)
 # train classifier (allow more iterations for better accuracy; use BigDataRuleListClassifier for large datasets)
 print('training...')
 m = BayesianRuleListClassifier(max_iter=3000, class1label="diabetes", verbose=False)
@@ -238,3 +238,5 @@ for lambda_reg in [0, 1e-2, 5e-2, 1e-1, 1, 2]:
     model.fit(X_sim, y_sim, lambda_reg)
     mse = np.mean(np.square(y_sim - model.predict(X_sim)))
     print(f'lambda: {lambda_reg}\tmse: {mse: 0.2f}\tweights: {model.model.coef_}')
+
+# %%
