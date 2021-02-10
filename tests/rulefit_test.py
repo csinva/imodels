@@ -1,5 +1,8 @@
 import numpy as np
 
+from sklearn.utils._testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
+
 from imodels.util.transforms import FriedScale
 from imodels.rule_set.rule_fit import RuleFitRegressor
 
@@ -22,6 +25,7 @@ def test_fried_scale():
 '''
 
 
+@ignore_warnings(category=ConvergenceWarning)
 def test_integration():
 
     X = np.array([[1, 99, 43, 34],
