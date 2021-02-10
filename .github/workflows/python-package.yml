@@ -27,4 +27,4 @@ jobs:
         pip install . --no-cache-dir
     - name: Test with pytest
       run: |
-        python tests/test.py
+        pytest --cov=imodels
