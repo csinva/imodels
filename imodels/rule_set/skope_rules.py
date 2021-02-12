@@ -88,7 +88,7 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
 from imodels.util.convert import tree_to_rules
-from imodels.util.rule import replace_feature_name, enum_features
+from imodels.util.rule import replace_feature_name, get_feature_dict, Rule
 from imodels.util.extract import extract_skope
 from imodels.util.score import score_oob
 from imodels.util.prune import prune_mins, deduplicate
@@ -246,7 +246,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
         self.random_state = random_state
         self.verbose = verbose
 
-    def fit(self, X, y, feature_names=None, sample_weight=None) -> 'SkopeRulesClassifier':
+    def fit(self, X, y, feature_names=None, sample_weight=None):
         """Fit the model according to the given training data.
 
         Parameters
@@ -319,16 +319,17 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
             max_samples = int(self.max_samples * X.shape[0])
         self.max_samples_ = max_samples
 
-        self.feature_names_, self.feature_dict_ = enum_features(X, feature_names)
+        self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
+        self.feature_placeholders = list(self.feature_dict_.keys())
+        self.feature_names = list(self.feature_dict_.values())
 
-        extracted_rules, self.estimators_, self.estimators_samples_, self.estimators_features_ = self._extract_rules(X, y)
-
+        extracted_rules, self.estimators_samples_, self.estimators_features_ = self._extract_rules(X, y)
         scored_rules = self._score_rules(X, y, extracted_rules)
         self.rules_ = self._prune_rules(scored_rules)
 
         self.rules_without_feature_names_ = self.rules_
         self.rules_ = [
-            (replace_feature_name(rule, self.feature_dict_), perf) for rule, perf in self.rules_
+            replace_feature_name(rule, self.feature_dict_) for rule in self.rules_
         ]
         return self
 
@@ -380,8 +381,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
 
         """
         # Check if fit had been called
-        check_is_fitted(self, ['rules_', 'estimators_', 'estimators_samples_',
-                               'max_samples_'])
+        check_is_fitted(self, ['rules_', 'estimators_samples_', 'max_samples_'])
 
         # Input validation
         X = check_array(X)
@@ -392,8 +392,8 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
                              " Please reshape your data."
                              % (X.shape[1], self.n_features_))
 
-        df = pandas.DataFrame(X, columns=self.feature_names_)
-        selected_rules = self.rules_
+        df = pandas.DataFrame(X, columns=self.feature_placeholders)
+        selected_rules = self.rules_without_feature_names_
 
         scores = np.zeros(X.shape[0])
         for (r, _) in selected_rules:
@@ -422,8 +422,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
 
         """
         # Check if fit had been called
-        check_is_fitted(self, ['rules_', 'estimators_', 'estimators_samples_',
-                               'max_samples_'])
+        check_is_fitted(self, ['rules_', 'estimators_samples_', 'max_samples_'])
 
         # Input validation
         X = check_array(X)
@@ -434,14 +433,14 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
                              " Please reshape your data."
                              % (X.shape[1], self.n_features_))
 
-        df = pandas.DataFrame(X, columns=self.feature_names_)
+        df = pandas.DataFrame(X, columns=self.feature_placeholders)
         selected_rules = self.rules_without_feature_names_
 
         scores = np.zeros(X.shape[0])
         for (k, r) in enumerate(list((selected_rules))):
-            scores[list(df.query(r[0]).index)] = np.maximum(
+            scores[list(df.query(r.rule).index)] = np.maximum(
                 len(selected_rules) - k,
-                scores[list(df.query(r[0]).index)])
+                scores[list(df.query(r.rule).index)])
 
         return scores
 
@@ -470,9 +469,9 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
         return np.array((self.score_top_rules(X) > len(self.rules_) - n_rules),
                         dtype=int)
 
-    def _extract_rules(self, X, y):
+    def _extract_rules(self, X, y) -> Tuple[List[str], List[np.array], List[np.array]]:
         return extract_skope(X, y,
-                             feature_names=self.feature_names_,
+                             feature_names=self.feature_placeholders,
                              sample_weight=self.sample_weight,
                              n_estimators=self.n_estimators,
                              max_samples=self.max_samples_,
@@ -487,10 +486,10 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
                              random_state=self.random_state,
                              verbose=self.verbose)
 
-    def _score_rules(self, X, y, rules):
-        return score_oob(X, y, rules, self.estimators_samples_, self.estimators_features_, self.feature_names_)
+    def _score_rules(self, X, y, rules) -> List[Rule]:
+        return score_oob(X, y, rules, self.estimators_samples_, self.estimators_features_, self.feature_placeholders)
 
-    def _prune_rules(self, rules):
+    def _prune_rules(self, rules) -> List[Rule]:
         return deduplicate(
             prune_mins(rules, self.precision_min, self.recall_min),
             self.max_depth_duplication

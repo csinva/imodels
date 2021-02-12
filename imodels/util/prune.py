@@ -1,8 +1,10 @@
 from typing import List
 from collections import Counter
 
+from imodels.util.rule import Rule
 
-def prune_mins(rules: List[str], precision_min: float, recall_min: float):
+
+def prune_mins(rules: List[Rule], precision_min: float, recall_min: float) -> List[Rule]:
     # Factorize rules before semantic tree filtering
     rules_ = [tuple(rule) for rule in rules]
     rules_dict = {}
@@ -22,23 +24,22 @@ def prune_mins(rules: List[str], precision_min: float, recall_min: float):
             else:
                 rules_dict[rule] = (score[0], score[1], 1)
 
-    rules_dict = sorted(rules_dict.items(), key=lambda x: (x[1][0], x[1][1]), reverse=True)
+    rule_tuple_list = sorted(rules_dict.items(), key=lambda x: (x[1][0], x[1][1]), reverse=True)
+    return [Rule(rule, args=scores) for rule, scores in rule_tuple_list]
 
-    return rules_dict
 
-
-def deduplicate(rules, max_depth_dup):
+def deduplicate(rules: List[Rule], max_depth_dup: int) -> List[Rule]:
     if max_depth_dup is not None:
         rules = [max(rules_set, key=f1_score) for rules_set in find_similar_rulesets(rules, max_depth_dup)]
     return sorted(rules, key=lambda x: - f1_score(x))
 
 
-def f1_score(x) -> float:
-    return 2 * x[1][0] * x[1][1] / \
-           (x[1][0] + x[1][1]) if (x[1][0] + x[1][1]) > 0 else 0
+def f1_score(rule: Rule) -> float:
+    return 2 * rule.args[0] * rule.args[1] / \
+           (rule.args[0] + rule.args[1]) if (rule.args[0] + rule.args[1]) > 0 else 0
 
 
-def find_similar_rulesets(rules, max_depth_duplication=None):
+def find_similar_rulesets(rules: List[Rule], max_depth_duplication: int = None) -> List[List[Rule]]:
     """Create clusters of rules using a decision tree based
     on the terms of the rules
 
@@ -76,9 +77,9 @@ def find_similar_rulesets(rules, max_depth_duplication=None):
         # Proceed to split
         rules_splitted = [[], [], []]
         for rule in rules:
-            if (most_represented_term + ' <=') in rule[0]:
+            if (most_represented_term + ' <=') in rule.rule:
                 rules_splitted[0].append(rule)
-            elif (most_represented_term + ' >') in rule[0]:
+            elif (most_represented_term + ' >') in rule.rule:
                 rules_splitted[1].append(rule)
             else:
                 rules_splitted[2].append(rule)

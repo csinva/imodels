@@ -18,7 +18,7 @@ class RuleSet:
 
     def eval_weighted_rule_sum(self, X) -> np.ndarray:
 
-        check_is_fitted(self, ['rules_without_feature_names_', 'n_features_', 'feature_names_'])
+        check_is_fitted(self, ['rules_without_feature_names_', 'n_features_', 'feature_placeholders'])
         X = check_array(X)
 
         if X.shape[1] != self.n_features_:
@@ -26,7 +26,7 @@ class RuleSet:
                              " Please reshape your data."
                              % (X.shape[1], self.n_features_))
 
-        df = pd.DataFrame(X, columns=self.feature_names_)
+        df = pd.DataFrame(X, columns=self.feature_placeholders)
         selected_rules = self.rules_without_feature_names_
 
         scores = np.zeros(X.shape[0])

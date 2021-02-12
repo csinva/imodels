@@ -27,8 +27,8 @@ def extract_fpgrowth(X, y,
         y = y.values
 
     if feature_labels is None:
-        feature_labels = [f'X{i}' for i in range(X.shape[1])]
-        
+        feature_labels = [f'feature_{i}' for i in range(X.shape[1])]
+    
     discretizer = BRLDiscretizer(X, y, feature_labels=feature_labels, verbose=verbose)
     X = discretizer.discretize_mixed_data(X, y, undiscretized_features)
     X_df_onehot = discretizer.onehot_df
@@ -50,7 +50,7 @@ def extract_rulefit(X, y, feature_names,
                     memory_par=0.01,
                     tree_generator=None,
                     exp_rand_tree_size=True,
-                    random_state=None):
+                    random_state=None) -> List[str]:
 
     if tree_generator is None:
         n_estimators_default = int(np.ceil(max_rules / tree_size))
@@ -122,7 +122,7 @@ def extract_skope(X, y, feature_names,
                   min_samples_split=2,
                   n_jobs=1,
                   random_state=None,
-                  verbose=0):
+                  verbose=0) -> Tuple[List[str], List[np.array], List[np.array]]:
     
     ensembles = []
     if not isinstance(max_depths, Iterable):
@@ -176,4 +176,4 @@ def extract_skope(X, y, feature_names,
     for estimator, features in zip(estimators_, estimators_features_):
         extracted_rules.append(tree_to_rules(estimator, np.array(feature_names)[features]))
     
-    return extracted_rules, estimators_, estimators_samples_, estimators_features_
+    return extracted_rules, estimators_samples_, estimators_features_

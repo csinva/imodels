@@ -7,6 +7,8 @@ that were used in the splits. The ensemble of rules together with the original i
 L1-regularized linear model, also called Lasso, which estimates the effects of each rule on the output target but at the
 same time estimating many of those effects to zero.
 """
+from typing import List, Tuple
+
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
@@ -15,7 +17,7 @@ from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from scipy.special import softmax
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.rule import enum_features
+from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
 from imodels.util.transforms import Winsorizer, FriedScale
 from imodels.util.score import score_lasso
 from imodels.util.convert import tree_to_rules
@@ -108,10 +110,15 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             y = y.values
 
         self.n_features_ = X.shape[1]
-        self.feature_names_ = enum_features(X, feature_names)[0]
+        self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
+        self.feature_placeholders = list(self.feature_dict_.keys())
+        self.feature_names = list(self.feature_dict_.values())
 
         extracted_rules = self._extract_rules(X, y)
         self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(X, y, extracted_rules)
+        self.rules_ = [
+            replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
+        ]
 
         return self
 
@@ -160,7 +167,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         X_transformed: matrix, shape=(n_samples, n_out)
             Transformed data set
         """        
-        df = pd.DataFrame(X, columns=self.feature_names_)
+        df = pd.DataFrame(X, columns=self.feature_placeholders)
         X_transformed = np.zeros([X.shape[0], 0])
 
         for r in rules:
@@ -189,7 +196,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                data set (X)
         """
 
-        n_features = len(self.coef) - len(self.rules_without_feature_names_)
+        n_features = len(self.coef) - len(self.rules_)
         rule_ensemble = list(self.rules_without_feature_names_)
         output_rules = []
         ## Add coefficients for linear effects
@@ -204,10 +211,10 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                 subregion = np.array(subregion)
                 importance = sum(abs(coef) * abs([x[i] for x in self.winsorizer.trim(subregion)] - self.mean[i])) / len(
                     subregion)
-            output_rules += [(self.feature_names_[i], 'linear', coef, 1, importance)]
+            output_rules += [(self.feature_names[i], 'linear', coef, 1, importance)]
 
         ## Add rules
-        for i in range(0, len(self.rules_without_feature_names_)):
+        for i in range(0, len(self.rules_)):
             rule = rule_ensemble[i]
             coef = self.coef[i + n_features]
 
@@ -229,9 +236,9 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         pd.set_option('display.max_colwidth', -1)
         return rules[['rule', 'coef']].round(3)
     
-    def _extract_rules(self, X, y):
+    def _extract_rules(self, X, y) -> List[Rule]:
         return extract_rulefit(X, y, 
-                               feature_names=self.feature_names_,
+                               feature_names=self.feature_placeholders,
                                tree_size=self.tree_size,
                                max_rules=self.max_rules,
                                memory_par=self.memory_par,
@@ -239,7 +246,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                                exp_rand_tree_size=self.exp_rand_tree_size,
                                random_state=self.random_state)
 
-    def _score_rules(self, X, y, rules):
+    def _score_rules(self, X, y, rules) -> Tuple[List[Rule], List[float], float]:
         X_concat = np.zeros([X.shape[0], 0])
 
         # standardise linear variables if requested (for regression model only)

@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 
 from imodels.rule_set.skope_rules import SkopeRulesClassifier
@@ -46,12 +48,11 @@ class FPSkopeClassifier(SkopeRulesClassifier):
         super().fit(X, y, feature_names=feature_names, sample_weight=sample_weight)
         return self
 
-    def _extract_rules(self, X, y):
-        itemsets, discretizer = extract_fpgrowth(X, y,
-                                                 feature_labels=self.feature_names_,
-                                                 minsupport=self.minsupport,
-                                                 maxcardinality=self.maxcardinality,
-                                                 undiscretized_features=self.undiscretized_features,
-                                                 verbose=self.verbose)
-        self.discretizer = discretizer
-        return [itemsets_to_rules(itemsets)], None, [np.arange(X.shape[0])], [np.arange(len(self.feature_names_))]
+    def _extract_rules(self, X, y) -> List[str]:
+        itemsets = extract_fpgrowth(X, y,
+                                    feature_labels=self.feature_placeholders,
+                                    minsupport=self.minsupport,
+                                    maxcardinality=self.maxcardinality,
+                                    undiscretized_features=self.undiscretized_features,
+                                    verbose=self.verbose)[0]
+        return [itemsets_to_rules(itemsets)], [np.arange(X.shape[0])], [np.arange(len(self.feature_names))]

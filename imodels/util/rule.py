@@ -1,29 +1,7 @@
 import re
-from typing import List, Tuple, Dict
-
-
-def replace_feature_name(rule, replace_dict):
-    def replace(match):
-        return replace_dict[match.group(0)]
-
-    rule = re.sub('|'.join(r'\b%s\b' % re.escape(s) for s in replace_dict),
-                  replace, rule)
-    return rule
-
-def enum_features(X, feature_names: List[str]) -> Tuple[List[str], Dict[str, str]]:
-    """ Removes problematic characters in features; if none provided, 
-    returns placeholder feature names
-    """
-
-    enum_feature_names = [f'feature_{i}' for i in range(X.shape[1])]
-    if feature_names is None:
-        feature_names = enum_feature_names
-    else:
-        feature_clean_fn = lambda f: f.replace(' ', '_').replace('/', '_').replace('<', '_under_')
-        feature_names = list(map(feature_clean_fn, feature_names))
-    feature_dict = {k: v for k, v in zip(enum_feature_names, feature_names)}
-
-    return feature_names, feature_dict
+from collections import OrderedDict
+import copy
+from typing import Dict, Iterable
 
 
 class Rule:
@@ -57,7 +35,7 @@ class Rule:
         # FIXME : Easier method ?
         return hash(tuple(sorted(((i, j) for i, j in self.agg_dict.items()))))
 
-    def factorize(self):
+    def factorize(self) -> None:
         for feature, symbol, value in self.terms:
             if (feature, symbol) not in self.agg_dict:
                 if symbol != '==':
@@ -85,3 +63,24 @@ class Rule:
             [feature, symbol, str(self.agg_dict[(feature, symbol)])])
             for feature, symbol in sorted(self.agg_dict.keys())
         ])
+
+
+def replace_feature_name(rule: Rule, replace_dict: Dict[str, str]) -> Rule:
+    def replace(match):
+        return replace_dict[match.group(0)]
+
+    rule_replaced = copy.copy(rule)
+    rule_replaced.rule = re.sub('|'.join(r'\b%s\b' % re.escape(s) for s in replace_dict),
+                  replace, rule.rule)
+    return rule_replaced
+
+
+def get_feature_dict(num_features: int, feature_names: Iterable[str] = None) -> Dict[str, str]:
+    feature_dict = OrderedDict()
+    if feature_names is not None:
+        for i in range(num_features):
+            feature_dict[f'feature_{i}'] = feature_names[i]
+    else:
+        for i in range(num_features):
+            feature_dict[f'feature_{i}'] = f'feature_{i}'
+    return feature_dict
