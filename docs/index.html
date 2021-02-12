@@ -27,15 +27,17 @@
 <p align="center"> Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easily customizable.
 </p>
 <p align="center">
-<a href="https://github.com/csinva/imodels">Github</a> •
+<a href="https://csinva.github.io/imodels/">docs</a> •
 <a href="#imodels-overview">imodels overview</a> •
-<a href="#demo-notebooks">Demo notebooks</a>
+<a href="#demo-notebooks">demo notebooks</a>
 </p>
 <p align="center">
-<img src="https://img.shields.io/badge/License-MIT-orange.svg">
+<img src="https://img.shields.io/badge/license-mit-blue.svg">
+<img src="https://img.shields.io/badge/python-3.6--3.8-blue">
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
-<img src="https://img.shields.io/pypi/v/imodels?color=blue">
-<img src="https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-blue">
+<img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
+<img src="https://img.shields.io/pypi/v/imodels?color=orange">
+<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=grey&right_color=orange&left_text=downloads">
 </p>
 <h2 id="imodels-overview">imodels overview</h2>
 <p>Implementations of different popular interpretable models can be easily used and installed:</p>
@@ -46,6 +48,12 @@ model = BayesianRuleListClassifier()  # initialize a model
 model.fit(X_train, y_train)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
+print(model) # print the rule-based model
+
+-----------------------------
+# if X1 &gt; 5: then 80.5% risk
+# else if X2 &gt; 5: then 40% risk
+# else: 10% risk
 </code></pre>
 <p>Install with <code>pip install imodels</code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help). Contains the following models:</p>
 <table>
@@ -134,10 +142,18 @@ More models coming soon!
 </tbody>
 </table>
 <p>Different models and algorithms vary not only in their final form but also in different choices made during modeling. In particular, many models differ in the 3 steps given by the table below.</p>
-<ul>
-<li>ex. RuleFit and SkopeRules differ only in the way they prune rules: RuleFit uses a linear model whereas SkopeRules heuristically deduplicates rules sharing overlap.</li>
-<li>ex. Bayesian rule lists and greedy rule lists differ in how they select rules; bayesian rule lists perform a global optimization over possible rule lists while Greedy rule lists pick splits sequentially to maximize a given criterion.</li>
-</ul>
+<details>
+<summary>ex. RuleFit and SkopeRules</summary>
+RuleFit and SkopeRules differ only in the way they prune rules: RuleFit uses a linear model whereas SkopeRules heuristically deduplicates rules sharing overlap.
+</details>
+<details>
+<summary>ex. Bayesian rule lists and greedy rule lists</summary>
+Bayesian rule lists and greedy rule lists differ in how they select rules; bayesian rule lists perform a global optimization over possible rule lists while Greedy rule lists pick splits sequentially to maximize a given criterion.
+</details>
+<details>
+<summary>ex. FPSkope and SkopeRules</summary>
+FPSkope and SkopeRules differ only in the way they generate candidate rules: FPSkope uses FPgrowth whereas SkopeRules extracts rules from decision trees.
+</details>
 <p>See the docs for individual models for futher descriptions.</p>
 <table>
 <thead>
@@ -279,6 +295,8 @@ from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListCla
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
+from .rule_set.fplasso import FPLassoRegressor, FPLassoClassifier
+from .rule_set.fpskope import FPSkopeClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.boosted_rules import BoostedRulesClassifier
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier

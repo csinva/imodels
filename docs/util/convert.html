@@ -28,7 +28,7 @@
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree import _tree
 from sklearn.tree import _tree
-from typing import Union, List
+from typing import Union, List, Tuple
 
 
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
@@ -123,7 +123,32 @@ def tree_to_code(clf, feature_names):
         # space=node_depth[i] * &#34;\t&#34;, node=i))
         else:
             s += f&#34;{feature_names[feature[i]]} &lt;= {threshold[i]}&#34;
-    return s + &#39;\n&#39;</code></pre>
+    return s + &#39;\n&#39;
+
+
+def itemsets_to_rules(itemsets: List[Tuple]) -&gt; List[str]:
+    itemsets_without_all = [itemset for itemset in itemsets if &#39;All&#39; not in &#39;&#39;.join(itemset)]
+    f = lambda itemset: &#39; and &#39;.join([single_discretized_feature_to_rule(item) for item in itemset])
+    return list(map(f, itemsets_without_all))
+
+
+def single_discretized_feature_to_rule(feat: str) -&gt; str:
+    
+    feat_split = feat.split(&#39;_to_&#39;)
+    upper_value = feat_split[-1]
+    lower_value = feat_split[-2].split(&#39;_&#39;)[-1]
+    
+    lower_to_upper_len = 1 + len(lower_value) + 4 + len(upper_value)
+    feature_name = feat[:-lower_to_upper_len]
+    
+    if lower_value == &#39;-inf&#39;:
+        rule = f&#39;{feature_name} &lt;= {upper_value}&#39;
+    elif upper_value == &#39;inf&#39;:
+        rule = f&#39;{feature_name} &gt; {lower_value}&#39;
+    else:
+        rule = f&#39;{feature_name} &gt; {lower_value} and {feature_name} &lt;= {upper_value}&#39;
+    
+    return rule</code></pre>
 </details>
 </section>
 <section>
@@ -133,6 +158,49 @@ def tree_to_code(clf, feature_names):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="imodels.util.convert.itemsets_to_rules"><code class="name flex">
+<span>def <span class="ident">itemsets_to_rules</span></span>(<span>itemsets)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def itemsets_to_rules(itemsets: List[Tuple]) -&gt; List[str]:
+    itemsets_without_all = [itemset for itemset in itemsets if &#39;All&#39; not in &#39;&#39;.join(itemset)]
+    f = lambda itemset: &#39; and &#39;.join([single_discretized_feature_to_rule(item) for item in itemset])
+    return list(map(f, itemsets_without_all))</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.convert.single_discretized_feature_to_rule"><code class="name flex">
+<span>def <span class="ident">single_discretized_feature_to_rule</span></span>(<span>feat)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def single_discretized_feature_to_rule(feat: str) -&gt; str:
+    
+    feat_split = feat.split(&#39;_to_&#39;)
+    upper_value = feat_split[-1]
+    lower_value = feat_split[-2].split(&#39;_&#39;)[-1]
+    
+    lower_to_upper_len = 1 + len(lower_value) + 4 + len(upper_value)
+    feature_name = feat[:-lower_to_upper_len]
+    
+    if lower_value == &#39;-inf&#39;:
+        rule = f&#39;{feature_name} &lt;= {upper_value}&#39;
+    elif upper_value == &#39;inf&#39;:
+        rule = f&#39;{feature_name} &gt; {lower_value}&#39;
+    else:
+        rule = f&#39;{feature_name} &gt; {lower_value} and {feature_name} &lt;= {upper_value}&#39;
+    
+    return rule</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.convert.tree_to_code"><code class="name flex">
 <span>def <span class="ident">tree_to_code</span></span>(<span>clf, feature_names)</span>
 </code></dt>
@@ -270,6 +338,8 @@ feature_names: list of variable names
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="imodels.util.convert.itemsets_to_rules" href="#imodels.util.convert.itemsets_to_rules">itemsets_to_rules</a></code></li>
+<li><code><a title="imodels.util.convert.single_discretized_feature_to_rule" href="#imodels.util.convert.single_discretized_feature_to_rule">single_discretized_feature_to_rule</a></code></li>
 <li><code><a title="imodels.util.convert.tree_to_code" href="#imodels.util.convert.tree_to_code">tree_to_code</a></code></li>
 <li><code><a title="imodels.util.convert.tree_to_rules" href="#imodels.util.convert.tree_to_rules">tree_to_rules</a></code></li>
 </ul>

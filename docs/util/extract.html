@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>imodels.util.extract API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>imodels.util.extract</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from typing import Iterable, Tuple, List
+
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import BaggingClassifier, BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from mlxtend.frequent_patterns import fpgrowth
+
+from imodels.util.convert import tree_to_rules
+from imodels.util.discretization.mdlp import BRLDiscretizer
+
+
+def extract_fpgrowth(X, y,
+                     feature_labels=None,
+                     minsupport=0.1,
+                     maxcardinality=2,
+                     undiscretized_features=[],
+                     verbose=False) -&gt; Tuple[List[Tuple], BRLDiscretizer]:
+
+    # deal with pandas data
+    if type(X) in [pd.DataFrame, pd.Series]:
+        if feature_labels is None:
+            feature_labels = X.columns
+        X = X.values
+    if type(y) in [pd.DataFrame, pd.Series]:
+        y = y.values
+
+    if feature_labels is None:
+        feature_labels = [f&#39;feature_{i}&#39; for i in range(X.shape[1])]
+    
+    discretizer = BRLDiscretizer(X, y, feature_labels=feature_labels, verbose=verbose)
+    X = discretizer.discretize_mixed_data(X, y, undiscretized_features)
+    X_df_onehot = discretizer.onehot_df
+    
+    # Now find frequent itemsets
+    itemsets_df = fpgrowth(X_df_onehot, min_support=minsupport, max_len=maxcardinality)
+    itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
+    itemsets = [np.array(X_df_onehot.columns)[list(inds)] for inds in itemsets_indices]
+    itemsets = list(map(tuple, itemsets))
+    if verbose:
+        print(len(itemsets), &#39;rules mined&#39;)
+
+    return itemsets, discretizer
+
+
+def extract_rulefit(X, y, feature_names,
+                    tree_size=4,
+                    max_rules=2000,
+                    memory_par=0.01,
+                    tree_generator=None,
+                    exp_rand_tree_size=True,
+                    random_state=None) -&gt; List[str]:
+
+    if tree_generator is None:
+        n_estimators_default = int(np.ceil(max_rules / tree_size))
+        sample_fract_ = min(0.5, (100 + 6 * np.sqrt(X.shape[0])) / X.shape[0])
+
+        tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default,
+                                                    max_leaf_nodes=tree_size,
+                                                    learning_rate=memory_par,
+                                                    subsample=sample_fract_,
+                                                    random_state=random_state,
+                                                    max_depth=100)
+
+    if type(tree_generator) not in [GradientBoostingRegressor, RandomForestRegressor]:
+        raise ValueError(&#34;RuleFit only works with RandomForest and BoostingRegressor&#34;)
+
+    ## fit tree generator
+    if not exp_rand_tree_size:  # simply fit with constant tree size
+        tree_generator.fit(X, y)
+    else:  # randomise tree size as per Friedman 2005 Sec 3.3
+        np.random.seed(random_state)
+        tree_sizes = np.random.exponential(scale=tree_size - 2,
+                                            size=int(np.ceil(max_rules * 2 / tree_size)))
+        tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
+        i = int(len(tree_sizes) / 4)
+        while np.sum(tree_sizes[0:i]) &lt; max_rules:
+            i = i + 1
+        tree_sizes = tree_sizes[0:i]
+        tree_generator.set_params(warm_start=True)
+        curr_est_ = 0
+        for i_size in np.arange(len(tree_sizes)):
+            size = tree_sizes[i_size]
+            tree_generator.set_params(n_estimators=curr_est_ + 1)
+            tree_generator.set_params(max_leaf_nodes=size)
+            random_state_add = random_state if random_state else 0
+            tree_generator.set_params(
+                random_state=i_size + random_state_add)  # warm_state=True seems to reset random_state, such that the trees are highly correlated, unless we manually change the random_sate here.
+            tree_generator.fit(np.copy(X, order=&#39;C&#39;), np.copy(y, order=&#39;C&#39;))
+            curr_est_ = curr_est_ + 1
+        tree_generator.set_params(warm_start=False)
+
+    if isinstance(tree_generator, RandomForestRegressor):
+        estimators_ = [[x] for x in tree_generator.estimators_]
+    else:
+        estimators_ = tree_generator.estimators_
+
+    seen_antecedents = set()
+    extracted_rules = [] 
+    for estimator in estimators_:
+        for rule_value_pair in tree_to_rules(estimator[0], np.array(feature_names), prediction_values=True):
+            if rule_value_pair[0] not in seen_antecedents:
+                extracted_rules.append(rule_value_pair)
+                seen_antecedents.add(rule_value_pair[0])
+    
+    extracted_rules = sorted(extracted_rules, key=lambda x: x[1])
+    extracted_rules = list(map(lambda x: x[0], extracted_rules))
+    return extracted_rules
+
+
+def extract_skope(X, y, feature_names, 
+                  sample_weight=None,
+                  n_estimators=10,
+                  max_samples=.8,
+                  max_samples_features=1.,
+                  bootstrap=False,
+                  bootstrap_features=False,
+                  max_depths=[3], 
+                  max_depth_duplication=None,
+                  max_features=1.,
+                  min_samples_split=2,
+                  n_jobs=1,
+                  random_state=None,
+                  verbose=0) -&gt; Tuple[List[str], List[np.array], List[np.array]]:
+    
+    ensembles = []
+    if not isinstance(max_depths, Iterable):
+        max_depths = [max_depths]
+
+    for max_depth in max_depths:
+        bagging_clf = BaggingRegressor(
+            base_estimator= DecisionTreeRegressor(
+                max_depth=max_depth,
+                max_features=max_features,
+                min_samples_split=min_samples_split
+            ),
+            n_estimators=n_estimators,
+            max_samples=max_samples,
+            max_features=max_samples_features,
+            bootstrap=bootstrap,
+            bootstrap_features=bootstrap_features,
+            # oob_score=... XXX may be added
+            # if selection on tree perf needed.
+            # warm_start=... XXX may be added to increase computation perf.
+            n_jobs=n_jobs,
+            random_state=random_state,
+            verbose=verbose
+        )
+        ensembles.append(bagging_clf)
+
+    y_reg = y
+    if sample_weight is not None:
+        sample_weight = check_array(sample_weight, ensure_2d=False)
+        weights = sample_weight - sample_weight.min()
+        contamination = float(sum(y)) / len(y)
+        y_reg = (
+                pow(weights, 0.5) * 0.5 / contamination * (y &gt; 0) -
+                pow((weights).mean(), 0.5) * (y == 0)
+        )
+        y_reg = 1. / (1 + np.exp(-y_reg))  # sigmoid
+
+    for e in ensembles[:len(ensembles) // 2]:
+        e.fit(X, y)
+
+    for e in ensembles[len(ensembles) // 2:]:
+        e.fit(X, y_reg)
+
+    estimators_, estimators_samples_, estimators_features_ = [], [], []
+    for ensemble in ensembles:
+        estimators_ += ensemble.estimators_
+        estimators_samples_ += ensemble.estimators_samples_
+        estimators_features_ += ensemble.estimators_features_
+
+    extracted_rules = []
+    for estimator, features in zip(estimators_, estimators_features_):
+        extracted_rules.append(tree_to_rules(estimator, np.array(feature_names)[features]))
+    
+    return extracted_rules, estimators_samples_, estimators_features_</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="imodels.util.extract.extract_fpgrowth"><code class="name flex">
+<span>def <span class="ident">extract_fpgrowth</span></span>(<span>X, y, feature_labels=None, minsupport=0.1, maxcardinality=2, undiscretized_features=[], verbose=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extract_fpgrowth(X, y,
+                     feature_labels=None,
+                     minsupport=0.1,
+                     maxcardinality=2,
+                     undiscretized_features=[],
+                     verbose=False) -&gt; Tuple[List[Tuple], BRLDiscretizer]:
+
+    # deal with pandas data
+    if type(X) in [pd.DataFrame, pd.Series]:
+        if feature_labels is None:
+            feature_labels = X.columns
+        X = X.values
+    if type(y) in [pd.DataFrame, pd.Series]:
+        y = y.values
+
+    if feature_labels is None:
+        feature_labels = [f&#39;feature_{i}&#39; for i in range(X.shape[1])]
+    
+    discretizer = BRLDiscretizer(X, y, feature_labels=feature_labels, verbose=verbose)
+    X = discretizer.discretize_mixed_data(X, y, undiscretized_features)
+    X_df_onehot = discretizer.onehot_df
+    
+    # Now find frequent itemsets
+    itemsets_df = fpgrowth(X_df_onehot, min_support=minsupport, max_len=maxcardinality)
+    itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
+    itemsets = [np.array(X_df_onehot.columns)[list(inds)] for inds in itemsets_indices]
+    itemsets = list(map(tuple, itemsets))
+    if verbose:
+        print(len(itemsets), &#39;rules mined&#39;)
+
+    return itemsets, discretizer</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.extract.extract_rulefit"><code class="name flex">
+<span>def <span class="ident">extract_rulefit</span></span>(<span>X, y, feature_names, tree_size=4, max_rules=2000, memory_par=0.01, tree_generator=None, exp_rand_tree_size=True, random_state=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extract_rulefit(X, y, feature_names,
+                    tree_size=4,
+                    max_rules=2000,
+                    memory_par=0.01,
+                    tree_generator=None,
+                    exp_rand_tree_size=True,
+                    random_state=None) -&gt; List[str]:
+
+    if tree_generator is None:
+        n_estimators_default = int(np.ceil(max_rules / tree_size))
+        sample_fract_ = min(0.5, (100 + 6 * np.sqrt(X.shape[0])) / X.shape[0])
+
+        tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default,
+                                                    max_leaf_nodes=tree_size,
+                                                    learning_rate=memory_par,
+                                                    subsample=sample_fract_,
+                                                    random_state=random_state,
+                                                    max_depth=100)
+
+    if type(tree_generator) not in [GradientBoostingRegressor, RandomForestRegressor]:
+        raise ValueError(&#34;RuleFit only works with RandomForest and BoostingRegressor&#34;)
+
+    ## fit tree generator
+    if not exp_rand_tree_size:  # simply fit with constant tree size
+        tree_generator.fit(X, y)
+    else:  # randomise tree size as per Friedman 2005 Sec 3.3
+        np.random.seed(random_state)
+        tree_sizes = np.random.exponential(scale=tree_size - 2,
+                                            size=int(np.ceil(max_rules * 2 / tree_size)))
+        tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
+        i = int(len(tree_sizes) / 4)
+        while np.sum(tree_sizes[0:i]) &lt; max_rules:
+            i = i + 1
+        tree_sizes = tree_sizes[0:i]
+        tree_generator.set_params(warm_start=True)
+        curr_est_ = 0
+        for i_size in np.arange(len(tree_sizes)):
+            size = tree_sizes[i_size]
+            tree_generator.set_params(n_estimators=curr_est_ + 1)
+            tree_generator.set_params(max_leaf_nodes=size)
+            random_state_add = random_state if random_state else 0
+            tree_generator.set_params(
+                random_state=i_size + random_state_add)  # warm_state=True seems to reset random_state, such that the trees are highly correlated, unless we manually change the random_sate here.
+            tree_generator.fit(np.copy(X, order=&#39;C&#39;), np.copy(y, order=&#39;C&#39;))
+            curr_est_ = curr_est_ + 1
+        tree_generator.set_params(warm_start=False)
+
+    if isinstance(tree_generator, RandomForestRegressor):
+        estimators_ = [[x] for x in tree_generator.estimators_]
+    else:
+        estimators_ = tree_generator.estimators_
+
+    seen_antecedents = set()
+    extracted_rules = [] 
+    for estimator in estimators_:
+        for rule_value_pair in tree_to_rules(estimator[0], np.array(feature_names), prediction_values=True):
+            if rule_value_pair[0] not in seen_antecedents:
+                extracted_rules.append(rule_value_pair)
+                seen_antecedents.add(rule_value_pair[0])
+    
+    extracted_rules = sorted(extracted_rules, key=lambda x: x[1])
+    extracted_rules = list(map(lambda x: x[0], extracted_rules))
+    return extracted_rules</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.extract.extract_skope"><code class="name flex">
+<span>def <span class="ident">extract_skope</span></span>(<span>X, y, feature_names, sample_weight=None, n_estimators=10, max_samples=0.8, max_samples_features=1.0, bootstrap=False, bootstrap_features=False, max_depths=[3], max_depth_duplication=None, max_features=1.0, min_samples_split=2, n_jobs=1, random_state=None, verbose=0)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extract_skope(X, y, feature_names, 
+                  sample_weight=None,
+                  n_estimators=10,
+                  max_samples=.8,
+                  max_samples_features=1.,
+                  bootstrap=False,
+                  bootstrap_features=False,
+                  max_depths=[3], 
+                  max_depth_duplication=None,
+                  max_features=1.,
+                  min_samples_split=2,
+                  n_jobs=1,
+                  random_state=None,
+                  verbose=0) -&gt; Tuple[List[str], List[np.array], List[np.array]]:
+    
+    ensembles = []
+    if not isinstance(max_depths, Iterable):
+        max_depths = [max_depths]
+
+    for max_depth in max_depths:
+        bagging_clf = BaggingRegressor(
+            base_estimator= DecisionTreeRegressor(
+                max_depth=max_depth,
+                max_features=max_features,
+                min_samples_split=min_samples_split
+            ),
+            n_estimators=n_estimators,
+            max_samples=max_samples,
+            max_features=max_samples_features,
+            bootstrap=bootstrap,
+            bootstrap_features=bootstrap_features,
+            # oob_score=... XXX may be added
+            # if selection on tree perf needed.
+            # warm_start=... XXX may be added to increase computation perf.
+            n_jobs=n_jobs,
+            random_state=random_state,
+            verbose=verbose
+        )
+        ensembles.append(bagging_clf)
+
+    y_reg = y
+    if sample_weight is not None:
+        sample_weight = check_array(sample_weight, ensure_2d=False)
+        weights = sample_weight - sample_weight.min()
+        contamination = float(sum(y)) / len(y)
+        y_reg = (
+                pow(weights, 0.5) * 0.5 / contamination * (y &gt; 0) -
+                pow((weights).mean(), 0.5) * (y == 0)
+        )
+        y_reg = 1. / (1 + np.exp(-y_reg))  # sigmoid
+
+    for e in ensembles[:len(ensembles) // 2]:
+        e.fit(X, y)
+
+    for e in ensembles[len(ensembles) // 2:]:
+        e.fit(X, y_reg)
+
+    estimators_, estimators_samples_, estimators_features_ = [], [], []
+    for ensemble in ensembles:
+        estimators_ += ensemble.estimators_
+        estimators_samples_ += ensemble.estimators_samples_
+        estimators_features_ += ensemble.estimators_features_
+
+    extracted_rules = []
+    for estimator, features in zip(estimators_, estimators_features_):
+        extracted_rules.append(tree_to_rules(estimator, np.array(feature_names)[features]))
+    
+    return extracted_rules, estimators_samples_, estimators_features_</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.util" href="index.html">imodels.util</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.util.extract.extract_fpgrowth" href="#imodels.util.extract.extract_fpgrowth">extract_fpgrowth</a></code></li>
+<li><code><a title="imodels.util.extract.extract_rulefit" href="#imodels.util.extract.extract_rulefit">extract_rulefit</a></code></li>
+<li><code><a title="imodels.util.extract.extract_skope" href="#imodels.util.extract.extract_skope">extract_skope</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

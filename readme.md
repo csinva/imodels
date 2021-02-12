@@ -8,15 +8,15 @@
   <a href="#imodels-overview">imodels overview</a> •
   <a href="#demo-notebooks">demo notebooks</a>
 </p>
-
 <p align="center">
   <img src="https://img.shields.io/badge/license-mit-blue.svg">
   <img src="https://img.shields.io/badge/python-3.6--3.8-blue">
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
   <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads">
+  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=grey&right_color=orange&left_text=downloads">
 </p>  
+
 
 
 ## imodels overview
@@ -68,8 +68,20 @@ The final form of the above models takes one of the following forms, which aim t
 
 Different models and algorithms vary not only in their final form but also in different choices made during modeling. In particular, many models differ in the 3 steps given by the table below.
 
-- ex. RuleFit and SkopeRules differ only in the way they prune rules: RuleFit uses a linear model whereas SkopeRules heuristically deduplicates rules sharing overlap.
-- ex. Bayesian rule lists and greedy rule lists differ in how they select rules; bayesian rule lists perform a global optimization over possible rule lists while Greedy rule lists pick splits sequentially to maximize a given criterion.
+<details>
+<summary>ex. RuleFit and SkopeRules</summary>
+RuleFit and SkopeRules differ only in the way they prune rules: RuleFit uses a linear model whereas SkopeRules heuristically deduplicates rules sharing overlap.
+</details>
+
+<details>
+<summary>ex. Bayesian rule lists and greedy rule lists</summary>
+Bayesian rule lists and greedy rule lists differ in how they select rules; bayesian rule lists perform a global optimization over possible rule lists while Greedy rule lists pick splits sequentially to maximize a given criterion.
+</details>
+
+<details>
+<summary>ex. FPSkope and SkopeRules</summary>
+FPSkope and SkopeRules differ only in the way they generate candidate rules: FPSkope uses FPgrowth whereas SkopeRules extracts rules from decision trees.
+</details>
 
 See the docs for individual models for futher descriptions.
 
