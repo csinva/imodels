@@ -1,3 +1,5 @@
+from typing import List
+
 from imodels.rule_set.rule_fit import RuleFit
 from imodels.util.extract import extract_fpgrowth
 from imodels.util.convert import itemsets_to_rules
@@ -41,14 +43,13 @@ class FPLasso(RuleFit):
         super().fit(X, y, feature_names=feature_names)
         return self
     
-    def _extract_rules(self, X, y):
-        itemsets, discretizer = extract_fpgrowth(X, y,
-                                                 feature_labels=self.feature_names_,
-                                                 minsupport=self.minsupport,
-                                                 maxcardinality=self.maxcardinality,
-                                                 undiscretized_features=self.undiscretized_features,
-                                                 verbose=self.verbose)
-        self.discretizer = discretizer
+    def _extract_rules(self, X, y) -> List[str]:
+        itemsets = extract_fpgrowth(X, y,
+                                    feature_labels=self.feature_placeholders,
+                                    minsupport=self.minsupport,
+                                    maxcardinality=self.maxcardinality,
+                                    undiscretized_features=self.undiscretized_features,
+                                    verbose=self.verbose)[0]
         return itemsets_to_rules(itemsets)
 
 class FPLassoRegressor(FPLasso):        

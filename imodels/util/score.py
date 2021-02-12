@@ -53,7 +53,7 @@ def score_oob(X,
     return scored_rules
 
 
-def _eval_rule_perf(rule, X, y) -> Tuple[float, float]:
+def _eval_rule_perf(rule: str, X, y) -> Tuple[float, float]:
     detected_index = list(X.query(rule).index)
     if len(detected_index) <= 1:
         return (0, 0)
@@ -67,7 +67,7 @@ def _eval_rule_perf(rule, X, y) -> Tuple[float, float]:
 
 def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
                 prediction_task='regression',
-                max_rules=2000, random_state=None) -> Tuple[List[Rule], Lasso]:
+                max_rules=2000, random_state=None) -> Tuple[List[Rule], List[float], float]:
     if alphas is None:
         if prediction_task == 'regression':
             alphas = _alpha_grid(X, y)

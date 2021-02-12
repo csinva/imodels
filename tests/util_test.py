@@ -1,17 +1,17 @@
 from imodels import SkopeRulesClassifier
 from imodels.util.prune import deduplicate, find_similar_rulesets, f1_score
+from imodels.util.rule import Rule
 
 
 def test_similarity_tree():
     # Test that rules are well splitted
-    rules = [("a <= 2 and b > 45 and c <= 3 and a > 4", (1, 1, 0)),
-             ("a <= 2 and b > 45 and c <= 3 and a > 4", (1, 1, 0)),
-             ("a > 2 and b > 45", (0.5, 0.3, 0)),
-             ("a > 2 and b > 40", (0.5, 0.2, 0)),
-             ("a <= 2 and b <= 45", (1, 1, 0)),
-             ("a > 2 and c <= 3", (1, 1, 0)),
-             ("b > 45", (1, 1, 0)),
-             ]
+    rules = [Rule("a <= 2 and b > 45 and c <= 3 and a > 4", args=(1, 1, 0)),
+             Rule("a <= 2 and b > 45 and c <= 3 and a > 4", (1, 1, 0)),
+             Rule("a > 2 and b > 45", (0.5, 0.3, 0)),
+             Rule("a > 2 and b > 40", (0.5, 0.2, 0)),
+             Rule("a <= 2 and b <= 45", (1, 1, 0)),
+             Rule("a > 2 and c <= 3", (1, 1, 0)),
+             Rule("b > 45", (1, 1, 0))]
 
     sk = SkopeRulesClassifier(max_depth_duplication=2)
     rulesets = find_similar_rulesets(rules, max_depth_duplication=2)
@@ -34,9 +34,9 @@ def test_similarity_tree():
 
 
 def test_f1_score():
-    rule0 = ('a > 0', (0, 0, 0))
-    rule1 = ('a > 0', (0.5, 0.5, 0))
-    rule2 = ('a > 0', (0.5, 0, 0))
+    rule0 = Rule('a > 0', (0, 0, 0))
+    rule1 = Rule('a > 0', (0.5, 0.5, 0))
+    rule2 = Rule('a > 0', (0.5, 0, 0))
 
     assert f1_score(rule0) == 0
     assert f1_score(rule1) == 0.5
