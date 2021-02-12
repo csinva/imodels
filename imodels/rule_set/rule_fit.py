@@ -195,7 +195,6 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                the coefficients and 'support' the support of the rule in the training
                data set (X)
         """
-
         n_features = len(self.coef) - len(self.rules_)
         rule_ensemble = list(self.rules_without_feature_names_)
         output_rules = []
@@ -224,7 +223,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                 rkx = self.transform(subregion, [rule])[:, -1]
                 importance = sum(abs(coef) * abs(rkx - rule.support)) / len(subregion)
 
-            output_rules += [(rule.__str__(), 'rule', coef, rule.support, importance)]
+            output_rules += [(self.rules_[i].rule, 'rule', coef, rule.support, importance)]
         rules = pd.DataFrame(output_rules, columns=["rule", "type", "coef", "support", "importance"])
         if exclude_zero_coef:
             rules = rules.ix[rules.coef != 0]
