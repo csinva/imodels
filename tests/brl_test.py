@@ -3,7 +3,6 @@ from urllib.request import urlretrieve
 
 import numpy as np
 from scipy.io.arff import loadarff
-from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 
 from imodels.rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier

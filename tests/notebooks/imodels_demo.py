@@ -16,19 +16,25 @@
 # %load_ext autoreload
 # %autoreload 2
 import sys
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 np.random.seed(13)
-from sklearn.datasets import fetch_openml, load_boston
+from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor, plot_tree, DecisionTreeClassifier
 from sklearn import metrics
+from scipy.io.arff import loadarff
 
 # installable with: `pip install imodels`
 from imodels import SLIMRegressor, BayesianRuleListClassifier, RuleFitRegressor, GreedyRuleListClassifier
 from imodels import OneRClassifier, BoostedRulesClassifier
 from imodels.util.convert import tree_to_code
+
+# change working directory to project root
+if os.getcwd().split('/')[-1] != 'imodels':
+    os.chdir('..')
 
 def get_reg_boston_data():
     '''load (regression) data on boston housing prices
@@ -41,9 +47,11 @@ def get_reg_boston_data():
 def get_diabetes_data():
     '''load (classification) data on diabetes
     '''
-    df = fetch_openml("diabetes", version=1) # get dataset
-    X = df.data
-    y = (df.target == 'tested_positive').astype(np.int) # labels 0-1
+    data = loadarff("tests/test_data/diabetes.arff")
+    data_np = np.array(list(map(lambda x: np.array(list(x)), data[0])))
+    X = data_np[:, :-1].astype('float32')
+    y_text = data_np[:, -1].astype('str')
+    y = (y_text == 'tested_positive').astype(np.int)  # labels 0-1
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.75) # split
     feature_names = ["#Pregnant","Glucose concentration test","Blood pressure(mmHg)","Triceps skin fold thickness(mm)",
                   "2-Hour serum insulin (mu U/ml)","Body mass index","Diabetes pedigree function","Age (years)"]
