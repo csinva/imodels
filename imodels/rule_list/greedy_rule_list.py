@@ -45,10 +45,9 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
 
         # set self.feature_names and make sure x, y are not pandas type
         if 'pandas' in str(type(x)):
-            self.feature_names = x.columns
             x = x.values
         else:
-            if self.feature_names is None:
+            if feature_names is None:
                 self.feature_names = ['feat ' + str(i) for i in range(x.shape[1])]
         if feature_names is not None:
             self.feature_names = feature_names

@@ -28,7 +28,7 @@ class OneRClassifier(GreedyRuleListClassifier):
             self.feature_names = X.columns
             X = X.values
         else:
-            if self.feature_names is None:
+            if feature_names is None:
                 self.feature_names = ['feat ' + str(i) for i in range(X.shape[1])]
         if feature_names is not None:
             self.feature_names = feature_names
