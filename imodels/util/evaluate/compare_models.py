@@ -1,20 +1,24 @@
 '''Compare different estimators on public datasets
 Code modified from https://github.com/tmadl/sklearn-random-bits-forest
 '''
-import numpy as np
-import imodels
-from sklearn.ensemble.forest import RandomForestClassifier, ExtraTreesClassifier
-from sklearn.metrics.classification import accuracy_score, f1_score
+import os 
+import time
 import re, string
+import pickle as pkl
+
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import KFold
 from sklearn.datasets import fetch_openml
 from sklearn.preprocessing import OneHotEncoder
 from scipy.stats.stats import mannwhitneyu, ttest_ind
-import pickle as pkl
-import os 
 from tqdm import tqdm
-import time
 import pandas as pd
+
+import imodels
 
 def dshape(X):
     if len(X.shape) == 1:
@@ -34,9 +38,9 @@ def to_numeric(lst):
             lbls[unpack(t)] = len(lbls.keys())
     return np.array([lbls[unpack(t)] for t in lst.flatten()])
 
-def get_dataset(datasetname, onehot_encode_strings=True):
+def get_dataset(data_id, onehot_encode_strings=True):
     # load
-    dataset = fetch_openml(datasetname)
+    dataset = fetch_openml(data_id=data_id)
     # get X and y
     X = dshape(dataset.data)
     try:
@@ -78,15 +82,15 @@ def compare_estimators(estimators: list,
     if type(metrics) != list:
         raise Exception("Argument metrics needs to be a list of tuples containing ('name', scoring function pairs)")
     
-    mean_results = {d: [] for d in datasets}
-    std_results = {d: [] for d in datasets}
+    mean_results = {d[0]: [] for d in datasets}
+    std_results = {d[0]: [] for d in datasets}
     
     # loop over datasets
     for d in tqdm(datasets):
-#         print("comparing on dataset", d)
+        print("comparing on dataset", d[0])
         mean_result = []
         std_result = []
-        X, y = get_dataset(d)
+        X, y = get_dataset(d[1])
         
         # loop over estimators
         for (est_name, est) in estimators:
@@ -114,8 +118,8 @@ def compare_estimators(estimators: list,
                 mean_result.append(np.mean(mresults[i]))
                 std_result.append(np.std(mresults[i]) / n_cv_folds)
         
-        mean_results[d] = mean_result
-        std_results[d] = std_result
+        mean_results[d[0]] = mean_result
+        std_results[d[0]] = std_result
         
     return mean_results, std_results
 
@@ -123,17 +127,15 @@ if __name__ == '__main__':
 
 
     comparison_datasets = [
-            "breast-cancer",
-    #         "datasets-UCI breast-w",
-    #         "datasets-UCI credit-g",
-    #         "uci-20070111 haberman",
-            "heart",
-            "ionosphere",
-    #         "uci-20070111 labor",
-    #         "liver-disorders",
-    #         "uci-20070111 tic-tac-toe",
-    #         "datasets-UCI vote"
-        ]
+        ("breast-cancer", 13),
+        ("breast-w", 15),
+        ("credit-g", 31),
+        ("haberman", 43),
+        ("heart", 1574),
+        ("ionosphere", 59),
+        ("labor", 4),
+        ("vote", 56),
+    ]
 
     metrics = [
         ('Acc.', accuracy_score),
@@ -141,17 +143,23 @@ if __name__ == '__main__':
         ('Time', None)
     ]
     
-    
     estimators = [
-        ('RandomForest', RandomForestClassifier(n_estimators=200)),
-        #                   'ExtraTrees': ExtraTreesClassifier(n_estimators=200),
+        ('RandomForest (sklearn)', RandomForestClassifier(n_estimators=200)),
+        ('GradientBoostingClassifier (sklearn)', GradientBoostingClassifier()),
+        ('MLPClassifier (sklearn)', MLPClassifier()),
         ('SkopeRules', imodels.SkopeRulesClassifier()),
-#         ('RuleFit', imodels.RuleFitRegressor(max_rules=10)),
+        ('RuleFit', imodels.RuleFitClassifier()),
+        ('FPLasso', imodels.FPLassoClassifier()),
+        ('FPSkope', imodels.FPSkopeClassifier()),
+        ('BRL', imodels.BayesianRuleListClassifier()),
+        ('GRL', imodels.GreedyRuleListClassifier()),
+        ('OneR', imodels.OneRClassifier()),
+        ('BoostedRuleSet', imodels.BoostedRulesClassifier())
     ]
     mean_results, std_results = compare_estimators(estimators=estimators,
                                                    datasets=comparison_datasets,
                                                    metrics=metrics,
-                                                   n_cv_folds=3)
+                                                   n_cv_folds=5)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     
     estimators_list = [e[0] for e in estimators]
@@ -171,4 +179,3 @@ if __name__ == '__main__':
         'metrics': metrics_list,
         'df': df,
     }, open(os.path.join(dir_path, 'model_comparisons.pkl'), 'wb'))
-    
