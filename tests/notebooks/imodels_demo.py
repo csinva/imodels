@@ -32,9 +32,6 @@ from imodels import SLIMRegressor, BayesianRuleListClassifier, RuleFitRegressor,
 from imodels import OneRClassifier, BoostedRulesClassifier
 from imodels.util.convert import tree_to_code
 
-# change working directory to project root
-if os.getcwd().split('/')[-1] != 'imodels':
-    os.chdir('..')
 
 def get_reg_boston_data():
     '''load (regression) data on boston housing prices
@@ -47,7 +44,14 @@ def get_reg_boston_data():
 def get_diabetes_data():
     '''load (classification) data on diabetes
     '''
+    # change working directory to project root
+    cwd_changed = False
+    if os.getcwd().split('/')[-1] == 'notebooks':
+        cwd_changed = True
+        os.chdir('..')
     data = loadarff("tests/test_data/diabetes.arff")
+    if cwd_changed:
+        os.chdir('./notebooks')
     data_np = np.array(list(map(lambda x: np.array(list(x)), data[0])))
     X = data_np[:, :-1].astype('float32')
     y_text = data_np[:, -1].astype('str')
