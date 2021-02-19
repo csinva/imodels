@@ -21,7 +21,7 @@ affiliations:
  - name: Statistics Department, University of California, Berkeley
    index: 2
 date: 27 January 2021
-bibliography: references.bib
+bibliography: docs/paper/references.bib
 ---
 
 # Summary
