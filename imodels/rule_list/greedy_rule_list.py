@@ -113,6 +113,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
 
             self.depth += 1  # increase the depth since we call fit once
             self.rules_ = par_node
+            self.complexity = len(self.rules_)
             return par_node
 
     def predict_proba(self, X):
