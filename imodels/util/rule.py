@@ -69,10 +69,12 @@ def replace_feature_name(rule: Rule, replace_dict: Dict[str, str]) -> Rule:
     def replace(match):
         return replace_dict[match.group(0)]
 
-    rule_replaced = Rule(
-        re.sub('|'.join(r'\b%s\b' % re.escape(s) for s in replace_dict), replace, rule.rule),
-        args=rule.args
-    )
+    rule_replaced = copy.copy(rule)
+    rule_replaced.rule = re.sub('|'.join(r'\b%s\b' % re.escape(s) for s in replace_dict), replace, rule.rule)
+    replaced_agg_dict = {}
+    for feature, symbol in rule_replaced.agg_dict:
+        replaced_agg_dict[(replace_dict[feature], symbol)] = rule_replaced.agg_dict[(feature, symbol)]
+    rule_replaced.agg_dict = replaced_agg_dict
     return rule_replaced
 
 
