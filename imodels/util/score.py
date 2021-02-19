@@ -11,12 +11,13 @@ from sklearn.model_selection import KFold
 from imodels.util.rule import Rule
 
 
-def score_oob(X,
+def score_precision_recall(X,
               y,
               rules: List[List[str]],
               samples: List[List[int]],
               features: List[List[int]],
-              feature_names: List[str]) -> List[Rule]:
+              feature_names: List[str],
+              oob: bool = True) -> List[Rule]:
 
     scored_rules = []
 
@@ -25,10 +26,11 @@ def score_oob(X,
         # Create mask for OOB samples
         mask = ~indices_to_mask(curr_samples, X.shape[0])
         if sum(mask) == 0:
-            warn(
-                "OOB evaluation not possible: doing it in-bag. Performance evaluation is likely to be wrong"
-                " (overfitting) and selected rules are likely to not perform well! Please use max_samples < 1."
-            )
+            if oob:
+                warn(
+                    "OOB evaluation not possible: doing it in-bag. Performance evaluation is likely to be wrong"
+                    " (overfitting) and selected rules are likely to not perform well! Please use max_samples < 1."
+                )
             mask = curr_samples
 
         # XXX todo: idem without dataframe
