@@ -34,7 +34,7 @@ In addition, the package provides a framework for developing custom tools and ru
 # Statement of need
 
 Recent advancements in machine learning have led to increasingly complex predictive models, often at the cost of interpretability.
-There is often a need for models which are inherently interpretable [@rudin2018please; @murdoch2019definitions], particularly in high-stakes applications such as medicine, biology, and political science.
+There is often a need for models which are inherently interpretable [@rudin2019stop; @murdoch2019definitions], particularly in high-stakes applications such as medicine, biology, and political science.
 In these cases, interpretability can ensure that models behave reasonably, identify when models will make errors, and make the models more trusted by domain experts.
 Moreover, interpretable models tend to be much more computationally efficient then larger black-box models.
 
