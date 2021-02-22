@@ -20,7 +20,8 @@ setuptools.setup(
         'cvxopt',
         'mlxtend',
         'pytest',
-        'pytest-cov'
+        'pytest-cov',
+        'tqdm'
     ],
     python_requires='>=3.6',
     classifiers=[
