@@ -1,1 +1,0 @@
-default_jupytext_formats = "notebooks//imodels_demo.ipynb,tests/notebooks//imodels_demo.py:percent"

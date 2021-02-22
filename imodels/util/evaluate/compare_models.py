@@ -90,6 +90,8 @@ def get_dataset(data_id, onehot_encode_strings=True):
     dataset = fetch_openml(data_id=data_id)
     # get X and y
     X = dshape(dataset.data)
+    if type(X) == pd.DataFrame:
+        X = X.values
     try:
         target = dshape(dataset.target)
     except:
@@ -106,10 +108,8 @@ def get_dataset(data_id, onehot_encode_strings=True):
     # one-hot for categorical values
     if onehot_encode_strings:
         cat_ft=[i for i in range(X.shape[1]) if 'str' in str(type(unpack(X[0,i]))) or 'unicode' in str(type(unpack(X[0,i])))]
-        if len(cat_ft): 
-            for i in cat_ft:
-                X[:,i] = to_numeric(X[:,i]) 
-            X = OneHotEncoder(categorical_features=cat_ft).fit_transform(X)
+        if len(cat_ft):
+            X = OneHotEncoder().fit_transform(X)
     # if sparse, make dense
     try:
         X = X.toarray()
@@ -203,7 +203,7 @@ def run_comparison(comparison_datasets, metrics, estimators, write=True, average
             'std_results': std_results,
             'metrics': metrics_list,
             'df': df,
-        }, open(os.path.join(dir_path, '../../../tests/test_data/data/model_comparisons.pkl'), 'wb'))
+        }, open(os.path.join(dir_path, '../../../tests/test_data/comparison_data/model_comparisons.pkl'), 'wb'))
     else:
         return df
 
