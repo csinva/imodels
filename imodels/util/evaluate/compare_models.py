@@ -203,7 +203,7 @@ def run_comparison(comparison_datasets, metrics, estimators, write=True, average
             'std_results': std_results,
             'metrics': metrics_list,
             'df': df,
-        }, open(os.path.join(dir_path, 'data/model_comparisons.pkl'), 'wb'))
+        }, open(os.path.join(dir_path, '../../../tests/test_data/data/model_comparisons.pkl'), 'wb'))
     else:
         return df
 
