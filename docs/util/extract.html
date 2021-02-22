@@ -100,10 +100,6 @@ def extract_rulefit(X, y, feature_names,
         tree_sizes = np.random.exponential(scale=tree_size - 2,
                                             size=int(np.ceil(max_rules * 2 / tree_size)))
         tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
-        i = int(len(tree_sizes) / 4)
-        while np.sum(tree_sizes[0:i]) &lt; max_rules:
-            i = i + 1
-        tree_sizes = tree_sizes[0:i]
         tree_generator.set_params(warm_start=True)
         curr_est_ = 0
         for i_size in np.arange(len(tree_sizes)):
@@ -293,10 +289,6 @@ def extract_skope(X, y, feature_names,
         tree_sizes = np.random.exponential(scale=tree_size - 2,
                                             size=int(np.ceil(max_rules * 2 / tree_size)))
         tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
-        i = int(len(tree_sizes) / 4)
-        while np.sum(tree_sizes[0:i]) &lt; max_rules:
-            i = i + 1
-        tree_sizes = tree_sizes[0:i]
         tree_generator.set_params(warm_start=True)
         curr_est_ = 0
         for i_size in np.arange(len(tree_sizes)):

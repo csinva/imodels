@@ -95,10 +95,12 @@ def replace_feature_name(rule: Rule, replace_dict: Dict[str, str]) -&gt; Rule:
     def replace(match):
         return replace_dict[match.group(0)]
 
-    rule_replaced = Rule(
-        re.sub(&#39;|&#39;.join(r&#39;\b%s\b&#39; % re.escape(s) for s in replace_dict), replace, rule.rule),
-        args=rule.args
-    )
+    rule_replaced = copy.copy(rule)
+    rule_replaced.rule = re.sub(&#39;|&#39;.join(r&#39;\b%s\b&#39; % re.escape(s) for s in replace_dict), replace, rule.rule)
+    replaced_agg_dict = {}
+    for feature, symbol in rule_replaced.agg_dict:
+        replaced_agg_dict[(replace_dict[feature], symbol)] = rule_replaced.agg_dict[(feature, symbol)]
+    rule_replaced.agg_dict = replaced_agg_dict
     return rule_replaced
 
 
@@ -153,10 +155,12 @@ def get_feature_dict(num_features: int, feature_names: Iterable[str] = None) -&g
     def replace(match):
         return replace_dict[match.group(0)]
 
-    rule_replaced = Rule(
-        re.sub(&#39;|&#39;.join(r&#39;\b%s\b&#39; % re.escape(s) for s in replace_dict), replace, rule.rule),
-        args=rule.args
-    )
+    rule_replaced = copy.copy(rule)
+    rule_replaced.rule = re.sub(&#39;|&#39;.join(r&#39;\b%s\b&#39; % re.escape(s) for s in replace_dict), replace, rule.rule)
+    replaced_agg_dict = {}
+    for feature, symbol in rule_replaced.agg_dict:
+        replaced_agg_dict[(replace_dict[feature], symbol)] = rule_replaced.agg_dict[(feature, symbol)]
+    rule_replaced.agg_dict = replaced_agg_dict
     return rule_replaced</code></pre>
 </details>
 </dd>

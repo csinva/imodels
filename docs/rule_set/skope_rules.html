@@ -171,7 +171,7 @@ from imodels.rule_set.rule_set import RuleSet
 from imodels.util.convert import tree_to_rules
 from imodels.util.rule import replace_feature_name, get_feature_dict, Rule
 from imodels.util.extract import extract_skope
-from imodels.util.score import score_oob
+from imodels.util.score import score_precision_recall
 from imodels.util.prune import prune_mins, deduplicate
 
 INTEGER_TYPES = (numbers.Integral, np.integer)
@@ -299,7 +299,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
 
     def __init__(self,
                  precision_min=0.5,
-                 recall_min=0.01,
+                 recall_min=0.4,
                  n_estimators=10,
                  max_samples=.8,
                  max_samples_features=1.,
@@ -412,6 +412,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_
         ]
+        self.complexity = self._get_complexity()
         return self
 
     def predict(self, X) -&gt; np.ndarray:
@@ -568,7 +569,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
                              verbose=self.verbose)
 
     def _score_rules(self, X, y, rules) -&gt; List[Rule]:
-        return score_oob(X, y, rules, self.estimators_samples_, self.estimators_features_, self.feature_placeholders)
+        return score_precision_recall(X, y, rules, self.estimators_samples_, self.estimators_features_, self.feature_placeholders)
 
     def _prune_rules(self, rules) -&gt; List[Rule]:
         return deduplicate(
@@ -588,7 +589,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
 <dl>
 <dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier"><code class="flex name class">
 <span>class <span class="ident">SkopeRulesClassifier</span></span>
-<span>(</span><span>precision_min=0.5, recall_min=0.01, n_estimators=10, max_samples=0.8, max_samples_features=1.0, bootstrap=False, bootstrap_features=False, max_depth=3, max_depth_duplication=None, max_features=1.0, min_samples_split=2, n_jobs=1, random_state=None, verbose=0)</span>
+<span>(</span><span>precision_min=0.5, recall_min=0.4, n_estimators=10, max_samples=0.8, max_samples_features=1.0, bootstrap=False, bootstrap_features=False, max_depth=3, max_depth_duplication=None, max_features=1.0, min_samples_split=2, n_jobs=1, random_state=None, verbose=0)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>An easy-interpretable classifier optimizing simple logical rules.</p>
@@ -817,7 +818,7 @@ estimator.</dd>
 
     def __init__(self,
                  precision_min=0.5,
-                 recall_min=0.01,
+                 recall_min=0.4,
                  n_estimators=10,
                  max_samples=.8,
                  max_samples_features=1.,
@@ -930,6 +931,7 @@ estimator.</dd>
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_
         ]
+        self.complexity = self._get_complexity()
         return self
 
     def predict(self, X) -&gt; np.ndarray:
@@ -1086,7 +1088,7 @@ estimator.</dd>
                              verbose=self.verbose)
 
     def _score_rules(self, X, y, rules) -&gt; List[Rule]:
-        return score_oob(X, y, rules, self.estimators_samples_, self.estimators_features_, self.feature_placeholders)
+        return score_precision_recall(X, y, rules, self.estimators_samples_, self.estimators_features_, self.feature_placeholders)
 
     def _prune_rules(self, rules) -&gt; List[Rule]:
         return deduplicate(
@@ -1218,6 +1220,7 @@ If not provided, then each sample is given unit weight.</dd>
     self.rules_ = [
         replace_feature_name(rule, self.feature_dict_) for rule in self.rules_
     ]
+    self.complexity = self._get_complexity()
     return self</code></pre>
 </details>
 </dd>

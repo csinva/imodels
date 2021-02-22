@@ -59,7 +59,13 @@ class RuleSet:
         for (r, w) in selected_rules:
             scores[list(df.query(r).index)] += w[0]
 
-        return scores</code></pre>
+        return scores
+
+    def _get_complexity(self):
+        check_is_fitted(self, [&#39;rules_without_feature_names_&#39;])
+        num_rules = len(self.rules_without_feature_names_)
+        extra_antecedents = np.sum([(len(rule.agg_dict) - 1) for rule in self.rules_without_feature_names_])
+        return num_rules + extra_antecedents * 0.5</code></pre>
 </details>
 </section>
 <section>
@@ -109,7 +115,13 @@ class RuleSet:
         for (r, w) in selected_rules:
             scores[list(df.query(r).index)] += w[0]
 
-        return scores</code></pre>
+        return scores
+
+    def _get_complexity(self):
+        check_is_fitted(self, [&#39;rules_without_feature_names_&#39;])
+        num_rules = len(self.rules_without_feature_names_)
+        extra_antecedents = np.sum([(len(rule.agg_dict) - 1) for rule in self.rules_without_feature_names_])
+        return num_rules + extra_antecedents * 0.5</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">

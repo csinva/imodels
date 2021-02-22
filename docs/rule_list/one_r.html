@@ -58,7 +58,7 @@ class OneRClassifier(GreedyRuleListClassifier):
             self.feature_names = X.columns
             X = X.values
         else:
-            if self.feature_names is None:
+            if feature_names is None:
                 self.feature_names = [&#39;feat &#39; + str(i) for i in range(X.shape[1])]
         if feature_names is not None:
             self.feature_names = feature_names
@@ -78,6 +78,7 @@ class OneRClassifier(GreedyRuleListClassifier):
             # print(&#39;acc&#39;, feat_names_single[0], f&#39;{accs[col_idx]:0.2f}&#39;)
         col_idx_best = np.argmax(accs)
         self.rules_ = ms[col_idx_best].rules_
+        self.complexity = len(self.rules_)
 
         # need to adjust index_col since was fitted with only 1 col
         for rule in self.rules_:
@@ -136,7 +137,7 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
             self.feature_names = X.columns
             X = X.values
         else:
-            if self.feature_names is None:
+            if feature_names is None:
                 self.feature_names = [&#39;feat &#39; + str(i) for i in range(X.shape[1])]
         if feature_names is not None:
             self.feature_names = feature_names
@@ -156,6 +157,7 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
             # print(&#39;acc&#39;, feat_names_single[0], f&#39;{accs[col_idx]:0.2f}&#39;)
         col_idx_best = np.argmax(accs)
         self.rules_ = ms[col_idx_best].rules_
+        self.complexity = len(self.rules_)
 
         # need to adjust index_col since was fitted with only 1 col
         for rule in self.rules_:
@@ -189,7 +191,7 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
         self.feature_names = X.columns
         X = X.values
     else:
-        if self.feature_names is None:
+        if feature_names is None:
             self.feature_names = [&#39;feat &#39; + str(i) for i in range(X.shape[1])]
     if feature_names is not None:
         self.feature_names = feature_names
@@ -209,6 +211,7 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
         # print(&#39;acc&#39;, feat_names_single[0], f&#39;{accs[col_idx]:0.2f}&#39;)
     col_idx_best = np.argmax(accs)
     self.rules_ = ms[col_idx_best].rules_
+    self.complexity = len(self.rules_)
 
     # need to adjust index_col since was fitted with only 1 col
     for rule in self.rules_:
