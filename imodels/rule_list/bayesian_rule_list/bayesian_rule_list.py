@@ -169,7 +169,18 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             # Compute the rule consequent
             self.theta, self.ci_theta = get_rule_rhs(Xtrain, Ytrain, self.d_star, self.alpha, True)
 
+        self.complexity = self._get_complexity()
+
         return self
+
+    def _get_complexity(self):
+        final_itemsets = np.array(self.itemsets, dtype=object)[self.d_star]
+        complexity = 0
+        for itemset in final_itemsets:
+            complexity += 1
+            if len(itemset) > 1 and type(itemset) != str:
+                complexity += 0.5 * (len(itemset) - 1)
+        return complexity
 
     def __str__(self, decimals=1):
         if self.d_star:

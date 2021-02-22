@@ -90,7 +90,7 @@ from imodels.rule_set.rule_set import RuleSet
 from imodels.util.convert import tree_to_rules
 from imodels.util.rule import replace_feature_name, get_feature_dict, Rule
 from imodels.util.extract import extract_skope
-from imodels.util.score import score_oob
+from imodels.util.score import score_precision_recall
 from imodels.util.prune import prune_mins, deduplicate
 
 INTEGER_TYPES = (numbers.Integral, np.integer)
@@ -218,7 +218,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
 
     def __init__(self,
                  precision_min=0.5,
-                 recall_min=0.01,
+                 recall_min=0.4,
                  n_estimators=10,
                  max_samples=.8,
                  max_samples_features=1.,
@@ -331,6 +331,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_
         ]
+        self.complexity = self._get_complexity()
         return self
 
     def predict(self, X) -> np.ndarray:
@@ -487,7 +488,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
                              verbose=self.verbose)
 
     def _score_rules(self, X, y, rules) -> List[Rule]:
-        return score_oob(X, y, rules, self.estimators_samples_, self.estimators_features_, self.feature_placeholders)
+        return score_precision_recall(X, y, rules, self.estimators_samples_, self.estimators_features_, self.feature_placeholders)
 
     def _prune_rules(self, rules) -> List[Rule]:
         return deduplicate(

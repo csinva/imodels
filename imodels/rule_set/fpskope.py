@@ -5,6 +5,8 @@ import numpy as np
 from imodels.rule_set.skope_rules import SkopeRulesClassifier
 from imodels.util.extract import extract_fpgrowth
 from imodels.util.convert import itemsets_to_rules
+from imodels.util.score import score_precision_recall
+from imodels.util.rule import Rule
 
 class FPSkopeClassifier(SkopeRulesClassifier):
 
@@ -13,7 +15,7 @@ class FPSkopeClassifier(SkopeRulesClassifier):
                  maxcardinality=2,
                  verbose=False,
                  precision_min=0.5,
-                 recall_min=0.01,
+                 recall_min=0.4,
                  n_estimators=10,
                  max_samples=.8,
                  max_samples_features=1.,
@@ -56,3 +58,11 @@ class FPSkopeClassifier(SkopeRulesClassifier):
                                     undiscretized_features=self.undiscretized_features,
                                     verbose=self.verbose)[0]
         return [itemsets_to_rules(itemsets)], [np.arange(X.shape[0])], [np.arange(len(self.feature_names))]
+
+    def _score_rules(self, X, y, rules) -> List[Rule]:
+        return score_precision_recall(X, y, 
+                                      rules, 
+                                      self.estimators_samples_, 
+                                      self.estimators_features_, 
+                                      self.feature_placeholders,
+                                      oob=False)

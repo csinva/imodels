@@ -3,7 +3,6 @@
 **.pdf
 **.zip
 **.npy
-**.pkl
 **slurm*
 **logs*
 env

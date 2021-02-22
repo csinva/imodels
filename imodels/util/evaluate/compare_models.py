@@ -20,6 +20,38 @@ import pandas as pd
 
 import imodels
 
+COMPARISON_DATASETS = [
+        ("breast-cancer", 13),
+        ("breast-w", 15),
+        ("credit-g", 31),
+        ("haberman", 43),
+        ("heart", 1574),
+        ("ionosphere", 59),
+        ("labor", 4),
+        ("vote", 56),
+    ]
+
+METRICS = [
+    ('Acc.', accuracy_score),
+    ('F1', f1_score),
+    ('Complexity', None),
+    ('Time', None)
+]
+
+ESTIMATORS = [
+    ('RandomForest (sklearn)', RandomForestClassifier(n_estimators=200)),
+    ('GradientBoostingClassifier (sklearn)', GradientBoostingClassifier()),
+    ('MLPClassifier (sklearn)', MLPClassifier()),
+    ('SkopeRules', imodels.SkopeRulesClassifier()),
+    ('RuleFit', imodels.RuleFitClassifier()),
+    ('FPLasso', imodels.FPLassoClassifier()),
+    ('FPSkope', imodels.FPSkopeClassifier()),
+    ('BRL', imodels.BayesianRuleListClassifier()),
+    ('GRL', imodels.GreedyRuleListClassifier()),
+    ('OneR', imodels.OneRClassifier()),
+    ('BoostedRuleSet', imodels.BoostedRulesClassifier())
+]
+
 def dshape(X):
     if len(X.shape) == 1:
         return X.reshape(-1,1)
@@ -37,6 +69,21 @@ def to_numeric(lst):
         if unpack(t) not in lbls:
             lbls[unpack(t)] = len(lbls.keys())
     return np.array([lbls[unpack(t)] for t in lst.flatten()])
+
+def get_complexity(estimator):
+    if isinstance(estimator, (RandomForestClassifier, GradientBoostingClassifier)):
+        complexity = 0
+        for tree in estimator.estimators_:
+            if type(tree) is np.ndarray:
+                tree = tree[0]
+            complexity += 2 ** tree.get_depth()
+            
+            # add 0.5 for every antecedent after the first
+            if tree.get_depth() > 1:
+                complexity += ((2 ** tree.get_depth()) - 1) * 0.5 
+        return complexity
+    else:
+        return estimator.complexity
 
 def get_dataset(data_id, onehot_encode_strings=True):
     # load
@@ -76,7 +123,7 @@ def get_dataset(data_id, onehot_encode_strings=True):
 def compare_estimators(estimators: list,
                        datasets,
                        metrics: list,
-                       n_cv_folds = 10, decimals = 3, cellsize = 22):
+                       n_cv_folds = 10, decimals = 3, cellsize = 22, verbose = True):
     if type(estimators) != list:
         raise Exception("First argument needs to be a list of tuples containing ('name', Estimator pairs)")
     if type(metrics) != list:
@@ -87,7 +134,8 @@ def compare_estimators(estimators: list,
     
     # loop over datasets
     for d in tqdm(datasets):
-        print("comparing on dataset", d[0])
+        if verbose:
+            print("comparing on dataset", d[0])
         mean_result = []
         std_result = []
         X, y = get_dataset(d[1])
@@ -108,13 +156,16 @@ def compare_estimators(estimators: list,
                 for i, (met_name, met) in enumerate(metrics):
                     if met_name == 'Time':
                         mresults[i].append(end - start)
+                    elif met_name == 'Complexity':
+                        if est_name != 'MLPClassifier (sklearn)':
+                            mresults[i].append(get_complexity(est))
                     else:
                         try:
                             mresults[i].append(met(y[test_idx], y_pred))
                         except:
                             mresults[i].append(met(to_numeric(y[test_idx]), to_numeric(y_pred)))
 
-            for i in range(len(metrics)):
+            for i in range(len(mresults)):
                 mean_result.append(np.mean(mresults[i]))
                 std_result.append(np.std(mresults[i]) / n_cv_folds)
         
@@ -123,42 +174,12 @@ def compare_estimators(estimators: list,
         
     return mean_results, std_results
 
-if __name__ == '__main__':
+def run_comparison(comparison_datasets, metrics, estimators, write=True, average=False, verbose=True):
 
-
-    comparison_datasets = [
-        ("breast-cancer", 13),
-        ("breast-w", 15),
-        ("credit-g", 31),
-        ("haberman", 43),
-        ("heart", 1574),
-        ("ionosphere", 59),
-        ("labor", 4),
-        ("vote", 56),
-    ]
-
-    metrics = [
-        ('Acc.', accuracy_score),
-        ('F1', f1_score),
-        ('Time', None)
-    ]
-    
-    estimators = [
-        ('RandomForest (sklearn)', RandomForestClassifier(n_estimators=200)),
-        ('GradientBoostingClassifier (sklearn)', GradientBoostingClassifier()),
-        ('MLPClassifier (sklearn)', MLPClassifier()),
-        ('SkopeRules', imodels.SkopeRulesClassifier()),
-        ('RuleFit', imodels.RuleFitClassifier()),
-        ('FPLasso', imodels.FPLassoClassifier()),
-        ('FPSkope', imodels.FPSkopeClassifier()),
-        ('BRL', imodels.BayesianRuleListClassifier()),
-        ('GRL', imodels.GreedyRuleListClassifier()),
-        ('OneR', imodels.OneRClassifier()),
-        ('BoostedRuleSet', imodels.BoostedRulesClassifier())
-    ]
     mean_results, std_results = compare_estimators(estimators=estimators,
                                                    datasets=comparison_datasets,
                                                    metrics=metrics,
+                                                   verbose=verbose,
                                                    n_cv_folds=5)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     
@@ -171,11 +192,21 @@ if __name__ == '__main__':
     df = pd.DataFrame.from_dict(mean_results)
     df.index = column_titles
 
-    pkl.dump({
-        'estimators': estimators_list,
-        'comparison_datasets': comparison_datasets,
-        'mean_results': mean_results,
-        'std_results': std_results,
-        'metrics': metrics_list,
-        'df': df,
-    }, open(os.path.join(dir_path, 'model_comparisons.pkl'), 'wb'))
+    if average:
+        df = df.mean(axis=1)
+
+    if write:
+        pkl.dump({
+            'estimators': estimators_list,
+            'comparison_datasets': comparison_datasets,
+            'mean_results': mean_results,
+            'std_results': std_results,
+            'metrics': metrics_list,
+            'df': df,
+        }, open(os.path.join(dir_path, '../../../tests/test_data/data/model_comparisons.pkl'), 'wb'))
+    else:
+        return df
+
+
+if __name__ == '__main__':
+    run_comparison(COMPARISON_DATASETS, METRICS, ESTIMATORS)
