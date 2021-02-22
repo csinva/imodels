@@ -123,7 +123,7 @@ def get_dataset(data_id, onehot_encode_strings=True):
 def compare_estimators(estimators: list,
                        datasets,
                        metrics: list,
-                       n_cv_folds = 10, decimals = 3, cellsize = 22):
+                       n_cv_folds = 10, decimals = 3, cellsize = 22, verbose = True):
     if type(estimators) != list:
         raise Exception("First argument needs to be a list of tuples containing ('name', Estimator pairs)")
     if type(metrics) != list:
@@ -134,7 +134,8 @@ def compare_estimators(estimators: list,
     
     # loop over datasets
     for d in tqdm(datasets):
-        print("comparing on dataset", d[0])
+        if verbose:
+            print("comparing on dataset", d[0])
         mean_result = []
         std_result = []
         X, y = get_dataset(d[1])
@@ -148,8 +149,6 @@ def compare_estimators(estimators: list,
             for train_idx, test_idx in kf.split(X):
                 start = time.time()
                 est.fit(X[train_idx, :], y[train_idx])
-                if est_name == 'RuleFit':
-                    print(est.rules_)
                 y_pred = est.predict(X[test_idx, :])
                 end = time.time()
                 
@@ -175,11 +174,12 @@ def compare_estimators(estimators: list,
         
     return mean_results, std_results
 
-def run_comparison(comparison_datasets, metrics, estimators, write=True, average=False):
+def run_comparison(comparison_datasets, metrics, estimators, write=True, average=False, verbose=True):
 
     mean_results, std_results = compare_estimators(estimators=estimators,
                                                    datasets=comparison_datasets,
                                                    metrics=metrics,
+                                                   verbose=verbose,
                                                    n_cv_folds=5)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     
@@ -193,7 +193,7 @@ def run_comparison(comparison_datasets, metrics, estimators, write=True, average
     df.index = column_titles
 
     if average:
-        df = df.mean(a)
+        df = df.mean(axis=1)
 
     if write:
         pkl.dump({
@@ -203,7 +203,7 @@ def run_comparison(comparison_datasets, metrics, estimators, write=True, average
             'std_results': std_results,
             'metrics': metrics_list,
             'df': df,
-        }, open(os.path.join(dir_path, 'model_comparisons.pkl'), 'wb'))
+        }, open(os.path.join(dir_path, 'data/model_comparisons.pkl'), 'wb'))
     else:
         return df
 

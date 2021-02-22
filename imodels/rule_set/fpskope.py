@@ -15,7 +15,7 @@ class FPSkopeClassifier(SkopeRulesClassifier):
                  maxcardinality=2,
                  verbose=False,
                  precision_min=0.5,
-                 recall_min=0.01,
+                 recall_min=0.4,
                  n_estimators=10,
                  max_samples=.8,
                  max_samples_features=1.,
