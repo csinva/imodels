@@ -5,6 +5,8 @@ minimizes norm(X * w - y, 2) + lambda_reg * norm(w, 1)
 
 with integer coefficients in w
 '''
+import warnings
+
 import cvxpy as cp  # package for optimization
 from cvxpy.error import SolverError
 import numpy as np
@@ -57,7 +59,8 @@ class SLIMRegressor(BaseEstimator):
             self.model.intercept_ = 0
 
         except SolverError as e:
-            print('gurobi, mosek, or cplex solver required for mixed-integer linear regression')
+            warnings.warn("gurobi, mosek, or cplex solver required for mixed-integer linear "
+                          "regression. rounding non-integer coefficients instead")
             m = Lasso(alpha=lambda_reg)
             m.fit(X, y, sample_weight=sample_weight)
             self.model.coef_ = np.round(m.coef_).astype(int)
@@ -114,7 +117,8 @@ class SLIMClassifier(BaseEstimator):
             self.model.intercept_ = 0
 
         except SolverError as e:
-            print('mosek solver required for mixed-integer linear regression')
+            warnings.warn("mosek solver required for mixed-integer logistic regression. "
+                          "rounding non-integer coefficients instead")
             m = LogisticRegression(C=1/lambda_reg)
             m.fit(X, y, sample_weight=sample_weight)
             self.model.coef_ = np.round(m.coef_).astype(int)

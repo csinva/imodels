@@ -52,7 +52,7 @@ def get_diabetes_data():
     data_np = np.array(list(map(lambda x: np.array(list(x)), data[0])))
     X = data_np[:, :-1].astype('float32')
     y_text = data_np[:, -1].astype('str')
-    y = (y_text == 'tested_positive').astype(np.int)  # labels 0-1
+    y = (y_text == 'tested_positive').astype(int)  # labels 0-1
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.75) # split
     feature_names = ["#Pregnant","Glucose concentration test","Blood pressure(mmHg)","Triceps skin fold thickness(mm)",
                   "2-Hour serum insulin (mu U/ml)","Body mass index","Diabetes pedigree function","Age (years)"]
