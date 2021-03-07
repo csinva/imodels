@@ -78,7 +78,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             if self.strategy == 'max':
                 y_left = y[x[:, col] < cutoff]  # left-hand side data
                 y_right = y[x[:, col] >= cutoff]  # right-hand side data
-                if np.mean(y_left) > np.mean(y_right):
+                if len(y_left) > 0 and np.mean(y_left) > np.mean(y_right):
                     flip = True
                     tmp = deepcopy(y_left)
                     y_left = deepcopy(y_right)

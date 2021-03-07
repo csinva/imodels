@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from imodels import RuleFitRegressor, SLIMRegressor
 
@@ -11,6 +12,7 @@ class TestClassRegression:
         self.X_regression = np.random.randn(self.n, self.p)
         self.y_regression = self.X_regression[:, 0] + np.random.randn(self.n) * 0.01
 
+    @pytest.mark.filterwarnings("ignore::UserWarning")
     def test_regression(self):
         '''Test imodels on basic binary classification task
         '''

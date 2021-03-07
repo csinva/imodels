@@ -40,7 +40,7 @@ class TestBRL(unittest.TestCase):
         data = loadarff(os.path.join(path_to_tests, "test_data/diabetes.arff"))
         data_np = np.array(list(map(lambda x: np.array(list(x)), data[0])))
         X, y_text = data_np[:, :-1].astype('float32'), data_np[:, -1].astype('str')
-        y = (y_text == 'tested_positive').astype(np.int)  # labels 0-1
+        y = (y_text == 'tested_positive').astype(int)  # labels 0-1
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.75)  # split
 

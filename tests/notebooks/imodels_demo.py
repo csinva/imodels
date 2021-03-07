@@ -30,7 +30,7 @@ from scipy.io.arff import loadarff
 
 # installable with: `pip install imodels`
 from imodels import SLIMRegressor, BayesianRuleListClassifier, RuleFitRegressor, GreedyRuleListClassifier
-from imodels import OneRClassifier, BoostedRulesClassifier
+from imodels import SLIMClassifier, OneRClassifier, BoostedRulesClassifier
 from imodels.util.convert import tree_to_code
 
 # change working directory to project root
@@ -52,7 +52,7 @@ def get_diabetes_data():
     data_np = np.array(list(map(lambda x: np.array(list(x)), data[0])))
     X = data_np[:, :-1].astype('float32')
     y_text = data_np[:, -1].astype('str')
-    y = (y_text == 'tested_positive').astype(np.int)  # labels 0-1
+    y = (y_text == 'tested_positive').astype(int)  # labels 0-1
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.75) # split
     feature_names = ["#Pregnant","Glucose concentration test","Blood pressure(mmHg)","Triceps skin fold thickness(mm)",
                   "2-Hour serum insulin (mu U/ml)","Body mass index","Diabetes pedigree function","Age (years)"]
@@ -243,9 +243,19 @@ y_sim = 1 * X_sim[:, 0] + 2 * X_sim[:, 1] - 1 * X_sim[:, 2] + np.random.randn(n)
 # fit linear models with different regularization parameters
 print('groundtruth weights should be 1, 2, -1...')
 model = SLIMRegressor()
-for lambda_reg in [0, 1e-2, 5e-2, 1e-1, 1, 2]:
+for lambda_reg in [0, 1e-2, 5e-2, 1e-1, 1, 2, 5, 10]:
     model.fit(X_sim, y_sim, lambda_reg)
     mse = np.mean(np.square(y_sim - model.predict(X_sim)))
     print(f'lambda: {lambda_reg}\tmse: {mse: 0.2f}\tweights: {model.model.coef_}')
 
 # %%
+y_sim = 1 / (1 + np.exp(-y_sim))
+y_sim = np.round(y_sim)
+
+# fit linear models with different regularization parameters
+print('groundtruth weights should be 1, 2, -1...')
+model = SLIMClassifier()
+for lambda_reg in [1e-2, 5e-2, 1e-1, 1, 2, 5, 10]:
+    model.fit(X_sim, y_sim, lambda_reg)
+    mll = np.mean(metrics.log_loss(y_sim, model.predict(X_sim)))
+    print(f'lambda: {lambda_reg}\tmlogloss: {mll: 0.2f}\tweights: {model.model.coef_}')
