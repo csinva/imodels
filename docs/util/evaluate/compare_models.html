@@ -119,6 +119,8 @@ def get_dataset(data_id, onehot_encode_strings=True):
     dataset = fetch_openml(data_id=data_id)
     # get X and y
     X = dshape(dataset.data)
+    if type(X) == pd.DataFrame:
+        X = X.values
     try:
         target = dshape(dataset.target)
     except:
@@ -135,10 +137,8 @@ def get_dataset(data_id, onehot_encode_strings=True):
     # one-hot for categorical values
     if onehot_encode_strings:
         cat_ft=[i for i in range(X.shape[1]) if &#39;str&#39; in str(type(unpack(X[0,i]))) or &#39;unicode&#39; in str(type(unpack(X[0,i])))]
-        if len(cat_ft): 
-            for i in cat_ft:
-                X[:,i] = to_numeric(X[:,i]) 
-            X = OneHotEncoder(categorical_features=cat_ft).fit_transform(X)
+        if len(cat_ft):
+            X = OneHotEncoder().fit_transform(X)
     # if sparse, make dense
     try:
         X = X.toarray()
@@ -232,7 +232,7 @@ def run_comparison(comparison_datasets, metrics, estimators, write=True, average
             &#39;std_results&#39;: std_results,
             &#39;metrics&#39;: metrics_list,
             &#39;df&#39;: df,
-        }, open(os.path.join(dir_path, &#39;../../../tests/test_data/data/model_comparisons.pkl&#39;), &#39;wb&#39;))
+        }, open(os.path.join(dir_path, &#39;../../../tests/test_data/comparison_data/model_comparisons.pkl&#39;), &#39;wb&#39;))
     else:
         return df
 
@@ -367,6 +367,8 @@ if __name__ == &#39;__main__&#39;:
     dataset = fetch_openml(data_id=data_id)
     # get X and y
     X = dshape(dataset.data)
+    if type(X) == pd.DataFrame:
+        X = X.values
     try:
         target = dshape(dataset.target)
     except:
@@ -383,10 +385,8 @@ if __name__ == &#39;__main__&#39;:
     # one-hot for categorical values
     if onehot_encode_strings:
         cat_ft=[i for i in range(X.shape[1]) if &#39;str&#39; in str(type(unpack(X[0,i]))) or &#39;unicode&#39; in str(type(unpack(X[0,i])))]
-        if len(cat_ft): 
-            for i in cat_ft:
-                X[:,i] = to_numeric(X[:,i]) 
-            X = OneHotEncoder(categorical_features=cat_ft).fit_transform(X)
+        if len(cat_ft):
+            X = OneHotEncoder().fit_transform(X)
     # if sparse, make dense
     try:
         X = X.toarray()
@@ -435,7 +435,7 @@ if __name__ == &#39;__main__&#39;:
             &#39;std_results&#39;: std_results,
             &#39;metrics&#39;: metrics_list,
             &#39;df&#39;: df,
-        }, open(os.path.join(dir_path, &#39;../../../tests/test_data/data/model_comparisons.pkl&#39;), &#39;wb&#39;))
+        }, open(os.path.join(dir_path, &#39;../../../tests/test_data/comparison_data/model_comparisons.pkl&#39;), &#39;wb&#39;))
     else:
         return df</code></pre>
 </details>

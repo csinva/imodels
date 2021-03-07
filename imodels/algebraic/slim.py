@@ -4,12 +4,13 @@ Wrapper for sparse, integer linear models.
 minimizes norm(X * w - y, 2) + lambda_reg * norm(w, 1)
 
 with integer coefficients in w
-'''
-import warnings
 
+Requires installation of a solver for mixed-integer linear programs, e.g. gurobi, mosek, or cplex
+'''
 import cvxpy as cp  # package for optimization
-from cvxpy.error import SolverError
 import numpy as np
+import warnings
+from cvxpy.error import SolverError
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import LinearRegression, Lasso, LogisticRegression
 
@@ -46,7 +47,7 @@ class SLIMRegressor(BaseEstimator):
         if sample_weight is not None:
             # print('shapes', residuals.shape, sample_weight.shape)
             residuals = cp.multiply(sample_weight, residuals)
-        
+
         try:
             mse = cp.sum_squares(residuals)
             l1_penalty = lambda_reg * cp.norm(w, 1)
@@ -104,7 +105,7 @@ class SLIMClassifier(BaseEstimator):
         residuals = cp.multiply(1 - y, logits) - cp.logistic(logits)
         if sample_weight is not None:
             residuals = cp.multiply(sample_weight, residuals)
-        
+
         try:
             celoss = -cp.sum(residuals)
             l1_penalty = lambda_reg * cp.norm(w, 1)
@@ -119,7 +120,7 @@ class SLIMClassifier(BaseEstimator):
         except SolverError as e:
             warnings.warn("mosek solver required for mixed-integer logistic regression. "
                           "rounding non-integer coefficients instead")
-            m = LogisticRegression(C=1/lambda_reg)
+            m = LogisticRegression(C=1 / lambda_reg)
             m.fit(X, y, sample_weight=sample_weight)
             self.model.coef_ = np.round(m.coef_).astype(int)
             self.model.intercept_ = m.intercept_

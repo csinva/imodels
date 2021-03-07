@@ -25,7 +25,7 @@
 Implementations of different popular interpretable models can be easily used and installed:
 
 ```python
-from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier
+from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
 from imodels import SLIMRegressor, RuleFitRegressor
 
 model = BayesianRuleListClassifier()  # initialize a model
@@ -116,7 +116,7 @@ Different models support different machine-learning tasks. Current support for d
 | OneR rule list              |           ✔️           |            |
 | Optimal rule tree           |                       |            |
 | Iterative random forest     |                       |            |
-| Sparse integer linear model |                       |     ✔️      |
+| Sparse integer linear model |           ✔️           |     ✔️      |
 
 ## References
 - Readings

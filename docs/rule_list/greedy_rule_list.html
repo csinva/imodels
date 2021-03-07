@@ -105,7 +105,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             if self.strategy == &#39;max&#39;:
                 y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
                 y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
-                if np.mean(y_left) &gt; np.mean(y_right):
+                if len(y_left) &gt; 0 and np.mean(y_left) &gt; np.mean(y_right):
                     flip = True
                     tmp = deepcopy(y_left)
                     y_left = deepcopy(y_right)
@@ -457,7 +457,7 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
             if self.strategy == &#39;max&#39;:
                 y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
                 y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
-                if np.mean(y_left) &gt; np.mean(y_right):
+                if len(y_left) &gt; 0 and np.mean(y_left) &gt; np.mean(y_right):
                     flip = True
                     tmp = deepcopy(y_left)
                     y_left = deepcopy(y_right)
@@ -873,7 +873,7 @@ returns: the column to split on, the cutoff value, and the actual criterion_valu
         if self.strategy == &#39;max&#39;:
             y_left = y[x[:, col] &lt; cutoff]  # left-hand side data
             y_right = y[x[:, col] &gt;= cutoff]  # right-hand side data
-            if np.mean(y_left) &gt; np.mean(y_right):
+            if len(y_left) &gt; 0 and np.mean(y_left) &gt; np.mean(y_right):
                 flip = True
                 tmp = deepcopy(y_left)
                 y_left = deepcopy(y_right)

@@ -33,15 +33,15 @@
 </p>
 <p align="center">
 <img src="https://img.shields.io/badge/license-mit-blue.svg">
-<img src="https://img.shields.io/badge/python-3.6--3.8-blue">
+<img src="https://img.shields.io/badge/python-3.6--3.9-blue">
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
 <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
 <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=grey&right_color=orange&left_text=downloads">
+<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=1">
 </p>
 <h2 id="imodels-overview">imodels overview</h2>
 <p>Implementations of different popular interpretable models can be easily used and installed:</p>
-<pre><code class="python">from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier
+<pre><code class="python">from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
 from imodels import SLIMRegressor, RuleFitRegressor
 
 model = BayesianRuleListClassifier()  # initialize a model
@@ -234,7 +234,7 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 </tr>
 <tr>
 <td align="left">Sparse integer linear model</td>
-<td align="center"></td>
+<td align="center">✔️</td>
 <td align="center">✔️</td>
 </tr>
 </tbody>
@@ -291,7 +291,7 @@ from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.boosted_rules import BoostedRulesClassifier
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
-from .algebraic.slim import SLIMRegressor
+from .algebraic.slim import SLIMRegressor, SLIMClassifier
 
 CLASSIFIERS = BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, BoostedRulesClassifier #, IRFClassifier
 REGRESSORS = RuleFitRegressor, SLIMRegressor</code></pre>

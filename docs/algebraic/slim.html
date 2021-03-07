@@ -23,6 +23,7 @@
 <p>Wrapper for sparse, integer linear models.</p>
 <p>minimizes norm(X * w - y, 2) + lambda_reg * norm(w, 1)</p>
 <p>with integer coefficients in w</p>
+<p>Requires installation of a solver for mixed-integer linear programs, e.g. gurobi, mosek, or cplex</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -33,11 +34,15 @@ Wrapper for sparse, integer linear models.
 minimizes norm(X * w - y, 2) + lambda_reg * norm(w, 1)
 
 with integer coefficients in w
+
+Requires installation of a solver for mixed-integer linear programs, e.g. gurobi, mosek, or cplex
 &#39;&#39;&#39;
 import cvxpy as cp  # package for optimization
 import numpy as np
+import warnings
+from cvxpy.error import SolverError
 from sklearn.base import BaseEstimator
-from sklearn.linear_model import LinearRegression, Lasso
+from sklearn.linear_model import LinearRegression, Lasso, LogisticRegression
 
 
 class SLIMRegressor(BaseEstimator):
@@ -72,7 +77,7 @@ class SLIMRegressor(BaseEstimator):
         if sample_weight is not None:
             # print(&#39;shapes&#39;, residuals.shape, sample_weight.shape)
             residuals = cp.multiply(sample_weight, residuals)
-        
+
         try:
             mse = cp.sum_squares(residuals)
             l1_penalty = lambda_reg * cp.norm(w, 1)
@@ -81,19 +86,74 @@ class SLIMRegressor(BaseEstimator):
 
             # solve the problem using an appropriate solver
             prob.solve()
-            self.model.coef_ = w.value.astype(np.int)
+            self.model.coef_ = w.value.astype(int)
             self.model.intercept_ = 0
 
-        except:
+        except SolverError as e:
+            warnings.warn(&#34;gurobi, mosek, or cplex solver required for mixed-integer linear &#34;
+                          &#34;regression. rounding non-integer coefficients instead&#34;)
             m = Lasso(alpha=lambda_reg)
             m.fit(X, y, sample_weight=sample_weight)
-            self.model.coef_ = np.round(m.coef_).astype(np.int)
+            self.model.coef_ = np.round(m.coef_).astype(int)
             self.model.intercept_ = m.intercept_
 
     def predict_proba(self, X):
         preds = self.predict(X)
         preds_proba = np.array([1 / (1 + np.exp(-y)) for y in preds])
-        return np.vstack((1 - preds_proba, preds_proba)).transpose()</code></pre>
+        return np.vstack((1 - preds_proba, preds_proba)).transpose()
+
+
+class SLIMClassifier(BaseEstimator):
+
+    def __init__(self):
+        self.model = LogisticRegression()
+        self.predict = self.model.predict
+        self.predict_proba = self.model.predict_proba
+
+    def fit(self, X, y, lambda_reg=1, sample_weight=None):
+        &#39;&#39;&#39;fit a logistic model with integer coefficient and L1 regularization.
+        In case the optimization fails, fit lasso and round coefs.
+        
+        Params
+        ------
+        sample_weight: np.ndarray (n,)
+            weight for each individual sample
+        &#39;&#39;&#39;
+        if &#39;pandas&#39; in str(type(X)):
+            X = X.values
+        if &#39;pandas&#39; in str(type(y)):
+            y = y.values
+        assert type(X) == np.ndarray, &#39;inputs should be ndarrays&#39;
+        assert type(y) == np.ndarray, &#39;inputs should be ndarrays&#39;
+        self.model.classes_ = np.unique(y)
+
+        # declare the integer-valued optimization variable
+        w = cp.Variable(X.shape[1], integer=True)
+
+        # set up the minimization problem
+        logits = -X @ w
+        residuals = cp.multiply(1 - y, logits) - cp.logistic(logits)
+        if sample_weight is not None:
+            residuals = cp.multiply(sample_weight, residuals)
+
+        try:
+            celoss = -cp.sum(residuals)
+            l1_penalty = lambda_reg * cp.norm(w, 1)
+            obj = cp.Minimize(celoss + l1_penalty)
+            prob = cp.Problem(obj)
+
+            # solve the problem using an appropriate solver
+            prob.solve()
+            self.model.coef_ = np.array([w.value.astype(int)])
+            self.model.intercept_ = 0
+
+        except SolverError as e:
+            warnings.warn(&#34;mosek solver required for mixed-integer logistic regression. &#34;
+                          &#34;rounding non-integer coefficients instead&#34;)
+            m = LogisticRegression(C=1 / lambda_reg)
+            m.fit(X, y, sample_weight=sample_weight)
+            self.model.coef_ = np.round(m.coef_).astype(int)
+            self.model.intercept_ = m.intercept_</code></pre>
 </details>
 </section>
 <section>
@@ -105,6 +165,140 @@ class SLIMRegressor(BaseEstimator):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="imodels.algebraic.slim.SLIMClassifier"><code class="flex name class">
+<span>class <span class="ident">SLIMClassifier</span></span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base class for all estimators in scikit-learn</p>
+<h2 id="notes">Notes</h2>
+<p>All estimators should specify all the parameters that can be set
+at the class level in their <code>__init__</code> as explicit keyword
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SLIMClassifier(BaseEstimator):
+
+    def __init__(self):
+        self.model = LogisticRegression()
+        self.predict = self.model.predict
+        self.predict_proba = self.model.predict_proba
+
+    def fit(self, X, y, lambda_reg=1, sample_weight=None):
+        &#39;&#39;&#39;fit a logistic model with integer coefficient and L1 regularization.
+        In case the optimization fails, fit lasso and round coefs.
+        
+        Params
+        ------
+        sample_weight: np.ndarray (n,)
+            weight for each individual sample
+        &#39;&#39;&#39;
+        if &#39;pandas&#39; in str(type(X)):
+            X = X.values
+        if &#39;pandas&#39; in str(type(y)):
+            y = y.values
+        assert type(X) == np.ndarray, &#39;inputs should be ndarrays&#39;
+        assert type(y) == np.ndarray, &#39;inputs should be ndarrays&#39;
+        self.model.classes_ = np.unique(y)
+
+        # declare the integer-valued optimization variable
+        w = cp.Variable(X.shape[1], integer=True)
+
+        # set up the minimization problem
+        logits = -X @ w
+        residuals = cp.multiply(1 - y, logits) - cp.logistic(logits)
+        if sample_weight is not None:
+            residuals = cp.multiply(sample_weight, residuals)
+
+        try:
+            celoss = -cp.sum(residuals)
+            l1_penalty = lambda_reg * cp.norm(w, 1)
+            obj = cp.Minimize(celoss + l1_penalty)
+            prob = cp.Problem(obj)
+
+            # solve the problem using an appropriate solver
+            prob.solve()
+            self.model.coef_ = np.array([w.value.astype(int)])
+            self.model.intercept_ = 0
+
+        except SolverError as e:
+            warnings.warn(&#34;mosek solver required for mixed-integer logistic regression. &#34;
+                          &#34;rounding non-integer coefficients instead&#34;)
+            m = LogisticRegression(C=1 / lambda_reg)
+            m.fit(X, y, sample_weight=sample_weight)
+            self.model.coef_ = np.round(m.coef_).astype(int)
+            self.model.intercept_ = m.intercept_</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.slim.SLIMClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, lambda_reg=1, sample_weight=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>fit a logistic model with integer coefficient and L1 regularization.
+In case the optimization fails, fit lasso and round coefs.</p>
+<h2 id="params">Params</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>np.ndarray</code> (<code>n</code>,)</dt>
+<dd>weight for each individual sample</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, lambda_reg=1, sample_weight=None):
+    &#39;&#39;&#39;fit a logistic model with integer coefficient and L1 regularization.
+    In case the optimization fails, fit lasso and round coefs.
+    
+    Params
+    ------
+    sample_weight: np.ndarray (n,)
+        weight for each individual sample
+    &#39;&#39;&#39;
+    if &#39;pandas&#39; in str(type(X)):
+        X = X.values
+    if &#39;pandas&#39; in str(type(y)):
+        y = y.values
+    assert type(X) == np.ndarray, &#39;inputs should be ndarrays&#39;
+    assert type(y) == np.ndarray, &#39;inputs should be ndarrays&#39;
+    self.model.classes_ = np.unique(y)
+
+    # declare the integer-valued optimization variable
+    w = cp.Variable(X.shape[1], integer=True)
+
+    # set up the minimization problem
+    logits = -X @ w
+    residuals = cp.multiply(1 - y, logits) - cp.logistic(logits)
+    if sample_weight is not None:
+        residuals = cp.multiply(sample_weight, residuals)
+
+    try:
+        celoss = -cp.sum(residuals)
+        l1_penalty = lambda_reg * cp.norm(w, 1)
+        obj = cp.Minimize(celoss + l1_penalty)
+        prob = cp.Problem(obj)
+
+        # solve the problem using an appropriate solver
+        prob.solve()
+        self.model.coef_ = np.array([w.value.astype(int)])
+        self.model.intercept_ = 0
+
+    except SolverError as e:
+        warnings.warn(&#34;mosek solver required for mixed-integer logistic regression. &#34;
+                      &#34;rounding non-integer coefficients instead&#34;)
+        m = LogisticRegression(C=1 / lambda_reg)
+        m.fit(X, y, sample_weight=sample_weight)
+        self.model.coef_ = np.round(m.coef_).astype(int)
+        self.model.intercept_ = m.intercept_</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="imodels.algebraic.slim.SLIMRegressor"><code class="flex name class">
 <span>class <span class="ident">SLIMRegressor</span></span>
 </code></dt>
@@ -146,7 +340,7 @@ class SLIMRegressor(BaseEstimator):
         if sample_weight is not None:
             # print(&#39;shapes&#39;, residuals.shape, sample_weight.shape)
             residuals = cp.multiply(sample_weight, residuals)
-        
+
         try:
             mse = cp.sum_squares(residuals)
             l1_penalty = lambda_reg * cp.norm(w, 1)
@@ -155,13 +349,15 @@ class SLIMRegressor(BaseEstimator):
 
             # solve the problem using an appropriate solver
             prob.solve()
-            self.model.coef_ = w.value.astype(np.int)
+            self.model.coef_ = w.value.astype(int)
             self.model.intercept_ = 0
 
-        except:
+        except SolverError as e:
+            warnings.warn(&#34;gurobi, mosek, or cplex solver required for mixed-integer linear &#34;
+                          &#34;regression. rounding non-integer coefficients instead&#34;)
             m = Lasso(alpha=lambda_reg)
             m.fit(X, y, sample_weight=sample_weight)
-            self.model.coef_ = np.round(m.coef_).astype(np.int)
+            self.model.coef_ = np.round(m.coef_).astype(int)
             self.model.intercept_ = m.intercept_
 
     def predict_proba(self, X):
@@ -214,7 +410,7 @@ In case the optimization fails, fit lasso and round coefs.</p>
     if sample_weight is not None:
         # print(&#39;shapes&#39;, residuals.shape, sample_weight.shape)
         residuals = cp.multiply(sample_weight, residuals)
-    
+
     try:
         mse = cp.sum_squares(residuals)
         l1_penalty = lambda_reg * cp.norm(w, 1)
@@ -223,13 +419,15 @@ In case the optimization fails, fit lasso and round coefs.</p>
 
         # solve the problem using an appropriate solver
         prob.solve()
-        self.model.coef_ = w.value.astype(np.int)
+        self.model.coef_ = w.value.astype(int)
         self.model.intercept_ = 0
 
-    except:
+    except SolverError as e:
+        warnings.warn(&#34;gurobi, mosek, or cplex solver required for mixed-integer linear &#34;
+                      &#34;regression. rounding non-integer coefficients instead&#34;)
         m = Lasso(alpha=lambda_reg)
         m.fit(X, y, sample_weight=sample_weight)
-        self.model.coef_ = np.round(m.coef_).astype(np.int)
+        self.model.coef_ = np.round(m.coef_).astype(int)
         self.model.intercept_ = m.intercept_</code></pre>
 </details>
 </dd>
@@ -266,6 +464,12 @@ In case the optimization fails, fit lasso and round coefs.</p>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="imodels.algebraic.slim.SLIMClassifier" href="#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.slim.SLIMClassifier.fit" href="#imodels.algebraic.slim.SLIMClassifier.fit">fit</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="imodels.algebraic.slim.SLIMRegressor" href="#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></code></h4>
 <ul class="">
