@@ -3,6 +3,7 @@
 **.pdf
 **.zip
 **.npy
+.coverage
 **slurm*
 **logs*
 env

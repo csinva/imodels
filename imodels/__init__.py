@@ -14,7 +14,7 @@ from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.boosted_rules import BoostedRulesClassifier
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
-from .algebraic.slim import SLIMRegressor
+from .algebraic.slim import SLIMRegressor, SLIMClassifier
 
 CLASSIFIERS = BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, BoostedRulesClassifier #, IRFClassifier
 REGRESSORS = RuleFitRegressor, SLIMRegressor
