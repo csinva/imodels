@@ -263,18 +263,19 @@ class MDLP_Discretizer(object):
 class BRLDiscretizer:
     
     def __init__(self, X, y, feature_labels, verbose=False):
-        self.feature_labels = feature_labels
+        self.feature_labels_original = feature_labels
         self.verbose = verbose
- 
+
     def discretize_mixed_data(self, X, y, undiscretized_features=[]):
-        if type(X) != list:
-            X = np.array(X).tolist()
 
         # check which features are numeric (to be discretized)
         self.discretized_features = []
-        for fi in range(len(X[0])):
+
+        X_str_disc = self.encode_strings(X)
+
+        for fi in range(X_str_disc.shape[1]):
             # if not string, and not specified as undiscretized
-            if isinstance(X[0][fi], numbers.Number) \
+            if isinstance(X_str_disc[0][fi], numbers.Number) \
                     and (len(self.feature_labels) == 0 or \
                          len(undiscretized_features) == 0 or \
                          self.feature_labels[fi] not in undiscretized_features):
@@ -285,38 +286,50 @@ class BRLDiscretizer:
                 print(
                     "Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to "
                     "strings, and/or specify the argument 'undiscretized_features', to avoid this.)")
-            X = self.discretize(X, y)
+            X_str_and_num_disc = self.discretize(X_str_disc, y)
         
-        self.discretized_X = X
-        return X
+        self.discretized_X = X_str_and_num_disc
+        return self.discretized_X
     
     def discretize(self, X, y):
         '''Discretize the features specified in self.discretized_features
         '''
         if self.verbose:
             print("Discretizing ", self.discretized_features, "...")
-        D = pd.DataFrame(np.hstack((X, np.array(y).reshape((len(y), 1)))), columns=list(self.feature_labels) + ["y"])
+        D = pd.DataFrame(np.hstack((X, np.expand_dims(y, axis=1))), columns=list(self.feature_labels) + ["y"])
         self.discretizer = MDLP_Discretizer(dataset=D, class_label="y", features=self.discretized_features)
 
         cat_data = pd.DataFrame(np.zeros_like(X))
         for i in range(len(self.feature_labels)):
             label = self.feature_labels[i]
             if label in self.discretized_features:
-                column = []
-                for j in range(len(self.discretizer._data[label])):
-                    column += [label + " : " + self.discretizer._data[label][j]]
-                cat_data.iloc[:, i] = np.array(column)
+                new_column = label + " : " + self.discretizer._data[label].astype(str)
+                cat_data.iloc[:, i] = new_column
             else:
-                cat_data.iloc[:, i] = D[label]
+                cat_data.iloc[:, i] = D[label]            
 
         return np.array(cat_data).tolist()
+
+    def encode_strings(self, X):
+        # handle string data
+        X_str_disc = pd.DataFrame([])
+        for fi in range(X.shape[1]):
+            if issubclass(type(X[0][fi]), str):
+                new_columns = pd.get_dummies(X[:, fi])
+                new_columns.columns = [self.feature_labels_original[fi] + '_' + value for value in new_columns.columns]
+                new_columns_colon_format = new_columns.apply(lambda s: s.name + ' : ' +  s.astype(str))
+                X_str_disc = pd.concat([X_str_disc, new_columns_colon_format], axis=1)
+            else:
+                X_str_disc = pd.concat([X_str_disc, pd.Series(X[:, fi], name=self.feature_labels_original[fi])], axis=1)
+        self.feature_labels = list(X_str_disc.columns)
+        return X_str_disc.values
 
     def apply_discretization(self, X, return_onehot=False):
         
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
         
-        self.data = pd.DataFrame(X, columns=self.feature_labels)
+        self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)        
         self.apply_cutpoints()
         D = np.array(self.data)
 
