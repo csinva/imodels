@@ -29,7 +29,9 @@ class SLIMRegressor(BaseEstimator):
         
         Params
         ------
-        sample_weight: np.ndarray (n,)
+        lambda_reg: float
+            weight for sparsity penalty
+        sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         '''
         if 'pandas' in str(type(X)):
@@ -86,7 +88,9 @@ class SLIMClassifier(BaseEstimator):
         
         Params
         ------
-        sample_weight: np.ndarray (n,)
+        lambda_reg: float
+            weight for sparsity penalty
+        sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         '''
         if 'pandas' in str(type(X)):

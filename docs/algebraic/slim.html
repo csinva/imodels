@@ -59,7 +59,9 @@ class SLIMRegressor(BaseEstimator):
         
         Params
         ------
-        sample_weight: np.ndarray (n,)
+        lambda_reg: float
+            weight for sparsity penalty
+        sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
         if &#39;pandas&#39; in str(type(X)):
@@ -116,7 +118,9 @@ class SLIMClassifier(BaseEstimator):
         
         Params
         ------
-        sample_weight: np.ndarray (n,)
+        lambda_reg: float
+            weight for sparsity penalty
+        sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
         if &#39;pandas&#39; in str(type(X)):
@@ -191,7 +195,9 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
         
         Params
         ------
-        sample_weight: np.ndarray (n,)
+        lambda_reg: float
+            weight for sparsity penalty
+        sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
         if &#39;pandas&#39; in str(type(X)):
@@ -244,7 +250,9 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
 In case the optimization fails, fit lasso and round coefs.</p>
 <h2 id="params">Params</h2>
 <dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>np.ndarray</code> (<code>n</code>,)</dt>
+<dt><strong><code>lambda_reg</code></strong> :&ensp;<code>float</code></dt>
+<dd>weight for sparsity penalty</dd>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>np.ndarray</code> (<code>n</code>,), optional</dt>
 <dd>weight for each individual sample</dd>
 </dl></section>
 <details class="source">
@@ -257,7 +265,9 @@ In case the optimization fails, fit lasso and round coefs.</p>
     
     Params
     ------
-    sample_weight: np.ndarray (n,)
+    lambda_reg: float
+        weight for sparsity penalty
+    sample_weight: np.ndarray (n,), optional
         weight for each individual sample
     &#39;&#39;&#39;
     if &#39;pandas&#39; in str(type(X)):
@@ -322,7 +332,9 @@ In case the optimization fails, fit lasso and round coefs.</p>
         
         Params
         ------
-        sample_weight: np.ndarray (n,)
+        lambda_reg: float
+            weight for sparsity penalty
+        sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
         if &#39;pandas&#39; in str(type(X)):
@@ -379,7 +391,9 @@ In case the optimization fails, fit lasso and round coefs.</p>
 In case the optimization fails, fit lasso and round coefs.</p>
 <h2 id="params">Params</h2>
 <dl>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>np.ndarray</code> (<code>n</code>,)</dt>
+<dt><strong><code>lambda_reg</code></strong> :&ensp;<code>float</code></dt>
+<dd>weight for sparsity penalty</dd>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>np.ndarray</code> (<code>n</code>,), optional</dt>
 <dd>weight for each individual sample</dd>
 </dl></section>
 <details class="source">
@@ -392,7 +406,9 @@ In case the optimization fails, fit lasso and round coefs.</p>
     
     Params
     ------
-    sample_weight: np.ndarray (n,)
+    lambda_reg: float
+        weight for sparsity penalty
+    sample_weight: np.ndarray (n,), optional
         weight for each individual sample
     &#39;&#39;&#39;
     if &#39;pandas&#39; in str(type(X)):
