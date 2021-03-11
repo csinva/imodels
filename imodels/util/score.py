@@ -113,7 +113,7 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
     lscv.fit(X, y)
 
     coef_ = lscv.coef_.flatten()
-    coefs = list(coef_[:-len(rules)])
+    coefs = list(coef_[:len(coef_)-len(rules)])
     support = np.sum(X[:, -len(rules):], axis=0) / X.shape[0]
 
     nonzero_rules = []

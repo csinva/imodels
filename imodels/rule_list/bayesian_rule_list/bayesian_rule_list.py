@@ -55,7 +55,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
     """
 
     def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=0.1, alpha=np.array([1., 1.]),
-                 n_chains=3, max_iter=50000, class1label="class 1", verbose=True, random_state=42):
+                 n_chains=3, max_iter=50000, class1label="class 1", verbose=False, random_state=42):
         self.listlengthprior = listlengthprior
         self.listwidthprior = listwidthprior
         self.maxcardinality = maxcardinality
