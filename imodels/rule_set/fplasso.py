@@ -1,3 +1,6 @@
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from typing import List
 
 from imodels.rule_set.rule_fit import RuleFit
@@ -54,11 +57,11 @@ class FPLasso(RuleFit):
         return itemsets_to_rules(itemsets)
 
 
-class FPLassoRegressor(FPLasso):
+class FPLassoRegressor(FPLasso, RegressorMixin):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
 
 
-class FPLassoClassifier(FPLasso):
+class FPLassoClassifier(FPLasso, ClassifierMixin):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'

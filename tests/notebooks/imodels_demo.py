@@ -246,7 +246,7 @@ model = SLIMRegressor()
 for lambda_reg in [1e-3, 1e-2, 5e-2, 1e-1, 1, 2, 5, 10]:
     model.fit(X_sim, y_sim, lambda_reg)
     mse = np.mean(np.square(y_sim - model.predict(X_sim)))
-    print(f'lambda: {lambda_reg}\tmse: {mse: 0.2f}\tweights: {model.model.coef_}')
+    print(f'lambda: {lambda_reg}\tmse: {mse: 0.2f}\tweights: {model.model_.coef_}')
 
 # %%
 y_sim = 1 / (1 + np.exp(-y_sim))
@@ -258,4 +258,4 @@ model = SLIMClassifier()
 for lambda_reg in [1e-3, 1e-2, 5e-2, 1e-1, 1, 2, 5, 10]:
     model.fit(X_sim, y_sim, lambda_reg)
     mll = np.mean(metrics.log_loss(y_sim, model.predict(X_sim)))
-    print(f'lambda: {lambda_reg}\tmlogloss: {mll: 0.2f}\tweights: {model.model.coef_}')
+    print(f'lambda: {lambda_reg}\tmlogloss: {mll: 0.2f}\tweights: {model.model_.coef_}')

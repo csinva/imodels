@@ -31,12 +31,14 @@
 import math
 import numpy as np
 from copy import deepcopy
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_list.rule_list import RuleList
 
 
-class GreedyRuleListClassifier(BaseEstimator, RuleList):
+class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
     def __init__(self, max_depth: int = 5, class_weight=None, criterion: str = &#39;gini&#39;, strategy: str = &#39;max&#39;):
         &#39;&#39;&#39;
         Params
@@ -52,7 +54,6 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
         &#39;&#39;&#39;
 
         self.max_depth = max_depth
-        self.feature_names = None
         self.class_weight = class_weight
         self.criterion = criterion
         self.strategy = strategy
@@ -75,13 +76,9 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             x = x.values
         else:
             if feature_names is None:
-                self.feature_names = [&#39;feat &#39; + str(i) for i in range(x.shape[1])]
+                self.feature_names_ = [&#39;feat &#39; + str(i) for i in range(x.shape[1])]
         if feature_names is not None:
-            self.feature_names = feature_names
-        if &#39;pandas&#39; in str(type(y)):
-            y = y.values
-        assert type(x) == np.ndarray, &#39;x is not numpy array&#39;
-        assert type(y) == np.ndarray, &#39;y is not numpy array&#39;
+            self.feature_names_ = feature_names
 
         # base case 1: no data in this group
         if len(y) == 0:
@@ -120,11 +117,11 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             # print
             if verbose:
                 print(
-                    f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
+                    f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names_[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
 
             # save info
             par_node = [{
-                &#39;col&#39;: self.feature_names[col],
+                &#39;col&#39;: self.feature_names_[col],
                 &#39;index_col&#39;: col,
                 &#39;cutoff&#39;: cutoff,
                 &#39;val&#39;: np.mean(y),  # values before splitting
@@ -139,12 +136,12 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
 
             self.depth += 1  # increase the depth since we call fit once
             self.rules_ = par_node
-            self.complexity = len(self.rules_)
+            self.complexity_ = len(self.rules_)
             return par_node
 
     def predict_proba(self, X):
-        if &#39;pandas&#39; in str(type(X)):
-            X = X.values
+        check_is_fitted(self)
+        X = check_array(X)
         n = X.shape[0]
         probs = np.zeros(n)
         for i in range(n):
@@ -158,6 +155,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
 
     def predict(self, X):
+        check_is_fitted(self)
+        X = check_array(X)
         return np.argmax(self.predict_proba(X), axis=1)
 
     def __str__(self):
@@ -386,7 +385,7 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GreedyRuleListClassifier(BaseEstimator, RuleList):
+<pre><code class="python">class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
     def __init__(self, max_depth: int = 5, class_weight=None, criterion: str = &#39;gini&#39;, strategy: str = &#39;max&#39;):
         &#39;&#39;&#39;
         Params
@@ -402,7 +401,6 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
         &#39;&#39;&#39;
 
         self.max_depth = max_depth
-        self.feature_names = None
         self.class_weight = class_weight
         self.criterion = criterion
         self.strategy = strategy
@@ -425,13 +423,9 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
             x = x.values
         else:
             if feature_names is None:
-                self.feature_names = [&#39;feat &#39; + str(i) for i in range(x.shape[1])]
+                self.feature_names_ = [&#39;feat &#39; + str(i) for i in range(x.shape[1])]
         if feature_names is not None:
-            self.feature_names = feature_names
-        if &#39;pandas&#39; in str(type(y)):
-            y = y.values
-        assert type(x) == np.ndarray, &#39;x is not numpy array&#39;
-        assert type(y) == np.ndarray, &#39;y is not numpy array&#39;
+            self.feature_names_ = feature_names
 
         # base case 1: no data in this group
         if len(y) == 0:
@@ -470,11 +464,11 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
             # print
             if verbose:
                 print(
-                    f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
+                    f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names_[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
 
             # save info
             par_node = [{
-                &#39;col&#39;: self.feature_names[col],
+                &#39;col&#39;: self.feature_names_[col],
                 &#39;index_col&#39;: col,
                 &#39;cutoff&#39;: cutoff,
                 &#39;val&#39;: np.mean(y),  # values before splitting
@@ -489,12 +483,12 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
 
             self.depth += 1  # increase the depth since we call fit once
             self.rules_ = par_node
-            self.complexity = len(self.rules_)
+            self.complexity_ = len(self.rules_)
             return par_node
 
     def predict_proba(self, X):
-        if &#39;pandas&#39; in str(type(X)):
-            X = X.values
+        check_is_fitted(self)
+        X = check_array(X)
         n = X.shape[0]
         probs = np.zeros(n)
         for i in range(n):
@@ -508,6 +502,8 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
 
     def predict(self, X):
+        check_is_fitted(self)
+        X = check_array(X)
         return np.argmax(self.predict_proba(X), axis=1)
 
     def __str__(self):
@@ -705,6 +701,7 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
 <li><a title="imodels.rule_list.rule_list.RuleList" href="rule_list.html#imodels.rule_list.rule_list.RuleList">RuleList</a></li>
+<li>sklearn.base.ClassifierMixin</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -838,13 +835,9 @@ returns: the column to split on, the cutoff value, and the actual criterion_valu
         x = x.values
     else:
         if feature_names is None:
-            self.feature_names = [&#39;feat &#39; + str(i) for i in range(x.shape[1])]
+            self.feature_names_ = [&#39;feat &#39; + str(i) for i in range(x.shape[1])]
     if feature_names is not None:
-        self.feature_names = feature_names
-    if &#39;pandas&#39; in str(type(y)):
-        y = y.values
-    assert type(x) == np.ndarray, &#39;x is not numpy array&#39;
-    assert type(y) == np.ndarray, &#39;y is not numpy array&#39;
+        self.feature_names_ = feature_names
 
     # base case 1: no data in this group
     if len(y) == 0:
@@ -883,11 +876,11 @@ returns: the column to split on, the cutoff value, and the actual criterion_valu
         # print
         if verbose:
             print(
-                f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
+                f&#39;{np.mean(100 * y):.2f} -&gt; {self.feature_names_[col]} -&gt; {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})&#39;)
 
         # save info
         par_node = [{
-            &#39;col&#39;: self.feature_names[col],
+            &#39;col&#39;: self.feature_names_[col],
             &#39;index_col&#39;: col,
             &#39;cutoff&#39;: cutoff,
             &#39;val&#39;: np.mean(y),  # values before splitting
@@ -902,7 +895,7 @@ returns: the column to split on, the cutoff value, and the actual criterion_valu
 
         self.depth += 1  # increase the depth since we call fit once
         self.rules_ = par_node
-        self.complexity = len(self.rules_)
+        self.complexity_ = len(self.rules_)
         return par_node</code></pre>
 </details>
 </dd>
@@ -974,6 +967,8 @@ y must be binary</p></section>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict(self, X):
+    check_is_fitted(self)
+    X = check_array(X)
     return np.argmax(self.predict_proba(X), axis=1)</code></pre>
 </details>
 </dd>
@@ -987,8 +982,8 @@ y must be binary</p></section>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
-    if &#39;pandas&#39; in str(type(X)):
-        X = X.values
+    check_is_fitted(self)
+    X = check_array(X)
     n = X.shape[0]
     probs = np.zeros(n)
     for i in range(n):

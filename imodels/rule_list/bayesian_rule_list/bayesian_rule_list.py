@@ -1,19 +1,20 @@
-from collections import Counter
 import numbers
-import random
-
-import pandas as pd
 import numpy as np
+import pandas as pd
+import random
+from collections import Counter
 from mlxtend.frequent_patterns import fpgrowth
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_list.bayesian_rule_list.brl_util import *
-from imodels.util.discretization.mdlp import MDLP_Discretizer, BRLDiscretizer
 from imodels.rule_list.rule_list import RuleList
+from imodels.util.discretization.mdlp import MDLP_Discretizer, BRLDiscretizer
 from imodels.util.extract import extract_fpgrowth
 
 
-class BayesianRuleListClassifier(BaseEstimator, RuleList):
+class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
     """
     This is a scikit-learn compatible wrapper for the Bayesian Rule List
     classifier developed by Benjamin Letham. It produces a highly
@@ -87,7 +88,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
                 feature_labels = ["ft" + str(i + 1) for i in range(len(X[0]))]
         self.feature_labels = feature_labels
 
-    def fit(self, X, y, feature_labels: list=None, undiscretized_features=[], verbose=False):
+    def fit(self, X, y, feature_labels: list = None, undiscretized_features=[], verbose=False):
         """Fit rule lists to data
 
         Parameters
@@ -118,16 +119,20 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         if len(set(y)) != 2:
             raise Exception("Only binary classification is supported at this time!")
 
-        itemsets, self.discretizer = extract_fpgrowth(X, y, 
+        X, y = check_X_y(X, y)
+        check_classification_targets(y)
+        self.n_features_in_ = X.shape[1]
+
+        itemsets, self.discretizer = extract_fpgrowth(X, y,
                                                       feature_labels=feature_labels,
-                                                      minsupport=self.minsupport, 
+                                                      minsupport=self.minsupport,
                                                       maxcardinality=self.maxcardinality,
                                                       undiscretized_features=undiscretized_features,
                                                       verbose=verbose)
-        
+
         self.feature_labels = self.discretizer.feature_labels
         X_df_onehot = self.discretizer.onehot_df
-        
+
         # Now form the data-vs.-lhs set
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
         for c in X_df_onehot.columns:
@@ -149,7 +154,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
         Xtrain, Ytrain, nruleslen, lhs_len, self.itemsets = (
             X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all
         )
-        
+
         permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
         # Do MCMC
         res, Rhat = run_bdl_multichain_serial(self.max_iter, self.thinning, self.alpha, self.listlengthprior,
@@ -169,7 +174,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList):
             # Compute the rule consequent
             self.theta, self.ci_theta = get_rule_rhs(Xtrain, Ytrain, self.d_star, self.alpha, True)
 
-        self.complexity = self._get_complexity()
+        self.complexity_ = self._get_complexity()
 
         return self
 

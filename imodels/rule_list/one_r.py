@@ -7,6 +7,9 @@ import math
 import numpy as np
 from copy import deepcopy
 from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels import GreedyRuleListClassifier
 from imodels.rule_list.rule_list import RuleList
@@ -48,7 +51,7 @@ class OneRClassifier(GreedyRuleListClassifier):
             # print('acc', feat_names_single[0], f'{accs[col_idx]:0.2f}')
         col_idx_best = np.argmax(accs)
         self.rules_ = ms[col_idx_best].rules_
-        self.complexity = len(self.rules_)
+        self.complexity_ = len(self.rules_)
 
         # need to adjust index_col since was fitted with only 1 col
         for rule in self.rules_:

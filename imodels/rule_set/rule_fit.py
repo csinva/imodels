@@ -10,9 +10,11 @@ same time estimating many of those effects to zero.
 import numpy as np
 import pandas as pd
 from scipy.special import softmax
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.base import TransformerMixin
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from typing import List, Tuple
 
 from imodels.rule_set.rule_set import RuleSet
@@ -74,23 +76,25 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                  alphas=None,
                  cv=3,
                  random_state=None):
+        self.tree_size = tree_size
+        self.sample_fract = sample_fract
+        self.max_rules = max_rules
+        self.memory_par = memory_par
         self.tree_generator = tree_generator
         self.lin_trim_quantile = lin_trim_quantile
         self.lin_standardise = lin_standardise
-        self.winsorizer = Winsorizer(trim_quantile=lin_trim_quantile)
+        self.exp_rand_tree_size = exp_rand_tree_size
+        self.include_linear = include_linear
+        self.alphas = alphas
+        self.cv = cv
+        self.random_state = random_state
+
+        self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
         self.friedscale = FriedScale(self.winsorizer)
         self.stddev = None
         self.mean = None
-        self.exp_rand_tree_size = exp_rand_tree_size
-        self.max_rules = max_rules
-        self.sample_fract = sample_fract
-        self.memory_par = memory_par
-        self.tree_size = tree_size
-        self.random_state = random_state
-        self.include_linear = include_linear
-        self.cv = cv
-        self.alphas = alphas
-        self._init_prediction_task()
+
+        self._init_prediction_task()  # decides between regressor and classifier
 
     def _init_prediction_task(self):
         """
@@ -104,10 +108,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         """Fit and estimate linear combination of rule ensemble
 
         """
-        if type(X) == pd.DataFrame:
-            X = X.values
-        if type(y) in [pd.DataFrame, pd.Series]:
-            y = y.values
+        X, y = check_X_y(X, y)
+        self.n_features_in_ = X.shape[1]
 
         self.n_features_ = X.shape[1]
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
@@ -119,7 +121,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
-        self.complexity = self._get_complexity()
+        self.complexity_ = self._get_complexity()
 
         return self
 
@@ -272,11 +274,11 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                            max_rules=self.max_rules, random_state=self.random_state)
 
 
-class RuleFitRegressor(RuleFit):
+class RuleFitRegressor(RuleFit, RegressorMixin):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
 
 
-class RuleFitClassifier(RuleFit):
+class RuleFitClassifier(RuleFit, ClassifierMixin):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'

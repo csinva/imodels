@@ -4,20 +4,23 @@ import pandas as pd
 from copy import deepcopy
 from functools import partial
 from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, MetaEstimatorMixin
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
 from imodels.util.convert import tree_to_code
 
 
-class BoostedRulesClassifier(BaseEstimator, RuleSet):
+class BoostedRulesClassifier(BaseEstimator, RuleSet, MetaEstimatorMixin):
     '''An easy-interpretable classifier optimizing simple logical rules.
     Currently limited to only binary classification.
     '''
 
-    def __init__(self, n_estimators=10, base_estimator=partial(DecisionTreeClassifier, max_depth=1)):
+    def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1)):
         self.n_estimators = n_estimators
-        self.base_estimator_ = base_estimator
+        self.estimator = estimator
 
     def fit(self, X, y, feature_names=None, sample_weight=None):
         """Fit the model according to the given training data.
@@ -44,7 +47,8 @@ class BoostedRulesClassifier(BaseEstimator, RuleSet):
             Returns self.
         """
 
-        # Initialize weights
+        X, y = check_X_y(X, y)
+        self.n_features_in_ = X.shape[1]
         n_train = y.shape[0]
         w = np.ones(n_train) / n_train
         self.estimators_ = []
@@ -53,17 +57,16 @@ class BoostedRulesClassifier(BaseEstimator, RuleSet):
         self.feature_names = feature_names
         for _ in range(self.n_estimators):
             # Fit a classifier with the specific weights
-            clf = self.base_estimator_()
+            clf = self.estimator()
             clf.fit(X, y, sample_weight=w)  # uses w as the sampling weight!
             preds = clf.predict(X)
 
             # Indicator function
-            miss = [int(x)
-                    for x in (preds != y)]
+            miss = preds != y
 
             # Equivalent with 1/-1 to update weights
-            miss2 = [x if x == 1 else -1
-                     for x in miss]
+            miss2 = np.ones(miss.size)
+            miss2[~miss] = -1
 
             # Error
             err_m = np.dot(w, miss) / sum(w)
@@ -80,21 +83,21 @@ class BoostedRulesClassifier(BaseEstimator, RuleSet):
             self.estimators_.append(deepcopy(clf))
             self.estimator_weights_.append(alpha_m)
             self.estimator_errors_.append(err_m)
-        self.complexity = len(self.estimators_)
+        self.complexity_ = len(self.estimators_)
         return self
 
     def predict_proba(self, X):
         '''Predict probabilities for X
         '''
-
-        if type(X) == pd.DataFrame:
-            X = X.values.astype(np.float32)
+        check_is_fitted(self)
+        X = check_array(X)
 
         # Add to prediction
         n_train = X.shape[0]
         n_estimators = len(self.estimators_)
         n_classes = 2  # hard-coded for now!
         preds = np.zeros((n_train, n_classes))
+        # print('shapes', preds.shape, self.estimator_weights_[0], self.estimators_[0].predict_proba(X).shape)
         for i in range(n_estimators):
             preds += self.estimator_weights_[i] * self.estimators_[i].predict_proba(X)
         return preds / n_estimators
@@ -102,7 +105,8 @@ class BoostedRulesClassifier(BaseEstimator, RuleSet):
     def predict(self, X):
         """Predict outcome for X
         """
-
+        check_is_fitted(self)
+        X = check_array(X)
         return self.predict_proba(X).argmax(axis=1)
 
     def __str__(self):

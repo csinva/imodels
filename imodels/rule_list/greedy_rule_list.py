@@ -4,12 +4,14 @@
 import math
 import numpy as np
 from copy import deepcopy
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_list.rule_list import RuleList
 
 
-class GreedyRuleListClassifier(BaseEstimator, RuleList):
+class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
     def __init__(self, max_depth: int = 5, class_weight=None, criterion: str = 'gini', strategy: str = 'max'):
         '''
         Params
@@ -25,7 +27,6 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
         '''
 
         self.max_depth = max_depth
-        self.feature_names = None
         self.class_weight = class_weight
         self.criterion = criterion
         self.strategy = strategy
@@ -48,13 +49,9 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             x = x.values
         else:
             if feature_names is None:
-                self.feature_names = ['feat ' + str(i) for i in range(x.shape[1])]
+                self.feature_names_ = ['feat ' + str(i) for i in range(x.shape[1])]
         if feature_names is not None:
-            self.feature_names = feature_names
-        if 'pandas' in str(type(y)):
-            y = y.values
-        assert type(x) == np.ndarray, 'x is not numpy array'
-        assert type(y) == np.ndarray, 'y is not numpy array'
+            self.feature_names_ = feature_names
 
         # base case 1: no data in this group
         if len(y) == 0:
@@ -93,11 +90,11 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             # print
             if verbose:
                 print(
-                    f'{np.mean(100 * y):.2f} -> {self.feature_names[col]} -> {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})')
+                    f'{np.mean(100 * y):.2f} -> {self.feature_names_[col]} -> {np.mean(100 * y_left):.2f} ({y_left.size}) {np.mean(100 * y_right):.2f} ({y_right.size})')
 
             # save info
             par_node = [{
-                'col': self.feature_names[col],
+                'col': self.feature_names_[col],
                 'index_col': col,
                 'cutoff': cutoff,
                 'val': np.mean(y),  # values before splitting
@@ -112,12 +109,12 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
 
             self.depth += 1  # increase the depth since we call fit once
             self.rules_ = par_node
-            self.complexity = len(self.rules_)
+            self.complexity_ = len(self.rules_)
             return par_node
 
     def predict_proba(self, X):
-        if 'pandas' in str(type(X)):
-            X = X.values
+        check_is_fitted(self)
+        X = check_array(X)
         n = X.shape[0]
         probs = np.zeros(n)
         for i in range(n):
@@ -131,6 +128,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
 
     def predict(self, X):
+        check_is_fitted(self)
+        X = check_array(X)
         return np.argmax(self.predict_proba(X), axis=1)
 
     def __str__(self):
