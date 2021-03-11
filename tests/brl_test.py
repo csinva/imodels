@@ -14,19 +14,19 @@ class TestBRL(unittest.TestCase):
     def test_integration_stability(self):
         '''Test on synthetic dataset
         '''
-        X = [[0, 0, 1, 1, 0],
-             [1, 0, 0, 0, 0],
-             [0, 0, 1, 0, 0],
-             [1, 0, 0, 0, 0],
-             [1, 1, 0, 1, 1],
-             [1, 1, 1, 1, 1],
-             [0, 1, 1, 1, 1],
-             [1, 0, 1, 1, 1]]
-        y = [0, 0, 0, 0, 1, 1, 1, 1]
+        X = np.array([[0, 0, 1, 1, 0],
+                     [1, 0, 0, 0, 0],
+                     [0, 0, 1, 0, 0],
+                     [1, 0, 0, 0, 0],
+                     [1, 1, 0, 1, 1],
+                     [1, 1, 1, 1, 1],
+                     [0, 1, 1, 1, 1],
+                     [1, 0, 1, 1, 1]])
+        y = np.array([0, 0, 0, 0, 1, 1, 1, 1])
         M = BayesianRuleListClassifier(minsupport=0.02)
         feat = ['ft1', 'ft2', 'ft3', 'ft4', 'ft5']
         M.fit(X, y, feature_labels=feat)
-        assert [M.predict([row], threshold=0.5) for row in X] == y
+        assert (np.array([M.predict(np.array([row]), threshold=0.5) for row in X]).flatten() == y).all()
 
     def test_integration_fitting(self):
         '''Test on a real (small) dataset
