@@ -7,6 +7,9 @@ import math
 import numpy as np
 from copy import deepcopy
 from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels import GreedyRuleListClassifier
 from imodels.rule_list.rule_list import RuleList

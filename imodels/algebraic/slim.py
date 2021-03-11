@@ -98,9 +98,9 @@ class SLIMClassifier(BaseEstimator, ClassifierMixin):
         '''
         X, y = check_X_y(X, y)
         check_classification_targets(y)
+        self.n_features_in_ = X.shape[1]
         self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
         self.model_ = LogisticRegression()
-        self.n_features_in_ = X.shape[1]
         self.model_.classes_ = self.classes_
 
         # declare the integer-valued optimization variable
