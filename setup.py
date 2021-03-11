@@ -1,12 +1,17 @@
 import setuptools
+from os import path
 
+path_to_repo = path.abspath(path.dirname(__file__))
+with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
+    long_description = f.read()
+    
 setuptools.setup(
     name="imodels",
     version="0.2.8",
-    author="Chandan Singh",
+    author="Chandan Singh, Keyan Nasseri, Bin Yu, and others",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",
-    long_description="Interpretable ML package for concise, transparent, and accurate predictive modeling (sklearn-compatible).",
+    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/csinva/imodels",
     packages=setuptools.find_packages(exclude=['tests']),
@@ -15,7 +20,7 @@ setuptools.setup(
         'scipy',
         'matplotlib',
         'pandas',
-        'scikit-learn>=0.23.0', # 0.23+ only works on py3.6+)
+        'scikit-learn>=0.23.0', # 0.23+ only works on py3.6+
         'cvxpy',
         'cvxopt',
         'mlxtend',
