@@ -84,7 +84,8 @@ class OneRClassifier(GreedyRuleListClassifier):
         for rule in self.rules_:
             if &#39;index_col&#39; in rule:
                 rule[&#39;index_col&#39;] += col_idx_best
-        self.depth = len(self.rules_)</code></pre>
+        self.depth = len(self.rules_)
+        return self</code></pre>
 </details>
 </section>
 <section>
@@ -163,7 +164,8 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
         for rule in self.rules_:
             if &#39;index_col&#39; in rule:
                 rule[&#39;index_col&#39;] += col_idx_best
-        self.depth = len(self.rules_)</code></pre>
+        self.depth = len(self.rules_)
+        return self</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -217,7 +219,8 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</d
     for rule in self.rules_:
         if &#39;index_col&#39; in rule:
             rule[&#39;index_col&#39;] += col_idx_best
-    self.depth = len(self.rules_)</code></pre>
+    self.depth = len(self.rules_)
+    return self</code></pre>
 </details>
 </dd>
 </dl>

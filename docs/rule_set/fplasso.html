@@ -27,12 +27,13 @@
 <pre><code class="python">from typing import List
 
 from imodels.rule_set.rule_fit import RuleFit
-from imodels.util.extract import extract_fpgrowth
 from imodels.util.convert import itemsets_to_rules
+from imodels.util.extract import extract_fpgrowth
+
 
 class FPLasso(RuleFit):
 
-    def __init__(self, 
+    def __init__(self,
                  minsupport=0.1,
                  maxcardinality=2,
                  verbose=False,
@@ -68,7 +69,7 @@ class FPLasso(RuleFit):
         self.undiscretized_features = undiscretized_features
         super().fit(X, y, feature_names=feature_names)
         return self
-    
+
     def _extract_rules(self, X, y) -&gt; List[str]:
         itemsets = extract_fpgrowth(X, y,
                                     feature_labels=self.feature_placeholders,
@@ -78,10 +79,12 @@ class FPLasso(RuleFit):
                                     verbose=self.verbose)[0]
         return itemsets_to_rules(itemsets)
 
-class FPLassoRegressor(FPLasso):        
+
+class FPLassoRegressor(FPLasso):
     def _init_prediction_task(self):
         self.prediction_task = &#39;regression&#39;
-        
+
+
 class FPLassoClassifier(FPLasso):
     def _init_prediction_task(self):
         self.prediction_task = &#39;classification&#39;</code></pre>
@@ -112,8 +115,8 @@ class FPLassoClassifier(FPLasso):
 <dd>FP 2004 (Sec. 2)</dd>
 <dt><strong><code>max_rules</code></strong> :&ensp;
 <code>total</code> <code>number</code> of <code>terms</code> <code>included</code> <code>in</code> <code>the</code> <code>final</code> <code>model</code> (<code>both</code> <code>linear</code> <code>and</code> <code>rules</code>)</dt>
-<dd>approximate total number of rules generated for fitting also is based on this
-Note that actual number of rules will usually be lower than this due to duplicates.</dd>
+<dd>approximate total number of candidate rules generated for fitting also is based on this
+Note that actual number of candidate rules will usually be lower than this due to duplicates.</dd>
 <dt><strong><code>memory_par</code></strong> :&ensp;
 <code>scale</code> <code>multiplier</code> (<code>shrinkage</code> <code>factor</code>) <code>applied</code> <code>to</code> <code>each</code> <code>new</code> <code>tree</code> <code>when</code></dt>
 <dd>sequentially induced. FP 2004 (Sec. 2)</dd>
@@ -145,7 +148,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
 </summary>
 <pre><code class="python">class FPLasso(RuleFit):
 
-    def __init__(self, 
+    def __init__(self,
                  minsupport=0.1,
                  maxcardinality=2,
                  verbose=False,
@@ -181,7 +184,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
         self.undiscretized_features = undiscretized_features
         super().fit(X, y, feature_names=feature_names)
         return self
-    
+
     def _extract_rules(self, X, y) -&gt; List[str]:
         itemsets = extract_fpgrowth(X, y,
                                     feature_labels=self.feature_placeholders,
@@ -232,8 +235,8 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
 <dd>FP 2004 (Sec. 2)</dd>
 <dt><strong><code>max_rules</code></strong> :&ensp;
 <code>total</code> <code>number</code> of <code>terms</code> <code>included</code> <code>in</code> <code>the</code> <code>final</code> <code>model</code> (<code>both</code> <code>linear</code> <code>and</code> <code>rules</code>)</dt>
-<dd>approximate total number of rules generated for fitting also is based on this
-Note that actual number of rules will usually be lower than this due to duplicates.</dd>
+<dd>approximate total number of candidate rules generated for fitting also is based on this
+Note that actual number of candidate rules will usually be lower than this due to duplicates.</dd>
 <dt><strong><code>memory_par</code></strong> :&ensp;
 <code>scale</code> <code>multiplier</code> (<code>shrinkage</code> <code>factor</code>) <code>applied</code> <code>to</code> <code>each</code> <code>new</code> <code>tree</code> <code>when</code></dt>
 <dd>sequentially induced. FP 2004 (Sec. 2)</dd>
@@ -304,8 +307,8 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
 <dd>FP 2004 (Sec. 2)</dd>
 <dt><strong><code>max_rules</code></strong> :&ensp;
 <code>total</code> <code>number</code> of <code>terms</code> <code>included</code> <code>in</code> <code>the</code> <code>final</code> <code>model</code> (<code>both</code> <code>linear</code> <code>and</code> <code>rules</code>)</dt>
-<dd>approximate total number of rules generated for fitting also is based on this
-Note that actual number of rules will usually be lower than this due to duplicates.</dd>
+<dd>approximate total number of candidate rules generated for fitting also is based on this
+Note that actual number of candidate rules will usually be lower than this due to duplicates.</dd>
 <dt><strong><code>memory_par</code></strong> :&ensp;
 <code>scale</code> <code>multiplier</code> (<code>shrinkage</code> <code>factor</code>) <code>applied</code> <code>to</code> <code>each</code> <code>new</code> <code>tree</code> <code>when</code></dt>
 <dd>sequentially induced. FP 2004 (Sec. 2)</dd>
@@ -335,7 +338,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FPLassoRegressor(FPLasso):        
+<pre><code class="python">class FPLassoRegressor(FPLasso):
     def _init_prediction_task(self):
         self.prediction_task = &#39;regression&#39;</code></pre>
 </details>

@@ -98,8 +98,11 @@ class SLIMRegressor(BaseEstimator):
             m.fit(X, y, sample_weight=sample_weight)
             self.model.coef_ = np.round(m.coef_).astype(int)
             self.model.intercept_ = m.intercept_
+        return self
 
     def predict_proba(self, X):
+        &#39;&#39;&#39;Converts predicted continuous output to probabilities using softmax
+        &#39;&#39;&#39;
         preds = self.predict(X)
         preds_proba = np.array([1 / (1 + np.exp(-y)) for y in preds])
         return np.vstack((1 - preds_proba, preds_proba)).transpose()
@@ -157,7 +160,9 @@ class SLIMClassifier(BaseEstimator):
             m = LogisticRegression(C=1 / lambda_reg)
             m.fit(X, y, sample_weight=sample_weight)
             self.model.coef_ = np.round(m.coef_).astype(int)
-            self.model.intercept_ = m.intercept_</code></pre>
+            self.model.intercept_ = m.intercept_
+
+        return self</code></pre>
 </details>
 </section>
 <section>
@@ -234,7 +239,9 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
             m = LogisticRegression(C=1 / lambda_reg)
             m.fit(X, y, sample_weight=sample_weight)
             self.model.coef_ = np.round(m.coef_).astype(int)
-            self.model.intercept_ = m.intercept_</code></pre>
+            self.model.intercept_ = m.intercept_
+
+        return self</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -304,7 +311,9 @@ In case the optimization fails, fit lasso and round coefs.</p>
         m = LogisticRegression(C=1 / lambda_reg)
         m.fit(X, y, sample_weight=sample_weight)
         self.model.coef_ = np.round(m.coef_).astype(int)
-        self.model.intercept_ = m.intercept_</code></pre>
+        self.model.intercept_ = m.intercept_
+
+    return self</code></pre>
 </details>
 </dd>
 </dl>
@@ -371,8 +380,11 @@ In case the optimization fails, fit lasso and round coefs.</p>
             m.fit(X, y, sample_weight=sample_weight)
             self.model.coef_ = np.round(m.coef_).astype(int)
             self.model.intercept_ = m.intercept_
+        return self
 
     def predict_proba(self, X):
+        &#39;&#39;&#39;Converts predicted continuous output to probabilities using softmax
+        &#39;&#39;&#39;
         preds = self.predict(X)
         preds_proba = np.array([1 / (1 + np.exp(-y)) for y in preds])
         return np.vstack((1 - preds_proba, preds_proba)).transpose()</code></pre>
@@ -444,19 +456,22 @@ In case the optimization fails, fit lasso and round coefs.</p>
         m = Lasso(alpha=lambda_reg)
         m.fit(X, y, sample_weight=sample_weight)
         self.model.coef_ = np.round(m.coef_).astype(int)
-        self.model.intercept_ = m.intercept_</code></pre>
+        self.model.intercept_ = m.intercept_
+    return self</code></pre>
 </details>
 </dd>
 <dt id="imodels.algebraic.slim.SLIMRegressor.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Converts predicted continuous output to probabilities using softmax</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
+    &#39;&#39;&#39;Converts predicted continuous output to probabilities using softmax
+    &#39;&#39;&#39;
     preds = self.predict(X)
     preds_proba = np.array([1 / (1 + np.exp(-y)) for y in preds])
     return np.vstack((1 - preds_proba, preds_proba)).transpose()</code></pre>

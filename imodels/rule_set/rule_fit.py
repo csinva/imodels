@@ -7,21 +7,21 @@ that were used in the splits. The ensemble of rules together with the original i
 L1-regularized linear model, also called Lasso, which estimates the effects of each rule on the output target but at the
 same time estimating many of those effects to zero.
 """
-from typing import List, Tuple
-
 import numpy as np
 import pandas as pd
+from scipy.special import softmax
 from sklearn.base import BaseEstimator
 from sklearn.base import TransformerMixin
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from scipy.special import softmax
+from typing import List, Tuple
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
-from imodels.util.transforms import Winsorizer, FriedScale
-from imodels.util.score import score_lasso
 from imodels.util.convert import tree_to_rules
 from imodels.util.extract import extract_rulefit
+from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
+from imodels.util.score import score_lasso
+from imodels.util.transforms import Winsorizer, FriedScale
+
 
 class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     """Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier
@@ -34,8 +34,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     sample_fract:   fraction of randomly chosen training observations used to produce each tree. 
                     FP 2004 (Sec. 2)
     max_rules:      total number of terms included in the final model (both linear and rules)
-                    approximate total number of rules generated for fitting also is based on this
-                    Note that actual number of rules will usually be lower than this due to duplicates.
+                    approximate total number of candidate rules generated for fitting also is based on this
+                    Note that actual number of candidate rules will usually be lower than this due to duplicates.
     memory_par:     scale multiplier (shrinkage factor) applied to each new tree when 
                     sequentially induced. FP 2004 (Sec. 2)
     lin_standardise: If True, the linear terms will be standardised as per Friedman Sec 3.2
@@ -91,7 +91,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.cv = cv
         self.alphas = alphas
         self._init_prediction_task()
-        
+
     def _init_prediction_task(self):
         """
         RuleFitRegressor and RuleFitClassifier override this method
@@ -123,7 +123,6 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
         return self
 
-    
     def predict_continuous_output(self, X):
         """Predict outcome of linear model for X
         """
@@ -138,7 +137,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                 X = self.friedscale.scale(X)
             y_pred += X @ self.coef[:X.shape[1]]
         return y_pred + self.intercept
-            
+
     def predict(self, X):
         '''Predict. For regression returns continuous output.
         For classification, returns discrete output.
@@ -147,7 +146,6 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             return self.predict_continuous_output(X)
         else:
             return np.argmax(self.predict_proba(X), axis=1)
-        
 
     def predict_proba(self, X):
         continuous_output = self.predict_continuous_output(X)
@@ -167,7 +165,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         -------
         X_transformed: matrix, shape=(n_samples, n_out)
             Transformed data set
-        """        
+        """
         df = pd.DataFrame(X, columns=self.feature_placeholders)
         X_transformed = np.zeros([X.shape[0], 0])
 
@@ -176,7 +174,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             curr_rule_feature[list(df.query(r).index)] = 1
             curr_rule_feature = np.expand_dims(curr_rule_feature, axis=1)
             X_transformed = np.concatenate((X_transformed, curr_rule_feature), axis=1)
-        
+
         return X_transformed
 
     def get_rules(self, exclude_zero_coef=False, subregion=None):
@@ -235,9 +233,9 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         rules = rules[rules.coef != 0].sort_values("support", ascending=False)
         pd.set_option('display.max_colwidth', -1)
         return rules[['rule', 'coef']].round(3)
-    
+
     def _extract_rules(self, X, y) -> List[Rule]:
-        return extract_rulefit(X, y, 
+        return extract_rulefit(X, y,
                                feature_names=self.feature_placeholders,
                                tree_size=self.tree_size,
                                max_rules=self.max_rules,
@@ -273,10 +271,12 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                            prediction_task=self.prediction_task,
                            max_rules=self.max_rules, random_state=self.random_state)
 
-class RuleFitRegressor(RuleFit):        
+
+class RuleFitRegressor(RuleFit):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
-        
+
+
 class RuleFitClassifier(RuleFit):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'

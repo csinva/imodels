@@ -68,8 +68,11 @@ class SLIMRegressor(BaseEstimator):
             m.fit(X, y, sample_weight=sample_weight)
             self.model.coef_ = np.round(m.coef_).astype(int)
             self.model.intercept_ = m.intercept_
+        return self
 
     def predict_proba(self, X):
+        '''Converts predicted continuous output to probabilities using softmax
+        '''
         preds = self.predict(X)
         preds_proba = np.array([1 / (1 + np.exp(-y)) for y in preds])
         return np.vstack((1 - preds_proba, preds_proba)).transpose()
@@ -128,3 +131,5 @@ class SLIMClassifier(BaseEstimator):
             m.fit(X, y, sample_weight=sample_weight)
             self.model.coef_ = np.round(m.coef_).astype(int)
             self.model.intercept_ = m.intercept_
+
+        return self

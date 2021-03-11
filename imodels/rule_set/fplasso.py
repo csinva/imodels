@@ -1,12 +1,13 @@
 from typing import List
 
 from imodels.rule_set.rule_fit import RuleFit
-from imodels.util.extract import extract_fpgrowth
 from imodels.util.convert import itemsets_to_rules
+from imodels.util.extract import extract_fpgrowth
+
 
 class FPLasso(RuleFit):
 
-    def __init__(self, 
+    def __init__(self,
                  minsupport=0.1,
                  maxcardinality=2,
                  verbose=False,
@@ -42,7 +43,7 @@ class FPLasso(RuleFit):
         self.undiscretized_features = undiscretized_features
         super().fit(X, y, feature_names=feature_names)
         return self
-    
+
     def _extract_rules(self, X, y) -> List[str]:
         itemsets = extract_fpgrowth(X, y,
                                     feature_labels=self.feature_placeholders,
@@ -52,10 +53,12 @@ class FPLasso(RuleFit):
                                     verbose=self.verbose)[0]
         return itemsets_to_rules(itemsets)
 
-class FPLassoRegressor(FPLasso):        
+
+class FPLassoRegressor(FPLasso):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
-        
+
+
 class FPLassoClassifier(FPLasso):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'

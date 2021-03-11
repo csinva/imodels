@@ -55,3 +55,4 @@ class OneRClassifier(GreedyRuleListClassifier):
             if 'index_col' in rule:
                 rule['index_col'] += col_idx_best
         self.depth = len(self.rules_)
+        return self

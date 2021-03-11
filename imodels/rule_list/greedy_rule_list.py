@@ -10,7 +10,7 @@ from imodels.rule_list.rule_list import RuleList
 
 
 class GreedyRuleListClassifier(BaseEstimator, RuleList):
-    def __init__(self, max_depth: int=5, class_weight=None, criterion: str='gini', strategy: str='max'):
+    def __init__(self, max_depth: int = 5, class_weight=None, criterion: str = 'gini', strategy: str = 'max'):
         '''
         Params
         ------
@@ -23,15 +23,15 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             How to select which side of split becomes leaf node
             Currently only supports 'max' - (higher risk side of split becomes leaf node)
         '''
-        
+
         self.max_depth = max_depth
         self.feature_names = None
         self.class_weight = class_weight
         self.criterion = criterion
         self.strategy = strategy
-        self.depth = 0 # tracks the fitted depth
+        self.depth = 0  # tracks the fitted depth
 
-    def fit(self, x, y, depth: int=0, feature_names=None, verbose=False):
+    def fit(self, x, y, depth: int = 0, feature_names=None, verbose=False):
         """
         Params
         ------
@@ -89,8 +89,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
                     x_left = x[x[:, col] < cutoff]
             else:
                 print('strategy must be max!')
-                
-                
+
             # print
             if verbose:
                 print(
@@ -291,7 +290,6 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
             # weights for each class
             weight = sum(y == c) / n
 
-            
             def entropy_from_counts(c1, c2):
                 """Returns entropy of a group of data
                 c1: count of one class
@@ -305,7 +303,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList):
                 p1 = c1 * 1.0 / (c1 + c2)
                 p2 = c2 * 1.0 / (c1 + c2)
                 return entropy_func(p1) + entropy_func(p2)
-            
+
             # weighted avg
             s += weight * entropy_from_counts(sum(y == c), sum(y != c))
         return s

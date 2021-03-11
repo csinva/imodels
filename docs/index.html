@@ -37,7 +37,7 @@
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
 <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
 <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=1">
+<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=0">
 </p>
 <h2 id="imodels-overview">imodels overview</h2>
 <p>Implementations of different popular interpretable models can be easily used and installed:</p>
@@ -174,13 +174,15 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <p>The code here contains many useful and customizable functions for rule-based learning in the <a href="https://csinva.io/imodels/util/index.html">util folder</a>. This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.</p>
 <h2 id="demo-notebooks">Demo notebooks</h2>
 <p>Demos are contained in the <a href="notebooks">notebooks</a> folder.</p>
+<blockquote>
+<p><a href="notebooks/imodels_demo.ipynb">imodels_demo</a> - shows how to fit, predict, and visualize with different interpretable models</p>
+<p><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">clinical decision rule notebook</a> - shows an example of using <code>imodels</code> for deriving a clinical decision rule</p>
+<p>we also include some demos of posthoc analysis, which occurs after fitting models</p>
 <ul>
-<li><a href="notebooks/imodels_demo.ipynb">imodels_demo.ipynb</a>, demos the imodels package. It shows how to fit, predict, and visualize with different interpretable models</li>
-<li><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">this notebook</a> shows an example of using <code>imodels</code> for deriving a clinical decision rule</li>
-<li>we also include some demos of posthoc analysis, which occurs after fitting models</li>
 <li><a href="notebooks/2_posthoc.ipynb">posthoc.ipynb</a> - shows different simple analyses to interpret a trained model</li>
 <li><a href="notebooks/3_uncertainty.ipynb">uncertainty.ipynb</a> - basic code to get uncertainty estimates for a model</li>
 </ul>
+</blockquote>
 <h2 id="support-for-different-tasks">Support for different tasks</h2>
 <p>Different models support different machine-learning tasks. Current support for different models is given below:</p>
 <table>
@@ -281,20 +283,21 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 # Python `imodels` package for interpretable models compatible with scikit-learn.
 # Github repo available [here](https://github.com/csinva/interpretability-implementations-demos).
 
-from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
-from .rule_list.greedy_rule_list import GreedyRuleListClassifier
-from .rule_list.one_r import OneRClassifier
-from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
-from .rule_set.fplasso import FPLassoRegressor, FPLassoClassifier
-from .rule_set.fpskope import FPSkopeClassifier
-from .rule_set.skope_rules import SkopeRulesClassifier
-from .rule_set.boosted_rules import BoostedRulesClassifier
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
+from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
+from .rule_list.greedy_rule_list import GreedyRuleListClassifier
+from .rule_list.one_r import OneRClassifier
+from .rule_set.boosted_rules import BoostedRulesClassifier
+from .rule_set.fplasso import FPLassoRegressor, FPLassoClassifier
+from .rule_set.fpskope import FPSkopeClassifier
+from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
+from .rule_set.skope_rules import SkopeRulesClassifier
 
-CLASSIFIERS = BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier, BoostedRulesClassifier #, IRFClassifier
-REGRESSORS = RuleFitRegressor, SLIMRegressor</code></pre>
+CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
+               BoostedRulesClassifier, SLIMClassifier]  # , IRFClassifier
+REGRESSORS = [RuleFitRegressor, SLIMRegressor]</code></pre>
 </details>
 </section>
 <section>

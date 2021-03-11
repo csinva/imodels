@@ -1,8 +1,7 @@
-from typing import Tuple, List, Dict
-
 import numpy as np
 import pandas as pd
 from sklearn.utils.validation import check_array, check_is_fitted
+from typing import Tuple, List, Dict
 
 
 class RuleSet:
