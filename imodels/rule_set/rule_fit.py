@@ -121,7 +121,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
-        self.complexity = self._get_complexity()
+        self.complexity_ = self._get_complexity()
 
         return self
 

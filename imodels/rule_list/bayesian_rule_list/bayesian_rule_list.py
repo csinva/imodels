@@ -174,7 +174,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             # Compute the rule consequent
             self.theta, self.ci_theta = get_rule_rhs(Xtrain, Ytrain, self.d_star, self.alpha, True)
 
-        self.complexity = self._get_complexity()
+        self.complexity_ = self._get_complexity()
 
         return self
 

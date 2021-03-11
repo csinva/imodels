@@ -331,7 +331,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_
         ]
-        self.complexity = self._get_complexity()
+        self.complexity_ = self._get_complexity()
         return self
 
     def predict(self, X) -> np.ndarray:

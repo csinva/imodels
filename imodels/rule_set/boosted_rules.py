@@ -83,7 +83,7 @@ class BoostedRulesClassifier(BaseEstimator, RuleSet, MetaEstimatorMixin):
             self.estimators_.append(deepcopy(clf))
             self.estimator_weights_.append(alpha_m)
             self.estimator_errors_.append(err_m)
-        self.complexity = len(self.estimators_)
+        self.complexity_ = len(self.estimators_)
         return self
 
     def predict_proba(self, X):
