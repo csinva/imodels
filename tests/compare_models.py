@@ -270,7 +270,7 @@ def main():
     parser.add_argument('--model', type=str, default=None)
     args = parser.parse_args()
 
-    path = os.path.dirname(os.path.realpath(__file__)) + "/test_data/data/"
+    path = os.path.dirname(os.path.realpath(__file__)) + "/test_data/comparison_data/"
 
     if args.test:
         ests = BEST_ESTIMATORS
