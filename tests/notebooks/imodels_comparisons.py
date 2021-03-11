@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.10.2
+#       jupytext_version: 1.10.3
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -14,16 +14,17 @@
 # ---
 
 # %%
-import pickle as pkl
-import pandas as pd
-import imodels
 import itertools
 import os
-from imodels.util.evaluate.compare_models import run_comparison
-from sklearn.metrics import accuracy_score, f1_score
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-import matplotlib.pyplot as plt
+import pickle as pkl
+
+import numpy as np
+import pandas as pd
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.datasets import fetch_openml
 
 # %load_ext autoreload
 # %autoreload 2
@@ -33,20 +34,9 @@ if os.getcwd().split('/')[-1] != 'imodels':
     os.chdir('..')
 
 MODEL_COMPARISON_PATH = 'tests/test_data/comparison_data/'
-MODEL_COMPARISON_FILE = MODEL_COMPARISON_PATH + 'model_comparisons.pkl'
-
-# %% [markdown]
-# # compare static performance of different models
 
 # %%
-df = pkl.load(open(MODEL_COMPARISON_FILE, 'rb'))['df'].round(3)
-print('columns', df.columns, 'models', df.index)
-
-# %% [markdown]
-# # complexity-vs-accuracy plots for each model
-
-# %%
-COMPARISON_DATASETS = [
+datasets = [
         ("breast-cancer", 13),
         ("breast-w", 15),
         ("credit-g", 31),
@@ -56,85 +46,114 @@ COMPARISON_DATASETS = [
         ("vote", 56),
     ]
 
-METRICS = [
-    ('Acc.', accuracy_score),
-    ('Time', None),
-    ('Complexity', None)
-    
-]
-
-
-def get_comparison_df(estimators):
-    '''Get results for running multiple estimators
-    '''
-    estimator_name = estimators[0][0]
-    model_comparison_file = MODEL_COMPARISON_PATH + f'{estimator_name}_comparisons.pkl'
-    if os.path.isfile(model_comparison_file):
-        result = pkl.load(open(model_comparison_file, 'rb'))['df']
+def get_comparison_result(path, estimator_name, test=False):
+    if test:
+        result_file = path + f'{estimator_name}_test_comparisons.pkl'
     else:
-        result = run_comparison(COMPARISON_DATASETS, METRICS, estimators, write=False, average=True, verbose=False)
-        pkl.dump({'df': result}, open(model_comparison_file, 'wb'))
-    return result
+        result_file = path + f'{estimator_name}_comparisons.pkl'
+    return pkl.load(open(result_file, 'rb'))
 
-def viz_model(result):
-    '''Plot acc vs complexity
+def collect_result_files(path, test=False):
+    if test:
+        fn = lambda x: '_test_' in x
+    else:
+        fn = lambda x: '_test_' not in x
+    return list(filter(fn, os.listdir(path)))
+
+def viz_comparison(result_df, result_estimators, dpi=83):
+    '''Plot ROC AUC vs complexity
     '''
-    complexities = result[result.index.str.contains('Complexity')]
-    accuracies = result[result.index.str.contains('Acc')]
-    complexity_sort_indices = complexities.argsort()
-    
-    plt.plot(complexities[complexity_sort_indices], accuracies[complexity_sort_indices])
-    plt.xlabel('Complexity score')
-    plt.ylabel('Average accuracy across comparison datasets')
+    plt.figure(dpi=dpi)
+    for est in np.unique(result_estimators):
+        
+        est_result_df = result_df[result_df.index.str.contains(est)]
+        complexities = est_result_df[est_result_df.index.str.contains('Complexity')]
+        rocs = est_result_df[est_result_df.index.str.contains('ROC')]
+        complexity_sort_indices = complexities.argsort()
 
+        plt.plot(complexities[complexity_sort_indices], rocs[complexity_sort_indices], label=est.replace('_', ' '))
+    
+    plt.xlabel('Complexity score')
+    plt.ylabel('Average ROC AUC across comparison datasets')
+    plt.legend(frameon=False, handlelength=1)
+    plt.show()
+
+
+# %% [markdown]
+# # dataset stats
+
+# %%
+metadata = []
+columns = ['name', 'samples', 'features', 'class 0 ct', 'class 1 ct', 'majority class %']
+for dataset_name, data_id in datasets:
+    dataset = fetch_openml(data_id=data_id)
+    shape = dataset.data.shape
+    class_counts = np.unique(dataset.target, return_counts=True)[1]
+    metadata.append([dataset_name, shape[0], shape[1], class_counts[0], class_counts[1], np.max(class_counts) / np.sum(class_counts)])
+pd.DataFrame(metadata, columns=columns).set_index('name')
+
+# %% [markdown]
+# # complexity vs. ROC Area plot for all models
+
+# %%
+result_files = collect_result_files(MODEL_COMPARISON_PATH, test=True)
+all_results_df = pd.Series([], dtype='float32')
+all_est_names = []
+for result_file in tqdm(result_files):
+    result = pkl.load(open(MODEL_COMPARISON_PATH + result_file, 'rb'))
+    all_results_df = pd.concat([all_results_df, result['df']])
+    all_est_names += result['estimators']
+viz_comparison(all_results_df, all_est_names, 250)
+
+# %% [markdown]
+# # hyperparameter tuning plots for each model
+#
 
 # %% [markdown]
 # ## Random Forest
 
 # %%
-est_rf = [
-    ('random_forest', RandomForestClassifier(n_estimators=n, max_depth=d)) 
-    for n, d in itertools.product([2, 3, 4], [2, 3])
-]
-est_gb = [
-    ('gradient_boosting', GradientBoostingClassifier(n_estimators=n, max_depth=d)) 
-    for n, d in itertools.product([2, 3, 4], [2, 3])
-]
-est_skope = [
-        ('skope', imodels.SkopeRulesClassifier(n_estimators=n, max_depth=d)) 
-        for n, d in itertools.product([2, 4, 8, 16, 32, 64, 96], [2, 3])
-    ]
-est_rulefit = [
-    ('rulefit', imodels.RuleFitClassifier(max_rules=n, tree_size=d)) 
-    for n, d in itertools.product([2, 4, 8, 16, 32, 48], [4, 8])
-]
-est_fplasso = [
-    ('fplasso', imodels.FPLassoClassifier(max_rules=n, maxcardinality=c)) 
-    for n, c in itertools.product([2, 4, 8, 16, 32, 48, 96], [2, 3])
-]
-est_fpskope = [
-    ('fpskope', imodels.FPSkopeClassifier(maxcardinality=c,  max_depth_duplication=dd))
-    for c, dd in itertools.product([2, 3, 4], [1, 2, 3])
-]
-est_brl = [
-    ('brl', imodels.BayesianRuleListClassifier(listlengthprior=l, maxcardinality=c)) 
-    for l, c in itertools.product([2, 4, 8, 16], [2, 3])
-]
-est_grl = [('grl', imodels.GreedyRuleListClassifier(max_depth=d)) for d in [2, 4, 8, 16]]
-est_oner = [('oner', imodels.OneRClassifier(max_depth=d)) for d in [2, 3, 4, 5, 6, 7]]
-est_brs = [('brs', imodels.BoostedRulesClassifier(n_estimators=n)) for n in [2, 4, 8, 16, 32]]
+comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'random_forest')
+viz_comparison(comparison_result['df'], comparison_result['estimators'])
 
-ests = [est_rf, est_gb, est_skope, est_rulefit, est_fplasso, est_fpskope, est_brl, est_grl, est_oner, est_brs]
-plt.figure(dpi=250)
-for est in tqdm(ests):
-    result = get_comparison_df(est)
-    complexities = result[result.index.str.contains('Complexity')]
-    accuracies = result[result.index.str.contains('Acc')]
-    complexity_sort_indices = complexities.argsort()
-    
-    plt.plot(complexities[complexity_sort_indices],
-             accuracies[complexity_sort_indices], label=est[0][0].replace('_', ' '))
-plt.xlabel('Complexity score')
-plt.ylabel('Average accuracy across comparison datasets')
-plt.legend(frameon=False, handlelength=1)
-plt.show()
+# %% [markdown]
+# ## Gradient boosted trees
+
+# %%
+comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'gradient_boosting')
+viz_comparison(comparison_result['df'], comparison_result['estimators'])
+
+# %% [markdown]
+# ## SkopeRules
+
+# %%
+comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'skope_rules')
+viz_comparison(comparison_result['df'], comparison_result['estimators'])
+
+# %% [markdown]
+# ## RuleFit
+
+# %%
+comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'rulefit')
+viz_comparison(comparison_result['df'], comparison_result['estimators'])
+
+# %% [markdown]
+# ## FPLasso
+
+# %%
+comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'fplasso')
+viz_comparison(comparison_result['df'], comparison_result['estimators'])
+
+# %% [markdown]
+# ## FPSkope
+
+# %%
+comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'fpskope')
+viz_comparison(comparison_result['df'], comparison_result['estimators'])
+
+# %% [markdown]
+# ## BRL
+
+# %%
+comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'brl')
+viz_comparison(comparison_result['df'], comparison_result['estimators'])
