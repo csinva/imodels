@@ -9,7 +9,7 @@ setuptools.setup(
     long_description="Interpretable ML package for concise, transparent, and accurate predictive modeling (sklearn-compatible).",
     long_description_content_type="text/markdown",
     url="https://github.com/csinva/imodels",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude=['tests']),
     install_requires=[
         'numpy',
         'scipy',
