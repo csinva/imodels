@@ -1,22 +1,17 @@
 '''Compare different estimators on public datasets
 Code modified from https://github.com/tmadl/sklearn-random-bits-forest
 '''
-import os 
+import os
 import time
-import re, string
 import pickle as pkl
 import argparse
-import logging
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.datasets import fetch_openml
-from sklearn.preprocessing import OneHotEncoder
-from scipy.stats.stats import mannwhitneyu, ttest_ind
 from tqdm import tqdm
 import pandas as pd
 import imodels
@@ -91,27 +86,6 @@ ALL_ESTIMATORS.append(
 )
 
 
-def dshape(X):
-    if len(X.shape) == 1:
-        return X.reshape(-1,1)
-    else:
-        return X if X.shape[0]>X.shape[1] else X.T
-
-
-def unpack(t):
-    while type(t) == list or type(t) == np.ndarray:
-        t = t[0]
-    return t
-
-
-def to_numeric(lst):
-    lbls = {}
-    for t in lst.flatten():
-        if unpack(t) not in lbls:
-            lbls[unpack(t)] = len(lbls.keys())
-    return np.array([lbls[unpack(t)] for t in lst.flatten()])
-
-
 def get_complexity(estimator):
     if isinstance(estimator, (RandomForestClassifier, GradientBoostingClassifier)):
         complexity = 0
@@ -128,45 +102,17 @@ def get_complexity(estimator):
         return estimator.complexity_
 
 
-def get_dataset(data_id, onehot_encode_strings=True):
-    # load
-    dataset = fetch_openml(data_id=data_id)
-    # get X and y
-    X = dshape(dataset.data)
-    if type(X) == pd.DataFrame:
-        X = X.values
-    try:
-        target = dshape(dataset.target)
-    except:
-        print("WARNING: No target found. Taking last column of data matrix as target")
-        target = X[:, -1]
-        X = X[:, :-1]
-    if len(target.shape)>1 and target.shape[1]>X.shape[1]: # some mldata sets are mixed up...
-        X = target
-        target = dshape(dataset.data)
-    if len(X.shape) == 1 or X.shape[1] <= 1:
-        for k in dataset.keys():
-            if k != 'data' and k != 'target' and len(dataset[k]) == X.shape[1]:
-                X = np.hstack((X, dshape(dataset[k])))
-    # one-hot for categorical values
-    if onehot_encode_strings:
-        cat_ft=[i for i in range(X.shape[1]) if 'str' in str(type(unpack(X[0,i]))) or 'unicode' in str(type(unpack(X[0,i])))]
-        if len(cat_ft):
-            X = OneHotEncoder().fit_transform(X)
-    # if sparse, make dense
-    try:
-        X = X.toarray()
-    except:
-        pass
-    # convert y to monotonically increasing ints
-    y = to_numeric(target).astype(int)
-    return np.nan_to_num(X.astype(float)),y
+def get_dataset(data_id, onehot_encode_strings=True): 
+    dataset = fetch_openml(data_id=data_id, as_frame=False)
+    X = dataset.data
+    y = (dataset.target[0] == dataset.target).astype(int)
+    return np.nan_to_num(X.astype('float32')), y
 
 
 def compare_estimators(estimators: list,
                        datasets,
                        metrics: list,
-                       n_cv_folds = 10, decimals = 3, cellsize = 22, verbose = True):
+                       n_cv_folds=10, decimals=3, cellsize=22, verbose=True):
     if type(estimators) != list:
         raise Exception("First argument needs to be a list of tuples containing ('name', Estimator pairs)")
     if type(metrics) != list:
@@ -204,13 +150,9 @@ def compare_estimators(estimators: list,
                     if met_name == 'Time':
                         mresults[i].append(end - start)
                     elif met_name == 'Complexity':
-                        if est_name != 'MLPClassifier (sklearn)':
-                            mresults[i].append(get_complexity(est))
+                        mresults[i].append(get_complexity(est))
                     else:
-                        try:
-                            mresults[i].append(met(y[test_idx], y_pred))
-                        except:
-                            mresults[i].append(met(to_numeric(y[test_idx]), to_numeric(y_pred)))
+                        mresults[i].append(met(y[test_idx], y_pred))
 
             for i in range(len(mresults)):
                 mean_result.append(np.mean(mresults[i]))
@@ -260,6 +202,7 @@ def run_comparison(path, datasets, metrics, estimators, average=True, verbose=Fa
         'df': df,
     }
     pkl.dump(output_dict, open(model_comparison_file, 'wb'))
+
 
 def main():
 
