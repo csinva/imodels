@@ -86,7 +86,7 @@ def viz_comparison(result_df, result_estimators, dpi=83):
 metadata = []
 columns = ['name', 'samples', 'features', 'class 0 ct', 'class 1 ct', 'majority class %']
 for dataset_name, data_id in datasets:
-    dataset = fetch_openml(data_id=data_id)
+    dataset = fetch_openml(data_id=data_id, as_frame=False)
     shape = dataset.data.shape
     class_counts = np.unique(dataset.target, return_counts=True)[1]
     metadata.append([dataset_name, shape[0], shape[1], class_counts[0], class_counts[1], np.max(class_counts) / np.sum(class_counts)])
