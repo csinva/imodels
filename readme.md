@@ -14,7 +14,7 @@
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
   <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=2">
+  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=3">
 </p>  
 
 
@@ -100,6 +100,7 @@ Demos are contained in the [notebooks](notebooks) folder.
 > [imodels_demo](notebooks/imodels_demo.ipynb) - shows how to fit, predict, and visualize with different interpretable models
 >
 > [clinical decision rule notebook](https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb) - shows an example of using `imodels` for deriving a clinical decision rule
+> 
 > we also include some demos of posthoc analysis, which occurs after fitting models
 >
 >  - [posthoc.ipynb](notebooks/2_posthoc.ipynb) - shows different simple analyses to interpret a trained model
@@ -141,3 +142,17 @@ Different models support different machine-learning tasks. Current support for d
     - For updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@csinva_](https://twitter.com/csinva_)
     - Please make sure to give authors of original methods / base implementations appropriate credit!
     - Pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!
+
+If it's useful for you, please cite the package using the below, but more importantly make sure to give authors of original methods / base implementations credit:
+
+```r
+@software{
+    imodels2021,
+    title        = {{imodels: a python package for fitting interpretable models}},
+    publisher    = {Zenodo},
+    year         = 2021,
+    author       = {Chandan Singh and Keyan Nasseri and Bin Yu},
+    version      = {v0.2.8},
+    doi          = {10.5281/zenodo.4598963},
+    url          = {https://github.com/csinva/imodels}
+}
