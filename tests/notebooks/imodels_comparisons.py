@@ -53,16 +53,24 @@ def get_comparison_result(path, estimator_name, test=False):
         result_file = path + f'{estimator_name}_comparisons.pkl'
     return pkl.load(open(result_file, 'rb'))
 
-def collect_result_files(path, test=False):
+def get_all_results(path, test=False):
     if test:
         fn = lambda x: '_test_' in x
     else:
         fn = lambda x: '_test_' not in x
-    return list(filter(fn, os.listdir(path)))
+    result_files = list(filter(fn, os.listdir(path)))
+    all_results_df = pd.Series([], dtype='float32')
+    all_est_names = []
+    for result_file in result_files:
+        result = pkl.load(open(MODEL_COMPARISON_PATH + result_file, 'rb'))
+        all_results_df = pd.concat([all_results_df, result['df']])
+        all_est_names += result['estimators']
+    return {'df': all_results_df, 'estimators': all_est_names}
 
-def viz_comparison(result_df, result_estimators, dpi=83):
+def viz_comparison(result, dpi=83):
     '''Plot ROC AUC vs complexity
     '''
+    result_df, result_estimators = result['df'], result['estimators']
     plt.figure(dpi=dpi)
     for est in np.unique(result_estimators):
         
@@ -96,14 +104,8 @@ pd.DataFrame(metadata, columns=columns).set_index('name')
 # # complexity vs. ROC Area plot for all models
 
 # %%
-result_files = collect_result_files(MODEL_COMPARISON_PATH, test=True)
-all_results_df = pd.Series([], dtype='float32')
-all_est_names = []
-for result_file in tqdm(result_files):
-    result = pkl.load(open(MODEL_COMPARISON_PATH + result_file, 'rb'))
-    all_results_df = pd.concat([all_results_df, result['df']])
-    all_est_names += result['estimators']
-viz_comparison(all_results_df, all_est_names, 250)
+result_files = get_all_results(MODEL_COMPARISON_PATH, test=True)
+viz_comparison(result_files, 250)
 
 # %% [markdown]
 # # hyperparameter tuning plots for each model
@@ -114,46 +116,48 @@ viz_comparison(all_results_df, all_est_names, 250)
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'random_forest')
-viz_comparison(comparison_result['df'], comparison_result['estimators'])
+viz_comparison(comparison_result)
 
 # %% [markdown]
 # ## Gradient boosted trees
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'gradient_boosting')
-viz_comparison(comparison_result['df'], comparison_result['estimators'])
+viz_comparison(comparison_result)
 
 # %% [markdown]
 # ## SkopeRules
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'skope_rules')
-viz_comparison(comparison_result['df'], comparison_result['estimators'])
+viz_comparison(comparison_result)
 
 # %% [markdown]
 # ## RuleFit
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'rulefit')
-viz_comparison(comparison_result['df'], comparison_result['estimators'])
+viz_comparison(comparison_result)
 
 # %% [markdown]
 # ## FPLasso
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'fplasso')
-viz_comparison(comparison_result['df'], comparison_result['estimators'])
+viz_comparison(comparison_result)
 
 # %% [markdown]
 # ## FPSkope
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'fpskope')
-viz_comparison(comparison_result['df'], comparison_result['estimators'])
+viz_comparison(comparison_result)
 
 # %% [markdown]
 # ## BRL
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'brl')
-viz_comparison(comparison_result['df'], comparison_result['estimators'])
+viz_comparison(comparison_result)
+
+# %%
