@@ -44,16 +44,16 @@ LOW_COMPLEXITY_CUTOFF = 30
 MAX_START_COMPLEXITY = 10
 
 BEST_ESTIMATORS = [
-    [('random_forest', RandomForestClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(2, 8, 5, dtype=int)],
-    [('gradient_boosting', GradientBoostingClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(2, 8, 5, dtype=int)],
-    [('skope_rules', imodels.SkopeRulesClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(2, 200, 5, dtype=int)],
-    [('rulefit', imodels.RuleFitClassifier(max_rules=n, tree_size=2)) for n in np.linspace(2, 100, 5, dtype=int)],
-    [('fplasso', imodels.FPLassoClassifier(max_rules=n, maxcardinality=2)) for n in np.linspace(2, 60, 5, dtype=int)],
+    [('random_forest', RandomForestClassifier(n_estimators=n, max_depth=2)) for n in np.arange(1, 8)],
+    [('gradient_boosting', GradientBoostingClassifier(n_estimators=n, max_depth=1)) for n in np.linspace(1, 20, 10, dtype=int)],
+    [('skope_rules', imodels.SkopeRulesClassifier(n_estimators=n, max_depth=1)) for n in np.linspace(2, 200, 10, dtype=int)],
+    [('rulefit', imodels.RuleFitClassifier(max_rules=n, tree_size=2)) for n in np.linspace(2, 100, 10, dtype=int)],
+    [('fplasso', imodels.FPLassoClassifier(max_rules=n, maxcardinality=1)) for n in np.linspace(2, 100, 10, dtype=int)],
     [('fpskope', imodels.FPSkopeClassifier(maxcardinality=n, max_depth_duplication=3)) for n in np.arange(1, 5)],
-    [('brl', imodels.BayesianRuleListClassifier(listlengthprior=n, maxcardinality=2)) for n in [2, 4, 8, 16]],
+    [('brl', imodels.BayesianRuleListClassifier(listlengthprior=n, maxcardinality=2)) for n in np.linspace(1, 16, 8)],
     [('grl', imodels.GreedyRuleListClassifier(max_depth=n)) for n in np.arange(1, 6)],
     [('oner', imodels.OneRClassifier(max_depth=n)) for n in np.arange(1, 6)],
-    [('brs', imodels.BoostedRulesClassifier(n_estimators=n)) for n in np.linspace(2, 32, 5, dtype=int)]
+    [('brs', imodels.BoostedRulesClassifier(n_estimators=n)) for n in np.linspace(1, 32, 10, dtype=int)]
 ]
 
 ALL_ESTIMATORS = []
@@ -80,7 +80,7 @@ ALL_ESTIMATORS.append(
 ALL_ESTIMATORS.append(
     [('fplasso - max_card_1', imodels.FPLassoClassifier(max_rules=n, maxcardinality=1)) for n in np.linspace(2, 100, 10, dtype=int)]
     + [('fplasso - max_card_2', imodels.FPLassoClassifier(max_rules=n, maxcardinality=2)) for n in np.linspace(2, 60, 10, dtype=int)]
-    + [('fplasso - max_card_3', imodels.FPLassoClassifier(max_rules=n, maxcardinality=3)) for n in np.linspace(2, 50, , dtype=int)]
+    + [('fplasso - max_card_3', imodels.FPLassoClassifier(max_rules=n, maxcardinality=3)) for n in np.linspace(2, 50, 10, dtype=int)]
 )
 ALL_ESTIMATORS.append(
     [('fpskope - No dedup', imodels.FPSkopeClassifier(maxcardinality=n,  max_depth_duplication=None)) for n in [1, 2]]
@@ -224,7 +224,8 @@ def compare_estimators(estimators: list,
     return mean_results, std_results
 
 
-def run_comparison(path, datasets, metrics, estimators, average=True, verbose=False, ignore_cache=False, test=False, cv_folds=4):
+def run_comparison(path, datasets, metrics, estimators,
+                   average=True, verbose=False, ignore_cache=False, test=False, cv_folds=4):
 
     estimator_name = estimators[0][0].split(' - ')[0]
     if test:
@@ -266,12 +267,12 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')
-    parser.add_argument('--val', action='store_true')
     parser.add_argument('--ignore_cache', action='store_true')
     parser.add_argument('--model', type=str, default=None)
     args = parser.parse_args()
 
-    path = os.path.dirname(os.path.realpath(__file__)) + "/test_data/comparison_data/"
+    path = os.path.dirname(os.path.realpath(__file__)) + "/comparison_data/"
+    path += 'test/' if args.test else 'val/'
 
     if args.test:
         ests = BEST_ESTIMATORS
@@ -290,7 +291,7 @@ def main():
                        verbose=False,
                        ignore_cache=args.ignore_cache,
                        test=args.test,
-                       cv_folds=1 if args.val else 4)
+                       cv_folds=4 if args.test else 1)
 
 
 if __name__ == "__main__":
