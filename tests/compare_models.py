@@ -1,20 +1,23 @@
 '''Compare different estimators on public datasets
 Code modified from https://github.com/tmadl/sklearn-random-bits-forest
 '''
-import os
-import time
-import pickle as pkl
 import argparse
+import os
+import pickle as pkl
+import time
+from typing import Dict, Any
 
+import imodels
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+import pandas as pd
+from scipy.interpolate import interp1d
+from scipy.sparse import issparse
+from sklearn.datasets import fetch_openml
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import KFold, train_test_split
-from sklearn.datasets import fetch_openml
 from tqdm import tqdm
-import pandas as pd
-import imodels
 
 
 COMPARISON_DATASETS = [
@@ -28,50 +31,56 @@ COMPARISON_DATASETS = [
 ]
 
 METRICS = [
-    ('Accuracy', accuracy_score),
-    ('ROC Score', roc_auc_score),
-    ('Time', None),
-    ('Complexity', None)
+    ('accuracy', accuracy_score),
+    ('ROCAUC', roc_auc_score),
+    ('time', None),
+    ('complexity', None)
 ]
 
+# complexity score under which a model is considered interpretable
+LOW_COMPLEXITY_CUTOFF = 30
+
+# min complexity of curves included in the AUC-of-AUC comparison must be below this value
+MAX_START_COMPLEXITY = 10
+
 BEST_ESTIMATORS = [
-    [('random_forest', RandomForestClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(2, 8, 5, dtype=int)],
-    [('gradient_boosting', GradientBoostingClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(2, 8, 5, dtype=int)],
-    [('skope_rules', imodels.SkopeRulesClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(2, 200, 5, dtype=int)],
-    [('rulefit', imodels.RuleFitClassifier(max_rules=n, tree_size=2)) for n in np.linspace(2, 100, 5, dtype=int)],
-    [('fplasso', imodels.FPLassoClassifier(max_rules=n, maxcardinality=2)) for n in np.linspace(2, 60, 5, dtype=int)],
+    [('random_forest', RandomForestClassifier(n_estimators=n, max_depth=2)) for n in np.arange(1, 8)],
+    [('gradient_boosting', GradientBoostingClassifier(n_estimators=n, max_depth=1)) for n in np.linspace(1, 20, 10, dtype=int)],
+    [('skope_rules', imodels.SkopeRulesClassifier(n_estimators=n, max_depth=1)) for n in np.linspace(2, 200, 10, dtype=int)],
+    [('rulefit', imodels.RuleFitClassifier(max_rules=n, tree_size=2)) for n in np.linspace(2, 100, 10, dtype=int)],
+    [('fplasso', imodels.FPLassoClassifier(max_rules=n, maxcardinality=1)) for n in np.linspace(2, 100, 10, dtype=int)],
     [('fpskope', imodels.FPSkopeClassifier(maxcardinality=n, max_depth_duplication=3)) for n in np.arange(1, 5)],
-    [('brl', imodels.BayesianRuleListClassifier(listlengthprior=n, maxcardinality=2)) for n in [2, 4, 8, 16]],
+    [('brl', imodels.BayesianRuleListClassifier(listlengthprior=n, maxcardinality=2)) for n in np.linspace(1, 16, 8)],
     [('grl', imodels.GreedyRuleListClassifier(max_depth=n)) for n in np.arange(1, 6)],
     [('oner', imodels.OneRClassifier(max_depth=n)) for n in np.arange(1, 6)],
-    [('brs', imodels.BoostedRulesClassifier(n_estimators=n)) for n in np.linspace(2, 32, 5, dtype=int)]
+    [('brs', imodels.BoostedRulesClassifier(n_estimators=n)) for n in np.linspace(1, 32, 10, dtype=int)]
 ]
 
 ALL_ESTIMATORS = []
 ALL_ESTIMATORS.append(
-    [('random_forest - depth_1', RandomForestClassifier(n_estimators=n, max_depth=1)) for n in np.linspace(2, 40, 5, dtype=int)]
-    + [('random_forest - depth_2', RandomForestClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(2, 15, 5, dtype=int)]
-    + [('random_forest - depth_3', RandomForestClassifier(n_estimators=n, max_depth=3)) for n in np.arange(2, 8)]
+    [('random_forest - depth_1', RandomForestClassifier(n_estimators=n, max_depth=1)) for n in np.linspace(1, 40, 10, dtype=int)]
+    + [('random_forest - depth_2', RandomForestClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(1, 15, 10, dtype=int)]
+    + [('random_forest - depth_3', RandomForestClassifier(n_estimators=n, max_depth=3)) for n in np.arange(1, 8)]
 )
 ALL_ESTIMATORS.append(
-    [('gradient_boosting - depth_1', GradientBoostingClassifier(n_estimators=n, max_depth=1)) for n in np.linspace(2, 40, 5, dtype=int)]
-    + [('gradient_boosting - depth_2', GradientBoostingClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(2, 15, 5, dtype=int)]
-    + [('gradient_boosting - depth_3', GradientBoostingClassifier(n_estimators=n, max_depth=3)) for n in np.arange(2, 8)]
+    [('gradient_boosting - depth_1', GradientBoostingClassifier(n_estimators=n, max_depth=1)) for n in np.linspace(1, 40, 10, dtype=int)]
+    + [('gradient_boosting - depth_2', GradientBoostingClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(1, 15, 10, dtype=int)]
+    + [('gradient_boosting - depth_3', GradientBoostingClassifier(n_estimators=n, max_depth=3)) for n in np.arange(1, 8)]
 )
 ALL_ESTIMATORS.append(
-    [('skope_rules - depth_1', imodels.SkopeRulesClassifier(n_estimators=n, max_depth=1)) for n in np.linspace(2, 200, 5, dtype=int)]
-    + [('skope_rules - depth_2', imodels.SkopeRulesClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(2, 200, 5, dtype=int)]
-    + [('skope_rules - depth_3', imodels.SkopeRulesClassifier(n_estimators=n, max_depth=3)) for n in np.linspace(2, 80, 5, dtype=int)]
+    [('skope_rules - depth_1', imodels.SkopeRulesClassifier(n_estimators=n, max_depth=1)) for n in np.linspace(2, 200, 10, dtype=int)]
+    + [('skope_rules - depth_2', imodels.SkopeRulesClassifier(n_estimators=n, max_depth=2)) for n in np.linspace(2, 200, 10, dtype=int)]
+    + [('skope_rules - depth_3', imodels.SkopeRulesClassifier(n_estimators=n, max_depth=3)) for n in np.linspace(2, 80, 10, dtype=int)]
 )
 ALL_ESTIMATORS.append(
-    [('rulefit - depth_1', imodels.RuleFitClassifier(max_rules=n, tree_size=2)) for n in np.linspace(2, 100, 5, dtype=int)]
-    + [('rulefit - depth_2', imodels.RuleFitClassifier(max_rules=n, tree_size=4)) for n in np.linspace(2, 50, 5, dtype=int)]
-    + [('rulefit - depth_3', imodels.RuleFitClassifier(max_rules=n, tree_size=8)) for n in np.linspace(2, 50, 5, dtype=int)]
+    [('rulefit - depth_1', imodels.RuleFitClassifier(max_rules=n, tree_size=2)) for n in np.linspace(2, 100, 10, dtype=int)]
+    + [('rulefit - depth_2', imodels.RuleFitClassifier(max_rules=n, tree_size=4)) for n in np.linspace(2, 50, 10, dtype=int)]
+    + [('rulefit - depth_3', imodels.RuleFitClassifier(max_rules=n, tree_size=8)) for n in np.linspace(2, 50, 10, dtype=int)]
 )
 ALL_ESTIMATORS.append(
-    [('fplasso - max_card_1', imodels.FPLassoClassifier(max_rules=n, maxcardinality=1)) for n in np.linspace(2, 100, 5, dtype=int)]
-    + [('fplasso - max_card_2', imodels.FPLassoClassifier(max_rules=n, maxcardinality=2)) for n in np.linspace(2, 60, 5, dtype=int)]
-    + [('fplasso - max_card_3', imodels.FPLassoClassifier(max_rules=n, maxcardinality=3)) for n in np.linspace(2, 50, 5, dtype=int)]
+    [('fplasso - max_card_1', imodels.FPLassoClassifier(max_rules=n, maxcardinality=1)) for n in np.linspace(2, 100, 10, dtype=int)]
+    + [('fplasso - max_card_2', imodels.FPLassoClassifier(max_rules=n, maxcardinality=2)) for n in np.linspace(2, 60, 10, dtype=int)]
+    + [('fplasso - max_card_3', imodels.FPLassoClassifier(max_rules=n, maxcardinality=3)) for n in np.linspace(2, 50, 10, dtype=int)]
 )
 ALL_ESTIMATORS.append(
     [('fpskope - No dedup', imodels.FPSkopeClassifier(maxcardinality=n,  max_depth_duplication=None)) for n in [1, 2]]
@@ -80,9 +89,9 @@ ALL_ESTIMATORS.append(
     + [('fpskope - max_dedup_3', imodels.FPSkopeClassifier(maxcardinality=n,  max_depth_duplication=3)) for n in [1, 2, 3, 4]]
 )
 ALL_ESTIMATORS.append(
-    [('brl - max_card_1', imodels.BayesianRuleListClassifier(listlengthprior=n, maxcardinality=1)) for n in [2, 4, 8, 16, 20]]
-    + [('brl - max_card_2', imodels.BayesianRuleListClassifier(listlengthprior=n, maxcardinality=2)) for n in [2, 4, 8, 16]]
-    + [('brl - max_card_3', imodels.BayesianRuleListClassifier(listlengthprior=n, maxcardinality=3)) for n in [2, 4, 8, 16]]
+    [('brl - max_card_1', imodels.BayesianRuleListClassifier(listlengthprior=n, maxcardinality=1)) for n in np.linspace(1, 20, 10)]
+    + [('brl - max_card_2', imodels.BayesianRuleListClassifier(listlengthprior=n, maxcardinality=2)) for n in np.linspace(1, 16, 8)]
+    + [('brl - max_card_3', imodels.BayesianRuleListClassifier(listlengthprior=n, maxcardinality=3)) for n in np.linspace(1, 16, 8)]
 )
 
 
@@ -105,8 +114,59 @@ def get_complexity(estimator):
 def get_dataset(data_id, onehot_encode_strings=True): 
     dataset = fetch_openml(data_id=data_id, as_frame=False)
     X = dataset.data
+    if issparse(X):
+        X = X.toarray()
     y = (dataset.target[0] == dataset.target).astype(int)
     return np.nan_to_num(X.astype('float32')), y
+
+
+def compute_auc_of_auc(result: Dict[str, Any], dpi=83) -> None:
+    mean_results = result['df']['mean']
+    estimators = np.unique(result['estimators'])
+    xs = np.empty(len(estimators), dtype=object)
+    ys = xs.copy()
+
+    for i, est in enumerate(estimators):
+
+        est_result_df = mean_results[mean_results.index.str.contains(est)]
+        complexities_unsorted = est_result_df[est_result_df.index.str.contains('complexity')]
+        complexity_sort_indices = complexities_unsorted.argsort()
+        complexities = complexities_unsorted[complexity_sort_indices]
+
+        roc_aucs = (
+                est_result_df[est_result_df.index.str.contains('ROC')][complexity_sort_indices]
+        )
+        xs[i] = complexities.values
+        ys[i] = roc_aucs.values
+
+    # filter out curves which start too complex
+    mask = list(map(lambda x: min(x) < MAX_START_COMPLEXITY, xs))
+    xs, ys, estimators = xs[mask], ys[mask], estimators[mask]
+
+    # find overlapping complexity region for roc-of-roc comparison
+    auc_of_auc_lb = max([x[0] for x in xs])
+    endpts = np.array([x[-1] for x in xs])
+    auc_of_auc_ub = min(endpts[endpts > auc_of_auc_lb])
+    auc_of_auc_ub = min(auc_of_auc_ub, LOW_COMPLEXITY_CUTOFF)
+
+    # handle non-overlapping curves
+    mask = endpts > auc_of_auc_lb
+    xs, ys, estimators = xs[mask], ys[mask], estimators[mask]
+
+    # compute AUC of interpolated curves in overlap region
+    auc_of_aucs = []
+    for i in range(len(xs)):
+
+        f_curve = interp1d(xs[i], ys[i])
+        x_interp = np.linspace(auc_of_auc_lb, auc_of_auc_ub, 100)
+        y_interp = f_curve(x_interp)
+        auc_of_aucs.append(np.trapz(y_interp, x=x_interp))
+
+    result['auc_of_auc'] = (
+        pd.Series(auc_of_aucs, index=estimators).sort_values(ascending=False)
+    )
+    result['auc_of_auc_lb'] = auc_of_auc_lb
+    result['auc_of_auc_ub'] = auc_of_auc_ub
 
 
 def compare_estimators(estimators: list,
@@ -147,9 +207,9 @@ def compare_estimators(estimators: list,
                 
                 # loop over metrics
                 for i, (met_name, met) in enumerate(metrics):
-                    if met_name == 'Time':
+                    if met_name == 'time':
                         mresults[i].append(end - start)
-                    elif met_name == 'Complexity':
+                    elif met_name == 'complexity':
                         mresults[i].append(get_complexity(est))
                     else:
                         mresults[i].append(met(y[test_idx], y_pred))
@@ -164,7 +224,8 @@ def compare_estimators(estimators: list,
     return mean_results, std_results
 
 
-def run_comparison(path, datasets, metrics, estimators, average=True, verbose=False, ignore_cache=False, test=False, cv_folds=4):
+def run_comparison(path, datasets, metrics, estimators,
+                   average=True, verbose=False, ignore_cache=False, test=False, cv_folds=4):
 
     estimator_name = estimators[0][0].split(' - ')[0]
     if test:
@@ -190,17 +251,15 @@ def run_comparison(path, datasets, metrics, estimators, average=True, verbose=Fa
     df = pd.DataFrame.from_dict(mean_results)
     df.index = column_titles
 
-    if average:
-        df = df.mean(axis=1)
-    
+    df['mean'], df['std'] = df.mean(axis=1), df.std(axis=1)
+
     output_dict = {
         'estimators': estimators_list,
         'comparison_datasets': datasets,
-        'mean_results': mean_results,
-        'std_results': std_results,
         'metrics': metrics_list,
         'df': df,
     }
+    compute_auc_of_auc(output_dict)
     pkl.dump(output_dict, open(model_comparison_file, 'wb'))
 
 
@@ -208,12 +267,12 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')
-    parser.add_argument('--val', action='store_true')
     parser.add_argument('--ignore_cache', action='store_true')
     parser.add_argument('--model', type=str, default=None)
     args = parser.parse_args()
 
-    path = os.path.dirname(os.path.realpath(__file__)) + "/test_data/comparison_data/"
+    path = os.path.dirname(os.path.realpath(__file__)) + "/comparison_data/"
+    path += 'test/' if args.test else 'val/'
 
     if args.test:
         ests = BEST_ESTIMATORS
@@ -224,15 +283,15 @@ def main():
         ests = list(filter(lambda x: args.model in x[0][0], ests))
 
     for est in ests:
-        run_comparison(path, 
+        run_comparison(path,
                        COMPARISON_DATASETS,
-                       METRICS, 
-                       est, 
+                       METRICS,
+                       est,
                        average=True,
                        verbose=False,
                        ignore_cache=args.ignore_cache,
                        test=args.test,
-                       cv_folds=1 if args.val else 4)
+                       cv_folds=4 if args.test else 1)
 
 
 if __name__ == "__main__":

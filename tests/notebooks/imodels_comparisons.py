@@ -14,17 +14,22 @@
 # ---
 
 # %%
-import itertools
+import itertools 
+import math
 import os
 import pickle as pkl
+from typing import List, Dict, Any
 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.datasets import fetch_openml
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+mpl.rcParams['figure.dpi'] = 250
 
 # %load_ext autoreload
 # %autoreload 2
@@ -33,7 +38,7 @@ from sklearn.datasets import fetch_openml
 if os.getcwd().split('/')[-1] != 'imodels':
     os.chdir('..')
 
-MODEL_COMPARISON_PATH = 'tests/test_data/comparison_data/'
+MODEL_COMPARISON_PATH = 'tests/comparison_data/'
 
 # %%
 datasets = [
@@ -46,44 +51,92 @@ datasets = [
         ("vote", 56),
     ]
 
-def get_comparison_result(path, estimator_name, test=False):
+def get_comparison_result(path: str, estimator_name: str, test=False) -> Dict[str, Any]:
     if test:
-        result_file = path + f'{estimator_name}_test_comparisons.pkl'
+        result_file = path + 'test/' + f'{estimator_name}_test_comparisons.pkl'
     else:
-        result_file = path + f'{estimator_name}_comparisons.pkl'
+        result_file = path + 'val/' + f'{estimator_name}_comparisons.pkl'
     return pkl.load(open(result_file, 'rb'))
 
-def get_all_results(path, test=False):
-    if test:
-        fn = lambda x: '_test_' in x
-    else:
-        fn = lambda x: '_test_' not in x
-    result_files = list(filter(fn, os.listdir(path)))
-    all_results_df = pd.Series([], dtype='float32')
-    all_est_names = []
-    for result_file in result_files:
-        result = pkl.load(open(MODEL_COMPARISON_PATH + result_file, 'rb'))
-        all_results_df = pd.concat([all_results_df, result['df']])
-        all_est_names += result['estimators']
-    return {'df': all_results_df, 'estimators': all_est_names}
+def get_x_and_y(result_data: pd.Series) -> (pd.Series, pd.Series):
+    complexities = result_data[result_data.index.str.contains('complexity')]
+    rocs = result_data[result_data.index.str.contains('ROC')]
+    complexity_sort_indices = complexities.argsort()    
+    return complexities[complexity_sort_indices], rocs[complexity_sort_indices]
 
-def viz_comparison(result, dpi=83):
-    '''Plot ROC AUC vs complexity
+def viz_comparison_val_average(result: Dict[str, Any]) -> None:
+    '''Plot dataset-averaged ROC AUC vs dataset-averaged complexity for different hyperparameter settings
+    of a single model, including zoomed-in plot of overlapping region
     '''
-    result_df, result_estimators = result['df'], result['estimators']
-    plt.figure(dpi=dpi)
+    result_data = result['df']['mean']
+    result_estimators = result['estimators']
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
     for est in np.unique(result_estimators):
         
-        est_result_df = result_df[result_df.index.str.contains(est)]
-        complexities = est_result_df[est_result_df.index.str.contains('Complexity')]
-        rocs = est_result_df[est_result_df.index.str.contains('ROC')]
-        complexity_sort_indices = complexities.argsort()
+        est_result_data = result_data[result_data.index.str.contains(est)]
+        x, y = get_x_and_y(est_result_data)  
+        axes[0].plot(x, y, marker='o', markersize=4, label=est.replace('_', ' '))
+        
+        if est in result['auc_of_auc'].index:
+            area = result['auc_of_auc'][est]
+            label = est.split(' - ')[1] + f' AUC: {area:.3f}'
+            axes[1].plot(x, y, marker='o', markersize=4, label=label.replace('_', ' '))
 
-        plt.plot(complexities[complexity_sort_indices], rocs[complexity_sort_indices], label=est.replace('_', ' '))
+    for ax in axes:
+        ax.set_xlabel('complexity score')
+        ax.set_ylabel('ROC AUC')
+        ax.legend(frameon=False, handlelength=1) 
+    axes[0].set_title('average ROC AUC across all comparison datasets')
+    axes[1].set_xlim(result['auc_of_auc_lb'], result['auc_of_auc_ub'])
+    axes[1].set_title('Overlapping, low (<30) complexity region only')
     
-    plt.xlabel('Complexity score')
-    plt.ylabel('Average ROC AUC across comparison datasets')
-    plt.legend(frameon=False, handlelength=1)
+    plt.tight_layout()
+    plt.show()
+
+def viz_comparison_test_average(results: List[Dict[str, Any]]) -> None:
+    '''Plot dataset-averaged ROC AUC vs dataset-averaged complexity for different models
+    '''
+    for result in results:
+        mean_result = result['df']['mean']
+        est = result['estimators'][0]
+        x, y = get_x_and_y(mean_result)  
+        plt.plot(x, y, marker='o', markersize=2, linewidth=1, label=est.replace('_', ' '))
+    plt.xlim(0, 30)
+    plt.xlabel('complexity score', size=8)
+    plt.ylabel('ROC AUC', size=8)
+    plt.title('average ROC AUC across all comparison datasets', size=8)
+    plt.legend(frameon=False, handlelength=1, fontsize=8)
+    plt.show()
+
+def viz_comparison_datasets(result: Dict[str, Any], cols=3, figsize=(14, 10), test=False) -> None:
+    '''Plot ROC AUC vs complexity for different datasets and models (not averaged)
+    '''
+    if test:
+        results_df = pd.concat([r['df'] for r in result])
+        results_estimators = [r['estimators'][0] for r in result]
+    else:
+        results_df = result['df']
+        results_estimators = np.unique(result['estimators'])
+
+    datasets = list(results_df.columns)[:-2]
+    n_rows = int(math.ceil(len(datasets) / cols))
+    fig, axes = plt.subplots(n_rows, cols, figsize=figsize)
+
+    for i, dataset in enumerate(datasets):
+        curr_ax = axes[i // cols, i % cols]
+        results_data = results_df[dataset]
+        for est in np.unique(results_estimators):
+            results_data_est = results_data[results_data.index.str.contains(est)]
+            x, y = get_x_and_y(results_data_est)
+            curr_ax.plot(x, y, marker='o', markersize=4, label=est.replace('_', ' '))
+        
+        curr_ax.set_xlim(0, 30)
+        curr_ax.set_xlabel('complexity score')
+        curr_ax.set_ylabel('ROC AUC')
+        curr_ax.set_title(f'dataset {dataset}')
+        curr_ax.legend(frameon=False, handlelength=1)
+    
+    plt.tight_layout()
     plt.show()
 
 
@@ -98,14 +151,25 @@ for dataset_name, data_id in datasets:
     shape = dataset.data.shape
     class_counts = np.unique(dataset.target, return_counts=True)[1]
     metadata.append([dataset_name, shape[0], shape[1], class_counts[0], class_counts[1], np.max(class_counts) / np.sum(class_counts)])
-pd.DataFrame(metadata, columns=columns).set_index('name')
+pd.DataFrame(metadata, columns=columns).set_index('name') 
 
 # %% [markdown]
 # # complexity vs. ROC Area plot for all models
 
 # %%
-result_files = get_all_results(MODEL_COMPARISON_PATH, test=True)
-viz_comparison(result_files, 250)
+test_models = [
+    'random_forest', 
+    'gradient_boosting', 
+    'skope_rules', 
+    'rulefit', 
+    'fplasso', 
+    'fpskope',
+    'grl',
+    'oner',
+    'brs']
+test_results = [get_comparison_result(MODEL_COMPARISON_PATH, mname, test=True) for mname in test_models]
+viz_comparison_test_average(test_results)
+viz_comparison_datasets(test_results, cols=2, figsize=(13, 18), test=True)
 
 # %% [markdown]
 # # hyperparameter tuning plots for each model
@@ -116,48 +180,55 @@ viz_comparison(result_files, 250)
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'random_forest')
-viz_comparison(comparison_result)
+viz_comparison_val_average(comparison_result)
+viz_comparison_datasets(comparison_result)
 
 # %% [markdown]
 # ## Gradient boosted trees
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'gradient_boosting')
-viz_comparison(comparison_result)
+viz_comparison_val_average(comparison_result)
+viz_comparison_datasets(comparison_result)
 
 # %% [markdown]
 # ## SkopeRules
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'skope_rules')
-viz_comparison(comparison_result)
+viz_comparison_val_average(comparison_result)
+viz_comparison_datasets(comparison_result)
 
 # %% [markdown]
 # ## RuleFit
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'rulefit')
-viz_comparison(comparison_result)
+viz_comparison_val_average(comparison_result)
+viz_comparison_datasets(comparison_result)
 
 # %% [markdown]
 # ## FPLasso
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'fplasso')
-viz_comparison(comparison_result)
+viz_comparison_val_average(comparison_result)
+viz_comparison_datasets(comparison_result)
 
 # %% [markdown]
 # ## FPSkope
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'fpskope')
-viz_comparison(comparison_result)
+viz_comparison_val_average(comparison_result)
+viz_comparison_datasets(comparison_result)
 
 # %% [markdown]
 # ## BRL
 
 # %%
 comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, 'brl')
-viz_comparison(comparison_result)
+viz_comparison_val_average(comparison_result)
+viz_comparison_datasets(comparison_result)
 
 # %%
