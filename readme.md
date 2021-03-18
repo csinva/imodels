@@ -14,7 +14,7 @@
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
   <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=3">
+  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=4">
 </p>  
 
 
@@ -103,8 +103,8 @@ Demos are contained in the [notebooks](notebooks) folder.
 > 
 > we also include some demos of posthoc analysis, which occurs after fitting models
 >
->  - [posthoc.ipynb](notebooks/2_posthoc.ipynb) - shows different simple analyses to interpret a trained model
->  - [uncertainty.ipynb](notebooks/3_uncertainty.ipynb) - basic code to get uncertainty estimates for a model
+>  - [posthoc.ipynb](notebooks/posthoc_analysis.ipynb) - shows different simple analyses to interpret a trained model
+>  - [uncertainty.ipynb](notebooks/uncertainty_analysis.ipynb) - basic code to get uncertainty estimates for a model
 
 ## Support for different tasks
 

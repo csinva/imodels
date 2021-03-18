@@ -16,16 +16,17 @@ setuptools.setup(
     url="https://github.com/csinva/imodels",
     packages=setuptools.find_packages(exclude=['tests']),
     install_requires=[
-        'numpy',
-        'scipy',
-        'matplotlib',
-        'pandas',
-        'scikit-learn>=0.23.0', # 0.23+ only works on py3.6+
         'cvxpy',
         'cvxopt',
-        'mlxtend',
+        'dvu', # for visualization
+        'matplotlib',        
+        'mlxtend',        
+        'numpy',        
+        'pandas',
         'pytest',
         'pytest-cov',
+        'scipy',
+        'scikit-learn>=0.23.0', # 0.23+ only works on py3.6+        
         'tqdm'
     ],
     python_requires='>=3.6',
