@@ -40,8 +40,6 @@ def viz_comparison_val_average(result: Dict[str, Any]) -> None:
             label = est.split(' - ')[1] + f' AUC: {area:.3f}'
             axes[1].plot(x, y, marker='o', markersize=4, label=label.replace('_', ' '))
 
-
-#         ax.legend(frameon=False, handlelength=1) 
     axes[0].set_title('average ROC AUC across all comparison datasets')
     axes[1].set_xlim(result['auc_of_auc_lb'], result['auc_of_auc_ub'])
     axes[1].set_title('Overlapping, low (<30) complexity region only')
@@ -49,7 +47,8 @@ def viz_comparison_val_average(result: Dict[str, Any]) -> None:
     for ax in axes:
         ax.set_xlabel('complexity score')
         ax.set_ylabel('ROC AUC')
-        dvu.line_legend(ax=ax)    
+        # ax.legend(frameon=False, handlelength=1)
+        dvu.line_legend(fontsize=10, ax=ax)    
     plt.tight_layout()
 
 def viz_comparison_test_average(results: List[Dict[str, Any]]) -> None:
