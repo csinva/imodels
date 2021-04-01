@@ -2,6 +2,7 @@
 Code modified from https://github.com/tmadl/sklearn-random-bits-forest
 '''
 import argparse
+import glob
 import os
 import pickle as pkl
 import time
@@ -298,7 +299,7 @@ def main():
     parser.add_argument('--ignore_cache', action='store_true')
     parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--parallel_id', type=int, default=None)
-    parser.add_argument('--combine', type=int, default=None)
+    parser.add_argument('--combine', action='store_true')
     args = parser.parse_args()
 
     path = os.path.dirname(os.path.realpath(__file__)) + "/comparison_data/"
