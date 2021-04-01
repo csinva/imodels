@@ -224,14 +224,17 @@ def compare_estimators(estimators: list,
     return mean_results, std_results
 
 
-def run_comparison(path, datasets, metrics, estimators,
-                   average=True, verbose=False, ignore_cache=False, test=False, cv_folds=4):
+def run_comparison(path, datasets, metrics, estimators, 
+                   parallel_id=None, verbose=False, ignore_cache=False, test=False, cv_folds=4):
 
     estimator_name = estimators[0][0].split(' - ')[0]
     if test:
         model_comparison_file = path + f'{estimator_name}_test_comparisons.pkl'
     else:
         model_comparison_file = path + f'{estimator_name}_comparisons.pkl'
+    if parallel_id is not None:
+        model_comparison_file = f'_{parallel_id}.'.join(model_comparison_file.split('.'))
+
     if os.path.isfile(model_comparison_file) and not ignore_cache:
         print(f'{estimator_name} results already computed and cached. use --ignore_cache to recompute')
         return
@@ -259,8 +262,33 @@ def run_comparison(path, datasets, metrics, estimators,
         'metrics': metrics_list,
         'df': df,
     }
-    compute_auc_of_auc(output_dict)
+    if parallel_id is None:
+        compute_auc_of_auc(output_dict)
     pkl.dump(output_dict, open(model_comparison_file, 'wb'))
+
+
+def combine_comparisons(path, model):
+    all_files = glob.glob(path + '*')
+    model_files = list(filter(lambda x: model in x, all_files))
+    model_files_sorted = sorted(model_files, key=lambda x: int(x.split('_')[-1][:-4]))
+    results_sorted = [pkl.load(open(f, 'rb')) for f in model_files_sorted]
+
+    df = pd.concat([r['df'] for r in results_sorted])
+    estimators = [r['estimators'][0] for r in results_sorted]
+
+    output_dict = {
+        'estimators': estimators,
+        'comparison_datasets': results_sorted[0]['comparison_datasets'],
+        'metrics': results_sorted[0]['metrics'],
+        'df': df,
+    }
+    compute_auc_of_auc(output_dict)
+
+    combined_filename = '.'.join(model_files_sorted[0].split(f'_0.'))
+    pkl.dump(output_dict, open(combined_filename, 'wb'))
+
+    for f in model_files_sorted:
+        os.remove(f)
 
 
 def main():
@@ -269,10 +297,16 @@ def main():
     parser.add_argument('--test', action='store_true')
     parser.add_argument('--ignore_cache', action='store_true')
     parser.add_argument('--model', type=str, default=None)
+    parser.add_argument('--parallel_id', type=int, default=None)
+    parser.add_argument('--combine', type=int, default=None)
     args = parser.parse_args()
 
     path = os.path.dirname(os.path.realpath(__file__)) + "/comparison_data/"
     path += 'test/' if args.test else 'val/'
+
+    if args.combine:
+        combine_comparisons(path, args.model)
+        return
 
     if args.test:
         ests = BEST_ESTIMATORS
@@ -281,13 +315,15 @@ def main():
     
     if args.model:
         ests = list(filter(lambda x: args.model in x[0][0], ests))
+        if args.parallel_id is not None:
+            ests = [[est[args.parallel_id]] for est in ests]
 
     for est in ests:
         run_comparison(path,
                        COMPARISON_DATASETS,
                        METRICS,
                        est,
-                       average=True,
+                       parallel_id=args.parallel_id,
                        verbose=False,
                        ignore_cache=args.ignore_cache,
                        test=args.test,
