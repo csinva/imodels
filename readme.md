@@ -153,6 +153,6 @@ If it's useful for you, please cite the package using the below, but more import
     year         = 2021,
     author       = {Chandan Singh and Keyan Nasseri and Bin Yu},
     version      = {v0.2.8},
-    doi          = {10.5281/zenodo.4598963},
+    doi          = {10.5281/zenodo.4026886},
     url          = {https://github.com/csinva/imodels}
 }
