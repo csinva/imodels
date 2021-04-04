@@ -14,7 +14,7 @@
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
   <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=4">
+  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=5">
 </p>  
 
 
@@ -132,16 +132,13 @@ Different models support different machine-learning tasks. Current support for d
     - [sklearn-expertsys](https://github.com/tmadl/sklearn-expertsys) - by [@tmadl](https://github.com/tmadl) and [@kenben](https://github.com/kenben) based on original code by [Ben Letham](http://lethalletham.com/)
     - [rulefit](https://github.com/christophM/rulefit) - by [@christophM](https://github.com/christophM)
     - [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) - by the [skope-rules team](https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst) (including [@ngoix](https://github.com/ngoix), [@floriangardin](https://github.com/floriangardin), [@datajms](https://github.com/datajms), [Bibi Ndiaye](), [Ronan Gautier]())
-- Compatible packages
-    - [sklearn](https://github.com/scikit-learn/scikit-learn)
-    - [dtreeviz](https://github.com/parrt/dtreeviz)
 - Related packages
-    - [gplearn](https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e) for symbolic regression/classification
-    - [pygam](https://github.com/dswah/pyGAM) for generative additive models
+    - [gplearn](https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e): symbolic regression/classification
+    - [pygam](https://github.com/dswah/pyGAM): generative additive models
 - Updates
     - For updates, star the repo, [see this related repo](https://github.com/csinva/csinva.github.io), or follow [@csinva_](https://twitter.com/csinva_)
     - Please make sure to give authors of original methods / base implementations appropriate credit!
-    - Pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!
+    - Contributing: pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!
 
 If it's useful for you, please cite the package using the below, but more importantly make sure to give authors of original methods / base implementations credit:
 
