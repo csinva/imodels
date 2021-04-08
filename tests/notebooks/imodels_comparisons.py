@@ -1,7 +1,7 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: ipynb,../tests/notebooks//py:percent
+#     formats: ipynb,../../tests/notebooks//py:percent
 #     text_representation:
 #       extension: .py
 #       format_name: percent
@@ -16,27 +16,21 @@
 # %%
 # %load_ext autoreload
 # %autoreload 2
-import itertools 
-import math
 import os
 import pickle as pkl
-from typing import List, Dict, Any
+from typing import Dict, Any
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.datasets import fetch_openml
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 mpl.rcParams['figure.dpi'] = 250
-import dvu  # for visualization
 
 # change working directory to project root
 if os.getcwd().split('/')[-1] != 'imodels':
-    os.chdir('..')
-from notebooks import viz
+    os.chdir('../..')
+from experiments.notebooks import viz
 
 def get_comparison_result(path: str, estimator_name: str, test=False) -> Dict[str, Any]:
     if test:
@@ -45,7 +39,8 @@ def get_comparison_result(path: str, estimator_name: str, test=False) -> Dict[st
         result_file = path + 'val/' + f'{estimator_name}_comparisons.pkl'
     return pkl.load(open(result_file, 'rb'))    
     
-MODEL_COMPARISON_PATH = 'tests/comparison_data/'
+MODEL_COMPARISON_PATH = 'experiments/comparison_data/'
+
 datasets = [
         ("breast-cancer", 13),
         ("breast-w", 15),

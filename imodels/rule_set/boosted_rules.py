@@ -1,11 +1,8 @@
 from copy import deepcopy
 from functools import partial
 
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-from sklearn.base import BaseEstimator
-from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, MetaEstimatorMixin
+from sklearn.base import BaseEstimator, ClassifierMixin, MetaEstimatorMixin
 from sklearn.preprocessing import normalize
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils.multiclass import check_classification_targets
@@ -16,7 +13,7 @@ from imodels.util.convert import tree_to_code, tree_to_rules
 from imodels.util.rule import Rule, get_feature_dict, replace_feature_name
 
 
-class BoostedRulesClassifier(BaseEstimator, RuleSet, MetaEstimatorMixin):
+class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, ClassifierMixin):
     '''An easy-interpretable classifier optimizing simple logical rules.
     Currently limited to only binary classification.
     '''
@@ -51,6 +48,7 @@ class BoostedRulesClassifier(BaseEstimator, RuleSet, MetaEstimatorMixin):
         """
 
         X, y = check_X_y(X, y)
+        check_classification_targets(y)
         self.n_features_ = X.shape[1]
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = list(self.feature_dict_.keys())
@@ -138,6 +136,12 @@ class BoostedRulesClassifier(BaseEstimator, RuleSet, MetaEstimatorMixin):
         X = check_array(X)
         return self.eval_weighted_rule_sum(X) > 0
 
+    # def predict(self, X):
+    #     """Predict outcome for X
+    #     """
+    #     check_is_fitted(self)
+    #     X = check_array(X)
+    #     return self.predict_proba(X).argmax(axis=1)
 
     def __str__(self):
         try:

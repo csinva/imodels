@@ -12,12 +12,12 @@ from imodels.util.rule import Rule
 
 
 def score_precision_recall(X,
-              y,
-              rules: List[List[str]],
-              samples: List[List[int]],
-              features: List[List[int]],
-              feature_names: List[str],
-              oob: bool = True) -> List[Rule]:
+                           y,
+                           rules: List[List[str]],
+                           samples: List[List[int]],
+                           features: List[List[int]],
+                           feature_names: List[str],
+                           oob: bool = True) -> List[Rule]:
 
     scored_rules = []
 
@@ -67,15 +67,18 @@ def _eval_rule_perf(rule: str, X, y) -> Tuple[float, float]:
     return y_detected.mean(), float(true_pos) / pos
 
 
-def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
-                prediction_task='regression',
-                max_rules=2000, random_state=None) -> Tuple[List[Rule], List[float], float]:
+def score_linear(X, y, rules: List[str], 
+                 alphas=None, 
+                 cv=3,
+                 penalty='l1',
+                 prediction_task='regression',
+                 max_rules=2000, 
+                 random_state=None) -> Tuple[List[Rule], List[float], float]:
     if alphas is None:
         if prediction_task == 'regression':
             alphas = _alpha_grid(X, y)
         elif prediction_task == 'classification':
-            alphas = [1 / alpha
-                     for alpha in np.logspace(-4, 4, num=10, base=10)]
+            alphas = [1 / alpha for alpha in np.logspace(-4, 4, num=10, base=10)]
 
     coef_zero_threshold = 1e-6 / np.mean(np.abs(y))
     mse_cv_scores = []
@@ -88,7 +91,7 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
         if prediction_task == 'regression':
             m = Lasso(alpha=alpha, random_state=random_state)
         else:
-            m = LogisticRegression(penalty='l1', C=1/alpha, solver='liblinear')
+            m = LogisticRegression(penalty=penalty, C=1/alpha, solver='liblinear')
         mse_cv = 0
         for train_index, test_index in kf.split(X):
             X_train, X_test = X[train_index], X[test_index]
@@ -108,7 +111,7 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
     if prediction_task == 'regression':
         lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
     else:
-        lscv = LogisticRegression(penalty='l1', C=1/best_alpha, solver='liblinear',
+        lscv = LogisticRegression(penalty=penalty, C=1/best_alpha, solver='liblinear',
                                   random_state=random_state, max_iter=200)
     lscv.fit(X, y)
 
