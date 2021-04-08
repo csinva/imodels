@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 mpl.rcParams['figure.dpi'] = 250
 
 # change working directory to project root
-if os.getcwd().split('/')[-1] != 'imodels':
+if os.getcwd().split('/')[-1] == 'notebooks':
     os.chdir('../..')
 from experiments.notebooks import viz
 
