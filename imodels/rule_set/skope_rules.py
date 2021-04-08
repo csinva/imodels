@@ -73,21 +73,17 @@ and predict_top_rules() functions).
 [5] Friedman and Popescu, Gradient directed regularization, Technical Report, 2004.
 '''
 import numbers
-from collections.abc import Iterable
 from warnings import warn
-from typing import Union, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
 import pandas
 import six
-from sklearn.base import BaseEstimator
-from sklearn.ensemble import BaggingClassifier, BaggingRegressor
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.convert import tree_to_rules
 from imodels.util.rule import replace_feature_name, get_feature_dict, Rule
 from imodels.util.extract import extract_skope
 from imodels.util.score import score_precision_recall
@@ -97,7 +93,7 @@ INTEGER_TYPES = (numbers.Integral, np.integer)
 BASE_FEATURE_NAME = "feature_"
 
 
-class SkopeRulesClassifier(BaseEstimator, RuleSet):
+class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
     """An easy-interpretable classifier optimizing simple logical rules.
 
     Parameters

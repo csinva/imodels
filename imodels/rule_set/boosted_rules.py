@@ -1,19 +1,19 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 from copy import deepcopy
 from functools import partial
-from sklearn.base import BaseEstimator
-from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, MetaEstimatorMixin
+
+import numpy as np
+from sklearn.base import BaseEstimator, ClassifierMixin, MetaEstimatorMixin
+from sklearn.preprocessing import normalize
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.convert import tree_to_code
+from imodels.util.convert import tree_to_code, tree_to_rules
+from imodels.util.rule import Rule, get_feature_dict, replace_feature_name
 
 
-class BoostedRulesClassifier(BaseEstimator, RuleSet, MetaEstimatorMixin):
+class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, ClassifierMixin):
     '''An easy-interpretable classifier optimizing simple logical rules.
     Currently limited to only binary classification.
     '''
@@ -48,7 +48,12 @@ class BoostedRulesClassifier(BaseEstimator, RuleSet, MetaEstimatorMixin):
         """
 
         X, y = check_X_y(X, y)
-        self.n_features_in_ = X.shape[1]
+        check_classification_targets(y)
+        self.n_features_ = X.shape[1]
+        self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
+        self.feature_placeholders = list(self.feature_dict_.keys())
+        self.feature_names = list(self.feature_dict_.values())
+
         n_train = y.shape[0]
         w = np.ones(n_train) / n_train
         self.estimators_ = []
@@ -83,6 +88,28 @@ class BoostedRulesClassifier(BaseEstimator, RuleSet, MetaEstimatorMixin):
             self.estimators_.append(deepcopy(clf))
             self.estimator_weights_.append(alpha_m)
             self.estimator_errors_.append(err_m)
+        
+        rules = []
+        for est, est_weight in zip(self.estimators_, self.estimator_weights_):
+            est_rules = tree_to_rules(est, self.feature_placeholders)
+            
+            rule_scores = np.max(est.predict_proba(X), axis=0)
+            rule_scores = (rule_scores * 2) - 1
+
+            # order scores to correspond to correct rule
+            rule_pred_class = np.argmax(est.tree_.value[1:], axis=2).flatten()
+            rule_scores = rule_scores[rule_pred_class]
+
+            # weight negatively rules that predict class 0
+            rule_scores[rule_pred_class[0]] *= -1
+
+            compos_score = est_weight * rule_scores
+            rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
+
+        self.rules_without_feature_names_ = rules
+        self.rules_ = [
+            replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
+        ]
         self.complexity_ = len(self.estimators_)
         return self
 
@@ -97,17 +124,24 @@ class BoostedRulesClassifier(BaseEstimator, RuleSet, MetaEstimatorMixin):
         n_estimators = len(self.estimators_)
         n_classes = 2  # hard-coded for now!
         preds = np.zeros((n_train, n_classes))
-        # print('shapes', preds.shape, self.estimator_weights_[0], self.estimators_[0].predict_proba(X).shape)
         for i in range(n_estimators):
             preds += self.estimator_weights_[i] * self.estimators_[i].predict_proba(X)
-        return preds / n_estimators
+        pred_values = preds / n_estimators
+        return normalize(pred_values, norm='l1')
 
     def predict(self, X):
         """Predict outcome for X
         """
         check_is_fitted(self)
         X = check_array(X)
-        return self.predict_proba(X).argmax(axis=1)
+        return self.eval_weighted_rule_sum(X) > 0
+
+    # def predict(self, X):
+    #     """Predict outcome for X
+    #     """
+    #     check_is_fitted(self)
+    #     X = check_array(X)
+    #     return self.predict_proba(X).argmax(axis=1)
 
     def __str__(self):
         try:

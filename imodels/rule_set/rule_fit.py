@@ -12,16 +12,13 @@ import pandas as pd
 from scipy.special import softmax
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.base import TransformerMixin
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from typing import List, Tuple
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.convert import tree_to_rules
 from imodels.util.extract import extract_rulefit
 from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
-from imodels.util.score import score_lasso
+from imodels.util.score import score_linear
 from imodels.util.transforms import Winsorizer, FriedScale
 
 
@@ -144,12 +141,16 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         '''Predict. For regression returns continuous output.
         For classification, returns discrete output.
         '''
+        check_is_fitted(self)
+        X = check_array(X)
         if self.prediction_task == 'regression':
             return self.predict_continuous_output(X)
         else:
             return np.argmax(self.predict_proba(X), axis=1)
 
     def predict_proba(self, X):
+        check_is_fitted(self)
+        X = check_array(X)
         continuous_output = self.predict_continuous_output(X)
         logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
         return softmax(logits, axis=1)
@@ -269,9 +270,12 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         if X_rules.shape[0] > 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
-        return score_lasso(X_concat, y, rules, alphas=self.alphas, cv=self.cv,
-                           prediction_task=self.prediction_task,
-                           max_rules=self.max_rules, random_state=self.random_state)
+        return score_linear(X_concat, y, rules,
+                            alphas=self.alphas,
+                            cv=self.cv,
+                            prediction_task=self.prediction_task,
+                            max_rules=self.max_rules,
+                            random_state=self.random_state)
 
 
 class RuleFitRegressor(RuleFit, RegressorMixin):
