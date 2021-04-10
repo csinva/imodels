@@ -6,6 +6,7 @@ import glob
 import os
 import pickle as pkl
 import time
+from collections import defaultdict
 from typing import Dict, Any
 
 import imodels
@@ -122,7 +123,7 @@ def get_dataset(data_id, onehot_encode_strings=True):
 
 
 def compute_auc_of_auc(result: Dict[str, Any], dpi=83) -> None:
-    mean_results = result['df']['mean']
+    mean_results = result['df']['mean ROCAUC']
     estimators = np.unique(result['estimators'])
     xs = np.empty(len(estimators), dtype=object)
     ys = xs.copy()
@@ -179,15 +180,12 @@ def compare_estimators(estimators: list,
     if type(metrics) != list:
         raise Exception("Argument metrics needs to be a list of tuples containing ('name', scoring function pairs)")
     
-    mean_results = {d[0]: [] for d in datasets}
-    std_results = {d[0]: [] for d in datasets}
+    mean_results = defaultdict(lambda: [])
     
     # loop over datasets
     for d in tqdm(datasets):
         if verbose:
             print("comparing on dataset", d[0])
-        mean_result = []
-        std_result = []
         X, y = get_dataset(d[1])
         
         # loop over estimators
@@ -204,25 +202,26 @@ def compare_estimators(estimators: list,
                 start = time.time()
                 est.fit(X[train_idx, :], y[train_idx])
                 y_pred = est.predict(X[test_idx, :])
+                y_pred_proba = est.predict_proba(X[test_idx, :])[:, 1]
                 end = time.time()
                 
                 # loop over metrics
                 for i, (met_name, met) in enumerate(metrics):
+                    colname = d[0] + ' ' + met_name
                     if met_name == 'time':
                         mresults[i].append(end - start)
                     elif met_name == 'complexity':
                         mresults[i].append(get_complexity(est))
+                    elif met_name == 'ROCAUC':
+                        mresults[i].append(roc_auc_score(y[test_idx], y_pred_proba))
                     else:
                         mresults[i].append(met(y[test_idx], y_pred))
 
             for i in range(len(mresults)):
-                mean_result.append(np.mean(mresults[i]))
-                std_result.append(np.std(mresults[i]) / n_cv_folds)
-        
-        mean_results[d[0]] = mean_result
-        std_results[d[0]] = std_result
-        
-    return mean_results, std_results
+                colname = d[0] + ' ' + met_name
+                mean_results[colname].append(np.mean(mresults[i]))
+
+    return mean_results
 
 
 def run_comparison(path, datasets, metrics, estimators, 
@@ -240,7 +239,7 @@ def run_comparison(path, datasets, metrics, estimators,
         print(f'{estimator_name} results already computed and cached. use --ignore_cache to recompute')
         return
 
-    mean_results, std_results = compare_estimators(estimators=estimators,
+    mean_results = compare_estimators(estimators=estimators,
                                                    datasets=datasets,
                                                    metrics=metrics,
                                                    verbose=verbose,
@@ -255,7 +254,9 @@ def run_comparison(path, datasets, metrics, estimators,
     df = pd.DataFrame.from_dict(mean_results)
     df.index = column_titles
 
-    df['mean'], df['std'] = df.mean(axis=1), df.std(axis=1)
+    for (met_name, met) in metrics:
+        met_df = df.loc[:, [met_name in col for col in df.columns]]
+        df['mean' + ' ' + met_name] = met_df.mean(axis=1)
 
     output_dict = {
         'estimators': estimators_list,
@@ -263,8 +264,8 @@ def run_comparison(path, datasets, metrics, estimators,
         'metrics': metrics_list,
         'df': df,
     }
-    if parallel_id is None:
-        compute_auc_of_auc(output_dict)
+    # if parallel_id is None:
+    #     compute_auc_of_auc(output_dict)
     pkl.dump(output_dict, open(model_comparison_file, 'wb'))
 
 
