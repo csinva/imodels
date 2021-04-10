@@ -22,22 +22,22 @@ models = [
 if not args.test_only:
     
     for model in models:
-        s.run(f'python tests/compare_models.py --model {model}')
+        s.run(f'python experiments/compare_models.py --model {model}')
 
     brl_job_ids = []
     for i in range(26):
-        job_id = s.run(f'python tests/compare_models.py --model brl --parallel_id {i}')
+        job_id = s.run(f'python experiments/compare_models.py --model brl --parallel_id {i}')
         brl_job_ids.append(job_id)
-    s.run(f'python tests/compare_models.py --combine --model brl', depends_on=brl_job_ids)
+    s.run(f'python experiments/compare_models.py --combine --model brl', depends_on=brl_job_ids)
 
 if not args.val_only:
     models += ['grl', 'oner', 'brs']
 
     for model in models:
-        s.run(f'python tests/compare_models.py --model {model} --test')
+        s.run(f'python experiments/compare_models.py --model {model} --test')
     
     brl_job_ids = []
     for i in range(8):
-        job_id = s.run(f'python tests/compare_models.py --test --model brl --parallel_id {i}')
+        job_id = s.run(f'python experiments/compare_models.py --test --model brl --parallel_id {i}')
         brl_job_ids.append(job_id)
-    s.run(f'python tests/compare_models.py --combine --test --model brl', depends_on=brl_job_ids)
+    s.run(f'python experiments/compare_models.py --combine --test --model brl', depends_on=brl_job_ids)

@@ -50,28 +50,31 @@ MAX_START_COMPLEXITY = 10
 
 
 class Model:
-    def __init__(self, name: str, cls, vary_param: str, vary_param_val: Any, fixed_param: str, fixed_param_val: Any):
+    def __init__(self, name: str, cls, vary_param: str, vary_param_val: Any, 
+                 fixed_param: str = None, fixed_param_val: Any = None):
         self.name = name
         self.cls = cls
         self.fixed_param = fixed_param
         self.fixed_param_val = fixed_param_val
         self.vary_param = vary_param
         self.vary_param_val = vary_param_val
-        self.kwargs = {self.fixed_param: fixed_param_val, self.vary_param: self.vary_param_val}
+        self.kwargs = {self.vary_param: self.vary_param_val}
+        if self.fixed_param is not None:
+            self.kwargs[self.fixed_param] = self.fixed_param_val
 
 
-# BEST_ESTIMATORS = [
-#     [('random_forest', rf(n_estimators=n, max_depth=2)) for n in np.arange(1, 8)],
-#     [('gradient_boosting', gb(n_estimators=n, max_depth=1)) for n in np.linspace(1, 20, 10, dtype=int)],
-#     [('skope_rules', skope(n_estimators=n, max_depth=1)) for n in np.linspace(2, 200, 10, dtype=int)],
-#     [('rulefit', rfit(max_rules=n, tree_size=2)) for n in np.linspace(2, 100, 10, dtype=int)],
-#     [('fplasso', fpl(max_rules=n, maxcardinality=1)) for n in np.linspace(2, 100, 10, dtype=int)],
-#     [('fpskope', fps(maxcardinality=n, max_depth_duplication=3)) for n in np.arange(1, 5)],
-#     [('brl', brl(listlengthprior=n, maxcardinality=2)) for n in np.linspace(1, 16, 8)],
-#     [('grl', grl(max_depth=n)) for n in np.arange(1, 6)],
-#     [('oner', oner(max_depth=n)) for n in np.arange(1, 6)],
-#     [('brs', brs(n_estimators=n)) for n in np.linspace(1, 32, 10, dtype=int)]
-# ]
+BEST_ESTIMATORS = [
+    [Model('random_forest', rf, 'n_estimators', n, 'max_depth', 1) for n in np.arange(1, 15)],
+    [Model('gradient_boosting', gb, 'n_estimators', n, 'max_depth', 1) for n in np.linspace(1, 20, 10, dtype=int)],
+    [Model('skope_rules', skope, 'n_estimators', n, 'max_depth', 1) for n in np.linspace(2, 200, 10, dtype=int)],
+    [Model('rulefit', rfit, 'max_rules', n, 'tree_size', 2) for n in np.linspace(2, 100, 10, dtype=int)],
+    [Model('fplasso', fpl, 'max_rules', n, 'maxcardinality', 1) for n in np.linspace(2, 100, 10, dtype=int)],
+    [Model('fpskope', fps, 'maxcardinality', n, 'max_depth_duplication', 3) for n in np.arange(1, 5)],
+    [Model('brl', brl, 'listlengthprior', n, 'maxcardinality', 2) for n in np.linspace(1, 16, 8)],
+    [Model('grl', grl, 'max_depth', n) for n in np.arange(1, 6)],
+    [Model('oner', oner, 'max_depth', n) for n in np.arange(1, 6)],
+    [Model('brs', brs, 'n_estimators', n) for n in np.linspace(1, 32, 10, dtype=int)]
+]
 
 ALL_ESTIMATORS = []
 ALL_ESTIMATORS.append(
@@ -106,9 +109,9 @@ ALL_ESTIMATORS.append(
     + [Model('fpskope - max_dedup_3', fps, 'maxcardinality', n, 'max_depth_duplication', 3) for n in [1, 2, 3, 4]]
 )
 ALL_ESTIMATORS.append(
-    [Model('brl - max_card_1', brl, 'listlengthprior', n, 'maxcardinality', 1) for n in np.linspace(1, 20, 10)]
-    + [Model('brl - max_card_2', brl, 'listlengthprior', n, 'maxcardinality', 2) for n in np.linspace(1, 16, 8)]
-    + [Model('brl - max_card_3', brl, 'listlengthprior', n, 'maxcardinality', 3) for n in np.linspace(1, 16, 8)]
+    [Model('brl - max_card_1', brl, 'listlengthprior', n, 'maxcardinality', 1) for n in np.linspace(1, 20, 10, dtype=int)]
+    + [Model('brl - max_card_2', brl, 'listlengthprior', n, 'maxcardinality', 2) for n in np.linspace(1, 16, 8, dtype=int)]
+    + [Model('brl - max_card_3', brl, 'listlengthprior', n, 'maxcardinality', 3) for n in np.linspace(1, 16, 8, dtype=int)]
 )
 
 
@@ -196,7 +199,8 @@ def compare_estimators(estimators: list,
     mean_results = defaultdict(lambda: [])
     for e in estimators:
         mean_results[e.vary_param].append(e.vary_param_val)
-        mean_results[e.fixed_param].append(e.fixed_param_val)
+        if e.fixed_param is not None:
+            mean_results[e.fixed_param].append(e.fixed_param_val)
 
     # loop over datasets
     for d in tqdm(datasets):
@@ -283,7 +287,7 @@ def run_comparison(path, datasets, metrics, estimators,
 
 def combine_comparisons(path, model):
     all_files = glob.glob(path + '*')
-    model_files = list(filter(lambda x: model in x, all_files))
+    model_files = list(filter(lambda x: (model in x) and ('comparisons_' in x), all_files))
     model_files_sorted = sorted(model_files, key=lambda x: int(x.split('_')[-1][:-4]))
     results_sorted = [pkl.load(open(f, 'rb')) for f in model_files_sorted]
 
@@ -306,6 +310,8 @@ def combine_comparisons(path, model):
 
 
 def main():
+
+    np.random.seed(0)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')

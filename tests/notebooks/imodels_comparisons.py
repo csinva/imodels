@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.0
+#       jupytext_version: 1.11.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -100,3 +100,9 @@ for model_name in ['random_forest', 'gradient_boosting', 'skope_rules',
     comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, model_name)
     viz.viz_comparison_val_average(comparison_result)
     plt.show()
+
+# %%
+df = get_comparison_result(MODEL_COMPARISON_PATH, 'brl', True)['df']
+df.loc[:, ['time' in c for c in df.columns]]
+
+# %%

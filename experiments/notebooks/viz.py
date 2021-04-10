@@ -70,11 +70,13 @@ def viz_comparison_datasets(result: Union[Dict[str, Any], List[Dict[str, Any]]],
     if test:
         results_data = pd.concat([r['df'] for r in result])
         results_estimators = [r['estimators'][0] for r in result]
+        results_datasets = result[0]['comparison_datasets']
     else:
         results_data = result['df']
         results_estimators = np.unique(result['estimators'])
+        results_datasets = result['comparison_datasets']
 
-    datasets = list(map(lambda x: x[0], result['comparison_datasets']))
+    datasets = list(map(lambda x: x[0], results_datasets))
     n_rows = int(math.ceil(len(datasets) / cols))
     plt.figure(figsize=figsize)
     for i, dataset in enumerate(datasets):
