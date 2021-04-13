@@ -1,15 +1,19 @@
 import numpy as np
-from sklearn.base import ClassifierMixin, RegressorMixin
 from typing import List
 
 from imodels.rule_set.rule_fit import RuleFit
 from imodels.util.score import score_linear
+from sklearn.base import ClassifierMixin, RegressorMixin, BaseEstimator
+
+from .util import extract_ensemble
 
 
 class StableLinear(RuleFit):
 
     def __init__(self,
-                 start_rules,
+                 weak_learners: List[BaseEstimator],
+                 max_complexity: int,
+                 min_mult: int = 1,
                  penalty='l1',
                  tree_size=4,
                  sample_fract='default',
@@ -35,16 +39,17 @@ class StableLinear(RuleFit):
                          alphas,
                          cv,
                          random_state)
-        self.start_rules = start_rules
+        self.max_complexity = max_complexity
+        self.weak_learners = weak_learners
         self.penalty = penalty
+        self.min_mult = min_mult
 
-    def fit(self, X, y=None, feature_names=None, undiscretized_features=[]):
-        self.undiscretized_features = undiscretized_features
+    def fit(self, X, y=None, feature_names=None):
         super().fit(X, y, feature_names=feature_names)
         return self
 
     def _extract_rules(self, X, y) -> List[str]:
-        return self.start_rules
+        return extract_ensemble(self.weak_learners, X, y, self.min_mult)
 
     def _score_rules(self, X, y, rules):
         X_concat = np.zeros([X.shape[0], 0])

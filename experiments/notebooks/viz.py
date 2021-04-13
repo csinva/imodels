@@ -17,7 +17,7 @@ def get_x_and_y(result_data: pd.Series, x_col: str, y_col: str) -> (pd.Series, p
     return complexities[complexity_sort_indices], rocs[complexity_sort_indices]
 
 
-def viz_comparison_val_average(result: Dict[str, Any]) -> None:
+def viz_comparison_val_average(result: Dict[str, Any], y_column: str = 'PRAUC') -> None:
     '''Plot dataset-averaged ROC AUC vs dataset-averaged complexity for different hyperparameter settings
     of a single model, including zoomed-in plot of overlapping region
     '''
@@ -27,7 +27,7 @@ def viz_comparison_val_average(result: Dict[str, Any]) -> None:
     for est in np.unique(result_estimators):
 
         est_result_data = result_data[result_data.index.str.contains(est)]
-        x, y = get_x_and_y(est_result_data, 'mean_complexity', 'mean_ROCAUC')
+        x, y = get_x_and_y(est_result_data, 'mean_complexity', f'mean_{y_column}')
         axes[0].plot(x, y, marker='o', markersize=4, label=est.replace('_', ' '))
 
         if est in result['auc_of_auc'].index:
@@ -42,18 +42,18 @@ def viz_comparison_val_average(result: Dict[str, Any]) -> None:
     for ax in axes:
         ax.set_xlabel('complexity score')
         ax.set_ylabel('ROC AUC')
-        # ax.legend(frameon=False, handlelength=1)
-        dvu.line_legend(fontsize=10, ax=ax)    
+        ax.legend(frameon=False, handlelength=1)
+        # dvu.line_legend(fontsize=10, ax=ax)    
     plt.tight_layout()
 
 
-def viz_comparison_test_average(results: List[Dict[str, Any]]) -> None:
+def viz_comparison_test_average(results: List[Dict[str, Any]], y_column: str = 'PRAUC') -> None:
     '''Plot dataset-averaged ROC AUC vs dataset-averaged complexity for different models
     '''
     for result in results:
         result_data = result['df']
         est = result['estimators'][0]
-        x, y = get_x_and_y(result_data, 'mean_complexity', 'mean_ROCAUC')  
+        x, y = get_x_and_y(result_data, 'mean_complexity', f'mean_{y_column}')
         plt.plot(x, y, marker='o', markersize=2, linewidth=1, label=est.replace('_', ' '))
     plt.xlim(0, 30)
     plt.xlabel('complexity score', size=8)
@@ -63,8 +63,11 @@ def viz_comparison_test_average(results: List[Dict[str, Any]]) -> None:
     dvu.line_legend(fontsize=8, adjust_text_labels=True)
 
 
-def viz_comparison_datasets(result: Union[Dict[str, Any], List[Dict[str, Any]]], 
-                            cols=3, figsize=(14, 10), test=False) -> None:
+def viz_comparison_datasets(result: Union[dict[str, Any], list[dict[str, Any]]],
+                            y_column: str = 'PRAUC',
+                            cols=3, 
+                            figsize=(14, 10), 
+                            test=False) -> None:
     '''Plot ROC AUC vs complexity for different datasets and models (not averaged)
     '''
     if test:
@@ -84,7 +87,7 @@ def viz_comparison_datasets(result: Union[Dict[str, Any], List[Dict[str, Any]]],
 
         for est in np.unique(results_estimators):
             est_result_data = results_data[results_data.index.str.contains(est)]
-            x, y = get_x_and_y(est_result_data, dataset + '_complexity', dataset + '_ROCAUC')
+            x, y = get_x_and_y(est_result_data, dataset + '_complexity', dataset + f'_{y_column}')
             plt.plot(x, y, marker='o', markersize=4, label=est.replace('_', ' '))
 
         plt.xlim(0, 30)

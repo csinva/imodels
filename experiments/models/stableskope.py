@@ -1,16 +1,20 @@
 import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from typing import List
 
 from imodels.rule_set.skope_rules import SkopeRulesClassifier
 from imodels.util.rule import Rule
 from imodels.util.score import score_precision_recall
+from sklearn.base import BaseEstimator
+
+from .util import extract_ensemble
 
 
 class StableSkopeClassifier(SkopeRulesClassifier):
 
     def __init__(self,
-                 start_rules,
+                 weak_learners: List[BaseEstimator],
+                 max_complexity: int,
+                 min_mult: int = 1,
                  precision_min=0.5,
                  recall_min=0.4,
                  n_estimators=10,
@@ -37,15 +41,16 @@ class StableSkopeClassifier(SkopeRulesClassifier):
                          min_samples_split,
                          n_jobs,
                          random_state)
-        self.start_rules = start_rules
+        self.weak_learners = weak_learners
+        self.max_complexity = max_complexity
+        self.min_mult = min_mult
 
-    def fit(self, X, y=None, feature_names=None, undiscretized_features=[], sample_weight=None):
-        self.undiscretized_features = undiscretized_features
+    def fit(self, X, y=None, feature_names=None, sample_weight=None):
         super().fit(X, y, feature_names=feature_names, sample_weight=sample_weight)
         return self
 
     def _extract_rules(self, X, y) -> List[str]:
-        return [self.start_rules], [np.arange(X.shape[0])], [np.arange(len(self.feature_names))]
+        return [extract_ensemble(self.weak_learners, X, y, self.min_mult)], [np.arange(X.shape[0])], [np.arange(len(self.feature_names))]
 
     def _score_rules(self, X, y, rules) -> List[Rule]:
         return score_precision_recall(X, y,

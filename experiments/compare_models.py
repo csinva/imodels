@@ -2,121 +2,29 @@
 Code modified from https://github.com/tmadl/sklearn-random-bits-forest
 '''
 import argparse
-import glob
 import os
 import pickle as pkl
 import time
-from collections import defaultdict
-from typing import Dict, Any
+from collections import defaultdict, OrderedDict
+from typing import Any, Callable
 
 import numpy as np
 import pandas as pd
-from imodels import (
-    SkopeRulesClassifier as skope, RuleFitClassifier as rfit, FPLassoClassifier as fpl, 
-    FPSkopeClassifier as fps, BayesianRuleListClassifier as brl, GreedyRuleListClassifier as grl,
-    OneRClassifier as oner, BoostedRulesClassifier as brs
-)
 from scipy.interpolate import interp1d
 from scipy.sparse import issparse
+from sklearn.base import BaseEstimator
 from sklearn.datasets import fetch_openml
-from sklearn.ensemble import RandomForestClassifier as rf, GradientBoostingClassifier as gb
-from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.model_selection import KFold, train_test_split
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score, make_scorer
+from sklearn.model_selection import KFold, train_test_split, cross_validate
 from tqdm import tqdm
 
-
-COMPARISON_DATASETS = [
-    ("breast-cancer", 13),
-    ("breast-w", 15),
-    ("credit-g", 31),
-    ("haberman", 43),
-    ("heart", 1574),
-    ("labor", 4),
-    ("vote", 56),
-]
-
-METRICS = [
-    ('accuracy', accuracy_score),
-    ('ROCAUC', roc_auc_score),
-    ('time', None),
-    ('complexity', None)
-]
-
-# complexity score under which a model is considered interpretable
-LOW_COMPLEXITY_CUTOFF = 30
-
-# min complexity of curves included in the AUC-of-AUC comparison must be below this value
-MAX_START_COMPLEXITY = 10
+from experiments.config import COMPARISON_DATASETS, BEST_ESTIMATORS, ALL_ESTIMATORS, ENSEMBLES
+from experiments.util import Model, MODEL_COMPARISON_PATH
 
 
-class Model:
-    def __init__(self, name: str, cls, vary_param: str, vary_param_val: Any, 
-                 fixed_param: str = None, fixed_param_val: Any = None):
-        self.name = name
-        self.cls = cls
-        self.fixed_param = fixed_param
-        self.fixed_param_val = fixed_param_val
-        self.vary_param = vary_param
-        self.vary_param_val = vary_param_val
-        self.kwargs = {self.vary_param: self.vary_param_val}
-        if self.fixed_param is not None:
-            self.kwargs[self.fixed_param] = self.fixed_param_val
-
-
-BEST_ESTIMATORS = [
-    [Model('random_forest', rf, 'n_estimators', n, 'max_depth', 1) for n in np.arange(1, 15)],
-    [Model('gradient_boosting', gb, 'n_estimators', n, 'max_depth', 1) for n in np.linspace(1, 20, 10, dtype=int)],
-    [Model('skope_rules', skope, 'n_estimators', n, 'max_depth', 1) for n in np.linspace(2, 200, 10, dtype=int)],
-    [Model('rulefit', rfit, 'max_rules', n, 'tree_size', 2) for n in np.linspace(2, 100, 10, dtype=int)],
-    [Model('fplasso', fpl, 'max_rules', n, 'maxcardinality', 1) for n in np.linspace(2, 100, 10, dtype=int)],
-    [Model('fpskope', fps, 'maxcardinality', n, 'max_depth_duplication', 3) for n in np.arange(1, 5)],
-    [Model('brl', brl, 'listlengthprior', n, 'maxcardinality', 2) for n in np.linspace(1, 16, 8)],
-    [Model('grl', grl, 'max_depth', n) for n in np.arange(1, 6)],
-    [Model('oner', oner, 'max_depth', n) for n in np.arange(1, 6)],
-    [Model('brs', brs, 'n_estimators', n) for n in np.linspace(1, 32, 10, dtype=int)]
-]
-
-ALL_ESTIMATORS = []
-ALL_ESTIMATORS.append(
-    [Model('random_forest - depth_1', rf, 'n_estimators', n, 'max_depth', 1) for n in np.linspace(1, 40, 10, dtype=int)]
-    + [Model('random_forest - depth_2', rf, 'n_estimators', n, 'max_depth', 2) for n in np.linspace(1, 15, 10, dtype=int)]
-    + [Model('random_forest - depth_3', rf, 'n_estimators', n, 'max_depth', 3) for n in np.arange(1, 8)]
-)
-ALL_ESTIMATORS.append(
-    [Model('gradient_boosting - depth_1', gb, 'n_estimators', n, 'max_depth', 1) for n in np.linspace(1, 40, 10, dtype=int)]
-    + [Model('gradient_boosting - depth_2', gb, 'n_estimators', n, 'max_depth', 2) for n in np.linspace(1, 15, 10, dtype=int)]
-    + [Model('gradient_boosting - depth_3', gb, 'n_estimators', n, 'max_depth', 3) for n in np.arange(1, 8)]
-)
-ALL_ESTIMATORS.append(
-    [Model('skope_rules - depth_1', skope, 'n_estimators', n, 'max_depth', 1) for n in np.linspace(2, 200, 10, dtype=int)]
-    + [Model('skope_rules - depth_2', skope, 'n_estimators', n, 'max_depth', 2) for n in np.linspace(2, 200, 10, dtype=int)]
-    + [Model('skope_rules - depth_3', skope, 'n_estimators', n, 'max_depth', 3) for n in np.linspace(2, 80, 10, dtype=int)]
-)
-ALL_ESTIMATORS.append(
-    [Model('rulefit - depth_1', rfit, 'max_rules', n, 'tree_size', 2) for n in np.linspace(2, 100, 10, dtype=int)]
-    + [Model('rulefit - depth_2', rfit, 'max_rules', n, 'tree_size', 4) for n in np.linspace(2, 50, 10, dtype=int)]
-    + [Model('rulefit - depth_3', rfit, 'max_rules', n, 'tree_size', 8) for n in np.linspace(2, 50, 10, dtype=int)]
-)
-ALL_ESTIMATORS.append(
-    [Model('fplasso - max_card_1', fpl, 'max_rules', n, 'maxcardinality', 1) for n in np.linspace(2, 100, 10, dtype=int)]
-    + [Model('fplasso - max_card_2', fpl, 'max_rules', n, 'maxcardinality', 2) for n in np.linspace(2, 60, 10, dtype=int)]
-    + [Model('fplasso - max_card_3', fpl, 'max_rules', n, 'maxcardinality', 3) for n in np.linspace(2, 50, 10, dtype=int)]
-)
-ALL_ESTIMATORS.append(
-    [Model('fpskope - No dedup', fps, 'maxcardinality', n, 'max_depth_duplication', None) for n in [1, 2]]
-    + [Model('fpskope - max_dedup_1', fps, 'maxcardinality', n, 'max_depth_duplication', 1) for n in [1, 2, 3, 4]]
-    + [Model('fpskope - max_dedup_2', fps, 'maxcardinality', n, 'max_depth_duplication', 2) for n in [1, 2, 3, 4]]
-    + [Model('fpskope - max_dedup_3', fps, 'maxcardinality', n, 'max_depth_duplication', 3) for n in [1, 2, 3, 4]]
-)
-ALL_ESTIMATORS.append(
-    [Model('brl - max_card_1', brl, 'listlengthprior', n, 'maxcardinality', 1) for n in np.linspace(1, 20, 10, dtype=int)]
-    + [Model('brl - max_card_2', brl, 'listlengthprior', n, 'maxcardinality', 2) for n in np.linspace(1, 16, 8, dtype=int)]
-    + [Model('brl - max_card_3', brl, 'listlengthprior', n, 'maxcardinality', 3) for n in np.linspace(1, 16, 8, dtype=int)]
-)
-
-
-def get_complexity(estimator):
-    if isinstance(estimator, (rf, gb)):
+def get_complexity(estimator: BaseEstimator) -> float:
+    if isinstance(estimator, (RandomForestClassifier, GradientBoostingClassifier)):
         complexity = 0
         for tree in estimator.estimators_:
             if type(tree) is np.ndarray:
@@ -125,13 +33,13 @@ def get_complexity(estimator):
             
             # add 0.5 for every antecedent after the first
             if tree.get_depth() > 1:
-                complexity += ((2 ** tree.get_depth()) - 1) * 0.5 
+                complexity += ((2 ** tree.get_depth()) - 1) * 0.5
         return complexity
     else:
         return estimator.complexity_
 
 
-def get_dataset(data_id, onehot_encode_strings=True): 
+def get_dataset(data_id: int, onehot_encode_strings: bool = True) -> tuple[np.array, np.array]:
     dataset = fetch_openml(data_id=data_id, as_frame=False)
     X = dataset.data
     if issparse(X):
@@ -140,7 +48,14 @@ def get_dataset(data_id, onehot_encode_strings=True):
     return np.nan_to_num(X.astype('float32')), y
 
 
-def compute_auc_of_auc(result: Dict[str, Any], dpi=83) -> None:
+def compute_auc_of_auc(result: dict[str, Any],
+                       low_complexity_cutoff: int = 30,
+                       max_start_complexity: int = 10,
+                       column: str = 'mean_PRAUC') -> None:
+
+    # LOW_COMPLEXITY_CUTOFF: complexity score under which a model is considered interpretable
+    # MAX_START_COMPLEXITY: min complexity of curves included in the AUC-of-AUC comparison must be below this value
+
     result_data = result['df']
     estimators = np.unique(result['estimators'])
     xs = np.empty(len(estimators), dtype=object)
@@ -153,19 +68,19 @@ def compute_auc_of_auc(result: Dict[str, Any], dpi=83) -> None:
         complexity_sort_indices = complexities_unsorted.argsort()
         complexities = complexities_unsorted[complexity_sort_indices]
 
-        roc_aucs = est_result_df['mean_ROCAUC'][complexity_sort_indices]
+        roc_aucs = est_result_df[column][complexity_sort_indices]
         xs[i] = complexities.values
         ys[i] = roc_aucs.values
 
     # filter out curves which start too complex
-    mask = list(map(lambda x: min(x) < MAX_START_COMPLEXITY, xs))
+    mask = list(map(lambda x: min(x) < max_start_complexity, xs))
     xs, ys, estimators = xs[mask], ys[mask], estimators[mask]
 
     # find overlapping complexity region for roc-of-roc comparison
     auc_of_auc_lb = max([x[0] for x in xs])
     endpts = np.array([x[-1] for x in xs])
     auc_of_auc_ub = min(endpts[endpts > auc_of_auc_lb])
-    auc_of_auc_ub = min(auc_of_auc_ub, LOW_COMPLEXITY_CUTOFF)
+    auc_of_auc_ub = min(auc_of_auc_ub, low_complexity_cutoff)
 
     # handle non-overlapping curves
     mask = endpts > auc_of_auc_lb
@@ -187,14 +102,17 @@ def compute_auc_of_auc(result: Dict[str, Any], dpi=83) -> None:
     result['auc_of_auc_ub'] = auc_of_auc_ub
 
 
-def compare_estimators(estimators: list,
-                       datasets,
-                       metrics: list,
-                       n_cv_folds=10, decimals=3, cellsize=22, verbose=True):
+def compare_estimators(estimators: list[Model],
+                       datasets: list[tuple[str, int]],
+                       metrics: list[tuple[str, Callable]],
+                       scorers: dict[str, Callable],
+                       n_cv_folds: int,
+                       verbose: bool = True,
+                       split_seed: int = 0) -> dict[str, list['float or int metric']]:
     if type(estimators) != list:
-        raise Exception("First argument needs to be a list of tuples containing ('name', Estimator pairs)")
+        raise Exception("First argument needs to be a list of Models")
     if type(metrics) != list:
-        raise Exception("Argument metrics needs to be a list of tuples containing ('name', scoring function pairs)")
+        raise Exception("Argument metrics needs to be a list containing ('name', callable) pairs")
 
     mean_results = defaultdict(lambda: [])
     for e in estimators:
@@ -207,45 +125,56 @@ def compare_estimators(estimators: list,
         if verbose:
             print("comparing on dataset", d[0])
         X, y = get_dataset(d[1])
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=split_seed)
 
         # loop over estimators
         for model in estimators:
-            mresults = [[] for i in range(len(metrics))]
             est = model.cls(**model.kwargs)
 
-            # loop over folds
-            if n_cv_folds == 1:
-                fold_iterator = [train_test_split(np.arange(X.shape[0]), test_size=0.2, random_state=0)]
+            if n_cv_folds > 1:
+                fold_iterator = KFold(n_splits=n_cv_folds, random_state=0, shuffle=True)
+                cv_scores = cross_validate(est, X_train, y_train, cv=fold_iterator, scoring=scorers)
+                metric_results = {k.split('_')[1]: np.mean(v) for k, v in cv_scores.items() if k != 'score_time'}
             else:
-                kf = KFold(n_splits=n_cv_folds)
-                fold_iterator = kf.split(X)
-            for train_idx, test_idx in fold_iterator:
+                if n_cv_folds == 1:
+                    X_fit, X_eval, y_fit, y_eval = train_test_split(X_train, y_train, 
+                                                                    test_size=0.2, random_state=0)
+                else:
+                    X_fit, X_eval, y_fit, y_eval = X_train, X_test, y_train, y_test
+
                 start = time.time()
-                est.fit(X[train_idx, :], y[train_idx])
-                y_pred = est.predict(X[test_idx, :])
-                y_pred_proba = est.predict_proba(X[test_idx, :])[:, 1]
+                est.fit(X_fit, y_fit)
                 end = time.time()
+                y_pred = est.predict(X_eval)
+                y_pred_proba = est.predict_proba(X_eval)[:, 1]
 
                 # loop over metrics
+                metric_results = {}
                 for i, (met_name, met) in enumerate(metrics):
-                    if met_name == 'time':
-                        mresults[i].append(end - start)
-                    elif met_name == 'complexity':
-                        mresults[i].append(get_complexity(est))
-                    elif met_name == 'ROCAUC':
-                        mresults[i].append(roc_auc_score(y[test_idx], y_pred_proba))
-                    else:
-                        mresults[i].append(met(y[test_idx], y_pred))
+                    if met is not None:
+                        tgt = y_pred if met_name == 'accuracy' else y_pred_proba
+                        metric_results[met_name] = met(y_eval, tgt)
+                metric_results['complexity'] = get_complexity(est)
+                metric_results['time'] = end - start
 
-            for i, (met_name, met) in enumerate(metrics):
+            for met_name, met_val in metric_results.items():
                 colname = d[0] + '_' + met_name
-                mean_results[colname].append(np.mean(mresults[i]))
+                mean_results[colname].append(met_val)
 
     return mean_results
 
 
-def run_comparison(path, datasets, metrics, estimators, 
-                   parallel_id=None, verbose=False, ignore_cache=False, test=False, cv_folds=4):
+def run_comparison(path: str, 
+                   datasets: list[tuple[str, int]], 
+                   metrics: list[tuple[str, Callable]],
+                   scorers: dict[str, Callable],
+                   estimators: list[Model], 
+                   parallel_id: int = None, 
+                   split_seed: int = 0, 
+                   verbose: bool = False, 
+                   ignore_cache: bool = False, 
+                   test: bool = False, 
+                   cv_folds: int = 4):
 
     estimator_name = estimators[0].name.split(' - ')[0]
     if test:
@@ -262,8 +191,10 @@ def run_comparison(path, datasets, metrics, estimators,
     mean_results = compare_estimators(estimators=estimators,
                                       datasets=datasets,
                                       metrics=metrics,
+                                      scorers=scorers,
                                       verbose=verbose,
-                                      n_cv_folds=cv_folds)
+                                      n_cv_folds=cv_folds,
+                                      split_seed=split_seed)
 
     estimators_list = [e.name for e in estimators]
     metrics_list = [m[0] for m in metrics]
@@ -281,58 +212,51 @@ def run_comparison(path, datasets, metrics, estimators,
         'df': df,
     }
     if parallel_id is None:
-        compute_auc_of_auc(output_dict)
+        compute_auc_of_auc(output_dict, column='mean_PRAUC')
     pkl.dump(output_dict, open(model_comparison_file, 'wb'))
 
 
-def combine_comparisons(path, model):
-    all_files = glob.glob(path + '*')
-    model_files = list(filter(lambda x: (model in x) and ('comparisons_' in x), all_files))
-    model_files_sorted = sorted(model_files, key=lambda x: int(x.split('_')[-1][:-4]))
-    results_sorted = [pkl.load(open(f, 'rb')) for f in model_files_sorted]
-
-    df = pd.concat([r['df'] for r in results_sorted])
-    estimators = [r['estimators'][0] for r in results_sorted]
-
-    output_dict = {
-        'estimators': estimators,
-        'comparison_datasets': results_sorted[0]['comparison_datasets'],
-        'metrics': results_sorted[0]['metrics'],
-        'df': df,
-    }
-    compute_auc_of_auc(output_dict)
-
-    combined_filename = '.'.join(model_files_sorted[0].split(f'_0.'))
-    pkl.dump(output_dict, open(combined_filename, 'wb'))
-
-    for f in model_files_sorted:
-        os.remove(f)
-
-
 def main():
+
+    metrics = [
+        ('accuracy', accuracy_score),
+        ('ROCAUC', roc_auc_score),
+        ('PRAUC', average_precision_score),
+        ('complexity', None),
+        ('time', None)
+    ]
+    scorers = OrderedDict({
+        'accuracy': make_scorer(accuracy_score),
+        'ROCAUC': make_scorer(roc_auc_score, needs_proba=True), 
+        'PRAUC': make_scorer(average_precision_score, needs_proba=True),
+        'complexity': lambda m, x, y: get_complexity(m)
+    })
 
     np.random.seed(0)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')
+    parser.add_argument('--cv', action='store_true')
+    parser.add_argument('--ensemble', action='store_true')
     parser.add_argument('--ignore_cache', action='store_true')
     parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--parallel_id', type=int, default=None)
-    parser.add_argument('--combine', action='store_true')
+    parser.add_argument('--split_seed', type=int, default=0)
     args = parser.parse_args()
 
-    path = os.path.dirname(os.path.realpath(__file__)) + "/comparison_data/"
+    path = MODEL_COMPARISON_PATH
     path += 'test/' if args.test else 'val/'
-
-    if args.combine:
-        combine_comparisons(path, args.model)
-        return
 
     if args.test:
         ests = BEST_ESTIMATORS
+        cv_folds = -1
+    elif args.ensemble:
+        ests = ENSEMBLES
+        cv_folds = -1
     else:
         ests = ALL_ESTIMATORS
-    
+        cv_folds = 4 if args.cv else 1
+
     if args.model:
         ests = list(filter(lambda x: args.model in x[0].name, ests))
         if args.parallel_id is not None:
@@ -341,13 +265,15 @@ def main():
     for est in ests:
         run_comparison(path,
                        COMPARISON_DATASETS,
-                       METRICS,
+                       metrics,
+                       scorers,
                        est,
                        parallel_id=args.parallel_id,
+                       split_seed=args.split_seed,
                        verbose=False,
                        ignore_cache=args.ignore_cache,
                        test=args.test,
-                       cv_folds=4 if args.test else 1)
+                       cv_folds=cv_folds)
 
 
 if __name__ == "__main__":
