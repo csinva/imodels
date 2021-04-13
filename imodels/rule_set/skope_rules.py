@@ -80,7 +80,7 @@ import numpy as np
 import pandas
 import six
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
@@ -270,7 +270,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
         check_classification_targets(y)
         self.n_features_ = X.shape[1]
         self.sample_weight = sample_weight
-        self.classes_ = np.unique(y)
+        self.classes_ = unique_labels(y)
         n_classes = len(self.classes_)
 
         if n_classes < 2:

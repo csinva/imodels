@@ -5,7 +5,7 @@ import random
 from collections import Counter
 from mlxtend.frequent_patterns import fpgrowth
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_list.bayesian_rule_list.brl_util import *
@@ -122,6 +122,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         X, y = check_X_y(X, y)
         check_classification_targets(y)
         self.n_features_in_ = X.shape[1]
+        self.classes_ = unique_labels(y)
 
         itemsets, self.discretizer = extract_fpgrowth(X, y,
                                                       feature_labels=feature_labels,

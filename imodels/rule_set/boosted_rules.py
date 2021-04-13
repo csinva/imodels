@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, MetaEstimatorMixin
 from sklearn.preprocessing import normalize
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
@@ -50,6 +50,8 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         X, y = check_X_y(X, y)
         check_classification_targets(y)
         self.n_features_ = X.shape[1]
+        self.classes_ = unique_labels(y)
+
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = list(self.feature_dict_.keys())
         self.feature_names = list(self.feature_dict_.values())

@@ -12,6 +12,7 @@ import pandas as pd
 from scipy.special import softmax
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.base import TransformerMixin
+from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from typing import List, Tuple
 
@@ -106,6 +107,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
         """
         X, y = check_X_y(X, y)
+        if self.prediction_task == 'classification':
+            self.classes_ = unique_labels(y)
         self.n_features_in_ = X.shape[1]
 
         self.n_features_ = X.shape[1]
