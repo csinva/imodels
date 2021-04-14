@@ -6,7 +6,7 @@ import os
 import pickle as pkl
 import time
 from collections import defaultdict, OrderedDict
-from typing import Any, Callable
+from typing import Any, Callable, List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -39,7 +39,7 @@ def get_complexity(estimator: BaseEstimator) -> float:
         return estimator.complexity_
 
 
-def get_dataset(data_id: int, onehot_encode_strings: bool = True) -> tuple[np.array, np.array]:
+def get_dataset(data_id: int, onehot_encode_strings: bool = True) -> Tuple[np.array, np.array]:
     dataset = fetch_openml(data_id=data_id, as_frame=False)
     X = dataset.data
     if issparse(X):
@@ -48,7 +48,7 @@ def get_dataset(data_id: int, onehot_encode_strings: bool = True) -> tuple[np.ar
     return np.nan_to_num(X.astype('float32')), y
 
 
-def compute_auc_of_auc(result: dict[str, Any],
+def compute_auc_of_auc(result: Dict[str, Any],
                        low_complexity_cutoff: int = 30,
                        max_start_complexity: int = 10,
                        column: str = 'mean_PRAUC') -> None:
@@ -102,13 +102,13 @@ def compute_auc_of_auc(result: dict[str, Any],
     result['auc_of_auc_ub'] = auc_of_auc_ub
 
 
-def compare_estimators(estimators: list[Model],
-                       datasets: list[tuple[str, int]],
-                       metrics: list[tuple[str, Callable]],
-                       scorers: dict[str, Callable],
+def compare_estimators(estimators: List[Model],
+                       datasets: List[Tuple[str, int]],
+                       metrics: List[Tuple[str, Callable]],
+                       scorers: Dict[str, Callable],
                        n_cv_folds: int,
                        verbose: bool = True,
-                       split_seed: int = 0) -> dict[str, list['float or int metric']]:
+                       split_seed: int = 0) -> dict:
     if type(estimators) != list:
         raise Exception("First argument needs to be a list of Models")
     if type(metrics) != list:
@@ -165,10 +165,10 @@ def compare_estimators(estimators: list[Model],
 
 
 def run_comparison(path: str, 
-                   datasets: list[tuple[str, int]], 
-                   metrics: list[tuple[str, Callable]],
-                   scorers: dict[str, Callable],
-                   estimators: list[Model], 
+                   datasets: List[Tuple[str, int]], 
+                   metrics: List[Tuple[str, Callable]],
+                   scorers: Dict[str, Callable],
+                   estimators: List[Model], 
                    parallel_id: int = None, 
                    split_seed: int = 0, 
                    verbose: bool = False, 

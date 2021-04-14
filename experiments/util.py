@@ -1,6 +1,6 @@
 import os
 import pickle as pkl
-from typing import Any
+from typing import Any, Dict, List, Tuple
 
 from sklearn.base import BaseEstimator
 
@@ -11,7 +11,7 @@ MODEL_COMPARISON_PATH = os.path.dirname(os.path.realpath(__file__)) + "/comparis
 class Model:
     def __init__(self, name: str, cls, vary_param: str, vary_param_val: Any, 
                  fixed_param: str = None, fixed_param_val: Any = None,
-                 other_params: dict[str, Any] = {}):
+                 other_params: Dict[str, Any] = {}):
         self.name = name
         self.cls = cls
         self.fixed_param = fixed_param
@@ -24,7 +24,7 @@ class Model:
         self.kwargs = {**self.kwargs, **other_params}
 
 
-def get_comparison_result(path: str, estimator_name: str, test=False) -> dict[str, Any]:
+def get_comparison_result(path: str, estimator_name: str, test=False) -> Dict[str, Any]:
     if test:
         result_file = path + 'test/' + f'{estimator_name}_test_comparisons.pkl'
     else:
@@ -32,7 +32,7 @@ def get_comparison_result(path: str, estimator_name: str, test=False) -> dict[st
     return pkl.load(open(result_file, 'rb'))
 
 
-def get_best_models_under_complexity(c: int, models: list[tuple[str, BaseEstimator]], 
+def get_best_models_under_complexity(c: int, models: List[Tuple[str, BaseEstimator]], 
                                      metric: str = 'mean_PRAUC'):
     init_models = []
     for m_name, m_cls in models:

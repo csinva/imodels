@@ -65,7 +65,7 @@ def viz_comparison_test_average(results: List[Dict[str, Any]], y_column: str = '
         plt.legend(frameon=False, handlelength=1, fontsize=8)
 
 
-def viz_comparison_datasets(result: Union[dict[str, Any], list[dict[str, Any]]],
+def viz_comparison_datasets(result: Union[Dict[str, Any], List[Dict[str, Any]]],
                             y_column: str = 'PRAUC',
                             cols=3, 
                             figsize=(14, 10), 
