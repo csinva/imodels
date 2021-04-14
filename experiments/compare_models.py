@@ -19,7 +19,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_sco
 from sklearn.model_selection import KFold, train_test_split, cross_validate
 from tqdm import tqdm
 
-from experiments.config import COMPARISON_DATASETS, BEST_ESTIMATORS, ALL_ESTIMATORS, ENSEMBLES
+from experiments.config import COMPARISON_DATASETS, BEST_ESTIMATORS, ALL_ESTIMATORS
 from experiments.util import Model, MODEL_COMPARISON_PATH
 
 
@@ -211,7 +211,7 @@ def run_comparison(path: str,
         'metrics': metrics_list,
         'df': df,
     }
-    if parallel_id is None:
+    if not test:
         compute_auc_of_auc(output_dict, column='mean_PRAUC')
     pkl.dump(output_dict, open(model_comparison_file, 'wb'))
 
@@ -237,7 +237,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')
     parser.add_argument('--cv', action='store_true')
-    parser.add_argument('--ensemble', action='store_true')
     parser.add_argument('--ignore_cache', action='store_true')
     parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--parallel_id', type=int, default=None)
@@ -249,9 +248,6 @@ def main():
 
     if args.test:
         ests = BEST_ESTIMATORS
-        cv_folds = -1
-    elif args.ensemble:
-        ests = ENSEMBLES
         cv_folds = -1
     else:
         ests = ALL_ESTIMATORS

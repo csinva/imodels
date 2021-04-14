@@ -18,7 +18,7 @@ def get_x_and_y(result_data: pd.Series, x_col: str, y_col: str) -> (pd.Series, p
 
 
 def viz_comparison_val_average(result: Dict[str, Any], y_column: str = 'PRAUC') -> None:
-    '''Plot dataset-averaged ROC AUC vs dataset-averaged complexity for different hyperparameter settings
+    '''Plot dataset-averaged y_column vs dataset-averaged complexity for different hyperparameter settings
     of a single model, including zoomed-in plot of overlapping region
     '''
     result_data = result['df']
@@ -35,20 +35,20 @@ def viz_comparison_val_average(result: Dict[str, Any], y_column: str = 'PRAUC') 
             label = est.split(' - ')[1] + f' AUC: {area:.3f}'
             axes[1].plot(x, y, marker='o', markersize=4, label=label.replace('_', ' '))
 
-    axes[0].set_title('average ROC AUC across all comparison datasets')
+    axes[0].set_title(f'average {y_column} across all comparison datasets')
     axes[1].set_xlim(result['auc_of_auc_lb'], result['auc_of_auc_ub'])
     axes[1].set_title('Overlapping, low (<30) complexity region only')
 
     for ax in axes:
         ax.set_xlabel('complexity score')
-        ax.set_ylabel('ROC AUC')
+        ax.set_ylabel(y_column)
         ax.legend(frameon=False, handlelength=1)
         # dvu.line_legend(fontsize=10, ax=ax)    
     plt.tight_layout()
 
 
-def viz_comparison_test_average(results: List[Dict[str, Any]], y_column: str = 'PRAUC') -> None:
-    '''Plot dataset-averaged ROC AUC vs dataset-averaged complexity for different models
+def viz_comparison_test_average(results: List[Dict[str, Any]], y_column: str = 'PRAUC', line_legend: bool = False) -> None:
+    '''Plot dataset-averaged y_column vs dataset-averaged complexity for different models
     '''
     for result in results:
         result_data = result['df']
@@ -57,10 +57,12 @@ def viz_comparison_test_average(results: List[Dict[str, Any]], y_column: str = '
         plt.plot(x, y, marker='o', markersize=2, linewidth=1, label=est.replace('_', ' '))
     plt.xlim(0, 30)
     plt.xlabel('complexity score', size=8)
-    plt.ylabel('ROC AUC', size=8)
-    plt.title('average ROC AUC across all comparison datasets', size=8)
-#     plt.legend(frameon=False, handlelength=1, fontsize=8)
-    dvu.line_legend(fontsize=8, adjust_text_labels=True)
+    plt.ylabel(y_column, size=8)
+    plt.title(f'average {y_column} across all comparison datasets', size=8)
+    if line_legend:
+        dvu.line_legend(fontsize=8, adjust_text_labels=True)
+    else:
+        plt.legend(frameon=False, handlelength=1, fontsize=8)
 
 
 def viz_comparison_datasets(result: Union[dict[str, Any], list[dict[str, Any]]],
@@ -68,7 +70,7 @@ def viz_comparison_datasets(result: Union[dict[str, Any], list[dict[str, Any]]],
                             cols=3, 
                             figsize=(14, 10), 
                             test=False) -> None:
-    '''Plot ROC AUC vs complexity for different datasets and models (not averaged)
+    '''Plot y_column vs complexity for different datasets and models (not averaged)
     '''
     if test:
         results_data = pd.concat([r['df'] for r in result])
@@ -92,9 +94,9 @@ def viz_comparison_datasets(result: Union[dict[str, Any], list[dict[str, Any]]],
 
         plt.xlim(0, 30)
         plt.xlabel('complexity score')
-        plt.ylabel('ROC AUC')
+        plt.ylabel(y_column)
 #             plt.legend()
-        dvu.line_legend(fontsize=8,
+        dvu.line_legend(fontsize=10,
                         adjust_text_labels=False,
                         xoffset_spacing=0,
                         extra_spacing=0)

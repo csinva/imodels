@@ -29,7 +29,7 @@ BEST_ESTIMATORS = [
     [Model('rulefit', rfit, 'max_rules', n, 'tree_size', 2) for n in np.linspace(2, 100, 10, dtype=int)],
     [Model('fplasso', fpl, 'max_rules', n, 'maxcardinality', 1) for n in np.linspace(2, 100, 10, dtype=int)],
     [Model('fpskope', fps, 'maxcardinality', n, 'max_depth_duplication', 3) for n in np.arange(1, 5)],
-    [Model('brl', brl, 'listlengthprior', n, 'maxcardinality', 2) for n in np.linspace(1, 16, 8, dtype=int)],
+    [Model('brl', brl, 'listlengthprior', n, 'maxcardinality', 1) for n in np.linspace(1, 20, 10, dtype=int)],
     [Model('grl', grl, 'max_depth', n) for n in np.arange(1, 6)],
     [Model('oner', oner, 'max_depth', n) for n in np.arange(1, 6)],
     [Model('brs', brs, 'n_estimators', n) for n in np.linspace(1, 32, 10, dtype=int)]
@@ -38,18 +38,18 @@ BEST_ESTIMATORS = [
 weak_learners = [('skope_rules', skope), ('rulefit', rfit), ('fplasso', fpl), ('fpskope', fps), ('brs', brs)]
 weak_learners_inst = [get_best_models_under_complexity(c, weak_learners) for c in np.arange(5, 30, 2)]
 stbl_kw = [{'weak_learners': wl_lst} for wl_lst in weak_learners_inst]
-stbl_cs = enumerate(np.arange(5, 30, 2))
+stbl_cs = lambda: enumerate(np.arange(5, 30, 2))
 
-ENSEMBLES = [
-    [Model('stbl_l2 - mm0', stbl, 'max_complexity', c, 'min_mult', 0, stbl_kw[i]) for i, c in stbl_cs],
-    [Model('stbl_l2 - mm1', stbl, 'max_complexity', c, 'min_mult', 1, stbl_kw[i]) for i, c in stbl_cs],
-    [Model('stbl_l2 - mm2', stbl, 'max_complexity', c, 'min_mult', 2, stbl_kw[i]) for i, c in stbl_cs],
-    [Model('stbl_l1 - mm0', stbl, 'max_complexity', c, 'min_mult', 0, stbl_kw[i]) for i, c in stbl_cs],
-    [Model('stbl_l1 - mm1', stbl, 'max_complexity', c, 'min_mult', 1, stbl_kw[i]) for i, c in stbl_cs],
-    [Model('stbl_l1 - mm2', stbl, 'max_complexity', c, 'min_mult', 2, stbl_kw[i]) for i, c in stbl_cs],
-    [Model('stbl_skp - mm0', stbs, 'max_complexity', c, 'min_mult', 0, stbl_kw[i]) for i, c in stbl_cs],
-    [Model('stbl_skp - mm1', stbs, 'max_complexity', c, 'min_mult', 1, stbl_kw[i]) for i, c in stbl_cs],
-    [Model('stbl_skp - mm2', stbs, 'max_complexity', c, 'min_mult', 2, stbl_kw[i]) for i, c in stbl_cs],
+BEST_ESTIMATORS += [
+    [Model('stbl_l2_mm0', stbl, 'max_complexity', c, 'min_mult', 0, {**stbl_kw[i], 'penalty': 'l2'}) for i, c in stbl_cs()],
+    [Model('stbl_l2_mm1', stbl, 'max_complexity', c, 'min_mult', 1, {**stbl_kw[i], 'penalty': 'l2'}) for i, c in stbl_cs()],
+    [Model('stbl_l2_mm2', stbl, 'max_complexity', c, 'min_mult', 2, {**stbl_kw[i], 'penalty': 'l2'}) for i, c in stbl_cs()],
+    [Model('stbl_l1_mm0', stbl, 'max_complexity', c, 'min_mult', 0, stbl_kw[i]) for i, c in stbl_cs()],
+    [Model('stbl_l1_mm1', stbl, 'max_complexity', c, 'min_mult', 1, stbl_kw[i]) for i, c in stbl_cs()],
+    [Model('stbl_l1_mm2', stbl, 'max_complexity', c, 'min_mult', 2, stbl_kw[i]) for i, c in stbl_cs()],
+    # [Model('stbl_skp_mm0', stbs, 'max_complexity', c, 'min_mult', 0, stbl_kw[i]) for i, c in stbl_cs()],
+    # [Model('stbl_skp_mm1', stbs, 'max_complexity', c, 'min_mult', 1, stbl_kw[i]) for i, c in stbl_cs()],
+    # [Model('stbl_skp_mm2', stbs, 'max_complexity', c, 'min_mult', 2, stbl_kw[i]) for i, c in stbl_cs()]
 ]
 
 ALL_ESTIMATORS = []

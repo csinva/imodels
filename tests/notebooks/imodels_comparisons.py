@@ -78,7 +78,10 @@ test_models = [
     'brl',
     'grl',
     'oner',
-    'brs']
+    'brs',
+    'stbl_l2_mm0',
+    'stbl_l2_mm1', 
+    'stbl_l2_mm2']
 test_results = [get_comparison_result(MODEL_COMPARISON_PATH, mname, test=True)
                 for mname in test_models]
 viz.viz_comparison_test_average(test_results)
