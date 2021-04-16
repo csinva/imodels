@@ -37,7 +37,7 @@
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
 <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
 <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=0">
+<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=5">
 </p>
 <h2 id="imodels-overview">imodels overview</h2>
 <p>Implementations of different popular interpretable models can be easily used and installed:</p>
@@ -179,8 +179,8 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <p><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">clinical decision rule notebook</a> - shows an example of using <code>imodels</code> for deriving a clinical decision rule</p>
 <p>we also include some demos of posthoc analysis, which occurs after fitting models</p>
 <ul>
-<li><a href="notebooks/2_posthoc.ipynb">posthoc.ipynb</a> - shows different simple analyses to interpret a trained model</li>
-<li><a href="notebooks/3_uncertainty.ipynb">uncertainty.ipynb</a> - basic code to get uncertainty estimates for a model</li>
+<li><a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> - shows different simple analyses to interpret a trained model</li>
+<li><a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> - basic code to get uncertainty estimates for a model</li>
 </ul>
 </blockquote>
 <h2 id="support-for-different-tasks">Support for different tasks</h2>
@@ -256,23 +256,37 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <li><a href="https://github.com/scikit-learn-contrib/skope-rules">skope-rules</a> - by the <a href="https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst">skope-rules team</a> (including <a href="https://github.com/ngoix">@ngoix</a>, <a href="https://github.com/floriangardin">@floriangardin</a>, <a href="https://github.com/datajms">@datajms</a>, <a href="">Bibi Ndiaye</a>, <a href="">Ronan Gautier</a>)</li>
 </ul>
 </li>
-<li>Compatible packages<ul>
-<li><a href="https://github.com/scikit-learn/scikit-learn">sklearn</a></li>
-<li><a href="https://github.com/parrt/dtreeviz">dtreeviz</a></li>
-</ul>
-</li>
 <li>Related packages<ul>
-<li><a href="https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e">gplearn</a> for symbolic regression/classification</li>
-<li><a href="https://github.com/dswah/pyGAM">pygam</a> for generative additive models</li>
+<li><a href="https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e">gplearn</a>: symbolic regression/classification</li>
+<li><a href="https://github.com/dswah/pyGAM">pygam</a>: generative additive models</li>
 </ul>
 </li>
 <li>Updates<ul>
 <li>For updates, star the repo, <a href="https://github.com/csinva/csinva.github.io">see this related repo</a>, or follow <a href="https://twitter.com/csinva_">@csinva_</a></li>
 <li>Please make sure to give authors of original methods / base implementations appropriate credit!</li>
-<li>Pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!</li>
+<li>Contributing: pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!</li>
 </ul>
 </li>
 </ul>
+<p>If it's useful for you, please cite the package using the below, but more importantly make sure to give authors of original methods / base implementations credit:</p>
+<p>```r
+@software{
+imodels2021,
+title
+= {{imodels: a python package for fitting interpretable models}},
+publisher
+= {Zenodo},
+year
+= 2021,
+author
+= {Chandan Singh and Keyan Nasseri and Bin Yu},
+version
+= {v0.2.8},
+doi
+= {10.5281/zenodo.4026886},
+url
+= {<a href="https://github.com/csinva/imodels}">https://github.com/csinva/imodels}</a>
+}</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>

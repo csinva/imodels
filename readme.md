@@ -97,14 +97,29 @@ The code here contains many useful and customizable functions for rule-based lea
 
 Demos are contained in the [notebooks](notebooks) folder.
 
-> [imodels_demo](notebooks/imodels_demo.ipynb) - shows how to fit, predict, and visualize with different interpretable models
->
-> [clinical decision rule notebook](https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb) - shows an example of using `imodels` for deriving a clinical decision rule
-> 
-> we also include some demos of posthoc analysis, which occurs after fitting models
->
->  - [posthoc.ipynb](notebooks/posthoc_analysis.ipynb) - shows different simple analyses to interpret a trained model
->  - [uncertainty.ipynb](notebooks/uncertainty_analysis.ipynb) - basic code to get uncertainty estimates for a model
+<details>
+<summary><a href="notebooks/imodels_demo.ipynb">imodels demo</a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+
+<details>
+<summary><a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ">imodels colab demo<img src="https://colab.research.google.com/assets/colab-badge.svg"></a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+
+<details>
+<summary><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">clinical decision rule notebook</a></summary>
+Shows an example of using <code>imodels</code> for deriving a clinical decision rule
+</details>
+
+<details>
+<summary>posthoc analysis</summary>
+We also include some demos of posthoc analysis, which occurs after fitting models:
+<a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and 
+<a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
+</details>
+
+
 
 ## Support for different tasks
 
@@ -153,3 +168,5 @@ If it's useful for you, please cite the package using the below, but more import
     doi          = {10.5281/zenodo.4026886},
     url          = {https://github.com/csinva/imodels}
 }
+
+```

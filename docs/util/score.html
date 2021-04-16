@@ -38,12 +38,12 @@ from imodels.util.rule import Rule
 
 
 def score_precision_recall(X,
-              y,
-              rules: List[List[str]],
-              samples: List[List[int]],
-              features: List[List[int]],
-              feature_names: List[str],
-              oob: bool = True) -&gt; List[Rule]:
+                           y,
+                           rules: List[List[str]],
+                           samples: List[List[int]],
+                           features: List[List[int]],
+                           feature_names: List[str],
+                           oob: bool = True) -&gt; List[Rule]:
 
     scored_rules = []
 
@@ -93,15 +93,18 @@ def _eval_rule_perf(rule: str, X, y) -&gt; Tuple[float, float]:
     return y_detected.mean(), float(true_pos) / pos
 
 
-def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
-                prediction_task=&#39;regression&#39;,
-                max_rules=2000, random_state=None) -&gt; Tuple[List[Rule], List[float], float]:
+def score_linear(X, y, rules: List[str], 
+                 alphas=None, 
+                 cv=3,
+                 penalty=&#39;l1&#39;,
+                 prediction_task=&#39;regression&#39;,
+                 max_rules=2000, 
+                 random_state=None) -&gt; Tuple[List[Rule], List[float], float]:
     if alphas is None:
         if prediction_task == &#39;regression&#39;:
             alphas = _alpha_grid(X, y)
         elif prediction_task == &#39;classification&#39;:
-            alphas = [1 / alpha
-                     for alpha in np.logspace(-4, 4, num=10, base=10)]
+            alphas = [1 / alpha for alpha in np.logspace(-4, 4, num=10, base=10)]
 
     coef_zero_threshold = 1e-6 / np.mean(np.abs(y))
     mse_cv_scores = []
@@ -114,7 +117,7 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
         if prediction_task == &#39;regression&#39;:
             m = Lasso(alpha=alpha, random_state=random_state)
         else:
-            m = LogisticRegression(penalty=&#39;l1&#39;, C=1/alpha, solver=&#39;liblinear&#39;)
+            m = LogisticRegression(penalty=penalty, C=1/alpha, solver=&#39;liblinear&#39;)
         mse_cv = 0
         for train_index, test_index in kf.split(X):
             X_train, X_test = X[train_index], X[test_index]
@@ -134,12 +137,12 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
     if prediction_task == &#39;regression&#39;:
         lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
     else:
-        lscv = LogisticRegression(penalty=&#39;l1&#39;, C=1/best_alpha, solver=&#39;liblinear&#39;,
+        lscv = LogisticRegression(penalty=penalty, C=1/best_alpha, solver=&#39;liblinear&#39;,
                                   random_state=random_state, max_iter=200)
     lscv.fit(X, y)
 
     coef_ = lscv.coef_.flatten()
-    coefs = list(coef_[:-len(rules)])
+    coefs = list(coef_[:len(coef_)-len(rules)])
     support = np.sum(X[:, -len(rules):], axis=0) / X.shape[0]
 
     nonzero_rules = []
@@ -158,8 +161,8 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="imodels.util.score.score_lasso"><code class="name flex">
-<span>def <span class="ident">score_lasso</span></span>(<span>X, y, rules, alphas=None, cv=3, prediction_task='regression', max_rules=2000, random_state=None)</span>
+<dt id="imodels.util.score.score_linear"><code class="name flex">
+<span>def <span class="ident">score_linear</span></span>(<span>X, y, rules, alphas=None, cv=3, penalty='l1', prediction_task='regression', max_rules=2000, random_state=None)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
@@ -167,15 +170,18 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
-                prediction_task=&#39;regression&#39;,
-                max_rules=2000, random_state=None) -&gt; Tuple[List[Rule], List[float], float]:
+<pre><code class="python">def score_linear(X, y, rules: List[str], 
+                 alphas=None, 
+                 cv=3,
+                 penalty=&#39;l1&#39;,
+                 prediction_task=&#39;regression&#39;,
+                 max_rules=2000, 
+                 random_state=None) -&gt; Tuple[List[Rule], List[float], float]:
     if alphas is None:
         if prediction_task == &#39;regression&#39;:
             alphas = _alpha_grid(X, y)
         elif prediction_task == &#39;classification&#39;:
-            alphas = [1 / alpha
-                     for alpha in np.logspace(-4, 4, num=10, base=10)]
+            alphas = [1 / alpha for alpha in np.logspace(-4, 4, num=10, base=10)]
 
     coef_zero_threshold = 1e-6 / np.mean(np.abs(y))
     mse_cv_scores = []
@@ -188,7 +194,7 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
         if prediction_task == &#39;regression&#39;:
             m = Lasso(alpha=alpha, random_state=random_state)
         else:
-            m = LogisticRegression(penalty=&#39;l1&#39;, C=1/alpha, solver=&#39;liblinear&#39;)
+            m = LogisticRegression(penalty=penalty, C=1/alpha, solver=&#39;liblinear&#39;)
         mse_cv = 0
         for train_index, test_index in kf.split(X):
             X_train, X_test = X[train_index], X[test_index]
@@ -208,12 +214,12 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
     if prediction_task == &#39;regression&#39;:
         lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
     else:
-        lscv = LogisticRegression(penalty=&#39;l1&#39;, C=1/best_alpha, solver=&#39;liblinear&#39;,
+        lscv = LogisticRegression(penalty=penalty, C=1/best_alpha, solver=&#39;liblinear&#39;,
                                   random_state=random_state, max_iter=200)
     lscv.fit(X, y)
 
     coef_ = lscv.coef_.flatten()
-    coefs = list(coef_[:-len(rules)])
+    coefs = list(coef_[:len(coef_)-len(rules)])
     support = np.sum(X[:, -len(rules):], axis=0) / X.shape[0]
 
     nonzero_rules = []
@@ -235,12 +241,12 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def score_precision_recall(X,
-              y,
-              rules: List[List[str]],
-              samples: List[List[int]],
-              features: List[List[int]],
-              feature_names: List[str],
-              oob: bool = True) -&gt; List[Rule]:
+                           y,
+                           rules: List[List[str]],
+                           samples: List[List[int]],
+                           features: List[List[int]],
+                           feature_names: List[str],
+                           oob: bool = True) -&gt; List[Rule]:
 
     scored_rules = []
 
@@ -296,7 +302,7 @@ def score_lasso(X, y, rules: List[str], alphas=None, cv=3,
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="imodels.util.score.score_lasso" href="#imodels.util.score.score_lasso">score_lasso</a></code></li>
+<li><code><a title="imodels.util.score.score_linear" href="#imodels.util.score.score_linear">score_linear</a></code></li>
 <li><code><a title="imodels.util.score.score_precision_recall" href="#imodels.util.score.score_precision_recall">score_precision_recall</a></code></li>
 </ul>
 </li>
