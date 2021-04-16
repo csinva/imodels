@@ -18,7 +18,7 @@ setuptools.setup(
     install_requires=[
         'cvxpy',
         'cvxopt',        
-        'mlxtend',        
+        'mlxtend>=0.18.0', # some lower version are missing fpgrowth
         'numpy',        
         'pandas',
         'scipy',
