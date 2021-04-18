@@ -19,7 +19,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_sco
 from sklearn.model_selection import KFold, train_test_split, cross_validate
 from tqdm import tqdm
 
-from experiments.config import COMPARISON_DATASETS, BEST_ESTIMATORS, ALL_ESTIMATORS
+from experiments.config import COMPARISON_DATASETS, EASY_DATASETS, MEDIUM_DATASETS, BEST_ESTIMATORS, ALL_ESTIMATORS
 from experiments.util import Model, MODEL_COMPARISON_PATH
 
 
@@ -107,6 +107,7 @@ def compare_estimators(estimators: List[Model],
                        metrics: List[Tuple[str, Callable]],
                        scorers: Dict[str, Callable],
                        n_cv_folds: int,
+                       low_data: bool,
                        verbose: bool = True,
                        split_seed: int = 0) -> dict:
     if type(estimators) != list:
@@ -125,7 +126,8 @@ def compare_estimators(estimators: List[Model],
         if verbose:
             print("comparing on dataset", d[0])
         X, y = get_dataset(d[1])
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=split_seed)
+        test_size = 0.7 if low_data else 0.2
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=split_seed)
 
         # loop over estimators
         for model in estimators:
@@ -138,7 +140,7 @@ def compare_estimators(estimators: List[Model],
             else:
                 if n_cv_folds == 1:
                     X_fit, X_eval, y_fit, y_eval = train_test_split(X_train, y_train, 
-                                                                    test_size=0.2, random_state=0)
+                                                                    test_size=test_size, random_state=0)
                 else:
                     X_fit, X_eval, y_fit, y_eval = X_train, X_test, y_train, y_test
 
@@ -173,7 +175,8 @@ def run_comparison(path: str,
                    split_seed: int = 0, 
                    verbose: bool = False, 
                    ignore_cache: bool = False, 
-                   test: bool = False, 
+                   test: bool = False,
+                   low_data: bool = False, 
                    cv_folds: int = 4):
 
     estimator_name = estimators[0].name.split(' - ')[0]
@@ -194,6 +197,7 @@ def run_comparison(path: str,
                                       scorers=scorers,
                                       verbose=verbose,
                                       n_cv_folds=cv_folds,
+                                      low_data=low_data,
                                       split_seed=split_seed)
 
     estimators_list = [e.name for e in estimators]
@@ -201,9 +205,13 @@ def run_comparison(path: str,
     df = pd.DataFrame.from_dict(mean_results)
     df.index = estimators_list
 
-    for (met_name, met) in metrics:
-        met_df = df.loc[:, [met_name in col for col in df.columns]]
-        df['mean' + '_' + met_name] = met_df.mean(axis=1)
+    easy_df = df.loc[:, [any([d in col for d in EASY_DATASETS]) for col in df.columns]]
+    med_df = df.loc[:, [any([d in col for d in MEDIUM_DATASETS]) for col in df.columns]]
+
+    for curr_df, colname in [(easy_df, 'easy_mean'), (med_df, 'med_mean'), (df, 'mean')]:
+        for (met_name, met) in metrics:
+            met_df = curr_df.loc[:, [met_name in col for col in curr_df.columns]]
+            df[f'{colname}_{met_name}'] = met_df.mean(axis=1)
 
     output_dict = {
         'estimators': estimators_list,
@@ -238,12 +246,14 @@ def main():
     parser.add_argument('--test', action='store_true')
     parser.add_argument('--cv', action='store_true')
     parser.add_argument('--ignore_cache', action='store_true')
+    parser.add_argument('--low_data', action='store_true')
     parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--parallel_id', type=int, default=None)
     parser.add_argument('--split_seed', type=int, default=0)
     args = parser.parse_args()
 
     path = MODEL_COMPARISON_PATH
+    path += 'low_data/' if args.low_data else ''
     path += 'test/' if args.test else 'val/'
 
     if args.test:
@@ -269,6 +279,7 @@ def main():
                        verbose=False,
                        ignore_cache=args.ignore_cache,
                        test=args.test,
+                       low_data=args.low_data,
                        cv_folds=cv_folds)
 
 

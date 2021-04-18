@@ -54,7 +54,8 @@ def viz_comparison_test_average(results: List[Dict[str, Any]], y_column: str = '
         result_data = result['df']
         est = result['estimators'][0]
         x, y = get_x_and_y(result_data, 'mean_complexity', f'mean_{y_column}')
-        plt.plot(x, y, marker='o', markersize=2, linewidth=1, label=est.replace('_', ' '))
+        linestyle = '--' if 'stbl' in est else '-'
+        plt.plot(x, y, marker='o', linestyle=linestyle, markersize=2, linewidth=1, label=est.replace('_', ' '))
     plt.xlim(0, 30)
     plt.xlabel('complexity score', size=8)
     plt.ylabel(y_column, size=8)

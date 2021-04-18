@@ -21,6 +21,8 @@ COMPARISON_DATASETS = [
         ("vote", 56),
     ]
 
+EASY_DATASETS = ["breast-w", "labor", "vote"]
+MEDIUM_DATASETS = ["breast-cancer", "credit-g", "haberman", "heart"]
 
 BEST_ESTIMATORS = [
     [Model('random_forest', rf, 'n_estimators', n, 'max_depth', 1) for n in np.arange(1, 16, 2)],

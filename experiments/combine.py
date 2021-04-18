@@ -37,8 +37,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--test', action='store_true')
+    parser.add_argument('--low_data', action='store_true')
     args = parser.parse_args()
 
     path = MODEL_COMPARISON_PATH
+    path += 'low_data/' if args.low_data else ''
     path += 'test/' if args.test else 'val/'
     combine_comparisons(path, args.model, args.test)

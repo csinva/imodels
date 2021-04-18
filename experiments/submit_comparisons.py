@@ -31,7 +31,7 @@ if not args.test_only:
     for i in range(26):
         job_id = s.run(f'python experiments/compare_models.py --model brl --parallel_id {i} --cv')
         brl_job_ids.append(job_id)
-    s.run(f'python experiments/combine.py --model brl', depends_on=brl_job_ids)
+    # s.run(f'python experiments/combine.py --model brl', depends_on=brl_job_ids)
 
 if not args.val_only:
 
@@ -51,4 +51,4 @@ if not args.val_only:
     for i in range(10):
         job_id = s.run(f'python experiments/compare_models.py --test --model brl --parallel_id {i}')
         brl_job_ids.append(job_id)
-    s.run(f'python experiments/combine.py --test --model brl', depends_on=brl_job_ids)
+    # s.run(f'python experiments/combine.py --test --model brl', depends_on=brl_job_ids)
