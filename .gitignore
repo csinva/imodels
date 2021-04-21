@@ -31,3 +31,6 @@ dist
 
 **.gslides
 **.xml
+
+experiments/data/
+!experiments/data/get_datasets.ipynb
