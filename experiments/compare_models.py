@@ -6,7 +6,7 @@ import os
 import pickle as pkl
 import time
 from collections import defaultdict, OrderedDict
-from typing import Any, Callable, List, Dict, Tuple
+from typing import Any, Callable, List, Dict, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -19,7 +19,9 @@ from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_sco
 from sklearn.model_selection import KFold, train_test_split, cross_validate
 from tqdm import tqdm
 
-from experiments.config import COMPARISON_DATASETS, EASY_DATASETS, MEDIUM_DATASETS, BEST_ESTIMATORS, ALL_ESTIMATORS
+from experiments.config import (
+    COMPARISON_DATASETS, EASY_DATASETS, MEDIUM_DATASETS, HARD_DATASETS, BEST_ESTIMATORS, ALL_ESTIMATORS
+)
 from experiments.util import Model, MODEL_COMPARISON_PATH
 
 
@@ -39,12 +41,20 @@ def get_complexity(estimator: BaseEstimator) -> float:
         return estimator.complexity_
 
 
-def get_dataset(data_id: int, onehot_encode_strings: bool = True) -> Tuple[np.array, np.array]:
-    dataset = fetch_openml(data_id=data_id, as_frame=False)
-    X = dataset.data
-    if issparse(X):
-        X = X.toarray()
-    y = (dataset.target[0] == dataset.target).astype(int)
+def get_dataset(data_id: Union[int, str], onehot_encode_strings: bool = True) -> Tuple[np.array, np.array]:
+    if type(data_id) is int:
+        # load data from OpenML
+        dataset = fetch_openml(data_id=data_id, as_frame=False)
+        X = dataset.data
+        if issparse(X):
+            X = X.toarray()
+        y = (dataset.target[0] == dataset.target).astype(int)
+    elif type(data_id) is str:
+        # load local datasets
+        df = pd.read_csv(data_id)
+        X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
+    else:
+        raise NotImplementedError
     return np.nan_to_num(X.astype('float32')), y
 
 
@@ -103,7 +113,7 @@ def compute_auc_of_auc(result: Dict[str, Any],
 
 
 def compare_estimators(estimators: List[Model],
-                       datasets: List[Tuple[str, int]],
+                       datasets: List[Tuple],
                        metrics: List[Tuple[str, Callable]],
                        scorers: Dict[str, Callable],
                        n_cv_folds: int,
@@ -167,7 +177,7 @@ def compare_estimators(estimators: List[Model],
 
 
 def run_comparison(path: str, 
-                   datasets: List[Tuple[str, int]], 
+                   datasets: List[Tuple], 
                    metrics: List[Tuple[str, Callable]],
                    scorers: Dict[str, Callable],
                    estimators: List[Model], 
@@ -207,8 +217,10 @@ def run_comparison(path: str,
 
     easy_df = df.loc[:, [any([d in col for d in EASY_DATASETS]) for col in df.columns]]
     med_df = df.loc[:, [any([d in col for d in MEDIUM_DATASETS]) for col in df.columns]]
+    hard_df = df.loc[:, [any([d in col for d in HARD_DATASETS]) for col in df.columns]]
+    level_dfs = (easy_df, 'easy_mean'), (med_df, 'med_mean'), (hard_df, 'hard_mean'), (df, 'mean')
 
-    for curr_df, colname in [(easy_df, 'easy_mean'), (med_df, 'med_mean'), (df, 'mean')]:
+    for curr_df, colname in level_dfs:
         for (met_name, met) in metrics:
             met_df = curr_df.loc[:, [met_name in col for col in curr_df.columns]]
             df[f'{colname}_{met_name}'] = met_df.mean(axis=1)

@@ -27,6 +27,7 @@ setuptools.setup(
     extras_require={
         'dev': [
             'dvu',
+            'gdown',
             'jupyter',
             'jupytext',
             'matplotlib',

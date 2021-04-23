@@ -6,7 +6,7 @@ from imodels import (
 )
 from sklearn.ensemble import RandomForestClassifier as rf, GradientBoostingClassifier as gb
 
-from experiments.util import Model, get_best_models_under_complexity
+from experiments.util import Model, get_best_models_under_complexity, DATASET_PATH as dp
 from experiments.models.stablelinear import StableLinearClassifier as stbl
 from experiments.models.stableskope import StableSkopeClassifier as stbs
 
@@ -19,10 +19,15 @@ COMPARISON_DATASETS = [
         ("heart", 1574),
         ("labor", 4),
         ("vote", 56),
+        ("recidivism", dp + "compas-analysis/compas_two_year_clean.csv"),
+        ("credit", dp + "credit_card/UCI_Credit_Card.csv"),
+        ("juvenile", dp + "ICPSR_03986/DS0001/data_clean.csv"),
+        # ("readmission", dp + "dataset_diabetes/diabetic_data.csv")
     ]
 
 EASY_DATASETS = ["breast-w", "labor", "vote"]
 MEDIUM_DATASETS = ["breast-cancer", "credit-g", "haberman", "heart"]
+HARD_DATASETS = ["recidivism", "credit", "juvenile"] #, "readmission"]
 
 BEST_ESTIMATORS = [
     [Model('random_forest', rf, 'n_estimators', n, 'max_depth', 1) for n in np.arange(1, 16, 2)],
@@ -74,6 +79,11 @@ ALL_ESTIMATORS.append(
     [Model('rulefit - depth_1', rfit, 'max_rules', n, 'tree_size', 2) for n in np.linspace(2, 100, 10, dtype=int)]
     + [Model('rulefit - depth_2', rfit, 'max_rules', n, 'tree_size', 4) for n in np.linspace(2, 50, 10, dtype=int)]
     + [Model('rulefit - depth_3', rfit, 'max_rules', n, 'tree_size', 8) for n in np.linspace(2, 50, 10, dtype=int)]
+)
+ALL_ESTIMATORS.append(
+    [Model('rulefit_nolin - depth_1', rfit, 'max_rules', n, 'tree_size', 2, {'include_linear': False}) for n in np.linspace(2, 100, 10, dtype=int)]
+    + [Model('rulefit_nolin - depth_2', rfit, 'max_rules', n, 'tree_size', 4, {'include_linear': False}) for n in np.linspace(2, 50, 10, dtype=int)]
+    + [Model('rulefit_nolin - depth_3', rfit, 'max_rules', n, 'tree_size', 8, {'include_linear': False}) for n in np.linspace(2, 50, 10, dtype=int)]
 )
 ALL_ESTIMATORS.append(
     [Model('fplasso - max_card_1', fpl, 'max_rules', n, 'maxcardinality', 1) for n in np.linspace(2, 100, 10, dtype=int)]

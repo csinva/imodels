@@ -7,6 +7,8 @@ from sklearn.base import BaseEstimator
 
 MODEL_COMPARISON_PATH = os.path.dirname(os.path.realpath(__file__)) + "/comparison_data/"
 
+DATASET_PATH = os.path.dirname(os.path.realpath(__file__)) + "/data/"
+
 
 class Model:
     def __init__(self, name: str, cls, vary_param: str, vary_param_val: Any, 

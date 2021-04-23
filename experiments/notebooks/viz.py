@@ -17,7 +17,7 @@ def get_x_and_y(result_data: pd.Series, x_col: str, y_col: str) -> (pd.Series, p
     return complexities[complexity_sort_indices], rocs[complexity_sort_indices]
 
 
-def viz_comparison_val_average(result: Dict[str, Any], y_column: str = 'PRAUC') -> None:
+def viz_comparison_val_average(result: Dict[str, Any], y_column: str = 'mean_PRAUC') -> None:
     '''Plot dataset-averaged y_column vs dataset-averaged complexity for different hyperparameter settings
     of a single model, including zoomed-in plot of overlapping region
     '''
@@ -27,7 +27,7 @@ def viz_comparison_val_average(result: Dict[str, Any], y_column: str = 'PRAUC') 
     for est in np.unique(result_estimators):
 
         est_result_data = result_data[result_data.index.str.contains(est)]
-        x, y = get_x_and_y(est_result_data, 'mean_complexity', f'mean_{y_column}')
+        x, y = get_x_and_y(est_result_data, 'mean_complexity', y_column)
         axes[0].plot(x, y, marker='o', markersize=4, label=est.replace('_', ' '))
 
         if est in result['auc_of_auc'].index:
@@ -47,13 +47,13 @@ def viz_comparison_val_average(result: Dict[str, Any], y_column: str = 'PRAUC') 
     plt.tight_layout()
 
 
-def viz_comparison_test_average(results: List[Dict[str, Any]], y_column: str = 'PRAUC', line_legend: bool = False) -> None:
+def viz_comparison_test_average(results: List[Dict[str, Any]], y_column: str = 'mean_PRAUC', line_legend: bool = False) -> None:
     '''Plot dataset-averaged y_column vs dataset-averaged complexity for different models
     '''
     for result in results:
         result_data = result['df']
         est = result['estimators'][0]
-        x, y = get_x_and_y(result_data, 'mean_complexity', f'mean_{y_column}')
+        x, y = get_x_and_y(result_data, 'mean_complexity', y_column)
         linestyle = '--' if 'stbl' in est else '-'
         plt.plot(x, y, marker='o', linestyle=linestyle, markersize=2, linewidth=1, label=est.replace('_', ' '))
     plt.xlim(0, 30)
