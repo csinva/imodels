@@ -23,9 +23,7 @@
 
 ## imodels overview
 
-Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy!
-
-**Usage**: Simply import a classifier or regressor and use the `fit` and `predict` methods, same as standard scikit-learn models.
+Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the `fit` and `predict` methods, same as standard scikit-learn models.
 
 ```python
 from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
@@ -44,9 +42,10 @@ print(model) # print the rule-based model
 # else: 10% risk
 ```
 
-**Installation:** Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help). 
+### Installation
+Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help). 
 
-**Supported models**:
+### Supported models
 
 | Model                       | Reference                                                    | Description                                                  |
 | :-------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
