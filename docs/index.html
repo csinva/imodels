@@ -37,10 +37,11 @@
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
 <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
 <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=5">
+<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=6">
 </p>
 <h2 id="imodels-overview">imodels overview</h2>
-<p>Implementations of different popular interpretable models can be easily used and installed:</p>
+<p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy!</p>
+<p><strong>Usage</strong>: Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
 <pre><code class="python">from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
 from imodels import SLIMRegressor, RuleFitRegressor
 
@@ -51,11 +52,13 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 print(model) # print the rule-based model
 
 -----------------------------
+# the model consists of the following 3 rules
 # if X1 &gt; 5: then 80.5% risk
 # else if X2 &gt; 5: then 40% risk
 # else: 10% risk
 </code></pre>
-<p>Install with <code>pip install imodels</code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help). Contains the following models:</p>
+<p><strong>Installation:</strong> Install with <code>pip install imodels</code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help). </p>
+<p><strong>Supported models</strong>:</p>
 <table>
 <thead>
 <tr>
@@ -174,15 +177,24 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <p>The code here contains many useful and customizable functions for rule-based learning in the <a href="https://csinva.io/imodels/util/index.html">util folder</a>. This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.</p>
 <h2 id="demo-notebooks">Demo notebooks</h2>
 <p>Demos are contained in the <a href="notebooks">notebooks</a> folder.</p>
-<blockquote>
-<p><a href="notebooks/imodels_demo.ipynb">imodels_demo</a> - shows how to fit, predict, and visualize with different interpretable models</p>
-<p><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">clinical decision rule notebook</a> - shows an example of using <code>imodels</code> for deriving a clinical decision rule</p>
-<p>we also include some demos of posthoc analysis, which occurs after fitting models</p>
-<ul>
-<li><a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> - shows different simple analyses to interpret a trained model</li>
-<li><a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> - basic code to get uncertainty estimates for a model</li>
-</ul>
-</blockquote>
+<details>
+<summary><a href="notebooks/imodels_demo.ipynb">imodels demo</a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+<details>
+<summary><a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ">imodels colab demo</a> <a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ"> <img src="https://colab.research.google.com/assets/colab-badge.svg"></a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+<details>
+<summary><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">clinical decision rule notebook</a></summary>
+Shows an example of using <code>imodels</code> for deriving a clinical decision rule
+</details>
+<details>
+<summary>posthoc analysis</summary>
+We also include some demos of posthoc analysis, which occurs after fitting models:
+<a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and
+<a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
+</details>
 <h2 id="support-for-different-tasks">Support for different tasks</h2>
 <p>Different models support different machine-learning tasks. Current support for different models is given below:</p>
 <table>
@@ -269,24 +281,18 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 </li>
 </ul>
 <p>If it's useful for you, please cite the package using the below, but more importantly make sure to give authors of original methods / base implementations credit:</p>
-<p>```r
-@software{
-imodels2021,
-title
-= {{imodels: a python package for fitting interpretable models}},
-publisher
-= {Zenodo},
-year
-= 2021,
-author
-= {Chandan Singh and Keyan Nasseri and Bin Yu},
-version
-= {v0.2.8},
-doi
-= {10.5281/zenodo.4026886},
-url
-= {<a href="https://github.com/csinva/imodels}">https://github.com/csinva/imodels}</a>
-}</p>
+<pre><code class="r">@software{
+    imodels2021,
+    title        = {{imodels: a python package for fitting interpretable models}},
+    publisher    = {Zenodo},
+    year         = 2021,
+    author       = {Chandan Singh and Keyan Nasseri and Bin Yu},
+    version      = {v0.2.8},
+    doi          = {10.5281/zenodo.4026886},
+    url          = {&lt;https://github.com/csinva/imodels}&gt;
+}
+
+</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>

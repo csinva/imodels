@@ -14,7 +14,7 @@
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
   <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=5">
+  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=6">
 </p>  
 
 
@@ -23,7 +23,9 @@
 
 ## imodels overview
 
-Implementations of different popular interpretable models can be easily used and installed:
+Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy!
+
+**Usage**: Simply import a classifier or regressor and use the `fit` and `predict` methods, same as standard scikit-learn models.
 
 ```python
 from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
@@ -36,12 +38,15 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 print(model) # print the rule-based model
 
 -----------------------------
+# the model consists of the following 3 rules
 # if X1 > 5: then 80.5% risk
 # else if X2 > 5: then 40% risk
 # else: 10% risk
 ```
 
-Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help). Contains the following models:
+**Installation:** Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help). 
+
+**Supported models**:
 
 | Model                       | Reference                                                    | Description                                                  |
 | :-------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -103,7 +108,7 @@ Shows how to fit, predict, and visualize with different interpretable models
 </details>
 
 <details>
-<summary><a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ">imodels colab demo<img src="https://colab.research.google.com/assets/colab-badge.svg"></a></summary>
+<summary><a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ">imodels colab demo</a> <a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ"> <img src="https://colab.research.google.com/assets/colab-badge.svg"></a></summary>
 Shows how to fit, predict, and visualize with different interpretable models
 </details>
 
