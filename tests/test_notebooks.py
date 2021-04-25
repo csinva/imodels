@@ -10,11 +10,11 @@ from sklearn.datasets._openml import OpenMLError
 def test_imodels_demo(mock_pd_style, mock_plot_tree, mock_pyplot):
     from .notebooks import imodels_demo
 
-@patch('matplotlib.pyplot')
-@patch('dvu.line_legend')
-def test_imodels_comparisons(mock_line_legend, mock_pyplot):
-    try:
-        mock_pyplot.subplots.return_value = (MagicMock(), MagicMock())
-        from .notebooks import imodels_comparisons
-    except OpenMLError:
-        pass
+# @patch('matplotlib.pyplot')
+# @patch('dvu.line_legend')
+# def test_imodels_comparisons(mock_line_legend, mock_pyplot):
+#     try:
+#         mock_pyplot.subplots.return_value = (MagicMock(), MagicMock())
+#         from .notebooks import imodels_comparisons
+#     except OpenMLError:
+#         pass

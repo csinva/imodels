@@ -17,26 +17,29 @@ def get_x_and_y(result_data: pd.Series, x_col: str, y_col: str) -> (pd.Series, p
     return complexities[complexity_sort_indices], rocs[complexity_sort_indices]
 
 
-def viz_comparison_val_average(result: Dict[str, Any], y_column: str = 'mean_PRAUC') -> None:
+def viz_comparison_val_average(result: Dict[str, Any], prefix: str = 'all', metric: str = 'mean_PRAUC') -> None:
     '''Plot dataset-averaged y_column vs dataset-averaged complexity for different hyperparameter settings
     of a single model, including zoomed-in plot of overlapping region
     '''
     result_data = result['df']
     result_estimators = result['estimators']
+    x_column = f'{prefix}_mean_complexity'
+    y_column = f'{prefix}_{metric}'
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
     for est in np.unique(result_estimators):
 
         est_result_data = result_data[result_data.index.str.contains(est)]
-        x, y = get_x_and_y(est_result_data, 'mean_complexity', y_column)
+        x, y = get_x_and_y(est_result_data, x_column, y_column)
         axes[0].plot(x, y, marker='o', markersize=4, label=est.replace('_', ' '))
 
-        if est in result['auc_of_auc'].index:
-            area = result['auc_of_auc'][est]
-            label = est.split(' - ')[1] + f' AUC: {area:.3f}'
+        meta_auc_df = result['meta_auc_df']
+        if est in meta_auc_df.index:
+            area = meta_auc_df.loc[est, y_column + '_auc']
+            label = est.split(' - ')[1] + f' {y_column} AUC: {area:.3f}'
             axes[1].plot(x, y, marker='o', markersize=4, label=label.replace('_', ' '))
 
-    axes[0].set_title(f'average {y_column} across all comparison datasets')
-    axes[1].set_xlim(result['auc_of_auc_lb'], result['auc_of_auc_ub'])
+    axes[0].set_title(f'average {metric} across {prefix} comparison datasets')
+    axes[1].set_xlim(meta_auc_df.iloc[0][f'{x_column}_lb'], meta_auc_df.iloc[0][f'{x_column}_ub'])
     axes[1].set_title('Overlapping, low (<30) complexity region only')
 
     for ax in axes:
@@ -47,19 +50,24 @@ def viz_comparison_val_average(result: Dict[str, Any], y_column: str = 'mean_PRA
     plt.tight_layout()
 
 
-def viz_comparison_test_average(results: List[Dict[str, Any]], y_column: str = 'mean_PRAUC', line_legend: bool = False) -> None:
+def viz_comparison_test_average(results: List[Dict[str, Any]], 
+                                prefix: str = 'all', 
+                                metric: str = 'mean_PRAUC', 
+                                line_legend: bool = False) -> None:
     '''Plot dataset-averaged y_column vs dataset-averaged complexity for different models
     '''
+    x_column = f'{prefix}_mean_complexity'
+    y_column = f'{prefix}_{metric}'
     for result in results:
         result_data = result['df']
         est = result['estimators'][0]
-        x, y = get_x_and_y(result_data, 'mean_complexity', y_column)
+        x, y = get_x_and_y(result_data, x_column, y_column)
         linestyle = '--' if 'stbl' in est else '-'
         plt.plot(x, y, marker='o', linestyle=linestyle, markersize=2, linewidth=1, label=est.replace('_', ' '))
     plt.xlim(0, 30)
     plt.xlabel('complexity score', size=8)
     plt.ylabel(y_column, size=8)
-    plt.title(f'average {y_column} across all comparison datasets', size=8)
+    plt.title(f'average {y_column} across {prefix} comparison datasets', size=8)
     if line_legend:
         dvu.line_legend(fontsize=8, adjust_text_labels=True)
     else:

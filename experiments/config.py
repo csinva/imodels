@@ -6,7 +6,7 @@ from imodels import (
 )
 from sklearn.ensemble import RandomForestClassifier as rf, GradientBoostingClassifier as gb
 
-from experiments.util import Model, get_best_models_under_complexity, DATASET_PATH as dp
+from experiments.util import Model, get_best_models_under_complexity, DATASET_PATH
 from experiments.models.stablelinear import StableLinearClassifier as stbl
 from experiments.models.stableskope import StableSkopeClassifier as stbs
 
@@ -17,15 +17,15 @@ COMPARISON_DATASETS = [
         ("credit-g", 31),
         ("haberman", 43),
         ("heart", 1574),
-        ("labor", 4),
+        # ("labor", 4),
         ("vote", 56),
-        ("recidivism", dp + "compas-analysis/compas_two_year_clean.csv"),
-        ("credit", dp + "credit_card/UCI_Credit_Card.csv"),
-        ("juvenile", dp + "ICPSR_03986/DS0001/data_clean.csv"),
+        ("recidivism", DATASET_PATH + "compas-analysis/compas_two_year_clean.csv"),
+        ("credit", DATASET_PATH + "credit_card/UCI_Credit_Card.csv"),
+        ("juvenile", DATASET_PATH + "ICPSR_03986/DS0001/data_clean.csv"),
         # ("readmission", dp + "dataset_diabetes/diabetic_data.csv")
     ]
 
-EASY_DATASETS = ["breast-w", "labor", "vote"]
+EASY_DATASETS = ["breast-w", "vote"]
 MEDIUM_DATASETS = ["breast-cancer", "credit-g", "haberman", "heart"]
 HARD_DATASETS = ["recidivism", "credit", "juvenile"] #, "readmission"]
 

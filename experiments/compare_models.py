@@ -58,27 +58,29 @@ def get_dataset(data_id: Union[int, str], onehot_encode_strings: bool = True) ->
     return np.nan_to_num(X.astype('float32')), y
 
 
-def compute_auc_of_auc(result: Dict[str, Any],
-                       low_complexity_cutoff: int = 30,
-                       max_start_complexity: int = 10,
-                       column: str = 'mean_PRAUC') -> None:
+def compute_meta_auc(result_data: pd.DataFrame,
+                     prefix: str,
+                    #  metric_names: list[str] = ['mean_PRAUC', 'mean_ROCAUC', 'mean_accuracy'],
+                     low_complexity_cutoff: int = 30,
+                     max_start_complexity: int = 10) -> Tuple[pd.DataFrame, Tuple[float]]:
 
     # LOW_COMPLEXITY_CUTOFF: complexity score under which a model is considered interpretable
     # MAX_START_COMPLEXITY: min complexity of curves included in the AUC-of-AUC comparison must be below this value
 
-    result_data = result['df']
-    estimators = np.unique(result['estimators'])
+    x_column = f'{prefix}_mean_complexity'
+    compute_columns = result_data.columns[result_data.columns.str.contains('mean')]
+    estimators = np.unique(result_data.index)
     xs = np.empty(len(estimators), dtype=object)
     ys = xs.copy()
 
     for i, est in enumerate(estimators):
 
         est_result_df = result_data[result_data.index.str.contains(est)]
-        complexities_unsorted = est_result_df['mean_complexity']
+        complexities_unsorted = est_result_df[x_column]
         complexity_sort_indices = complexities_unsorted.argsort()
         complexities = complexities_unsorted[complexity_sort_indices]
 
-        roc_aucs = est_result_df[column][complexity_sort_indices]
+        roc_aucs = est_result_df.iloc[complexity_sort_indices][compute_columns]
         xs[i] = complexities.values
         ys[i] = roc_aucs.values
 
@@ -87,29 +89,28 @@ def compute_auc_of_auc(result: Dict[str, Any],
     xs, ys, estimators = xs[mask], ys[mask], estimators[mask]
 
     # find overlapping complexity region for roc-of-roc comparison
-    auc_of_auc_lb = max([x[0] for x in xs])
+    meta_auc_lb = max([x[0] for x in xs])
     endpts = np.array([x[-1] for x in xs])
-    auc_of_auc_ub = min(endpts[endpts > auc_of_auc_lb])
-    auc_of_auc_ub = min(auc_of_auc_ub, low_complexity_cutoff)
+    meta_auc_ub = min(endpts[endpts > meta_auc_lb])
+    meta_auc_ub = min(meta_auc_ub, low_complexity_cutoff)
 
     # handle non-overlapping curves
-    mask = endpts > auc_of_auc_lb
+    mask = endpts > meta_auc_lb
     xs, ys, estimators = xs[mask], ys[mask], estimators[mask]
 
     # compute AUC of interpolated curves in overlap region
-    auc_of_aucs = []
+    meta_aucs = defaultdict(lambda:[])
     for i in range(len(xs)):
+        for c, col in enumerate(compute_columns):
+            f_curve = interp1d(xs[i], ys[i][:, c])
+            x_interp = np.linspace(meta_auc_lb, meta_auc_ub, 100)
+            y_interp = f_curve(x_interp)
+            meta_aucs[col + '_auc'].append(np.trapz(y_interp, x=x_interp))
 
-        f_curve = interp1d(xs[i], ys[i])
-        x_interp = np.linspace(auc_of_auc_lb, auc_of_auc_ub, 100)
-        y_interp = f_curve(x_interp)
-        auc_of_aucs.append(np.trapz(y_interp, x=x_interp))
-
-    result['auc_of_auc'] = (
-        pd.Series(auc_of_aucs, index=estimators).sort_values(ascending=False)
-    )
-    result['auc_of_auc_lb'] = auc_of_auc_lb
-    result['auc_of_auc_ub'] = auc_of_auc_ub
+    meta_auc_df = pd.DataFrame(meta_aucs, index=estimators)
+    meta_auc_df[f'{x_column}_lb'] = meta_auc_lb
+    meta_auc_df[f'{x_column}_ub'] = meta_auc_ub
+    return meta_auc_df, (meta_auc_lb, meta_auc_ub)
 
 
 def compare_estimators(estimators: List[Model],
@@ -215,24 +216,30 @@ def run_comparison(path: str,
     df = pd.DataFrame.from_dict(mean_results)
     df.index = estimators_list
 
-    easy_df = df.loc[:, [any([d in col for d in EASY_DATASETS]) for col in df.columns]]
-    med_df = df.loc[:, [any([d in col for d in MEDIUM_DATASETS]) for col in df.columns]]
-    hard_df = df.loc[:, [any([d in col for d in HARD_DATASETS]) for col in df.columns]]
-    level_dfs = (easy_df, 'easy_mean'), (med_df, 'med_mean'), (hard_df, 'hard_mean'), (df, 'mean')
+    easy_df = df.loc[:, [any([d in col for d in EASY_DATASETS]) for col in df.columns]].copy()
+    med_df = df.loc[:, [any([d in col for d in MEDIUM_DATASETS]) for col in df.columns]].copy()
+    hard_df = df.loc[:, [any([d in col for d in HARD_DATASETS]) for col in df.columns]].copy()
+    all_df = df.copy()
+    level_dfs = (easy_df, 'easy'), (med_df, 'med'), (hard_df, 'hard'), (all_df, 'all')
 
-    for curr_df, colname in level_dfs:
+    meta_auc_df = pd.DataFrame([])
+    for curr_df, prefix in level_dfs:
         for (met_name, met) in metrics:
+            colname = f'{prefix}_mean_{met_name}'
             met_df = curr_df.loc[:, [met_name in col for col in curr_df.columns]]
-            df[f'{colname}_{met_name}'] = met_df.mean(axis=1)
+            curr_df[colname] = met_df.mean(axis=1)
+            df[colname] = curr_df[colname]
+
+        curr_meta_auc_df, curr_meta_auc_region = compute_meta_auc(curr_df, prefix)
+        meta_auc_df = pd.concat((meta_auc_df, curr_meta_auc_df), axis=1)
 
     output_dict = {
         'estimators': estimators_list,
         'comparison_datasets': datasets,
         'metrics': metrics_list,
         'df': df,
+        'meta_auc_df': meta_auc_df,
     }
-    if not test:
-        compute_auc_of_auc(output_dict, column='mean_PRAUC')
     pkl.dump(output_dict, open(model_comparison_file, 'wb'))
 
 
