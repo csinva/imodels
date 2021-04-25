@@ -31,7 +31,7 @@ class TestClassClassificationBinary:
                 init_kwargs['max_rules'] = 5
             if model_type == SkopeRulesClassifier or model_type == FPSkopeClassifier:
                 init_kwargs['random_state'] = 0
-                init_kwargs['recall_min'] = 0.5
+                init_kwargs['max_samples_features'] = 1.
             m = model_type(**init_kwargs)
 
             if model_type == BayesianRuleListClassifier:

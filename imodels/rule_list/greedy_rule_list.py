@@ -210,8 +210,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         cutoff = 0.5
 
         # iterate through each value in the column
-        for value in set(col):
-
+        for value in np.unique(col):
             # separate y into 2 groups
             y_predict = col < value
 
@@ -228,7 +227,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         """Returns criterion calculated over a split
         split decision, True/False, and y_true can be multi class
         """
-        if len(split_decision) != len(y_real):
+        if split_decision.shape[0] != y_real.shape[0]:
             print('They have to be the same length')
             return None
 
@@ -247,16 +246,20 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         s_right = criterion_func(y_real[~split_decision])
 
         # overall criterion, again weighted average
-        n = len(y_real)
-        sample_weights = np.ones(n)
+        n = y_real.shape[0]
         if self.class_weight is not None:
+            sample_weights = np.ones(n)
             for c in self.class_weight.keys():
                 idxs_c = y_real == c
                 sample_weights[idxs_c] = self.class_weight[c]
-        tot_weight = np.sum(sample_weights)
-        weight_left = np.sum(sample_weights[split_decision]) / tot_weight
-        weight_right = np.sum(sample_weights[~split_decision]) / tot_weight
-        s = weight_left * s_left + weight_right * s_right
+            total_weight = np.sum(sample_weights)
+            weight_left = np.sum(sample_weights[split_decision]) / total_weight
+            # weight_right = np.sum(sample_weights[~split_decision]) / total_weight
+        else:
+            tot_left_samples = np.sum(split_decision == 1)
+            weight_left = tot_left_samples / n
+
+        s = weight_left * s_left + (1 - weight_left) * s_right
         return s
 
     def gini_criterion(self, y):
@@ -264,13 +267,13 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         = sum(pc * (1 – pc))
         '''
         s = 0
-        n = len(y)
-        classes = set(y)
+        n = y.shape[0]
+        classes = np.unique(y)
 
         # for each class, get entropy
         for c in classes:
             # weights for each class
-            n_c = sum(y == c)
+            n_c = np.sum(y == c)
             p_c = n_c / n
 
             # weighted avg

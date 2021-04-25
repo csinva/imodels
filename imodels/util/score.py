@@ -107,7 +107,12 @@ def score_linear(X, y, rules: List[str],
         nonzero_rule_coefs_count.append(rule_count)
         mse_cv_scores.append(mse_cv / cv)
     
-    best_alpha = alphas[np.argmin(mse_cv_scores)]
+    # rare case in which diff alphas lead to identical scores
+    if np.all(mse_cv_scores == mse_cv_scores[0]):
+        best_alpha = alphas[len(mse_cv_scores) - 1]
+    else:
+        best_alpha = alphas[np.argmin(mse_cv_scores)]
+
     if prediction_task == 'regression':
         lscv = Lasso(alpha=best_alpha, random_state=random_state, max_iter=2000)
     else:

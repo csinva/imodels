@@ -214,10 +214,10 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
 
     def __init__(self,
                  precision_min=0.5,
-                 recall_min=0.4,
+                 recall_min=0.01,
                  n_estimators=10,
                  max_samples=.8,
-                 max_samples_features=1.,
+                 max_samples_features=.8,
                  bootstrap=False,
                  bootstrap_features=False,
                  max_depth=3,
@@ -345,13 +345,14 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
             For each observations, tells whether or not (1 or 0) it should
             be considered as an outlier according to the selected rules.
         """
-
+        X = check_array(X)
         return np.argmax(self.predict_proba(X), axis=1)
 
     def predict_proba(self, X) -> np.ndarray:
         '''Predict probability of a particular sample being an outlier or not
 
         '''
+        X = check_array(X)
         weight_sum = np.sum([w[0] for (r, w) in self.rules_without_feature_names_])
         if weight_sum == 0:
             return np.vstack((np.ones(X.shape[0]), np.zeros(X.shape[0]))).transpose()
