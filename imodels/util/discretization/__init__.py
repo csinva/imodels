@@ -25,3 +25,6 @@ script options:
 1. Pandas
 2. Numpy
 '''
+
+from .mdlp import BRLDiscretizer
+from .simple import SimpleDiscretizer

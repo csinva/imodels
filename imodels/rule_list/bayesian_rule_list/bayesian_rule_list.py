@@ -12,6 +12,7 @@ from imodels.rule_list.bayesian_rule_list.brl_util import *
 from imodels.rule_list.rule_list import RuleList
 from imodels.util.discretization.mdlp import MDLP_Discretizer, BRLDiscretizer
 from imodels.util.extract import extract_fpgrowth
+from imodels.util.rule import get_feature_dict
 
 
 class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
@@ -54,12 +55,23 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         Random seed
     """
 
-    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=0.1, alpha=np.array([1., 1.]),
-                 n_chains=3, max_iter=50000, class1label="class 1", verbose=False, random_state=42):
+    def __init__(self, 
+                 listlengthprior=3, 
+                 listwidthprior=1, 
+                 maxcardinality=2, 
+                 minsupport=0.1,
+                 disc_strategy='mdlp',
+                 alpha=np.array([1., 1.]),
+                 n_chains=3, 
+                 max_iter=50000, 
+                 class1label="class 1", 
+                 verbose=False, 
+                 random_state=42):
         self.listlengthprior = listlengthprior
         self.listwidthprior = listwidthprior
         self.maxcardinality = maxcardinality
         self.minsupport = minsupport
+        self.disc_strategy = disc_strategy
         self.alpha = alpha
         self.n_chains = n_chains
         self.max_iter = max_iter
@@ -124,15 +136,18 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.n_features_in_ = X.shape[1]
         self.classes_ = unique_labels(y)
 
+        self.feature_dict_ = get_feature_dict(X.shape[1], feature_labels)
+        self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
+        self.feature_labels = np.array(list(self.feature_dict_.values()))
+
         itemsets, self.discretizer = extract_fpgrowth(X, y,
-                                                      feature_labels=feature_labels,
+                                                      feature_labels=self.feature_labels,
                                                       minsupport=self.minsupport,
                                                       maxcardinality=self.maxcardinality,
                                                       undiscretized_features=undiscretized_features,
+                                                      disc_strategy=self.disc_strategy,
                                                       verbose=verbose)
-
-        self.feature_labels = self.discretizer.feature_labels
-        X_df_onehot = self.discretizer.onehot_df
+        X_df_onehot = self.discretizer.transform(X)
 
         # Now form the data-vs.-lhs set
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
@@ -210,18 +225,12 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         else:
             return "(Untrained RuleListClassifier)"
 
-    def _to_itemset_indices(self, data):
-        X_colname_removed = data.copy()
-        for i in range(len(data)):
-            X_colname_removed[i] = list(map(lambda s: s.split(' : ')[1], X_colname_removed[i]))
-        X_df_categorical = pd.DataFrame(X_colname_removed, columns=self.feature_labels)
-        X_df_onehot = pd.get_dummies(X_df_categorical)
-
+    def _to_itemset_indices(self, X_df_onehot):
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
         for c in X_df_onehot.columns:
             X_df_onehot[c] = [c if x == 1 else '' for x in list(X_df_onehot[c])]
         X = [set() for j in range(len(self.itemsets))]
-        X[0] = set(range(len(data)))  # the default rule satisfies all data
+        X[0] = set(range(X_df_onehot.shape[0]))  # the default rule satisfies all data
         for (j, lhs) in enumerate(self.itemsets):
             if j > 0:
                 X[j] = set([i for (i, xi) in enumerate(X_df_onehot.values) if set(lhs).issubset(xi)])
@@ -242,16 +251,12 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             order, as they appear in the attribute `classes_`.
         """
         if self.discretizer:
-            D = self.discretizer.apply_discretization(X)
+            D = self.discretizer.transform(X)
         else:
-            D = X
-
-        # deal with pandas data
-        if type(D) in [pd.DataFrame, pd.Series]:
-            D = D.values
+            D = pd.DataFrame(X, columns=self.feature_labels)
 
         N = len(D)
-        X2 = self._to_itemset_indices(D[:])
+        X2 = self._to_itemset_indices(D)
         P = preds_d_t(X2, np.zeros((N, 1), dtype=int), self.d_star, self.theta)
         return np.vstack((1 - P, P)).T
 

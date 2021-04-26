@@ -316,8 +316,8 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
         self.max_samples_ = max_samples
 
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
-        self.feature_placeholders = list(self.feature_dict_.keys())
-        self.feature_names = list(self.feature_dict_.values())
+        self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
+        self.feature_names = np.array(list(self.feature_dict_.values()))
 
         extracted_rules, self.estimators_samples_, self.estimators_features_ = self._extract_rules(X, y)
         scored_rules = self._score_rules(X, y, extracted_rules)
