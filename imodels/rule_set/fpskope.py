@@ -16,9 +16,11 @@ class FPSkopeClassifier(SkopeRulesClassifier):
     def __init__(self,
                  minsupport=0.1,
                  maxcardinality=2,
+                 disc_strategy='mdlp',
+                 disc_kwargs={},
                  verbose=False,
                  precision_min=0.5,
-                 recall_min=0.4,
+                 recall_min=0.01,
                  n_estimators=10,
                  max_samples=.8,
                  max_samples_features=1.,
@@ -44,6 +46,8 @@ class FPSkopeClassifier(SkopeRulesClassifier):
                          n_jobs,
                          random_state,
                          verbose)
+        self.disc_strategy = disc_strategy
+        self.disc_kwargs = disc_kwargs
         self.minsupport = minsupport
         self.maxcardinality = maxcardinality
         self.verbose = verbose
@@ -59,6 +63,8 @@ class FPSkopeClassifier(SkopeRulesClassifier):
                                     minsupport=self.minsupport,
                                     maxcardinality=self.maxcardinality,
                                     undiscretized_features=self.undiscretized_features,
+                                    disc_strategy=self.disc_strategy,
+                                    disc_kwargs=self.disc_kwargs,
                                     verbose=self.verbose)[0]
         return [itemsets_to_rules(itemsets)], [np.arange(X.shape[0])], [np.arange(len(self.feature_names))]
 

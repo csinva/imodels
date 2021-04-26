@@ -3,19 +3,22 @@ from typing import Iterable, Tuple, List
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor
+from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from mlxtend.frequent_patterns import fpgrowth
 
 from imodels.util.convert import tree_to_rules
-from imodels.util.discretization.mdlp import BRLDiscretizer
+from imodels.util.discretization import BRLDiscretizer, SimpleDiscretizer
 
 
 def extract_fpgrowth(X, y,
-                     feature_labels=None,
+                     feature_labels,
                      minsupport=0.1,
                      maxcardinality=2,
                      undiscretized_features=[],
+                     disc_strategy = 'simple',
+                     disc_kwargs = {},
                      verbose=False) -> Tuple[List[Tuple], BRLDiscretizer]:
 
     # deal with pandas data
@@ -26,13 +29,15 @@ def extract_fpgrowth(X, y,
     if type(y) in [pd.DataFrame, pd.Series]:
         y = y.values
 
-    if feature_labels is None:
-        feature_labels = [f'feature_{i}' for i in range(X.shape[1])]
+    if disc_strategy == 'mdlp':
+        discretizer = BRLDiscretizer(X, y, feature_labels=feature_labels, verbose=verbose)
+        discretizer.fit(X, y, undiscretized_features)
+    else:
+        discretizer = SimpleDiscretizer(**disc_kwargs)
+        discretizer.fit(X, feature_labels)
     
-    discretizer = BRLDiscretizer(X, y, feature_labels=feature_labels, verbose=verbose)
-    X = discretizer.discretize_mixed_data(X, y, undiscretized_features)
-    X_df_onehot = discretizer.onehot_df
-    
+    X_df_onehot = discretizer.transform(X)
+
     # Now find frequent itemsets
     itemsets_df = fpgrowth(X_df_onehot, min_support=minsupport, max_len=maxcardinality)
     itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]

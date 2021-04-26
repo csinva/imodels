@@ -113,8 +113,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
         self.n_features_ = X.shape[1]
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
-        self.feature_placeholders = list(self.feature_dict_.keys())
-        self.feature_names = list(self.feature_dict_.values())
+        self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
+        self.feature_names = np.array(list(self.feature_dict_.values()))
 
         extracted_rules = self._extract_rules(X, y)
         self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(X, y, extracted_rules)
