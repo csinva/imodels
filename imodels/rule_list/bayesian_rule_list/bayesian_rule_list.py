@@ -61,6 +61,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                  maxcardinality=2, 
                  minsupport=0.1,
                  disc_strategy='mdlp',
+                 disc_kwargs={},
                  alpha=np.array([1., 1.]),
                  n_chains=3, 
                  max_iter=50000, 
@@ -72,6 +73,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.maxcardinality = maxcardinality
         self.minsupport = minsupport
         self.disc_strategy = disc_strategy
+        self.disc_kwargs = disc_kwargs
         self.alpha = alpha
         self.n_chains = n_chains
         self.max_iter = max_iter
@@ -146,6 +148,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                                                       maxcardinality=self.maxcardinality,
                                                       undiscretized_features=undiscretized_features,
                                                       disc_strategy=self.disc_strategy,
+                                                      disc_kwargs=self.disc_kwargs,
                                                       verbose=verbose)
         X_df_onehot = self.discretizer.transform(X)
 

@@ -14,6 +14,7 @@ class FPLasso(RuleFit):
                  minsupport=0.1,
                  maxcardinality=2,
                  disc_strategy='mdlp',
+                 disc_kwargs={},
                  verbose=False,
                  tree_size=4,
                  sample_fract='default',
@@ -40,6 +41,7 @@ class FPLasso(RuleFit):
                          cv,
                          random_state)
         self.disc_strategy = disc_strategy
+        self.disc_kwargs = disc_kwargs
         self.minsupport = minsupport
         self.maxcardinality = maxcardinality
         self.verbose = verbose
@@ -56,6 +58,7 @@ class FPLasso(RuleFit):
                                     maxcardinality=self.maxcardinality,
                                     undiscretized_features=self.undiscretized_features,
                                     disc_strategy=self.disc_strategy,
+                                    disc_kwargs=self.disc_kwargs,
                                     verbose=self.verbose)[0]
         return itemsets_to_rules(itemsets)
 
