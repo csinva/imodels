@@ -13,6 +13,10 @@ authors:
     affiliation: 1 # (Multiple affiliations must be quoted)
   - name: Keyan Nasseri^[Equal contribution]
     affiliation: 1
+  - name: Yan Shuo Tan
+    affiliation: 2
+  - name: Tiffany Tang
+    affiliation: 2
   - name: Bin Yu
     affiliation: "1, 2"
 affiliations:
@@ -62,7 +66,6 @@ The code here heavily derives from the wonderful work of previous projects.
 In particular, we build upon the following repos and users: [sklearn-expertsys](https://github.com/tmadl/sklearn-expertsys) - by [Tamas Madl](https://github.com/tmadl) and [Benedict](https://github.com/kenben) based on original code by [Ben Letham](http://lethalletham.com/).
 We also based many rule-based models on [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) by the [skope-rules team](https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst) (including [
 Nicolas Goix](https://github.com/ngoix), [Florian Gardin](https://github.com/floriangardin), [Jean-Matthieu Schertzer](https://github.com/datajms), Bibi Ndiaye, and Ronan Gautier). 
-We also build upon the [rulefit](https://github.com/christophM/rulefit) repository by [Christoph Molnar](https://github.com/christophM). 
-The authors would also like to acknowledge very useful feedback from Yan Shuo Tan during the early stages of this project.
+We also build upon the [rulefit](https://github.com/christophM/rulefit) repository by [Christoph Molnar](https://github.com/christophM).
 
 # References

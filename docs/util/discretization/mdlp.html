@@ -292,7 +292,7 @@ class BRLDiscretizer:
         self.feature_labels_original = feature_labels
         self.verbose = verbose
 
-    def discretize_mixed_data(self, X, y, undiscretized_features=[]):
+    def fit(self, X, y, undiscretized_features=[]):
 
         # check which features are numeric (to be discretized)
         self.discretized_features = []
@@ -300,11 +300,15 @@ class BRLDiscretizer:
         X_str_disc = self.encode_strings(X)
 
         for fi in range(X_str_disc.shape[1]):
-            # if not string, and not specified as undiscretized
-            if isinstance(X_str_disc[0][fi], numbers.Number) \
-                    and (len(self.feature_labels) == 0 or \
-                         len(undiscretized_features) == 0 or \
-                         self.feature_labels[fi] not in undiscretized_features):
+            # if not string, has values other than 0 and 1, and not specified as undiscretized
+            if (
+                isinstance(X_str_disc[0][fi], numbers.Number)
+                and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
+                and (len(self.feature_labels) == 0 or
+                        len(undiscretized_features) == 0 or
+                        self.feature_labels[fi] not in undiscretized_features
+                )
+            ):
                 self.discretized_features.append(self.feature_labels[fi])
 
         if len(self.discretized_features) &gt; 0:
@@ -314,8 +318,10 @@ class BRLDiscretizer:
                     &#34;strings, and/or specify the argument &#39;undiscretized_features&#39;, to avoid this.)&#34;)
             X_str_and_num_disc = self.discretize(X_str_disc, y)
         
-        self.discretized_X = X_str_and_num_disc
-        return self.discretized_X
+            self.discretized_X = X_str_and_num_disc
+        else:
+            self.discretizer = None
+            return
     
     def discretize(self, X, y):
         &#39;&#39;&#39;Discretize the features specified in self.discretized_features
@@ -350,11 +356,14 @@ class BRLDiscretizer:
         self.feature_labels = list(X_str_disc.columns)
         return X_str_disc.values
 
-    def apply_discretization(self, X, return_onehot=False):
+    def transform(self, X, return_onehot=True):
         
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
         
+        if self.discretizer is None:
+            return pd.DataFrame(X, columns=self.feature_labels_original)
+
         self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)        
         self.apply_cutpoints()
         D = np.array(self.data)
@@ -380,13 +389,14 @@ class BRLDiscretizer:
         data = list(discretized_X[:])
 
         X_colname_removed = data.copy()
+        replace_str_entries_func = lambda s: s.split(&#39; : &#39;)[1] if type(s) is str else s
         for i in range(len(data)):
-            X_colname_removed[i] = list(map(lambda s: s.split(&#39; : &#39;)[1], X_colname_removed[i]))
+            X_colname_removed[i] = list(map(replace_str_entries_func, X_colname_removed[i]))
 
         X_df_categorical = pd.DataFrame(X_colname_removed, columns=self.feature_labels)
         X_df_onehot = pd.get_dummies(X_df_categorical)
         return X_df_onehot
-    
+
     @property
     def data(self):
         return self.discretizer._data
@@ -424,7 +434,7 @@ class BRLDiscretizer:
         self.feature_labels_original = feature_labels
         self.verbose = verbose
 
-    def discretize_mixed_data(self, X, y, undiscretized_features=[]):
+    def fit(self, X, y, undiscretized_features=[]):
 
         # check which features are numeric (to be discretized)
         self.discretized_features = []
@@ -432,11 +442,15 @@ class BRLDiscretizer:
         X_str_disc = self.encode_strings(X)
 
         for fi in range(X_str_disc.shape[1]):
-            # if not string, and not specified as undiscretized
-            if isinstance(X_str_disc[0][fi], numbers.Number) \
-                    and (len(self.feature_labels) == 0 or \
-                         len(undiscretized_features) == 0 or \
-                         self.feature_labels[fi] not in undiscretized_features):
+            # if not string, has values other than 0 and 1, and not specified as undiscretized
+            if (
+                isinstance(X_str_disc[0][fi], numbers.Number)
+                and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
+                and (len(self.feature_labels) == 0 or
+                        len(undiscretized_features) == 0 or
+                        self.feature_labels[fi] not in undiscretized_features
+                )
+            ):
                 self.discretized_features.append(self.feature_labels[fi])
 
         if len(self.discretized_features) &gt; 0:
@@ -446,8 +460,10 @@ class BRLDiscretizer:
                     &#34;strings, and/or specify the argument &#39;undiscretized_features&#39;, to avoid this.)&#34;)
             X_str_and_num_disc = self.discretize(X_str_disc, y)
         
-        self.discretized_X = X_str_and_num_disc
-        return self.discretized_X
+            self.discretized_X = X_str_and_num_disc
+        else:
+            self.discretizer = None
+            return
     
     def discretize(self, X, y):
         &#39;&#39;&#39;Discretize the features specified in self.discretized_features
@@ -482,11 +498,14 @@ class BRLDiscretizer:
         self.feature_labels = list(X_str_disc.columns)
         return X_str_disc.values
 
-    def apply_discretization(self, X, return_onehot=False):
+    def transform(self, X, return_onehot=True):
         
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
         
+        if self.discretizer is None:
+            return pd.DataFrame(X, columns=self.feature_labels_original)
+
         self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)        
         self.apply_cutpoints()
         D = np.array(self.data)
@@ -512,13 +531,14 @@ class BRLDiscretizer:
         data = list(discretized_X[:])
 
         X_colname_removed = data.copy()
+        replace_str_entries_func = lambda s: s.split(&#39; : &#39;)[1] if type(s) is str else s
         for i in range(len(data)):
-            X_colname_removed[i] = list(map(lambda s: s.split(&#39; : &#39;)[1], X_colname_removed[i]))
+            X_colname_removed[i] = list(map(replace_str_entries_func, X_colname_removed[i]))
 
         X_df_categorical = pd.DataFrame(X_colname_removed, columns=self.feature_labels)
         X_df_onehot = pd.get_dummies(X_df_categorical)
         return X_df_onehot
-    
+
     @property
     def data(self):
         return self.discretizer._data
@@ -572,36 +592,6 @@ def onehot_df(self):
     return self.discretizer.apply_cutpoints()</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.apply_discretization"><code class="name flex">
-<span>def <span class="ident">apply_discretization</span></span>(<span>self, X, return_onehot=False)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def apply_discretization(self, X, return_onehot=False):
-    
-    if type(X) in [pd.DataFrame, pd.Series]:
-        X = X.values
-    
-    self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)        
-    self.apply_cutpoints()
-    D = np.array(self.data)
-
-    # prepend feature labels
-    Dl = np.copy(D).astype(str).tolist()
-    for i in range(len(Dl)):
-        for j in range(len(Dl[0])):
-            Dl[i][j] = self.feature_labels[j] + &#34; : &#34; + Dl[i][j]
-    
-    if not return_onehot:
-        return Dl
-    else:
-        return self.get_onehot_df(Dl)</code></pre>
-</details>
-</dd>
 <dt id="imodels.util.discretization.mdlp.BRLDiscretizer.discretize"><code class="name flex">
 <span>def <span class="ident">discretize</span></span>(<span>self, X, y)</span>
 </code></dt>
@@ -631,41 +621,6 @@ def onehot_df(self):
     return np.array(cat_data).tolist()</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.discretize_mixed_data"><code class="name flex">
-<span>def <span class="ident">discretize_mixed_data</span></span>(<span>self, X, y, undiscretized_features=[])</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def discretize_mixed_data(self, X, y, undiscretized_features=[]):
-
-    # check which features are numeric (to be discretized)
-    self.discretized_features = []
-
-    X_str_disc = self.encode_strings(X)
-
-    for fi in range(X_str_disc.shape[1]):
-        # if not string, and not specified as undiscretized
-        if isinstance(X_str_disc[0][fi], numbers.Number) \
-                and (len(self.feature_labels) == 0 or \
-                     len(undiscretized_features) == 0 or \
-                     self.feature_labels[fi] not in undiscretized_features):
-            self.discretized_features.append(self.feature_labels[fi])
-
-    if len(self.discretized_features) &gt; 0:
-        if self.verbose:
-            print(
-                &#34;Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to &#34;
-                &#34;strings, and/or specify the argument &#39;undiscretized_features&#39;, to avoid this.)&#34;)
-        X_str_and_num_disc = self.discretize(X_str_disc, y)
-    
-    self.discretized_X = X_str_and_num_disc
-    return self.discretized_X</code></pre>
-</details>
-</dd>
 <dt id="imodels.util.discretization.mdlp.BRLDiscretizer.encode_strings"><code class="name flex">
 <span>def <span class="ident">encode_strings</span></span>(<span>self, X)</span>
 </code></dt>
@@ -690,6 +645,47 @@ def onehot_df(self):
     return X_str_disc.values</code></pre>
 </details>
 </dd>
+<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, undiscretized_features=[])</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, undiscretized_features=[]):
+
+    # check which features are numeric (to be discretized)
+    self.discretized_features = []
+
+    X_str_disc = self.encode_strings(X)
+
+    for fi in range(X_str_disc.shape[1]):
+        # if not string, has values other than 0 and 1, and not specified as undiscretized
+        if (
+            isinstance(X_str_disc[0][fi], numbers.Number)
+            and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
+            and (len(self.feature_labels) == 0 or
+                    len(undiscretized_features) == 0 or
+                    self.feature_labels[fi] not in undiscretized_features
+            )
+        ):
+            self.discretized_features.append(self.feature_labels[fi])
+
+    if len(self.discretized_features) &gt; 0:
+        if self.verbose:
+            print(
+                &#34;Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to &#34;
+                &#34;strings, and/or specify the argument &#39;undiscretized_features&#39;, to avoid this.)&#34;)
+        X_str_and_num_disc = self.discretize(X_str_disc, y)
+    
+        self.discretized_X = X_str_and_num_disc
+    else:
+        self.discretizer = None
+        return</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.discretization.mdlp.BRLDiscretizer.get_onehot_df"><code class="name flex">
 <span>def <span class="ident">get_onehot_df</span></span>(<span>self, discretized_X)</span>
 </code></dt>
@@ -705,12 +701,46 @@ def onehot_df(self):
     data = list(discretized_X[:])
 
     X_colname_removed = data.copy()
+    replace_str_entries_func = lambda s: s.split(&#39; : &#39;)[1] if type(s) is str else s
     for i in range(len(data)):
-        X_colname_removed[i] = list(map(lambda s: s.split(&#39; : &#39;)[1], X_colname_removed[i]))
+        X_colname_removed[i] = list(map(replace_str_entries_func, X_colname_removed[i]))
 
     X_df_categorical = pd.DataFrame(X_colname_removed, columns=self.feature_labels)
     X_df_onehot = pd.get_dummies(X_df_categorical)
     return X_df_onehot</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, X, return_onehot=True)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, X, return_onehot=True):
+    
+    if type(X) in [pd.DataFrame, pd.Series]:
+        X = X.values
+    
+    if self.discretizer is None:
+        return pd.DataFrame(X, columns=self.feature_labels_original)
+
+    self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)        
+    self.apply_cutpoints()
+    D = np.array(self.data)
+
+    # prepend feature labels
+    Dl = np.copy(D).astype(str).tolist()
+    for i in range(len(Dl)):
+        for j in range(len(Dl[0])):
+            Dl[i][j] = self.feature_labels[j] + &#34; : &#34; + Dl[i][j]
+    
+    if not return_onehot:
+        return Dl
+    else:
+        return self.get_onehot_df(Dl)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1308,15 +1338,15 @@ attribute-values' range
 <ul>
 <li>
 <h4><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer" href="#imodels.util.discretization.mdlp.BRLDiscretizer">BRLDiscretizer</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.apply_cutpoints" href="#imodels.util.discretization.mdlp.BRLDiscretizer.apply_cutpoints">apply_cutpoints</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.apply_discretization" href="#imodels.util.discretization.mdlp.BRLDiscretizer.apply_discretization">apply_discretization</a></code></li>
 <li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.data" href="#imodels.util.discretization.mdlp.BRLDiscretizer.data">data</a></code></li>
 <li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.discretize" href="#imodels.util.discretization.mdlp.BRLDiscretizer.discretize">discretize</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.discretize_mixed_data" href="#imodels.util.discretization.mdlp.BRLDiscretizer.discretize_mixed_data">discretize_mixed_data</a></code></li>
 <li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.encode_strings" href="#imodels.util.discretization.mdlp.BRLDiscretizer.encode_strings">encode_strings</a></code></li>
+<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.fit" href="#imodels.util.discretization.mdlp.BRLDiscretizer.fit">fit</a></code></li>
 <li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.get_onehot_df" href="#imodels.util.discretization.mdlp.BRLDiscretizer.get_onehot_df">get_onehot_df</a></code></li>
 <li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.onehot_df" href="#imodels.util.discretization.mdlp.BRLDiscretizer.onehot_df">onehot_df</a></code></li>
+<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.transform" href="#imodels.util.discretization.mdlp.BRLDiscretizer.transform">transform</a></code></li>
 </ul>
 </li>
 <li>

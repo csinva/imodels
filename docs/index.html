@@ -37,11 +37,10 @@
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
 <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
 <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=6">
+<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=7">
 </p>
 <h2 id="imodels-overview">imodels overview</h2>
-<p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy!</p>
-<p><strong>Usage</strong>: Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
+<p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
 <pre><code class="python">from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
 from imodels import SLIMRegressor, RuleFitRegressor
 
@@ -57,8 +56,9 @@ print(model) # print the rule-based model
 # else if X2 &gt; 5: then 40% risk
 # else: 10% risk
 </code></pre>
-<p><strong>Installation:</strong> Install with <code>pip install imodels</code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help). </p>
-<p><strong>Supported models</strong>:</p>
+<h3 id="installation">Installation</h3>
+<p>Install with <code>pip install imodels</code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help). </p>
+<h3 id="supported-models">Supported models</h3>
 <table>
 <thead>
 <tr>
@@ -285,8 +285,8 @@ We also include some demos of posthoc analysis, which occurs after fitting model
     imodels2021,
     title        = {{imodels: a python package for fitting interpretable models}},
     publisher    = {Zenodo},
-    year         = 2021,
-    author       = {Chandan Singh and Keyan Nasseri and Bin Yu},
+    year         = {2021},
+    author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
     version      = {v0.2.8},
     doi          = {10.5281/zenodo.4026886},
     url          = {&lt;https://github.com/csinva/imodels}&gt;
@@ -356,7 +356,11 @@ REGRESSORS = [RuleFitRegressor, SLIMRegressor]</code></pre>
 <h1>Index 🔍</h1>
 <div class="toc">
 <ul>
-<li><a href="#imodels-overview">imodels overview</a></li>
+<li><a href="#imodels-overview">imodels overview</a><ul>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#supported-models">Supported models</a></li>
+</ul>
+</li>
 <li><a href="#demo-notebooks">Demo notebooks</a></li>
 <li><a href="#support-for-different-tasks">Support for different tasks</a></li>
 <li><a href="#references">References</a></li>

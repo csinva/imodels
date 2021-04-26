@@ -133,11 +133,16 @@ def itemsets_to_rules(itemsets: List[Tuple]) -&gt; List[str]:
 
 
 def single_discretized_feature_to_rule(feat: str) -&gt; str:
-    
+
+    # categorical feature
+    if &#39;_to_&#39; not in feat:
+        return f&#39;{feat} &gt; 0.5&#39;
+
+    # discretized numeric feature
     feat_split = feat.split(&#39;_to_&#39;)
     upper_value = feat_split[-1]
     lower_value = feat_split[-2].split(&#39;_&#39;)[-1]
-    
+
     lower_to_upper_len = 1 + len(lower_value) + 4 + len(upper_value)
     feature_name = feat[:-lower_to_upper_len]
     
@@ -183,11 +188,16 @@ def single_discretized_feature_to_rule(feat: str) -&gt; str:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def single_discretized_feature_to_rule(feat: str) -&gt; str:
-    
+
+    # categorical feature
+    if &#39;_to_&#39; not in feat:
+        return f&#39;{feat} &gt; 0.5&#39;
+
+    # discretized numeric feature
     feat_split = feat.split(&#39;_to_&#39;)
     upper_value = feat_split[-1]
     lower_value = feat_split[-2].split(&#39;_&#39;)[-1]
-    
+
     lower_to_upper_len = 1 + len(lower_value) + 4 + len(upper_value)
     feature_name = feat[:-lower_to_upper_len]
     

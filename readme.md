@@ -14,7 +14,7 @@
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
   <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=6">
+  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=7">
 </p>  
 
 
@@ -166,8 +166,8 @@ If it's useful for you, please cite the package using the below, but more import
     imodels2021,
     title        = {{imodels: a python package for fitting interpretable models}},
     publisher    = {Zenodo},
-    year         = 2021,
-    author       = {Chandan Singh and Keyan Nasseri and Bin Yu},
+    year         = {2021},
+    author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
     version      = {v0.2.8},
     doi          = {10.5281/zenodo.4026886},
     url          = {https://github.com/csinva/imodels}

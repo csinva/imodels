@@ -4,4 +4,4 @@ cp -rf ../docs/imodels/* ../docs/
 rm -rf ../docs/imodels
 cd ../docs
 python3 style_docs.py
-bash paper/compile_paper.sh
+#bash paper/compile_paper.sh
