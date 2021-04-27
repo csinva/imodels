@@ -171,14 +171,10 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             Transformed data set
         """
         df = pd.DataFrame(X, columns=self.feature_placeholders)
-        X_transformed = np.zeros([X.shape[0], 0])
-
-        for r in rules:
-            curr_rule_feature = np.zeros(X.shape[0])
-            curr_rule_feature[list(df.query(r).index)] = 1
-            curr_rule_feature = np.expand_dims(curr_rule_feature, axis=1)
-            X_transformed = np.concatenate((X_transformed, curr_rule_feature), axis=1)
-
+        X_transformed = np.zeros((X.shape[0], len(rules)))
+        for i, r in enumerate(rules):
+            features_r_uses = [term.split(' ')[0] for term in r.split(' and ')] 
+            X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
     def get_rules(self, exclude_zero_coef=False, subregion=None):
