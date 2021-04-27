@@ -24,8 +24,7 @@ class StableLinear(RuleFit):
                  lin_standardise=True,
                  exp_rand_tree_size=True,
                  include_linear=True,
-                 alphas=None,
-                 cv=3,
+                 alpha=None,
                  random_state=None):
         super().__init__(tree_size,
                          sample_fract,
@@ -36,7 +35,7 @@ class StableLinear(RuleFit):
                          lin_standardise,
                          exp_rand_tree_size,
                          include_linear,
-                         alphas,
+                         alpha,
                          cv,
                          random_state)
         self.max_complexity = max_complexity
@@ -75,8 +74,7 @@ class StableLinear(RuleFit):
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
         return score_linear(X_concat, y, rules, 
-                            alphas=self.alphas, 
-                            cv=self.cv,
+                            alpha=self.alpha, 
                             penalty=self.penalty,
                             prediction_task=self.prediction_task,
                             max_rules=self.max_rules, random_state=self.random_state)
