@@ -23,7 +23,7 @@ class TestBRL(unittest.TestCase):
                      [0, 1, 1, 1, 1],
                      [1, 0, 1, 1, 1]])
         y = np.array([0, 0, 0, 0, 1, 1, 1, 1])
-        M = BayesianRuleListClassifier(minsupport=0.02)
+        M = BayesianRuleListClassifier(minsupport=0.02, maxcardinality=1)
         feat = ['ft1', 'ft2', 'ft3', 'ft4', 'ft5']
         M.fit(X, y, feature_labels=feat)
         assert (np.array([M.predict(np.array([row]), threshold=0.5) for row in X]).flatten() == y).all()
@@ -46,7 +46,7 @@ class TestBRL(unittest.TestCase):
 
         # train classifier (allow more iterations for better accuracy; use BigDataRuleListClassifier for large datasets)
         print('training...')
-        model = BayesianRuleListClassifier(max_iter=1000, listlengthprior=5, class1label="diabetes", verbose=False)
+        model = BayesianRuleListClassifier(max_iter=1000, minsupport=0.4, maxcardinality=1, class1label="diabetes", verbose=False)
         model.fit(X_train, y_train, feature_labels=feature_labels)
         preds = model.predict(X_test, threshold=0.1)
         print("RuleListClassifier Accuracy:", np.mean(y_test == preds), "Learned interpretable model:\n", model)
