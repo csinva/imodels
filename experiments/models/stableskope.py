@@ -19,7 +19,7 @@ class StableSkopeClassifier(SkopeRulesClassifier):
                  recall_min=0.4,
                  n_estimators=10,
                  max_samples=.8,
-                 max_samples_features=1.,
+                 max_samples_features=.8,
                  bootstrap=False,
                  bootstrap_features=False,
                  max_depth=3,

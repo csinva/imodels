@@ -71,8 +71,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                  lin_standardise=True,
                  exp_rand_tree_size=True,
                  include_linear=True,
-                 alphas=None,
-                 cv=3,
+                 alpha=None,
                  random_state=None):
         self.tree_size = tree_size
         self.sample_fract = sample_fract
@@ -83,8 +82,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.lin_standardise = lin_standardise
         self.exp_rand_tree_size = exp_rand_tree_size
         self.include_linear = include_linear
-        self.alphas = alphas
-        self.cv = cv
+        self.alpha = alpha
         self.random_state = random_state
 
         self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
@@ -173,14 +171,10 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             Transformed data set
         """
         df = pd.DataFrame(X, columns=self.feature_placeholders)
-        X_transformed = np.zeros([X.shape[0], 0])
-
-        for r in rules:
-            curr_rule_feature = np.zeros(X.shape[0])
-            curr_rule_feature[list(df.query(r).index)] = 1
-            curr_rule_feature = np.expand_dims(curr_rule_feature, axis=1)
-            X_transformed = np.concatenate((X_transformed, curr_rule_feature), axis=1)
-
+        X_transformed = np.zeros((X.shape[0], len(rules)))
+        for i, r in enumerate(rules):
+            features_r_uses = [term.split(' ')[0] for term in r.split(' and ')] 
+            X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
     def get_rules(self, exclude_zero_coef=False, subregion=None):
@@ -274,10 +268,9 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
 
         return score_linear(X_concat, y, rules,
-                            alphas=self.alphas,
-                            cv=self.cv,
                             prediction_task=self.prediction_task,
                             max_rules=self.max_rules,
+                            alpha=self.alpha,
                             random_state=self.random_state)
 
 

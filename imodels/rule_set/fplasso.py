@@ -25,8 +25,7 @@ class FPLasso(RuleFit):
                  lin_standardise=True,
                  exp_rand_tree_size=True,
                  include_linear=True,
-                 alphas=None,
-                 cv=3,
+                 alpha=None,
                  random_state=None):
         super().__init__(tree_size,
                          sample_fract,
@@ -37,8 +36,7 @@ class FPLasso(RuleFit):
                          lin_standardise,
                          exp_rand_tree_size,
                          include_linear,
-                         alphas,
-                         cv,
+                         alpha,
                          random_state)
         self.disc_strategy = disc_strategy
         self.disc_kwargs = disc_kwargs
