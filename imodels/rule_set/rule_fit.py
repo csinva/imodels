@@ -62,9 +62,10 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     """
 
     def __init__(self,
+                 n_estimators=100,
                  tree_size=4,
                  sample_fract='default',
-                 max_rules=2000,
+                 max_rules=30,
                  memory_par=0.01,
                  tree_generator=None,
                  lin_trim_quantile=0.025,
@@ -73,6 +74,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                  include_linear=True,
                  alpha=None,
                  random_state=None):
+        self.n_estimators = n_estimators
         self.tree_size = tree_size
         self.sample_fract = sample_fract
         self.max_rules = max_rules
@@ -237,8 +239,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     def _extract_rules(self, X, y) -> List[Rule]:
         return extract_rulefit(X, y,
                                feature_names=self.feature_placeholders,
+                               n_estimators=self.n_estimators,
                                tree_size=self.tree_size,
-                               max_rules=self.max_rules,
                                memory_par=self.memory_par,
                                tree_generator=self.tree_generator,
                                exp_rand_tree_size=self.exp_rand_tree_size,

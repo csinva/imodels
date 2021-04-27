@@ -50,18 +50,17 @@ def extract_fpgrowth(X, y,
 
 
 def extract_rulefit(X, y, feature_names,
+                    n_estimators=10,
                     tree_size=4,
-                    max_rules=2000,
                     memory_par=0.01,
                     tree_generator=None,
                     exp_rand_tree_size=True,
                     random_state=None) -> List[str]:
 
     if tree_generator is None:
-        n_estimators_default = int(np.ceil(max_rules / tree_size))
         sample_fract_ = min(0.5, (100 + 6 * np.sqrt(X.shape[0])) / X.shape[0])
 
-        tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default,
+        tree_generator = GradientBoostingRegressor(n_estimators=n_estimators,
                                                     max_leaf_nodes=tree_size,
                                                     learning_rate=memory_par,
                                                     subsample=sample_fract_,
@@ -76,8 +75,7 @@ def extract_rulefit(X, y, feature_names,
         tree_generator.fit(X, y)
     else:  # randomise tree size as per Friedman 2005 Sec 3.3
         np.random.seed(random_state)
-        tree_sizes = np.random.exponential(scale=tree_size - 2,
-                                            size=int(np.ceil(max_rules * 2 / tree_size)))
+        tree_sizes = np.random.exponential(scale=tree_size - 2, size=n_estimators)
         tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
         tree_generator.set_params(warm_start=True)
         curr_est_ = 0
@@ -117,8 +115,7 @@ def extract_skope(X, y, feature_names,
                   max_samples_features=1.,
                   bootstrap=False,
                   bootstrap_features=False,
-                  max_depths=[3], 
-                  max_depth_duplication=None,
+                  max_depths=[3],
                   max_features=1.,
                   min_samples_split=2,
                   n_jobs=1,

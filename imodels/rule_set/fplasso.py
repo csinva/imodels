@@ -16,6 +16,7 @@ class FPLasso(RuleFit):
                  disc_strategy='mdlp',
                  disc_kwargs={},
                  verbose=False,
+                 n_estimators=100,
                  tree_size=4,
                  sample_fract='default',
                  max_rules=2000,
@@ -27,7 +28,8 @@ class FPLasso(RuleFit):
                  include_linear=True,
                  alpha=None,
                  random_state=None):
-        super().__init__(tree_size,
+        super().__init__(n_estimators,
+                         tree_size,
                          sample_fract,
                          max_rules,
                          memory_par,
