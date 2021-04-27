@@ -71,18 +71,21 @@ def _eval_rule_perf(rule: str, X, y) -> Tuple[float, float]:
 def score_linear(X, y, rules: List[str], 
                  penalty='l1',
                  prediction_task='regression',
-                 max_rules=2000,
+                 max_rules=30,
                  alpha=None,
                  random_state=None) -> Tuple[List[Rule], List[float], float]:
 
-    if alpha is not None:
+    if alpha is not None and max_rules is None:
         final_alpha = alpha
-    else:
+    elif max_rules is not None and alpha is None:
         final_alpha = get_best_alpha_under_max_rules(X, y, rules,
                                                      penalty=penalty,
                                                      prediction_task=prediction_task,
                                                      max_rules=max_rules, 
                                                      random_state=random_state)
+    else:
+        raise ValueError("max_rules and alpha cannot be used together")
+
 
     if prediction_task == 'regression':
         lscv = Lasso(alpha=final_alpha, random_state=random_state, max_iter=2000)
@@ -108,7 +111,7 @@ def score_linear(X, y, rules: List[str],
 def get_best_alpha_under_max_rules(X, y, rules: List[str],
                                    penalty='l1',
                                    prediction_task='regression',
-                                   max_rules=2000,
+                                   max_rules=30,
                                    random_state=None) -> float:
     coef_zero_threshold = 1e-6 / np.mean(np.abs(y))
     alpha_scores = []

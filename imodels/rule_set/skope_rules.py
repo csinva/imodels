@@ -477,7 +477,6 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
                              bootstrap=self.bootstrap,
                              bootstrap_features=self.bootstrap_features,
                              max_depths=self.max_depth,
-                             max_depth_duplication=self.max_depth_duplication,
                              max_features=self.max_features,
                              min_samples_split=self.min_samples_split,
                              n_jobs=self.n_jobs,
