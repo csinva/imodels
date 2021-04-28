@@ -59,7 +59,7 @@ class FPSkopeClassifier(SkopeRulesClassifier):
 
     def _extract_rules(self, X, y) -> List[str]:
         itemsets = extract_fpgrowth(X, y,
-                                    feature_labels=self.feature_placeholders,
+                                    feature_names=self.feature_placeholders,
                                     minsupport=self.minsupport,
                                     maxcardinality=self.maxcardinality,
                                     undiscretized_features=self.undiscretized_features,

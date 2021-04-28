@@ -94,15 +94,15 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             random.seed(self.random_state)
             np.random.seed(self.random_state)
 
-    def _setlabels(self, X, feature_labels=[]):
-        if len(feature_labels) == 0:
+    def _setlabels(self, X, feature_names=[]):
+        if len(feature_names) == 0:
             if type(X) == pd.DataFrame and ('object' in str(X.columns.dtype) or 'str' in str(X.columns.dtype)):
-                feature_labels = X.columns
+                feature_names = X.columns
             else:
-                feature_labels = ["ft" + str(i + 1) for i in range(len(X[0]))]
-        self.feature_labels = feature_labels
+                feature_names = ["ft" + str(i + 1) for i in range(len(X[0]))]
+        self.feature_names = feature_names
 
-    def fit(self, X, y, feature_labels: list = None, undiscretized_features=[], verbose=False):
+    def fit(self, X, y, feature_names: list = None, undiscretized_features=[], verbose=False):
         """Fit rule lists to data
 
         Parameters
@@ -113,7 +113,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         y : array_like, shape = [n_samples]
             Labels
             
-        feature_labels : array_like, shape = [n_features], optional (default: [])
+        feature_names : array_like, shape = [n_features], optional (default: [])
             String labels for each feature.
             If empty and X is a DataFrame, column labels are used.
             If empty and X is not a DataFrame, then features are simply enumerated
@@ -138,12 +138,12 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.n_features_in_ = X.shape[1]
         self.classes_ = unique_labels(y)
 
-        self.feature_dict_ = get_feature_dict(X.shape[1], feature_labels)
+        self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
-        self.feature_labels = np.array(list(self.feature_dict_.values()))
+        self.feature_names = np.array(list(self.feature_dict_.values()))
 
         itemsets, self.discretizer = extract_fpgrowth(X, y,
-                                                      feature_labels=self.feature_labels,
+                                                      feature_names=self.feature_names,
                                                       minsupport=self.minsupport,
                                                       maxcardinality=self.maxcardinality,
                                                       undiscretized_features=undiscretized_features,
@@ -256,7 +256,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         if self.discretizer:
             D = self.discretizer.transform(X)
         else:
-            D = pd.DataFrame(X, columns=self.feature_labels)
+            D = pd.DataFrame(X, columns=self.feature_names)
 
         N = len(D)
         X2 = self._to_itemset_indices(D)

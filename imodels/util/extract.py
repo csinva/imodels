@@ -13,7 +13,7 @@ from imodels.util.discretization import BRLDiscretizer, SimpleDiscretizer
 
 
 def extract_fpgrowth(X, y,
-                     feature_labels,
+                     feature_names,
                      minsupport=0.1,
                      maxcardinality=2,
                      undiscretized_features=[],
@@ -23,18 +23,18 @@ def extract_fpgrowth(X, y,
 
     # deal with pandas data
     if type(X) in [pd.DataFrame, pd.Series]:
-        if feature_labels is None:
-            feature_labels = X.columns
+        if feature_names is None:
+            feature_names = X.columns
         X = X.values
     if type(y) in [pd.DataFrame, pd.Series]:
         y = y.values
 
     if disc_strategy == 'mdlp':
-        discretizer = BRLDiscretizer(X, y, feature_labels=feature_labels, verbose=verbose)
+        discretizer = BRLDiscretizer(X, y, feature_labels=feature_names, verbose=verbose)
         discretizer.fit(X, y, undiscretized_features)
     else:
         discretizer = SimpleDiscretizer(**disc_kwargs)
-        discretizer.fit(X, feature_labels)
+        discretizer.fit(X, feature_names)
     
     X_df_onehot = discretizer.transform(X)
 
