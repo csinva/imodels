@@ -25,14 +25,14 @@ class TestBRL(unittest.TestCase):
         y = np.array([0, 0, 0, 0, 1, 1, 1, 1])
         M = BayesianRuleListClassifier(minsupport=0.02, maxcardinality=1)
         feat = ['ft1', 'ft2', 'ft3', 'ft4', 'ft5']
-        M.fit(X, y, feature_labels=feat)
+        M.fit(X, y, feature_names=feat)
         assert (np.array([M.predict(np.array([row]), threshold=0.5) for row in X]).flatten() == y).all()
 
     def test_integration_fitting(self):
         '''Test on a real (small) dataset
         '''
         np.random.seed(13)
-        feature_labels = ["#Pregnant", "Glucose concentration test", "Blood pressure(mmHg)",
+        feature_names = ["#Pregnant", "Glucose concentration test", "Blood pressure(mmHg)",
                           "Triceps skin fold thickness(mm)",
                           "2-Hour serum insulin (mu U/ml)", "Body mass index", "Diabetes pedigree function",
                           "Age (years)"]
@@ -47,6 +47,6 @@ class TestBRL(unittest.TestCase):
         # train classifier (allow more iterations for better accuracy; use BigDataRuleListClassifier for large datasets)
         print('training...')
         model = BayesianRuleListClassifier(max_iter=1000, minsupport=0.4, maxcardinality=1, class1label="diabetes", verbose=False)
-        model.fit(X_train, y_train, feature_labels=feature_labels)
+        model.fit(X_train, y_train, feature_names=feature_names)
         preds = model.predict(X_test, threshold=0.1)
         print("RuleListClassifier Accuracy:", np.mean(y_test == preds), "Learned interpretable model:\n", model)
