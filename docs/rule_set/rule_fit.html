@@ -95,18 +95,19 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     &#34;&#34;&#34;
 
     def __init__(self,
+                 n_estimators=100,
                  tree_size=4,
                  sample_fract=&#39;default&#39;,
-                 max_rules=2000,
+                 max_rules=30,
                  memory_par=0.01,
                  tree_generator=None,
                  lin_trim_quantile=0.025,
                  lin_standardise=True,
                  exp_rand_tree_size=True,
                  include_linear=True,
-                 alphas=None,
-                 cv=3,
+                 alpha=None,
                  random_state=None):
+        self.n_estimators = n_estimators
         self.tree_size = tree_size
         self.sample_fract = sample_fract
         self.max_rules = max_rules
@@ -116,8 +117,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.lin_standardise = lin_standardise
         self.exp_rand_tree_size = exp_rand_tree_size
         self.include_linear = include_linear
-        self.alphas = alphas
-        self.cv = cv
+        self.alpha = alpha
         self.random_state = random_state
 
         self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
@@ -206,14 +206,10 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             Transformed data set
         &#34;&#34;&#34;
         df = pd.DataFrame(X, columns=self.feature_placeholders)
-        X_transformed = np.zeros([X.shape[0], 0])
-
-        for r in rules:
-            curr_rule_feature = np.zeros(X.shape[0])
-            curr_rule_feature[list(df.query(r).index)] = 1
-            curr_rule_feature = np.expand_dims(curr_rule_feature, axis=1)
-            X_transformed = np.concatenate((X_transformed, curr_rule_feature), axis=1)
-
+        X_transformed = np.zeros((X.shape[0], len(rules)))
+        for i, r in enumerate(rules):
+            features_r_uses = [term.split(&#39; &#39;)[0] for term in r.split(&#39; and &#39;)] 
+            X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
     def get_rules(self, exclude_zero_coef=False, subregion=None):
@@ -276,8 +272,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     def _extract_rules(self, X, y) -&gt; List[Rule]:
         return extract_rulefit(X, y,
                                feature_names=self.feature_placeholders,
+                               n_estimators=self.n_estimators,
                                tree_size=self.tree_size,
-                               max_rules=self.max_rules,
                                memory_par=self.memory_par,
                                tree_generator=self.tree_generator,
                                exp_rand_tree_size=self.exp_rand_tree_size,
@@ -305,12 +301,15 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         X_rules = self.transform(X, rules)
         if X_rules.shape[0] &gt; 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
+        
+        # no rules fit and self.include_linear == False
+        if X_concat.shape[1] == 0:
+            return [], [], 0
 
         return score_linear(X_concat, y, rules,
-                            alphas=self.alphas,
-                            cv=self.cv,
                             prediction_task=self.prediction_task,
                             max_rules=self.max_rules,
+                            alpha=self.alpha,
                             random_state=self.random_state)
 
 
@@ -335,7 +334,7 @@ class RuleFitClassifier(RuleFit, ClassifierMixin):
 <dl>
 <dt id="imodels.rule_set.rule_fit.RuleFit"><code class="flex name class">
 <span>class <span class="ident">RuleFit</span></span>
-<span>(</span><span>tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alphas=None, cv=3, random_state=None)</span>
+<span>(</span><span>n_estimators=100, tree_size=4, sample_fract='default', max_rules=30, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
@@ -419,18 +418,19 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
     &#34;&#34;&#34;
 
     def __init__(self,
+                 n_estimators=100,
                  tree_size=4,
                  sample_fract=&#39;default&#39;,
-                 max_rules=2000,
+                 max_rules=30,
                  memory_par=0.01,
                  tree_generator=None,
                  lin_trim_quantile=0.025,
                  lin_standardise=True,
                  exp_rand_tree_size=True,
                  include_linear=True,
-                 alphas=None,
-                 cv=3,
+                 alpha=None,
                  random_state=None):
+        self.n_estimators = n_estimators
         self.tree_size = tree_size
         self.sample_fract = sample_fract
         self.max_rules = max_rules
@@ -440,8 +440,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
         self.lin_standardise = lin_standardise
         self.exp_rand_tree_size = exp_rand_tree_size
         self.include_linear = include_linear
-        self.alphas = alphas
-        self.cv = cv
+        self.alpha = alpha
         self.random_state = random_state
 
         self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
@@ -530,14 +529,10 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
             Transformed data set
         &#34;&#34;&#34;
         df = pd.DataFrame(X, columns=self.feature_placeholders)
-        X_transformed = np.zeros([X.shape[0], 0])
-
-        for r in rules:
-            curr_rule_feature = np.zeros(X.shape[0])
-            curr_rule_feature[list(df.query(r).index)] = 1
-            curr_rule_feature = np.expand_dims(curr_rule_feature, axis=1)
-            X_transformed = np.concatenate((X_transformed, curr_rule_feature), axis=1)
-
+        X_transformed = np.zeros((X.shape[0], len(rules)))
+        for i, r in enumerate(rules):
+            features_r_uses = [term.split(&#39; &#39;)[0] for term in r.split(&#39; and &#39;)] 
+            X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
     def get_rules(self, exclude_zero_coef=False, subregion=None):
@@ -600,8 +595,8 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
     def _extract_rules(self, X, y) -&gt; List[Rule]:
         return extract_rulefit(X, y,
                                feature_names=self.feature_placeholders,
+                               n_estimators=self.n_estimators,
                                tree_size=self.tree_size,
-                               max_rules=self.max_rules,
                                memory_par=self.memory_par,
                                tree_generator=self.tree_generator,
                                exp_rand_tree_size=self.exp_rand_tree_size,
@@ -629,12 +624,15 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
         X_rules = self.transform(X, rules)
         if X_rules.shape[0] &gt; 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
+        
+        # no rules fit and self.include_linear == False
+        if X_concat.shape[1] == 0:
+            return [], [], 0
 
         return score_linear(X_concat, y, rules,
-                            alphas=self.alphas,
-                            cv=self.cv,
                             prediction_task=self.prediction_task,
                             max_rules=self.max_rules,
+                            alpha=self.alpha,
                             random_state=self.random_state)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -858,14 +856,10 @@ efficiency.</dd>
         Transformed data set
     &#34;&#34;&#34;
     df = pd.DataFrame(X, columns=self.feature_placeholders)
-    X_transformed = np.zeros([X.shape[0], 0])
-
-    for r in rules:
-        curr_rule_feature = np.zeros(X.shape[0])
-        curr_rule_feature[list(df.query(r).index)] = 1
-        curr_rule_feature = np.expand_dims(curr_rule_feature, axis=1)
-        X_transformed = np.concatenate((X_transformed, curr_rule_feature), axis=1)
-
+    X_transformed = np.zeros((X.shape[0], len(rules)))
+    for i, r in enumerate(rules):
+        features_r_uses = [term.split(&#39; &#39;)[0] for term in r.split(&#39; and &#39;)] 
+        X_transformed[df[features_r_uses].query(r).index.values, i] = 1
     return X_transformed</code></pre>
 </details>
 </dd>
@@ -889,7 +883,7 @@ efficiency.</dd>
 </dd>
 <dt id="imodels.rule_set.rule_fit.RuleFitClassifier"><code class="flex name class">
 <span>class <span class="ident">RuleFitClassifier</span></span>
-<span>(</span><span>tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alphas=None, cv=3, random_state=None)</span>
+<span>(</span><span>n_estimators=100, tree_size=4, sample_fract='default', max_rules=30, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
@@ -961,7 +955,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
 </dd>
 <dt id="imodels.rule_set.rule_fit.RuleFitRegressor"><code class="flex name class">
 <span>class <span class="ident">RuleFitRegressor</span></span>
-<span>(</span><span>tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alphas=None, cv=3, random_state=None)</span>
+<span>(</span><span>n_estimators=100, tree_size=4, sample_fract='default', max_rules=30, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>

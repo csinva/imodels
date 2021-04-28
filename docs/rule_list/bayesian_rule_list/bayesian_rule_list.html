@@ -120,15 +120,15 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             random.seed(self.random_state)
             np.random.seed(self.random_state)
 
-    def _setlabels(self, X, feature_labels=[]):
-        if len(feature_labels) == 0:
+    def _setlabels(self, X, feature_names=[]):
+        if len(feature_names) == 0:
             if type(X) == pd.DataFrame and (&#39;object&#39; in str(X.columns.dtype) or &#39;str&#39; in str(X.columns.dtype)):
-                feature_labels = X.columns
+                feature_names = X.columns
             else:
-                feature_labels = [&#34;ft&#34; + str(i + 1) for i in range(len(X[0]))]
-        self.feature_labels = feature_labels
+                feature_names = [&#34;ft&#34; + str(i + 1) for i in range(len(X[0]))]
+        self.feature_names = feature_names
 
-    def fit(self, X, y, feature_labels: list = None, undiscretized_features=[], verbose=False):
+    def fit(self, X, y, feature_names: list = None, undiscretized_features=[], verbose=False):
         &#34;&#34;&#34;Fit rule lists to data
 
         Parameters
@@ -139,7 +139,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         y : array_like, shape = [n_samples]
             Labels
             
-        feature_labels : array_like, shape = [n_features], optional (default: [])
+        feature_names : array_like, shape = [n_features], optional (default: [])
             String labels for each feature.
             If empty and X is a DataFrame, column labels are used.
             If empty and X is not a DataFrame, then features are simply enumerated
@@ -164,12 +164,12 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.n_features_in_ = X.shape[1]
         self.classes_ = unique_labels(y)
 
-        self.feature_dict_ = get_feature_dict(X.shape[1], feature_labels)
+        self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
-        self.feature_labels = np.array(list(self.feature_dict_.values()))
+        self.feature_names = np.array(list(self.feature_dict_.values()))
 
         itemsets, self.discretizer = extract_fpgrowth(X, y,
-                                                      feature_labels=self.feature_labels,
+                                                      feature_names=self.feature_names,
                                                       minsupport=self.minsupport,
                                                       maxcardinality=self.maxcardinality,
                                                       undiscretized_features=undiscretized_features,
@@ -282,7 +282,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         if self.discretizer:
             D = self.discretizer.transform(X)
         else:
-            D = pd.DataFrame(X, columns=self.feature_labels)
+            D = pd.DataFrame(X, columns=self.feature_names)
 
         N = len(D)
         X2 = self._to_itemset_indices(D)
@@ -433,15 +433,15 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
             random.seed(self.random_state)
             np.random.seed(self.random_state)
 
-    def _setlabels(self, X, feature_labels=[]):
-        if len(feature_labels) == 0:
+    def _setlabels(self, X, feature_names=[]):
+        if len(feature_names) == 0:
             if type(X) == pd.DataFrame and (&#39;object&#39; in str(X.columns.dtype) or &#39;str&#39; in str(X.columns.dtype)):
-                feature_labels = X.columns
+                feature_names = X.columns
             else:
-                feature_labels = [&#34;ft&#34; + str(i + 1) for i in range(len(X[0]))]
-        self.feature_labels = feature_labels
+                feature_names = [&#34;ft&#34; + str(i + 1) for i in range(len(X[0]))]
+        self.feature_names = feature_names
 
-    def fit(self, X, y, feature_labels: list = None, undiscretized_features=[], verbose=False):
+    def fit(self, X, y, feature_names: list = None, undiscretized_features=[], verbose=False):
         &#34;&#34;&#34;Fit rule lists to data
 
         Parameters
@@ -452,7 +452,7 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         y : array_like, shape = [n_samples]
             Labels
             
-        feature_labels : array_like, shape = [n_features], optional (default: [])
+        feature_names : array_like, shape = [n_features], optional (default: [])
             String labels for each feature.
             If empty and X is a DataFrame, column labels are used.
             If empty and X is not a DataFrame, then features are simply enumerated
@@ -477,12 +477,12 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         self.n_features_in_ = X.shape[1]
         self.classes_ = unique_labels(y)
 
-        self.feature_dict_ = get_feature_dict(X.shape[1], feature_labels)
+        self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
-        self.feature_labels = np.array(list(self.feature_dict_.values()))
+        self.feature_names = np.array(list(self.feature_dict_.values()))
 
         itemsets, self.discretizer = extract_fpgrowth(X, y,
-                                                      feature_labels=self.feature_labels,
+                                                      feature_names=self.feature_names,
                                                       minsupport=self.minsupport,
                                                       maxcardinality=self.maxcardinality,
                                                       undiscretized_features=undiscretized_features,
@@ -595,7 +595,7 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         if self.discretizer:
             D = self.discretizer.transform(X)
         else:
-            D = pd.DataFrame(X, columns=self.feature_labels)
+            D = pd.DataFrame(X, columns=self.feature_names)
 
         N = len(D)
         X2 = self._to_itemset_indices(D)
@@ -630,7 +630,7 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_labels=None, undiscretized_features=[], verbose=False)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, undiscretized_features=[], verbose=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Fit rule lists to data</p>
@@ -640,7 +640,7 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
 <dd>Training data</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>array_like</code>, <code>shape</code> = [<code>n_samples</code>]</dt>
 <dd>Labels</dd>
-<dt><strong><code>feature_labels</code></strong> :&ensp;<code>array_like</code>, <code>shape</code> = [<code>n_features</code>], optional (default: [])</dt>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>array_like</code>, <code>shape</code> = [<code>n_features</code>], optional (default: [])</dt>
 <dd>String labels for each feature.
 If empty and X is a DataFrame, column labels are used.
 If empty and X is not a DataFrame, then features are simply enumerated</dd>
@@ -655,7 +655,7 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y, feature_labels: list = None, undiscretized_features=[], verbose=False):
+<pre><code class="python">def fit(self, X, y, feature_names: list = None, undiscretized_features=[], verbose=False):
     &#34;&#34;&#34;Fit rule lists to data
 
     Parameters
@@ -666,7 +666,7 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
     y : array_like, shape = [n_samples]
         Labels
         
-    feature_labels : array_like, shape = [n_features], optional (default: [])
+    feature_names : array_like, shape = [n_features], optional (default: [])
         String labels for each feature.
         If empty and X is a DataFrame, column labels are used.
         If empty and X is not a DataFrame, then features are simply enumerated
@@ -691,12 +691,12 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
     self.n_features_in_ = X.shape[1]
     self.classes_ = unique_labels(y)
 
-    self.feature_dict_ = get_feature_dict(X.shape[1], feature_labels)
+    self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
     self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
-    self.feature_labels = np.array(list(self.feature_dict_.values()))
+    self.feature_names = np.array(list(self.feature_dict_.values()))
 
     itemsets, self.discretizer = extract_fpgrowth(X, y,
-                                                  feature_labels=self.feature_labels,
+                                                  feature_names=self.feature_names,
                                                   minsupport=self.minsupport,
                                                   maxcardinality=self.maxcardinality,
                                                   undiscretized_features=undiscretized_features,
@@ -828,7 +828,7 @@ order, as they appear in the attribute <code>classes_</code>.</dd>
     if self.discretizer:
         D = self.discretizer.transform(X)
     else:
-        D = pd.DataFrame(X, columns=self.feature_labels)
+        D = pd.DataFrame(X, columns=self.feature_names)
 
     N = len(D)
     X2 = self._to_itemset_indices(D)
