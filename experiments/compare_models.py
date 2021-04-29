@@ -5,24 +5,26 @@ import argparse
 import os
 import pickle as pkl
 import time
+import warnings
 from collections import defaultdict, OrderedDict
 from typing import Any, Callable, List, Dict, Tuple, Union
+
+warnings.filterwarnings("ignore", message="Bins whose width")
 
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
-from scipy.sparse import issparse
 from sklearn.base import BaseEstimator
-from sklearn.datasets import fetch_openml
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score, make_scorer
 from sklearn.model_selection import KFold, train_test_split, cross_validate
 from tqdm import tqdm
 
-from experiments.config import (
-    COMPARISON_DATASETS, EASY_DATASETS, MEDIUM_DATASETS, HARD_DATASETS, BEST_ESTIMATORS, ALL_ESTIMATORS
+from experiments.config.config import (
+    EASY_DATASETS, HARD_DATASETS, BEST_ESTIMATORS, ALL_ESTIMATORS, 
+    BEST_EASY_ESTIMATORS, EASY_ESTIMATORS
 )
-from experiments.util import Model, MODEL_COMPARISON_PATH
+from experiments.util import Model, MODEL_COMPARISON_PATH, get_clean_dataset
 
 
 def get_complexity(estimator: BaseEstimator) -> float:
@@ -41,25 +43,8 @@ def get_complexity(estimator: BaseEstimator) -> float:
         return estimator.complexity_
 
 
-def get_dataset(data_id: Union[int, str], onehot_encode_strings: bool = True) -> Tuple[np.array, np.array]:
-    if type(data_id) is int:
-        # load data from OpenML
-        dataset = fetch_openml(data_id=data_id, as_frame=False)
-        X = dataset.data
-        if issparse(X):
-            X = X.toarray()
-        y = (dataset.target[0] == dataset.target).astype(int)
-    elif type(data_id) is str:
-        # load local datasets
-        df = pd.read_csv(data_id)
-        X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
-    else:
-        raise NotImplementedError
-    return np.nan_to_num(X.astype('float32')), y
-
-
 def compute_meta_auc(result_data: pd.DataFrame,
-                     prefix: str,
+                     prefix: str = '',
                     #  metric_names: list[str] = ['mean_PRAUC', 'mean_ROCAUC', 'mean_accuracy'],
                      low_complexity_cutoff: int = 30,
                      max_start_complexity: int = 10) -> Tuple[pd.DataFrame, Tuple[float]]:
@@ -67,7 +52,8 @@ def compute_meta_auc(result_data: pd.DataFrame,
     # LOW_COMPLEXITY_CUTOFF: complexity score under which a model is considered interpretable
     # MAX_START_COMPLEXITY: min complexity of curves included in the AUC-of-AUC comparison must be below this value
 
-    x_column = f'{prefix}_mean_complexity'
+    # x_column = f'{prefix}_mean_complexity'
+    x_column = f'mean_complexity'
     compute_columns = result_data.columns[result_data.columns.str.contains('mean')]
     estimators = np.unique(result_data.index)
     xs = np.empty(len(estimators), dtype=object)
@@ -85,8 +71,7 @@ def compute_meta_auc(result_data: pd.DataFrame,
         ys[i] = roc_aucs.values
 
     # filter out curves which start too complex
-    mask = list(map(lambda x: min(x) < max_start_complexity, xs))
-    xs, ys, estimators = xs[mask], ys[mask], estimators[mask]
+    start_under_10 = list(map(lambda x: min(x) < max_start_complexity, xs))
 
     # find overlapping complexity region for roc-of-roc comparison
     meta_auc_lb = max([x[0] for x in xs])
@@ -95,22 +80,26 @@ def compute_meta_auc(result_data: pd.DataFrame,
     meta_auc_ub = min(meta_auc_ub, low_complexity_cutoff)
 
     # handle non-overlapping curves
-    mask = endpts > meta_auc_lb
-    xs, ys, estimators = xs[mask], ys[mask], estimators[mask]
+    endpt_after_lb = endpts > meta_auc_lb
+    eligible = start_under_10 & endpt_after_lb
 
     # compute AUC of interpolated curves in overlap region
     meta_aucs = defaultdict(lambda:[])
     for i in range(len(xs)):
         for c, col in enumerate(compute_columns):
-            f_curve = interp1d(xs[i], ys[i][:, c])
-            x_interp = np.linspace(meta_auc_lb, meta_auc_ub, 100)
-            y_interp = f_curve(x_interp)
-            meta_aucs[col + '_auc'].append(np.trapz(y_interp, x=x_interp))
+            if eligible[i]:
+                f_curve = interp1d(xs[i], ys[i][:, c])
+                x_interp = np.linspace(meta_auc_lb, meta_auc_ub, 100)
+                y_interp = f_curve(x_interp)
+                auc_value = np.trapz(y_interp, x=x_interp)
+            else:
+                auc_value = 0
+            meta_aucs[col + '_auc'].append(auc_value)
 
     meta_auc_df = pd.DataFrame(meta_aucs, index=estimators)
     meta_auc_df[f'{x_column}_lb'] = meta_auc_lb
     meta_auc_df[f'{x_column}_ub'] = meta_auc_ub
-    return meta_auc_df, (meta_auc_lb, meta_auc_ub)
+    return meta_auc_df
 
 
 def compare_estimators(estimators: List[Model],
@@ -120,7 +109,7 @@ def compare_estimators(estimators: List[Model],
                        n_cv_folds: int,
                        low_data: bool,
                        verbose: bool = True,
-                       split_seed: int = 0) -> dict:
+                       split_seed: int = 0) -> Tuple[dict, dict]:
     if type(estimators) != list:
         raise Exception("First argument needs to be a list of Models")
     if type(metrics) != list:
@@ -132,11 +121,13 @@ def compare_estimators(estimators: List[Model],
         if e.fixed_param is not None:
             mean_results[e.fixed_param].append(e.fixed_param_val)
 
+    rules = mean_results.copy()
+
     # loop over datasets
     for d in tqdm(datasets):
         if verbose:
             print("comparing on dataset", d[0])
-        X, y = get_dataset(d[1])
+        X, y, feat_names = get_clean_dataset(d[1])
         test_size = 0.7 if low_data else 0.2
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=split_seed)
 
@@ -156,10 +147,19 @@ def compare_estimators(estimators: List[Model],
                     X_fit, X_eval, y_fit, y_eval = X_train, X_test, y_train, y_test
 
                 start = time.time()
-                est.fit(X_fit, y_fit)
+                if type(est) in [RandomForestClassifier, GradientBoostingClassifier]:
+                    est.fit(X_fit, y_fit)
+                else:
+                    est.fit(X_fit, y_fit, feature_names=feat_names)
                 end = time.time()
+
                 y_pred = est.predict(X_eval)
                 y_pred_proba = est.predict_proba(X_eval)[:, 1]
+
+                if hasattr(est, 'rules_'):
+                    rules[d[0]].append(est.rules_)
+                else:
+                    rules[d[0]].append('')
 
                 # loop over metrics
                 metric_results = {}
@@ -174,7 +174,7 @@ def compare_estimators(estimators: List[Model],
                 colname = d[0] + '_' + met_name
                 mean_results[colname].append(met_val)
 
-    return mean_results
+    return mean_results, rules
 
 
 def run_comparison(path: str, 
@@ -196,13 +196,13 @@ def run_comparison(path: str,
     else:
         model_comparison_file = path + f'{estimator_name}_comparisons.pkl'
     if parallel_id is not None:
-        model_comparison_file = f'_{parallel_id}.'.join(model_comparison_file.split('.'))
+        model_comparison_file = f'_{parallel_id[0]}.'.join(model_comparison_file.split('.'))
 
     if os.path.isfile(model_comparison_file) and not ignore_cache:
         print(f'{estimator_name} results already computed and cached. use --ignore_cache to recompute')
         return
 
-    mean_results = compare_estimators(estimators=estimators,
+    mean_results, rules = compare_estimators(estimators=estimators,
                                       datasets=datasets,
                                       metrics=metrics,
                                       scorers=scorers,
@@ -215,31 +215,51 @@ def run_comparison(path: str,
     metrics_list = [m[0] for m in metrics]
     df = pd.DataFrame.from_dict(mean_results)
     df.index = estimators_list
+    rule_df = pd.DataFrame.from_dict(rules)
+    rule_df.index = estimators_list
 
-    easy_df = df.loc[:, [any([d in col for d in EASY_DATASETS]) for col in df.columns]].copy()
-    med_df = df.loc[:, [any([d in col for d in MEDIUM_DATASETS]) for col in df.columns]].copy()
-    hard_df = df.loc[:, [any([d in col for d in HARD_DATASETS]) for col in df.columns]].copy()
-    all_df = df.copy()
-    level_dfs = (easy_df, 'easy'), (med_df, 'med'), (hard_df, 'hard'), (all_df, 'all')
+    # easy_df = df.loc[:, [any([d in col for d in EASY_DATASETS]) for col in df.columns]].copy()
+    # med_df = df.loc[:, [any([d in col for d in MEDIUM_DATASETS]) for col in df.columns]].copy()
+    # hard_df = df.loc[:, [any([d in col for d in HARD_DATASETS]) for col in df.columns]].copy()
+    # all_df = df.copy()
+    # level_dfs = [(med_df, 'med'), (hard_df, 'hard'), (all_df, 'all')]
 
-    meta_auc_df = pd.DataFrame([])
-    for curr_df, prefix in level_dfs:
-        for (met_name, met) in metrics:
-            colname = f'{prefix}_mean_{met_name}'
-            met_df = curr_df.loc[:, [met_name in col for col in curr_df.columns]]
-            curr_df[colname] = met_df.mean(axis=1)
-            df[colname] = curr_df[colname]
+    # for curr_df, prefix in level_dfs:
+    for (met_name, met) in metrics:
+        # colname = f'{prefix}_mean_{met_name}'
+        colname = f'mean_{met_name}'
+        # met_df = curr_df.loc[:, [met_name in col for col in curr_df.columns]]
+        met_df = df.loc[:, [met_name in col for col in df.columns]]
+        df[colname] = met_df.mean(axis=1)
+        # curr_df[colname] = met_df.mean(axis=1)
+        # df[colname] = curr_df[colname]
+    if parallel_id is None:
+        try:
+            meta_auc_df = compute_meta_auc(df)
+        except ValueError as e:
+            warnings.warn(f'bad complexity range')
+            warnings.warn(e)
+            meta_auc_df = None
 
-        curr_meta_auc_df, curr_meta_auc_region = compute_meta_auc(curr_df, prefix)
-        meta_auc_df = pd.concat((meta_auc_df, curr_meta_auc_df), axis=1)
+    # meta_auc_df = pd.DataFrame([])
+    # if parallel_id is None:
+    #     for curr_df, prefix in level_dfs:
+    #         try:
+    #             curr_meta_auc_df = compute_meta_auc(curr_df, prefix)
+    #             meta_auc_df = pd.concat((meta_auc_df, curr_meta_auc_df), axis=1)
+    #         except ValueError as e:
+    #             warnings.warn(f'bad complexity range for {prefix} datasets')
 
     output_dict = {
         'estimators': estimators_list,
         'comparison_datasets': datasets,
         'metrics': metrics_list,
         'df': df,
-        'meta_auc_df': meta_auc_df,
     }
+    if parallel_id is None:
+        output_dict['meta_auc_df'] = meta_auc_df
+    if cv_folds <= 1:
+        output_dict['rule_df'] = rule_df
     pkl.dump(output_dict, open(model_comparison_file, 'wb'))
 
 
@@ -264,32 +284,46 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')
     parser.add_argument('--cv', action='store_true')
+    parser.add_argument('--datasets', type=str, default='hard')
     parser.add_argument('--ignore_cache', action='store_true')
     parser.add_argument('--low_data', action='store_true')
     parser.add_argument('--model', type=str, default=None)
-    parser.add_argument('--parallel_id', type=int, default=None)
+    parser.add_argument('--parallel_id', nargs='+', type=int, default=None)
     parser.add_argument('--split_seed', type=int, default=0)
     args = parser.parse_args()
 
     path = MODEL_COMPARISON_PATH
-    path += 'low_data/' if args.low_data else ''
-    path += 'test/' if args.test else 'val/'
+    path += 'low_data/' if args.low_data else 'reg_data/'
+    path += f'{args.datasets}/'
+    if args.test:
+        path += 'test/'
+    elif args.cv:
+        path += 'cv/'
+    else:
+        path += 'val/'
 
     if args.test:
-        ests = BEST_ESTIMATORS
         cv_folds = -1
     else:
-        ests = ALL_ESTIMATORS
         cv_folds = 4 if args.cv else 1
+    
+    if args.datasets == 'hard':
+        datasets = HARD_DATASETS
+        ests = BEST_ESTIMATORS if args.test else ALL_ESTIMATORS
+    else:
+        datasets = EASY_DATASETS
+        ests = BEST_EASY_ESTIMATORS if args.test else EASY_ESTIMATORS
 
     if args.model:
         ests = list(filter(lambda x: args.model in x[0].name, ests))
-        if args.parallel_id is not None:
-            ests = [[est[args.parallel_id]] for est in ests]
+        if args.parallel_id is not None and len(args.parallel_id) > 1:
+            ests = [est[args.parallel_id[0]:args.parallel_id[1]+1] for est in ests]
+        elif args.parallel_id is not None:
+            ests = [[est[args.parallel_id[0]]] for est in ests]
 
     for est in ests:
         run_comparison(path,
-                       COMPARISON_DATASETS,
+                       datasets,
                        metrics,
                        scorers,
                        est,
