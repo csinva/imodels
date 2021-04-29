@@ -6,9 +6,18 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
+import os.path
+from os.path import join as oj
 dvu.set_style()
 mpl.rcParams['figure.dpi'] = 250
+DIR_FILE = os.path.dirname(os.path.realpath(__file__)) # directory of this file
+print(DIR_FILE)
+DIR_FIGS = oj(DIR_FILE, 'figs')
 
+def savefig(fname):
+    plt.tight_layout()
+    plt.savefig(oj(DIR_FIGS, fname + '.pdf'))
 
 def get_x_and_y(result_data: pd.Series, x_col: str, y_col: str) -> (pd.Series, pd.Series):
     complexities = result_data[x_col]
