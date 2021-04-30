@@ -15,9 +15,10 @@ class StableLinear(RuleFit):
                  max_complexity: int,
                  min_mult: int = 1,
                  penalty='l1',
+                 n_estimators=100,
                  tree_size=4,
                  sample_fract='default',
-                 max_rules=2000,
+                 max_rules=30,
                  memory_par=0.01,
                  tree_generator=None,
                  lin_trim_quantile=0.025,
@@ -26,7 +27,8 @@ class StableLinear(RuleFit):
                  include_linear=True,
                  alpha=None,
                  random_state=None):
-        super().__init__(tree_size,
+        super().__init__(n_estimators,
+                         tree_size,
                          sample_fract,
                          max_rules,
                          memory_par,
@@ -36,7 +38,6 @@ class StableLinear(RuleFit):
                          exp_rand_tree_size,
                          include_linear,
                          alpha,
-                         cv,
                          random_state)
         self.max_complexity = max_complexity
         self.weak_learners = weak_learners

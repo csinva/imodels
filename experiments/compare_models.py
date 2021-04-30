@@ -24,6 +24,7 @@ from experiments.config.config import (
     EASY_DATASETS, HARD_DATASETS, BEST_ESTIMATORS, ALL_ESTIMATORS, 
     BEST_EASY_ESTIMATORS, EASY_ESTIMATORS
 )
+from experiments.config.ensemble_config import get_ensembles_easy, get_ensembles_hard
 from experiments.util import Model, MODEL_COMPARISON_PATH, get_clean_dataset
 
 
@@ -287,6 +288,7 @@ def main():
     parser.add_argument('--datasets', type=str, default='hard')
     parser.add_argument('--ignore_cache', action='store_true')
     parser.add_argument('--low_data', action='store_true')
+    parser.add_argument('--ensemble', action='store_true')
     parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--parallel_id', nargs='+', type=int, default=None)
     parser.add_argument('--split_seed', type=int, default=0)
@@ -313,13 +315,18 @@ def main():
     else:
         datasets = EASY_DATASETS
         ests = BEST_EASY_ESTIMATORS if args.test else EASY_ESTIMATORS
+    
+    if args.ensemble:
+        ests = get_ensembles_hard() if args.datasets == 'hard' else get_ensembles_easy()
 
     if args.model:
         ests = list(filter(lambda x: args.model in x[0].name, ests))
-        if args.parallel_id is not None and len(args.parallel_id) > 1:
+    
+    if args.parallel_id is not None and len(args.parallel_id) > 1:
             ests = [est[args.parallel_id[0]:args.parallel_id[1]+1] for est in ests]
-        elif args.parallel_id is not None:
-            ests = [[est[args.parallel_id[0]]] for est in ests]
+    elif args.parallel_id is not None:
+        ests = [[est[args.parallel_id[0]]] for est in ests]
+
 
     for est in ests:
         run_comparison(path,

@@ -8,7 +8,7 @@ from imodels import (
 )
 from sklearn.ensemble import RandomForestClassifier as rf, GradientBoostingClassifier as gb
 
-from experiments.util import Model, get_best_models_under_complexity, DATASET_PATH
+from experiments.util import Model, DATASET_PATH
 from experiments.models.stablelinear import StableLinearClassifier as stbl
 from experiments.models.stableskope import StableSkopeClassifier as stbs
 
@@ -40,9 +40,9 @@ ALL_ESTIMATORS.append(
     + [Model('gradient_boosting - depth_3', gb, 'n_estimators', n, 'max_depth', 3) for n in np.arange(1, 8)]
 )
 ALL_ESTIMATORS.append(
-    [Model('skope_rules - max_depth_1_prec_0.3', skope, 'n_estimators', n, 'max_depth', 1, {'precision_min': 0.3}) for n in np.arange(1, 137, 14)]
-    + [Model('skope_rules - max_depth_1_prec_0.4', skope, 'n_estimators', n, 'max_depth', 1, {'precision_min': 0.4}) for n in np.arange(1, 137, 14)]
-    + [Model('skope_rules - max_depth_1_prec_0.5', skope, 'n_estimators', n, 'max_depth', 1, {'precision_min': 0.5}) for n in np.arange(1, 137, 14)]
+    [Model('skope_rules - max_depth_1_prec_0.3', skope, 'n_estimators', n, 'max_depth', 1, {'precision_min': 0.3}) for n in np.arange(1, 137, 15)]
+    + [Model('skope_rules - max_depth_1_prec_0.4', skope, 'n_estimators', n, 'max_depth', 1, {'precision_min': 0.4}) for n in np.arange(1, 137, 15)]
+    + [Model('skope_rules - max_depth_1_prec_0.5', skope, 'n_estimators', n, 'max_depth', 1, {'precision_min': 0.5}) for n in np.arange(1, 137, 15)]
     + [Model('skope_rules - max_depth_2_prec_0.3', skope, 'n_estimators', n, 'max_depth', 2, {'precision_min': 0.3}) for n in np.arange(1, 20, 2)]
     + [Model('skope_rules - max_depth_2_prec_0.4', skope, 'n_estimators', n, 'max_depth', 2, {'precision_min': 0.4}) for n in np.arange(1, 20, 2)]
     + [Model('skope_rules - max_depth_2_prec_0.5', skope, 'n_estimators', n, 'max_depth', 2, {'precision_min': 0.5}) for n in np.arange(1, 20, 2)]
@@ -50,18 +50,18 @@ ALL_ESTIMATORS.append(
     + [Model('skope_rules - max_depth_3_prec_0.4', skope, 'n_estimators', n, 'max_depth', 3, {'precision_min': 0.4}) for n in np.arange(1, 6)]
     + [Model('skope_rules - max_depth_3_prec_0.5', skope, 'n_estimators', n, 'max_depth', 3, {'precision_min': 0.5}) for n in np.arange(1, 6)]
 )
-rulefit_kwargs = {'random_state': 0, 'max_rules': None, 'include_linear': False}
+RULEFIT_KWARGS = {'random_state': 0, 'max_rules': None, 'include_linear': False}
 ALL_ESTIMATORS.append(
-    [Model('rulefit - alpha_30', rfit, 'n_estimators', n, 'alpha', 30, rulefit_kwargs) for n in [1, 3] + list(np.arange(7, 50, 6))]
-    + [Model('rulefit - alpha_13', rfit, 'n_estimators', n, 'alpha', 13, rulefit_kwargs) for n in np.arange(1, 24, 2)]
-    + [Model('rulefit - alpha_5', rfit, 'n_estimators', n, 'alpha', 5, rulefit_kwargs) for n in np.arange(1, 11)]
-    + [Model('rulefit - alpha_2', rfit, 'n_estimators', n, 'alpha', 2, rulefit_kwargs) for n in np.arange(1, 11)]
-    + [Model('rulefit - alpha_1', rfit, 'n_estimators', n, 'alpha', 1, rulefit_kwargs) for n in np.arange(1, 11)]
+    [Model('rulefit - alpha_30', rfit, 'n_estimators', n, 'alpha', 30, RULEFIT_KWARGS) for n in [1, 2, 3] + list(np.arange(7, 50, 6))]
+    + [Model('rulefit - alpha_13', rfit, 'n_estimators', n, 'alpha', 13, RULEFIT_KWARGS) for n in np.arange(1, 24, 2)]
+    + [Model('rulefit - alpha_5', rfit, 'n_estimators', n, 'alpha', 5, RULEFIT_KWARGS) for n in np.arange(1, 11)]
+    + [Model('rulefit - alpha_2', rfit, 'n_estimators', n, 'alpha', 2, RULEFIT_KWARGS) for n in np.arange(1, 11)]
+    + [Model('rulefit - alpha_1', rfit, 'n_estimators', n, 'alpha', 1, RULEFIT_KWARGS) for n in np.arange(1, 11)]
 )
-fpl_kwargs = {'disc_strategy': 'simple', 'max_rules': None}
+FPL_KWARGS = {'disc_strategy': 'simple', 'max_rules': None}
 ALL_ESTIMATORS.append(
-    [Model('fplasso - max_card_1', fpl, 'alpha', a, 'maxcardinality', 1, fpl_kwargs) for a in np.logspace(1, 2.8, 10)]
-    + [Model('fplasso - max_card_2', fpl, 'alpha', a, 'maxcardinality', 2, fpl_kwargs) for a in np.logspace(2, 3, 10)]
+    [Model('fplasso - max_card_1', fpl, 'alpha', a, 'maxcardinality', 1, FPL_KWARGS) for a in np.logspace(1, 2.8, 10)]
+    + [Model('fplasso - max_card_2', fpl, 'alpha', a, 'maxcardinality', 2, FPL_KWARGS) for a in np.logspace(2, 3, 10)]
 )
 ALL_ESTIMATORS.append(
     [Model('fpskope - max_card_1_prec_0.3', fps, 'minsupport', n, 'maxcardinality', 1, {'disc_strategy': 'simple', 'precision_min': 0.3}) for n in np.linspace(0.03, 0.5, 10)]
@@ -71,11 +71,11 @@ ALL_ESTIMATORS.append(
     + [Model('fpskope - max_card_2_prec_0.4', fps, 'minsupport', n, 'maxcardinality', 2, {'disc_strategy': 'simple', 'precision_min': 0.4}) for n in np.linspace(0.2, 0.6, 10)]
     + [Model('fpskope - max_card_2_prec_0.5', fps, 'minsupport', n, 'maxcardinality', 2, {'disc_strategy': 'simple', 'precision_min': 0.5}) for n in np.linspace(0.2, 0.6, 10)]
 )
-brl_kwargs = {'disc_strategy': 'simple', 'max_iter': 2000}
+BRL_KWARGS = {'disc_strategy': 'simple', 'max_iter': 2000}
 ALL_ESTIMATORS.append(
-    [Model('brl - list_width_1', brl, 'listlengthprior', n, 'listwidthprior', 1, brl_kwargs) for n in np.arange(1, 20, 2)]
-    + [Model('brl - list_width_2', brl, 'listlengthprior', n, 'listwidthprior', 2, brl_kwargs) for n in np.arange(1, 20, 2)]
-    + [Model('brl - list_width_3', brl, 'listlengthprior', n, 'listwidthprior', 3, brl_kwargs) for n in np.arange(1, 16, 2)]
+    [Model('brl - list_width_1', brl, 'listlengthprior', n, 'listwidthprior', 1, BRL_KWARGS) for n in np.arange(1, 20, 2)]
+    + [Model('brl - list_width_2', brl, 'listlengthprior', n, 'listwidthprior', 2, BRL_KWARGS) for n in np.arange(1, 20, 2)]
+    + [Model('brl - list_width_3', brl, 'listlengthprior', n, 'listwidthprior', 3, BRL_KWARGS) for n in np.arange(1, 16, 2)]
 )
 ALL_ESTIMATORS.append([Model('brs - ', brs, 'n_estimators', n) for n in np.arange(1, 35, 3)])
 
@@ -85,15 +85,15 @@ BEST_EASY_ESTIMATORS = []
 EASY_ESTIMATORS = deepcopy(ALL_ESTIMATORS)
 
 EASY_ESTIMATORS[3] = (
-    [Model('rulefit - alpha_30', rfit, 'n_estimators', n, 'alpha', 30, rulefit_kwargs) for n in np.arange(1, 92, 10)]
-    + [Model('rulefit - alpha_13', rfit, 'n_estimators', n, 'alpha', 13, rulefit_kwargs) for n in np.arange(1, 38, 4)]
-    + [Model('rulefit - alpha_5', rfit, 'n_estimators', n, 'alpha', 5, rulefit_kwargs) for n in np.arange(1, 38, 4)]
-    + [Model('rulefit - alpha_2', rfit, 'n_estimators', n, 'alpha', 2, rulefit_kwargs) for n in np.arange(1, 20, 2)]
-    + [Model('rulefit - alpha_1', rfit, 'n_estimators', n, 'alpha', 1, rulefit_kwargs) for n in np.arange(1, 11)]
+    [Model('rulefit - alpha_30', rfit, 'n_estimators', n, 'alpha', 30, RULEFIT_KWARGS) for n in np.arange(1, 92, 10)]
+    + [Model('rulefit - alpha_13', rfit, 'n_estimators', n, 'alpha', 13, RULEFIT_KWARGS) for n in [1, 3] + list(np.arange(5, 38, 4))]
+    + [Model('rulefit - alpha_5', rfit, 'n_estimators', n, 'alpha', 5, RULEFIT_KWARGS) for n in np.arange(1, 38, 4)]
+    + [Model('rulefit - alpha_2', rfit, 'n_estimators', n, 'alpha', 2, RULEFIT_KWARGS) for n in np.arange(1, 20, 2)]
+    + [Model('rulefit - alpha_1', rfit, 'n_estimators', n, 'alpha', 1, RULEFIT_KWARGS) for n in np.arange(1, 11)]
 )
 EASY_ESTIMATORS[4] = (
-    [Model('fplasso - max_card_1', fpl, 'alpha', a, 'maxcardinality', 1, fpl_kwargs) for a in np.logspace(-0.5, 1, 10)]
-    + [Model('fplasso - max_card_2', fpl, 'alpha', a, 'maxcardinality', 2, fpl_kwargs) for a in np.logspace(0.5, 1.4, 10)]
+    [Model('fplasso - max_card_1', fpl, 'alpha', a, 'maxcardinality', 1, FPL_KWARGS) for a in np.logspace(-0.5, 1.2, 10)]
+    + [Model('fplasso - max_card_2', fpl, 'alpha', a, 'maxcardinality', 2, FPL_KWARGS) for a in np.logspace(0.5, 1.4, 10)]
 )
 EASY_ESTIMATORS[5] = (
     [Model('fpskope - max_card_1_prec_0.3', fps, 'minsupport', n, 'maxcardinality', 1, {'disc_strategy': 'simple', 'precision_min': 0.3}) for n in np.linspace(0.1, 0.5, 10)]

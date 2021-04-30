@@ -1,5 +1,6 @@
 import os
 import pickle as pkl
+import warnings
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
@@ -66,17 +67,34 @@ def get_comparison_result(path: str, estimator_name: str, prefix='val', low_data
     return pkl.load(open(result_file, 'rb'))
 
 
-def get_best_models_under_complexity(c: int, models: List[Tuple[str, BaseEstimator]], 
-                                     metric: str = 'mean_PRAUC'):
-    init_models = []
-    for m_name, m_cls in models:
-        result = get_comparison_result(MODEL_COMPARISON_PATH, m_name)
-        df, auc_df = result['df'], result['auc_of_auc']
-        df_best_curve = df[df.index == auc_df.idxmax()]
-        df_under_c = df_best_curve[df_best_curve['mean_complexity'] < c]
-        best_param = df_under_c.iloc[:, 0][df_under_c[metric].argmax()]
-        kwargs = {df_under_c.columns[0]: best_param}
-        if auc_df.shape[0] > 1:
-            kwargs[df_under_c.columns[1]] = int(df_under_c.iloc[0, 1])
-        init_models.append(m_cls(**kwargs))
-    return init_models
+def get_best_model_under_complexity(c: int, model_name: str, model_cls: BaseEstimator,
+                                    curve_param = None,
+                                    metric: str = 'mean_ROCAUC',
+                                    kwargs: dict = {},
+                                    prefix: str = 'cv',
+                                    easy: bool = False) -> BaseEstimator:
+    # init_models = []
+    # for m_name, m_cls in models:
+    result = get_comparison_result(MODEL_COMPARISON_PATH, model_name, prefix=prefix, easy=easy)
+    df, auc_metric = result['df'], result['meta_auc_df'][f'{metric}_auc']
+
+    if curve_param:
+        # specify which curve to use
+        df_best_curve = df[df.iloc[:, 1] == curve_param]
+    else:
+        # detect which curve to use
+        df_best_curve = df[df.index == auc_metric.idxmax()]
+    
+    df_under_c = df_best_curve[df_best_curve['mean_complexity'] < c]
+    if df_under_c.shape[0] == 0:
+        warnings.warn(f'{model_name} skipped for complexity limit {c}')
+        return None
+
+    best_param = df_under_c.iloc[:, 0][df_under_c[metric].argmax()]
+    kwargs[df_under_c.columns[0]] = best_param
+
+    # if there is a second param that was varied
+    if auc_metric.shape[0] > 1:
+        kwargs[df_under_c.columns[1]] = int(df_under_c.iloc[0, 1])
+
+    return model_cls(**kwargs)

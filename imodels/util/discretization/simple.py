@@ -4,7 +4,7 @@ from sklearn.preprocessing import KBinsDiscretizer
 
 class SimpleDiscretizer:
 
-    def __init__(self, n_bins: int = 4, strategy: str = 'quantile'):
+    def __init__(self, n_bins: int = 8, strategy: str = 'uniform'):
         self.n_bins = n_bins
         self.strategy = strategy
     
