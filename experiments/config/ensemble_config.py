@@ -46,7 +46,7 @@ def get_weak_learner_inst_list(complexity_limits, easy: bool = False):
 c_limits = np.concatenate((np.arange(2, 10), np.arange(10, 29, 2)))
 stbl_cs = lambda: enumerate(c_limits)
 
-def get_ensembles_hard():
+def get_ensembles_hard(test=False):
     stbl_kw_hard = [{'weak_learners': wl_lst} for wl_lst in get_weak_learner_inst_list(c_limits)]
 
     kwargs_1 = [{**kw, 'penalty': 'l2', 'alpha': 30, 'max_rules': None} for kw in stbl_kw_hard]
@@ -56,14 +56,13 @@ def get_ensembles_hard():
     kwargs_5 = [{**kw, 'penalty': 'l2', 'alpha': 1, 'max_rules': None} for kw in stbl_kw_hard]
 
     BEST_ENSEMBLES = []
+    BEST_ENSEMBLES += [
+        [Model('stbl_l2_mm2', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_2[i]) for i, c in stbl_cs()],
+        [Model('stbl_l2_mm1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_2[i]) for i, c in stbl_cs()]
+    ]
 
     ALL_ENSEMBLES = []
     ALL_ENSEMBLES.append(
-        # [Model('stbl_l2 - mm0_alpha_30', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_1[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l2 - mm0_alpha_13', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_2[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l2 - mm0_alpha_5', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l2 - mm0_alpha_2', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l2 - mm0_alpha_1', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
         [Model('stbl_l2 - mm1_alpha_30', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_1[i]) for i, c in stbl_cs()]
         + [Model('stbl_l2 - mm1_alpha_13', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_2[i]) for i, c in stbl_cs()]
         + [Model('stbl_l2 - mm1_alpha_5', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_3[i]) for i, c in stbl_cs()]
@@ -79,13 +78,15 @@ def get_ensembles_hard():
     kwargs_1 = [{**kw, 'penalty': 'l1', 'alpha': 30, 'max_rules': None} for kw in stbl_kw_hard]
     kwargs_2 = [{**kw, 'penalty': 'l1', 'alpha': 13, 'max_rules': None} for kw in stbl_kw_hard]
     kwargs_3 = [{**kw, 'penalty': 'l1', 'alpha': 5, 'max_rules': None} for kw in stbl_kw_hard]
+    kwargs_4 = [{**kw, 'penalty': 'l1', 'alpha': 2, 'max_rules': None} for kw in stbl_kw_hard]
+    kwargs_5 = [{**kw, 'penalty': 'l1', 'alpha': 1, 'max_rules': None} for kw in stbl_kw_hard]
+
+    BEST_ENSEMBLES += [
+        [Model('stbl_l1_mm2', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_3[i]) for i, c in stbl_cs()],
+        [Model('stbl_l1_mm1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_3[i]) for i, c in stbl_cs()]
+    ]
 
     ALL_ENSEMBLES.append(
-        # [Model('stbl_l1 - mm0_alpha_30', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_1[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l1 - mm0_alpha_13', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_2[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l1 - mm0_alpha_5', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l1 - mm0_alpha_2', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l1 - mm0_alpha_1', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
         [Model('stbl_l1 - mm1_alpha_30', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_1[i]) for i, c in stbl_cs()]
         + [Model('stbl_l1 - mm1_alpha_13', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_2[i]) for i, c in stbl_cs()]
         + [Model('stbl_l1 - mm1_alpha_5', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_3[i]) for i, c in stbl_cs()]
@@ -97,13 +98,10 @@ def get_ensembles_hard():
         + [Model('stbl_l1 - mm2_alpha_2', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_4[i]) for i, c in stbl_cs()]
         + [Model('stbl_l1 - mm2_alpha_1', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_5[i]) for i, c in stbl_cs()]
     )
-    return ALL_ENSEMBLES
+    return ALL_ENSEMBLES if not test else BEST_ENSEMBLES
 
-def get_ensembles_easy():
+def get_ensembles_easy(test=False):
     stbl_kw_easy = [{'weak_learners': wl_lst} for wl_lst in get_weak_learner_inst_list(c_limits, easy=True)]
-
-    BEST_EASY_ENSEMBLES = []
-
 
     kwargs_1 = [{**kw, 'penalty': 'l2', 'alpha': 30, 'max_rules': None} for kw in stbl_kw_easy]
     kwargs_2 = [{**kw, 'penalty': 'l2', 'alpha': 13, 'max_rules': None} for kw in stbl_kw_easy]
@@ -111,13 +109,14 @@ def get_ensembles_easy():
     kwargs_4 = [{**kw, 'penalty': 'l2', 'alpha': 2, 'max_rules': None} for kw in stbl_kw_easy]
     kwargs_5 = [{**kw, 'penalty': 'l2', 'alpha': 1, 'max_rules': None} for kw in stbl_kw_easy]
 
+    BEST_EASY_ENSEMBLES = []
+    BEST_EASY_ENSEMBLES += [
+        [Model('stbl_l2_mm2', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_3[i]) for i, c in stbl_cs()],
+        [Model('stbl_l2_mm1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_2[i]) for i, c in stbl_cs()]
+    ]
+
     EASY_ENSEMBLES = []
     EASY_ENSEMBLES.append(
-        # [Model('stbl_l2 - mm0_alpha_30', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_1[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l2 - mm0_alpha_13', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_2[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l2 - mm0_alpha_5', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l2 - mm0_alpha_2', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l2 - mm0_alpha_1', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
         [Model('stbl_l2 - mm1_alpha_30', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_1[i]) for i, c in stbl_cs()]
         + [Model('stbl_l2 - mm1_alpha_13', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_2[i]) for i, c in stbl_cs()]
         + [Model('stbl_l2 - mm1_alpha_5', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_3[i]) for i, c in stbl_cs()]
@@ -136,12 +135,12 @@ def get_ensembles_easy():
     kwargs_4 = [{**kw, 'penalty': 'l1', 'alpha': 2, 'max_rules': None} for kw in stbl_kw_easy]
     kwargs_5 = [{**kw, 'penalty': 'l1', 'alpha': 1, 'max_rules': None} for kw in stbl_kw_easy]
 
+    BEST_EASY_ENSEMBLES += [
+        [Model('stbl_l1_mm2', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_4[i]) for i, c in stbl_cs()],
+        [Model('stbl_l1_mm1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_4[i]) for i, c in stbl_cs()]
+    ]
+    
     EASY_ENSEMBLES.append(
-        # [Model('stbl_l1 - mm0_alpha_30', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_1[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l1 - mm0_alpha_13', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_2[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l1 - mm0_alpha_5', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l1 - mm0_alpha_2', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
-        # + [Model('stbl_l1 - mm0_alpha_1', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
         [Model('stbl_l1 - mm1_alpha_30', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_1[i]) for i, c in stbl_cs()]
         + [Model('stbl_l1 - mm1_alpha_13', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_2[i]) for i, c in stbl_cs()]
         + [Model('stbl_l1 - mm1_alpha_5', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_3[i]) for i, c in stbl_cs()]
@@ -154,4 +153,4 @@ def get_ensembles_easy():
         + [Model('stbl_l1 - mm2_alpha_1', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_5[i]) for i, c in stbl_cs()]
     )
 
-    return EASY_ENSEMBLES
+    return EASY_ENSEMBLES if not test else BEST_EASY_ENSEMBLES

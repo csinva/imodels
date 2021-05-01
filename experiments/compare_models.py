@@ -129,7 +129,7 @@ def compare_estimators(estimators: List[Model],
         if verbose:
             print("comparing on dataset", d[0])
         X, y, feat_names = get_clean_dataset(d[1])
-        test_size = 0.7 if low_data else 0.2
+        test_size = 0.8 if low_data else 0.2
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=split_seed)
 
         # loop over estimators
@@ -317,7 +317,7 @@ def main():
         ests = BEST_EASY_ESTIMATORS if args.test else EASY_ESTIMATORS
     
     if args.ensemble:
-        ests = get_ensembles_hard() if args.datasets == 'hard' else get_ensembles_easy()
+        ests = get_ensembles_hard(args.test) if args.datasets == 'hard' else get_ensembles_easy(args.test)
 
     if args.model:
         ests = list(filter(lambda x: args.model in x[0].name, ests))

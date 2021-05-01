@@ -24,7 +24,7 @@ class StableLinear(RuleFit):
                  lin_trim_quantile=0.025,
                  lin_standardise=True,
                  exp_rand_tree_size=True,
-                 include_linear=True,
+                 include_linear=False,
                  alpha=None,
                  random_state=None):
         super().__init__(n_estimators,
