@@ -73,6 +73,10 @@ class StableLinear(RuleFit):
         X_rules = self.transform(X, rules)
         if X_rules.shape[0] > 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
+        
+        # no rules fit and self.include_linear == False
+        if X_concat.shape[1] == 0:
+            return [], [], 0
 
         return score_linear(X_concat, y, rules, 
                             alpha=self.alpha, 
