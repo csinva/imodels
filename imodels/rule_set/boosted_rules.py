@@ -112,7 +112,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
-        self.complexity_ = len(self.estimators_)
+        self.complexity_ = len(self.rules_)
         return self
 
     def predict_proba(self, X):

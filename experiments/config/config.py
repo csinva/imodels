@@ -37,7 +37,7 @@ BEST_ESTIMATORS = [
     [Model('fplasso', fpl, 'alpha', a, 'maxcardinality', 1, FPL_KWARGS) for a in np.logspace(1, 2.8, 10)],
     [Model('fpskope', fps, 'minsupport', n, 'maxcardinality', 1, {'disc_strategy': 'simple', 'precision_min': 0.4}) for n in np.linspace(0.01, 0.5, 10)],
     [Model('brl', brl, 'listlengthprior', n, 'listwidthprior', 3, BRL_KWARGS) for n in np.arange(1, 16, 2)],
-    [Model('brs', brs, 'n_estimators', n) for n in np.arange(1, 35, 3)]
+    [Model('brs - ', brs, 'n_estimators', n) for n in np.arange(1, 20, 2)]
 ]
 
 
@@ -87,7 +87,7 @@ ALL_ESTIMATORS.append(
     + [Model('brl - list_width_2', brl, 'listlengthprior', n, 'listwidthprior', 2, BRL_KWARGS) for n in np.arange(1, 20, 2)]
     + [Model('brl - list_width_3', brl, 'listlengthprior', n, 'listwidthprior', 3, BRL_KWARGS) for n in np.arange(1, 16, 2)]
 )
-ALL_ESTIMATORS.append([Model('brs - ', brs, 'n_estimators', n) for n in np.arange(1, 35, 3)])
+ALL_ESTIMATORS.append([Model('brs - ', brs, 'n_estimators', n) for n in np.arange(1, 20, 2)])
 
 
 BEST_EASY_ESTIMATORS = [
@@ -98,7 +98,7 @@ BEST_EASY_ESTIMATORS = [
     [Model('fplasso', fpl, 'alpha', a, 'maxcardinality', 1, FPL_KWARGS) for a in np.logspace(-0.5, 1.2, 10)],
     [Model('fpskope', fps, 'minsupport', n, 'maxcardinality', 2, {'disc_strategy': 'simple', 'precision_min': 0.3}) for n in np.linspace(0.3, 0.6, 10)],
     [Model('brl', brl, 'listlengthprior', n, 'listwidthprior', 1, BRL_KWARGS) for n in np.arange(1, 20, 2)],
-    [Model('brs', brs, 'n_estimators', n) for n in np.arange(1, 35, 3)]
+    [Model('brs - ', brs, 'n_estimators', n) for n in np.arange(1, 20, 2)]
 ]
 
 EASY_ESTIMATORS = deepcopy(ALL_ESTIMATORS)
