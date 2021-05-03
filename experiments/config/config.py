@@ -26,7 +26,7 @@ HARD_DATASETS = [
 ]
 
 RULEFIT_KWARGS = {'random_state': 0, 'max_rules': None, 'include_linear': False}
-FPL_KWARGS = {'disc_strategy': 'simple', 'max_rules': None}
+FPL_KWARGS = {'disc_strategy': 'simple', 'max_rules': None, 'include_linear': False}
 BRL_KWARGS = {'disc_strategy': 'simple', 'max_iter': 2000}
 
 BEST_ESTIMATORS = [
@@ -36,7 +36,7 @@ BEST_ESTIMATORS = [
     [Model('skope_rules', skope, 'n_estimators', n, 'max_depth', 1, {'precision_min': 0.3}) for n in np.arange(1, 137, 15)],
     [Model('fplasso', fpl, 'alpha', a, 'maxcardinality', 1, FPL_KWARGS) for a in np.logspace(1, 2.8, 10)],
     [Model('fpskope', fps, 'minsupport', n, 'maxcardinality', 1, {'disc_strategy': 'simple', 'precision_min': 0.4}) for n in np.linspace(0.01, 0.5, 10)],
-    [Model('brl', brl, 'listlengthprior', n, 'listwidthprior', 3, BRL_KWARGS) for n in np.arange(1, 16, 2)],
+    [Model('brl', brl, 'listlengthprior', n, 'listwidthprior', 1, BRL_KWARGS) for n in np.arange(1, 16, 2)],
     [Model('brs - ', brs, 'n_estimators', n) for n in np.arange(1, 20, 2)]
 ]
 
