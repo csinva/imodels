@@ -11,8 +11,9 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from imodels.rule_list.bayesian_rule_list.brl_util import *
 from imodels.rule_list.rule_list import RuleList
 from imodels.util.discretization.mdlp import MDLP_Discretizer, BRLDiscretizer
+from imodels.util.convert import itemsets_to_rules
 from imodels.util.extract import extract_fpgrowth
-from imodels.util.rule import get_feature_dict
+from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
 
 
 class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
@@ -143,7 +144,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.feature_names = np.array(list(self.feature_dict_.values()))
 
         itemsets, self.discretizer = extract_fpgrowth(X, y,
-                                                      feature_names=self.feature_names,
+                                                      feature_names=self.feature_placeholders,
                                                       minsupport=self.minsupport,
                                                       maxcardinality=self.maxcardinality,
                                                       undiscretized_features=undiscretized_features,
@@ -193,20 +194,47 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             # Compute the rule consequent
             self.theta, self.ci_theta = get_rule_rhs(Xtrain, Ytrain, self.d_star, self.alpha, True)
 
+        self.final_itemsets = np.array(self.itemsets, dtype=object)[self.d_star]
+        rule_strs = itemsets_to_rules(self.final_itemsets)
+        self.rules_without_feature_names_ = [Rule(r) for r in rule_strs]
+        self.rules_ = [
+            replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
+        ]
         self.complexity_ = self._get_complexity()
 
         return self
 
     def _get_complexity(self):
-        final_itemsets = np.array(self.itemsets, dtype=object)[self.d_star]
         complexity = 0
-        for itemset in final_itemsets:
-            complexity += 1
+        for itemset in self.final_itemsets:
+            complexity += 1 
             if len(itemset) > 1 and type(itemset) != str:
                 complexity += 0.5 * (len(itemset) - 1)
         return complexity
 
-    def __str__(self, decimals=1):
+    # def __repr__(self, decimals=1):
+    #     if self.d_star:
+    #         detect = ""
+    #         if self.class1label != "class 1":
+    #             detect = "for detecting " + self.class1label
+    #         header = "Trained RuleListClassifier " + detect + "\n"
+    #         separator = "".join(["="] * len(header)) + "\n"
+    #         s = ""
+    #         for i, j in enumerate(self.d_star):
+    #             if self.itemsets[j] != 'null':
+    #                 condition = "ELSE IF " + (
+    #                     " AND ".join([str(self.itemsets[j][k]) for k in range(len(self.itemsets[j]))])) + " THEN"
+    #             else:
+    #                 condition = "ELSE"
+    #             s += condition + " probability of " + self.class1label + ": " + str(
+    #                 np.round(self.theta[i] * 100, decimals)) + "% (" + str(
+    #                 np.round(self.ci_theta[i][0] * 100, decimals)) + "%-" + str(
+    #                 np.round(self.ci_theta[i][1] * 100, decimals)) + "%)\n"
+    #         return header + separator + s[5:] + separator[1:]
+    #     else:
+    #         return "(Untrained RuleListClassifier)"
+
+    def __repr__(self, decimals=1):
         if self.d_star:
             detect = ""
             if self.class1label != "class 1":
@@ -214,10 +242,9 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             header = "Trained RuleListClassifier " + detect + "\n"
             separator = "".join(["="] * len(header)) + "\n"
             s = ""
-            for i, j in enumerate(self.d_star):
-                if self.itemsets[j] != 'null':
-                    condition = "ELSE IF " + (
-                        " AND ".join([str(self.itemsets[j][k]) for k in range(len(self.itemsets[j]))])) + " THEN"
+            for i in range(len(self.rules_) + 1):
+                if i != len(self.rules_):
+                    condition = "ELSE IF " + str(self.rules_[i]) + " THEN"
                 else:
                     condition = "ELSE"
                 s += condition + " probability of " + self.class1label + ": " + str(

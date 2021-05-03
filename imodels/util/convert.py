@@ -101,9 +101,9 @@ def tree_to_code(clf, feature_names):
 
 
 def itemsets_to_rules(itemsets: List[Tuple]) -> List[str]:
-    itemsets_without_all = [itemset for itemset in itemsets if 'All' not in ''.join(itemset)]
+    itemsets_clean = list(filter(lambda it: it != 'null' and 'All' not in ''.join(it), itemsets))
     f = lambda itemset: ' and '.join([single_discretized_feature_to_rule(item) for item in itemset])
-    return list(map(f, itemsets_without_all))
+    return list(map(f, itemsets_clean))
 
 
 def single_discretized_feature_to_rule(feat: str) -> str:
