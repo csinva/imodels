@@ -24,21 +24,21 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import numbers
-import numpy as np
+<pre><code class="python">import numpy as np
 import pandas as pd
 import random
-from collections import Counter
-from mlxtend.frequent_patterns import fpgrowth
+from collections import Counter, defaultdict
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
-from imodels.rule_list.bayesian_rule_list.brl_util import *
+from imodels.rule_list.bayesian_rule_list.brl_util import (
+    default_permsdic, preds_d_t, run_bdl_multichain_serial, merge_chains, get_point_estimate, get_rule_rhs
+)
 from imodels.rule_list.rule_list import RuleList
-from imodels.util.discretization.mdlp import MDLP_Discretizer, BRLDiscretizer
+from imodels.util.convert import itemsets_to_rules
 from imodels.util.extract import extract_fpgrowth
-from imodels.util.rule import get_feature_dict
+from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
 
 
 class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
@@ -81,18 +81,18 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         Random seed
     &#34;&#34;&#34;
 
-    def __init__(self, 
-                 listlengthprior=3, 
-                 listwidthprior=1, 
-                 maxcardinality=2, 
+    def __init__(self,
+                 listlengthprior=3,
+                 listwidthprior=1,
+                 maxcardinality=2,
                  minsupport=0.1,
                  disc_strategy=&#39;mdlp&#39;,
                  disc_kwargs={},
                  alpha=np.array([1., 1.]),
-                 n_chains=3, 
-                 max_iter=50000, 
-                 class1label=&#34;class 1&#34;, 
-                 verbose=False, 
+                 n_chains=3,
+                 max_iter=50000,
+                 class1label=&#34;class 1&#34;,
+                 verbose=False,
                  random_state=42):
         self.listlengthprior = listlengthprior
         self.listwidthprior = listwidthprior
@@ -134,7 +134,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         Parameters
         ----------
         X : array-like, shape = [n_samples, n_features]
-            Training data 
+            Training data
 
         y : array_like, shape = [n_samples]
             Labels
@@ -145,7 +145,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             If empty and X is not a DataFrame, then features are simply enumerated
             
         undiscretized_features : array_like, shape = [n_features], optional (default: [])
-            String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized
+            String labels for each feature which is NOT to be discretized.
+            If empty, all numeric features are discretized
             
         verbose : bool
             Currently doesn&#39;t do anything
@@ -169,7 +170,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.feature_names = np.array(list(self.feature_dict_.values()))
 
         itemsets, self.discretizer = extract_fpgrowth(X, y,
-                                                      feature_names=self.feature_names,
+                                                      feature_names=self.feature_placeholders,
                                                       minsupport=self.minsupport,
                                                       maxcardinality=self.maxcardinality,
                                                       undiscretized_features=undiscretized_features,
@@ -192,7 +193,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         for lhs in itemsets:
             lhs_len.append(len(lhs))
         nruleslen = Counter(lhs_len)
-        lhs_len = array(lhs_len)
+        lhs_len = np.array(lhs_len)
         itemsets_all = [&#39;null&#39;]
         itemsets_all.extend(itemsets)
 
@@ -210,7 +211,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         # Merge the chains
         permsdic = merge_chains(res)
 
-        ###The point estimate, BRL-point
+        # The point estimate, BRL-point
         self.d_star = get_point_estimate(permsdic, lhs_len, Xtrain, Ytrain, self.alpha, nruleslen, self.maxcardinality,
                                          self.listlengthprior, self.listwidthprior,
                                          verbose=self.verbose)  # get the point estimate
@@ -219,20 +220,47 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             # Compute the rule consequent
             self.theta, self.ci_theta = get_rule_rhs(Xtrain, Ytrain, self.d_star, self.alpha, True)
 
+        self.final_itemsets = np.array(self.itemsets, dtype=object)[self.d_star]
+        rule_strs = itemsets_to_rules(self.final_itemsets)
+        self.rules_without_feature_names_ = [Rule(r) for r in rule_strs]
+        self.rules_ = [
+            replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
+        ]
         self.complexity_ = self._get_complexity()
 
         return self
 
     def _get_complexity(self):
-        final_itemsets = np.array(self.itemsets, dtype=object)[self.d_star]
         complexity = 0
-        for itemset in final_itemsets:
+        for itemset in self.final_itemsets:
             complexity += 1
             if len(itemset) &gt; 1 and type(itemset) != str:
                 complexity += 0.5 * (len(itemset) - 1)
         return complexity
 
-    def __str__(self, decimals=1):
+    # def __repr__(self, decimals=1):
+    #     if self.d_star:
+    #         detect = &#34;&#34;
+    #         if self.class1label != &#34;class 1&#34;:
+    #             detect = &#34;for detecting &#34; + self.class1label
+    #         header = &#34;Trained RuleListClassifier &#34; + detect + &#34;\n&#34;
+    #         separator = &#34;&#34;.join([&#34;=&#34;] * len(header)) + &#34;\n&#34;
+    #         s = &#34;&#34;
+    #         for i, j in enumerate(self.d_star):
+    #             if self.itemsets[j] != &#39;null&#39;:
+    #                 condition = &#34;ELSE IF &#34; + (
+    #                     &#34; AND &#34;.join([str(self.itemsets[j][k]) for k in range(len(self.itemsets[j]))])) + &#34; THEN&#34;
+    #             else:
+    #                 condition = &#34;ELSE&#34;
+    #             s += condition + &#34; probability of &#34; + self.class1label + &#34;: &#34; + str(
+    #                 np.round(self.theta[i] * 100, decimals)) + &#34;% (&#34; + str(
+    #                 np.round(self.ci_theta[i][0] * 100, decimals)) + &#34;%-&#34; + str(
+    #                 np.round(self.ci_theta[i][1] * 100, decimals)) + &#34;%)\n&#34;
+    #         return header + separator + s[5:] + separator[1:]
+    #     else:
+    #         return &#34;(Untrained RuleListClassifier)&#34;
+
+    def __repr__(self, decimals=1):
         if self.d_star:
             detect = &#34;&#34;
             if self.class1label != &#34;class 1&#34;:
@@ -240,10 +268,9 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             header = &#34;Trained RuleListClassifier &#34; + detect + &#34;\n&#34;
             separator = &#34;&#34;.join([&#34;=&#34;] * len(header)) + &#34;\n&#34;
             s = &#34;&#34;
-            for i, j in enumerate(self.d_star):
-                if self.itemsets[j] != &#39;null&#39;:
-                    condition = &#34;ELSE IF &#34; + (
-                        &#34; AND &#34;.join([str(self.itemsets[j][k]) for k in range(len(self.itemsets[j]))])) + &#34; THEN&#34;
+            for i in range(len(self.rules_) + 1):
+                if i != len(self.rules_):
+                    condition = &#34;ELSE IF &#34; + str(self.rules_[i]) + &#34; THEN&#34;
                 else:
                     condition = &#34;ELSE&#34;
                 s += condition + &#34; probability of &#34; + self.class1label + &#34;: &#34; + str(
@@ -279,6 +306,9 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             the model. The columns correspond to the classes in sorted
             order, as they appear in the attribute `classes_`.
         &#34;&#34;&#34;
+        check_is_fitted(self)
+        X = check_array(X)
+
         if self.discretizer:
             D = self.discretizer.transform(X)
         else:
@@ -301,9 +331,9 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         y_pred : array, shape = [n_samples]
             Class labels for samples in X.
         &#34;&#34;&#34;
-        # deal with pandas data
-        if type(X) in [pd.DataFrame, pd.Series]:
-            X = X.values
+        check_is_fitted(self)
+        X = check_array(X)
+
         # print(&#39;predicting!&#39;)
         # print(&#39;preds_proba&#39;, self.predict_proba(X)[:, 1])
         return 1 * (self.predict_proba(X)[:, 1] &gt;= threshold)</code></pre>
@@ -394,18 +424,18 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         Random seed
     &#34;&#34;&#34;
 
-    def __init__(self, 
-                 listlengthprior=3, 
-                 listwidthprior=1, 
-                 maxcardinality=2, 
+    def __init__(self,
+                 listlengthprior=3,
+                 listwidthprior=1,
+                 maxcardinality=2,
                  minsupport=0.1,
                  disc_strategy=&#39;mdlp&#39;,
                  disc_kwargs={},
                  alpha=np.array([1., 1.]),
-                 n_chains=3, 
-                 max_iter=50000, 
-                 class1label=&#34;class 1&#34;, 
-                 verbose=False, 
+                 n_chains=3,
+                 max_iter=50000,
+                 class1label=&#34;class 1&#34;,
+                 verbose=False,
                  random_state=42):
         self.listlengthprior = listlengthprior
         self.listwidthprior = listwidthprior
@@ -447,7 +477,7 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         Parameters
         ----------
         X : array-like, shape = [n_samples, n_features]
-            Training data 
+            Training data
 
         y : array_like, shape = [n_samples]
             Labels
@@ -458,7 +488,8 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
             If empty and X is not a DataFrame, then features are simply enumerated
             
         undiscretized_features : array_like, shape = [n_features], optional (default: [])
-            String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized
+            String labels for each feature which is NOT to be discretized.
+            If empty, all numeric features are discretized
             
         verbose : bool
             Currently doesn&#39;t do anything
@@ -482,7 +513,7 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         self.feature_names = np.array(list(self.feature_dict_.values()))
 
         itemsets, self.discretizer = extract_fpgrowth(X, y,
-                                                      feature_names=self.feature_names,
+                                                      feature_names=self.feature_placeholders,
                                                       minsupport=self.minsupport,
                                                       maxcardinality=self.maxcardinality,
                                                       undiscretized_features=undiscretized_features,
@@ -505,7 +536,7 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         for lhs in itemsets:
             lhs_len.append(len(lhs))
         nruleslen = Counter(lhs_len)
-        lhs_len = array(lhs_len)
+        lhs_len = np.array(lhs_len)
         itemsets_all = [&#39;null&#39;]
         itemsets_all.extend(itemsets)
 
@@ -523,7 +554,7 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         # Merge the chains
         permsdic = merge_chains(res)
 
-        ###The point estimate, BRL-point
+        # The point estimate, BRL-point
         self.d_star = get_point_estimate(permsdic, lhs_len, Xtrain, Ytrain, self.alpha, nruleslen, self.maxcardinality,
                                          self.listlengthprior, self.listwidthprior,
                                          verbose=self.verbose)  # get the point estimate
@@ -532,20 +563,47 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
             # Compute the rule consequent
             self.theta, self.ci_theta = get_rule_rhs(Xtrain, Ytrain, self.d_star, self.alpha, True)
 
+        self.final_itemsets = np.array(self.itemsets, dtype=object)[self.d_star]
+        rule_strs = itemsets_to_rules(self.final_itemsets)
+        self.rules_without_feature_names_ = [Rule(r) for r in rule_strs]
+        self.rules_ = [
+            replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
+        ]
         self.complexity_ = self._get_complexity()
 
         return self
 
     def _get_complexity(self):
-        final_itemsets = np.array(self.itemsets, dtype=object)[self.d_star]
         complexity = 0
-        for itemset in final_itemsets:
+        for itemset in self.final_itemsets:
             complexity += 1
             if len(itemset) &gt; 1 and type(itemset) != str:
                 complexity += 0.5 * (len(itemset) - 1)
         return complexity
 
-    def __str__(self, decimals=1):
+    # def __repr__(self, decimals=1):
+    #     if self.d_star:
+    #         detect = &#34;&#34;
+    #         if self.class1label != &#34;class 1&#34;:
+    #             detect = &#34;for detecting &#34; + self.class1label
+    #         header = &#34;Trained RuleListClassifier &#34; + detect + &#34;\n&#34;
+    #         separator = &#34;&#34;.join([&#34;=&#34;] * len(header)) + &#34;\n&#34;
+    #         s = &#34;&#34;
+    #         for i, j in enumerate(self.d_star):
+    #             if self.itemsets[j] != &#39;null&#39;:
+    #                 condition = &#34;ELSE IF &#34; + (
+    #                     &#34; AND &#34;.join([str(self.itemsets[j][k]) for k in range(len(self.itemsets[j]))])) + &#34; THEN&#34;
+    #             else:
+    #                 condition = &#34;ELSE&#34;
+    #             s += condition + &#34; probability of &#34; + self.class1label + &#34;: &#34; + str(
+    #                 np.round(self.theta[i] * 100, decimals)) + &#34;% (&#34; + str(
+    #                 np.round(self.ci_theta[i][0] * 100, decimals)) + &#34;%-&#34; + str(
+    #                 np.round(self.ci_theta[i][1] * 100, decimals)) + &#34;%)\n&#34;
+    #         return header + separator + s[5:] + separator[1:]
+    #     else:
+    #         return &#34;(Untrained RuleListClassifier)&#34;
+
+    def __repr__(self, decimals=1):
         if self.d_star:
             detect = &#34;&#34;
             if self.class1label != &#34;class 1&#34;:
@@ -553,10 +611,9 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
             header = &#34;Trained RuleListClassifier &#34; + detect + &#34;\n&#34;
             separator = &#34;&#34;.join([&#34;=&#34;] * len(header)) + &#34;\n&#34;
             s = &#34;&#34;
-            for i, j in enumerate(self.d_star):
-                if self.itemsets[j] != &#39;null&#39;:
-                    condition = &#34;ELSE IF &#34; + (
-                        &#34; AND &#34;.join([str(self.itemsets[j][k]) for k in range(len(self.itemsets[j]))])) + &#34; THEN&#34;
+            for i in range(len(self.rules_) + 1):
+                if i != len(self.rules_):
+                    condition = &#34;ELSE IF &#34; + str(self.rules_[i]) + &#34; THEN&#34;
                 else:
                     condition = &#34;ELSE&#34;
                 s += condition + &#34; probability of &#34; + self.class1label + &#34;: &#34; + str(
@@ -592,6 +649,9 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
             the model. The columns correspond to the classes in sorted
             order, as they appear in the attribute `classes_`.
         &#34;&#34;&#34;
+        check_is_fitted(self)
+        X = check_array(X)
+
         if self.discretizer:
             D = self.discretizer.transform(X)
         else:
@@ -614,9 +674,9 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         y_pred : array, shape = [n_samples]
             Class labels for samples in X.
         &#34;&#34;&#34;
-        # deal with pandas data
-        if type(X) in [pd.DataFrame, pd.Series]:
-            X = X.values
+        check_is_fitted(self)
+        X = check_array(X)
+
         # print(&#39;predicting!&#39;)
         # print(&#39;preds_proba&#39;, self.predict_proba(X)[:, 1])
         return 1 * (self.predict_proba(X)[:, 1] &gt;= threshold)</code></pre>
@@ -645,7 +705,8 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
 If empty and X is a DataFrame, column labels are used.
 If empty and X is not a DataFrame, then features are simply enumerated</dd>
 <dt><strong><code>undiscretized_features</code></strong> :&ensp;<code>array_like</code>, <code>shape</code> = [<code>n_features</code>], optional (default: [])</dt>
-<dd>String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized</dd>
+<dd>String labels for each feature which is NOT to be discretized.
+If empty, all numeric features are discretized</dd>
 <dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Currently doesn't do anything</dd>
 </dl>
@@ -661,7 +722,7 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
     Parameters
     ----------
     X : array-like, shape = [n_samples, n_features]
-        Training data 
+        Training data
 
     y : array_like, shape = [n_samples]
         Labels
@@ -672,7 +733,8 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
         If empty and X is not a DataFrame, then features are simply enumerated
         
     undiscretized_features : array_like, shape = [n_features], optional (default: [])
-        String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized
+        String labels for each feature which is NOT to be discretized.
+        If empty, all numeric features are discretized
         
     verbose : bool
         Currently doesn&#39;t do anything
@@ -696,7 +758,7 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
     self.feature_names = np.array(list(self.feature_dict_.values()))
 
     itemsets, self.discretizer = extract_fpgrowth(X, y,
-                                                  feature_names=self.feature_names,
+                                                  feature_names=self.feature_placeholders,
                                                   minsupport=self.minsupport,
                                                   maxcardinality=self.maxcardinality,
                                                   undiscretized_features=undiscretized_features,
@@ -719,7 +781,7 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
     for lhs in itemsets:
         lhs_len.append(len(lhs))
     nruleslen = Counter(lhs_len)
-    lhs_len = array(lhs_len)
+    lhs_len = np.array(lhs_len)
     itemsets_all = [&#39;null&#39;]
     itemsets_all.extend(itemsets)
 
@@ -737,7 +799,7 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
     # Merge the chains
     permsdic = merge_chains(res)
 
-    ###The point estimate, BRL-point
+    # The point estimate, BRL-point
     self.d_star = get_point_estimate(permsdic, lhs_len, Xtrain, Ytrain, self.alpha, nruleslen, self.maxcardinality,
                                      self.listlengthprior, self.listwidthprior,
                                      verbose=self.verbose)  # get the point estimate
@@ -746,6 +808,12 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
         # Compute the rule consequent
         self.theta, self.ci_theta = get_rule_rhs(Xtrain, Ytrain, self.d_star, self.alpha, True)
 
+    self.final_itemsets = np.array(self.itemsets, dtype=object)[self.d_star]
+    rule_strs = itemsets_to_rules(self.final_itemsets)
+    self.rules_without_feature_names_ = [Rule(r) for r in rule_strs]
+    self.rules_ = [
+        replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
+    ]
     self.complexity_ = self._get_complexity()
 
     return self</code></pre>
@@ -782,9 +850,9 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
     y_pred : array, shape = [n_samples]
         Class labels for samples in X.
     &#34;&#34;&#34;
-    # deal with pandas data
-    if type(X) in [pd.DataFrame, pd.Series]:
-        X = X.values
+    check_is_fitted(self)
+    X = check_array(X)
+
     # print(&#39;predicting!&#39;)
     # print(&#39;preds_proba&#39;, self.predict_proba(X)[:, 1])
     return 1 * (self.predict_proba(X)[:, 1] &gt;= threshold)</code></pre>
@@ -825,6 +893,9 @@ order, as they appear in the attribute <code>classes_</code>.</dd>
         the model. The columns correspond to the classes in sorted
         order, as they appear in the attribute `classes_`.
     &#34;&#34;&#34;
+    check_is_fitted(self)
+    X = check_array(X)
+
     if self.discretizer:
         D = self.discretizer.transform(X)
     else:

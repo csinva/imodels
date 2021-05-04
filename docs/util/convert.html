@@ -127,9 +127,9 @@ def tree_to_code(clf, feature_names):
 
 
 def itemsets_to_rules(itemsets: List[Tuple]) -&gt; List[str]:
-    itemsets_without_all = [itemset for itemset in itemsets if &#39;All&#39; not in &#39;&#39;.join(itemset)]
+    itemsets_clean = list(filter(lambda it: it != &#39;null&#39; and &#39;All&#39; not in &#39;&#39;.join(it), itemsets))
     f = lambda itemset: &#39; and &#39;.join([single_discretized_feature_to_rule(item) for item in itemset])
-    return list(map(f, itemsets_without_all))
+    return list(map(f, itemsets_clean))
 
 
 def single_discretized_feature_to_rule(feat: str) -&gt; str:
@@ -173,9 +173,9 @@ def single_discretized_feature_to_rule(feat: str) -&gt; str:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def itemsets_to_rules(itemsets: List[Tuple]) -&gt; List[str]:
-    itemsets_without_all = [itemset for itemset in itemsets if &#39;All&#39; not in &#39;&#39;.join(itemset)]
+    itemsets_clean = list(filter(lambda it: it != &#39;null&#39; and &#39;All&#39; not in &#39;&#39;.join(it), itemsets))
     f = lambda itemset: &#39; and &#39;.join([single_discretized_feature_to_rule(item) for item in itemset])
-    return list(map(f, itemsets_without_all))</code></pre>
+    return list(map(f, itemsets_clean))</code></pre>
 </details>
 </dd>
 <dt id="imodels.util.convert.single_discretized_feature_to_rule"><code class="name flex">

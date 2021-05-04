@@ -30,7 +30,7 @@ from sklearn.preprocessing import KBinsDiscretizer
 
 class SimpleDiscretizer:
 
-    def __init__(self, n_bins: int = 4, strategy: str = &#39;quantile&#39;):
+    def __init__(self, n_bins: int = 8, strategy: str = &#39;uniform&#39;):
         self.n_bins = n_bins
         self.strategy = strategy
     
@@ -87,7 +87,7 @@ class SimpleDiscretizer:
 <dl>
 <dt id="imodels.util.discretization.simple.SimpleDiscretizer"><code class="flex name class">
 <span>class <span class="ident">SimpleDiscretizer</span></span>
-<span>(</span><span>n_bins=4, strategy='quantile')</span>
+<span>(</span><span>n_bins=8, strategy='uniform')</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
@@ -97,7 +97,7 @@ class SimpleDiscretizer:
 </summary>
 <pre><code class="python">class SimpleDiscretizer:
 
-    def __init__(self, n_bins: int = 4, strategy: str = &#39;quantile&#39;):
+    def __init__(self, n_bins: int = 8, strategy: str = &#39;uniform&#39;):
         self.n_bins = n_bins
         self.strategy = strategy
     

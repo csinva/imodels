@@ -138,7 +138,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
-        self.complexity_ = len(self.estimators_)
+        self.complexity_ = len(self.rules_)
         return self
 
     def predict_proba(self, X):
@@ -300,7 +300,7 @@ Currently limited to only binary classification.</p></section>
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
-        self.complexity_ = len(self.estimators_)
+        self.complexity_ = len(self.rules_)
         return self
 
     def predict_proba(self, X):
@@ -469,7 +469,7 @@ If not provided, then each sample is given unit weight.</dd>
     self.rules_ = [
         replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
     ]
-    self.complexity_ = len(self.estimators_)
+    self.complexity_ = len(self.rules_)
     return self</code></pre>
 </details>
 </dd>

@@ -11,10 +11,11 @@
 <p align="center">
   <img src="https://img.shields.io/badge/license-mit-blue.svg">
   <img src="https://img.shields.io/badge/python-3.6--3.9-blue">
+  <a href="https://doi.org/10.21105/joss.03192"><img src="https://joss.theoj.org/papers/10.21105/joss.03192/status.svg"></a>
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
-  <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
+  <!--img src="https://img.shields.io/github/checks-status/csinva/imodels/master"-->
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=7">
+  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=9">
 </p>  
 
 
@@ -159,18 +160,21 @@ Different models support different machine-learning tasks. Current support for d
     - Please make sure to give authors of original methods / base implementations appropriate credit!
     - Contributing: pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!
 
-If it's useful for you, please cite the package using the below, but more importantly make sure to give authors of original methods / base implementations credit:
+If it's useful for you, please cite the package using the below, and make sure to give authors of original methods / base implementations credit:
 
 ```r
 @software{
     imodels2021,
     title        = {{imodels: a python package for fitting interpretable models}},
-    publisher    = {Zenodo},
+    journal      = {Journal of Open Source Software}
+    publisher    = {The Open Journal},
     year         = {2021},
     author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
-    version      = {v0.2.8},
-    doi          = {10.5281/zenodo.4026886},
-    url          = {https://github.com/csinva/imodels}
+    volume       = {6},
+    number       = {61},
+    pages        = {3192},
+    doi          = {10.21105/joss.03192},
+    url          = {https://doi.org/10.21105/joss.03192},
 }
 
 ```

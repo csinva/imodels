@@ -23,6 +23,7 @@ def savefig(fname):
 
 def get_x_and_y(result_data: pd.Series, x_col: str, y_col: str) -> (pd.Series, pd.Series):
     complexities = result_data[x_col]
+    # print('ks', result_data.keys())
     rocs = result_data[y_col]
     complexity_sort_indices = complexities.argsort()
     return complexities[complexity_sort_indices], rocs[complexity_sort_indices]

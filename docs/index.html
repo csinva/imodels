@@ -34,10 +34,11 @@
 <p align="center">
 <img src="https://img.shields.io/badge/license-mit-blue.svg">
 <img src="https://img.shields.io/badge/python-3.6--3.9-blue">
+<a href="https://doi.org/10.21105/joss.03192"><img src="https://joss.theoj.org/papers/10.21105/joss.03192/status.svg"></a>
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
-<img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
+<!--img src="https://img.shields.io/github/checks-status/csinva/imodels/master"-->
 <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=7">
+<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=9">
 </p>
 <h2 id="imodels-overview">imodels overview</h2>
 <p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
@@ -280,16 +281,19 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 </ul>
 </li>
 </ul>
-<p>If it's useful for you, please cite the package using the below, but more importantly make sure to give authors of original methods / base implementations credit:</p>
+<p>If it's useful for you, please cite the package using the below, and make sure to give authors of original methods / base implementations credit:</p>
 <pre><code class="r">@software{
     imodels2021,
     title        = {{imodels: a python package for fitting interpretable models}},
-    publisher    = {Zenodo},
+    journal      = {Journal of Open Source Software}
+    publisher    = {The Open Journal},
     year         = {2021},
     author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
-    version      = {v0.2.8},
-    doi          = {10.5281/zenodo.4026886},
-    url          = {&lt;https://github.com/csinva/imodels}&gt;
+    volume       = {6},
+    number       = {61},
+    pages        = {3192},
+    doi          = {10.21105/joss.03192},
+    url          = {&lt;https://doi.org/10.21105/joss.03192},&gt;
 }
 
 </code></pre>
