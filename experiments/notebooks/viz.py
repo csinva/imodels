@@ -11,13 +11,15 @@ import os.path
 from os.path import join as oj
 dvu.set_style()
 mpl.rcParams['figure.dpi'] = 250
-DIR_FILE = os.path.dirname(os.path.realpath(__file__)) # directory of this file
+DIR_FILE = os.path.dirname(os.path.realpath(__file__))  # directory of this file
 print(DIR_FILE)
 DIR_FIGS = oj(DIR_FILE, 'figs')
+
 
 def savefig(fname):
     plt.tight_layout()
     plt.savefig(oj(DIR_FIGS, fname + '.pdf'))
+
 
 def get_x_and_y(result_data: pd.Series, x_col: str, y_col: str) -> (pd.Series, pd.Series):
     complexities = result_data[x_col]
@@ -32,7 +34,7 @@ def viz_comparison_val_average(result: Dict[str, Any], metric: str = 'mean_ROCAU
     '''
     result_data = result['df']
     result_estimators = result['estimators']
-    x_column = f'mean_complexity'
+    x_column = 'mean_complexity'
     y_column = metric
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
     for est in np.unique(result_estimators):
@@ -56,16 +58,16 @@ def viz_comparison_val_average(result: Dict[str, Any], metric: str = 'mean_ROCAU
         ax.set_xlabel('complexity score')
         ax.set_ylabel(y_column)
         ax.legend(frameon=False, handlelength=1)
-        # dvu.line_legend(fontsize=10, ax=ax)    
+        # dvu.line_legend(fontsize=10, ax=ax)
     plt.tight_layout()
 
 
 def viz_comparison_test_average(results: List[Dict[str, Any]],
-                                metric: str = 'mean_ROCAUC', 
+                                metric: str = 'mean_ROCAUC',
                                 line_legend: bool = False) -> None:
     '''Plot dataset-averaged y_column vs dataset-averaged complexity for different models
     '''
-    x_column = f'mean_complexity'
+    x_column = 'mean_complexity'
     y_column = metric
     for result in results:
         result_data = result['df']
@@ -85,7 +87,7 @@ def viz_comparison_test_average(results: List[Dict[str, Any]],
 
 def viz_comparison_datasets(result: Union[Dict[str, Any], List[Dict[str, Any]]],
                             y_column: str = 'ROCAUC',
-                            cols=3, 
+                            cols=3,
                             figsize=(14, 10),
                             line_legend: bool = False,
                             datasets=None,

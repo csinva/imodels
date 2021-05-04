@@ -17,12 +17,12 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=['tests']),
     install_requires=[
         'cvxpy',
-        'cvxopt',        
-        'mlxtend>=0.18.0', # some lower version are missing fpgrowth
-        'numpy',        
+        'cvxopt',
+        'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
+        'numpy',
         'pandas',
         'scipy',
-        'scikit-learn>=0.23.0', # 0.23+ only works on py3.6+        
+        'scikit-learn>=0.23.0',  # 0.23+ only works on py3.6+
     ],
     extras_require={
         'dev': [

@@ -1,16 +1,15 @@
-import numbers
 import numpy as np
 import pandas as pd
 import random
-from collections import Counter
-from mlxtend.frequent_patterns import fpgrowth
+from collections import Counter, defaultdict
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
-from imodels.rule_list.bayesian_rule_list.brl_util import *
+from imodels.rule_list.bayesian_rule_list.brl_util import (
+    default_permsdic, preds_d_t, run_bdl_multichain_serial, merge_chains, get_point_estimate, get_rule_rhs
+)
 from imodels.rule_list.rule_list import RuleList
-from imodels.util.discretization.mdlp import MDLP_Discretizer, BRLDiscretizer
 from imodels.util.convert import itemsets_to_rules
 from imodels.util.extract import extract_fpgrowth
 from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
@@ -56,18 +55,18 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         Random seed
     """
 
-    def __init__(self, 
-                 listlengthprior=3, 
-                 listwidthprior=1, 
-                 maxcardinality=2, 
+    def __init__(self,
+                 listlengthprior=3,
+                 listwidthprior=1,
+                 maxcardinality=2,
                  minsupport=0.1,
                  disc_strategy='mdlp',
                  disc_kwargs={},
                  alpha=np.array([1., 1.]),
-                 n_chains=3, 
-                 max_iter=50000, 
-                 class1label="class 1", 
-                 verbose=False, 
+                 n_chains=3,
+                 max_iter=50000,
+                 class1label="class 1",
+                 verbose=False,
                  random_state=42):
         self.listlengthprior = listlengthprior
         self.listwidthprior = listwidthprior
@@ -109,7 +108,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         Parameters
         ----------
         X : array-like, shape = [n_samples, n_features]
-            Training data 
+            Training data
 
         y : array_like, shape = [n_samples]
             Labels
@@ -120,7 +119,8 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             If empty and X is not a DataFrame, then features are simply enumerated
             
         undiscretized_features : array_like, shape = [n_features], optional (default: [])
-            String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized
+            String labels for each feature which is NOT to be discretized.
+            If empty, all numeric features are discretized
             
         verbose : bool
             Currently doesn't do anything
@@ -167,7 +167,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         for lhs in itemsets:
             lhs_len.append(len(lhs))
         nruleslen = Counter(lhs_len)
-        lhs_len = array(lhs_len)
+        lhs_len = np.array(lhs_len)
         itemsets_all = ['null']
         itemsets_all.extend(itemsets)
 
@@ -185,7 +185,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         # Merge the chains
         permsdic = merge_chains(res)
 
-        ###The point estimate, BRL-point
+        # The point estimate, BRL-point
         self.d_star = get_point_estimate(permsdic, lhs_len, Xtrain, Ytrain, self.alpha, nruleslen, self.maxcardinality,
                                          self.listlengthprior, self.listwidthprior,
                                          verbose=self.verbose)  # get the point estimate
@@ -207,7 +207,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
     def _get_complexity(self):
         complexity = 0
         for itemset in self.final_itemsets:
-            complexity += 1 
+            complexity += 1
             if len(itemset) > 1 and type(itemset) != str:
                 complexity += 0.5 * (len(itemset) - 1)
         return complexity
@@ -280,6 +280,9 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             the model. The columns correspond to the classes in sorted
             order, as they appear in the attribute `classes_`.
         """
+        check_is_fitted(self)
+        X = check_array(X)
+
         if self.discretizer:
             D = self.discretizer.transform(X)
         else:
@@ -302,9 +305,9 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         y_pred : array, shape = [n_samples]
             Class labels for samples in X.
         """
-        # deal with pandas data
-        if type(X) in [pd.DataFrame, pd.Series]:
-            X = X.values
+        check_is_fitted(self)
+        X = check_array(X)
+
         # print('predicting!')
         # print('preds_proba', self.predict_proba(X)[:, 1])
         return 1 * (self.predict_proba(X)[:, 1] >= threshold)
