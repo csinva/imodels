@@ -50,7 +50,7 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
                     else ' == '.join([feature_names[0]] * 2))
             # a rule selecting all is set to "c0==c0"
             if prediction_values:
-                rules.append((rule, tree_.value[node][0][0]))
+                rules.append((rule, tree_.value[node][0].tolist()))
             else:
                 rules.append(rule)
 

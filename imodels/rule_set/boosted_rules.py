@@ -93,17 +93,12 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         
         rules = []
         for est, est_weight in zip(self.estimators_, self.estimator_weights_):
-            est_rules = tree_to_rules(est, self.feature_placeholders)
+            est_rules_values = tree_to_rules(est, self.feature_placeholders, prediction_values=True)
+            est_rules = list(map(lambda x: x[0], est_rules_values))
             
-            rule_scores = np.max(est.predict_proba(X), axis=0)
-            rule_scores = (rule_scores * 2) - 1
-
-            # order scores to correspond to correct rule
-            rule_pred_class = np.argmax(est.tree_.value[1:], axis=2).flatten()
-            rule_scores = rule_scores[rule_pred_class]
-
-            # weight negatively rules that predict class 0
-            rule_scores[rule_pred_class[0]] *= -1
+            # BRS scores are difference between class 1 % and class 0 % in a node
+            est_values = np.array(list(map(lambda x: x[1], est_rules_values)))
+            rule_scores = (est_values[:, 1] - est_values[:, 0]) / est_values.sum(axis=1)
 
             compos_score = est_weight * rule_scores
             rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
