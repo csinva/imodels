@@ -60,7 +60,7 @@ def combine_comparisons(path, model, test):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, default=None)
-    parser.add_argument('--datasets', type=str, default=None)
+    parser.add_argument('--dataset', type=str)
     parser.add_argument('--test', action='store_true')
     parser.add_argument('--cv', action='store_true')
     parser.add_argument('--low_data', action='store_true')
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
     path = MODEL_COMPARISON_PATH
     path += 'low_data/' if args.low_data else 'reg_data/'
-    path += 'easy/' if args.datasets == 'easy' else 'hard/'
+    path += f'{args.dataset}/'
 
     if args.test:
         path += 'test/'

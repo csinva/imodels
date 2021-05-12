@@ -201,11 +201,13 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
         
-        # add 1 for 'else' rule
-        self.complexity_ = self._get_complexity() + 1
+        self.complexity_ = self._get_complexity()
 
         return self
 
+    def _get_complexity(self):
+        n_rule_terms = sum([len(iset) for iset in self.final_itemsets if type(iset) != str])
+        return n_rule_terms + 1
 
     # def __repr__(self, decimals=1):
     #     if self.d_star:
