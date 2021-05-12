@@ -8,6 +8,7 @@ import pandas as pd
 from scipy.sparse import issparse
 from sklearn.base import BaseEstimator
 from sklearn.datasets import fetch_openml
+from sklearn.metrics import accuracy_score
 
 
 MODEL_COMPARISON_PATH = os.path.dirname(os.path.realpath(__file__)) + "/comparison_data/"
@@ -55,9 +56,17 @@ def get_clean_dataset(path: str) -> Tuple[np.array]:
     return np.nan_to_num(X.astype('float32')), y, feature_names
 
 
-def get_comparison_result(path: str, estimator_name: str, prefix='val', low_data=False, easy=False) -> Dict[str, Any]:
+def get_best_accuracy(ytest, yscore):
+    thrs = np.unique(yscore)
+    accs = []
+    for thr in thrs:
+        accs.append(accuracy_score(ytest, yscore > thr))
+    return np.max(accs)
+
+
+def get_comparison_result(path: str, estimator_name: str, dataset: str, prefix='val', low_data=False) -> Dict[str, Any]:
     path += 'low_data/' if low_data else 'reg_data/'
-    path += 'easy/' if easy else 'hard/'
+    path += f'{dataset}/'
     if prefix == 'test':
         result_file = path + 'test/' + f'{estimator_name}_test_comparisons.pkl'
     elif prefix == 'cv':

@@ -7,21 +7,8 @@ from imodels.util.rule import Rule
 def extract_ensemble(weak_learners, X, y, min_multiplicity: int = 1) -> List[Rule]:
 
     all_rules = []
-    # seen_splits = set()
-    # weak_learner_scores = []
     for est in weak_learners:
         est.fit(X, y)
-        # weak_learner_scores.append(average_precision_score(y, est.predict_proba(X)[:, 1)
-        
-        # deduplicate rules that arise from same feature split
-        # for rule in est.rules_:
-        #     if len(rule.agg_dict) == 1:
-        #         split = [(key[0], val) for key, val in rule.agg_dict.items()][0]
-        #         if split not in seen_splits:
-        #             seen_splits.add(split)
-        #             all_rules.append(rule)
-        #     else:
-        #         all_rules.append(rule)
         all_rules += est.rules_
 
     if min_multiplicity > 0:

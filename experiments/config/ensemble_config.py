@@ -1,7 +1,7 @@
 import numpy as np
 import imodels
 
-from experiments.config.config import RULEFIT_KWARGS, FPL_KWARGS, BRL_KWARGS
+from experiments.config.config_general import RULEFIT_KWARGS, FPL_KWARGS, BRL_KWARGS
 from experiments.models.stablelinear import StableLinearClassifier as stbl
 from experiments.util import Model, get_best_model_under_complexity
 

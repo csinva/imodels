@@ -9,23 +9,21 @@ import warnings
 from collections import defaultdict, OrderedDict
 from typing import Any, Callable, List, Dict, Tuple, Union
 
-warnings.filterwarnings("ignore", message="Bins whose width")
-
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score, make_scorer
+from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score, make_scorer, f1_score
 from sklearn.model_selection import KFold, train_test_split, cross_validate
 from tqdm import tqdm
 
-from experiments.config.config import (
-    EASY_DATASETS, HARD_DATASETS, BEST_ESTIMATORS, ALL_ESTIMATORS, 
-    BEST_EASY_ESTIMATORS, EASY_ESTIMATORS
-)
+from experiments.config.config_general import HARD_DATASETS, EASY_DATASETS
 from experiments.config.ensemble_config import get_ensembles_easy, get_ensembles_hard
-from experiments.util import Model, MODEL_COMPARISON_PATH, get_clean_dataset
+from experiments.config.util import get_estimators_for_dataset
+from experiments.util import Model, MODEL_COMPARISON_PATH, get_clean_dataset, get_best_accuracy
+
+warnings.filterwarnings("ignore", message="Bins whose width")
 
 
 def get_complexity(estimator: BaseEstimator) -> float:
@@ -34,11 +32,7 @@ def get_complexity(estimator: BaseEstimator) -> float:
         for tree in estimator.estimators_:
             if type(tree) is np.ndarray:
                 tree = tree[0]
-            complexity += 2 ** tree.get_depth()
-            
-            # add 0.5 for every antecedent after the first
-            if tree.get_depth() > 1:
-                complexity += ((2 ** tree.get_depth()) - 1) * 0.5
+            complexity += (2 ** tree.get_depth()) * tree.get_depth()
         return complexity
     else:
         return estimator.complexity_
@@ -125,7 +119,7 @@ def compare_estimators(estimators: List[Model],
     rules = mean_results.copy()
 
     # loop over datasets
-    for d in tqdm(datasets):
+    for d in datasets:
         if verbose:
             print("comparing on dataset", d[0])
         X, y, feat_names = get_clean_dataset(d[1])
@@ -133,7 +127,7 @@ def compare_estimators(estimators: List[Model],
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=split_seed)
 
         # loop over estimators
-        for model in estimators:
+        for model in tqdm(estimators):
             est = model.cls(**model.kwargs)
 
             if n_cv_folds > 1:
@@ -154,7 +148,6 @@ def compare_estimators(estimators: List[Model],
                     est.fit(X_fit, y_fit, feature_names=feat_names)
                 end = time.time()
 
-                y_pred = est.predict(X_eval)
                 y_pred_proba = est.predict_proba(X_eval)[:, 1]
 
                 if hasattr(est, 'rules_'):
@@ -166,8 +159,8 @@ def compare_estimators(estimators: List[Model],
                 metric_results = {}
                 for i, (met_name, met) in enumerate(metrics):
                     if met is not None:
-                        tgt = y_pred if met_name == 'accuracy' else y_pred_proba
-                        metric_results[met_name] = met(y_eval, tgt)
+                        metric_results[met_name] = met(y_eval, y_pred_proba)
+                metric_results['best_accuracy'] = get_best_accuracy(y_eval, y_pred_proba)
                 metric_results['complexity'] = get_complexity(est)
                 metric_results['time'] = end - start
 
@@ -267,9 +260,9 @@ def run_comparison(path: str,
 def main():
 
     metrics = [
-        ('accuracy', accuracy_score),
-        ('ROCAUC', roc_auc_score),
-        ('PRAUC', average_precision_score),
+        ('rocauc', roc_auc_score),
+        ('avg_precision', average_precision_score),
+        ('best_accuracy', None),
         ('complexity', None),
         ('time', None)
     ]
@@ -285,7 +278,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')
     parser.add_argument('--cv', action='store_true')
-    parser.add_argument('--datasets', type=str, default='hard')
+    parser.add_argument('--dataset', type=str)
     parser.add_argument('--ignore_cache', action='store_true')
     parser.add_argument('--low_data', action='store_true')
     parser.add_argument('--ensemble', action='store_true')
@@ -296,7 +289,7 @@ def main():
 
     path = MODEL_COMPARISON_PATH
     path += 'low_data/' if args.low_data else 'reg_data/'
-    path += f'{args.datasets}/'
+    path += f'{args.dataset}/'
     if args.test:
         path += 'test/'
     elif args.cv:
@@ -309,15 +302,18 @@ def main():
     else:
         cv_folds = 4 if args.cv else 1
     
-    if args.datasets == 'hard':
-        datasets = HARD_DATASETS
-        ests = BEST_ESTIMATORS if args.test else ALL_ESTIMATORS
-    else:
-        datasets = EASY_DATASETS
-        ests = BEST_EASY_ESTIMATORS if args.test else EASY_ESTIMATORS
-    
-    if args.ensemble:
-        ests = get_ensembles_hard(args.test) if args.datasets == 'hard' else get_ensembles_easy(args.test)
+    # if args.datasets == 'hard':
+    #     datasets = HARD_DATASETS
+    #     ests = BEST_ESTIMATORS if args.test else ALL_ESTIMATORS
+    # else:
+    #     datasets = EASY_DATASETS
+    #     ests = BEST_EASY_ESTIMATORS if args.test else EASY_ESTIMATORS
+
+    datasets = list(filter(lambda x: args.dataset == x[0], HARD_DATASETS))
+    ests = get_estimators_for_dataset(args.dataset, test=args.test)
+
+    # if args.ensemble:
+    #     ests = get_ensembles_hard(args.test) if args.datasets == 'hard' else get_ensembles_easy(args.test)
 
     if args.model:
         ests = list(filter(lambda x: args.model in x[0].name, ests))
