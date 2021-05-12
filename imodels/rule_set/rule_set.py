@@ -37,6 +37,4 @@ class RuleSet:
 
     def _get_complexity(self):
         check_is_fitted(self, ['rules_without_feature_names_'])
-        num_rules = len(self.rules_without_feature_names_)
-        extra_antecedents = np.sum([(len(rule.agg_dict) - 1) for rule in self.rules_without_feature_names_])
-        return num_rules + extra_antecedents * 0.5
+        return sum([len(rule.agg_dict) for rule in self.rules_without_feature_names_]) 

@@ -200,17 +200,12 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
-        self.complexity_ = self._get_complexity()
+        
+        # add 1 for 'else' rule
+        self.complexity_ = self._get_complexity() + 1
 
         return self
 
-    def _get_complexity(self):
-        complexity = 0
-        for itemset in self.final_itemsets:
-            complexity += 1
-            if len(itemset) > 1 and type(itemset) != str:
-                complexity += 0.5 * (len(itemset) - 1)
-        return complexity
 
     # def __repr__(self, decimals=1):
     #     if self.d_star:
