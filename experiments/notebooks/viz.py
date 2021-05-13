@@ -1,11 +1,13 @@
 import math
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Tuple
 
 import dvu
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
+from experiments.util import remove_x_axis_duplicates
 
 import os.path
 from os.path import join as oj
@@ -21,12 +23,13 @@ def savefig(fname):
     plt.savefig(oj(DIR_FIGS, fname + '.pdf'))
 
 
-def get_x_and_y(result_data: pd.Series, x_col: str, y_col: str) -> (pd.Series, pd.Series):
+def get_x_and_y(result_data: pd.Series, x_col: str, y_col: str) -> Tuple[np.array, np.array]:
     complexities = result_data[x_col]
-    # print('ks', result_data.keys())
     rocs = result_data[y_col]
     complexity_sort_indices = complexities.argsort()
-    return complexities[complexity_sort_indices], rocs[complexity_sort_indices]
+    x = complexities[complexity_sort_indices]
+    y = rocs[complexity_sort_indices]
+    return remove_x_axis_duplicates(x.values, y.values)
 
 
 def viz_comparison_val_average(result: Dict[str, Any], metric: str = 'mean_ROCAUC') -> None:
@@ -40,19 +43,21 @@ def viz_comparison_val_average(result: Dict[str, Any], metric: str = 'mean_ROCAU
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
     for est in np.unique(result_estimators):
 
-        est_result_data = result_data[result_data.index.str.contains(est)]
+        est_result_data = result_data[result_data.index.str.fullmatch(est)]
         x, y = get_x_and_y(est_result_data, x_column, y_column)
         axes[0].plot(x, y, marker='o', markersize=4, label=est.replace('_', ' '))
 
         meta_auc_df = result['meta_auc_df']
         area = meta_auc_df.loc[est, y_column + '_auc']
+        label = est.split(' - ')[1]
         if area != 0:
-            label = est.split(' - ')[1] + f' {y_column} AUC: {area:.3f}'
-            axes[1].plot(x, y, marker='o', markersize=4, label=label.replace('_', ' '))
+            label += f' {y_column} AUC: {area:.3f}'
+        axes[1].plot(x, y, marker='o', markersize=4, label=label.replace('_', ' '))
 
     axes[0].set_title(f'{metric} across comparison datasets')
-    # axes[0].set_xlim(0, 50)
     axes[1].set_xlim(meta_auc_df.iloc[0][f'{x_column}_lb'], meta_auc_df.iloc[0][f'{x_column}_ub'])
+    if 'stbl' in est:
+        axes[0].set_xlim(0, 50)
     axes[1].set_title('Overlapping, low (<30) complexity region only')
 
     for ax in axes:
@@ -112,7 +117,7 @@ def viz_comparison_datasets(result: Union[Dict[str, Any], List[Dict[str, Any]]],
         plt.subplot(n_rows, cols, i + 1)
 
         for est in np.unique(results_estimators):
-            est_result_data = results_data[results_data.index.str.contains(est)]
+            est_result_data = results_data[results_data.index.str.fullmatch(est)]
             x, y = get_x_and_y(est_result_data, dataset + '_complexity', dataset + f'_{y_column}')
 
             linestyle = '--' if 'stbl' in est else '-'

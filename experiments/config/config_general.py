@@ -1,18 +1,15 @@
 from experiments.util import DATASET_PATH
 
 
-EASY_DATASETS = [
-    ("breast-cancer", DATASET_PATH + "breast_cancer.csv"), 
-    ("credit-g", DATASET_PATH + "credit_g.csv"), 
-    ("haberman", DATASET_PATH + "haberman.csv"), 
-    ("heart", DATASET_PATH + "heart.csv"), 
-]
-
-HARD_DATASETS = [
+DATASETS = [
     ("recidivism", DATASET_PATH + "compas-analysis/compas_two_year_clean.csv"),
     ("credit", DATASET_PATH + "credit_card/UCI_Credit_Card.csv"),
     ("juvenile", DATASET_PATH + "ICPSR_03986/DS0001/data_clean.csv"),
-    ("readmission", DATASET_PATH + 'readmission/readmission_clean.csv')
+    ("readmission", DATASET_PATH + 'readmission/readmission_clean.csv'),
+    ("breast-cancer", DATASET_PATH + "breast_cancer.csv"), 
+    ("credit-g", DATASET_PATH + "credit_g.csv"), 
+    ("haberman", DATASET_PATH + "haberman.csv"), 
+    ("heart", DATASET_PATH + "heart.csv")
 ]
 
 RULEFIT_KWARGS = {'random_state': 0, 'max_rules': None, 'include_linear': False}

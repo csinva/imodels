@@ -7,21 +7,20 @@ import pickle as pkl
 import time
 import warnings
 from collections import defaultdict, OrderedDict
-from typing import Any, Callable, List, Dict, Tuple, Union
+from typing import Any, Callable, List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score, make_scorer, f1_score
+from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score, make_scorer
 from sklearn.model_selection import KFold, train_test_split, cross_validate
 from tqdm import tqdm
 
-from experiments.config.config_general import HARD_DATASETS, EASY_DATASETS
-from experiments.config.ensemble_config import get_ensembles_easy, get_ensembles_hard
-from experiments.config.util import get_estimators_for_dataset
-from experiments.util import Model, MODEL_COMPARISON_PATH, get_clean_dataset, get_best_accuracy
+from experiments.config.config_general import DATASETS
+from experiments.config.util import get_estimators_for_dataset, get_ensembles_for_dataset
+from experiments.util import Model, MODEL_COMPARISON_PATH, get_clean_dataset, get_best_accuracy, remove_x_axis_duplicates
 
 warnings.filterwarnings("ignore", message="Bins whose width")
 
@@ -40,7 +39,6 @@ def get_complexity(estimator: BaseEstimator) -> float:
 
 def compute_meta_auc(result_data: pd.DataFrame,
                      prefix: str = '',
-                    #  metric_names: list[str] = ['mean_PRAUC', 'mean_ROCAUC', 'mean_accuracy'],
                      low_complexity_cutoff: int = 30,
                      max_start_complexity: int = 10) -> Tuple[pd.DataFrame, Tuple[float]]:
 
@@ -56,7 +54,7 @@ def compute_meta_auc(result_data: pd.DataFrame,
 
     for i, est in enumerate(estimators):
 
-        est_result_df = result_data[result_data.index.str.contains(est)]
+        est_result_df = result_data[result_data.index.str.fullmatch(est)]
         complexities_unsorted = est_result_df[x_column]
         complexity_sort_indices = complexities_unsorted.argsort()
         complexities = complexities_unsorted[complexity_sort_indices]
@@ -83,7 +81,8 @@ def compute_meta_auc(result_data: pd.DataFrame,
     for i in range(len(xs)):
         for c, col in enumerate(compute_columns):
             if eligible[i]:
-                f_curve = interp1d(xs[i], ys[i][:, c])
+                x, y = remove_x_axis_duplicates(xs[i], ys[i][:, c])
+                f_curve = interp1d(x, y)
                 x_interp = np.linspace(meta_auc_lb, meta_auc_ub, 100)
                 y_interp = f_curve(x_interp)
                 auc_value = np.trapz(y_interp, x=x_interp)
@@ -223,7 +222,7 @@ def run_comparison(path: str,
         # colname = f'{prefix}_mean_{met_name}'
         colname = f'mean_{met_name}'
         # met_df = curr_df.loc[:, [met_name in col for col in curr_df.columns]]
-        met_df = df.loc[:, [met_name in col for col in df.columns]]
+        met_df = df.iloc[:, 1:].loc[:, [met_name in col for col in df.iloc[:, 1:].columns]]
         df[colname] = met_df.mean(axis=1)
         # curr_df[colname] = met_df.mean(axis=1)
         # df[colname] = curr_df[colname]
@@ -301,19 +300,13 @@ def main():
         cv_folds = -1
     else:
         cv_folds = 4 if args.cv else 1
-    
-    # if args.datasets == 'hard':
-    #     datasets = HARD_DATASETS
-    #     ests = BEST_ESTIMATORS if args.test else ALL_ESTIMATORS
-    # else:
-    #     datasets = EASY_DATASETS
-    #     ests = BEST_EASY_ESTIMATORS if args.test else EASY_ESTIMATORS
 
-    datasets = list(filter(lambda x: args.dataset == x[0], HARD_DATASETS))
-    ests = get_estimators_for_dataset(args.dataset, test=args.test)
+    datasets = list(filter(lambda x: args.dataset == x[0], DATASETS))
+    if args.ensemble:
+        ests = get_estimators_for_dataset(args.dataset, test=args.test)
+    else:
+        ests = get_ensembles_for_dataset(args.dataset, test=args.test)
 
-    # if args.ensemble:
-    #     ests = get_ensembles_hard(args.test) if args.datasets == 'hard' else get_ensembles_easy(args.test)
 
     if args.model:
         ests = list(filter(lambda x: args.model in x[0].name, ests))

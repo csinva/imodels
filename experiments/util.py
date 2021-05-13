@@ -1,6 +1,7 @@
 import os
 import pickle as pkl
 import warnings
+from functools import partial
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
@@ -76,20 +77,26 @@ def get_comparison_result(path: str, estimator_name: str, dataset: str, prefix='
     return pkl.load(open(result_file, 'rb'))
 
 
-def get_best_model_under_complexity(c: int, model_name: str, model_cls: BaseEstimator,
+def get_best_model_under_complexity(c: int, model_name: str, 
+                                    model_cls: BaseEstimator,
+                                    dataset: str,
                                     curve_param = None,
-                                    metric: str = 'mean_ROCAUC',
+                                    metric: str = 'mean_rocauc',
                                     kwargs: dict = {},
-                                    prefix: str = 'cv',
+                                    prefix: str = 'val',
                                     easy: bool = False) -> BaseEstimator:
     # init_models = []
     # for m_name, m_cls in models:
-    result = get_comparison_result(MODEL_COMPARISON_PATH, model_name, prefix=prefix, easy=easy)
+    result = get_comparison_result(MODEL_COMPARISON_PATH, model_name, dataset=dataset, prefix=prefix)
     df, auc_metric = result['df'], result['meta_auc_df'][f'{metric}_auc']
 
     if curve_param:
         # specify which curve to use
-        df_best_curve = df[df.iloc[:, 1] == curve_param]
+        if type(df.iloc[:, 1][0]) is partial:
+            df_best_curve = df[df.iloc[:, 1].apply(lambda x: x.keywords['min_impurity_decrease']) == curve_param]
+        else:
+            df_best_curve = df[df.iloc[:, 1] == curve_param]
+
     else:
         # detect which curve to use
         df_best_curve = df[df.index == auc_metric.idxmax()]
@@ -104,6 +111,16 @@ def get_best_model_under_complexity(c: int, model_name: str, model_cls: BaseEsti
 
     # if there is a second param that was varied
     if auc_metric.shape[0] > 1:
-        kwargs[df_under_c.columns[1]] = int(df_under_c.iloc[0, 1])
+        kwargs[df_under_c.columns[1]] = df_under_c.iloc[0, 1]
 
     return model_cls(**kwargs)
+
+
+def remove_x_axis_duplicates(x: np.array, y: np.array) -> Tuple[np.array, np.array]:
+    unique_arr, inds, counts = np.unique(x, return_index=True, return_counts=True)
+
+    y_for_unique_x = []
+    for i, ind in enumerate(inds):
+        y_for_unique_x.append(y[ind:ind+counts[i]].max())
+
+    return unique_arr, np.array(y_for_unique_x)
