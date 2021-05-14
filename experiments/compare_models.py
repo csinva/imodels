@@ -122,7 +122,10 @@ def compare_estimators(estimators: List[Model],
         if verbose:
             print("comparing on dataset", d[0])
         X, y, feat_names = get_clean_dataset(d[1])
-        test_size = 0.8 if low_data else 0.2
+        if low_data:
+            test_size = X.shape[0] - 1000
+        else:
+            test_size = 0.2
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=split_seed)
 
         # loop over estimators
@@ -231,7 +234,6 @@ def run_comparison(path: str,
             meta_auc_df = compute_meta_auc(df)
         except ValueError as e:
             warnings.warn(f'bad complexity range')
-            warnings.warn(e)
             meta_auc_df = None
 
     # meta_auc_df = pd.DataFrame([])
@@ -280,7 +282,7 @@ def main():
     parser.add_argument('--dataset', type=str)
     parser.add_argument('--ignore_cache', action='store_true')
     parser.add_argument('--low_data', action='store_true')
-    parser.add_argument('--ensemble', action='store_true')
+    parser.add_argument('--ensemble', action='store_true', default=False)
     parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--parallel_id', nargs='+', type=int, default=None)
     parser.add_argument('--split_seed', type=int, default=0)
@@ -303,9 +305,9 @@ def main():
 
     datasets = list(filter(lambda x: args.dataset == x[0], DATASETS))
     if args.ensemble:
-        ests = get_estimators_for_dataset(args.dataset, test=args.test)
-    else:
         ests = get_ensembles_for_dataset(args.dataset, test=args.test)
+    else:
+        ests = get_estimators_for_dataset(args.dataset, test=args.test)
 
 
     if args.model:

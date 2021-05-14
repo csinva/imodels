@@ -127,8 +127,12 @@ def get_ensembles_for_recidivism(test: bool = False):
 
     BEST_ENSEMBLES = []
     BEST_ENSEMBLES += [
+        [Model('stbl_l2_mm0', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs() if i < 8],
+        [Model('stbl_l2_mm1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_3[i]) for i, c in stbl_cs()]
     ]
 
+    kwargs_0 = [{**kw, 'penalty': 'l1', 'alpha': 200, 'max_rules': None} for kw in stbl_kw]
+    kwargs_1 = [{**kw, 'penalty': 'l1', 'alpha': 150, 'max_rules': None} for kw in stbl_kw]
     kwargs_2 = [{**kw, 'penalty': 'l1', 'alpha': 100, 'max_rules': None} for kw in stbl_kw]
     kwargs_3 = [{**kw, 'penalty': 'l1', 'alpha': 10, 'max_rules': None} for kw in stbl_kw]
     kwargs_4 = [{**kw, 'penalty': 'l1', 'alpha': 1, 'max_rules': None} for kw in stbl_kw]
@@ -150,6 +154,9 @@ def get_ensembles_for_recidivism(test: bool = False):
     )
 
     BEST_ENSEMBLES += [
+        [Model('stbl_l1_mm0', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_0[i]) for i, c in stbl_cs()],
+        [Model('stbl_l1_mm1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_1[i]) for i, c in stbl_cs()],
+        [Model('stbl_l1_mm2', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_3[i]) for i, c in stbl_cs()]
     ]
 
     return ALL_ENSEMBLES if not test else BEST_ENSEMBLES

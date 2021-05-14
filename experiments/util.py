@@ -31,6 +31,9 @@ class Model:
         if self.fixed_param is not None:
             self.kwargs[self.fixed_param] = self.fixed_param_val
         self.kwargs = {**self.kwargs, **other_params}
+    
+    def __repr__(self):
+        return self.name
 
 
 def get_openml_dataset(data_id: int) -> pd.DataFrame:
