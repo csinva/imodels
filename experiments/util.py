@@ -83,7 +83,7 @@ def get_comparison_result(path: str, estimator_name: str, dataset: str, prefix='
 def get_best_model_under_complexity(c: int, model_name: str, 
                                     model_cls: BaseEstimator,
                                     dataset: str,
-                                    curve_param = None,
+                                    curve_params: list = None,
                                     metric: str = 'mean_rocauc',
                                     kwargs: dict = {},
                                     prefix: str = 'val',
@@ -93,12 +93,12 @@ def get_best_model_under_complexity(c: int, model_name: str,
     result = get_comparison_result(MODEL_COMPARISON_PATH, model_name, dataset=dataset, prefix=prefix)
     df, auc_metric = result['df'], result['meta_auc_df'][f'{metric}_auc']
 
-    if curve_param:
+    if curve_params:
         # specify which curve to use
         if type(df.iloc[:, 1][0]) is partial:
-            df_best_curve = df[df.iloc[:, 1].apply(lambda x: x.keywords['min_impurity_decrease']) == curve_param]
+            df_best_curve = df[df.iloc[:, 1].apply(lambda x: x.keywords['min_samples_split']).isin(curve_params)]
         else:
-            df_best_curve = df[df.iloc[:, 1] == curve_param]
+            df_best_curve = df[df.iloc[:, 1].isin(curve_params)]
 
     else:
         # detect which curve to use
@@ -127,3 +127,47 @@ def remove_x_axis_duplicates(x: np.array, y: np.array) -> Tuple[np.array, np.arr
         y_for_unique_x.append(y[ind:ind+counts[i]].max())
 
     return unique_arr, np.array(y_for_unique_x)
+
+
+def merge_overlapping_curves(test_mul_curves, y_col):
+    final_x = []
+    final_y = []
+    curves = test_mul_curves.index.unique()
+    
+    start_compl = 0
+    for i in range(curves.shape[0]):
+        curr_x = test_mul_curves[test_mul_curves.index == curves[i]]['mean_complexity']
+        curr_y = test_mul_curves[test_mul_curves.index == curves[i]][y_col]
+        curr_x, curr_y = curr_x[curr_x.argsort()], curr_y[curr_x.argsort()]
+        curr_x, curr_y = remove_x_axis_duplicates(curr_x, curr_y)
+        curr_x, curr_y = curr_x[curr_x >= start_compl], curr_y[curr_x >= start_compl]
+        
+        if i != curves.shape[0] - 1:
+
+            next_x = test_mul_curves[test_mul_curves.index == curves[i+1]]['mean_complexity']
+            next_y = test_mul_curves[test_mul_curves.index == curves[i+1]][y_col]
+            next_x, next_y = next_x[next_x.argsort()], next_y[next_x.argsort()]
+            next_x, next_y = remove_x_axis_duplicates(next_x, next_y)
+
+        found_switch_point = False
+        for j in range(curr_x.shape[0] - 1):     
+            
+            final_x.append(curr_x[j])
+            final_y.append(curr_y[j])
+            
+            if i != curves.shape[0] - 1:
+            
+                next_x_next_val = next_x[next_x > curr_x[j]][0]
+                next_y_next_val = next_y[next_x > curr_x[j]][0]
+                curr_x_next_val = curr_x[j+1]
+                curr_y_next_val = curr_y[j+1]
+            
+                if next_y_next_val > curr_y_next_val and next_x_next_val - curr_x_next_val <= 5:
+                    start_compl = next_x_next_val
+                    found_switch_point = True
+                    break
+        
+        if not found_switch_point:
+            return np.array(final_x), np.array(final_y)
+    
+    return np.array(final_x), np.array(final_y)

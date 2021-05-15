@@ -59,6 +59,7 @@ RECIDIVISM_ESTIMATORS.append(
     + [Model('brl - minsup_0.5', brl, 'listlengthprior', n, 'minsupport', 0.5, BRL_KWARGS) for n in np.arange(1, 20)]
     + [Model('brl - minsup_0.3', brl, 'listlengthprior', n, 'minsupport', 0.3, BRL_KWARGS) for n in np.arange(1, 20)]
     + [Model('brl - minsup_0.1', brl, 'listlengthprior', n, 'minsupport', 0.1, BRL_KWARGS) for n in np.arange(1, 20)]
+    + [Model('brl - minsup_0.05', brl, 'listlengthprior', n, 'minsupport', 0.05, BRL_KWARGS) for n in np.arange(1, 20)]
 )
 RECIDIVISM_ESTIMATORS.append(
     [Model('brs - mss_2', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_samples_split=2, max_depth=3)) for n in np.arange(1, 9)]
@@ -72,13 +73,23 @@ RECIDIVISM_ESTIMATORS.append(
 )
 
 RECIDIVISM_TEST_ESTIMATORS = [
-    [Model('random_forest', rf, 'n_estimators', n, 'min_impurity_decrease', 1e-4, {'max_depth': 2}) for n in np.arange(1, 8)],
-    [Model('gradient_boosting', gb, 'n_estimators', n, 'min_impurity_decrease', 0., {'max_depth': 2}) for n in np.arange(1, 8)],
-    [Model('skope_rules', skope, 'n_estimators', n, 'precision_min', 0.4, {'max_depth': 2}) for n in np.arange(1, 10)],
-    [Model('rulefit', rfit, 'n_estimators', n, 'alpha', 30, RULEFIT_KWARGS) for n in np.arange(1, 13)],
-    [Model('fplasso', fpl, 'alpha', a, 'minsupport', 0.1, FPL_KWARGS) for a in np.logspace(1.55, 2.3, 10)],
-    [Model('brl', brl, 'listlengthprior', n, 'minsupport', 0.3, BRL_KWARGS) for n in np.arange(1, 20, 2)],
-    [Model('brs', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_impurity_decrease=2e-3, max_depth=2)) for n in np.arange(1, 9)]
+    [Model('random_forest - mss_2500', rf, 'n_estimators', n, 'min_samples_split', 2500, {'max_depth': 3}) for n in np.arange(1, 50)],
+    [Model('gradient_boosting - mss_3000', gb, 'n_estimators', n, 'min_samples_split', 3000, {'max_depth': 3}) for n in np.arange(1, 18)],
+    (
+        [Model('skope_rules - mss_2000_prec_0.5', skope, 'n_estimators', n, 'min_samples_split', 2000, {'max_depth': 3}) for n in np.arange(1, 30).tolist() + np.arange(30, 200, 5).tolist()]
+        + [Model('skope_rules - mss_1000_prec_0.5', skope, 'n_estimators', n, 'min_samples_split', 1000, {'max_depth': 3}) for n in np.arange(1, 20)]
+    ),
+    (
+        [Model('rulefit - alpha_300', rfit, 'n_estimators', n, 'alpha', 300, RULEFIT_KWARGS) for n in np.arange(1, 30).tolist() + np.arange(30, 200, 5).tolist()]
+        + [Model('rulefit - alpha_50', rfit, 'n_estimators', n, 'alpha', 50, RULEFIT_KWARGS) for n in np.arange(1, 30).tolist() + np.arange(30, 100, 5).tolist()]
+    ),
+    [Model('fplasso - minsup_0.05', fpl, 'alpha', a, 'minsupport', 0.05, FPL_KWARGS) for a in np.logspace(1.5, 3, 40)],
+    (
+        [Model('brl - minsup_0.7', brl, 'listlengthprior', n, 'minsupport', 0.7, BRL_KWARGS) for n in np.arange(1, 20)]
+        + [Model('brl - minsup_0.3', brl, 'listlengthprior', n, 'minsupport', 0.3, BRL_KWARGS) for n in np.arange(1, 20)]
+        + [Model('brl - minsup_0.1', brl, 'listlengthprior', n, 'minsupport', 0.1, BRL_KWARGS) for n in np.arange(1, 20)]
+    ),
+    [Model('brs - mss_3000', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_samples_split=3000, max_depth=3)) for n in np.arange(1, 11)]
 ]
 
 
@@ -90,27 +101,27 @@ def get_weak_learner_inst_list_recidivism(complexity_limits):
             get_best_model_under_complexity(**common_kwargs,
                                             model_name='skope_rules',
                                             model_cls=skope,
-                                            curve_param=0.4,
-                                            kwargs={'max_depth': 2}),
+                                            curve_params=[2000, 1000],
+                                            kwargs={'max_depth': 3}),
             get_best_model_under_complexity(**common_kwargs,
                                             model_name='rulefit',
                                             model_cls=rfit,
-                                            curve_param=30,
+                                            curve_params=[300, 50],
                                             kwargs=RULEFIT_KWARGS),
             get_best_model_under_complexity(**common_kwargs,
                                             model_name='fplasso',
                                             model_cls=fpl,
-                                            curve_param=0.1,
+                                            curve_params=[0.05],
                                             kwargs=FPL_KWARGS),
             get_best_model_under_complexity(**common_kwargs,
                                             model_name='brl',
                                             model_cls=brl,
                                             kwargs=BRL_KWARGS,
-                                            curve_param=0.3),
+                                            curve_params=[0.7, 0.3, 0.1]),
             get_best_model_under_complexity(**common_kwargs,
                                             model_name='brs',
                                             model_cls=brs,
-                                            curve_param=2e-3)
+                                            curve_params=[3000])
         ]
         weak_learners_c_clean = [wl for wl in weak_learners_c if wl is not None]
         weak_learners.append(weak_learners_c_clean)
@@ -119,60 +130,52 @@ def get_weak_learner_inst_list_recidivism(complexity_limits):
 
 
 def get_ensembles_for_recidivism(test: bool = False):
-    c_limits = np.concatenate((np.arange(2, 10), np.arange(10, 29, 2)))
+    c_limits = np.arange(2, 40)
     stbl_cs = lambda: enumerate(c_limits)
     stbl_kw = [{'weak_learners': wl_lst} for wl_lst in get_weak_learner_inst_list_recidivism(c_limits)]
 
-    kwargs_2 = [{**kw, 'penalty': 'l2', 'alpha': 100, 'max_rules': None} for kw in stbl_kw]
+    kwargs_0 = [{**kw, 'penalty': 'l2', 'alpha': 200, 'max_rules': None} for kw in stbl_kw]
+    kwargs_1 = [{**kw, 'penalty': 'l2', 'alpha': 100, 'max_rules': None} for kw in stbl_kw]
+    kwargs_2 = [{**kw, 'penalty': 'l2', 'alpha': 50, 'max_rules': None} for kw in stbl_kw]
     kwargs_3 = [{**kw, 'penalty': 'l2', 'alpha': 10, 'max_rules': None} for kw in stbl_kw]
     kwargs_4 = [{**kw, 'penalty': 'l2', 'alpha': 1, 'max_rules': None} for kw in stbl_kw]
-    kwargs_5 = [{**kw, 'penalty': 'l2', 'alpha': 0.1, 'max_rules': None} for kw in stbl_kw]
 
     ALL_ENSEMBLES = []
     ALL_ENSEMBLES.append(
-        [Model('stbl_l2 - mm0_alpha_10.', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs() if i < 8]
-        + [Model('stbl_l2 - mm0_alpha_1.', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_4[i]) for i, c in stbl_cs() if i < 8]
-        + [Model('stbl_l2 - mm0_alpha_0.1', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_5[i]) for i, c in stbl_cs() if i < 8]
-        + [Model('stbl_l2 - mm1_alpha_10.', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_3[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l2 - mm1_alpha_1.', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_4[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l2 - mm1_alpha_0.1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_5[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l2 - mm2_alpha_10.', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_3[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l2 - mm2_alpha_1.', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_4[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l2 - mm2_alpha_0.1', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_5[i]) for i, c in stbl_cs()]
+        [Model('stbl_l2 - mm1_alpha_200', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_0[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l2 - mm1_alpha_100', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_1[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l2 - mm1_alpha_50', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_2[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l2 - mm1_alpha_10', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_3[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l2 - mm1_alpha_1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_4[i]) for i, c in stbl_cs()]
     )
 
     BEST_ENSEMBLES = []
     BEST_ENSEMBLES += [
-        [Model('stbl_l2_mm0', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs() if i < 8],
-        [Model('stbl_l2_mm1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_3[i]) for i, c in stbl_cs()]
+        [Model('stbl_l2_mm1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_2[i]) for i, c in stbl_cs()]
     ]
 
     kwargs_0 = [{**kw, 'penalty': 'l1', 'alpha': 200, 'max_rules': None} for kw in stbl_kw]
-    kwargs_1 = [{**kw, 'penalty': 'l1', 'alpha': 150, 'max_rules': None} for kw in stbl_kw]
-    kwargs_2 = [{**kw, 'penalty': 'l1', 'alpha': 100, 'max_rules': None} for kw in stbl_kw]
+    kwargs_1 = [{**kw, 'penalty': 'l1', 'alpha': 100, 'max_rules': None} for kw in stbl_kw]
+    kwargs_2 = [{**kw, 'penalty': 'l1', 'alpha': 50, 'max_rules': None} for kw in stbl_kw]
     kwargs_3 = [{**kw, 'penalty': 'l1', 'alpha': 10, 'max_rules': None} for kw in stbl_kw]
     kwargs_4 = [{**kw, 'penalty': 'l1', 'alpha': 1, 'max_rules': None} for kw in stbl_kw]
-    kwargs_5 = [{**kw, 'penalty': 'l1', 'alpha': 0.1, 'max_rules': None} for kw in stbl_kw]
 
     ALL_ENSEMBLES.append(
-        [Model('stbl_l1 - mm0_alpha_100.', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_2[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l1 - mm0_alpha_10.', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l1 - mm0_alpha_1.', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_4[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l1 - mm0_alpha_0.1', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_5[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l1 - mm1_alpha_100.', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_2[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l1 - mm1_alpha_10.', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_3[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l1 - mm1_alpha_1.', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_4[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l1 - mm1_alpha_0.1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_5[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l1 - mm2_alpha_100.', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_2[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l1 - mm2_alpha_10.', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_3[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l1 - mm2_alpha_1.', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_4[i]) for i, c in stbl_cs()]
-        + [Model('stbl_l1 - mm2_alpha_0.1', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_5[i]) for i, c in stbl_cs()]
+        [Model('stbl_l1 - mm0_alpha_200', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_0[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l1 - mm0_alpha_100', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_1[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l1 - mm0_alpha_50', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_2[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l1 - mm0_alpha_10', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_3[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l1 - mm0_alpha_1', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_4[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l1 - mm1_alpha_200', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_0[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l1 - mm1_alpha_100', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_1[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l1 - mm1_alpha_50', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_2[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l1 - mm1_alpha_10', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_3[i]) for i, c in stbl_cs()]
+        + [Model('stbl_l1 - mm1_alpha_1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_4[i]) for i, c in stbl_cs()]
     )
 
     BEST_ENSEMBLES += [
-        [Model('stbl_l1_mm0', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_0[i]) for i, c in stbl_cs()],
-        [Model('stbl_l1_mm1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_1[i]) for i, c in stbl_cs()],
-        [Model('stbl_l1_mm2', stbl, 'max_complexity', c, 'min_mult', 2, kwargs_3[i]) for i, c in stbl_cs()]
+        [Model('stbl_l1_mm0', stbl, 'max_complexity', c, 'min_mult', 0, kwargs_2[i]) for i, c in stbl_cs()],
+        [Model('stbl_l1_mm1', stbl, 'max_complexity', c, 'min_mult', 1, kwargs_2[i]) for i, c in stbl_cs()]
     ]
 
     return ALL_ENSEMBLES if not test else BEST_ENSEMBLES

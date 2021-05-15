@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from experiments.util import remove_x_axis_duplicates
+from experiments.util import remove_x_axis_duplicates, merge_overlapping_curves
 
 import os.path
 from os.path import join as oj
@@ -23,7 +23,10 @@ def savefig(fname):
     plt.savefig(oj(DIR_FIGS, fname + '.pdf'))
 
 
-def get_x_and_y(result_data: pd.Series, x_col: str, y_col: str) -> Tuple[np.array, np.array]:
+def get_x_and_y(result_data: pd.Series, x_col: str, y_col: str, test=False) -> Tuple[np.array, np.array]:
+    if test and result_data.index.unique().shape[0] > 1:
+        return merge_overlapping_curves(result_data, y_col)
+
     complexities = result_data[x_col]
     rocs = result_data[y_col]
     complexity_sort_indices = complexities.argsort()
@@ -68,7 +71,7 @@ def viz_comparison_val_average(result: Dict[str, Any], metric: str = 'mean_ROCAU
 
 
 def viz_comparison_test_average(results: List[Dict[str, Any]],
-                                metric: str = 'mean_ROCAUC',
+                                metric: str = 'mean_rocauc',
                                 line_legend: bool = False) -> None:
     '''Plot dataset-averaged y_column vs dataset-averaged complexity for different models
     '''
@@ -76,8 +79,8 @@ def viz_comparison_test_average(results: List[Dict[str, Any]],
     y_column = metric
     for result in results:
         result_data = result['df']
-        est = result['estimators'][0]
-        x, y = get_x_and_y(result_data, x_column, y_column)
+        est = result['estimators'][0].split(' - ')[0]
+        x, y = get_x_and_y(result_data, x_column, y_column, test=True)
         linestyle = '--' if 'stbl' in est else '-'
         plt.plot(x, y, marker='o', linestyle=linestyle, markersize=2, linewidth=1, label=est.replace('_', ' '))
     plt.xlim(0, 40)
