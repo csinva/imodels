@@ -133,13 +133,13 @@ def compare_estimators(estimators: List[Model],
             est = model.cls(**model.kwargs)
 
             if n_cv_folds > 1:
-                fold_iterator = KFold(n_splits=n_cv_folds, random_state=0, shuffle=True)
+                fold_iterator = KFold(n_splits=n_cv_folds, random_state=split_seed, shuffle=True)
                 cv_scores = cross_validate(est, X_train, y_train, cv=fold_iterator, scoring=scorers)
                 metric_results = {k.split('_')[1]: np.mean(v) for k, v in cv_scores.items() if k != 'score_time'}
             else:
                 if n_cv_folds == 1:
                     X_fit, X_eval, y_fit, y_eval = train_test_split(X_train, y_train, 
-                                                                    test_size=test_size, random_state=0)
+                                                                    test_size=0.2, random_state=split_seed)
                 else:
                     X_fit, X_eval, y_fit, y_eval = X_train, X_test, y_train, y_test
 
@@ -274,7 +274,7 @@ def main():
         'complexity': lambda m, x, y: get_complexity(m)
     })
 
-    np.random.seed(0)
+    np.random.seed(1)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--test', action='store_true')

@@ -16,43 +16,59 @@ from experiments.util import get_best_model_under_complexity
 
 RECIDIVISM_ESTIMATORS = []
 RECIDIVISM_ESTIMATORS.append(
-    [Model('random_forest - mid_0', rf, 'n_estimators', n, 'min_impurity_decrease', 0., {'max_depth': 2}) for n in np.arange(1, 8)]
-    + [Model('random_forest - mid_1e-4', rf, 'n_estimators', n, 'min_impurity_decrease', 1e-4, {'max_depth': 2}) for n in np.arange(1, 8)]
-    + [Model('random_forest - mid_5e-4', rf, 'n_estimators', n, 'min_impurity_decrease', 5e-4, {'max_depth': 2}) for n in np.arange(1, 8)]
+    [Model('random_forest - mss_2', rf, 'n_estimators', n, 'min_samples_split', 2, {'max_depth': 3}) for n in np.arange(1, 8)]
+    + [Model('random_forest - mss_100', rf, 'n_estimators', n, 'min_samples_split', 100, {'max_depth': 3}) for n in np.arange(1, 8)]
+    + [Model('random_forest - mss_500', rf, 'n_estimators', n, 'min_samples_split', 500, {'max_depth': 3}) for n in np.arange(1, 8)]
+    + [Model('random_forest - mss_1000', rf, 'n_estimators', n, 'min_samples_split', 1000, {'max_depth': 3}) for n in np.arange(1, 8)]
+    + [Model('random_forest - mss_1500', rf, 'n_estimators', n, 'min_samples_split', 1500, {'max_depth': 3}) for n in np.arange(1, 8)]
+    + [Model('random_forest - mss_2000', rf, 'n_estimators', n, 'min_samples_split', 2000, {'max_depth': 3}) for n in np.arange(1, 18)]
+    + [Model('random_forest - mss_2500', rf, 'n_estimators', n, 'min_samples_split', 2500, {'max_depth': 3}) for n in np.arange(1, 50)]
 )
 RECIDIVISM_ESTIMATORS.append(
-    [Model('gradient_boosting - mid_0', gb, 'n_estimators', n, 'min_impurity_decrease', 0., {'max_depth': 2}) for n in np.arange(1, 8)]
-    + [Model('gradient_boosting - mid_10', gb, 'n_estimators', n, 'min_impurity_decrease', 10, {'max_depth': 2}) for n in np.arange(1, 10)]
-    + [Model('gradient_boosting - mid_20', gb, 'n_estimators', n, 'min_impurity_decrease', 20, {'max_depth': 2}) for n in np.arange(1, 40, 4)]
+    [Model('gradient_boosting - mss_2', gb, 'n_estimators', n, 'min_samples_split', 2, {'max_depth': 3}) for n in np.arange(1, 8)]
+    + [Model('gradient_boosting - mss_100', gb, 'n_estimators', n, 'min_samples_split', 100, {'max_depth': 3}) for n in np.arange(1, 8)]
+    + [Model('gradient_boosting - mss_500', gb, 'n_estimators', n, 'min_samples_split', 500, {'max_depth': 3}) for n in np.arange(1, 8)]
+    + [Model('gradient_boosting - mss_1000', gb, 'n_estimators', n, 'min_samples_split', 1000, {'max_depth': 3}) for n in np.arange(1, 8)]
+    + [Model('gradient_boosting - mss_1500', gb, 'n_estimators', n, 'min_samples_split', 1500, {'max_depth': 3}) for n in np.arange(1, 8)]
+    + [Model('gradient_boosting - mss_2000', gb, 'n_estimators', n, 'min_samples_split', 2000, {'max_depth': 3}) for n in np.arange(1, 8)]
+    + [Model('gradient_boosting - mss_3000', gb, 'n_estimators', n, 'min_samples_split', 3000, {'max_depth': 3}) for n in np.arange(1, 18)]
 )
 RECIDIVISM_ESTIMATORS.append(
-    [Model('skope_rules - prec_0.5', skope, 'n_estimators', n, 'precision_min', 0.5, {'max_depth': 2}) for n in [1, 2, 3] + np.arange(5, 40, 4).tolist()]
-    + [Model('skope_rules - prec_.45', skope, 'n_estimators', n, 'precision_min', 0.45, {'max_depth': 2}) for n in [1, 2] + np.arange(3, 20, 2).tolist()]
-    + [Model('skope_rules - prec_0.4', skope, 'n_estimators', n, 'precision_min', 0.4, {'max_depth': 2}) for n in np.arange(1, 10)]
+    [Model('skope_rules - mss_100_prec_0.5', skope, 'n_estimators', n, 'min_samples_split', 100, {'max_depth': 3}) for n in np.arange(1, 20)]
+    + [Model('skope_rules - mss_1000_prec_0.5', skope, 'n_estimators', n, 'min_samples_split', 1000, {'max_depth': 3}) for n in np.arange(1, 20)]
+    + [Model('skope_rules - mss_2000_prec_0.5', skope, 'n_estimators', n, 'min_samples_split', 2000, {'max_depth': 3}) for n in np.arange(1, 30).tolist() + np.arange(30, 200, 5).tolist()]
+    + [Model('skope_rules - mss_100_prec_0.4', skope, 'n_estimators', n, 'min_samples_split', 100, {'precision_min': 0.4, 'max_depth': 3}) for n in np.arange(1, 20)]
+    + [Model('skope_rules - mss_1000_prec_0.4', skope, 'n_estimators', n, 'min_samples_split', 1000, {'precision_min': 0.4, 'max_depth': 3}) for n in np.arange(1, 20)]
+    + [Model('skope_rules - mss_2000_prec_0.4', skope, 'n_estimators', n, 'min_samples_split', 2000, {'precision_min': 0.4, 'max_depth': 3}) for n in np.arange(1, 30).tolist() + np.arange(30, 200, 5).tolist()]
 )
 RECIDIVISM_ESTIMATORS.append(
-    [Model('rulefit - alpha_30', rfit, 'n_estimators', n, 'alpha', 30, RULEFIT_KWARGS) for n in np.arange(1, 13)]
-    + [Model('rulefit - alpha_13', rfit, 'n_estimators', n, 'alpha', 13, RULEFIT_KWARGS) for n in np.arange(1, 11)]
-    + [Model('rulefit - alpha_5', rfit, 'n_estimators', n, 'alpha', 5, RULEFIT_KWARGS) for n in np.arange(1, 11)]
-    + [Model('rulefit - alpha_2', rfit, 'n_estimators', n, 'alpha', 2, RULEFIT_KWARGS) for n in np.arange(1, 11)]
-    + [Model('rulefit - alpha_01', rfit, 'n_estimators', n, 'alpha', 1, RULEFIT_KWARGS) for n in np.arange(1, 11)]
+    [Model('rulefit - alpha_300', rfit, 'n_estimators', n, 'alpha', 300, RULEFIT_KWARGS) for n in np.arange(1, 30).tolist() + np.arange(30, 200, 5).tolist()]
+    + [Model('rulefit - alpha_200', rfit, 'n_estimators', n, 'alpha', 200, RULEFIT_KWARGS) for n in np.arange(1, 30).tolist() + np.arange(30, 200, 5).tolist()]
+    + [Model('rulefit - alpha_100', rfit, 'n_estimators', n, 'alpha', 100, RULEFIT_KWARGS) for n in np.arange(1, 30).tolist() + np.arange(30, 200, 5).tolist()]
+    + [Model('rulefit - alpha_50', rfit, 'n_estimators', n, 'alpha', 50, RULEFIT_KWARGS) for n in np.arange(1, 30).tolist() + np.arange(30, 100, 5).tolist()]
+    + [Model('rulefit - alpha_10', rfit, 'n_estimators', n, 'alpha', 10, RULEFIT_KWARGS) for n in np.arange(1, 15)]
+    + [Model('rulefit - alpha_1', rfit, 'n_estimators', n, 'alpha', 1, RULEFIT_KWARGS) for n in np.arange(1, 13)]
 )
 RECIDIVISM_ESTIMATORS.append(
-    [Model('fplasso - minsup_0.1', fpl, 'alpha', a, 'minsupport', 0.1, FPL_KWARGS) for a in np.logspace(1.55, 2.3, 10)]
-    + [Model('fplasso - minsup_0.2', fpl, 'alpha', a, 'minsupport', 0.2, FPL_KWARGS) for a in np.logspace(1, 2, 10)]
-    + [Model('fplasso - minsup_0.3', fpl, 'alpha', a, 'minsupport', 0.3, FPL_KWARGS) for a in np.logspace(1, 2, 10)]
+    [Model('fplasso - minsup_0.05', fpl, 'alpha', a, 'minsupport', 0.05, FPL_KWARGS) for a in np.logspace(1.5, 3, 40)]
+    + [Model('fplasso - minsup_0.1', fpl, 'alpha', a, 'minsupport', 0.1, FPL_KWARGS) for a in np.logspace(1.5, 3, 40)]
+    + [Model('fplasso - minsup_0.15', fpl, 'alpha', a, 'minsupport', 0.15, FPL_KWARGS) for a in np.logspace(1.5, 3, 40)]
 )
 RECIDIVISM_ESTIMATORS.append(
-    [Model('brl - minsup_0.5', brl, 'listlengthprior', n, 'minsupport', 0.5, BRL_KWARGS) for n in np.arange(1, 20, 2)]
-    + [Model('brl - minsup_0.3', brl, 'listlengthprior', n, 'minsupport', 0.3, BRL_KWARGS) for n in np.arange(1, 20, 2)]
-    + [Model('brl - minsup_0.1', brl, 'listlengthprior', n, 'minsupport', 0.1, BRL_KWARGS) for n in np.arange(1, 20, 2)]
+    [Model('brl - minsup_0.7', brl, 'listlengthprior', n, 'minsupport', 0.7, BRL_KWARGS) for n in np.arange(1, 20)]
+    + [Model('brl - minsup_0.5', brl, 'listlengthprior', n, 'minsupport', 0.5, BRL_KWARGS) for n in np.arange(1, 20)]
+    + [Model('brl - minsup_0.3', brl, 'listlengthprior', n, 'minsupport', 0.3, BRL_KWARGS) for n in np.arange(1, 20)]
+    + [Model('brl - minsup_0.1', brl, 'listlengthprior', n, 'minsupport', 0.1, BRL_KWARGS) for n in np.arange(1, 20)]
 )
 RECIDIVISM_ESTIMATORS.append(
-    [Model('brs - mid_0', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_impurity_decrease=0, max_depth=2)) for n in np.arange(1, 9)]
-    + [Model('brs - mid_1e-3', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_impurity_decrease=1e-3, max_depth=2)) for n in np.arange(1, 9)]
-    + [Model('brs - mid_2e-3', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_impurity_decrease=2e-3, max_depth=2)) for n in np.arange(1, 9)]
-    + [Model('brs - mid_5e-3', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_impurity_decrease=5e-3, max_depth=2)) for n in np.arange(1, 9)]
-    + [Model('brs - mid_1e-2', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_impurity_decrease=1e-2, max_depth=2)) for n in np.arange(1, 9)]
+    [Model('brs - mss_2', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_samples_split=2, max_depth=3)) for n in np.arange(1, 9)]
+    + [Model('brs - mss_100', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_samples_split=100, max_depth=3)) for n in np.arange(1, 9)]
+    + [Model('brs - mss_500', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_samples_split=500, max_depth=3)) for n in np.arange(1, 9)]
+    + [Model('brs - mss_1000', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_samples_split=1000, max_depth=3)) for n in np.arange(1, 9)]
+    + [Model('brs - mss_1500', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_samples_split=1500, max_depth=3)) for n in np.arange(1, 9)]
+    + [Model('brs - mss_2000', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_samples_split=2000, max_depth=3)) for n in np.arange(1, 9)]
+    + [Model('brs - mss_2500', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_samples_split=2500, max_depth=3)) for n in np.arange(1, 9)]
+    + [Model('brs - mss_3000', brs, 'n_estimators', n, 'estimator', partial(DecisionTreeClassifier, min_samples_split=3000, max_depth=3)) for n in np.arange(1, 11)]
 )
 
 RECIDIVISM_TEST_ESTIMATORS = [

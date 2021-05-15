@@ -56,8 +56,7 @@ def viz_comparison_val_average(result: Dict[str, Any], metric: str = 'mean_ROCAU
 
     axes[0].set_title(f'{metric} across comparison datasets')
     axes[1].set_xlim(meta_auc_df.iloc[0][f'{x_column}_lb'], meta_auc_df.iloc[0][f'{x_column}_ub'])
-    if 'stbl' in est:
-        axes[0].set_xlim(0, 50)
+    axes[0].set_xlim(0, 40)
     axes[1].set_title('Overlapping, low (<30) complexity region only')
 
     for ax in axes:
