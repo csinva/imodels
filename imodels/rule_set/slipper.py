@@ -4,11 +4,12 @@ import random
 import string
 
 from copy import deepcopy
+from joblib import Parallel, delayed
 
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import train_test_split
 
-from imodels.util.rule import Rule
+from imodels.util.rule import Rule, get_feature_dict
 
 
 class SlipperRule(BaseEstimator, ClassifierMixin):
@@ -19,13 +20,11 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
 
     def __init__(self, D):
         self.Z = None
-        self.rule = Rule('')
+        self.rule = None
         self.D = D
-        self._place_holders = None
 
     def _make_candidate(self, X, y, curr_rule, feat, A_c):
-        """ Make candidate rules to explore best option
-        greedily
+        """ Make candidate rules for grow routine to compare scores
 
         Parameters
         ----------
@@ -34,33 +33,47 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
           D (np.array): Array of distributions
         """
 
+        print(curr_rule)
+
         # make candidate rules
-        candidates = []
-        for operator in ['>', '<', '==']:
-            if curr_rule.rule == '':
-                temp_rule = Rule(
-                    str(feat) + ' ' +
-                    operator + ' ' + str(A_c)
-                )
-            else:
-                temp_rule = Rule(
-                    curr_rule.rule + 'and ' + str(feat) +
-                    ' ' + operator + ' ' + str(A_c)
-                )
-            candidates.append(temp_rule)
+        candidates = [curr_rule.copy() for _ in range(3)]
+        candidates = [
+            x.append({
+                'feature': self.feature_dict[feat],
+                'operator': operator,
+                'pivot': A_c})
+            for x, operator in zip(candidates, ['>', '<', '=='])
+        ]
 
         # pick best condition
         Zs = [self._grow_rule_obj(X, y, r) for r in candidates]
         return candidates[Zs.index(max(Zs))]
 
+    def _condition_classify(self, X, condition):
+        """
+        Helper funciton to make classificaitons for a condition 
+        in a rule
+        """
+
+        logic = 'X[: condition["feature"]] {} condition["pivot"]'.format(condition['operator']) 
+        output = np.where(eval(logic))
+        return output[0]
+
     def _rule_predict(self, X, rule): 
-        preds = np.zeros((X.shape[0],))
-        df = pd.DataFrame(X)
-        idx = df.query(rule.rule).index[0]
-        preds[idx] = 1
+        """ return all indices for which the passed rule holds on X """
+
+        preds = np.zeros(X.shape[0],)
+        positive_cases = set(range(X.shape[0]))
+
+        for condition in rule:
+            ouptuts = set(list(self._condition_classify(X, condition)))
+            positive_cases.intersection(outputs)
+
+        preds[list(positive_cases)] = 1
         return preds
 
     def _get_design_matrices(self, X, y, rule):
+        """ produce design matrices used in most equaitons"""
         preds = self._rule_predict(X, rule)
 
         W_plus_idx = np.where((preds == 1) & (y == 1))
@@ -69,6 +82,9 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
         return np.sum(self.D[W_plus_idx]), np.sum(self.D[W_minus_idx])
 
     def _grow_rule_obj(self, X, y, rule):
+        """ equation to maximize in growing rule
+        equation 6 from Cohen & Singer (1999)
+        """
         W_plus, W_minus = self._get_design_matrices(X, y, rule) 
         C_R = self.sample_weight(W_plus, W_minus)
         return np.sqrt(W_plus) - np.sqrt(W_minus)
@@ -93,22 +109,18 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
         y : array-like, shape (n_samples,)
             Target vector relative to X. Has to follow the convention 0 for
             normal data, 1 for anomalies.
-
-        tol: tolerance for when to end adding conditions to rule
-
-        con_tol: condition tolerance for when to stop
-                 tuning condition for feature
         """
 
         stop_condition = False
         features = list(range(X.shape[1]))
-        curr_rule = Rule('')
+        curr_rule = []
 
         while not stop_condition:
-            candidate_rule = deepcopy(curr_rule)
+            candidate_rule = curr_rule.copy()
             for feat in features:
                 pivots = np.percentile(X[:, feat], range(0, 100, 10),
                                        interpolation='midpoint')
+
 
                 feature_candidates = [
                     self._make_candidate(X, y, curr_rule, feat, A_c)
@@ -122,10 +134,10 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
                         tildas.index(max(tildas))
                     ]
 
-            preds = candidate_rule.predict(X)
+            preds = self._rule_predict(X, candidate_rule)
             negative_coverage = np.where((preds == y) & (y == 0))
 
-            if self._grow_rule_obj(X, y, rule) >= self._grow_rule_obj(candidate_rule) or \
+            if self._grow_rule_obj(X, y, curr_rule) >= self._grow_rule_obj(X, y, candidate_rule) or \
                     len(negative_coverage) == 0:
                 stop_condition = True
             else:
@@ -133,74 +145,145 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
 
         return curr_rule
 
-    def _prune_rule(self, X, y):
+    def _prune_rule(self, X, y, rule):
+        """ Remove conditions from greedily built rule until 
+        objective does not improve
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Training vector, where n_samples is the number of samples and
+            n_features is the number of features.
+
+        y : array-like, shape (n_samples,)
+            Target vector relative to X. Has to follow the convention 0 for
+            normal data, 1 for anomalies.
+
+        rule : Rule
+            Rule object
+        """
         stop_condition = False
         curr_rule = deepcopy(rule)
-        curr_rule.prune_r
 
         while not stop_condition:
             candidate_rules = []
 
-            if len(curr_rule.conditions) == 1:
+            if len(curr_rule.agg_dict) == 1:
                 return curr_rule
 
-            for condition in curr_rule.conditions:
-                R_prime = deepcopy(curr_rule)
-                R_prime.prune_rule(X, y, condition)
-                candidate_rules.append(R_prime)
+            candidate_rules = Parallel(n_jobs=-1)(
+                delayed(self._pop_condition)(curr_rule, condition)
+                for condition in curr_rule.agg_dict.keys()
+            )
 
-            prune_objs = [self._prune_rule_obj(pobj) for x in candidate_rules]
+            prune_objs = [self._prune_rule_obj(X, y, rule) for x in candidate_rules]
             best_prune = candidate_rules[
                 prune_objs.index(min(prune_objs))
             ]
 
-            if self._prune_rule_obj(curr_rule) > self._prune_rule_obj(best_prune):
+            if self._prune_rule_obj(X, y, rule) > self._prune_rule_obj(X, y, rule):
                 curr_rule = deepcopy(best_prune)
             else:
                 stop_condition = True
 
         return curr_rule
+    
+    def _pop_condition(self, rule, condition):
+        """
+        Remove a condition from an existing Rule objet
+
+        Parameters:
+            rule : Rule object
+            condition : tuple(str, str)
+                key of rule agg_dict to pop from newly created rule
+        """
+        temp = deepcopy(rule)
+        temp.agg_dict.pop(condition)
+        r_prime = Rule(str(temp))
+        return r_prime
 
     def _make_default_rule(self, X, y):
+        """
+        Make the default rule that is true for every observation 
+        of data set. Without default rule a SlipperRule would never 
+        predict negative
+        """
         default_rule = Rule('')
         features = random.choices(
             range(X.shape[1]),
             k=random.randint(2, 8)
         )
 
-        default_rule.rule = str(features[0]) + ' > ' + min(X[:, features[0]]) 
+        default_rule.rule = str(features[0]) + ' > ' + str(min(X[:, features[0]]))
 
         for i, x in enumerate(features):
             if i % 2:
-                default_rule.rule += ' and ' + str(feature) + ' < ' + max(X[:, x])
+                default_rule.rule += ' and ' + self.feature_dict[x] + ' < ' + str(max(X[:, x]))
             else:
-                default_rule.rule += ' and ' + str(feature) + ' > ' + min(X[:, x])
+                default_rule.rule += ' and ' + self.feature_dict[x] + ' > ' + str(min(X[:, x]))
         
         return default_rule
 
     def _prune_rule_obj(self, X, y, rule):
+        """
+        objective function for prune rule routine
+        eq 7 from Cohen & Singer (1999)
+        """
+
         V_plus, V_minus = self._get_design_matrices(X, y, rule)
         C_R = self.sample_weight(V_plus, V_minus)
         return (1 - V_plus - V_minus) + V_plus * np.exp(-C_R) \
             + V_minus * np.exp(C_R)
 
     def _eq_5(self, X, y, rule):
+        """
+        equation 5 from Cohen & Singer (1999)
+        used to compare the learned rule with a default rule
+        """
         W_plus, W_minus = self._get_design_matrices(X, y, rule)
         return 1 - np.square(np.sqrt(W_plus) - np.sqrt(W_minus))
 
     def _set_rule_or_default(self, X, y, learned_rule):
-        rules = [self._make_default_rule(X, y), learned_rule]
-        scores = [self._eq_5(self, X, y, rule) for rule in rules]
-        self.rule = rules[rules.index(min(scores))]
+        """
+        Compare output of eq 5 between learned rule and default rule
+        return rule that minmizes eq 5
+        """
 
-    def fit(self, X, y):
+        rules = [self._make_default_rule(X, y), learned_rule]
+        scores = [self._eq_5(X, y, rule) for rule in rules]
+        self.rule = rules[scores.index(min(scores))]
+
+    def make_feature_dict(self, num_features, features):
+        """
+        Map features to place holder names
+        """
+        if features is None:
+            new_feats = ['feature_' + str(i) for i in range(num_features)]
+        else:
+            new_feats = features
+
+        self.feature_dict = {
+            old_feat:new_feat for old_feat, new_feat in enumerate(new_feats)
+        }
+
+    def predict(self, X):
+        """
+        external predict function that returns predictions 
+        using estimators rule
+        """
+        return self._rule_predict(X, self.rule)
+
+    def fit(self, X, y, features=None, n_jobs=-1):
         """
         Main loop for training
         """
+
         X_grow, X_prune, y_grow, y_prune = \
             train_test_split(X, y, test_size=0.33)
-        
+
+        self.make_feature_dict(X.shape[1], features)
+
         rule = self._grow_rule(X_grow, y_grow)
-        # rule = self._prune_rule(X_prune, y_prune, rule)
+        rule = self._prune_rule(X_prune, y_prune, rule)
 
         self._set_rule_or_default(X, y, rule)
