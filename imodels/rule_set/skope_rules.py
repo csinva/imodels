@@ -73,21 +73,17 @@ and predict_top_rules() functions).
 [5] Friedman and Popescu, Gradient directed regularization, Technical Report, 2004.
 '''
 import numbers
-from collections.abc import Iterable
 from warnings import warn
-from typing import Union, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
 import pandas
 import six
-from sklearn.base import BaseEstimator
-from sklearn.ensemble import BaggingClassifier, BaggingRegressor
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.utils.multiclass import check_classification_targets
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.convert import tree_to_rules
 from imodels.util.rule import replace_feature_name, get_feature_dict, Rule
 from imodels.util.extract import extract_skope
 from imodels.util.score import score_precision_recall
@@ -97,7 +93,7 @@ INTEGER_TYPES = (numbers.Integral, np.integer)
 BASE_FEATURE_NAME = "feature_"
 
 
-class SkopeRulesClassifier(BaseEstimator, RuleSet):
+class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
     """An easy-interpretable classifier optimizing simple logical rules.
 
     Parameters
@@ -218,10 +214,10 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
 
     def __init__(self,
                  precision_min=0.5,
-                 recall_min=0.4,
+                 recall_min=0.01,
                  n_estimators=10,
                  max_samples=.8,
-                 max_samples_features=1.,
+                 max_samples_features=.8,
                  bootstrap=False,
                  bootstrap_features=False,
                  max_depth=3,
@@ -274,7 +270,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
         check_classification_targets(y)
         self.n_features_ = X.shape[1]
         self.sample_weight = sample_weight
-        self.classes_ = np.unique(y)
+        self.classes_ = unique_labels(y)
         n_classes = len(self.classes_)
 
         if n_classes < 2:
@@ -320,8 +316,8 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
         self.max_samples_ = max_samples
 
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
-        self.feature_placeholders = list(self.feature_dict_.keys())
-        self.feature_names = list(self.feature_dict_.values())
+        self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
+        self.feature_names = np.array(list(self.feature_dict_.values()))
 
         extracted_rules, self.estimators_samples_, self.estimators_features_ = self._extract_rules(X, y)
         scored_rules = self._score_rules(X, y, extracted_rules)
@@ -349,13 +345,14 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
             For each observations, tells whether or not (1 or 0) it should
             be considered as an outlier according to the selected rules.
         """
-
+        X = check_array(X)
         return np.argmax(self.predict_proba(X), axis=1)
 
     def predict_proba(self, X) -> np.ndarray:
         '''Predict probability of a particular sample being an outlier or not
 
         '''
+        X = check_array(X)
         weight_sum = np.sum([w[0] for (r, w) in self.rules_without_feature_names_])
         if weight_sum == 0:
             return np.vstack((np.ones(X.shape[0]), np.zeros(X.shape[0]))).transpose()
@@ -480,7 +477,6 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet):
                              bootstrap=self.bootstrap,
                              bootstrap_features=self.bootstrap_features,
                              max_depths=self.max_depth,
-                             max_depth_duplication=self.max_depth_duplication,
                              max_features=self.max_features,
                              min_samples_split=self.min_samples_split,
                              n_jobs=self.n_jobs,

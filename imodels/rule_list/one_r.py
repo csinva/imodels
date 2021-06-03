@@ -8,7 +8,7 @@ import numpy as np
 from copy import deepcopy
 from sklearn.base import BaseEstimator
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
-from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels import GreedyRuleListClassifier
@@ -25,6 +25,8 @@ class OneRClassifier(GreedyRuleListClassifier):
     def fit(self, X, y, depth=0, feature_names=None, verbose=False):
         """Fit oneR
         """
+
+        self.classes_ = unique_labels(y)
 
         # set self.feature_names and make sure x, y are not pandas type
         if 'pandas' in str(type(X)):

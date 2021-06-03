@@ -13,7 +13,10 @@ class FPLasso(RuleFit):
     def __init__(self,
                  minsupport=0.1,
                  maxcardinality=2,
+                 disc_strategy='mdlp',
+                 disc_kwargs={},
                  verbose=False,
+                 n_estimators=100,
                  tree_size=4,
                  sample_fract='default',
                  max_rules=2000,
@@ -23,10 +26,10 @@ class FPLasso(RuleFit):
                  lin_standardise=True,
                  exp_rand_tree_size=True,
                  include_linear=True,
-                 alphas=None,
-                 cv=3,
+                 alpha=None,
                  random_state=None):
-        super().__init__(tree_size,
+        super().__init__(n_estimators,
+                         tree_size,
                          sample_fract,
                          max_rules,
                          memory_par,
@@ -35,9 +38,10 @@ class FPLasso(RuleFit):
                          lin_standardise,
                          exp_rand_tree_size,
                          include_linear,
-                         alphas,
-                         cv,
+                         alpha,
                          random_state)
+        self.disc_strategy = disc_strategy
+        self.disc_kwargs = disc_kwargs
         self.minsupport = minsupport
         self.maxcardinality = maxcardinality
         self.verbose = verbose
@@ -49,10 +53,12 @@ class FPLasso(RuleFit):
 
     def _extract_rules(self, X, y) -> List[str]:
         itemsets = extract_fpgrowth(X, y,
-                                    feature_labels=self.feature_placeholders,
+                                    feature_names=self.feature_placeholders,
                                     minsupport=self.minsupport,
                                     maxcardinality=self.maxcardinality,
                                     undiscretized_features=self.undiscretized_features,
+                                    disc_strategy=self.disc_strategy,
+                                    disc_kwargs=self.disc_kwargs,
                                     verbose=self.verbose)[0]
         return itemsets_to_rules(itemsets)
 

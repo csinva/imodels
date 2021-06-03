@@ -33,10 +33,10 @@ Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation alg
 python MDLPC.py &ndash;options=&hellip;</li>
 </ol>
 <p>script options:
-* in_path (required): Path to dataset in .csv format (must include header)
-* out_path (required): Path where the discretized dataset will be saved
-* features (optional): comma-separated list of attribute names to be discretized, e.g., features=attr1,attr2,attr3
-* class_label (required): label of class column in .csv dataset
+<em> in_path (required): Path to dataset in .csv format (must include header)
+</em> out_path (required): Path where the discretized dataset will be saved
+<em> features (optional): comma-separated list of attribute names to be discretized, e.g., features=attr1,attr2,attr3
+</em> class_label (required): label of class column in .csv dataset
 * return_bins (optional): Doesn't take on values. If specified (&ndash;return_bins), a text file will be saved in the same directory as out_path. This file will include the description of the bins computed by the algorighm.</p>
 <p><strong>Dependencies:</strong></p>
 <ol>
@@ -73,13 +73,20 @@ script options:
 
 1. Pandas
 2. Numpy
-&#39;&#39;&#39;</code></pre>
+&#39;&#39;&#39;
+
+from .mdlp import BRLDiscretizer
+from .simple import SimpleDiscretizer</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
 <dt><code class="name"><a title="imodels.util.discretization.mdlp" href="mdlp.html">imodels.util.discretization.mdlp</a></code></dt>
+<dd>
+<section class="desc"></section>
+</dd>
+<dt><code class="name"><a title="imodels.util.discretization.simple" href="simple.html">imodels.util.discretization.simple</a></code></dt>
 <dd>
 <section class="desc"></section>
 </dd>
@@ -108,6 +115,7 @@ script options:
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="imodels.util.discretization.mdlp" href="mdlp.html">imodels.util.discretization.mdlp</a></code></li>
+<li><code><a title="imodels.util.discretization.simple" href="simple.html">imodels.util.discretization.simple</a></code></li>
 </ul>
 </li>
 </ul>

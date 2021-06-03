@@ -29,13 +29,12 @@ class RuleSet:
         selected_rules = self.rules_without_feature_names_
 
         scores = np.zeros(X.shape[0])
-        for (r, w) in selected_rules:
-            scores[list(df.query(r).index)] += w[0]
+        for r in selected_rules: 
+            features_r_uses = list(map(lambda x: x[0], r.agg_dict.keys()))
+            scores[df[features_r_uses].query(str(r)).index.values] += r.args[0]
 
         return scores
 
     def _get_complexity(self):
         check_is_fitted(self, ['rules_without_feature_names_'])
-        num_rules = len(self.rules_without_feature_names_)
-        extra_antecedents = np.sum([(len(rule.agg_dict) - 1) for rule in self.rules_without_feature_names_])
-        return num_rules + extra_antecedents * 0.5
+        return sum([len(rule.agg_dict) for rule in self.rules_without_feature_names_]) 

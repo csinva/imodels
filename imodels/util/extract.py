@@ -3,36 +3,41 @@ from typing import Iterable, Tuple, List
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import BaggingClassifier, BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor
+from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from mlxtend.frequent_patterns import fpgrowth
 
 from imodels.util.convert import tree_to_rules
-from imodels.util.discretization.mdlp import BRLDiscretizer
+from imodels.util.discretization import BRLDiscretizer, SimpleDiscretizer
 
 
 def extract_fpgrowth(X, y,
-                     feature_labels=None,
+                     feature_names,
                      minsupport=0.1,
                      maxcardinality=2,
                      undiscretized_features=[],
+                     disc_strategy = 'simple',
+                     disc_kwargs = {},
                      verbose=False) -> Tuple[List[Tuple], BRLDiscretizer]:
 
     # deal with pandas data
     if type(X) in [pd.DataFrame, pd.Series]:
-        if feature_labels is None:
-            feature_labels = X.columns
+        if feature_names is None:
+            feature_names = X.columns
         X = X.values
     if type(y) in [pd.DataFrame, pd.Series]:
         y = y.values
 
-    if feature_labels is None:
-        feature_labels = [f'feature_{i}' for i in range(X.shape[1])]
+    if disc_strategy == 'mdlp':
+        discretizer = BRLDiscretizer(X, y, feature_labels=feature_names, verbose=verbose)
+        discretizer.fit(X, y, undiscretized_features)
+    else:
+        discretizer = SimpleDiscretizer(**disc_kwargs)
+        discretizer.fit(X, feature_names)
     
-    discretizer = BRLDiscretizer(X, y, feature_labels=feature_labels, verbose=verbose)
-    X = discretizer.discretize_mixed_data(X, y, undiscretized_features)
-    X_df_onehot = discretizer.onehot_df
-    
+    X_df_onehot = discretizer.transform(X)
+
     # Now find frequent itemsets
     itemsets_df = fpgrowth(X_df_onehot, min_support=minsupport, max_len=maxcardinality)
     itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
@@ -45,18 +50,17 @@ def extract_fpgrowth(X, y,
 
 
 def extract_rulefit(X, y, feature_names,
+                    n_estimators=10,
                     tree_size=4,
-                    max_rules=2000,
                     memory_par=0.01,
                     tree_generator=None,
                     exp_rand_tree_size=True,
                     random_state=None) -> List[str]:
 
     if tree_generator is None:
-        n_estimators_default = int(np.ceil(max_rules / tree_size))
         sample_fract_ = min(0.5, (100 + 6 * np.sqrt(X.shape[0])) / X.shape[0])
 
-        tree_generator = GradientBoostingRegressor(n_estimators=n_estimators_default,
+        tree_generator = GradientBoostingRegressor(n_estimators=n_estimators,
                                                     max_leaf_nodes=tree_size,
                                                     learning_rate=memory_par,
                                                     subsample=sample_fract_,
@@ -71,8 +75,7 @@ def extract_rulefit(X, y, feature_names,
         tree_generator.fit(X, y)
     else:  # randomise tree size as per Friedman 2005 Sec 3.3
         np.random.seed(random_state)
-        tree_sizes = np.random.exponential(scale=tree_size - 2,
-                                            size=int(np.ceil(max_rules * 2 / tree_size)))
+        tree_sizes = np.random.exponential(scale=tree_size - 2, size=n_estimators)
         tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
         tree_generator.set_params(warm_start=True)
         curr_est_ = 0
@@ -112,8 +115,7 @@ def extract_skope(X, y, feature_names,
                   max_samples_features=1.,
                   bootstrap=False,
                   bootstrap_features=False,
-                  max_depths=[3], 
-                  max_depth_duplication=None,
+                  max_depths=[3],
                   max_features=1.,
                   min_samples_split=2,
                   n_jobs=1,

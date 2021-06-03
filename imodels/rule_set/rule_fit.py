@@ -12,16 +12,14 @@ import pandas as pd
 from scipy.special import softmax
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.base import TransformerMixin
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from typing import List, Tuple
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.convert import tree_to_rules
 from imodels.util.extract import extract_rulefit
 from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
-from imodels.util.score import score_lasso
+from imodels.util.score import score_linear
 from imodels.util.transforms import Winsorizer, FriedScale
 
 
@@ -64,18 +62,19 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     """
 
     def __init__(self,
+                 n_estimators=100,
                  tree_size=4,
                  sample_fract='default',
-                 max_rules=2000,
+                 max_rules=30,
                  memory_par=0.01,
                  tree_generator=None,
                  lin_trim_quantile=0.025,
                  lin_standardise=True,
                  exp_rand_tree_size=True,
                  include_linear=True,
-                 alphas=None,
-                 cv=3,
+                 alpha=None,
                  random_state=None):
+        self.n_estimators = n_estimators
         self.tree_size = tree_size
         self.sample_fract = sample_fract
         self.max_rules = max_rules
@@ -85,8 +84,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.lin_standardise = lin_standardise
         self.exp_rand_tree_size = exp_rand_tree_size
         self.include_linear = include_linear
-        self.alphas = alphas
-        self.cv = cv
+        self.alpha = alpha
         self.random_state = random_state
 
         self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
@@ -109,12 +107,14 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
         """
         X, y = check_X_y(X, y)
+        if self.prediction_task == 'classification':
+            self.classes_ = unique_labels(y)
         self.n_features_in_ = X.shape[1]
 
         self.n_features_ = X.shape[1]
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
-        self.feature_placeholders = list(self.feature_dict_.keys())
-        self.feature_names = list(self.feature_dict_.values())
+        self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
+        self.feature_names = np.array(list(self.feature_dict_.values()))
 
         extracted_rules = self._extract_rules(X, y)
         self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(X, y, extracted_rules)
@@ -144,12 +144,16 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         '''Predict. For regression returns continuous output.
         For classification, returns discrete output.
         '''
+        check_is_fitted(self)
+        X = check_array(X)
         if self.prediction_task == 'regression':
             return self.predict_continuous_output(X)
         else:
             return np.argmax(self.predict_proba(X), axis=1)
 
     def predict_proba(self, X):
+        check_is_fitted(self)
+        X = check_array(X)
         continuous_output = self.predict_continuous_output(X)
         logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
         return softmax(logits, axis=1)
@@ -169,14 +173,10 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             Transformed data set
         """
         df = pd.DataFrame(X, columns=self.feature_placeholders)
-        X_transformed = np.zeros([X.shape[0], 0])
-
-        for r in rules:
-            curr_rule_feature = np.zeros(X.shape[0])
-            curr_rule_feature[list(df.query(r).index)] = 1
-            curr_rule_feature = np.expand_dims(curr_rule_feature, axis=1)
-            X_transformed = np.concatenate((X_transformed, curr_rule_feature), axis=1)
-
+        X_transformed = np.zeros((X.shape[0], len(rules)))
+        for i, r in enumerate(rules):
+            features_r_uses = [term.split(' ')[0] for term in r.split(' and ')] 
+            X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
     def get_rules(self, exclude_zero_coef=False, subregion=None):
@@ -239,8 +239,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     def _extract_rules(self, X, y) -> List[Rule]:
         return extract_rulefit(X, y,
                                feature_names=self.feature_placeholders,
+                               n_estimators=self.n_estimators,
                                tree_size=self.tree_size,
-                               max_rules=self.max_rules,
                                memory_par=self.memory_par,
                                tree_generator=self.tree_generator,
                                exp_rand_tree_size=self.exp_rand_tree_size,
@@ -268,10 +268,16 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         X_rules = self.transform(X, rules)
         if X_rules.shape[0] > 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
+        
+        # no rules fit and self.include_linear == False
+        if X_concat.shape[1] == 0:
+            return [], [], 0
 
-        return score_lasso(X_concat, y, rules, alphas=self.alphas, cv=self.cv,
-                           prediction_task=self.prediction_task,
-                           max_rules=self.max_rules, random_state=self.random_state)
+        return score_linear(X_concat, y, rules,
+                            prediction_task=self.prediction_task,
+                            max_rules=self.max_rules,
+                            alpha=self.alpha,
+                            random_state=self.random_state)
 
 
 class RuleFitRegressor(RuleFit, RegressorMixin):

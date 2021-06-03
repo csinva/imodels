@@ -115,7 +115,7 @@ def test_skope_rules_works():
     X_test = [[-2, -1], [-1, -1], [-1, -2], [1, 1], [1, 2], [2, 1],
               [10, 5], [5, -7]]
     # Test LOF
-    clf = SkopeRulesClassifier(random_state=rng, max_samples=1.)
+    clf = SkopeRulesClassifier(random_state=rng, max_samples=1., max_samples_features=1.)
     clf.fit(X, y)
     decision_func = clf.eval_weighted_rule_sum(X_test)
     rules_vote = clf.rules_vote(X_test)

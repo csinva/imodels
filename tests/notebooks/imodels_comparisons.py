@@ -1,12 +1,12 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: ipynb,../tests/notebooks//py:percent
+#     formats: ipynb,../../tests/notebooks//py:percent
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.11.0
+#       jupytext_version: 1.11.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -16,27 +16,21 @@
 # %%
 # %load_ext autoreload
 # %autoreload 2
-import itertools 
-import math
 import os
 import pickle as pkl
-from typing import List, Dict, Any
+from typing import Dict, Any
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.datasets import fetch_openml
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 mpl.rcParams['figure.dpi'] = 250
-import dvu  # for visualization
 
 # change working directory to project root
-if os.getcwd().split('/')[-1] != 'imodels':
-    os.chdir('..')
-from notebooks import viz
+if os.getcwd().split('/')[-1] == 'notebooks':
+    os.chdir('../..')
+from experiments.notebooks import viz
 
 def get_comparison_result(path: str, estimator_name: str, test=False) -> Dict[str, Any]:
     if test:
@@ -45,7 +39,8 @@ def get_comparison_result(path: str, estimator_name: str, test=False) -> Dict[st
         result_file = path + 'val/' + f'{estimator_name}_comparisons.pkl'
     return pkl.load(open(result_file, 'rb'))    
     
-MODEL_COMPARISON_PATH = 'tests/comparison_data/'
+MODEL_COMPARISON_PATH = 'experiments/comparison_data/'
+
 datasets = [
         ("breast-cancer", 13),
         ("breast-w", 15),
@@ -83,7 +78,10 @@ test_models = [
     'brl',
     'grl',
     'oner',
-    'brs']
+    'brs',
+    'stbl_l2_mm0',
+    'stbl_l2_mm1', 
+    'stbl_l2_mm2']
 test_results = [get_comparison_result(MODEL_COMPARISON_PATH, mname, test=True)
                 for mname in test_models]
 viz.viz_comparison_test_average(test_results)
@@ -105,3 +103,9 @@ for model_name in ['random_forest', 'gradient_boosting', 'skope_rules',
     comparison_result = get_comparison_result(MODEL_COMPARISON_PATH, model_name)
     viz.viz_comparison_val_average(comparison_result)
     plt.show()
+
+# %%
+df = get_comparison_result(MODEL_COMPARISON_PATH, 'brl', True)['df']
+df.loc[:, ['time' in c for c in df.columns]]
+
+# %%

@@ -14,7 +14,6 @@ class TestClassClassificationBinary:
         self.n = 40
         self.p = 2
         self.X_classification_binary = np.random.randn(self.n, self.p)
-        self.X_classification_binary_brl = (self.X_classification_binary > 0).astype(str)
         self.y_classification_binary = (self.X_classification_binary[:, 0] > 0).astype(int) # y = x0 > 0
         self.y_classification_binary[-2:] = 1 - self.y_classification_binary[-2:]  # flip labels for last few
 
@@ -31,16 +30,11 @@ class TestClassClassificationBinary:
                 init_kwargs['max_rules'] = 5
             if model_type == SkopeRulesClassifier or model_type == FPSkopeClassifier:
                 init_kwargs['random_state'] = 0
-                init_kwargs['recall_min'] = 0.5
+                init_kwargs['max_samples_features'] = 1.
             m = model_type(**init_kwargs)
 
-            if model_type == BayesianRuleListClassifier:
-                X = self.X_classification_binary_brl
-                m.fit(X, self.y_classification_binary,
-                      feature_labels=[f'X{i}' for i in range(self.p)])
-            else:
-                X = self.X_classification_binary
-                m.fit(X, self.y_classification_binary)
+            X = self.X_classification_binary
+            m.fit(X, self.y_classification_binary)
 
 #             print('starting to test', type(m), '...')
             # print(m.visualize())

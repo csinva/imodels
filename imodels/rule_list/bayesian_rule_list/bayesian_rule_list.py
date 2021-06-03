@@ -1,17 +1,18 @@
-import numbers
 import numpy as np
 import pandas as pd
 import random
-from collections import Counter
-from mlxtend.frequent_patterns import fpgrowth
+from collections import Counter, defaultdict
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
-from imodels.rule_list.bayesian_rule_list.brl_util import *
+from imodels.rule_list.bayesian_rule_list.brl_util import (
+    default_permsdic, preds_d_t, run_bdl_multichain_serial, merge_chains, get_point_estimate, get_rule_rhs
+)
 from imodels.rule_list.rule_list import RuleList
-from imodels.util.discretization.mdlp import MDLP_Discretizer, BRLDiscretizer
+from imodels.util.convert import itemsets_to_rules
 from imodels.util.extract import extract_fpgrowth
+from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
 
 
 class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
@@ -54,12 +55,25 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         Random seed
     """
 
-    def __init__(self, listlengthprior=3, listwidthprior=1, maxcardinality=2, minsupport=0.1, alpha=np.array([1., 1.]),
-                 n_chains=3, max_iter=50000, class1label="class 1", verbose=False, random_state=42):
+    def __init__(self,
+                 listlengthprior=3,
+                 listwidthprior=1,
+                 maxcardinality=2,
+                 minsupport=0.1,
+                 disc_strategy='mdlp',
+                 disc_kwargs={},
+                 alpha=np.array([1., 1.]),
+                 n_chains=3,
+                 max_iter=50000,
+                 class1label="class 1",
+                 verbose=False,
+                 random_state=42):
         self.listlengthprior = listlengthprior
         self.listwidthprior = listwidthprior
         self.maxcardinality = maxcardinality
         self.minsupport = minsupport
+        self.disc_strategy = disc_strategy
+        self.disc_kwargs = disc_kwargs
         self.alpha = alpha
         self.n_chains = n_chains
         self.max_iter = max_iter
@@ -80,32 +94,33 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             random.seed(self.random_state)
             np.random.seed(self.random_state)
 
-    def _setlabels(self, X, feature_labels=[]):
-        if len(feature_labels) == 0:
+    def _setlabels(self, X, feature_names=[]):
+        if len(feature_names) == 0:
             if type(X) == pd.DataFrame and ('object' in str(X.columns.dtype) or 'str' in str(X.columns.dtype)):
-                feature_labels = X.columns
+                feature_names = X.columns
             else:
-                feature_labels = ["ft" + str(i + 1) for i in range(len(X[0]))]
-        self.feature_labels = feature_labels
+                feature_names = ["ft" + str(i + 1) for i in range(len(X[0]))]
+        self.feature_names = feature_names
 
-    def fit(self, X, y, feature_labels: list = None, undiscretized_features=[], verbose=False):
+    def fit(self, X, y, feature_names: list = None, undiscretized_features=[], verbose=False):
         """Fit rule lists to data
 
         Parameters
         ----------
         X : array-like, shape = [n_samples, n_features]
-            Training data 
+            Training data
 
         y : array_like, shape = [n_samples]
             Labels
             
-        feature_labels : array_like, shape = [n_features], optional (default: [])
+        feature_names : array_like, shape = [n_features], optional (default: [])
             String labels for each feature.
             If empty and X is a DataFrame, column labels are used.
             If empty and X is not a DataFrame, then features are simply enumerated
             
         undiscretized_features : array_like, shape = [n_features], optional (default: [])
-            String labels for each feature which is NOT to be discretized. If empty, all numeric features are discretized
+            String labels for each feature which is NOT to be discretized.
+            If empty, all numeric features are discretized
             
         verbose : bool
             Currently doesn't do anything
@@ -122,16 +137,21 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         X, y = check_X_y(X, y)
         check_classification_targets(y)
         self.n_features_in_ = X.shape[1]
+        self.classes_ = unique_labels(y)
+
+        self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
+        self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
+        self.feature_names = np.array(list(self.feature_dict_.values()))
 
         itemsets, self.discretizer = extract_fpgrowth(X, y,
-                                                      feature_labels=feature_labels,
+                                                      feature_names=self.feature_placeholders,
                                                       minsupport=self.minsupport,
                                                       maxcardinality=self.maxcardinality,
                                                       undiscretized_features=undiscretized_features,
+                                                      disc_strategy=self.disc_strategy,
+                                                      disc_kwargs=self.disc_kwargs,
                                                       verbose=verbose)
-
-        self.feature_labels = self.discretizer.feature_labels
-        X_df_onehot = self.discretizer.onehot_df
+        X_df_onehot = self.discretizer.transform(X)
 
         # Now form the data-vs.-lhs set
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
@@ -147,7 +167,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         for lhs in itemsets:
             lhs_len.append(len(lhs))
         nruleslen = Counter(lhs_len)
-        lhs_len = array(lhs_len)
+        lhs_len = np.array(lhs_len)
         itemsets_all = ['null']
         itemsets_all.extend(itemsets)
 
@@ -165,7 +185,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         # Merge the chains
         permsdic = merge_chains(res)
 
-        ###The point estimate, BRL-point
+        # The point estimate, BRL-point
         self.d_star = get_point_estimate(permsdic, lhs_len, Xtrain, Ytrain, self.alpha, nruleslen, self.maxcardinality,
                                          self.listlengthprior, self.listwidthprior,
                                          verbose=self.verbose)  # get the point estimate
@@ -174,20 +194,44 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             # Compute the rule consequent
             self.theta, self.ci_theta = get_rule_rhs(Xtrain, Ytrain, self.d_star, self.alpha, True)
 
+        self.final_itemsets = np.array(self.itemsets, dtype=object)[self.d_star]
+        rule_strs = itemsets_to_rules(self.final_itemsets)
+        self.rules_without_feature_names_ = [Rule(r) for r in rule_strs]
+        self.rules_ = [
+            replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
+        ]
+        
         self.complexity_ = self._get_complexity()
 
         return self
 
     def _get_complexity(self):
-        final_itemsets = np.array(self.itemsets, dtype=object)[self.d_star]
-        complexity = 0
-        for itemset in final_itemsets:
-            complexity += 1
-            if len(itemset) > 1 and type(itemset) != str:
-                complexity += 0.5 * (len(itemset) - 1)
-        return complexity
+        n_rule_terms = sum([len(iset) for iset in self.final_itemsets if type(iset) != str])
+        return n_rule_terms + 1
 
-    def __str__(self, decimals=1):
+    # def __repr__(self, decimals=1):
+    #     if self.d_star:
+    #         detect = ""
+    #         if self.class1label != "class 1":
+    #             detect = "for detecting " + self.class1label
+    #         header = "Trained RuleListClassifier " + detect + "\n"
+    #         separator = "".join(["="] * len(header)) + "\n"
+    #         s = ""
+    #         for i, j in enumerate(self.d_star):
+    #             if self.itemsets[j] != 'null':
+    #                 condition = "ELSE IF " + (
+    #                     " AND ".join([str(self.itemsets[j][k]) for k in range(len(self.itemsets[j]))])) + " THEN"
+    #             else:
+    #                 condition = "ELSE"
+    #             s += condition + " probability of " + self.class1label + ": " + str(
+    #                 np.round(self.theta[i] * 100, decimals)) + "% (" + str(
+    #                 np.round(self.ci_theta[i][0] * 100, decimals)) + "%-" + str(
+    #                 np.round(self.ci_theta[i][1] * 100, decimals)) + "%)\n"
+    #         return header + separator + s[5:] + separator[1:]
+    #     else:
+    #         return "(Untrained RuleListClassifier)"
+
+    def __repr__(self, decimals=1):
         if self.d_star:
             detect = ""
             if self.class1label != "class 1":
@@ -195,10 +239,9 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             header = "Trained RuleListClassifier " + detect + "\n"
             separator = "".join(["="] * len(header)) + "\n"
             s = ""
-            for i, j in enumerate(self.d_star):
-                if self.itemsets[j] != 'null':
-                    condition = "ELSE IF " + (
-                        " AND ".join([str(self.itemsets[j][k]) for k in range(len(self.itemsets[j]))])) + " THEN"
+            for i in range(len(self.rules_) + 1):
+                if i != len(self.rules_):
+                    condition = "ELSE IF " + str(self.rules_[i]) + " THEN"
                 else:
                     condition = "ELSE"
                 s += condition + " probability of " + self.class1label + ": " + str(
@@ -209,18 +252,12 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         else:
             return "(Untrained RuleListClassifier)"
 
-    def _to_itemset_indices(self, data):
-        X_colname_removed = data.copy()
-        for i in range(len(data)):
-            X_colname_removed[i] = list(map(lambda s: s.split(' : ')[1], X_colname_removed[i]))
-        X_df_categorical = pd.DataFrame(X_colname_removed, columns=self.feature_labels)
-        X_df_onehot = pd.get_dummies(X_df_categorical)
-
+    def _to_itemset_indices(self, X_df_onehot):
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
         for c in X_df_onehot.columns:
             X_df_onehot[c] = [c if x == 1 else '' for x in list(X_df_onehot[c])]
         X = [set() for j in range(len(self.itemsets))]
-        X[0] = set(range(len(data)))  # the default rule satisfies all data
+        X[0] = set(range(X_df_onehot.shape[0]))  # the default rule satisfies all data
         for (j, lhs) in enumerate(self.itemsets):
             if j > 0:
                 X[j] = set([i for (i, xi) in enumerate(X_df_onehot.values) if set(lhs).issubset(xi)])
@@ -240,17 +277,16 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             the model. The columns correspond to the classes in sorted
             order, as they appear in the attribute `classes_`.
         """
-        if self.discretizer:
-            D = self.discretizer.apply_discretization(X)
-        else:
-            D = X
+        check_is_fitted(self)
+        X = check_array(X)
 
-        # deal with pandas data
-        if type(D) in [pd.DataFrame, pd.Series]:
-            D = D.values
+        if self.discretizer:
+            D = self.discretizer.transform(X)
+        else:
+            D = pd.DataFrame(X, columns=self.feature_names)
 
         N = len(D)
-        X2 = self._to_itemset_indices(D[:])
+        X2 = self._to_itemset_indices(D)
         P = preds_d_t(X2, np.zeros((N, 1), dtype=int), self.d_star, self.theta)
         return np.vstack((1 - P, P)).T
 
@@ -266,9 +302,9 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         y_pred : array, shape = [n_samples]
             Class labels for samples in X.
         """
-        # deal with pandas data
-        if type(X) in [pd.DataFrame, pd.Series]:
-            X = X.values
+        check_is_fitted(self)
+        X = check_array(X)
+
         # print('predicting!')
         # print('preds_proba', self.predict_proba(X)[:, 1])
         return 1 * (self.predict_proba(X)[:, 1] >= threshold)

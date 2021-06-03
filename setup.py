@@ -18,17 +18,25 @@ setuptools.setup(
     install_requires=[
         'cvxpy',
         'cvxopt',
-        'dvu', # for visualization
-        'matplotlib',        
-        'mlxtend',        
-        'numpy',        
+        'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
+        'numpy',
         'pandas',
-        'pytest',
-        'pytest-cov',
         'scipy',
-        'scikit-learn>=0.23.0', # 0.23+ only works on py3.6+        
-        'tqdm'
+        'scikit-learn>=0.23.0',  # 0.23+ only works on py3.6+
     ],
+    extras_require={
+        'dev': [
+            'dvu',
+            'gdown',
+            'jupyter',
+            'jupytext',
+            'matplotlib',
+            'pytest',
+            'pytest-cov',
+            'slurmpy',
+            'tqdm',
+        ]
+    },
     python_requires='>=3.6',
     classifiers=[
         "Programming Language :: Python :: 3",

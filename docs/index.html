@@ -34,13 +34,14 @@
 <p align="center">
 <img src="https://img.shields.io/badge/license-mit-blue.svg">
 <img src="https://img.shields.io/badge/python-3.6--3.9-blue">
+<a href="https://doi.org/10.21105/joss.03192"><img src="https://joss.theoj.org/papers/10.21105/joss.03192/status.svg"></a>
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
-<img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
+<!--img src="https://img.shields.io/github/checks-status/csinva/imodels/master"-->
 <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=0">
+<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=10">
 </p>
 <h2 id="imodels-overview">imodels overview</h2>
-<p>Implementations of different popular interpretable models can be easily used and installed:</p>
+<p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
 <pre><code class="python">from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
 from imodels import SLIMRegressor, RuleFitRegressor
 
@@ -51,11 +52,14 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 print(model) # print the rule-based model
 
 -----------------------------
+# the model consists of the following 3 rules
 # if X1 &gt; 5: then 80.5% risk
 # else if X2 &gt; 5: then 40% risk
 # else: 10% risk
 </code></pre>
-<p>Install with <code>pip install imodels</code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help). Contains the following models:</p>
+<h3 id="installation">Installation</h3>
+<p>Install with <code>pip install imodels</code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help). </p>
+<h3 id="supported-models">Supported models</h3>
 <table>
 <thead>
 <tr>
@@ -174,15 +178,24 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <p>The code here contains many useful and customizable functions for rule-based learning in the <a href="https://csinva.io/imodels/util/index.html">util folder</a>. This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.</p>
 <h2 id="demo-notebooks">Demo notebooks</h2>
 <p>Demos are contained in the <a href="notebooks">notebooks</a> folder.</p>
-<blockquote>
-<p><a href="notebooks/imodels_demo.ipynb">imodels_demo</a> - shows how to fit, predict, and visualize with different interpretable models</p>
-<p><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">clinical decision rule notebook</a> - shows an example of using <code>imodels</code> for deriving a clinical decision rule</p>
-<p>we also include some demos of posthoc analysis, which occurs after fitting models</p>
-<ul>
-<li><a href="notebooks/2_posthoc.ipynb">posthoc.ipynb</a> - shows different simple analyses to interpret a trained model</li>
-<li><a href="notebooks/3_uncertainty.ipynb">uncertainty.ipynb</a> - basic code to get uncertainty estimates for a model</li>
-</ul>
-</blockquote>
+<details>
+<summary><a href="notebooks/imodels_demo.ipynb">imodels demo</a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+<details>
+<summary><a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ">imodels colab demo</a> <a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ"> <img src="https://colab.research.google.com/assets/colab-badge.svg"></a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+<details>
+<summary><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">clinical decision rule notebook</a></summary>
+Shows an example of using <code>imodels</code> for deriving a clinical decision rule
+</details>
+<details>
+<summary>posthoc analysis</summary>
+We also include some demos of posthoc analysis, which occurs after fitting models:
+<a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and
+<a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
+</details>
 <h2 id="support-for-different-tasks">Support for different tasks</h2>
 <p>Different models support different machine-learning tasks. Current support for different models is given below:</p>
 <table>
@@ -256,23 +269,34 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <li><a href="https://github.com/scikit-learn-contrib/skope-rules">skope-rules</a> - by the <a href="https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst">skope-rules team</a> (including <a href="https://github.com/ngoix">@ngoix</a>, <a href="https://github.com/floriangardin">@floriangardin</a>, <a href="https://github.com/datajms">@datajms</a>, <a href="">Bibi Ndiaye</a>, <a href="">Ronan Gautier</a>)</li>
 </ul>
 </li>
-<li>Compatible packages<ul>
-<li><a href="https://github.com/scikit-learn/scikit-learn">sklearn</a></li>
-<li><a href="https://github.com/parrt/dtreeviz">dtreeviz</a></li>
-</ul>
-</li>
 <li>Related packages<ul>
-<li><a href="https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e">gplearn</a> for symbolic regression/classification</li>
-<li><a href="https://github.com/dswah/pyGAM">pygam</a> for generative additive models</li>
+<li><a href="https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e">gplearn</a>: symbolic regression/classification</li>
+<li><a href="https://github.com/dswah/pyGAM">pygam</a>: generative additive models</li>
 </ul>
 </li>
 <li>Updates<ul>
 <li>For updates, star the repo, <a href="https://github.com/csinva/csinva.github.io">see this related repo</a>, or follow <a href="https://twitter.com/csinva_">@csinva_</a></li>
 <li>Please make sure to give authors of original methods / base implementations appropriate credit!</li>
-<li>Pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!</li>
+<li>Contributing: pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!</li>
 </ul>
 </li>
 </ul>
+<p>If it's useful for you, please cite the package using the below, and make sure to give authors of original methods / base implementations credit:</p>
+<pre><code class="r">@software{
+    imodels2021,
+    title        = {{imodels: a python package for fitting interpretable models}},
+    journal      = {Journal of Open Source Software}
+    publisher    = {The Open Journal},
+    year         = {2021},
+    author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
+    volume       = {6},
+    number       = {61},
+    pages        = {3192},
+    doi          = {10.21105/joss.03192},
+    url          = {&lt;https://doi.org/10.21105/joss.03192},&gt;
+}
+
+</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -336,7 +360,11 @@ REGRESSORS = [RuleFitRegressor, SLIMRegressor]</code></pre>
 <h1>Index 🔍</h1>
 <div class="toc">
 <ul>
-<li><a href="#imodels-overview">imodels overview</a></li>
+<li><a href="#imodels-overview">imodels overview</a><ul>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#supported-models">Supported models</a></li>
+</ul>
+</li>
 <li><a href="#demo-notebooks">Demo notebooks</a></li>
 <li><a href="#support-for-different-tasks">Support for different tasks</a></li>
 <li><a href="#references">References</a></li>

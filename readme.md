@@ -11,10 +11,11 @@
 <p align="center">
   <img src="https://img.shields.io/badge/license-mit-blue.svg">
   <img src="https://img.shields.io/badge/python-3.6--3.9-blue">
+  <a href="https://doi.org/10.21105/joss.03192"><img src="https://joss.theoj.org/papers/10.21105/joss.03192/status.svg"></a>
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
-  <img src="https://img.shields.io/github/checks-status/csinva/imodels/master">
+  <!--img src="https://img.shields.io/github/checks-status/csinva/imodels/master"-->
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=5">
+  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=10">
 </p>  
 
 
@@ -23,7 +24,7 @@
 
 ## imodels overview
 
-Implementations of different popular interpretable models can be easily used and installed:
+Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the `fit` and `predict` methods, same as standard scikit-learn models.
 
 ```python
 from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
@@ -36,12 +37,16 @@ preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n
 print(model) # print the rule-based model
 
 -----------------------------
+# the model consists of the following 3 rules
 # if X1 > 5: then 80.5% risk
 # else if X2 > 5: then 40% risk
 # else: 10% risk
 ```
 
-Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help). Contains the following models:
+### Installation
+Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help). 
+
+### Supported models
 
 | Model                       | Reference                                                    | Description                                                  |
 | :-------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -97,14 +102,29 @@ The code here contains many useful and customizable functions for rule-based lea
 
 Demos are contained in the [notebooks](notebooks) folder.
 
-> [imodels_demo](notebooks/imodels_demo.ipynb) - shows how to fit, predict, and visualize with different interpretable models
->
-> [clinical decision rule notebook](https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb) - shows an example of using `imodels` for deriving a clinical decision rule
-> 
-> we also include some demos of posthoc analysis, which occurs after fitting models
->
->  - [posthoc.ipynb](notebooks/posthoc_analysis.ipynb) - shows different simple analyses to interpret a trained model
->  - [uncertainty.ipynb](notebooks/uncertainty_analysis.ipynb) - basic code to get uncertainty estimates for a model
+<details>
+<summary><a href="notebooks/imodels_demo.ipynb">imodels demo</a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+
+<details>
+<summary><a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ">imodels colab demo</a> <a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ"> <img src="https://colab.research.google.com/assets/colab-badge.svg"></a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+
+<details>
+<summary><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">clinical decision rule notebook</a></summary>
+Shows an example of using <code>imodels</code> for deriving a clinical decision rule
+</details>
+
+<details>
+<summary>posthoc analysis</summary>
+We also include some demos of posthoc analysis, which occurs after fitting models:
+<a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and 
+<a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
+</details>
+
+
 
 ## Support for different tasks
 
@@ -140,16 +160,21 @@ Different models support different machine-learning tasks. Current support for d
     - Please make sure to give authors of original methods / base implementations appropriate credit!
     - Contributing: pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!
 
-If it's useful for you, please cite the package using the below, but more importantly make sure to give authors of original methods / base implementations credit:
+If it's useful for you, please cite the package using the below, and make sure to give authors of original methods / base implementations credit:
 
 ```r
 @software{
     imodels2021,
     title        = {{imodels: a python package for fitting interpretable models}},
-    publisher    = {Zenodo},
-    year         = 2021,
-    author       = {Chandan Singh and Keyan Nasseri and Bin Yu},
-    version      = {v0.2.8},
-    doi          = {10.5281/zenodo.4026886},
-    url          = {https://github.com/csinva/imodels}
+    journal      = {Journal of Open Source Software}
+    publisher    = {The Open Journal},
+    year         = {2021},
+    author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
+    volume       = {6},
+    number       = {61},
+    pages        = {3192},
+    doi          = {10.21105/joss.03192},
+    url          = {https://doi.org/10.21105/joss.03192},
 }
+
+```

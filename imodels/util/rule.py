@@ -1,6 +1,6 @@
+import copy
 import re
 from collections import OrderedDict
-import copy
 from typing import Dict, Iterable
 
 

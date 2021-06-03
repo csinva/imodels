@@ -50,7 +50,7 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
                     else ' == '.join([feature_names[0]] * 2))
             # a rule selecting all is set to "c0==c0"
             if prediction_values:
-                rules.append((rule, tree_.value[node][0][0]))
+                rules.append((rule, tree_.value[node][0].tolist()))
             else:
                 rules.append(rule)
 
@@ -101,17 +101,22 @@ def tree_to_code(clf, feature_names):
 
 
 def itemsets_to_rules(itemsets: List[Tuple]) -> List[str]:
-    itemsets_without_all = [itemset for itemset in itemsets if 'All' not in ''.join(itemset)]
+    itemsets_clean = list(filter(lambda it: it != 'null' and 'All' not in ''.join(it), itemsets))
     f = lambda itemset: ' and '.join([single_discretized_feature_to_rule(item) for item in itemset])
-    return list(map(f, itemsets_without_all))
+    return list(map(f, itemsets_clean))
 
 
 def single_discretized_feature_to_rule(feat: str) -> str:
-    
+
+    # categorical feature
+    if '_to_' not in feat:
+        return f'{feat} > 0.5'
+
+    # discretized numeric feature
     feat_split = feat.split('_to_')
     upper_value = feat_split[-1]
     lower_value = feat_split[-2].split('_')[-1]
-    
+
     lower_to_upper_len = 1 + len(lower_value) + 4 + len(upper_value)
     feature_name = feat[:-lower_to_upper_len]
     
