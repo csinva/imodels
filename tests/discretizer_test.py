@@ -45,27 +45,27 @@ class TestBasicDiscretizer(unittest.TestCase):
         assert Xd.equals(Xd_expected)
         assert Xd_test.equals(Xd_test_expected)
         
-    def test_discretizer(self):
+    # def test_discretizer(self):
         
-        dir_data = oj("../../Subgroups/supervised-subgroups/data/enhancer_small")
-        X_train = pd.read_csv(oj(dir_data, "X_train.csv"), index_col = 0)
-        X_test = pd.read_csv(oj(dir_data, "X_test.csv"), index_col = 0)
-        Y_train = pd.read_csv(oj(dir_data, "Y_train.csv"))['y']
-        Y_test = pd.read_csv(oj(dir_data, "Y_test.csv"))['y']
-        X_train.columns = X_train.columns.str.replace("_", "")
-        X_test.columns = X_test.columns.str.replace("_", "")
+    #     dir_data = oj("../../Subgroups/supervised-subgroups/data/enhancer_small")
+    #     X_train = pd.read_csv(oj(dir_data, "X_train.csv"), index_col = 0)
+    #     X_test = pd.read_csv(oj(dir_data, "X_test.csv"), index_col = 0)
+    #     Y_train = pd.read_csv(oj(dir_data, "Y_train.csv"))['y']
+    #     Y_test = pd.read_csv(oj(dir_data, "Y_test.csv"))['y']
+    #     X_train.columns = X_train.columns.str.replace("_", "")
+    #     X_test.columns = X_test.columns.str.replace("_", "")
         
-        discretizer = BasicDiscretizer(n_bins = 4, dcols = list(X_train.columns)[:40], 
-                                       encode = "onehot", strategy = "quantile", 
-                                       onehot_drop = "if_binary")
-        discretizer.fit(X_train)
-        Xd = discretizer.transform(X_train)
-        Xd_test = discretizer.transform(X_test)
+    #     discretizer = BasicDiscretizer(n_bins = 4, dcols = list(X_train.columns)[:40], 
+    #                                    encode = "onehot", strategy = "quantile", 
+    #                                    onehot_drop = "if_binary")
+    #     discretizer.fit(X_train)
+    #     Xd = discretizer.transform(X_train)
+    #     Xd_test = discretizer.transform(X_test)
         
-        Xd.head()
-        Xd_test.head()
+    #     Xd.head()
+    #     Xd_test.head()
         
-        assert Xd.shape[1] == Xd_test.shape[1]
+    #     assert Xd.shape[1] == Xd_test.shape[1]
     
     
 class TestRFDiscretizer(unittest.TestCase):
@@ -109,29 +109,29 @@ class TestRFDiscretizer(unittest.TestCase):
         assert Xd.equals(Xd_expected)
         assert Xd_test.equals(Xd_test_expected)
         
-    def test_discretizer(self):
+    # def test_discretizer(self):
         
-        dir_data = oj("../../Subgroups/supervised-subgroups/data/enhancer_small")
-        X_train = pd.read_csv(oj(dir_data, "X_train.csv"), index_col = 0)
-        X_test = pd.read_csv(oj(dir_data, "X_test.csv"), index_col = 0)
-        Y_train = pd.read_csv(oj(dir_data, "Y_train.csv"))['y']
-        Y_test = pd.read_csv(oj(dir_data, "Y_test.csv"))['y']
-        X_train.columns = X_train.columns.str.replace("_", "")
-        X_test.columns = X_test.columns.str.replace("_", "")
+    #     dir_data = oj("../../Subgroups/supervised-subgroups/data/enhancer_small")
+    #     X_train = pd.read_csv(oj(dir_data, "X_train.csv"), index_col = 0)
+    #     X_test = pd.read_csv(oj(dir_data, "X_test.csv"), index_col = 0)
+    #     Y_train = pd.read_csv(oj(dir_data, "Y_train.csv"))['y']
+    #     Y_test = pd.read_csv(oj(dir_data, "Y_test.csv"))['y']
+    #     X_train.columns = X_train.columns.str.replace("_", "")
+    #     X_test.columns = X_test.columns.str.replace("_", "")
         
-        discretizer = RFDiscretizer(rf_model = None, classification = True,
-                                    n_bins = 4, dcols = [], 
-                                    encode = "onehot", strategy = "quantile", 
-                                    onehot_drop = "if_binary")
-        discretizer.reweight_n_bins(X = X_train, y = Y_train)
-        discretizer.fit(X_train, Y_train)
-        Xd = discretizer.transform(X_train)
-        Xd_test = discretizer.transform(X_test)
+    #     discretizer = RFDiscretizer(rf_model = None, classification = True,
+    #                                 n_bins = 4, dcols = [], 
+    #                                 encode = "onehot", strategy = "quantile", 
+    #                                 onehot_drop = "if_binary")
+    #     discretizer.reweight_n_bins(X = X_train, y = Y_train)
+    #     discretizer.fit(X_train, Y_train)
+    #     Xd = discretizer.transform(X_train)
+    #     Xd_test = discretizer.transform(X_test)
         
-        Xd.head()
-        Xd_test.head()
+    #     Xd.head()
+    #     Xd_test.head()
         
-        assert discretizer.n_bins.sum() == (len(discretizer.dcols) * 4)
+    #     assert discretizer.n_bins.sum() == (len(discretizer.dcols) * 4)
         
     
     
