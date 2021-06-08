@@ -2,6 +2,8 @@ import unittest
 from urllib.request import urlretrieve
 from os.path import join as oj
 import random
+import numpy as np
+import pandas as pd
 
 from imodels.util.discretizer import BasicDiscretizer, RFDiscretizer
 
