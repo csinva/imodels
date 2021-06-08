@@ -162,7 +162,7 @@ class Discretizer():
         return xd.astype(int)
             
     
-    def _fit_header(self, X):
+    def _fit_preprocessing(self, X):
         """
         Initial checks before fitting the estimator.
         
@@ -188,7 +188,7 @@ class Discretizer():
         self._validate_dcols(X)
         
         
-    def _transform_footer(self, discretized_df, X):
+    def _transform_postprocessing(self, discretized_df, X):
         """
         Final processing in transform method. Does one-hot encoding
         (if specified) and joins discretized columns to the 
@@ -316,7 +316,7 @@ class BasicDiscretizer(Discretizer):
         """
         
         # initalization and error checking
-        self._fit_header(X)
+        self._fit_preprocessing(X)
         
         # apply KBinsDiscretizer to the selected columns
         discretizer = KBinsDiscretizer(n_bins = self.n_bins,
@@ -382,7 +382,7 @@ class BasicDiscretizer(Discretizer):
 
         # return onehot encoded data if specified and
         # join discretized columns with rest of X
-        X_discretized = self._transform_footer(discretized_df, X)
+        X_discretized = self._transform_postprocessing(discretized_df, X)
 
         return X_discretized
         
@@ -605,7 +605,7 @@ class RFDiscretizer(Discretizer):
             'by' argument
         """
         # initialization and error checking
-        self._fit_header(X)
+        self._fit_preprocessing(X)
         
         # get all random forest split points
         self._fit_rf(X = X, y = y)
@@ -644,7 +644,7 @@ class RFDiscretizer(Discretizer):
         self
         """
         # initialization and error checking
-        self._fit_header(X)
+        self._fit_preprocessing(X)
         
         # get all random forest split points
         self._fit_rf(X = X, y = y)
@@ -726,6 +726,6 @@ class RFDiscretizer(Discretizer):
 
         # return onehot encoded data if specified and
         # join discretized columns with rest of X
-        X_discretized = self._transform_footer(discretized_df, X)
+        X_discretized = self._transform_postprocessing(discretized_df, X)
 
         return X_discretized
