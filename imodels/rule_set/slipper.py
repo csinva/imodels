@@ -9,7 +9,7 @@ from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import train_test_split
 
-from imodels.util.rule import Rule, get_feature_dict
+from imodels.util.rule import Rule
 
 
 class SlipperRule(BaseEstimator, ClassifierMixin):
@@ -33,15 +33,13 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
           D (np.array): Array of distributions
         """
 
-        print(curr_rule)
-
         # make candidate rules
         candidates = [curr_rule.copy() for _ in range(3)]
         candidates = [
-            x.append({
-                'feature': self.feature_dict[feat],
+            x + [{
+                'feature': feat,
                 'operator': operator,
-                'pivot': A_c})
+                'pivot': A_c}]
             for x, operator in zip(candidates, ['>', '<', '=='])
         ]
 
@@ -55,25 +53,31 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
         in a rule
         """
 
-        logic = 'X[: condition["feature"]] {} condition["pivot"]'.format(condition['operator']) 
+        logic = 'X[:, {}] {} {}'.format(
+            condition['feature'],
+            condition['operator'],
+            condition['pivot']
+        )
+
         output = np.where(eval(logic))
         return output[0]
 
     def _rule_predict(self, X, rule): 
         """ return all indices for which the passed rule holds on X """
 
-        preds = np.zeros(X.shape[0],)
+        preds = np.zeros(X.shape[0])
         positive_cases = set(range(X.shape[0]))
 
         for condition in rule:
-            ouptuts = set(list(self._condition_classify(X, condition)))
-            positive_cases.intersection(outputs)
+            outputs = set(list(self._condition_classify(X, condition)))
+            positive_cases = positive_cases.intersection(outputs)
 
         preds[list(positive_cases)] = 1
+
         return preds
 
     def _get_design_matrices(self, X, y, rule):
-        """ produce design matrices used in most equaitons"""
+        """ produce design matrices used in most equaitons""" 
         preds = self._rule_predict(X, rule)
 
         W_plus_idx = np.where((preds == 1) & (y == 1))
@@ -113,15 +117,17 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
 
         stop_condition = False
         features = list(range(X.shape[1]))
+
+        # rule is stored as a list of dictionaries, each dictionary is a condition
         curr_rule = []
 
         while not stop_condition:
             candidate_rule = curr_rule.copy()
             for feat in features:
-                pivots = np.percentile(X[:, feat], range(0, 100, 10),
+                pivots = np.percentile(X[:, feat], range(0, 100, 2),
                                        interpolation='midpoint')
 
-
+                # get a list of possible rules
                 feature_candidates = [
                     self._make_candidate(X, y, curr_rule, feat, A_c)
                     for A_c in pivots
@@ -163,18 +169,18 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
             Rule object
         """
         stop_condition = False
-        curr_rule = deepcopy(rule)
+        curr_rule = rule.copy()
 
         while not stop_condition:
             candidate_rules = []
 
-            if len(curr_rule.agg_dict) == 1:
+            if len(curr_rule) == 1:
                 return curr_rule
 
-            candidate_rules = Parallel(n_jobs=-1)(
-                delayed(self._pop_condition)(curr_rule, condition)
-                for condition in curr_rule.agg_dict.keys()
-            )
+            candidate_rules = [
+                self._pop_condition(curr_rule, condition)
+                for condition in curr_rule
+            ]
 
             prune_objs = [self._prune_rule_obj(X, y, rule) for x in candidate_rules]
             best_prune = candidate_rules[
@@ -182,7 +188,7 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
             ]
 
             if self._prune_rule_obj(X, y, rule) > self._prune_rule_obj(X, y, rule):
-                curr_rule = deepcopy(best_prune)
+                curr_rule = best_prune.copy()
             else:
                 stop_condition = True
 
@@ -190,17 +196,16 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
     
     def _pop_condition(self, rule, condition):
         """
-        Remove a condition from an existing Rule objet
+        Remove a condition from an existing Rule object
 
         Parameters:
             rule : Rule object
             condition : tuple(str, str)
                 key of rule agg_dict to pop from newly created rule
         """
-        temp = deepcopy(rule)
-        temp.agg_dict.pop(condition)
-        r_prime = Rule(str(temp))
-        return r_prime
+        temp = rule.copy()
+        temp.remove(condition)
+        return temp
 
     def _make_default_rule(self, X, y):
         """
@@ -208,19 +213,31 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
         of data set. Without default rule a SlipperRule would never 
         predict negative
         """
-        default_rule = Rule('')
+        default_rule = []
         features = random.choices(
             range(X.shape[1]),
             k=random.randint(2, 8)
         )
 
-        default_rule.rule = str(features[0]) + ' > ' + str(min(X[:, features[0]]))
+        default_rule.append({
+            'feature': str(features[0]),
+            'operator': '>',
+            'pivot': str(min(X[:, features[0]]))
+        })
 
         for i, x in enumerate(features):
             if i % 2:
-                default_rule.rule += ' and ' + self.feature_dict[x] + ' < ' + str(max(X[:, x]))
+                default_rule.append({
+                    'feature': x,
+                    'operator': '<',
+                    'pivot': str(max(X[:, x]))
+                })
             else:
-                default_rule.rule += ' and ' + self.feature_dict[x] + ' > ' + str(min(X[:, x]))
+                default_rule.append({
+                    'feature': x,
+                    'operator': '>',
+                    'pivot': str(min(X[:, x]))
+                })
         
         return default_rule
 
@@ -285,5 +302,4 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
 
         rule = self._grow_rule(X_grow, y_grow)
         rule = self._prune_rule(X_prune, y_prune, rule)
-
         self._set_rule_or_default(X, y, rule)
