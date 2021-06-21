@@ -1,9 +1,6 @@
-import pandas as pd
 import numpy as np
 import random
-import string
 
-from copy import deepcopy
 from joblib import Parallel, delayed
 
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -18,10 +15,10 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
     as part of the BoostedRulesClassifier.
     """
 
-    def __init__(self, D):
+    def __init__(self):
         self.Z = None
         self.rule = None
-        self.D = D
+        self.D = None
 
     def _make_candidate(self, X, y, curr_rule, feat, A_c):
         """ Make candidate rules for grow routine to compare scores
@@ -147,7 +144,7 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
                     len(negative_coverage) == 0:
                 stop_condition = True
             else:
-                curr_rule = deepcopy(candidate_rule)
+                curr_rule = candidate_rule.copy()
 
         return curr_rule
 
@@ -193,7 +190,7 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
                 stop_condition = True
 
         return curr_rule
-    
+
     def _pop_condition(self, rule, condition):
         """
         Remove a condition from an existing Rule object
@@ -238,7 +235,7 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
                     'operator': '>',
                     'pivot': str(min(X[:, x]))
                 })
-        
+
         return default_rule
 
     def _prune_rule_obj(self, X, y, rule):
@@ -290,14 +287,17 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
         """
         return self._rule_predict(X, self.rule)
 
-    def fit(self, X, y, features=None, n_jobs=-1):
+    def fit(self, X, y, sample_weight=None, features=None, n_jobs=-1):
         """
         Main loop for training
         """
 
+        if sample_weight is not None: 
+            self.D = sample_weight
+
         X_grow, X_prune, y_grow, y_prune = \
             train_test_split(X, y, test_size=0.33)
-
+        
         self.make_feature_dict(X.shape[1], features)
 
         rule = self._grow_rule(X_grow, y_grow)

@@ -2,7 +2,7 @@ import numpy as np
 
 from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRuleListClassifier, \
     OneRClassifier, BoostedRulesClassifier, RuleFitClassifier, FPLassoClassifier, FPSkopeClassifier, \
-    SLIMClassifier  # IRFClassifier
+    SLIMClassifier, SlipperRule # IRFClassifier
 
 
 class TestClassClassificationBinary:
@@ -23,7 +23,7 @@ class TestClassClassificationBinary:
         for model_type in [RuleFitClassifier, GreedyRuleListClassifier,
                            FPLassoClassifier, SkopeRulesClassifier,
                            FPSkopeClassifier, BoostedRulesClassifier, 
-                           OneRClassifier, SLIMClassifier]:  # IRFClassifier, 
+                           OneRClassifier, SLIMClassifier, SlipperRule]:  # IRFClassifier, 
 
             init_kwargs = {}
             if model_type == RuleFitClassifier:
@@ -31,6 +31,7 @@ class TestClassClassificationBinary:
             if model_type == SkopeRulesClassifier or model_type == FPSkopeClassifier:
                 init_kwargs['random_state'] = 0
                 init_kwargs['max_samples_features'] = 1.
+            if model_type == SlipperRule:
             m = model_type(**init_kwargs)
 
             X = self.X_classification_binary
