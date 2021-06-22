@@ -9,7 +9,7 @@ from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.rule_set.slipper import SlipperRule
+from imodels.rule_set.slipper import SlipperClassifier 
 from imodels.util.convert import tree_to_code, tree_to_rules, dict_to_rule 
 from imodels.util.rule import Rule, get_feature_dict, replace_feature_name
 
@@ -23,7 +23,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         self.n_estimators = n_estimators
         self.method = method
         if method == 'SLIPPER':
-            self.estimator = partial(SlipperRule)
+            self.estimator = partial(SlipperClassifier)
         elif method == 'DT': 
             self.estimator = partial(DecisionTreeClassifier, max_depth=1)
 

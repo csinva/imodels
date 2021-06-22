@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from imodels.util.rule import Rule
 
 
-class SlipperRule(BaseEstimator, ClassifierMixin):
+class SlipperClassifier(BaseEstimator, ClassifierMixin):
     """ An estimator that supports building rules as described in
     A Simple, Fast, and Effective Rule Learner (1999). Intended to be used
     as part of the BoostedRulesClassifier.
@@ -207,7 +207,7 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
     def _make_default_rule(self, X, y):
         """
         Make the default rule that is true for every observation 
-        of data set. Without default rule a SlipperRule would never 
+        of data set. Without default rule a SlipperClassifier would never 
         predict negative
         """
         default_rule = []
