@@ -21,14 +21,7 @@ class SlipperClassifier(BaseEstimator, ClassifierMixin):
         self.D = None
 
     def _make_candidate(self, X, y, curr_rule, feat, A_c):
-        """ Make candidate rules for grow routine to compare scores
-
-        Parameters
-        ----------
-          X (np.array): Data matrix
-          y (np.array): Response matrix
-          D (np.array): Array of distributions
-        """
+        """ Make candidate rules for grow routine to compare scores"""
 
         # make candidate rules
         candidates = [curr_rule.copy() for _ in range(3)]
@@ -100,16 +93,6 @@ class SlipperClassifier(BaseEstimator, ClassifierMixin):
     def _grow_rule(self, X, y):
         """ Starts with empty conjunction of conditions and
         greddily adds rules to mazimize Z_tilda
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            Training vector, where n_samples is the number of samples and
-            n_features is the number of features.
-
-        y : array-like, shape (n_samples,)
-            Target vector relative to X. Has to follow the convention 0 for
-            normal data, 1 for anomalies.
         """
 
         stop_condition = False
@@ -151,19 +134,6 @@ class SlipperClassifier(BaseEstimator, ClassifierMixin):
     def _prune_rule(self, X, y, rule):
         """ Remove conditions from greedily built rule until 
         objective does not improve
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            Training vector, where n_samples is the number of samples and
-            n_features is the number of features.
-
-        y : array-like, shape (n_samples,)
-            Target vector relative to X. Has to follow the convention 0 for
-            normal data, 1 for anomalies.
-
-        rule : Rule
-            Rule object
         """
         stop_condition = False
         curr_rule = rule.copy()
@@ -194,11 +164,6 @@ class SlipperClassifier(BaseEstimator, ClassifierMixin):
     def _pop_condition(self, rule, condition):
         """
         Remove a condition from an existing Rule object
-
-        Parameters:
-            rule : Rule object
-            condition : tuple(str, str)
-                key of rule agg_dict to pop from newly created rule
         """
         temp = rule.copy()
         temp.remove(condition)
@@ -281,13 +246,6 @@ class SlipperClassifier(BaseEstimator, ClassifierMixin):
         }
 
     def predict_proba(self, X):
-        """ 
-        Predicted class probability is fraction of samples
-        of the same class in a rule. No probability for 
-        out of sample rules.
-
-        Modeled after sklearn DT predict_proba funciton
-        """
 
         proba = self.predict(X)
         proba = proba.reshape(-1,1)
