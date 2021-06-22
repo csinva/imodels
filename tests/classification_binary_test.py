@@ -32,17 +32,17 @@ class TestClassClassificationBinary:
                 init_kwargs['random_state'] = 0
                 init_kwargs['max_samples_features'] = 1.
             if model_type == SlipperRule:
+                model_type = BoostedRulesClassifier
+                init_kwargs['method'] = 'SLIPPER'
+                init_kwargs['n_estimators'] = 3
             m = model_type(**init_kwargs)
 
             X = self.X_classification_binary
             m.fit(X, self.y_classification_binary)
 
-#             print('starting to test', type(m), '...')
-            # print(m.visualize())
             preds_proba = m.predict_proba(X)
-            #             for i in range(20):
-            #                 print(i, self.X_classification_binary[i], preds_proba[i])
-            # print('preds_proba', preds_proba)
+            
+
             assert len(preds_proba.shape) == 2, 'preds_proba has 2 columns'
             assert preds_proba.shape[1] == 2, 'preds_proba has 2 columns'
             assert np.max(preds_proba) < 1.1, 'preds_proba has no values over 1'
@@ -51,11 +51,8 @@ class TestClassClassificationBinary:
             assert preds.size == self.n, 'predict() yields right size'
             assert (np.argmax(preds_proba, axis=1) == preds).all(), "predict_proba and predict correspond"
             
-            #             print(model_type, preds, self.y_classification_binary)
-            # for i in range(20):
-            #     print(i, self.y_classification_binary[i], preds_proba[i], preds[i])
 
             acc_train = np.mean(preds == self.y_classification_binary)
-            # print(type(m), m)
+
             print(type(m), m, 'final acc', acc_train)
             assert acc_train > 0.8, 'acc greater than 0.8'

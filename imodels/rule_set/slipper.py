@@ -34,9 +34,9 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
         candidates = [curr_rule.copy() for _ in range(3)]
         candidates = [
             x + [{
-                'feature': feat,
+                'feature': int(feat),
                 'operator': operator,
-                'pivot': A_c}]
+                'pivot': float(A_c)}]
             for x, operator in zip(candidates, ['>', '<', '=='])
         ]
 
@@ -280,6 +280,23 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
             old_feat:new_feat for old_feat, new_feat in enumerate(new_feats)
         }
 
+    def predict_proba(self, X):
+        """ 
+        Predicted class probability is fraction of samples
+        of the same class in a rule. No probability for 
+        out of sample rules.
+
+        Modeled after sklearn DT predict_proba funciton
+        """
+
+        proba = self.predict(X)
+        proba = proba.reshape(-1,1)
+        proba = np.hstack([
+            np.zeros(proba.shape), proba
+        ])
+
+        return proba
+
     def predict(self, X):
         """
         external predict function that returns predictions 
@@ -303,3 +320,5 @@ class SlipperRule(BaseEstimator, ClassifierMixin):
         rule = self._grow_rule(X_grow, y_grow)
         rule = self._prune_rule(X_prune, y_prune, rule)
         self._set_rule_or_default(X, y, rule)
+
+        return self

@@ -125,7 +125,7 @@ def dict_to_rule(rule, clf_feature_dict):
 
     for condition in rule:
         output += '{} {} {} and '.format(
-            clf_feature_dict[condition['feature']],
+            clf_feature_dict[int(condition['feature'])],
             condition['operator'],
             condition['pivot']
         )
