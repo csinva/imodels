@@ -31,7 +31,6 @@ class RuleSet:
         scores = np.zeros(X.shape[0])
         for r in selected_rules: 
             features_r_uses = list(map(lambda x: x[0], r.agg_dict.keys()))
-            # print(scores[df[features_r_uses].query(str(r)).index.values])
             scores[df[features_r_uses].query(str(r)).index.values] += r.args[0]
 
         return scores
