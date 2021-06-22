@@ -98,10 +98,6 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
 
         rules = []
 
-        if type(clf) == SlipperRule:
-            for est in self.estimators_:
-                print(est.feature_dict)
-
         for est, est_weight in zip(self.estimators_, self.estimator_weights_):
             if self.method == 'DT':
                 est_rules_values = tree_to_rules(est, self.feature_placeholders, prediction_values=True)
