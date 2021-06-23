@@ -106,6 +106,32 @@ def itemsets_to_rules(itemsets: List[Tuple]) -> List[str]:
     return list(map(f, itemsets_clean))
 
 
+def dict_to_rule(rule, clf_feature_dict):
+    """
+    Function to accept rule dict and convert to Rule object
+
+    Parameters:
+    rule: list of dict of schema
+    [
+        {
+            'feature': int,
+            'operator': str,
+            'value': float
+        },
+    ]
+    """
+
+    output = ''
+
+    for condition in rule:
+        output += '{} {} {} and '.format(
+            clf_feature_dict[int(condition['feature'])],
+            condition['operator'],
+            condition['pivot']
+        )
+    
+    return output[:-5]
+
 def single_discretized_feature_to_rule(feat: str) -> str:
 
     # categorical feature

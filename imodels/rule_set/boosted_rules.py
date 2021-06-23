@@ -9,7 +9,8 @@ from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.convert import tree_to_code, tree_to_rules
+from imodels.rule_set.slipper import SlipperClassifier 
+from imodels.util.convert import tree_to_code, tree_to_rules, dict_to_rule 
 from imodels.util.rule import Rule, get_feature_dict, replace_feature_name
 
 
@@ -90,18 +91,25 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
             self.estimators_.append(deepcopy(clf))
             self.estimator_weights_.append(alpha_m)
             self.estimator_errors_.append(err_m)
-        
-        rules = []
-        for est, est_weight in zip(self.estimators_, self.estimator_weights_):
-            est_rules_values = tree_to_rules(est, self.feature_placeholders, prediction_values=True)
-            est_rules = list(map(lambda x: x[0], est_rules_values))
-            
-            # BRS scores are difference between class 1 % and class 0 % in a node
-            est_values = np.array(list(map(lambda x: x[1], est_rules_values)))
-            rule_scores = (est_values[:, 1] - est_values[:, 0]) / est_values.sum(axis=1)
 
-            compos_score = est_weight * rule_scores
-            rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
+        rules = []
+
+        for est, est_weight in zip(self.estimators_, self.estimator_weights_):
+            if type(clf) == DecisionTreeClassifier:
+                est_rules_values = tree_to_rules(est, self.feature_placeholders, prediction_values=True)
+                est_rules = list(map(lambda x: x[0], est_rules_values))
+
+                # BRS scores are difference between class 1 % and class 0 % in a node
+                est_values = np.array(list(map(lambda x: x[1], est_rules_values)))
+                rule_scores = (est_values[:, 1] - est_values[:, 0]) / est_values.sum(axis=1)
+
+                compos_score = est_weight * rule_scores
+                rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
+
+            if type(clf) == SlipperClassifier:
+                # SLIPPER uses uniform confidence over in rule observations
+                est_rule = dict_to_rule(est.rule, est.feature_dict)
+                rules += [Rule(est_rule, args=[est_weight])]
 
         self.rules_without_feature_names_ = rules
         self.rules_ = [
@@ -111,8 +119,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         return self
 
     def predict_proba(self, X):
-        '''Predict probabilities for X
-        '''
+        ''' Predict probabilities for X '''
         check_is_fitted(self)
         X = check_array(X)
 
@@ -132,13 +139,6 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         check_is_fitted(self)
         X = check_array(X)
         return self.eval_weighted_rule_sum(X) > 0
-
-    # def predict(self, X):
-    #     """Predict outcome for X
-    #     """
-    #     check_is_fitted(self)
-    #     X = check_array(X)
-    #     return self.predict_proba(X).argmax(axis=1)
 
     def __str__(self):
         try:
