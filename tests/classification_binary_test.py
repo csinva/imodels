@@ -24,7 +24,7 @@ class TestClassClassificationBinary:
         for model_type in [RuleFitClassifier, GreedyRuleListClassifier,
                            FPLassoClassifier, SkopeRulesClassifier,
                            FPSkopeClassifier, BoostedRulesClassifier, 
-                           OneRClassifier, SLIMClassifier, SlipperClassifier]:  # IRFClassifier, 
+                           OneRClassifier, SlipperClassifier]:  # IRFClassifier, SLIMClassifier
 
             init_kwargs = {}
             if model_type == RuleFitClassifier:
