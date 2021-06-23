@@ -82,7 +82,7 @@ print(model) # print the rule-based model
 <tr>
 <td align="left">Boosted rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/boosted_rules.html">🗂️</a>, <a href="https://github.com/jaimeps/adaboost-implementation">🔗</a>, <a href="https://www.sciencedirect.com/science/article/pii/S002200009791504X">📄</a></td>
-<td>Uses Adaboost to sequentially learn a set of rules</td>
+<td>Uses Adaboost or SLIPPER to sequentially learn a set of rules</td>
 </tr>
 <tr>
 <td align="left">Bayesian rule list</td>
@@ -117,7 +117,7 @@ print(model) # print the rule-based model
 <tr>
 <td align="left">Rule sets</td>
 <td>⌛</td>
-<td>(Coming soon) Many popular rule sets including SLIPPER, Lightweight Rule Induction, MLRules</td>
+<td>(Coming soon) Many popular rule sets including Lightweight Rule Induction, MLRules</td>
 </tr>
 </tbody>
 </table>
@@ -318,9 +318,10 @@ from .rule_set.fplasso import FPLassoRegressor, FPLassoClassifier
 from .rule_set.fpskope import FPSkopeClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
+from .rule_set.slipper import SlipperClassifier
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
-               BoostedRulesClassifier, SLIMClassifier]  # , IRFClassifier
+               BoostedRulesClassifier, SLIMClassifier, SlipperClassifier]  # , IRFClassifier
 REGRESSORS = [RuleFitRegressor, SLIMRegressor]</code></pre>
 </details>
 </section>

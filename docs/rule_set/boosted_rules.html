@@ -35,13 +35,20 @@ from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.convert import tree_to_code, tree_to_rules
+from imodels.rule_set.slipper import SlipperClassifier 
+from imodels.util.convert import tree_to_code, tree_to_rules, dict_to_rule 
 from imodels.util.rule import Rule, get_feature_dict, replace_feature_name
 
 
 class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, ClassifierMixin):
     &#39;&#39;&#39;An easy-interpretable classifier optimizing simple logical rules.
     Currently limited to only binary classification.
+    
+    Params
+    ------
+    estimator: object with fit and predict methods
+        defaults to DecisionTreeClassifier with AdaBoost
+        for SLIPPER, pass imodels.SlipperClassifier        
     &#39;&#39;&#39;
 
     def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1)):
@@ -116,34 +123,35 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
             self.estimators_.append(deepcopy(clf))
             self.estimator_weights_.append(alpha_m)
             self.estimator_errors_.append(err_m)
-        
+
         rules = []
+
         for est, est_weight in zip(self.estimators_, self.estimator_weights_):
-            est_rules = tree_to_rules(est, self.feature_placeholders)
-            
-            rule_scores = np.max(est.predict_proba(X), axis=0)
-            rule_scores = (rule_scores * 2) - 1
+            if type(clf) == DecisionTreeClassifier:
+                est_rules_values = tree_to_rules(est, self.feature_placeholders, prediction_values=True)
+                est_rules = list(map(lambda x: x[0], est_rules_values))
 
-            # order scores to correspond to correct rule
-            rule_pred_class = np.argmax(est.tree_.value[1:], axis=2).flatten()
-            rule_scores = rule_scores[rule_pred_class]
+                # BRS scores are difference between class 1 % and class 0 % in a node
+                est_values = np.array(list(map(lambda x: x[1], est_rules_values)))
+                rule_scores = (est_values[:, 1] - est_values[:, 0]) / est_values.sum(axis=1)
 
-            # weight negatively rules that predict class 0
-            rule_scores[rule_pred_class[0]] *= -1
+                compos_score = est_weight * rule_scores
+                rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
 
-            compos_score = est_weight * rule_scores
-            rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
+            if type(clf) == SlipperClassifier:
+                # SLIPPER uses uniform confidence over in rule observations
+                est_rule = dict_to_rule(est.rule, est.feature_dict)
+                rules += [Rule(est_rule, args=[est_weight])]
 
         self.rules_without_feature_names_ = rules
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
-        self.complexity_ = len(self.rules_)
+        self.complexity_ = self._get_complexity()
         return self
 
     def predict_proba(self, X):
-        &#39;&#39;&#39;Predict probabilities for X
-        &#39;&#39;&#39;
+        &#39;&#39;&#39; Predict probabilities for X &#39;&#39;&#39;
         check_is_fitted(self)
         X = check_array(X)
 
@@ -163,13 +171,6 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         check_is_fitted(self)
         X = check_array(X)
         return self.eval_weighted_rule_sum(X) &gt; 0
-
-    # def predict(self, X):
-    #     &#34;&#34;&#34;Predict outcome for X
-    #     &#34;&#34;&#34;
-    #     check_is_fitted(self)
-    #     X = check_array(X)
-    #     return self.predict_proba(X).argmax(axis=1)
 
     def __str__(self):
         try:
@@ -196,7 +197,13 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
 </code></dt>
 <dd>
 <section class="desc"><p>An easy-interpretable classifier optimizing simple logical rules.
-Currently limited to only binary classification.</p></section>
+Currently limited to only binary classification.</p>
+<h2 id="params">Params</h2>
+<dl>
+<dt><strong><code>estimator</code></strong> :&ensp;<code>object</code> <code>with</code> <code>fit</code> <code>and</code> <code>predict</code> <code>methods</code></dt>
+<dd>defaults to DecisionTreeClassifier with AdaBoost
+for SLIPPER, pass imodels.SlipperClassifier</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -204,6 +211,12 @@ Currently limited to only binary classification.</p></section>
 <pre><code class="python">class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, ClassifierMixin):
     &#39;&#39;&#39;An easy-interpretable classifier optimizing simple logical rules.
     Currently limited to only binary classification.
+    
+    Params
+    ------
+    estimator: object with fit and predict methods
+        defaults to DecisionTreeClassifier with AdaBoost
+        for SLIPPER, pass imodels.SlipperClassifier        
     &#39;&#39;&#39;
 
     def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1)):
@@ -278,34 +291,35 @@ Currently limited to only binary classification.</p></section>
             self.estimators_.append(deepcopy(clf))
             self.estimator_weights_.append(alpha_m)
             self.estimator_errors_.append(err_m)
-        
+
         rules = []
+
         for est, est_weight in zip(self.estimators_, self.estimator_weights_):
-            est_rules = tree_to_rules(est, self.feature_placeholders)
-            
-            rule_scores = np.max(est.predict_proba(X), axis=0)
-            rule_scores = (rule_scores * 2) - 1
+            if type(clf) == DecisionTreeClassifier:
+                est_rules_values = tree_to_rules(est, self.feature_placeholders, prediction_values=True)
+                est_rules = list(map(lambda x: x[0], est_rules_values))
 
-            # order scores to correspond to correct rule
-            rule_pred_class = np.argmax(est.tree_.value[1:], axis=2).flatten()
-            rule_scores = rule_scores[rule_pred_class]
+                # BRS scores are difference between class 1 % and class 0 % in a node
+                est_values = np.array(list(map(lambda x: x[1], est_rules_values)))
+                rule_scores = (est_values[:, 1] - est_values[:, 0]) / est_values.sum(axis=1)
 
-            # weight negatively rules that predict class 0
-            rule_scores[rule_pred_class[0]] *= -1
+                compos_score = est_weight * rule_scores
+                rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
 
-            compos_score = est_weight * rule_scores
-            rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
+            if type(clf) == SlipperClassifier:
+                # SLIPPER uses uniform confidence over in rule observations
+                est_rule = dict_to_rule(est.rule, est.feature_dict)
+                rules += [Rule(est_rule, args=[est_weight])]
 
         self.rules_without_feature_names_ = rules
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
-        self.complexity_ = len(self.rules_)
+        self.complexity_ = self._get_complexity()
         return self
 
     def predict_proba(self, X):
-        &#39;&#39;&#39;Predict probabilities for X
-        &#39;&#39;&#39;
+        &#39;&#39;&#39; Predict probabilities for X &#39;&#39;&#39;
         check_is_fitted(self)
         X = check_array(X)
 
@@ -325,13 +339,6 @@ Currently limited to only binary classification.</p></section>
         check_is_fitted(self)
         X = check_array(X)
         return self.eval_weighted_rule_sum(X) &gt; 0
-
-    # def predict(self, X):
-    #     &#34;&#34;&#34;Predict outcome for X
-    #     &#34;&#34;&#34;
-    #     check_is_fitted(self)
-    #     X = check_array(X)
-    #     return self.predict_proba(X).argmax(axis=1)
 
     def __str__(self):
         try:
@@ -447,29 +454,31 @@ If not provided, then each sample is given unit weight.</dd>
         self.estimators_.append(deepcopy(clf))
         self.estimator_weights_.append(alpha_m)
         self.estimator_errors_.append(err_m)
-    
+
     rules = []
+
     for est, est_weight in zip(self.estimators_, self.estimator_weights_):
-        est_rules = tree_to_rules(est, self.feature_placeholders)
-        
-        rule_scores = np.max(est.predict_proba(X), axis=0)
-        rule_scores = (rule_scores * 2) - 1
+        if type(clf) == DecisionTreeClassifier:
+            est_rules_values = tree_to_rules(est, self.feature_placeholders, prediction_values=True)
+            est_rules = list(map(lambda x: x[0], est_rules_values))
 
-        # order scores to correspond to correct rule
-        rule_pred_class = np.argmax(est.tree_.value[1:], axis=2).flatten()
-        rule_scores = rule_scores[rule_pred_class]
+            # BRS scores are difference between class 1 % and class 0 % in a node
+            est_values = np.array(list(map(lambda x: x[1], est_rules_values)))
+            rule_scores = (est_values[:, 1] - est_values[:, 0]) / est_values.sum(axis=1)
 
-        # weight negatively rules that predict class 0
-        rule_scores[rule_pred_class[0]] *= -1
+            compos_score = est_weight * rule_scores
+            rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
 
-        compos_score = est_weight * rule_scores
-        rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
+        if type(clf) == SlipperClassifier:
+            # SLIPPER uses uniform confidence over in rule observations
+            est_rule = dict_to_rule(est.rule, est.feature_dict)
+            rules += [Rule(est_rule, args=[est_weight])]
 
     self.rules_without_feature_names_ = rules
     self.rules_ = [
         replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
     ]
-    self.complexity_ = len(self.rules_)
+    self.complexity_ = self._get_complexity()
     return self</code></pre>
 </details>
 </dd>
@@ -500,8 +509,7 @@ If not provided, then each sample is given unit weight.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
-    &#39;&#39;&#39;Predict probabilities for X
-    &#39;&#39;&#39;
+    &#39;&#39;&#39; Predict probabilities for X &#39;&#39;&#39;
     check_is_fitted(self)
     X = check_array(X)
 

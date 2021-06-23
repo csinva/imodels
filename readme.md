@@ -15,7 +15,7 @@
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
   <!--img src="https://img.shields.io/github/checks-status/csinva/imodels/master"-->
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=10">
+  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=11">
 </p>  
 
 
@@ -52,14 +52,14 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | :-------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | Rulefit rule set            | [🗂️](https://csinva.io/imodels/rule_set/rule_fit.html), [🔗](https://github.com/christophM/rulefit), [📄](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf) | Extracts rules from a decision tree then builds a sparse linear model with them |
 | Skope rule set              | [🗂️](https://csinva.io/imodels/rule_set/skope_rules.html), [🔗](https://github.com/scikit-learn-contrib/skope-rules) | Extracts rules from gradient-boosted trees, deduplicates them, then forms a linear combination of them based on their OOB precision |
-| Boosted rule set            | [🗂️](https://csinva.io/imodels/rule_set/boosted_rules.html), [🔗](https://github.com/jaimeps/adaboost-implementation), [📄](https://www.sciencedirect.com/science/article/pii/S002200009791504X) | Uses Adaboost to sequentially learn a set of rules          |
+| Boosted rule set            | [🗂️](https://csinva.io/imodels/rule_set/boosted_rules.html), [🔗](https://github.com/jaimeps/adaboost-implementation), [📄](https://www.sciencedirect.com/science/article/pii/S002200009791504X) | Uses Adaboost or SLIPPER to sequentially learn a set of rules |
 | Bayesian rule list          | [🗂️](https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html), [🔗](https://github.com/tmadl/sklearn-expertsys), [📄](https://arxiv.org/abs/1602.08610) | Learns a compact rule list by sampling rule lists (rather than using a greedy heuristic) |
 | Greedy rule list            | [🗂️](https://csinva.io/imodels/rule_list/greedy_rule_list.html), [🔗](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea) | Uses CART to learn a list (only a single path), rather than a decision tree |
 | OneR rule list              | [🗂️](https://csinva.io/imodels/rule_list/one_r.html), [📄](https://link.springer.com/article/10.1023/A:1022631118932) | Learns rule list restricted to only one feature              |
 | Optimal rule tree           | [🗂️](https://csinva.io/imodels/tree/optimal_classification_tree/index.html), [🔗](https://github.com/pan5431333/pyoptree), [📄](https://link.springer.com/article/10.1007/s10994-017-5633-9) | (In progress) Learns succinct trees using global optimization rather than greedy heuristics |
 | Iterative random forest     | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [🔗](https://github.com/Yu-Group/iterative-Random-Forest), [📄](https://www.pnas.org/content/115/8/1943) | (In progress) Repeatedly fit random forest, giving features with high importance a higher chance of being selected. |
 | Sparse integer linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Forces coefficients to be integers                           |
-| Rule sets                   | ⌛                                                            | (Coming soon) Many popular rule sets including SLIPPER, Lightweight Rule Induction, MLRules              |
+| Rule sets                   | ⌛                                                            | (Coming soon) Many popular rule sets including Lightweight Rule Induction, MLRules |
 
 <p align="center">
 Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementation 🔗, Research paper 📄

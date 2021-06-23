@@ -76,7 +76,7 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
                     else &#39; == &#39;.join([feature_names[0]] * 2))
             # a rule selecting all is set to &#34;c0==c0&#34;
             if prediction_values:
-                rules.append((rule, tree_.value[node][0][0]))
+                rules.append((rule, tree_.value[node][0].tolist()))
             else:
                 rules.append(rule)
 
@@ -132,6 +132,32 @@ def itemsets_to_rules(itemsets: List[Tuple]) -&gt; List[str]:
     return list(map(f, itemsets_clean))
 
 
+def dict_to_rule(rule, clf_feature_dict):
+    &#34;&#34;&#34;
+    Function to accept rule dict and convert to Rule object
+
+    Parameters:
+    rule: list of dict of schema
+    [
+        {
+            &#39;feature&#39;: int,
+            &#39;operator&#39;: str,
+            &#39;value&#39;: float
+        },
+    ]
+    &#34;&#34;&#34;
+
+    output = &#39;&#39;
+
+    for condition in rule:
+        output += &#39;{} {} {} and &#39;.format(
+            clf_feature_dict[int(condition[&#39;feature&#39;])],
+            condition[&#39;operator&#39;],
+            condition[&#39;pivot&#39;]
+        )
+    
+    return output[:-5]
+
 def single_discretized_feature_to_rule(feat: str) -&gt; str:
 
     # categorical feature
@@ -163,6 +189,51 @@ def single_discretized_feature_to_rule(feat: str) -&gt; str:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="imodels.util.convert.dict_to_rule"><code class="name flex">
+<span>def <span class="ident">dict_to_rule</span></span>(<span>rule, clf_feature_dict)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Function to accept rule dict and convert to Rule object</p>
+<p>Parameters:
+rule: list of dict of schema
+[
+{
+'feature': int,
+'operator': str,
+'value': float
+},
+]</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dict_to_rule(rule, clf_feature_dict):
+    &#34;&#34;&#34;
+    Function to accept rule dict and convert to Rule object
+
+    Parameters:
+    rule: list of dict of schema
+    [
+        {
+            &#39;feature&#39;: int,
+            &#39;operator&#39;: str,
+            &#39;value&#39;: float
+        },
+    ]
+    &#34;&#34;&#34;
+
+    output = &#39;&#39;
+
+    for condition in rule:
+        output += &#39;{} {} {} and &#39;.format(
+            clf_feature_dict[int(condition[&#39;feature&#39;])],
+            condition[&#39;operator&#39;],
+            condition[&#39;pivot&#39;]
+        )
+    
+    return output[:-5]</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.convert.itemsets_to_rules"><code class="name flex">
 <span>def <span class="ident">itemsets_to_rules</span></span>(<span>itemsets)</span>
 </code></dt>
@@ -321,7 +392,7 @@ feature_names: list of variable names
                     else &#39; == &#39;.join([feature_names[0]] * 2))
             # a rule selecting all is set to &#34;c0==c0&#34;
             if prediction_values:
-                rules.append((rule, tree_.value[node][0][0]))
+                rules.append((rule, tree_.value[node][0].tolist()))
             else:
                 rules.append(rule)
 
@@ -348,6 +419,7 @@ feature_names: list of variable names
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="imodels.util.convert.dict_to_rule" href="#imodels.util.convert.dict_to_rule">dict_to_rule</a></code></li>
 <li><code><a title="imodels.util.convert.itemsets_to_rules" href="#imodels.util.convert.itemsets_to_rules">itemsets_to_rules</a></code></li>
 <li><code><a title="imodels.util.convert.single_discretized_feature_to_rule" href="#imodels.util.convert.single_discretized_feature_to_rule">single_discretized_feature_to_rule</a></code></li>
 <li><code><a title="imodels.util.convert.tree_to_code" href="#imodels.util.convert.tree_to_code">tree_to_code</a></code></li>

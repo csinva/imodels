@@ -24,9 +24,14 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RuleList:
-    
-    rules = []</code></pre>
+<pre><code class="python">from sklearn.utils.validation import check_is_fitted
+
+
+class RuleList:
+
+    def _get_complexity(self):
+        check_is_fitted(self, [&#39;rules_without_feature_names_&#39;])
+        return sum([len(rule.agg_dict) for rule in self.rules_without_feature_names_]) </code></pre>
 </details>
 </section>
 <section>
@@ -49,23 +54,16 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class RuleList:
-    
-    rules = []</code></pre>
+
+    def _get_complexity(self):
+        check_is_fitted(self, [&#39;rules_without_feature_names_&#39;])
+        return sum([len(rule.agg_dict) for rule in self.rules_without_feature_names_]) </code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier" href="bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">BayesianRuleListClassifier</a></li>
 <li><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="imodels.rule_list.rule_list.RuleList.rules"><code class="name">var <span class="ident">rules</span></code></dt>
-<dd>
-<section class="desc"><p>Built-in mutable sequence.</p>
-<p>If no argument is given, the constructor creates a new empty list.
-The argument must be an iterable if specified.</p></section>
-</dd>
-</dl>
 </dd>
 </dl>
 </section>
@@ -85,9 +83,6 @@ The argument must be an iterable if specified.</p></section>
 <ul>
 <li>
 <h4><code><a title="imodels.rule_list.rule_list.RuleList" href="#imodels.rule_list.rule_list.RuleList">RuleList</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.rule_list.rule_list.RuleList.rules" href="#imodels.rule_list.rule_list.RuleList.rules">rules</a></code></li>
-</ul>
 </li>
 </ul>
 </li>

@@ -226,17 +226,14 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
+        
         self.complexity_ = self._get_complexity()
 
         return self
 
     def _get_complexity(self):
-        complexity = 0
-        for itemset in self.final_itemsets:
-            complexity += 1
-            if len(itemset) &gt; 1 and type(itemset) != str:
-                complexity += 0.5 * (len(itemset) - 1)
-        return complexity
+        n_rule_terms = sum([len(iset) for iset in self.final_itemsets if type(iset) != str])
+        return n_rule_terms + 1
 
     # def __repr__(self, decimals=1):
     #     if self.d_star:
@@ -569,17 +566,14 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
+        
         self.complexity_ = self._get_complexity()
 
         return self
 
     def _get_complexity(self):
-        complexity = 0
-        for itemset in self.final_itemsets:
-            complexity += 1
-            if len(itemset) &gt; 1 and type(itemset) != str:
-                complexity += 0.5 * (len(itemset) - 1)
-        return complexity
+        n_rule_terms = sum([len(iset) for iset in self.final_itemsets if type(iset) != str])
+        return n_rule_terms + 1
 
     # def __repr__(self, decimals=1):
     #     if self.d_star:
@@ -814,6 +808,7 @@ If empty, all numeric features are discretized</dd>
     self.rules_ = [
         replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
     ]
+    
     self.complexity_ = self._get_complexity()
 
     return self</code></pre>
@@ -923,14 +918,6 @@ order, as they appear in the attribute <code>classes_</code>.</dd>
 </details>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="imodels.rule_list.rule_list.RuleList" href="../rule_list.html#imodels.rule_list.rule_list.RuleList">RuleList</a></b></code>:
-<ul class="hlist">
-<li><code><a title="imodels.rule_list.rule_list.RuleList.rules" href="../rule_list.html#imodels.rule_list.rule_list.RuleList.rules">rules</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 </dl>
 </section>

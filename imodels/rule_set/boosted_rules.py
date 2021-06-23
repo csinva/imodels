@@ -17,6 +17,12 @@ from imodels.util.rule import Rule, get_feature_dict, replace_feature_name
 class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, ClassifierMixin):
     '''An easy-interpretable classifier optimizing simple logical rules.
     Currently limited to only binary classification.
+    
+    Params
+    ------
+    estimator: object with fit and predict methods
+        defaults to DecisionTreeClassifier with AdaBoost
+        for SLIPPER, pass imodels.SlipperClassifier        
     '''
 
     def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1)):
