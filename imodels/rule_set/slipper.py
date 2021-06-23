@@ -1,8 +1,6 @@
 import numpy as np
 import random
 
-from joblib import Parallel, delayed
-
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import train_test_split
 
@@ -262,7 +260,7 @@ class SlipperClassifier(BaseEstimator, ClassifierMixin):
         """
         return self._rule_predict(X, self.rule)
 
-    def fit(self, X, y, sample_weight=None, features=None, n_jobs=-1):
+    def fit(self, X, y, sample_weight=None, features=None):
         """
         Main loop for training
         """

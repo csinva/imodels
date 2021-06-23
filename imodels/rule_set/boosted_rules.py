@@ -19,13 +19,9 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
     Currently limited to only binary classification.
     '''
 
-    def __init__(self, method='DT', n_estimators=10):
+    def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1)):
         self.n_estimators = n_estimators
-        self.method = method
-        if method == 'SLIPPER':
-            self.estimator = partial(SlipperClassifier)
-        elif method == 'DT': 
-            self.estimator = partial(DecisionTreeClassifier, max_depth=1)
+        self.estimator = estimator
 
     def fit(self, X, y, feature_names=None, sample_weight=None):
         """Fit the model according to the given training data.
@@ -99,7 +95,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         rules = []
 
         for est, est_weight in zip(self.estimators_, self.estimator_weights_):
-            if self.method == 'DT':
+            if type(clf) == DecisionTreeClassifier:
                 est_rules_values = tree_to_rules(est, self.feature_placeholders, prediction_values=True)
                 est_rules = list(map(lambda x: x[0], est_rules_values))
 
@@ -110,7 +106,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
                 compos_score = est_weight * rule_scores
                 rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
 
-            if self.method == 'SLIPPER':
+            if type(clf) == SlipperClassifier:
                 # SLIPPER uses uniform confidence over in rule observations
                 est_rule = dict_to_rule(est.rule, est.feature_dict)
                 rules += [Rule(est_rule, args=[est_weight])]

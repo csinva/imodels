@@ -1,4 +1,5 @@
 import numpy as np
+from functools import partial
 
 from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRuleListClassifier, \
     OneRClassifier, BoostedRulesClassifier, RuleFitClassifier, FPLassoClassifier, FPSkopeClassifier, \
@@ -33,8 +34,8 @@ class TestClassClassificationBinary:
                 init_kwargs['max_samples_features'] = 1.
             if model_type == SlipperClassifier:
                 model_type = BoostedRulesClassifier
-                init_kwargs['method'] = 'SLIPPER'
                 init_kwargs['n_estimators'] = 3
+                init_kwargs['estimator'] = partial(SlipperClassifier)
             m = model_type(**init_kwargs)
 
             X = self.X_classification_binary
