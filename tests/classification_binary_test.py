@@ -1,4 +1,5 @@
 import numpy as np
+import random
 from functools import partial
 
 from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRuleListClassifier, \
@@ -12,6 +13,7 @@ class TestClassClassificationBinary:
 
     def setup(self):
         np.random.seed(13)
+        random.seed(13)
         self.n = 40
         self.p = 2
         self.X_classification_binary = np.random.randn(self.n, self.p)
