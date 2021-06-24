@@ -34,7 +34,7 @@ class TestClassClassificationBinary:
                 init_kwargs['max_samples_features'] = 1.
             if model_type == SlipperClassifier:
                 model_type = BoostedRulesClassifier
-                init_kwargs['n_estimators'] = 3
+                init_kwargs['n_estimators'] = 1
                 init_kwargs['estimator'] = partial(SlipperClassifier)
             m = model_type(**init_kwargs)
 
