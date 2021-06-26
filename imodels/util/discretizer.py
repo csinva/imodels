@@ -2,8 +2,17 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import KBinsDiscretizer, OneHotEncoder
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+
+"""
+- wrapper around KBinsDiscretizer sklearn...
+- spits out a data frame
+- accepts full data frame and list of features to discretize
+    - handles the merging
+- better handling of pointwise bins
+"""
+
     
-class Discretizer():
+class Discretizer:
     """
     Discretize numeric data into bins. Base class.
     
@@ -51,9 +60,9 @@ class Discretizer():
             Features with 1 or more than 2 categories are left intact.
     """
     
-    def __init__(self, n_bins = 2, dcols = [],
-                 encode = 'onehot', strategy = 'quantile',
-                 onehot_drop = 'if_binary'):
+    def __init__(self, n_bins=2, dcols=[],
+                 encode='onehot', strategy='quantile',
+                 onehot_drop='if_binary'):
         self.n_bins = n_bins
         self.encode = encode
         self.strategy = strategy
@@ -105,7 +114,7 @@ class Discretizer():
 
             
     def _discretize_to_bins(self, x, bin_edges, 
-                            keep_pointwise_bins = False):
+                            keep_pointwise_bins=False):
         """
         Discretize data into bins of the form [a, b) given bin 
         edges/boundaries
@@ -218,12 +227,12 @@ class Discretizer():
             onehot_col_names = self.onehot_.get_feature_names(colnames)
             discretized_df = self.onehot_.transform(discretized_df.astype(str))
             discretized_df = pd.DataFrame(discretized_df, 
-                                          columns = onehot_col_names, 
-                                          index = X.index).astype(int)
+                                          columns=onehot_col_names, 
+                                          index=X.index).astype(int)
 
         # join discretized columns with rest of X
         cols = [col for col in X.columns if col not in self.dcols]
-        X_discretized = pd.concat([discretized_df, X[cols]], axis = 1)
+        X_discretized = pd.concat([discretized_df, X[cols]], axis=1)
 
         return X_discretized
     
@@ -293,12 +302,12 @@ class BasicDiscretizer(Discretizer):
     --------
     """
     
-    def __init__(self, n_bins = 2, dcols = [],
-                 encode = 'onehot', strategy = 'quantile',
-                 onehot_drop = 'if_binary'):
-        super().__init__(n_bins = n_bins, dcols = dcols,
-                         encode = encode, strategy = strategy,
-                         onehot_drop = onehot_drop)
+    def __init__(self, n_bins=2, dcols=[],
+                 encode='onehot', strategy='quantile',
+                 onehot_drop='if_binary'):
+        super().__init__(n_bins=n_bins, dcols=dcols,
+                         encode=encode, strategy=strategy,
+                         onehot_drop=onehot_drop)
     
     
     def fit(self, X):
@@ -319,17 +328,17 @@ class BasicDiscretizer(Discretizer):
         self._fit_preprocessing(X)
         
         # apply KBinsDiscretizer to the selected columns
-        discretizer = KBinsDiscretizer(n_bins = self.n_bins,
-                                       encode = 'ordinal', 
-                                       strategy = self.strategy)
+        discretizer = KBinsDiscretizer(n_bins=self.n_bins,
+                                       encode='ordinal', 
+                                       strategy=self.strategy)
         discretizer.fit(X[self.dcols])
         self.discretizer_ = discretizer
         
         if (self.encode == 'onehot') | (self.strategy == 'quantile'):
             discretized_df = discretizer.transform(X[self.dcols])
             discretized_df = pd.DataFrame(discretized_df, 
-                                          columns = self.dcols,
-                                          index = X.index).astype(int)
+                                          columns=self.dcols,
+                                          index=X.index).astype(int)
 
         # fix KBinsDiscretizer errors if any when strategy = "quantile"
         if self.strategy == "quantile":
@@ -341,12 +350,12 @@ class BasicDiscretizer(Discretizer):
                     q_values = np.linspace(0, 1, self.n_bins[idx]+1)
                     bin_edges = np.quantile(X[col], q_values)
                     discretized_df[col] = self._discretize_to_bins(X[col], bin_edges, 
-                                                                   keep_pointwise_bins = True)
+                                                                   keep_pointwise_bins=True)
                     self.manual_discretizer_[col] = bin_edges
                     
         # fit onehot encoded X if specified
         if self.encode == "onehot":
-            onehot = OneHotEncoder(drop = self.onehot_drop, sparse = False)
+            onehot = OneHotEncoder(drop=self.onehot_drop, sparse=False)
             onehot.fit(discretized_df.astype(str))
             self.onehot_ = onehot
         
@@ -370,15 +379,15 @@ class BasicDiscretizer(Discretizer):
         # transform using KBinsDiscretizer
         discretized_df = self.discretizer_.transform(X[self.dcols]).astype(int)
         discretized_df = pd.DataFrame(discretized_df, 
-                                      columns = self.dcols,
-                                      index = X.index)
+                                      columns=self.dcols,
+                                      index=X.index)
 
         # fix KBinsDiscretizer errors (if any) when strategy = "quantile"
         if self.strategy == "quantile":
             for col in self.manual_discretizer_.keys():
                 bin_edges = self.manual_discretizer_[col]
                 discretized_df[col] = self._discretize_to_bins(X[col], bin_edges, 
-                                                               keep_pointwise_bins = True)
+                                                               keep_pointwise_bins=True)
 
         # return onehot encoded data if specified and
         # join discretized columns with rest of X
@@ -478,13 +487,13 @@ class RFDiscretizer(Discretizer):
     --------
     """
     
-    def __init__(self, rf_model = None, classification = False,
-                 n_bins = 2, dcols = [], encode = 'onehot', 
-                 strategy = 'quantile', backup_strategy = 'quantile', 
-                 onehot_drop = 'if_binary'):
-        super().__init__(n_bins = n_bins, dcols = dcols,
-                         encode = encode, strategy = strategy,
-                         onehot_drop = onehot_drop)
+    def __init__(self, rf_model=None, classification=False,
+                 n_bins=2, dcols=[], encode='onehot', 
+                 strategy='quantile', backup_strategy='quantile', 
+                 onehot_drop='if_binary'):
+        super().__init__(n_bins=n_bins, dcols=dcols,
+                         encode=encode, strategy=strategy,
+                         onehot_drop=onehot_drop)
         self.backup_strategy = backup_strategy
         self.rf_model = rf_model
         if rf_model is None:
@@ -536,7 +545,7 @@ class RFDiscretizer(Discretizer):
         return rule_dict
             
         
-    def _fit_rf(self, X, y = None):
+    def _fit_rf(self, X, y=None):
         """
         Fit random forest (if necessary) and obtain RF split thresholds
         
@@ -560,9 +569,9 @@ class RFDiscretizer(Discretizer):
             if y is None:
                 raise ValueError("Must provide y if rf_model is not given.")
             if self.classification:
-                self.rf_model = RandomForestClassifier(n_estimators = 500)
+                self.rf_model = RandomForestClassifier(n_estimators=500)
             else:
-                self.rf_model = RandomForestRegressor(n_estimators = 500)
+                self.rf_model = RandomForestRegressor(n_estimators=500)
             self.rf_model.fit(X, y)
 
         else:
@@ -576,7 +585,7 @@ class RFDiscretizer(Discretizer):
         self.rf_splits_ = self._get_rf_splits(list(X.columns))
         
         
-    def reweight_n_bins(self, X, y = None, by = "nsplits"):
+    def reweight_n_bins(self, X, y=None, by="nsplits"):
         """
         Reallocate number of bins per feature.
 
@@ -608,7 +617,7 @@ class RFDiscretizer(Discretizer):
         self._fit_preprocessing(X)
         
         # get all random forest split points
-        self._fit_rf(X = X, y = y)
+        self._fit_rf(X=X, y=y)
         
         # get total number of bins to reallocate
         total_bins = self.n_bins.sum()
@@ -626,7 +635,7 @@ class RFDiscretizer(Discretizer):
                              .format(valid_by, by))
         
         
-    def fit(self, X, y = None):
+    def fit(self, X, y=None):
         """
         Fit the estimator.
         
@@ -647,7 +656,7 @@ class RFDiscretizer(Discretizer):
         self._fit_preprocessing(X)
         
         # get all random forest split points
-        self._fit_rf(X = X, y = y)
+        self._fit_rf(X=X, y=y)
         
         # features that were not used in the rf but need to be discretized
         self.missing_rf_cols_ = list(set(self.dcols) -\
@@ -658,10 +667,10 @@ class RFDiscretizer(Discretizer):
             missing_n_bins = np.array([self.n_bins[np.array(self.dcols) == col][0]\
                                        for col in self.missing_rf_cols_])
             
-            backup_discretizer = BasicDiscretizer(n_bins = missing_n_bins,
-                                                  dcols = self.missing_rf_cols_, 
-                                                  encode = 'ordinal', 
-                                                  strategy = self.backup_strategy)
+            backup_discretizer = BasicDiscretizer(n_bins=missing_n_bins,
+                                                  dcols=self.missing_rf_cols_, 
+                                                  encode='ordinal', 
+                                                  strategy=self.backup_strategy)
             backup_discretizer.fit(X[self.missing_rf_cols_])
             self.backup_discretizer_ = backup_discretizer
         else:
@@ -671,7 +680,7 @@ class RFDiscretizer(Discretizer):
             if len(self.missing_rf_cols_) > 0:
                 discretized_df = backup_discretizer.transform(X[self.missing_rf_cols_])
             else:
-                discretized_df = pd.DataFrame({}, index = X.index)
+                discretized_df = pd.DataFrame({}, index=X.index)
 
         # do discretization based on rf split thresholds
         self.bin_edges_ = dict()
@@ -690,7 +699,7 @@ class RFDiscretizer(Discretizer):
         
         # fit onehot encoded X if specified
         if self.encode == "onehot":
-            onehot = OneHotEncoder(drop = self.onehot_drop, sparse = False)
+            onehot = OneHotEncoder(drop=self.onehot_drop, sparse=False)
             onehot.fit(discretized_df[self.dcols].astype(str))
             self.onehot_ = onehot
         
@@ -715,10 +724,10 @@ class RFDiscretizer(Discretizer):
         if len(self.missing_rf_cols_) > 0:
             discretized_df = self.backup_discretizer_.transform(X[self.missing_rf_cols_])
             discretized_df = pd.DataFrame(discretized_df, 
-                                          columns = self.missing_rf_cols_,
-                                          index = X.index)
+                                          columns=self.missing_rf_cols_,
+                                          index=X.index)
         else:
-            discretized_df = pd.DataFrame({}, index = X.index)
+            discretized_df = pd.DataFrame({}, index=X.index)
 
         # do discretization based on rf split thresholds
         for col in self.bin_edges_.keys():
