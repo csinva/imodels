@@ -35,6 +35,7 @@ class TestBasicDiscretizer(unittest.TestCase):
         discretizer.fit(X)
         Xd = discretizer.transform(X)
         Xd_test = discretizer.transform(X_test)
+        Xd2 = discretizer.fit_transform(X)
 
         Xd_expected = pd.DataFrame({"0_1": [1, 1, 0, 0, 0],
                                     "1_1": [1, 0, 1, 1, 0], 
@@ -45,6 +46,7 @@ class TestBasicDiscretizer(unittest.TestCase):
                                          "2_1": [0, 1, 1, 0], 
                                          "3_1": [0, 0, 1, 0]})
         assert Xd.equals(Xd_expected)
+        assert Xd.equals(Xd2)
         assert Xd_test.equals(Xd_test_expected)
         
     # def test_discretizer(self):
@@ -99,6 +101,7 @@ class TestRFDiscretizer(unittest.TestCase):
         discretizer.fit(X, y)
         Xd = discretizer.transform(X)
         Xd_test = discretizer.transform(X_test)
+        Xd2 = discretizer.fit_transform(X, y)
 
         Xd_expected = pd.DataFrame({"0_1": [1, 1, 0, 0, 0],
                                     "1_1": [1, 0, 1, 1, 0], 
@@ -110,6 +113,7 @@ class TestRFDiscretizer(unittest.TestCase):
                                          "3_1": [1, 0, 1, 0]})
         # assert Xd.equals(Xd_expected)
         # assert Xd_test.equals(Xd_test_expected)
+        assert Xd.equals(Xd2)
         
     # def test_discretizer(self):
         

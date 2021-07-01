@@ -1,18 +1,25 @@
 import numpy as np
 import pandas as pd
+import numbers
 from sklearn.preprocessing import KBinsDiscretizer, OneHotEncoder
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.utils.validation import check_is_fitted, check_array
+from sklearn.base import BaseEstimator, TransformerMixin
 
 """
-- wrapper around KBinsDiscretizer sklearn...
-- spits out a data frame
-- accepts full data frame and list of features to discretize
-    - handles the merging
-- better handling of pointwise bins
+The classes below (BasicDiscretizer and RFDiscretizer) provide 
+additional functionalities and wrappers around KBinsDiscretizer 
+from sklearn. In particular, the following Discretizer classes
+    - take a data frame as input and output a data frame
+    - allow for discretization of a subset of columns in the data 
+      frame and returns the full data frame with both the 
+      discretized and non-discretized columns
+    - allow quantile bins to be a single point if necessary
+
 """
 
     
-class Discretizer:
+class Discretizer(TransformerMixin, BaseEstimator):
     """
     Discretize numeric data into bins. Base class.
     
@@ -75,15 +82,43 @@ class Discretizer:
         """
         Check if n_bins argument is valid.
         """
-        if isinstance(self.n_bins, int):
-            if self.n_bins < 2:
-                raise ValueError("Invalid number of bins. n_bins must be at least 2.");
-            self.n_bins = np.repeat(self.n_bins, len(self.dcols))
-        elif len(self.n_bins) > 1:
-            if any(self.n_bins < 2):
-                raise ValueError("Invalid number of bins. n_bins must be at least 2.");
-            elif len(self.n_bins) != len(self.dcols):
-                raise ValueError("n_bins must be an int or array-like of shape (len(dcols),)")
+        orig_bins = self.n_bins
+        n_features = len(self.dcols)
+        if isinstance(orig_bins, numbers.Number):
+            if not isinstance(orig_bins, numbers.Integral):
+                raise ValueError(
+                    "{} received an invalid n_bins type. "
+                    "Received {}, expected int.".format(
+                        Discretizer.__name__, type(orig_bins).__name__
+                    )
+                )
+            if orig_bins < 2:
+                raise ValueError(
+                    "{} received an invalid number "
+                    "of bins. Received {}, expected at least 2.".format(
+                        Discretizer.__name__, orig_bins
+                    )
+                )
+            self.n_bins = np.full(n_features, orig_bins, dtype=int)
+        else:
+            n_bins = check_array(orig_bins, dtype=int, copy=True, ensure_2d=False)
+
+            if n_bins.ndim > 1 or n_bins.shape[0] != n_features:
+                raise ValueError("n_bins must be a scalar or array of shape (n_features,).")
+
+            bad_nbins_value = (n_bins < 2) | (n_bins != orig_bins)
+
+            violating_indices = np.where(bad_nbins_value)[0]
+            if violating_indices.shape[0] > 0:
+                indices = ", ".join(str(i) for i in violating_indices)
+                raise ValueError(
+                    "{} received an invalid number "
+                    "of bins at indices {}. Number of bins "
+                    "must be at least 2, and must be an int.".format(
+                        Discretizer.__name__, indices
+                    )
+                )
+            self.n_bins = n_bins
         
         
     def _validate_dcols(self, X):
@@ -177,7 +212,7 @@ class Discretizer:
         
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : data frame of shape (n_samples, n_features)
             (Training) data to be discretized.
             
         Returns
@@ -205,10 +240,10 @@ class Discretizer:
         
         Parameters
         ----------
-        discretized_df : array-like of shape (n_sample, len(dcols))
+        discretized_df : data frame of shape (n_sample, len(dcols))
             Discretized data in the transformed bin space.
         
-        X : array-like of shape (n_samples, n_features)
+        X : data frame of shape (n_samples, n_features)
             Data to be discretized.
         
         Returns
@@ -235,11 +270,13 @@ class Discretizer:
         X_discretized = pd.concat([discretized_df, X[cols]], axis=1)
 
         return X_discretized
+        
     
     
 class BasicDiscretizer(Discretizer):
     """
-    Discretize numeric data into bins.
+    Discretize numeric data into bins. Provides a wrapper around
+    KBinsDiscretizer from sklearn
     
     Parameters
     ----------  
@@ -310,14 +347,17 @@ class BasicDiscretizer(Discretizer):
                          onehot_drop=onehot_drop)
     
     
-    def fit(self, X):
+    def fit(self, X, y=None):
         """
         Fit the estimator.
         
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : data frame of shape (n_samples, n_features)
             (Training) data to be discretized.
+        
+        y : Ignored. This parameter exists only for compatibility with
+            :class:`~sklearn.pipeline.Pipeline` and fit_transform method
             
         Returns
         -------
@@ -359,6 +399,7 @@ class BasicDiscretizer(Discretizer):
             onehot.fit(discretized_df.astype(str))
             self.onehot_ = onehot
         
+        return self
         
     def transform(self, X):
         """
@@ -366,7 +407,7 @@ class BasicDiscretizer(Discretizer):
         
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : data frame of shape (n_samples, n_features)
             Data to be discretized.
         
         Returns
@@ -375,6 +416,8 @@ class BasicDiscretizer(Discretizer):
             Data with features in dcols transformed to the 
             binned space. All other features remain unchanged.
         """
+        
+        check_is_fitted(self)
         
         # transform using KBinsDiscretizer
         discretized_df = self.discretizer_.transform(X[self.dcols]).astype(int)
@@ -438,7 +481,7 @@ class RFDiscretizer(Discretizer):
     
     backup_strategy : {‘uniform’, ‘quantile’, ‘kmeans’}, default=’quantile’
         Strategy used to define the widths of the bins if no rf splits exist for 
-        that feature.
+        that feature. Used in KBinsDiscretizer.
         
         uniform
             All bins in each feature have identical widths.
@@ -464,14 +507,14 @@ class RFDiscretizer(Discretizer):
     
     Attributes
     ----------
+    rf_splits : dictionary where
+        key = feature name
+        value = array of all RF split threshold values
+        
     bin_edges_ : dictionary where
         key = feature name
         value = array of bin edges used for discretization, taken from 
             RF split values
-        
-    rf_splits_ : dictionary where
-        key = feature name
-        value = array of all RF split threshold values
     
     missing_rf_cols_ : array-like
         List of features that were not used in RF
@@ -559,7 +602,7 @@ class RFDiscretizer(Discretizer):
         
         Returns
         -------
-        rf_splits_ : dictionary where
+        rf_splits : dictionary where
             key = feature name
             value = array of all RF split threshold values
         """
@@ -576,13 +619,13 @@ class RFDiscretizer(Discretizer):
 
         else:
             # provided rf model has not yet been trained
-            if not hasattr(self.rf_model, "estimators_"):
+            if not check_is_fitted(self.rf_model):
                 if y is None:
                     raise ValueError("Must provide y if rf_model has not been trained.")
                 self.rf_model.fit(X, y)
                 
         # get all random forest split points
-        self.rf_splits_ = self._get_rf_splits(list(X.columns))
+        self.rf_splits = self._get_rf_splits(list(X.columns))
         
         
     def reweight_n_bins(self, X, y=None, by="nsplits"):
@@ -591,7 +634,7 @@ class RFDiscretizer(Discretizer):
 
         Parameters
         ----------  
-        X : array-like of shape (n_samples, n_features)
+        X : data frame of shape (n_samples, n_features)
             (Training) data to be discretized.
             
         y : array-like of shape (n_samples,)
@@ -626,7 +669,7 @@ class RFDiscretizer(Discretizer):
         if by == "nsplits":
             # each col gets at least 2 bins; remaining bins get 
             # reallocated based on number of RF splits using that feature
-            n_rules = np.array([len(self.rf_splits_[col]) for col in self.dcols])
+            n_rules = np.array([len(self.rf_splits[col]) for col in self.dcols])
             self.n_bins = np.round(n_rules / n_rules.sum() *\
                                    (total_bins - 2 * len(self.dcols))) + 2
         else:
@@ -641,7 +684,7 @@ class RFDiscretizer(Discretizer):
         
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : data frame of shape (n_samples, n_features)
             (Training) data to be discretized.
             
         y : array-like of shape (n_samples,)
@@ -660,7 +703,7 @@ class RFDiscretizer(Discretizer):
         
         # features that were not used in the rf but need to be discretized
         self.missing_rf_cols_ = list(set(self.dcols) -\
-                                     set(self.rf_splits_.keys()))
+                                     set(self.rf_splits.keys()))
         if len(self.missing_rf_cols_) > 0:
             print("{} did not appear in random forest so were discretized via {} discretization"\
                   .format(self.missing_rf_cols_, self.strategy))
@@ -685,14 +728,14 @@ class RFDiscretizer(Discretizer):
         # do discretization based on rf split thresholds
         self.bin_edges_ = dict()
         for col in self.dcols:
-            if col in self.rf_splits_.keys():
+            if col in self.rf_splits.keys():
                 b = self.n_bins[np.array(self.dcols) == col]
                 if self.strategy == "quantile":
                     q_values = np.linspace(0, 1, int(b)+1)
-                    bin_edges = np.quantile(self.rf_splits_[col], q_values)
+                    bin_edges = np.quantile(self.rf_splits[col], q_values)
                 elif strategy == "uniform":
-                    width = (max(self.rf_splits_[col]) - min(self.rf_splits_[col])) / b
-                    bin_edges = width * np.arange(0, b+1) + min(self.rf_splits_[col])
+                    width = (max(self.rf_splits[col]) - min(self.rf_splits[col])) / b
+                    bin_edges = width * np.arange(0, b+1) + min(self.rf_splits[col])
                 self.bin_edges_[col] = bin_edges
                 if self.encode == 'onehot':
                     discretized_df[col] = self._discretize_to_bins(X[col], bin_edges)
@@ -702,6 +745,8 @@ class RFDiscretizer(Discretizer):
             onehot = OneHotEncoder(drop=self.onehot_drop, sparse=False)
             onehot.fit(discretized_df[self.dcols].astype(str))
             self.onehot_ = onehot
+            
+        return self
         
         
     def transform(self, X):
@@ -710,7 +755,7 @@ class RFDiscretizer(Discretizer):
         
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : data frame of shape (n_samples, n_features)
             Data to be discretized.
         
         Returns
@@ -719,6 +764,8 @@ class RFDiscretizer(Discretizer):
             Data with features in dcols transformed to the 
             binned space. All other features remain unchanged.
         """
+        
+        check_is_fitted(self)
         
         # transform features that did not appear in RF
         if len(self.missing_rf_cols_) > 0:
