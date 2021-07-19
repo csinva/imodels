@@ -11,6 +11,10 @@ import os
 path_to_tests = os.path.dirname(os.path.realpath(__file__))
 
 class TestBasicDiscretizer(unittest.TestCase):
+    def setup(self):
+        np.random.seed(13)
+        random.seed(13)
+    
     
     def test_discretizer_simple(self):
         """ test discretizer on small synthetic dataset
@@ -74,6 +78,10 @@ class TestBasicDiscretizer(unittest.TestCase):
     
 class TestRFDiscretizer(unittest.TestCase):
 
+    def setup(self):
+        np.random.seed(13)
+        random.seed(13)
+        
     def test_discretizer_simple(self):
         """ test discretizer on small synthetic dataset
         """
