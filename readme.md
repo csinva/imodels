@@ -64,7 +64,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 <p align="center">
 Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementation 🔗, Research paper 📄
 </br>
-  More models coming soon! See also our [effective discretizers](https://csinva.io/imodels/util/discretizer.html) for data preprocessing.
+  More models coming soon! See also our <a href="https://csinva.io/imodels/util/discretizer.html">fast and effective discretizers</a> for data preprocessing.
 </p>
 
 The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
