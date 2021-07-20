@@ -23,8 +23,8 @@ class Discretizer(TransformerMixin, BaseEstimator):
     """
     Discretize numeric data into bins. Base class.
     
-    Parameters
-    ----------  
+    Params
+    ------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
         
@@ -52,8 +52,7 @@ class Discretizer(TransformerMixin, BaseEstimator):
             Values in each bin have the same nearest center of a 1D
             k-means cluster.
     
-    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape 
-    (len(dcols),), default='if_binary'
+    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape (len(dcols),), default='if_binary'
         Specifies a methodology to use to drop one of the categories 
         per feature when encode = "onehot".
         
@@ -278,8 +277,8 @@ class BasicDiscretizer(Discretizer):
     Discretize numeric data into bins. Provides a wrapper around
     KBinsDiscretizer from sklearn
     
-    Parameters
-    ----------  
+    Params
+    ------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
         
@@ -307,8 +306,7 @@ class BasicDiscretizer(Discretizer):
             Values in each bin have the same nearest center of a 1D
             k-means cluster.
     
-    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape 
-    (len(dcols),), default='if_binary'
+    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape  (len(dcols),), default='if_binary'
         Specifies a methodology to use to drop one of the categories 
         per feature when encode = "onehot".
         
@@ -444,7 +442,7 @@ class RFDiscretizer(Discretizer):
     Discretize numeric data into bins using RF splits.
     
     Parameters
-    ----------  
+    ----------
     rf_model : RandomForestClassifer() or RandomForestRegressor()
         RF model from which to extract splits for discretization. 
         Default is RandomForestClassifer(n_estimators = 500) or 
@@ -465,24 +463,18 @@ class RFDiscretizer(Discretizer):
     encode : {‘onehot’, ‘ordinal’}, default=’onehot’
         Method used to encode the transformed result.
         
-        onehot
-            Encode the transformed result with one-hot encoding and
+        onehot - Encode the transformed result with one-hot encoding and
             return a dense array.
-        ordinal
-            Return the bin identifier encoded as an integer value.
+        ordinal - Return the bin identifier encoded as an integer value.
             
     strategy : {‘uniform’, ‘quantile’}, default=’quantile’
         Strategy used to choose RF split points.
-        
-        uniform
-            RF split points chosen to be uniformly spaced out.
-        quantile
-            RF split points chosen based on equally-spaced quantiles.
+        uniform - RF split points chosen to be uniformly spaced out.
+        quantile - RF split points chosen based on equally-spaced quantiles.
     
     backup_strategy : {‘uniform’, ‘quantile’, ‘kmeans’}, default=’quantile’
         Strategy used to define the widths of the bins if no rf splits exist for 
         that feature. Used in KBinsDiscretizer.
-        
         uniform
             All bins in each feature have identical widths.
         quantile
@@ -491,11 +483,9 @@ class RFDiscretizer(Discretizer):
             Values in each bin have the same nearest center of a 1D
             k-means cluster.
     
-    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape 
-    (len(dcols),), default='if_binary'
+    onehot_drop : {‘first’, ‘if_binary’} or array-like of shape  (len(dcols),), default='if_binary'
         Specifies a methodology to use to drop one of the categories
         per feature when encode = "onehot".
-        
         None
             Retain all features (the default).
         ‘first’
@@ -525,9 +515,7 @@ class RFDiscretizer(Discretizer):
         
     onehot_ : object of class OneHotEncoder()
         One hot encoding fit. Ignored if encode != 'onehot'
-        
-    Examples
-    --------
+
     """
     
     def __init__(self, rf_model=None, classification=False,

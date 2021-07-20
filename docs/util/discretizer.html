@@ -49,8 +49,8 @@ class Discretizer(TransformerMixin, BaseEstimator):
     &#34;&#34;&#34;
     Discretize numeric data into bins. Base class.
     
-    Parameters
-    ----------  
+    Params
+    ------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
         
@@ -78,8 +78,7 @@ class Discretizer(TransformerMixin, BaseEstimator):
             Values in each bin have the same nearest center of a 1D
             k-means cluster.
     
-    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape 
-    (len(dcols),), default=&#39;if_binary&#39;
+    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape (len(dcols),), default=&#39;if_binary&#39;
         Specifies a methodology to use to drop one of the categories 
         per feature when encode = &#34;onehot&#34;.
         
@@ -304,8 +303,8 @@ class BasicDiscretizer(Discretizer):
     Discretize numeric data into bins. Provides a wrapper around
     KBinsDiscretizer from sklearn
     
-    Parameters
-    ----------  
+    Params
+    ------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
         
@@ -333,8 +332,7 @@ class BasicDiscretizer(Discretizer):
             Values in each bin have the same nearest center of a 1D
             k-means cluster.
     
-    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape 
-    (len(dcols),), default=&#39;if_binary&#39;
+    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape  (len(dcols),), default=&#39;if_binary&#39;
         Specifies a methodology to use to drop one of the categories 
         per feature when encode = &#34;onehot&#34;.
         
@@ -470,7 +468,7 @@ class RFDiscretizer(Discretizer):
     Discretize numeric data into bins using RF splits.
     
     Parameters
-    ----------  
+    ----------
     rf_model : RandomForestClassifer() or RandomForestRegressor()
         RF model from which to extract splits for discretization. 
         Default is RandomForestClassifer(n_estimators = 500) or 
@@ -491,24 +489,18 @@ class RFDiscretizer(Discretizer):
     encode : {‘onehot’, ‘ordinal’}, default=’onehot’
         Method used to encode the transformed result.
         
-        onehot
-            Encode the transformed result with one-hot encoding and
+        onehot - Encode the transformed result with one-hot encoding and
             return a dense array.
-        ordinal
-            Return the bin identifier encoded as an integer value.
+        ordinal - Return the bin identifier encoded as an integer value.
             
     strategy : {‘uniform’, ‘quantile’}, default=’quantile’
         Strategy used to choose RF split points.
-        
-        uniform
-            RF split points chosen to be uniformly spaced out.
-        quantile
-            RF split points chosen based on equally-spaced quantiles.
+        uniform - RF split points chosen to be uniformly spaced out.
+        quantile - RF split points chosen based on equally-spaced quantiles.
     
     backup_strategy : {‘uniform’, ‘quantile’, ‘kmeans’}, default=’quantile’
         Strategy used to define the widths of the bins if no rf splits exist for 
         that feature. Used in KBinsDiscretizer.
-        
         uniform
             All bins in each feature have identical widths.
         quantile
@@ -517,11 +509,9 @@ class RFDiscretizer(Discretizer):
             Values in each bin have the same nearest center of a 1D
             k-means cluster.
     
-    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape 
-    (len(dcols),), default=&#39;if_binary&#39;
+    onehot_drop : {‘first’, ‘if_binary’} or array-like of shape  (len(dcols),), default=&#39;if_binary&#39;
         Specifies a methodology to use to drop one of the categories
         per feature when encode = &#34;onehot&#34;.
-        
         None
             Retain all features (the default).
         ‘first’
@@ -551,9 +541,7 @@ class RFDiscretizer(Discretizer):
         
     onehot_ : object of class OneHotEncoder()
         One hot encoding fit. Ignored if encode != &#39;onehot&#39;
-        
-    Examples
-    --------
+
     &#34;&#34;&#34;
     
     def __init__(self, rf_model=None, classification=False,
@@ -829,43 +817,48 @@ class RFDiscretizer(Discretizer):
 <dd>
 <section class="desc"><p>Discretize numeric data into bins. Provides a wrapper around
 KBinsDiscretizer from sklearn</p>
-<h2 id="parameters">Parameters</h2>
-<p>n_bins : int or array-like of shape (len(dcols),), default=2
-Number of bins to discretize each feature into.</p>
-<p>dcols : list of strings
-The names of the columns to be discretized; by default,
-discretize all float and int columns in X.</p>
-<p>encode : {‘onehot’, ‘ordinal’}, default=’onehot’
-Method used to encode the transformed result.</p>
-<pre><code>onehot
-    Encode the transformed result with one-hot encoding and
-    return a dense array.
+<h2 id="params">Params</h2>
+<dl>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code> or <code>array</code>-<code>like</code> of <code>shape</code> (<code>len</code>(<code>dcols</code>),), default=<code>2</code></dt>
+<dd>Number of bins to discretize each feature into.</dd>
+<dt><strong><code>dcols</code></strong> :&ensp;<code>list</code> of <code>strings</code></dt>
+<dd>The names of the columns to be discretized; by default,
+discretize all float and int columns in X.</dd>
+<dt><strong><code>encode</code></strong> :&ensp;{‘<code>onehot</code>’, ‘<code>ordinal</code>’}, default=’<code>onehot</code>’</dt>
+<dd>
+<p>Method used to encode the transformed result.</p>
+<p>onehot
+Encode the transformed result with one-hot encoding and
+return a dense array.
 ordinal
-    Return the bin identifier encoded as an integer value.
-</code></pre>
-<p>strategy : {‘uniform’, ‘quantile’, ‘kmeans’}, default=’quantile’
-Strategy used to define the widths of the bins.</p>
-<pre><code>uniform
-    All bins in each feature have identical widths.
+Return the bin identifier encoded as an integer value.</p>
+</dd>
+<dt><strong><code>strategy</code></strong> :&ensp;{‘<code>uniform</code>’, ‘<code>quantile</code>’, ‘<code>kmeans</code>’}, default=’<code>quantile</code>’</dt>
+<dd>
+<p>Strategy used to define the widths of the bins.</p>
+<p>uniform
+All bins in each feature have identical widths.
 quantile
-    All bins in each feature have the same number of points.
+All bins in each feature have the same number of points.
 kmeans
-    Values in each bin have the same nearest center of a 1D
-    k-means cluster.
-</code></pre>
-<p>onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape
-(len(dcols),), default='if_binary'
-Specifies a methodology to use to drop one of the categories
+Values in each bin have the same nearest center of a 1D
+k-means cluster.</p>
+</dd>
+<dt><strong><code>onehot_drop</code></strong> :&ensp;{‘<code>first</code>’, ‘<code>if_binary</code>’} or <code>a</code> <code>array</code>-<code>like</code> of <code>shape</code>
+(<code>len</code>(<code>dcols</code>),), default=<code>'if_binary'</code></dt>
+<dd>
+<p>Specifies a methodology to use to drop one of the categories
 per feature when encode = "onehot".</p>
-<pre><code>None
-    Retain all features (the default).
+<p>None
+Retain all features (the default).
 ‘first’
-    Drop the first category in each feature. If only one category 
-    is present, the feature will be dropped entirely.
+Drop the first category in each feature. If only one category
+is present, the feature will be dropped entirely.
 ‘if_binary’
-    Drop the first category in each feature with two categories.
-    Features with 1 or more than 2 categories are left intact.
-</code></pre>
+Drop the first category in each feature with two categories.
+Features with 1 or more than 2 categories are left intact.</p>
+</dd>
+</dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
 <dt><strong><code>discretizer_</code></strong> :&ensp;<code>object</code> of <code>class</code> <code>KBinsDiscretizer</code>()</dt>
@@ -888,8 +881,8 @@ or no errors in KBinsDiscretizer().</dd>
     Discretize numeric data into bins. Provides a wrapper around
     KBinsDiscretizer from sklearn
     
-    Parameters
-    ----------  
+    Params
+    ------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
         
@@ -917,8 +910,7 @@ or no errors in KBinsDiscretizer().</dd>
             Values in each bin have the same nearest center of a 1D
             k-means cluster.
     
-    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape 
-    (len(dcols),), default=&#39;if_binary&#39;
+    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape  (len(dcols),), default=&#39;if_binary&#39;
         Specifies a methodology to use to drop one of the categories 
         per feature when encode = &#34;onehot&#34;.
         
@@ -1198,43 +1190,47 @@ binned space. All other features remain unchanged.</dd>
 </code></dt>
 <dd>
 <section class="desc"><p>Discretize numeric data into bins. Base class.</p>
-<h2 id="parameters">Parameters</h2>
-<p>n_bins : int or array-like of shape (len(dcols),), default=2
-Number of bins to discretize each feature into.</p>
-<p>dcols : list of strings
-The names of the columns to be discretized; by default,
-discretize all float and int columns in X.</p>
-<p>encode : {‘onehot’, ‘ordinal’}, default=’onehot’
-Method used to encode the transformed result.</p>
-<pre><code>onehot
-    Encode the transformed result with one-hot encoding and
-    return a dense array.
+<h2 id="params">Params</h2>
+<dl>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code> or <code>array</code>-<code>like</code> of <code>shape</code> (<code>len</code>(<code>dcols</code>),), default=<code>2</code></dt>
+<dd>Number of bins to discretize each feature into.</dd>
+<dt><strong><code>dcols</code></strong> :&ensp;<code>list</code> of <code>strings</code></dt>
+<dd>The names of the columns to be discretized; by default,
+discretize all float and int columns in X.</dd>
+<dt><strong><code>encode</code></strong> :&ensp;{‘<code>onehot</code>’, ‘<code>ordinal</code>’}, default=’<code>onehot</code>’</dt>
+<dd>
+<p>Method used to encode the transformed result.</p>
+<p>onehot
+Encode the transformed result with one-hot encoding and
+return a dense array.
 ordinal
-    Return the bin identifier encoded as an integer value.
-</code></pre>
-<p>strategy : {‘uniform’, ‘quantile’, ‘kmeans’}, default=’quantile’
-Strategy used to define the widths of the bins.</p>
-<pre><code>uniform
-    All bins in each feature have identical widths.
+Return the bin identifier encoded as an integer value.</p>
+</dd>
+<dt><strong><code>strategy</code></strong> :&ensp;{‘<code>uniform</code>’, ‘<code>quantile</code>’, ‘<code>kmeans</code>’}, default=’<code>quantile</code>’</dt>
+<dd>
+<p>Strategy used to define the widths of the bins.</p>
+<p>uniform
+All bins in each feature have identical widths.
 quantile
-    All bins in each feature have the same number of points.
+All bins in each feature have the same number of points.
 kmeans
-    Values in each bin have the same nearest center of a 1D
-    k-means cluster.
-</code></pre>
-<p>onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape
-(len(dcols),), default='if_binary'
-Specifies a methodology to use to drop one of the categories
+Values in each bin have the same nearest center of a 1D
+k-means cluster.</p>
+</dd>
+<dt><strong><code>onehot_drop</code></strong> :&ensp;{‘<code>first</code>’, ‘<code>if_binary</code>’} or <code>a</code> <code>array</code>-<code>like</code> of <code>shape</code> (<code>len</code>(<code>dcols</code>),), default=<code>'if_binary'</code></dt>
+<dd>
+<p>Specifies a methodology to use to drop one of the categories
 per feature when encode = "onehot".</p>
-<pre><code>None
-    Retain all features (the default).
+<p>None
+Retain all features (the default).
 ‘first’
-    Drop the first category in each feature. If only one category 
-    is present, the feature will be dropped entirely.
+Drop the first category in each feature. If only one category
+is present, the feature will be dropped entirely.
 ‘if_binary’
-    Drop the first category in each feature with two categories.
-    Features with 1 or more than 2 categories are left intact.
-</code></pre></section>
+Drop the first category in each feature with two categories.
+Features with 1 or more than 2 categories are left intact.</p>
+</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1243,8 +1239,8 @@ per feature when encode = "onehot".</p>
     &#34;&#34;&#34;
     Discretize numeric data into bins. Base class.
     
-    Parameters
-    ----------  
+    Params
+    ------
     n_bins : int or array-like of shape (len(dcols),), default=2
         Number of bins to discretize each feature into.
         
@@ -1272,8 +1268,7 @@ per feature when encode = "onehot".</p>
             Values in each bin have the same nearest center of a 1D
             k-means cluster.
     
-    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape 
-    (len(dcols),), default=&#39;if_binary&#39;
+    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape (len(dcols),), default=&#39;if_binary&#39;
         Specifies a methodology to use to drop one of the categories 
         per feature when encode = &#34;onehot&#34;.
         
@@ -1509,58 +1504,54 @@ per feature when encode = "onehot".</p>
 <dd>
 <section class="desc"><p>Discretize numeric data into bins using RF splits.</p>
 <h2 id="parameters">Parameters</h2>
-<p>rf_model : RandomForestClassifer() or RandomForestRegressor()
-RF model from which to extract splits for discretization.
+<dl>
+<dt><strong><code>rf_model</code></strong> :&ensp;<code>RandomForestClassifer</code>() or <code>RandomForestRegressor</code>()</dt>
+<dd>RF model from which to extract splits for discretization.
 Default is RandomForestClassifer(n_estimators = 500) or
-RandomForestRegressor(n_estimators = 500)</p>
-<p>classification : boolean; default=False
-Used only if rf_model=None. If True,
+RandomForestRegressor(n_estimators = 500)</dd>
+<dt><strong><code>classification</code></strong> :&ensp;<code>boolean</code>; default=<code>False</code></dt>
+<dd>Used only if rf_model=None. If True,
 rf_model=RandomForestClassifier(n_estimators = 500).
-Else, rf_model=RandomForestRegressor(n_estimators = 500)</p>
-<p>n_bins : int or array-like of shape (len(dcols),), default=2
-Number of bins to discretize each feature into.</p>
-<p>dcols : list of strings
-The names of the columns to be discretized; by default,
-discretize all float and int columns in X.</p>
-<p>encode : {‘onehot’, ‘ordinal’}, default=’onehot’
-Method used to encode the transformed result.</p>
-<pre><code>onehot
-    Encode the transformed result with one-hot encoding and
-    return a dense array.
-ordinal
-    Return the bin identifier encoded as an integer value.
-</code></pre>
-<p>strategy : {‘uniform’, ‘quantile’}, default=’quantile’
-Strategy used to choose RF split points.</p>
-<pre><code>uniform
-    RF split points chosen to be uniformly spaced out.
+Else, rf_model=RandomForestRegressor(n_estimators = 500)</dd>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code> or <code>array</code>-<code>like</code> of <code>shape</code> (<code>len</code>(<code>dcols</code>),), default=<code>2</code></dt>
+<dd>Number of bins to discretize each feature into.</dd>
+<dt><strong><code>dcols</code></strong> :&ensp;<code>list</code> of <code>strings</code></dt>
+<dd>The names of the columns to be discretized; by default,
+discretize all float and int columns in X.</dd>
+<dt><strong><code>encode</code></strong> :&ensp;{‘<code>onehot</code>’, ‘<code>ordinal</code>’}, default=’<code>onehot</code>’</dt>
+<dd>
+<p>Method used to encode the transformed result.</p>
+<p>onehot - Encode the transformed result with one-hot encoding and
+return a dense array.
+ordinal - Return the bin identifier encoded as an integer value.</p>
+</dd>
+<dt><strong><code>strategy</code></strong> :&ensp;{‘<code>uniform</code>’, ‘<code>quantile</code>’}, default=’<code>quantile</code>’</dt>
+<dd>Strategy used to choose RF split points.
+uniform - RF split points chosen to be uniformly spaced out.
+quantile - RF split points chosen based on equally-spaced quantiles.</dd>
+<dt><strong><code>backup_strategy</code></strong> :&ensp;{‘<code>uniform</code>’, ‘<code>quantile</code>’, ‘<code>kmeans</code>’}, default=’<code>quantile</code>’</dt>
+<dd>Strategy used to define the widths of the bins if no rf splits exist for
+that feature. Used in KBinsDiscretizer.
+uniform
+All bins in each feature have identical widths.
 quantile
-    RF split points chosen based on equally-spaced quantiles.
-</code></pre>
-<p>backup_strategy : {‘uniform’, ‘quantile’, ‘kmeans’}, default=’quantile’
-Strategy used to define the widths of the bins if no rf splits exist for
-that feature. Used in KBinsDiscretizer.</p>
-<pre><code>uniform
-    All bins in each feature have identical widths.
-quantile
-    All bins in each feature have the same number of points.
+All bins in each feature have the same number of points.
 kmeans
-    Values in each bin have the same nearest center of a 1D
-    k-means cluster.
-</code></pre>
-<p>onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape
-(len(dcols),), default='if_binary'
-Specifies a methodology to use to drop one of the categories
-per feature when encode = "onehot".</p>
-<pre><code>None
-    Retain all features (the default).
+Values in each bin have the same nearest center of a 1D
+k-means cluster.</dd>
+<dt><strong><code>onehot_drop</code></strong> :&ensp;{‘<code>first</code>’, ‘<code>if_binary</code>’} or <code>array</code>-<code>like</code> of <code>shape</code>
+(<code>len</code>(<code>dcols</code>),), default=<code>'if_binary'</code></dt>
+<dd>Specifies a methodology to use to drop one of the categories
+per feature when encode = "onehot".
+None
+Retain all features (the default).
 ‘first’
-    Drop the first category in each feature. If only one category 
-    is present, the feature will be dropped entirely.
+Drop the first category in each feature. If only one category
+is present, the feature will be dropped entirely.
 ‘if_binary’
-    Drop the first category in each feature with two categories.
-    Features with 1 or more than 2 categories are left intact.
-</code></pre>
+Drop the first category in each feature with two categories.
+Features with 1 or more than 2 categories are left intact.</dd>
+</dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
 <dt><strong><code>rf_splits</code></strong> :&ensp;<code>dictionary</code> <code>where</code></dt>
@@ -1577,8 +1568,7 @@ RF split values</dd>
 in missing_rf_cols_</dd>
 <dt><strong><code>onehot_</code></strong> :&ensp;<code>object</code> of <code>class</code> <code>OneHotEncoder</code>()</dt>
 <dd>One hot encoding fit. Ignored if encode != 'onehot'</dd>
-</dl>
-<h2 id="examples">Examples</h2></section>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1588,7 +1578,7 @@ in missing_rf_cols_</dd>
     Discretize numeric data into bins using RF splits.
     
     Parameters
-    ----------  
+    ----------
     rf_model : RandomForestClassifer() or RandomForestRegressor()
         RF model from which to extract splits for discretization. 
         Default is RandomForestClassifer(n_estimators = 500) or 
@@ -1609,24 +1599,18 @@ in missing_rf_cols_</dd>
     encode : {‘onehot’, ‘ordinal’}, default=’onehot’
         Method used to encode the transformed result.
         
-        onehot
-            Encode the transformed result with one-hot encoding and
+        onehot - Encode the transformed result with one-hot encoding and
             return a dense array.
-        ordinal
-            Return the bin identifier encoded as an integer value.
+        ordinal - Return the bin identifier encoded as an integer value.
             
     strategy : {‘uniform’, ‘quantile’}, default=’quantile’
         Strategy used to choose RF split points.
-        
-        uniform
-            RF split points chosen to be uniformly spaced out.
-        quantile
-            RF split points chosen based on equally-spaced quantiles.
+        uniform - RF split points chosen to be uniformly spaced out.
+        quantile - RF split points chosen based on equally-spaced quantiles.
     
     backup_strategy : {‘uniform’, ‘quantile’, ‘kmeans’}, default=’quantile’
         Strategy used to define the widths of the bins if no rf splits exist for 
         that feature. Used in KBinsDiscretizer.
-        
         uniform
             All bins in each feature have identical widths.
         quantile
@@ -1635,11 +1619,9 @@ in missing_rf_cols_</dd>
             Values in each bin have the same nearest center of a 1D
             k-means cluster.
     
-    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape 
-    (len(dcols),), default=&#39;if_binary&#39;
+    onehot_drop : {‘first’, ‘if_binary’} or array-like of shape  (len(dcols),), default=&#39;if_binary&#39;
         Specifies a methodology to use to drop one of the categories
         per feature when encode = &#34;onehot&#34;.
-        
         None
             Retain all features (the default).
         ‘first’
@@ -1669,9 +1651,7 @@ in missing_rf_cols_</dd>
         
     onehot_ : object of class OneHotEncoder()
         One hot encoding fit. Ignored if encode != &#39;onehot&#39;
-        
-    Examples
-    --------
+
     &#34;&#34;&#34;
     
     def __init__(self, rf_model=None, classification=False,

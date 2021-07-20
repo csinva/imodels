@@ -59,12 +59,12 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | Optimal rule tree           | [🗂️](https://csinva.io/imodels/tree/optimal_classification_tree/index.html), [🔗](https://github.com/pan5431333/pyoptree), [📄](https://link.springer.com/article/10.1007/s10994-017-5633-9) | (In progress) Learns succinct trees using global optimization rather than greedy heuristics |
 | Iterative random forest     | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [🔗](https://github.com/Yu-Group/iterative-Random-Forest), [📄](https://www.pnas.org/content/115/8/1943) | (In progress) Repeatedly fit random forest, giving features with high importance a higher chance of being selected. |
 | Sparse integer linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Forces coefficients to be integers                           |
-| Rule sets                   | ⌛                                                            | (Coming soon) Many popular rule sets including Lightweight Rule Induction, MLRules |
+| Rule sets                   | ⌛                                                            | (Coming soon!) Many popular rule sets including Lightweight Rule Induction, MLRules |
 
 <p align="center">
 Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementation 🔗, Research paper 📄
 </br>
-  More models coming soon! See also our <a href="https://csinva.io/imodels/util/discretizer.html">fast and effective discretizers</a> for data preprocessing.
+  See also our <a href="https://csinva.io/imodels/util/discretizer.html">fast and effective discretizers</a> for data preprocessing.
 </p>
 
 The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
