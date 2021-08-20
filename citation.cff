@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Singh"
+  given-names: "Chandan"
+- family-names: "Nasseri"
+  given-names: "Keyan"
+- family-names: "Tan"
+  given-names: "Yan Shuo"
+- family-names: "Tang"
+  given-names: "Tiffany"
+- family-names: "Yu"
+  given-names: "Bin"
+title: "imodels: a python package for fitting interpretable models"
+journal: "Journal of Open Source Software"
+doi: 10.21105/joss.03192
+date-released: 2021-05-04
+url: "https://doi.org/10.21105/joss.03192"
