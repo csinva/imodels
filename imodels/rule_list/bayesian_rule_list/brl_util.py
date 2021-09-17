@@ -27,14 +27,6 @@
 # The author/copyright holder can be contacted at bletham@mit.edu
 
 ####README
-#
-# This code implements the Bayesian Rule Lists algorithm as described in the
-# paper. We include the Titanic dataset in the correct formatting to be used
-# by this code.
-#
-# This code requires the external frequent itemset mining package "PyFIM,"
-# available at http://www.borgelt.net/pyfim.html
-#
 # It is specific to binary classification with binary features (although could
 # easily be extended to multiclass).
 #

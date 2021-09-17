@@ -42,7 +42,7 @@
 </p>
 <h2 id="imodels-overview">imodels overview</h2>
 <p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
-<pre><code class="python">from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
+<pre><code class="language-python">from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
 from imodels import SLIMRegressor, RuleFitRegressor
 
 model = BayesianRuleListClassifier()  # initialize a model
@@ -282,7 +282,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 </li>
 </ul>
 <p>If it's useful for you, please cite the package using the below, and make sure to give authors of original methods / base implementations credit:</p>
-<pre><code class="r">@software{
+<pre><code class="language-r">@software{
     imodels2021,
     title        = {{imodels: a python package for fitting interpretable models}},
     journal      = {Journal of Open Source Software}
@@ -319,6 +319,7 @@ from .rule_set.fpskope import FPSkopeClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.slipper import SlipperClassifier
+from .rule_set.boa import BOAClassifier
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier]  # , IRFClassifier
@@ -339,6 +340,10 @@ REGRESSORS = [RuleFitRegressor, SLIMRegressor]</code></pre>
 <dt><code class="name"><a title="imodels.rule_set" href="rule_set/index.html">rule_set</a></code></dt>
 <dd>
 <section class="desc"><p>Generic class for models that take the form of a set of (potentially overlapping) rules.</p></section>
+</dd>
+<dt><code class="name"><a title="imodels.tests" href="tests/index.html">tests</a></code></dt>
+<dd>
+<section class="desc"></section>
 </dd>
 <dt><code class="name"><a title="imodels.tree" href="tree/index.html">tree</a></code></dt>
 <dd>
@@ -377,6 +382,7 @@ REGRESSORS = [RuleFitRegressor, SLIMRegressor]</code></pre>
 <li><code><a title="imodels.algebraic" href="algebraic/index.html">algebraic</a></code></li>
 <li><code><a title="imodels.rule_list" href="rule_list/index.html">rule_list</a></code></li>
 <li><code><a title="imodels.rule_set" href="rule_set/index.html">rule_set</a></code></li>
+<li><code><a title="imodels.tests" href="tests/index.html">tests</a></code></li>
 <li><code><a title="imodels.tree" href="tree/index.html">tree</a></code></li>
 <li><code><a title="imodels.util" href="util/index.html">util</a></code></li>
 </ul>

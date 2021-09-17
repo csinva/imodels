@@ -2,11 +2,10 @@ from typing import Iterable, Tuple, List
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import BaggingClassifier, BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor
-from sklearn.preprocessing import KBinsDiscretizer
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from mlxtend.frequent_patterns import fpgrowth
+from sklearn.ensemble import BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.utils.validation import check_array
 
 from imodels.util.convert import tree_to_rules
 from imodels.util.discretization import BRLDiscretizer, SimpleDiscretizer
@@ -17,10 +16,9 @@ def extract_fpgrowth(X, y,
                      minsupport=0.1,
                      maxcardinality=2,
                      undiscretized_features=[],
-                     disc_strategy = 'simple',
-                     disc_kwargs = {},
+                     disc_strategy='simple',
+                     disc_kwargs={},
                      verbose=False) -> Tuple[List[Tuple], BRLDiscretizer]:
-
     # deal with pandas data
     if type(X) in [pd.DataFrame, pd.Series]:
         if feature_names is None:
@@ -35,7 +33,7 @@ def extract_fpgrowth(X, y,
     else:
         discretizer = SimpleDiscretizer(**disc_kwargs)
         discretizer.fit(X, feature_names)
-    
+
     X_df_onehot = discretizer.transform(X)
 
     # Now find frequent itemsets
@@ -56,16 +54,15 @@ def extract_rulefit(X, y, feature_names,
                     tree_generator=None,
                     exp_rand_tree_size=True,
                     random_state=None) -> List[str]:
-
     if tree_generator is None:
         sample_fract_ = min(0.5, (100 + 6 * np.sqrt(X.shape[0])) / X.shape[0])
 
         tree_generator = GradientBoostingRegressor(n_estimators=n_estimators,
-                                                    max_leaf_nodes=tree_size,
-                                                    learning_rate=memory_par,
-                                                    subsample=sample_fract_,
-                                                    random_state=random_state,
-                                                    max_depth=100)
+                                                   max_leaf_nodes=tree_size,
+                                                   learning_rate=memory_par,
+                                                   subsample=sample_fract_,
+                                                   random_state=random_state,
+                                                   max_depth=100)
 
     if type(tree_generator) not in [GradientBoostingRegressor, RandomForestRegressor]:
         raise ValueError("RuleFit only works with RandomForest and BoostingRegressor")
@@ -96,19 +93,19 @@ def extract_rulefit(X, y, feature_names,
         estimators_ = tree_generator.estimators_
 
     seen_antecedents = set()
-    extracted_rules = [] 
+    extracted_rules = []
     for estimator in estimators_:
         for rule_value_pair in tree_to_rules(estimator[0], np.array(feature_names), prediction_values=True):
             if rule_value_pair[0] not in seen_antecedents:
                 extracted_rules.append(rule_value_pair)
                 seen_antecedents.add(rule_value_pair[0])
-    
+
     extracted_rules = sorted(extracted_rules, key=lambda x: x[1])
     extracted_rules = list(map(lambda x: x[0], extracted_rules))
     return extracted_rules
 
 
-def extract_skope(X, y, feature_names, 
+def extract_skope(X, y, feature_names,
                   sample_weight=None,
                   n_estimators=10,
                   max_samples=.8,
@@ -121,14 +118,13 @@ def extract_skope(X, y, feature_names,
                   n_jobs=1,
                   random_state=None,
                   verbose=0) -> Tuple[List[str], List[np.array], List[np.array]]:
-    
     ensembles = []
     if not isinstance(max_depths, Iterable):
         max_depths = [max_depths]
 
     for max_depth in max_depths:
         bagging_clf = BaggingRegressor(
-            base_estimator= DecisionTreeRegressor(
+            base_estimator=DecisionTreeRegressor(
                 max_depth=max_depth,
                 max_features=max_features,
                 min_samples_split=min_samples_split
@@ -173,5 +169,5 @@ def extract_skope(X, y, feature_names,
     extracted_rules = []
     for estimator, features in zip(estimators_, estimators_features_):
         extracted_rules.append(tree_to_rules(estimator, np.array(feature_names)[features]))
-    
+
     return extracted_rules, estimators_samples_, estimators_features_

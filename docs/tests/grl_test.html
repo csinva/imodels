@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.util.discretization API documentation</title>
-<meta name="description" content="Discretization MDLP
-Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation algorithm …" />
+<title>imodels.tests.grl_test API documentation</title>
+<meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -18,104 +17,168 @@ Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation alg
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.util.discretization</code></h1>
+<h1 class="title">Module <code>imodels.tests.grl_test</code></h1>
 </header>
 <section id="section-intro">
-<h1 id="discretization-mdlp">Discretization MDLP</h1>
-<p>Python implementation of Fayyad and Irani's MDLP criterion discretiation algorithm</p>
-<p><strong>Reference:</strong></p>
-<p>Irani, Keki B. "Multi-interval discretization of continuous-valued attributes for classiﬁcation learning." (1993).</p>
-<p><strong>Instructions:</strong></p>
-<ol>
-<li>Download Entropy.py and MDLPC.py</li>
-<li>In a terminal, cd into the directory where the .py files were saved</li>
-<li>run the following command:
-python MDLPC.py &ndash;options=&hellip;</li>
-</ol>
-<p>script options:
-* in_path (required): Path to dataset in .csv format (must include header)
-* out_path (required): Path where the discretized dataset will be saved
-* features (optional): comma-separated list of attribute names to be discretized, e.g., features=attr1,attr2,attr3
-* class_label (required): label of class column in .csv dataset
-* return_bins (optional): Doesn't take on values. If specified (&ndash;return_bins), a text file will be saved in the same directory as out_path. This file will include the description of the bins computed by the algorighm.</p>
-<p><strong>Dependencies:</strong></p>
-<ol>
-<li>Pandas</li>
-<li>Numpy</li>
-</ol>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#39;&#39;&#39;
-# Discretization MDLP
-Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation algorithm
+<pre><code class="python">import unittest
 
-**Reference:**
+import numpy as np
 
-Irani, Keki B. &#34;Multi-interval discretization of continuous-valued attributes for classiﬁcation learning.&#34; (1993).
+from imodels.rule_list.greedy_rule_list import GreedyRuleListClassifier
 
-**Instructions:**
 
-1. Download Entropy.py and MDLPC.py
-2. In a terminal, cd into the directory where the .py files were saved
-3. run the following command:
-  python MDLPC.py --options=...
-  
-script options:
-* in_path (required): Path to dataset in .csv format (must include header)
-* out_path (required): Path where the discretized dataset will be saved
-* features (optional): comma-separated list of attribute names to be discretized, e.g., features=attr1,attr2,attr3
-* class_label (required): label of class column in .csv dataset
-* return_bins (optional): Doesn&#39;t take on values. If specified (--return_bins), a text file will be saved in the same directory as out_path. This file will include the description of the bins computed by the algorighm.
+class TestGRL(unittest.TestCase):
 
-**Dependencies:**
-
-1. Pandas
-2. Numpy
-&#39;&#39;&#39;
-
-from .mdlp import BRLDiscretizer
-from .simple import SimpleDiscretizer</code></pre>
+    def test_integration_stability(self):
+        &#39;&#39;&#39;Test on synthetic dataset
+        &#39;&#39;&#39;
+        X = np.array(
+            [[0, 0, 1, 1, 0],
+             [1, 0, 0, 0, 0],
+             [0, 0, 1, 0, 0],
+             [1, 0, 0, 0, 0],
+             [1, 1, 0, 1, 1],
+             [1, 1, 1, 1, 1],
+             [0, 1, 1, 1, 1],
+             [1, 0, 1, 1, 1]])
+        y = np.array([0, 0, 0, 0, 1, 1, 1, 1])
+        m = GreedyRuleListClassifier()
+        m.fit(X, y)
+        yhat = m.predict(X)
+        acc = np.mean(y == yhat) * 100
+        assert acc &gt; 99, &#39;acc must be 100&#39;</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="imodels.util.discretization.mdlp" href="mdlp.html">imodels.util.discretization.mdlp</a></code></dt>
+<dt id="imodels.tests.grl_test.TestGRL"><code class="flex name class">
+<span>class <span class="ident">TestGRL</span></span>
+<span>(</span><span>methodName='runTest')</span>
+</code></dt>
 <dd>
-<section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="imodels.util.discretization.simple" href="simple.html">imodels.util.discretization.simple</a></code></dt>
+<section class="desc"><p>A class whose instances are single test cases.</p>
+<p>By default, the test code itself should be placed in a method named
+'runTest'.</p>
+<p>If the fixture may be used for many test cases, create as
+many test methods as are needed. When instantiating such a TestCase
+subclass, specify in the constructor arguments the name of the test method
+that the instance is to execute.</p>
+<p>Test authors should subclass TestCase for their own tests. Construction
+and deconstruction of the test's environment ('fixture') can be
+implemented by overriding the 'setUp' and 'tearDown' methods respectively.</p>
+<p>If it is necessary to override the <strong>init</strong> method, the base class
+<strong>init</strong> method must always be called. It is important that subclasses
+should not change the signature of their <strong>init</strong> method, since instances
+of the classes are instantiated automatically by parts of the framework
+in order to be run.</p>
+<p>When subclassing TestCase, you can set these attributes:
+* failureException: determines which exception will be raised when
+the instance's assertion methods fail; test methods raising this
+exception will be deemed to have 'failed' rather than 'errored'.
+* longMessage: determines whether long messages (including repr of
+objects used in assert methods) will be printed on failure in <em>addition</em>
+to any explicit message passed.
+* maxDiff: sets the maximum length of a diff in failure messages
+by assert methods using difflib. It is looked up as an instance
+attribute so can be configured by individual tests if required.</p>
+<p>Create an instance of the class that will use the named test
+method when executed. Raises a ValueError if the instance does
+not have a method with the specified name.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TestGRL(unittest.TestCase):
+
+    def test_integration_stability(self):
+        &#39;&#39;&#39;Test on synthetic dataset
+        &#39;&#39;&#39;
+        X = np.array(
+            [[0, 0, 1, 1, 0],
+             [1, 0, 0, 0, 0],
+             [0, 0, 1, 0, 0],
+             [1, 0, 0, 0, 0],
+             [1, 1, 0, 1, 1],
+             [1, 1, 1, 1, 1],
+             [0, 1, 1, 1, 1],
+             [1, 0, 1, 1, 1]])
+        y = np.array([0, 0, 0, 0, 1, 1, 1, 1])
+        m = GreedyRuleListClassifier()
+        m.fit(X, y)
+        yhat = m.predict(X)
+        acc = np.mean(y == yhat) * 100
+        assert acc &gt; 99, &#39;acc must be 100&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>unittest.case.TestCase</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tests.grl_test.TestGRL.test_integration_stability"><code class="name flex">
+<span>def <span class="ident">test_integration_stability</span></span>(<span>self)</span>
+</code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Test on synthetic dataset</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_integration_stability(self):
+    &#39;&#39;&#39;Test on synthetic dataset
+    &#39;&#39;&#39;
+    X = np.array(
+        [[0, 0, 1, 1, 0],
+         [1, 0, 0, 0, 0],
+         [0, 0, 1, 0, 0],
+         [1, 0, 0, 0, 0],
+         [1, 1, 0, 1, 1],
+         [1, 1, 1, 1, 1],
+         [0, 1, 1, 1, 1],
+         [1, 0, 1, 1, 1]])
+    y = np.array([0, 0, 0, 0, 1, 1, 1, 1])
+    m = GreedyRuleListClassifier()
+    m.fit(X, y)
+    yhat = m.predict(X)
+    acc = np.mean(y == yhat) * 100
+    assert acc &gt; 99, &#39;acc must be 100&#39;</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul>
-<li><a href="#discretization-mdlp">Discretization MDLP</a></li>
-</ul>
+<ul></ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.util" href="../index.html">imodels.util</a></code></li>
+<li><code><a title="imodels.tests" href="index.html">imodels.tests</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li><code><a title="imodels.util.discretization.mdlp" href="mdlp.html">imodels.util.discretization.mdlp</a></code></li>
-<li><code><a title="imodels.util.discretization.simple" href="simple.html">imodels.util.discretization.simple</a></code></li>
+<li>
+<h4><code><a title="imodels.tests.grl_test.TestGRL" href="#imodels.tests.grl_test.TestGRL">TestGRL</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.tests.grl_test.TestGRL.test_integration_stability" href="#imodels.tests.grl_test.TestGRL.test_integration_stability">test_integration_stability</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.util.discretization API documentation</title>
-<meta name="description" content="Discretization MDLP
-Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation algorithm …" />
+<title>imodels.tests.util_test API documentation</title>
+<meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -18,83 +17,124 @@ Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation alg
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.util.discretization</code></h1>
+<h1 class="title">Module <code>imodels.tests.util_test</code></h1>
 </header>
 <section id="section-intro">
-<h1 id="discretization-mdlp">Discretization MDLP</h1>
-<p>Python implementation of Fayyad and Irani's MDLP criterion discretiation algorithm</p>
-<p><strong>Reference:</strong></p>
-<p>Irani, Keki B. "Multi-interval discretization of continuous-valued attributes for classiﬁcation learning." (1993).</p>
-<p><strong>Instructions:</strong></p>
-<ol>
-<li>Download Entropy.py and MDLPC.py</li>
-<li>In a terminal, cd into the directory where the .py files were saved</li>
-<li>run the following command:
-python MDLPC.py &ndash;options=&hellip;</li>
-</ol>
-<p>script options:
-* in_path (required): Path to dataset in .csv format (must include header)
-* out_path (required): Path where the discretized dataset will be saved
-* features (optional): comma-separated list of attribute names to be discretized, e.g., features=attr1,attr2,attr3
-* class_label (required): label of class column in .csv dataset
-* return_bins (optional): Doesn't take on values. If specified (&ndash;return_bins), a text file will be saved in the same directory as out_path. This file will include the description of the bins computed by the algorighm.</p>
-<p><strong>Dependencies:</strong></p>
-<ol>
-<li>Pandas</li>
-<li>Numpy</li>
-</ol>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#39;&#39;&#39;
-# Discretization MDLP
-Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation algorithm
+<pre><code class="python">from imodels import SkopeRulesClassifier
+from imodels.util.prune import deduplicate, find_similar_rulesets, f1_score
+from imodels.util.rule import Rule
 
-**Reference:**
 
-Irani, Keki B. &#34;Multi-interval discretization of continuous-valued attributes for classiﬁcation learning.&#34; (1993).
+def test_similarity_tree():
+    # Test that rules are well splitted
+    rules = [Rule(&#34;a &lt;= 2 and b &gt; 45 and c &lt;= 3 and a &gt; 4&#34;, args=(1, 1, 0)),
+             Rule(&#34;a &lt;= 2 and b &gt; 45 and c &lt;= 3 and a &gt; 4&#34;, (1, 1, 0)),
+             Rule(&#34;a &gt; 2 and b &gt; 45&#34;, (0.5, 0.3, 0)),
+             Rule(&#34;a &gt; 2 and b &gt; 40&#34;, (0.5, 0.2, 0)),
+             Rule(&#34;a &lt;= 2 and b &lt;= 45&#34;, (1, 1, 0)),
+             Rule(&#34;a &gt; 2 and c &lt;= 3&#34;, (1, 1, 0)),
+             Rule(&#34;b &gt; 45&#34;, (1, 1, 0))]
 
-**Instructions:**
+    sk = SkopeRulesClassifier(max_depth_duplication=2)
+    rulesets = find_similar_rulesets(rules, max_depth_duplication=2)
+    # Assert some couples of rules are in the same bag
+    idx_bags_rules = []
+    for idx_rule, r in enumerate(rules):
+        idx_bags_for_rule = []
+        for idx_bag, bag in enumerate(rulesets):
+            if r in bag:
+                idx_bags_for_rule.append(idx_bag)
+        idx_bags_rules.append(idx_bags_for_rule)
 
-1. Download Entropy.py and MDLPC.py
-2. In a terminal, cd into the directory where the .py files were saved
-3. run the following command:
-  python MDLPC.py --options=...
-  
-script options:
-* in_path (required): Path to dataset in .csv format (must include header)
-* out_path (required): Path where the discretized dataset will be saved
-* features (optional): comma-separated list of attribute names to be discretized, e.g., features=attr1,attr2,attr3
-* class_label (required): label of class column in .csv dataset
-* return_bins (optional): Doesn&#39;t take on values. If specified (--return_bins), a text file will be saved in the same directory as out_path. This file will include the description of the bins computed by the algorighm.
+    assert idx_bags_rules[0] == idx_bags_rules[1]
+    assert not idx_bags_rules[0] == idx_bags_rules[2]
+    # Assert the best rules are kept
+    final_rules = deduplicate(rules, sk.max_depth_duplication)
+    assert rules[0] in final_rules
+    assert rules[2] in final_rules
+    assert not rules[3] in final_rules
 
-**Dependencies:**
 
-1. Pandas
-2. Numpy
-&#39;&#39;&#39;
+def test_f1_score():
+    rule0 = Rule(&#39;a &gt; 0&#39;, (0, 0, 0))
+    rule1 = Rule(&#39;a &gt; 0&#39;, (0.5, 0.5, 0))
+    rule2 = Rule(&#39;a &gt; 0&#39;, (0.5, 0, 0))
 
-from .mdlp import BRLDiscretizer
-from .simple import SimpleDiscretizer</code></pre>
+    assert f1_score(rule0) == 0
+    assert f1_score(rule1) == 0.5
+    assert f1_score(rule2) == 0</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="imodels.util.discretization.mdlp" href="mdlp.html">imodels.util.discretization.mdlp</a></code></dt>
+<dt id="imodels.tests.util_test.test_f1_score"><code class="name flex">
+<span>def <span class="ident">test_f1_score</span></span>(<span>)</span>
+</code></dt>
 <dd>
 <section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_f1_score():
+    rule0 = Rule(&#39;a &gt; 0&#39;, (0, 0, 0))
+    rule1 = Rule(&#39;a &gt; 0&#39;, (0.5, 0.5, 0))
+    rule2 = Rule(&#39;a &gt; 0&#39;, (0.5, 0, 0))
+
+    assert f1_score(rule0) == 0
+    assert f1_score(rule1) == 0.5
+    assert f1_score(rule2) == 0</code></pre>
+</details>
 </dd>
-<dt><code class="name"><a title="imodels.util.discretization.simple" href="simple.html">imodels.util.discretization.simple</a></code></dt>
+<dt id="imodels.tests.util_test.test_similarity_tree"><code class="name flex">
+<span>def <span class="ident">test_similarity_tree</span></span>(<span>)</span>
+</code></dt>
 <dd>
 <section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_similarity_tree():
+    # Test that rules are well splitted
+    rules = [Rule(&#34;a &lt;= 2 and b &gt; 45 and c &lt;= 3 and a &gt; 4&#34;, args=(1, 1, 0)),
+             Rule(&#34;a &lt;= 2 and b &gt; 45 and c &lt;= 3 and a &gt; 4&#34;, (1, 1, 0)),
+             Rule(&#34;a &gt; 2 and b &gt; 45&#34;, (0.5, 0.3, 0)),
+             Rule(&#34;a &gt; 2 and b &gt; 40&#34;, (0.5, 0.2, 0)),
+             Rule(&#34;a &lt;= 2 and b &lt;= 45&#34;, (1, 1, 0)),
+             Rule(&#34;a &gt; 2 and c &lt;= 3&#34;, (1, 1, 0)),
+             Rule(&#34;b &gt; 45&#34;, (1, 1, 0))]
+
+    sk = SkopeRulesClassifier(max_depth_duplication=2)
+    rulesets = find_similar_rulesets(rules, max_depth_duplication=2)
+    # Assert some couples of rules are in the same bag
+    idx_bags_rules = []
+    for idx_rule, r in enumerate(rules):
+        idx_bags_for_rule = []
+        for idx_bag, bag in enumerate(rulesets):
+            if r in bag:
+                idx_bags_for_rule.append(idx_bag)
+        idx_bags_rules.append(idx_bags_for_rule)
+
+    assert idx_bags_rules[0] == idx_bags_rules[1]
+    assert not idx_bags_rules[0] == idx_bags_rules[2]
+    # Assert the best rules are kept
+    final_rules = deduplicate(rules, sk.max_depth_duplication)
+    assert rules[0] in final_rules
+    assert rules[2] in final_rules
+    assert not rules[3] in final_rules</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -102,20 +142,18 @@ from .simple import SimpleDiscretizer</code></pre>
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul>
-<li><a href="#discretization-mdlp">Discretization MDLP</a></li>
-</ul>
+<ul></ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.util" href="../index.html">imodels.util</a></code></li>
+<li><code><a title="imodels.tests" href="index.html">imodels.tests</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="imodels.util.discretization.mdlp" href="mdlp.html">imodels.util.discretization.mdlp</a></code></li>
-<li><code><a title="imodels.util.discretization.simple" href="simple.html">imodels.util.discretization.simple</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.tests.util_test.test_f1_score" href="#imodels.tests.util_test.test_f1_score">test_f1_score</a></code></li>
+<li><code><a title="imodels.tests.util_test.test_similarity_tree" href="#imodels.tests.util_test.test_similarity_tree">test_similarity_tree</a></code></li>
 </ul>
 </li>
 </ul>

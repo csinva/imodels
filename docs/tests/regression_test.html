@@ -4,9 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.util.discretization API documentation</title>
-<meta name="description" content="Discretization MDLP
-Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation algorithm …" />
+<title>imodels.tests.regression_test API documentation</title>
+<meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -18,104 +17,160 @@ Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation alg
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.util.discretization</code></h1>
+<h1 class="title">Module <code>imodels.tests.regression_test</code></h1>
 </header>
 <section id="section-intro">
-<h1 id="discretization-mdlp">Discretization MDLP</h1>
-<p>Python implementation of Fayyad and Irani's MDLP criterion discretiation algorithm</p>
-<p><strong>Reference:</strong></p>
-<p>Irani, Keki B. "Multi-interval discretization of continuous-valued attributes for classiﬁcation learning." (1993).</p>
-<p><strong>Instructions:</strong></p>
-<ol>
-<li>Download Entropy.py and MDLPC.py</li>
-<li>In a terminal, cd into the directory where the .py files were saved</li>
-<li>run the following command:
-python MDLPC.py &ndash;options=&hellip;</li>
-</ol>
-<p>script options:
-* in_path (required): Path to dataset in .csv format (must include header)
-* out_path (required): Path where the discretized dataset will be saved
-* features (optional): comma-separated list of attribute names to be discretized, e.g., features=attr1,attr2,attr3
-* class_label (required): label of class column in .csv dataset
-* return_bins (optional): Doesn't take on values. If specified (&ndash;return_bins), a text file will be saved in the same directory as out_path. This file will include the description of the bins computed by the algorighm.</p>
-<p><strong>Dependencies:</strong></p>
-<ol>
-<li>Pandas</li>
-<li>Numpy</li>
-</ol>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#39;&#39;&#39;
-# Discretization MDLP
-Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation algorithm
+<pre><code class="python">import numpy as np
+import pytest
 
-**Reference:**
+from imodels import RuleFitRegressor, SLIMRegressor
 
-Irani, Keki B. &#34;Multi-interval discretization of continuous-valued attributes for classiﬁcation learning.&#34; (1993).
 
-**Instructions:**
+class TestClassRegression:
+    def setup(self):
+        np.random.seed(13)
+        self.n = 10
+        self.p = 10
+        self.X_regression = np.random.randn(self.n, self.p)
+        self.y_regression = self.X_regression[:, 0] + np.random.randn(self.n) * 0.01
 
-1. Download Entropy.py and MDLPC.py
-2. In a terminal, cd into the directory where the .py files were saved
-3. run the following command:
-  python MDLPC.py --options=...
-  
-script options:
-* in_path (required): Path to dataset in .csv format (must include header)
-* out_path (required): Path where the discretized dataset will be saved
-* features (optional): comma-separated list of attribute names to be discretized, e.g., features=attr1,attr2,attr3
-* class_label (required): label of class column in .csv dataset
-* return_bins (optional): Doesn&#39;t take on values. If specified (--return_bins), a text file will be saved in the same directory as out_path. This file will include the description of the bins computed by the algorighm.
+    @pytest.mark.filterwarnings(&#34;ignore::UserWarning&#34;)
+    def test_regression(self):
+        &#39;&#39;&#39;Test imodels on basic binary classification task
+        &#39;&#39;&#39;
+        for model_type in [RuleFitRegressor, SLIMRegressor]:
+            if model_type == RuleFitRegressor:
+                m = model_type(include_linear=False, max_rules=3)
+            else:
+                m = model_type()
+            m.fit(self.X_regression, self.y_regression)
 
-**Dependencies:**
+            preds = m.predict(self.X_regression)
+            assert preds.size == self.n, &#39;predictions are right size&#39;
 
-1. Pandas
-2. Numpy
-&#39;&#39;&#39;
-
-from .mdlp import BRLDiscretizer
-from .simple import SimpleDiscretizer</code></pre>
+            mse = np.mean(np.square(preds - self.y_regression))
+            assert mse &lt; 1, &#39;mse less than 1&#39;</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="imodels.util.discretization.mdlp" href="mdlp.html">imodels.util.discretization.mdlp</a></code></dt>
+<dt id="imodels.tests.regression_test.TestClassRegression"><code class="flex name class">
+<span>class <span class="ident">TestClassRegression</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
 <dd>
 <section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TestClassRegression:
+    def setup(self):
+        np.random.seed(13)
+        self.n = 10
+        self.p = 10
+        self.X_regression = np.random.randn(self.n, self.p)
+        self.y_regression = self.X_regression[:, 0] + np.random.randn(self.n) * 0.01
+
+    @pytest.mark.filterwarnings(&#34;ignore::UserWarning&#34;)
+    def test_regression(self):
+        &#39;&#39;&#39;Test imodels on basic binary classification task
+        &#39;&#39;&#39;
+        for model_type in [RuleFitRegressor, SLIMRegressor]:
+            if model_type == RuleFitRegressor:
+                m = model_type(include_linear=False, max_rules=3)
+            else:
+                m = model_type()
+            m.fit(self.X_regression, self.y_regression)
+
+            preds = m.predict(self.X_regression)
+            assert preds.size == self.n, &#39;predictions are right size&#39;
+
+            mse = np.mean(np.square(preds - self.y_regression))
+            assert mse &lt; 1, &#39;mse less than 1&#39;</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tests.regression_test.TestClassRegression.setup"><code class="name flex">
+<span>def <span class="ident">setup</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup(self):
+    np.random.seed(13)
+    self.n = 10
+    self.p = 10
+    self.X_regression = np.random.randn(self.n, self.p)
+    self.y_regression = self.X_regression[:, 0] + np.random.randn(self.n) * 0.01</code></pre>
+</details>
 </dd>
-<dt><code class="name"><a title="imodels.util.discretization.simple" href="simple.html">imodels.util.discretization.simple</a></code></dt>
+<dt id="imodels.tests.regression_test.TestClassRegression.test_regression"><code class="name flex">
+<span>def <span class="ident">test_regression</span></span>(<span>self)</span>
+</code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Test imodels on basic binary classification task</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@pytest.mark.filterwarnings(&#34;ignore::UserWarning&#34;)
+def test_regression(self):
+    &#39;&#39;&#39;Test imodels on basic binary classification task
+    &#39;&#39;&#39;
+    for model_type in [RuleFitRegressor, SLIMRegressor]:
+        if model_type == RuleFitRegressor:
+            m = model_type(include_linear=False, max_rules=3)
+        else:
+            m = model_type()
+        m.fit(self.X_regression, self.y_regression)
+
+        preds = m.predict(self.X_regression)
+        assert preds.size == self.n, &#39;predictions are right size&#39;
+
+        mse = np.mean(np.square(preds - self.y_regression))
+        assert mse &lt; 1, &#39;mse less than 1&#39;</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul>
-<li><a href="#discretization-mdlp">Discretization MDLP</a></li>
-</ul>
+<ul></ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.util" href="../index.html">imodels.util</a></code></li>
+<li><code><a title="imodels.tests" href="index.html">imodels.tests</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li><code><a title="imodels.util.discretization.mdlp" href="mdlp.html">imodels.util.discretization.mdlp</a></code></li>
-<li><code><a title="imodels.util.discretization.simple" href="simple.html">imodels.util.discretization.simple</a></code></li>
+<li>
+<h4><code><a title="imodels.tests.regression_test.TestClassRegression" href="#imodels.tests.regression_test.TestClassRegression">TestClassRegression</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.tests.regression_test.TestClassRegression.setup" href="#imodels.tests.regression_test.TestClassRegression.setup">setup</a></code></li>
+<li><code><a title="imodels.tests.regression_test.TestClassRegression.test_regression" href="#imodels.tests.regression_test.TestClassRegression.test_regression">test_regression</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
