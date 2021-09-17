@@ -1,12 +1,14 @@
 import os
+import unittest
 from os.path import join as oj
 from random import sample
-import unittest
+
 test_dir = os.path.dirname(os.path.abspath(__file__))
 import numpy as np
 from pandas.io.parsers import read_csv
 import random
 from imodels import BOAClassifier
+
 
 class TestBoaClassifier(unittest.TestCase):
     def setup(self):
@@ -24,13 +26,13 @@ class TestBoaClassifier(unittest.TestCase):
         Nchain = 2  # number of chains in the simulated annealing search algorithm
 
         supp = 5  # 5% is a generally good number. The higher this supp, the 'larger' a pattern is
-        maxlen = 3  # maxmum length of a pattern
+        maxlen = 3  # maximum length of a pattern
 
         # \rho = alpha/(alpha+beta). Make sure \rho is close to one when choosing alpha and beta.
-        alpha_1 = 500  # alpha_+
-        beta_1 = 1  # beta_+
-        alpha_2 = 500  # alpha_-
-        beta_2 = 1  # beta_-
+        alpha_pos = 500  # alpha_+
+        beta_pos = 1  # beta_+
+        alpha_neg = 500  # alpha_-
+        beta_neg = 1  # beta_-
 
         """ input file """
         # notice that in the example, X is already binary coded.
@@ -44,15 +46,21 @@ class TestBoaClassifier(unittest.TestCase):
         train_index = sample(range(lenY), int(0.70 * lenY))
         test_index = [i for i in range(lenY) if i not in train_index]
 
-        model = BOAClassifier(df.iloc[train_index], Y[train_index])
-        model.generate_rules(supp, maxlen, N)
-        model.set_parameters(alpha_1, beta_1, alpha_2, beta_2, None, None)
-        rules = model.fit(Niteration, Nchain, print_message=True)
+        model = BOAClassifier(df.iloc[train_index], Y[train_index],
+                              N=N,
+                              supp=supp,
+                              maxlen=maxlen,
+                              Niteration=Niteration,
+                              Nchain=Nchain,
+                              alpha_pos=alpha_pos, beta_pos=beta_pos, alpha_neg=alpha_neg, beta_neg=beta_neg,
+                              al=None, bl=None)
+        # model.generate_rules()
+        # model.set_parameters(alpha_1, beta_pos, alpha_neg, beta_neg, None, None)
+        model.fit()
 
         # test
-        print('printing rules...', rules)
-        Yhat = model.predict(rules, df.iloc[test_index])
-
+        print('printing rules...', model)
+        Yhat = model.predict(df.iloc[test_index])
 
         def getConfusion(Yhat, Y):
             if len(Yhat) != len(Y):
@@ -62,7 +70,6 @@ class TestBoaClassifier(unittest.TestCase):
             TN = len(Y) - np.sum(Y) - FP
             FN = len(Yhat) - np.sum(Yhat) - TN
             return TP, FP, TN, FN
-
 
         TP, FP, TN, FN = getConfusion(Yhat, Y[test_index])
         tpr = float(TP) / (TP + FN)
