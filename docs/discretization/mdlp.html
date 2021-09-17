@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.util.discretization.mdlp API documentation</title>
-<meta name="description" content="" />
+<title>imodels.discretization.mdlp API documentation</title>
+<meta name="description" content="Discretization MDLP
+Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation algorithm …" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -17,27 +18,37 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.util.discretization.mdlp</code></h1>
+<h1 class="title">Module <code>imodels.discretization.mdlp</code></h1>
 </header>
 <section id="section-intro">
+<h1 id="discretization-mdlp">Discretization MDLP</h1>
+<p>Python implementation of Fayyad and Irani's MDLP criterion discretiation algorithm</p>
+<p><strong>Reference:</strong>
+Irani, Keki B. "Multi-interval discretization of continuous-valued attributes for classiﬁcation learning." (1993).</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from __future__ import division
+<pre><code class="python">&#39;&#39;&#39;
+# Discretization MDLP
+Python implementation of Fayyad and Irani&#39;s MDLP criterion discretiation algorithm
 
+**Reference:**
+Irani, Keki B. &#34;Multi-interval discretization of continuous-valued attributes for classiﬁcation learning.&#34; (1993).
+
+&#39;&#39;&#39;
 __author__ = &#39;Victor Ruiz, vmr11@pitt.edu&#39;
 
-from math import log
 import numbers
+from math import log
 
 import numpy as np
 import pandas as pd
 
-from ..metrics import entropy, cut_point_information_gain
+from imodels.util.metrics import entropy, cut_point_information_gain
 
 
-class MDLP_Discretizer(object):
+class MDLPDiscretizer(object):
     def __init__(self, dataset, class_label, out_path_data=None, out_path_bins=None, features=None):
         &#39;&#39;&#39;
         initializes discretizer object:
@@ -286,8 +297,9 @@ class MDLP_Discretizer(object):
                     print(&#39;attr: %s\n\t%s&#39; % (attr, &#39;, &#39;.join([bin_label for bin_label in bin_label_collection[attr]])),
                           file=bins_file)
 
+
 class BRLDiscretizer:
-    
+
     def __init__(self, X, y, feature_labels, verbose=False):
         self.feature_labels_original = feature_labels
         self.verbose = verbose
@@ -302,12 +314,12 @@ class BRLDiscretizer:
         for fi in range(X_str_disc.shape[1]):
             # if not string, has values other than 0 and 1, and not specified as undiscretized
             if (
-                isinstance(X_str_disc[0][fi], numbers.Number)
-                and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
-                and (len(self.feature_labels) == 0 or
-                        len(undiscretized_features) == 0 or
-                        self.feature_labels[fi] not in undiscretized_features
-                )
+                    isinstance(X_str_disc[0][fi], numbers.Number)
+                    and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
+                    and (len(self.feature_labels) == 0 or
+                         len(undiscretized_features) == 0 or
+                         self.feature_labels[fi] not in undiscretized_features
+            )
             ):
                 self.discretized_features.append(self.feature_labels[fi])
 
@@ -317,19 +329,19 @@ class BRLDiscretizer:
                     &#34;Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to &#34;
                     &#34;strings, and/or specify the argument &#39;undiscretized_features&#39;, to avoid this.)&#34;)
             X_str_and_num_disc = self.discretize(X_str_disc, y)
-        
+
             self.discretized_X = X_str_and_num_disc
         else:
             self.discretizer = None
             return
-    
+
     def discretize(self, X, y):
         &#39;&#39;&#39;Discretize the features specified in self.discretized_features
         &#39;&#39;&#39;
         if self.verbose:
             print(&#34;Discretizing &#34;, self.discretized_features, &#34;...&#34;)
         D = pd.DataFrame(np.hstack((X, np.expand_dims(y, axis=1))), columns=list(self.feature_labels) + [&#34;y&#34;])
-        self.discretizer = MDLP_Discretizer(dataset=D, class_label=&#34;y&#34;, features=self.discretized_features)
+        self.discretizer = MDLPDiscretizer(dataset=D, class_label=&#34;y&#34;, features=self.discretized_features)
 
         cat_data = pd.DataFrame(np.zeros_like(X))
         for i in range(len(self.feature_labels)):
@@ -338,7 +350,7 @@ class BRLDiscretizer:
                 new_column = label + &#34; : &#34; + self.discretizer._data[label].astype(str)
                 cat_data.iloc[:, i] = new_column
             else:
-                cat_data.iloc[:, i] = D[label]            
+                cat_data.iloc[:, i] = D[label]
 
         return np.array(cat_data).tolist()
 
@@ -349,7 +361,7 @@ class BRLDiscretizer:
             if issubclass(type(X[0][fi]), str):
                 new_columns = pd.get_dummies(X[:, fi])
                 new_columns.columns = [self.feature_labels_original[fi] + &#39;_&#39; + value for value in new_columns.columns]
-                new_columns_colon_format = new_columns.apply(lambda s: s.name + &#39; : &#39; +  s.astype(str))
+                new_columns_colon_format = new_columns.apply(lambda s: s.name + &#39; : &#39; + s.astype(str))
                 X_str_disc = pd.concat([X_str_disc, new_columns_colon_format], axis=1)
             else:
                 X_str_disc = pd.concat([X_str_disc, pd.Series(X[:, fi], name=self.feature_labels_original[fi])], axis=1)
@@ -357,14 +369,14 @@ class BRLDiscretizer:
         return X_str_disc.values
 
     def transform(self, X, return_onehot=True):
-        
+
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
-        
+
         if self.discretizer is None:
             return pd.DataFrame(X, columns=self.feature_labels_original)
 
-        self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)        
+        self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)
         self.apply_cutpoints()
         D = np.array(self.data)
 
@@ -373,12 +385,12 @@ class BRLDiscretizer:
         for i in range(len(Dl)):
             for j in range(len(Dl[0])):
                 Dl[i][j] = self.feature_labels[j] + &#34; : &#34; + Dl[i][j]
-        
+
         if not return_onehot:
             return Dl
         else:
             return self.get_onehot_df(Dl)
-    
+
     @property
     def onehot_df(self):
         return self.get_onehot_df(self.discretized_X)
@@ -404,7 +416,7 @@ class BRLDiscretizer:
     @data.setter
     def data(self, value):
         self.discretizer._data = value
-    
+
     def apply_cutpoints(self):
         return self.discretizer.apply_cutpoints()</code></pre>
 </details>
@@ -418,7 +430,7 @@ class BRLDiscretizer:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.util.discretization.mdlp.BRLDiscretizer"><code class="flex name class">
+<dt id="imodels.discretization.mdlp.BRLDiscretizer"><code class="flex name class">
 <span>class <span class="ident">BRLDiscretizer</span></span>
 <span>(</span><span>X, y, feature_labels, verbose=False)</span>
 </code></dt>
@@ -429,7 +441,7 @@ class BRLDiscretizer:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BRLDiscretizer:
-    
+
     def __init__(self, X, y, feature_labels, verbose=False):
         self.feature_labels_original = feature_labels
         self.verbose = verbose
@@ -444,12 +456,12 @@ class BRLDiscretizer:
         for fi in range(X_str_disc.shape[1]):
             # if not string, has values other than 0 and 1, and not specified as undiscretized
             if (
-                isinstance(X_str_disc[0][fi], numbers.Number)
-                and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
-                and (len(self.feature_labels) == 0 or
-                        len(undiscretized_features) == 0 or
-                        self.feature_labels[fi] not in undiscretized_features
-                )
+                    isinstance(X_str_disc[0][fi], numbers.Number)
+                    and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
+                    and (len(self.feature_labels) == 0 or
+                         len(undiscretized_features) == 0 or
+                         self.feature_labels[fi] not in undiscretized_features
+            )
             ):
                 self.discretized_features.append(self.feature_labels[fi])
 
@@ -459,19 +471,19 @@ class BRLDiscretizer:
                     &#34;Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to &#34;
                     &#34;strings, and/or specify the argument &#39;undiscretized_features&#39;, to avoid this.)&#34;)
             X_str_and_num_disc = self.discretize(X_str_disc, y)
-        
+
             self.discretized_X = X_str_and_num_disc
         else:
             self.discretizer = None
             return
-    
+
     def discretize(self, X, y):
         &#39;&#39;&#39;Discretize the features specified in self.discretized_features
         &#39;&#39;&#39;
         if self.verbose:
             print(&#34;Discretizing &#34;, self.discretized_features, &#34;...&#34;)
         D = pd.DataFrame(np.hstack((X, np.expand_dims(y, axis=1))), columns=list(self.feature_labels) + [&#34;y&#34;])
-        self.discretizer = MDLP_Discretizer(dataset=D, class_label=&#34;y&#34;, features=self.discretized_features)
+        self.discretizer = MDLPDiscretizer(dataset=D, class_label=&#34;y&#34;, features=self.discretized_features)
 
         cat_data = pd.DataFrame(np.zeros_like(X))
         for i in range(len(self.feature_labels)):
@@ -480,7 +492,7 @@ class BRLDiscretizer:
                 new_column = label + &#34; : &#34; + self.discretizer._data[label].astype(str)
                 cat_data.iloc[:, i] = new_column
             else:
-                cat_data.iloc[:, i] = D[label]            
+                cat_data.iloc[:, i] = D[label]
 
         return np.array(cat_data).tolist()
 
@@ -491,7 +503,7 @@ class BRLDiscretizer:
             if issubclass(type(X[0][fi]), str):
                 new_columns = pd.get_dummies(X[:, fi])
                 new_columns.columns = [self.feature_labels_original[fi] + &#39;_&#39; + value for value in new_columns.columns]
-                new_columns_colon_format = new_columns.apply(lambda s: s.name + &#39; : &#39; +  s.astype(str))
+                new_columns_colon_format = new_columns.apply(lambda s: s.name + &#39; : &#39; + s.astype(str))
                 X_str_disc = pd.concat([X_str_disc, new_columns_colon_format], axis=1)
             else:
                 X_str_disc = pd.concat([X_str_disc, pd.Series(X[:, fi], name=self.feature_labels_original[fi])], axis=1)
@@ -499,14 +511,14 @@ class BRLDiscretizer:
         return X_str_disc.values
 
     def transform(self, X, return_onehot=True):
-        
+
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
-        
+
         if self.discretizer is None:
             return pd.DataFrame(X, columns=self.feature_labels_original)
 
-        self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)        
+        self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)
         self.apply_cutpoints()
         D = np.array(self.data)
 
@@ -515,12 +527,12 @@ class BRLDiscretizer:
         for i in range(len(Dl)):
             for j in range(len(Dl[0])):
                 Dl[i][j] = self.feature_labels[j] + &#34; : &#34; + Dl[i][j]
-        
+
         if not return_onehot:
             return Dl
         else:
             return self.get_onehot_df(Dl)
-    
+
     @property
     def onehot_df(self):
         return self.get_onehot_df(self.discretized_X)
@@ -546,13 +558,13 @@ class BRLDiscretizer:
     @data.setter
     def data(self, value):
         self.discretizer._data = value
-    
+
     def apply_cutpoints(self):
         return self.discretizer.apply_cutpoints()</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
-<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.data"><code class="name">var <span class="ident">data</span></code></dt>
+<dt id="imodels.discretization.mdlp.BRLDiscretizer.data"><code class="name">var <span class="ident">data</span></code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
@@ -564,7 +576,7 @@ def data(self):
     return self.discretizer._data</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.onehot_df"><code class="name">var <span class="ident">onehot_df</span></code></dt>
+<dt id="imodels.discretization.mdlp.BRLDiscretizer.onehot_df"><code class="name">var <span class="ident">onehot_df</span></code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
@@ -579,7 +591,7 @@ def onehot_df(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.apply_cutpoints"><code class="name flex">
+<dt id="imodels.discretization.mdlp.BRLDiscretizer.apply_cutpoints"><code class="name flex">
 <span>def <span class="ident">apply_cutpoints</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -592,7 +604,7 @@ def onehot_df(self):
     return self.discretizer.apply_cutpoints()</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.discretize"><code class="name flex">
+<dt id="imodels.discretization.mdlp.BRLDiscretizer.discretize"><code class="name flex">
 <span>def <span class="ident">discretize</span></span>(<span>self, X, y)</span>
 </code></dt>
 <dd>
@@ -607,7 +619,7 @@ def onehot_df(self):
     if self.verbose:
         print(&#34;Discretizing &#34;, self.discretized_features, &#34;...&#34;)
     D = pd.DataFrame(np.hstack((X, np.expand_dims(y, axis=1))), columns=list(self.feature_labels) + [&#34;y&#34;])
-    self.discretizer = MDLP_Discretizer(dataset=D, class_label=&#34;y&#34;, features=self.discretized_features)
+    self.discretizer = MDLPDiscretizer(dataset=D, class_label=&#34;y&#34;, features=self.discretized_features)
 
     cat_data = pd.DataFrame(np.zeros_like(X))
     for i in range(len(self.feature_labels)):
@@ -616,12 +628,12 @@ def onehot_df(self):
             new_column = label + &#34; : &#34; + self.discretizer._data[label].astype(str)
             cat_data.iloc[:, i] = new_column
         else:
-            cat_data.iloc[:, i] = D[label]            
+            cat_data.iloc[:, i] = D[label]
 
     return np.array(cat_data).tolist()</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.encode_strings"><code class="name flex">
+<dt id="imodels.discretization.mdlp.BRLDiscretizer.encode_strings"><code class="name flex">
 <span>def <span class="ident">encode_strings</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -637,7 +649,7 @@ def onehot_df(self):
         if issubclass(type(X[0][fi]), str):
             new_columns = pd.get_dummies(X[:, fi])
             new_columns.columns = [self.feature_labels_original[fi] + &#39;_&#39; + value for value in new_columns.columns]
-            new_columns_colon_format = new_columns.apply(lambda s: s.name + &#39; : &#39; +  s.astype(str))
+            new_columns_colon_format = new_columns.apply(lambda s: s.name + &#39; : &#39; + s.astype(str))
             X_str_disc = pd.concat([X_str_disc, new_columns_colon_format], axis=1)
         else:
             X_str_disc = pd.concat([X_str_disc, pd.Series(X[:, fi], name=self.feature_labels_original[fi])], axis=1)
@@ -645,7 +657,7 @@ def onehot_df(self):
     return X_str_disc.values</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.fit"><code class="name flex">
+<dt id="imodels.discretization.mdlp.BRLDiscretizer.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, undiscretized_features=[])</span>
 </code></dt>
 <dd>
@@ -664,12 +676,12 @@ def onehot_df(self):
     for fi in range(X_str_disc.shape[1]):
         # if not string, has values other than 0 and 1, and not specified as undiscretized
         if (
-            isinstance(X_str_disc[0][fi], numbers.Number)
-            and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
-            and (len(self.feature_labels) == 0 or
-                    len(undiscretized_features) == 0 or
-                    self.feature_labels[fi] not in undiscretized_features
-            )
+                isinstance(X_str_disc[0][fi], numbers.Number)
+                and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
+                and (len(self.feature_labels) == 0 or
+                     len(undiscretized_features) == 0 or
+                     self.feature_labels[fi] not in undiscretized_features
+        )
         ):
             self.discretized_features.append(self.feature_labels[fi])
 
@@ -679,14 +691,14 @@ def onehot_df(self):
                 &#34;Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to &#34;
                 &#34;strings, and/or specify the argument &#39;undiscretized_features&#39;, to avoid this.)&#34;)
         X_str_and_num_disc = self.discretize(X_str_disc, y)
-    
+
         self.discretized_X = X_str_and_num_disc
     else:
         self.discretizer = None
         return</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.get_onehot_df"><code class="name flex">
+<dt id="imodels.discretization.mdlp.BRLDiscretizer.get_onehot_df"><code class="name flex">
 <span>def <span class="ident">get_onehot_df</span></span>(<span>self, discretized_X)</span>
 </code></dt>
 <dd>
@@ -710,7 +722,7 @@ def onehot_df(self):
     return X_df_onehot</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.BRLDiscretizer.transform"><code class="name flex">
+<dt id="imodels.discretization.mdlp.BRLDiscretizer.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, X, return_onehot=True)</span>
 </code></dt>
 <dd>
@@ -720,14 +732,14 @@ def onehot_df(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def transform(self, X, return_onehot=True):
-    
+
     if type(X) in [pd.DataFrame, pd.Series]:
         X = X.values
-    
+
     if self.discretizer is None:
         return pd.DataFrame(X, columns=self.feature_labels_original)
 
-    self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)        
+    self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)
     self.apply_cutpoints()
     D = np.array(self.data)
 
@@ -736,7 +748,7 @@ def onehot_df(self):
     for i in range(len(Dl)):
         for j in range(len(Dl[0])):
             Dl[i][j] = self.feature_labels[j] + &#34; : &#34; + Dl[i][j]
-    
+
     if not return_onehot:
         return Dl
     else:
@@ -745,8 +757,8 @@ def onehot_df(self):
 </dd>
 </dl>
 </dd>
-<dt id="imodels.util.discretization.mdlp.MDLP_Discretizer"><code class="flex name class">
-<span>class <span class="ident">MDLP_Discretizer</span></span>
+<dt id="imodels.discretization.mdlp.MDLPDiscretizer"><code class="flex name class">
+<span>class <span class="ident">MDLPDiscretizer</span></span>
 <span>(</span><span>dataset, class_label, out_path_data=None, out_path_bins=None, features=None)</span>
 </code></dt>
 <dd>
@@ -766,7 +778,7 @@ self._cuts = dictionary with cut points for each feature
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class MDLP_Discretizer(object):
+<pre><code class="python">class MDLPDiscretizer(object):
     def __init__(self, dataset, class_label, out_path_data=None, out_path_bins=None, features=None):
         &#39;&#39;&#39;
         initializes discretizer object:
@@ -1017,7 +1029,7 @@ self._cuts = dictionary with cut points for each feature
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.util.discretization.mdlp.MDLP_Discretizer.MDLPC_criterion"><code class="name flex">
+<dt id="imodels.discretization.mdlp.MDLPDiscretizer.MDLPC_criterion"><code class="name flex">
 <span>def <span class="ident">MDLPC_criterion</span></span>(<span>self, data, feature, cut_point)</span>
 </code></dt>
 <dd>
@@ -1065,7 +1077,7 @@ self._cuts = dictionary with cut points for each feature
         return False</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.MDLP_Discretizer.all_features_accepted_cutpoints"><code class="name flex">
+<dt id="imodels.discretization.mdlp.MDLPDiscretizer.all_features_accepted_cutpoints"><code class="name flex">
 <span>def <span class="ident">all_features_accepted_cutpoints</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1085,7 +1097,7 @@ self._cuts = dictionary with cut points for each feature
     return</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.MDLP_Discretizer.apply_cutpoints"><code class="name flex">
+<dt id="imodels.discretization.mdlp.MDLPDiscretizer.apply_cutpoints"><code class="name flex">
 <span>def <span class="ident">apply_cutpoints</span></span>(<span>self, out_data_path=None, out_bins_path=None)</span>
 </code></dt>
 <dd>
@@ -1139,7 +1151,7 @@ the bins
                       file=bins_file)</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.MDLP_Discretizer.best_cut_point"><code class="name flex">
+<dt id="imodels.discretization.mdlp.MDLPDiscretizer.best_cut_point"><code class="name flex">
 <span>def <span class="ident">best_cut_point</span></span>(<span>self, data, feature)</span>
 </code></dt>
 <dd>
@@ -1169,7 +1181,7 @@ the bins
     return gains[0][0]  # return cut point</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.MDLP_Discretizer.boundaries_in_partition"><code class="name flex">
+<dt id="imodels.discretization.mdlp.MDLPDiscretizer.boundaries_in_partition"><code class="name flex">
 <span>def <span class="ident">boundaries_in_partition</span></span>(<span>self, data, feature)</span>
 </code></dt>
 <dd>
@@ -1194,7 +1206,7 @@ attribute-values' range
     return set([x for x in self._boundaries[feature] if (x &gt; range_min) and (x &lt; range_max)])</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.MDLP_Discretizer.compute_boundary_points_all_features"><code class="name flex">
+<dt id="imodels.discretization.mdlp.MDLPDiscretizer.compute_boundary_points_all_features"><code class="name flex">
 <span>def <span class="ident">compute_boundary_points_all_features</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1216,7 +1228,7 @@ attribute-values' range
     return boundaries</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.MDLP_Discretizer.feature_boundary_points"><code class="name flex">
+<dt id="imodels.discretization.mdlp.MDLPDiscretizer.feature_boundary_points"><code class="name flex">
 <span>def <span class="ident">feature_boundary_points</span></span>(<span>self, data, feature)</span>
 </code></dt>
 <dd>
@@ -1263,7 +1275,7 @@ attribute-values' range
     return set(boundary_points)</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.mdlp.MDLP_Discretizer.single_feature_accepted_cutpoints"><code class="name flex">
+<dt id="imodels.discretization.mdlp.MDLPDiscretizer.single_feature_accepted_cutpoints"><code class="name flex">
 <span>def <span class="ident">single_feature_accepted_cutpoints</span></span>(<span>self, feature, partition_index=Index([], dtype='object'))</span>
 </code></dt>
 <dd>
@@ -1326,40 +1338,42 @@ attribute-values' range
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#discretization-mdlp">Discretization MDLP</a></li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.util.discretization" href="index.html">imodels.util.discretization</a></code></li>
+<li><code><a title="imodels.discretization" href="index.html">imodels.discretization</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer" href="#imodels.util.discretization.mdlp.BRLDiscretizer">BRLDiscretizer</a></code></h4>
+<h4><code><a title="imodels.discretization.mdlp.BRLDiscretizer" href="#imodels.discretization.mdlp.BRLDiscretizer">BRLDiscretizer</a></code></h4>
 <ul class="two-column">
-<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.apply_cutpoints" href="#imodels.util.discretization.mdlp.BRLDiscretizer.apply_cutpoints">apply_cutpoints</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.data" href="#imodels.util.discretization.mdlp.BRLDiscretizer.data">data</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.discretize" href="#imodels.util.discretization.mdlp.BRLDiscretizer.discretize">discretize</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.encode_strings" href="#imodels.util.discretization.mdlp.BRLDiscretizer.encode_strings">encode_strings</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.fit" href="#imodels.util.discretization.mdlp.BRLDiscretizer.fit">fit</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.get_onehot_df" href="#imodels.util.discretization.mdlp.BRLDiscretizer.get_onehot_df">get_onehot_df</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.onehot_df" href="#imodels.util.discretization.mdlp.BRLDiscretizer.onehot_df">onehot_df</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.BRLDiscretizer.transform" href="#imodels.util.discretization.mdlp.BRLDiscretizer.transform">transform</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.BRLDiscretizer.apply_cutpoints" href="#imodels.discretization.mdlp.BRLDiscretizer.apply_cutpoints">apply_cutpoints</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.BRLDiscretizer.data" href="#imodels.discretization.mdlp.BRLDiscretizer.data">data</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.BRLDiscretizer.discretize" href="#imodels.discretization.mdlp.BRLDiscretizer.discretize">discretize</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.BRLDiscretizer.encode_strings" href="#imodels.discretization.mdlp.BRLDiscretizer.encode_strings">encode_strings</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.BRLDiscretizer.fit" href="#imodels.discretization.mdlp.BRLDiscretizer.fit">fit</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.BRLDiscretizer.get_onehot_df" href="#imodels.discretization.mdlp.BRLDiscretizer.get_onehot_df">get_onehot_df</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.BRLDiscretizer.onehot_df" href="#imodels.discretization.mdlp.BRLDiscretizer.onehot_df">onehot_df</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.BRLDiscretizer.transform" href="#imodels.discretization.mdlp.BRLDiscretizer.transform">transform</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.util.discretization.mdlp.MDLP_Discretizer" href="#imodels.util.discretization.mdlp.MDLP_Discretizer">MDLP_Discretizer</a></code></h4>
+<h4><code><a title="imodels.discretization.mdlp.MDLPDiscretizer" href="#imodels.discretization.mdlp.MDLPDiscretizer">MDLPDiscretizer</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.util.discretization.mdlp.MDLP_Discretizer.MDLPC_criterion" href="#imodels.util.discretization.mdlp.MDLP_Discretizer.MDLPC_criterion">MDLPC_criterion</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.MDLP_Discretizer.all_features_accepted_cutpoints" href="#imodels.util.discretization.mdlp.MDLP_Discretizer.all_features_accepted_cutpoints">all_features_accepted_cutpoints</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.MDLP_Discretizer.apply_cutpoints" href="#imodels.util.discretization.mdlp.MDLP_Discretizer.apply_cutpoints">apply_cutpoints</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.MDLP_Discretizer.best_cut_point" href="#imodels.util.discretization.mdlp.MDLP_Discretizer.best_cut_point">best_cut_point</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.MDLP_Discretizer.boundaries_in_partition" href="#imodels.util.discretization.mdlp.MDLP_Discretizer.boundaries_in_partition">boundaries_in_partition</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.MDLP_Discretizer.compute_boundary_points_all_features" href="#imodels.util.discretization.mdlp.MDLP_Discretizer.compute_boundary_points_all_features">compute_boundary_points_all_features</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.MDLP_Discretizer.feature_boundary_points" href="#imodels.util.discretization.mdlp.MDLP_Discretizer.feature_boundary_points">feature_boundary_points</a></code></li>
-<li><code><a title="imodels.util.discretization.mdlp.MDLP_Discretizer.single_feature_accepted_cutpoints" href="#imodels.util.discretization.mdlp.MDLP_Discretizer.single_feature_accepted_cutpoints">single_feature_accepted_cutpoints</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.MDLPDiscretizer.MDLPC_criterion" href="#imodels.discretization.mdlp.MDLPDiscretizer.MDLPC_criterion">MDLPC_criterion</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.MDLPDiscretizer.all_features_accepted_cutpoints" href="#imodels.discretization.mdlp.MDLPDiscretizer.all_features_accepted_cutpoints">all_features_accepted_cutpoints</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.MDLPDiscretizer.apply_cutpoints" href="#imodels.discretization.mdlp.MDLPDiscretizer.apply_cutpoints">apply_cutpoints</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.MDLPDiscretizer.best_cut_point" href="#imodels.discretization.mdlp.MDLPDiscretizer.best_cut_point">best_cut_point</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.MDLPDiscretizer.boundaries_in_partition" href="#imodels.discretization.mdlp.MDLPDiscretizer.boundaries_in_partition">boundaries_in_partition</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.MDLPDiscretizer.compute_boundary_points_all_features" href="#imodels.discretization.mdlp.MDLPDiscretizer.compute_boundary_points_all_features">compute_boundary_points_all_features</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.MDLPDiscretizer.feature_boundary_points" href="#imodels.discretization.mdlp.MDLPDiscretizer.feature_boundary_points">feature_boundary_points</a></code></li>
+<li><code><a title="imodels.discretization.mdlp.MDLPDiscretizer.single_feature_accepted_cutpoints" href="#imodels.discretization.mdlp.MDLPDiscretizer.single_feature_accepted_cutpoints">single_feature_accepted_cutpoints</a></code></li>
 </ul>
 </li>
 </ul>

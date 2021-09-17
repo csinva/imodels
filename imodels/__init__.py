@@ -19,7 +19,11 @@ from .rule_set.slipper import SlipperClassifier
 from .rule_set.boa import BOAClassifier
 from .rule_set import boosted_rules
 from .rule_set.boosted_rules import *
+from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
+from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BOAClassifier]  # , IRFClassifier
 REGRESSORS = [RuleFitRegressor, SLIMRegressor]
+DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]
+

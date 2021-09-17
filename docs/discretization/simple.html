@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.util.discretization.simple API documentation</title>
+<title>imodels.discretization.simple API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,7 +17,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.util.discretization.simple</code></h1>
+<h1 class="title">Module <code>imodels.discretization.simple</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -28,12 +28,13 @@
 import pandas as pd
 from sklearn.preprocessing import KBinsDiscretizer
 
+
 class SimpleDiscretizer:
 
     def __init__(self, n_bins: int = 8, strategy: str = &#39;uniform&#39;):
         self.n_bins = n_bins
         self.strategy = strategy
-    
+
     def fit(self, X: np.array, feature_labels: np.array):
         self.is_categorical = np.array([set(np.unique(X[:, i])).issubset({0, 1}) for i in np.arange(X.shape[1])])
 
@@ -42,33 +43,33 @@ class SimpleDiscretizer:
             self.discretizer = None
             return
 
-        X_categorical = X[:, self.is_categorical]
+        # X_categorical = X[:, self.is_categorical]
         X_categorical_columns = feature_labels[self.is_categorical]
         X_numeric = X[:, ~self.is_categorical]
         X_numeric_columns = feature_labels[~self.is_categorical]
 
         self.discretizer = KBinsDiscretizer(n_bins=self.n_bins, encode=&#39;onehot&#39;, strategy=self.strategy)
-        X_numeric_discretized =  self.discretizer.fit(X_numeric)
+        # X_numeric_discretized = self.discretizer.fit(X_numeric)
 
         discretized_featnames = []
         for feat_name, bin_edges in zip(X_numeric_columns, self.discretizer.bin_edges_):
             be_str = bin_edges.astype(str)
             discretized_featnames += (
-                [f&#39;{feat_name}_&#39; + &#39;_to_&#39;.join([be_str[i], be_str[i+1]]) for i in range(bin_edges.shape[0] - 1)]
+                [f&#39;{feat_name}_&#39; + &#39;_to_&#39;.join([be_str[i], be_str[i + 1]]) for i in range(bin_edges.shape[0] - 1)]
             )
         self.featnames_after_disc = np.append(discretized_featnames, X_categorical_columns)
- 
+
     def transform(self, X: np.array):
         if self.discretizer is None:
             return pd.DataFrame(X, columns=self.feature_labels)
-        
+
         X_categorical = X[:, self.is_categorical]
         X_numeric = X[:, ~self.is_categorical]
 
         X_numeric_discretized = self.discretizer.transform(X_numeric).toarray()
         X_concat = np.concatenate((X_numeric_discretized, X_categorical), axis=1)
         X_df_onehot = pd.DataFrame(X_concat, columns=self.featnames_after_disc)
-        
+
         return X_df_onehot
 
     def fit_transform(self, X: np.array, feature_labels: np.array):
@@ -85,7 +86,7 @@ class SimpleDiscretizer:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.util.discretization.simple.SimpleDiscretizer"><code class="flex name class">
+<dt id="imodels.discretization.simple.SimpleDiscretizer"><code class="flex name class">
 <span>class <span class="ident">SimpleDiscretizer</span></span>
 <span>(</span><span>n_bins=8, strategy='uniform')</span>
 </code></dt>
@@ -100,7 +101,7 @@ class SimpleDiscretizer:
     def __init__(self, n_bins: int = 8, strategy: str = &#39;uniform&#39;):
         self.n_bins = n_bins
         self.strategy = strategy
-    
+
     def fit(self, X: np.array, feature_labels: np.array):
         self.is_categorical = np.array([set(np.unique(X[:, i])).issubset({0, 1}) for i in np.arange(X.shape[1])])
 
@@ -109,33 +110,33 @@ class SimpleDiscretizer:
             self.discretizer = None
             return
 
-        X_categorical = X[:, self.is_categorical]
+        # X_categorical = X[:, self.is_categorical]
         X_categorical_columns = feature_labels[self.is_categorical]
         X_numeric = X[:, ~self.is_categorical]
         X_numeric_columns = feature_labels[~self.is_categorical]
 
         self.discretizer = KBinsDiscretizer(n_bins=self.n_bins, encode=&#39;onehot&#39;, strategy=self.strategy)
-        X_numeric_discretized =  self.discretizer.fit(X_numeric)
+        # X_numeric_discretized = self.discretizer.fit(X_numeric)
 
         discretized_featnames = []
         for feat_name, bin_edges in zip(X_numeric_columns, self.discretizer.bin_edges_):
             be_str = bin_edges.astype(str)
             discretized_featnames += (
-                [f&#39;{feat_name}_&#39; + &#39;_to_&#39;.join([be_str[i], be_str[i+1]]) for i in range(bin_edges.shape[0] - 1)]
+                [f&#39;{feat_name}_&#39; + &#39;_to_&#39;.join([be_str[i], be_str[i + 1]]) for i in range(bin_edges.shape[0] - 1)]
             )
         self.featnames_after_disc = np.append(discretized_featnames, X_categorical_columns)
- 
+
     def transform(self, X: np.array):
         if self.discretizer is None:
             return pd.DataFrame(X, columns=self.feature_labels)
-        
+
         X_categorical = X[:, self.is_categorical]
         X_numeric = X[:, ~self.is_categorical]
 
         X_numeric_discretized = self.discretizer.transform(X_numeric).toarray()
         X_concat = np.concatenate((X_numeric_discretized, X_categorical), axis=1)
         X_df_onehot = pd.DataFrame(X_concat, columns=self.featnames_after_disc)
-        
+
         return X_df_onehot
 
     def fit_transform(self, X: np.array, feature_labels: np.array):
@@ -144,7 +145,7 @@ class SimpleDiscretizer:
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.util.discretization.simple.SimpleDiscretizer.fit"><code class="name flex">
+<dt id="imodels.discretization.simple.SimpleDiscretizer.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, feature_labels)</span>
 </code></dt>
 <dd>
@@ -161,24 +162,24 @@ class SimpleDiscretizer:
         self.discretizer = None
         return
 
-    X_categorical = X[:, self.is_categorical]
+    # X_categorical = X[:, self.is_categorical]
     X_categorical_columns = feature_labels[self.is_categorical]
     X_numeric = X[:, ~self.is_categorical]
     X_numeric_columns = feature_labels[~self.is_categorical]
 
     self.discretizer = KBinsDiscretizer(n_bins=self.n_bins, encode=&#39;onehot&#39;, strategy=self.strategy)
-    X_numeric_discretized =  self.discretizer.fit(X_numeric)
+    # X_numeric_discretized = self.discretizer.fit(X_numeric)
 
     discretized_featnames = []
     for feat_name, bin_edges in zip(X_numeric_columns, self.discretizer.bin_edges_):
         be_str = bin_edges.astype(str)
         discretized_featnames += (
-            [f&#39;{feat_name}_&#39; + &#39;_to_&#39;.join([be_str[i], be_str[i+1]]) for i in range(bin_edges.shape[0] - 1)]
+            [f&#39;{feat_name}_&#39; + &#39;_to_&#39;.join([be_str[i], be_str[i + 1]]) for i in range(bin_edges.shape[0] - 1)]
         )
     self.featnames_after_disc = np.append(discretized_featnames, X_categorical_columns)</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.simple.SimpleDiscretizer.fit_transform"><code class="name flex">
+<dt id="imodels.discretization.simple.SimpleDiscretizer.fit_transform"><code class="name flex">
 <span>def <span class="ident">fit_transform</span></span>(<span>self, X, feature_labels)</span>
 </code></dt>
 <dd>
@@ -192,7 +193,7 @@ class SimpleDiscretizer:
     return self.transform(X)</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.discretization.simple.SimpleDiscretizer.transform"><code class="name flex">
+<dt id="imodels.discretization.simple.SimpleDiscretizer.transform"><code class="name flex">
 <span>def <span class="ident">transform</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -204,14 +205,14 @@ class SimpleDiscretizer:
 <pre><code class="python">def transform(self, X: np.array):
     if self.discretizer is None:
         return pd.DataFrame(X, columns=self.feature_labels)
-    
+
     X_categorical = X[:, self.is_categorical]
     X_numeric = X[:, ~self.is_categorical]
 
     X_numeric_discretized = self.discretizer.transform(X_numeric).toarray()
     X_concat = np.concatenate((X_numeric_discretized, X_categorical), axis=1)
     X_df_onehot = pd.DataFrame(X_concat, columns=self.featnames_after_disc)
-    
+
     return X_df_onehot</code></pre>
 </details>
 </dd>
@@ -228,17 +229,17 @@ class SimpleDiscretizer:
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.util.discretization" href="index.html">imodels.util.discretization</a></code></li>
+<li><code><a title="imodels.discretization" href="index.html">imodels.discretization</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.util.discretization.simple.SimpleDiscretizer" href="#imodels.util.discretization.simple.SimpleDiscretizer">SimpleDiscretizer</a></code></h4>
+<h4><code><a title="imodels.discretization.simple.SimpleDiscretizer" href="#imodels.discretization.simple.SimpleDiscretizer">SimpleDiscretizer</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.util.discretization.simple.SimpleDiscretizer.fit" href="#imodels.util.discretization.simple.SimpleDiscretizer.fit">fit</a></code></li>
-<li><code><a title="imodels.util.discretization.simple.SimpleDiscretizer.fit_transform" href="#imodels.util.discretization.simple.SimpleDiscretizer.fit_transform">fit_transform</a></code></li>
-<li><code><a title="imodels.util.discretization.simple.SimpleDiscretizer.transform" href="#imodels.util.discretization.simple.SimpleDiscretizer.transform">transform</a></code></li>
+<li><code><a title="imodels.discretization.simple.SimpleDiscretizer.fit" href="#imodels.discretization.simple.SimpleDiscretizer.fit">fit</a></code></li>
+<li><code><a title="imodels.discretization.simple.SimpleDiscretizer.fit_transform" href="#imodels.discretization.simple.SimpleDiscretizer.fit_transform">fit_transform</a></code></li>
+<li><code><a title="imodels.discretization.simple.SimpleDiscretizer.transform" href="#imodels.discretization.simple.SimpleDiscretizer.transform">transform</a></code></li>
 </ul>
 </li>
 </ul>

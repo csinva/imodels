@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from imodels.util.discretizer import BasicDiscretizer, RFDiscretizer
+from imodels.discretization.discretizer import BasicDiscretizer, RFDiscretizer
 
 path_to_tests = os.path.dirname(os.path.realpath(__file__))
 

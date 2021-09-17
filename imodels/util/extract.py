@@ -8,7 +8,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_array
 
 from imodels.util.convert import tree_to_rules
-from imodels.util.discretization import BRLDiscretizer, SimpleDiscretizer
+from imodels.discretization import BRLDiscretizer, SimpleDiscretizer
 
 
 def extract_fpgrowth(X, y,

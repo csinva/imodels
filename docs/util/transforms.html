@@ -59,7 +59,7 @@ class Winsorizer():
 
 
 class FriedScale():
-    &#34;&#34;&#34;Performs scaling of linear variables according to Friedman et al. 2005 Sec 5
+    &#34;&#34;&#34;Performs scaling of linear variables according to Friedman et alpha_l. 2005 Sec 5
 
     Each variable is first Winsorized l-&gt;l*, then standardised as 0.4 x l* / std(l*)
     Warning: this class should not be used directly.
@@ -104,7 +104,7 @@ class FriedScale():
 <span>(</span><span>winsorizer=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Performs scaling of linear variables according to Friedman et al. 2005 Sec 5</p>
+<section class="desc"><p>Performs scaling of linear variables according to Friedman et alpha_l. 2005 Sec 5</p>
 <p>Each variable is first Winsorized l-&gt;l<em>, then standardised as 0.4 x l</em> / std(l*)
 Warning: this class should not be used directly.</p></section>
 <details class="source">
@@ -112,7 +112,7 @@ Warning: this class should not be used directly.</p></section>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FriedScale():
-    &#34;&#34;&#34;Performs scaling of linear variables according to Friedman et al. 2005 Sec 5
+    &#34;&#34;&#34;Performs scaling of linear variables according to Friedman et alpha_l. 2005 Sec 5
 
     Each variable is first Winsorized l-&gt;l*, then standardised as 0.4 x l* / std(l*)
     Warning: this class should not be used directly.

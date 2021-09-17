@@ -32,7 +32,7 @@ class Winsorizer():
 
 
 class FriedScale():
-    """Performs scaling of linear variables according to Friedman et al. 2005 Sec 5
+    """Performs scaling of linear variables according to Friedman et alpha_l. 2005 Sec 5
 
     Each variable is first Winsorized l->l*, then standardised as 0.4 x l* / std(l*)
     Warning: this class should not be used directly.

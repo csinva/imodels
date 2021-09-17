@@ -30,12 +30,12 @@ np.random.seed(13)
 
 
 num_features = 4
-n_rules = 1000
+N = 1000
 max_depth = 100
 
 # prepare data
-X = np.random.rand(n_rules, num_features)
-y = np.random.rand(n_rules)
+X = np.random.rand(N, num_features)
+y = np.random.rand(N)
 X_t = torch.Tensor(X)
 
 # train rf
@@ -70,12 +70,12 @@ Example
 
 
     num_features = 4
-    n_rules = 1000
+    N = 1000
     max_depth = 100
 
     # prepare data
-    X = np.random.rand(n_rules, num_features)
-    y = np.random.rand(n_rules)
+    X = np.random.rand(N, num_features)
+    y = np.random.rand(N)
     X_t = torch.Tensor(X)
 
     # train rf

@@ -90,7 +90,7 @@ print(model) # print the rule-based model
 <td>Uses SLIPPER to sequentially learn a set of rules</td>
 </tr>
 <tr>
-<td align="left">BOA rule set</td>
+<td align="left">BOA rule set*</td>
 <td><a href="https://csinva.io/imodels/rule_set/boa.html">🗂️</a>, <a href="https://github.com/wangtongada/BOA">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/16-003/16-003.pdf">📄</a></td>
 <td>Uses a Bayesian or-of-and algorithm to find a concise rule set</td>
 </tr>
@@ -135,6 +135,8 @@ print(model) # print the rule-based model
 Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementation 🔗, Research paper 📄
 </br>
 See also our <a href="https://csinva.io/imodels/util/discretizer.html">fast and effective discretizers</a> for data preprocessing.
+</br>
+*Still not fully tested/compatible
 </p>
 <p>The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:</p>
 <table>
@@ -234,7 +236,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 </tr>
 <tr>
 <td align="left">SLIPPER rule set</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">SlipperClassifier</a></td>
+<td align="center"><a href="https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SlipperClassifier</a></td>
 <td align="center"></td>
 </tr>
 <tr>
@@ -343,10 +345,13 @@ from .rule_set.slipper import SlipperClassifier
 from .rule_set.boa import BOAClassifier
 from .rule_set import boosted_rules
 from .rule_set.boosted_rules import *
+from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
+from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BOAClassifier]  # , IRFClassifier
-REGRESSORS = [RuleFitRegressor, SLIMRegressor]</code></pre>
+REGRESSORS = [RuleFitRegressor, SLIMRegressor]
+DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]</code></pre>
 </details>
 </section>
 <section>
@@ -355,6 +360,10 @@ REGRESSORS = [RuleFitRegressor, SLIMRegressor]</code></pre>
 <dt><code class="name"><a title="imodels.algebraic" href="algebraic/index.html">algebraic</a></code></dt>
 <dd>
 <section class="desc"><p>Generic class for models that take the form of algebraic equations (e.g. linear models).</p></section>
+</dd>
+<dt><code class="name"><a title="imodels.discretization" href="discretization/index.html">discretization</a></code></dt>
+<dd>
+<section class="desc"></section>
 </dd>
 <dt><code class="name"><a title="imodels.rule_list" href="rule_list/index.html">rule_list</a></code></dt>
 <dd>
@@ -403,6 +412,7 @@ REGRESSORS = [RuleFitRegressor, SLIMRegressor]</code></pre>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="imodels.algebraic" href="algebraic/index.html">algebraic</a></code></li>
+<li><code><a title="imodels.discretization" href="discretization/index.html">discretization</a></code></li>
 <li><code><a title="imodels.rule_list" href="rule_list/index.html">rule_list</a></code></li>
 <li><code><a title="imodels.rule_set" href="rule_set/index.html">rule_set</a></code></li>
 <li><code><a title="imodels.tests" href="tests/index.html">tests</a></code></li>

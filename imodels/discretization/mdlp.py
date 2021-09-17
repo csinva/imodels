@@ -1,17 +1,23 @@
-from __future__ import division
+'''
+# Discretization MDLP
+Python implementation of Fayyad and Irani's MDLP criterion discretiation algorithm
 
+**Reference:**
+Irani, Keki B. "Multi-interval discretization of continuous-valued attributes for classiﬁcation learning." (1993).
+
+'''
 __author__ = 'Victor Ruiz, vmr11@pitt.edu'
 
-from math import log
 import numbers
+from math import log
 
 import numpy as np
 import pandas as pd
 
-from ..metrics import entropy, cut_point_information_gain
+from imodels.util.metrics import entropy, cut_point_information_gain
 
 
-class MDLP_Discretizer(object):
+class MDLPDiscretizer(object):
     def __init__(self, dataset, class_label, out_path_data=None, out_path_bins=None, features=None):
         '''
         initializes discretizer object:
@@ -260,8 +266,9 @@ class MDLP_Discretizer(object):
                     print('attr: %s\n\t%s' % (attr, ', '.join([bin_label for bin_label in bin_label_collection[attr]])),
                           file=bins_file)
 
+
 class BRLDiscretizer:
-    
+
     def __init__(self, X, y, feature_labels, verbose=False):
         self.feature_labels_original = feature_labels
         self.verbose = verbose
@@ -276,12 +283,12 @@ class BRLDiscretizer:
         for fi in range(X_str_disc.shape[1]):
             # if not string, has values other than 0 and 1, and not specified as undiscretized
             if (
-                isinstance(X_str_disc[0][fi], numbers.Number)
-                and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
-                and (len(self.feature_labels) == 0 or
-                        len(undiscretized_features) == 0 or
-                        self.feature_labels[fi] not in undiscretized_features
-                )
+                    isinstance(X_str_disc[0][fi], numbers.Number)
+                    and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
+                    and (len(self.feature_labels) == 0 or
+                         len(undiscretized_features) == 0 or
+                         self.feature_labels[fi] not in undiscretized_features
+            )
             ):
                 self.discretized_features.append(self.feature_labels[fi])
 
@@ -291,19 +298,19 @@ class BRLDiscretizer:
                     "Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to "
                     "strings, and/or specify the argument 'undiscretized_features', to avoid this.)")
             X_str_and_num_disc = self.discretize(X_str_disc, y)
-        
+
             self.discretized_X = X_str_and_num_disc
         else:
             self.discretizer = None
             return
-    
+
     def discretize(self, X, y):
         '''Discretize the features specified in self.discretized_features
         '''
         if self.verbose:
             print("Discretizing ", self.discretized_features, "...")
         D = pd.DataFrame(np.hstack((X, np.expand_dims(y, axis=1))), columns=list(self.feature_labels) + ["y"])
-        self.discretizer = MDLP_Discretizer(dataset=D, class_label="y", features=self.discretized_features)
+        self.discretizer = MDLPDiscretizer(dataset=D, class_label="y", features=self.discretized_features)
 
         cat_data = pd.DataFrame(np.zeros_like(X))
         for i in range(len(self.feature_labels)):
@@ -312,7 +319,7 @@ class BRLDiscretizer:
                 new_column = label + " : " + self.discretizer._data[label].astype(str)
                 cat_data.iloc[:, i] = new_column
             else:
-                cat_data.iloc[:, i] = D[label]            
+                cat_data.iloc[:, i] = D[label]
 
         return np.array(cat_data).tolist()
 
@@ -323,7 +330,7 @@ class BRLDiscretizer:
             if issubclass(type(X[0][fi]), str):
                 new_columns = pd.get_dummies(X[:, fi])
                 new_columns.columns = [self.feature_labels_original[fi] + '_' + value for value in new_columns.columns]
-                new_columns_colon_format = new_columns.apply(lambda s: s.name + ' : ' +  s.astype(str))
+                new_columns_colon_format = new_columns.apply(lambda s: s.name + ' : ' + s.astype(str))
                 X_str_disc = pd.concat([X_str_disc, new_columns_colon_format], axis=1)
             else:
                 X_str_disc = pd.concat([X_str_disc, pd.Series(X[:, fi], name=self.feature_labels_original[fi])], axis=1)
@@ -331,14 +338,14 @@ class BRLDiscretizer:
         return X_str_disc.values
 
     def transform(self, X, return_onehot=True):
-        
+
         if type(X) in [pd.DataFrame, pd.Series]:
             X = X.values
-        
+
         if self.discretizer is None:
             return pd.DataFrame(X, columns=self.feature_labels_original)
 
-        self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)        
+        self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)
         self.apply_cutpoints()
         D = np.array(self.data)
 
@@ -347,12 +354,12 @@ class BRLDiscretizer:
         for i in range(len(Dl)):
             for j in range(len(Dl[0])):
                 Dl[i][j] = self.feature_labels[j] + " : " + Dl[i][j]
-        
+
         if not return_onehot:
             return Dl
         else:
             return self.get_onehot_df(Dl)
-    
+
     @property
     def onehot_df(self):
         return self.get_onehot_df(self.discretized_X)
@@ -378,6 +385,6 @@ class BRLDiscretizer:
     @data.setter
     def data(self, value):
         self.discretizer._data = value
-    
+
     def apply_cutpoints(self):
         return self.discretizer.apply_cutpoints()

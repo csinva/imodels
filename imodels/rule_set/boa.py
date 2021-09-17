@@ -15,6 +15,7 @@ from numpy.random import random
 from scipy.sparse import csc_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.utils.validation import check_X_y
 
 from imodels.rule_set.rule_set import RuleSet
 
@@ -26,18 +27,15 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
     Remember here the BOA contains only the index of selected rules from Nrules self.rules_
     '''
 
-    def __init__(self, binary_data, Y,
-                 n_rules: int = 2000,
+    def __init__(self, n_rules: int = 2000,
                  supp=5, maxlen: int = 10,
                  num_iterations=5000, num_chains=3, q=0.1,
                  alpha_pos=100, beta_pos=1, alpha_neg=1, beta_neg=100,
-                 al=None, bl=None,
-                 method='randomforest', ):
+                 alpha_l=None, beta_l=None,
+                 discretization_method='randomforest', ):
         '''
         Params
         ------
-        binary_data
-        Y
         n_rules
             number of rules to be used in SA_patternbased and also the output of generate_rules
         supp
@@ -50,26 +48,16 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             number of chains in the simulated annealing search algorithm
         q
         alpha_1
-            \rho = alpha/(alpha+beta). Make sure \rho is close to one when choosing alpha and beta.
+            \rho = alpha/(alpha+beta). Make sure \rho is close to one when choosing alpha and beta
+            The alpha and beta parameters alter the prior distributions for different rules
         beta_pos
         alpha_neg
         beta_neg
-        al
-        bl
-        method
+        alpha_l
+        beta_l
+        discretization_method
             discretization method
         '''
-
-        self.df = binary_data
-        self.Y = Y
-        self.attributeLevelNum = defaultdict(int)
-        self.attributeNames = []
-        for i, name in enumerate(binary_data.columns):
-            attribute = name.split('_')[0]
-            self.attributeLevelNum[attribute] += 1
-            self.attributeNames.append(attribute)
-        self.attributeNames = list(set(self.attributeNames))
-
         self.n_rules = n_rules
         self.supp = supp
         self.maxlen = maxlen
@@ -82,32 +70,55 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         self.beta_pos = beta_pos
         self.alpha_neg = alpha_neg
         self.beta_neg = beta_neg
-        self.method = method
-        self.set_pattern_space()
-        if al == None or bl == None or len(al) != self.maxlen or len(bl) != self.maxlen:
-            print('No or wrong input for alpha_l and beta_l. The model will use default parameters!')
-            self.C = [1.0 / self.maxlen for i in range(self.maxlen)]
-            self.C.insert(0, -1)
-            self.alpha_l = [10 for i in range(self.maxlen + 1)]
-            self.beta_l = [10 * self.patternSpace[i] / self.C[i] for i in range(self.maxlen + 1)]
-        else:
-            self.alpha_l = [1] + list(al)
-            self.beta_l = [1] + list(bl)
+        self.method = discretization_method
 
-    def fit(self, init=[], verbose=False):
-        self.generate_rules()
-        nRules = len(self.rules_)
-        self.rules_len = [len(rule) for rule in self.rules_]
+        self.alpha_l = alpha_l
+        self.beta_l = beta_l
+
+    def fit(self, X, y, init=[], verbose=False):
+
+        # check inputs
+        # todo: change this so it works for np arrays in addition to just pd dataframe
+        check_X_y(X, y)
+        self.attr_level_num = defaultdict(int)  # any missing value defaults to 0
+        self.attr_names = []
+        for i, name in enumerate(X.columns):
+            attribute = name.split('_')[0]  # todo: remove this hardcoded split on underscore
+            self.attr_level_num[attribute] += 1
+            self.attr_names.append(attribute)
+        self.attr_names = list(set(self.attr_names))
+
+        # set up patterns
+        self.set_pattern_space()
+
+        # parameter checking
+        if self.alpha_l is None or self.beta_l is None or len(self.alpha_l) != self.maxlen or len(
+                self.beta_l) != self.maxlen:
+            print('No or wrong input for alpha_l and beta_l. The model will use default parameters!')
+            self.C = [1.0 / self.maxlen] * self.maxlen
+            self.C.insert(0, -1)
+            self.alpha_l = [10] * (self.maxlen + 1)
+            self.beta_l = [10 * self.pattern_space[i] / self.C[i] for i in range(self.maxlen + 1)]
+        else:
+            self.alpha_l = [1] + list(self.alpha_l)
+            self.beta_l = [1] + list(self.beta_l)
+
+        # setup
+        self.generate_rules(X, y)
+        n_rules_current = len(self.rules_)
+        self.rules_len_list = [len(rule) for rule in self.rules_]
         maps = defaultdict(list)
-        T0 = 1000
+        T0 = 1000  # initial temperature for simulated annealing
         split = 0.7 * self.num_iterations
+
+        # run simulated annealing
         for chain in range(self.num_chains):
             # initialize with a random pattern set
             if init != []:
                 rules_curr = init.copy()
             else:
-                N = sample(range(1, min(8, nRules), 1), 1)[0]
-                rules_curr = sample(range(nRules), N)
+                N = sample(range(1, min(8, n_rules_current), 1), 1)[0]
+                rules_curr = sample(range(n_rules_current), N)
             rules_curr_norm = self.normalize(rules_curr)
             pt_curr = -100000000000
             maps[chain].append(
@@ -121,19 +132,25 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                     index = find_lt(p, random())
                     rules_curr = maps[chain][index][2].copy()
                     rules_curr_norm = maps[chain][index][2].copy()
-                rules_new, rules_norm = self.propose(rules_curr.copy(), rules_curr_norm.copy(), self.q)
-                cfmatrix, prob = self.compute_prob(rules_new)
-                T = T0 ** (1 - iter / self.num_iterations)
+
+                # propose new rules
+                rules_new, rules_norm = self.propose(rules_curr.copy(), rules_curr_norm.copy(), self.q, y)
+
+                # compute probability of new rules
+                cfmatrix, prob = self.compute_prob(rules_new, y)
+                T = T0 ** (1 - iter / self.num_iterations)  # temperature for simulated annealing
                 pt_new = sum(prob)
                 alpha = np.exp(float(pt_new - pt_curr) / T)
 
                 if pt_new > sum(maps[chain][-1][1]):
                     maps[chain].append([iter, prob, rules_new, [self.rules_[i] for i in rules_new]])
                     if verbose:
-                        print(
-                            '\n** chain = {}, max at iter = {} ** \n accuracy = {}, TP = {},FP = {}, TN = {}, FN = {}\n pt_new is {}, prior_ChsRules={}, likelihood_1 = {}, likelihood_2 = {}\n '.format(
-                                chain, iter, (cfmatrix[0] + cfmatrix[2] + 0.0) / len(self.Y), cfmatrix[0], cfmatrix[1],
-                                cfmatrix[2], cfmatrix[3], sum(prob), prob[0], prob[1], prob[2]))
+                        print((
+                            '\n** chain = {}, max at iter = {} ** \n accuracy = {}, TP = {},FP = {}, TN = {}, FN = {}'
+                            '\n pt_new is {}, prior_ChsRules={}, likelihood_1 = {}, likelihood_2 = {}\n').format(
+                            chain, iter, (cfmatrix[0] + cfmatrix[2] + 0.0) / len(y), cfmatrix[0], cfmatrix[1],
+                            cfmatrix[2], cfmatrix[3], sum(prob), prob[0], prob[1], prob[2])
+                        )
                         self.print_rules(rules_new)
                         print(rules_new)
                 if random() <= alpha:
@@ -147,7 +164,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         return ' '.join(str(r) for r in self.rules_)
 
     def predict(self, df):
-        Z = [[] for rule in self.rules_]
+        Z = [[]] * len(self.rules_)
         dfn = 1 - df  # df has negative associations
         dfn.columns = [name.strip() + '_neg' for name in df.columns]
         df = pd.concat([df, dfn], axis=1)
@@ -157,68 +174,79 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         return Yhat
 
     def set_pattern_space(self):
-        """Compute the rule space from the levels in each attribute """
-        for item in self.attributeNames:
-            self.attributeLevelNum[item + '_neg'] = self.attributeLevelNum[item]
-        tmp = [item + '_neg' for item in self.attributeNames]
-        self.attributeNames.extend(tmp)
-        self.patternSpace = np.zeros(self.maxlen + 1)
+        """Compute the rule space from the levels in each attribute
+        """
+        # add feat_neg to each existing feature feat
+        for item in self.attr_names:
+            self.attr_level_num[item + '_neg'] = self.attr_level_num[item]
+        tmp = [item + '_neg' for item in self.attr_names]
+        self.attr_names.extend(tmp)
+
+        # set up pattern_space
+        self.pattern_space = np.zeros(self.maxlen + 1)
         for k in range(1, self.maxlen + 1, 1):
-            for subset in combinations(self.attributeNames, k):
+            for subset in combinations(self.attr_names, k):
                 tmp = 1
                 for i in subset:
-                    tmp = tmp * self.attributeLevelNum[i]
-                self.patternSpace[k] = self.patternSpace[k] + tmp
+                    tmp = tmp * self.attr_level_num[i]
+                print('subset', subset, 'tmp', tmp, 'k', k)
+                self.pattern_space[k] = self.pattern_space[k] + tmp
 
-    def generate_rules(self):
+    def generate_rules(self, X, y):
         '''This function generates rules that satisfy supp and maxlen using fpgrowth, then it selects the top n_rules rules that make data have the biggest decrease in entropy
         there are two ways to generate rules. fpgrowth can handle cases where the maxlen is small. If maxlen<=3, fpgrowth can generates rules much faster than randomforest.
         If maxlen is big, fpgrowh tends to generate too many rules that overflow the memories.
         '''
 
-        df = 1 - self.df  # df has negative associations
-        df.columns = [name.strip() + '_neg' for name in self.df.columns]
-        df = pd.concat([self.df, df], axis=1)
+        df = 1 - X  # df has negative associations
+        df.columns = [name.strip() + '_neg' for name in X.columns]
+        df = pd.concat([X, df], axis=1)
         if self.method == 'fpgrowth' and self.maxlen <= 3:
             itemMatrix = [[item for item in df.columns if row[item] == 1] for i, row in df.iterrows()]
-            pindex = np.where(self.Y == 1)[0]
+            pindex = np.where(y == 1)[0]
             rules = fpgrowth([itemMatrix[i] for i in pindex], supp=self.supp, zmin=1, zmax=self.maxlen)
             rules = [tuple(np.sort(rule[0])) for rule in rules]
             rules = list(set(rules))
         else:
+            '''todo: replace this with imodels.RFDiscretizer
+            '''
             rules = []
             for length in range(1, self.maxlen + 1, 1):
                 n_estimators = min(pow(df.shape[1], length), 4000)
                 clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=length)
-                clf.fit(self.df, self.Y)
+                clf.fit(X, y)
                 for n in range(n_estimators):
                     rules.extend(extract_rules(clf.estimators_[n], df.columns))
             rules = [list(x) for x in set(tuple(x) for x in rules)]
         self.rules_ = rules
-        self.screen_rules(rules, df, self.n_rules)  # select the top n_rules rules using secondary criteria, information gain
+
+        # select the top n_rules rules using secondary criteria, information gain
+        self.screen_rules(df, y)  # updates self.rules_
         self.set_pattern_space()
 
-    def screen_rules(self, rules, df, N):
-        '''Screening rules using information gain'''
-        itemInd = {}
+    def screen_rules(self, df, y):
+        '''Screening rules using information gain
+        '''
+        item_ind_dict = {}
         for i, name in enumerate(df.columns):
-            itemInd[name] = i
-        indices = np.array(list(itertools.chain.from_iterable([[itemInd[x] for x in rule] for rule in rules])))
-        len_rules = [len(rule) for rule in rules]
+            item_ind_dict[name] = i
+        indices = np.array(
+            list(itertools.chain.from_iterable([[item_ind_dict[x] for x in rule] for rule in self.rules_])))
+        len_rules = [len(rule) for rule in self.rules_]
         indptr = list(accumulate(len_rules))
         indptr.insert(0, 0)
         indptr = np.array(indptr)
         data = np.ones(len(indices))
-        ruleMatrix = csc_matrix((data, indices, indptr), shape=(len(df.columns), len(rules)))
-        mat = np.matrix(df) * ruleMatrix
-        lenMatrix = np.matrix([len_rules for i in range(df.shape[0])])
-        Z = (mat == lenMatrix).astype(int)
-        Zpos = [Z[i] for i in np.where(self.Y > 0)][0]
+        rule_matrix = csc_matrix((data, indices, indptr), shape=(len(df.columns), len(self.rules_)))
+        mat = np.matrix(df) * rule_matrix
+        len_matrix = np.matrix([len_rules for i in range(df.shape[0])])
+        Z = (mat == len_matrix).astype(int)
+        Zpos = [Z[i] for i in np.where(y > 0)][0]
         TP = np.array(np.sum(Zpos, axis=0).tolist()[0])
-        supp_select = np.where(TP >= self.supp * sum(self.Y) / 100)[0]
+        supp_select = np.where(TP >= self.supp * sum(y) / 100)[0]
         FP = np.array(np.sum(Z, axis=0))[0] - TP
-        TN = len(self.Y) - np.sum(self.Y) - FP
-        FN = np.sum(self.Y) - TP
+        TN = len(y) - np.sum(y) - FP
+        FN = np.sum(y) - TP
         p1 = TP.astype(float) / (TP + FP)
         p2 = FN.astype(float) / (FN + TN)
         pp = (TP + FP).astype(float) / (TP + FP + TN + FN)
@@ -228,22 +256,23 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             p1 * (1 - p1) == 0]
         cond_entropy[p2 * (1 - p2) == 0] = -(pp * (p1 * np.log(p1) + (1 - p1) * np.log(1 - p1)))[p2 * (1 - p2) == 0]
         cond_entropy[p1 * (1 - p1) * p2 * (1 - p2) == 0] = 0
-        select = np.argsort(cond_entropy[supp_select])[::-1][-N:]
-        self.rules_ = [rules[i] for i in supp_select[select]]
+        select = np.argsort(cond_entropy[supp_select])[::-1][-self.n_rules:]
+        self.rules_ = [self.rules_[i] for i in supp_select[select]]
         self.RMatrix = np.array(Z[:, supp_select[select]])
 
-    def propose(self, rules_curr, rules_norm, q):
+    def propose(self, rules_curr, rules_norm, q, y):
         nRules = len(self.rules_)
-        Yhat = (np.sum(self.RMatrix[:, rules_curr], axis=1) > 0).astype(int)
-        incorr = np.where(self.Y != Yhat)[0]
+        yhat = (np.sum(self.RMatrix[:, rules_curr], axis=1) > 0).astype(int)
+        incorr = np.where(y != yhat)[0]
         N = len(rules_curr)
+
         if len(incorr) == 0:
+            # BOA correctly classified all points but there could be redundant patterns, so cleaning is needed
             move = ['clean']
-            # it means the BOA correctly classified all points but there could be redundant patterns, so cleaning is needed
         else:
             ex = sample(incorr.tolist(), 1)[0]
             t = random()
-            if self.Y[ex] == 1 or N == 1:
+            if y[ex] == 1 or N == 1:
                 if t < 1.0 / 2 or N == 1:
                     move = ['add']  # action: add
                 else:
@@ -264,10 +293,9 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                 p = []
                 all_sum = np.sum(self.RMatrix[:, rules_curr], axis=1)
                 for index, rule in enumerate(rules_curr):
-                    Yhat = ((all_sum - np.array(self.RMatrix[:, rule])) > 0).astype(int)
-                    TP, FP, TN, FN = getConfusion(Yhat, self.Y)
+                    yhat = ((all_sum - np.array(self.RMatrix[:, rule])) > 0).astype(int)
+                    TP, FP, TN, FN = get_confusion_matrix(yhat, y)
                     p.append(TP.astype(float) / (TP + FP + 1))
-                    # p.append(log_betabin(TP,TP+FP,self.alpha_1,self.beta_pos) + log_betabin(FN,FN+TN,self.alpha_neg,self.beta_neg))
                 p = [x - min(p) for x in p]
                 p = np.exp(p)
                 p = np.insert(p, 0, 0)
@@ -288,12 +316,9 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                 add_rule = sample(range(nRules), 1)[0]
             else:
                 Yhat_neg_index = list(np.where(np.sum(self.RMatrix[:, rules_curr], axis=1) < 1)[0])
-                mat = np.multiply(self.RMatrix[Yhat_neg_index, :].transpose(), self.Y[Yhat_neg_index])
-                # TP = np.array(np.sum(mat,axis = 0).tolist()[0])
+                mat = np.multiply(self.RMatrix[Yhat_neg_index, :].transpose(), y[Yhat_neg_index])
                 TP = np.sum(mat, axis=1)
                 FP = np.array((np.sum(self.RMatrix[Yhat_neg_index, :], axis=0) - TP))
-                TN = np.sum(self.Y[Yhat_neg_index] == 0) - FP
-                FN = sum(self.Y[Yhat_neg_index]) - TP
                 p = (TP.astype(float) / (TP + FP + 1))
                 p[rules_curr] = 0
                 add_rule = sample(np.where(p == max(p))[0].tolist(), 1)[0]
@@ -304,10 +329,10 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         if len(move) > 0 and move[0] == 'clean':
             remove = []
             for i, rule in enumerate(rules_norm):
-                Yhat = (np.sum(
+                yhat = (np.sum(
                     self.RMatrix[:, [rule for j, rule in enumerate(rules_norm) if (j != i and j not in remove)]],
                     axis=1) > 0).astype(int)
-                TP, FP, TN, FN = getConfusion(Yhat, self.Y)
+                TP, FP, TN, FN = get_confusion_matrix(yhat, y)
                 if TP + FP == 0:
                     remove.append(i)
             for x in remove:
@@ -315,11 +340,11 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             return rules_curr, rules_norm
         return rules_curr, rules_norm
 
-    def compute_prob(self, rules):
+    def compute_prob(self, rules, y):
         Yhat = (np.sum(self.RMatrix[:, rules], axis=1) > 0).astype(int)
-        TP, FP, TN, FN = getConfusion(Yhat, self.Y)
-        Kn_count = list(np.bincount([self.rules_len[x] for x in rules], minlength=self.maxlen + 1))
-        prior_ChsRules = sum([log_betabin(Kn_count[i], self.patternSpace[i], self.alpha_l[i], self.beta_l[i]) for i in
+        TP, FP, TN, FN = get_confusion_matrix(Yhat, y)
+        Kn_count = list(np.bincount([self.rules_len_list[x] for x in rules], minlength=self.maxlen + 1))
+        prior_ChsRules = sum([log_betabin(Kn_count[i], self.pattern_space[i], self.alpha_l[i], self.beta_l[i]) for i in
                               range(1, len(Kn_count), 1)])
         likelihood_1 = log_betabin(TP, TP + FP, self.alpha_pos, self.beta_pos)
         likelihood_2 = log_betabin(TN, FN + TN, self.alpha_neg, self.beta_neg)
@@ -357,9 +382,10 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
 
 
 def accumulate(iterable, func=operator.add):
-    'Return running totals'
-    # accumulate([1,2,3,4,5]) --> 1 3 6 10 15
-    # accumulate([1,2,3,4,5], operator.mul) --> 1 2 6 24 120
+    '''Return running totals
+    Ex. accumulate([1,2,3,4,5]) --> 1 3 6 10 15
+    Ex. accumulate([1,2,3,4,5], operator.mul) --> 1 2 6 24 120
+    '''
     it = iter(iterable)
     total = next(it)
     yield total
@@ -387,7 +413,7 @@ def log_gampoiss(k, alpha, beta):
 def log_betabin(k, n, alpha, beta):
     import math
     try:
-        Const = math.lgamma(alpha + beta) - math.lgamma(alpha) - math.lgamma(beta)
+        const = math.lgamma(alpha + beta) - math.lgamma(alpha) - math.lgamma(beta)
     except:
         print('alpha = {}, beta = {}'.format(alpha, beta))
     if isinstance(k, list) or isinstance(k, np.ndarray):
@@ -396,15 +422,13 @@ def log_betabin(k, n, alpha, beta):
             raise ValueError
         lbeta = []
         for ki, ni in zip(k, n):
-            # lbeta.append(math.lgamma(ni+1)- math.lgamma(ki+1) - math.lgamma(ni-ki+1) + math.lgamma(ki+alpha) + math.lgamma(ni-ki+beta) - math.lgamma(ni+alpha+beta) + Const)
-            lbeta.append(math.lgamma(ki + alpha) + math.lgamma(ni - ki + beta) - math.lgamma(ni + alpha + beta) + Const)
+            lbeta.append(math.lgamma(ki + alpha) + math.lgamma(ni - ki + beta) - math.lgamma(ni + alpha + beta) + const)
         return np.array(lbeta)
     else:
-        return math.lgamma(k + alpha) + math.lgamma(n - k + beta) - math.lgamma(n + alpha + beta) + Const
-        # return math.lgamma(n+1)- math.lgamma(k+1) - math.lgamma(n-k+1) + math.lgamma(k+alpha) + math.lgamma(n-k+beta) - math.lgamma(n+alpha+beta) + Const
+        return math.lgamma(k + alpha) + math.lgamma(n - k + beta) - math.lgamma(n + alpha + beta) + const
 
 
-def getConfusion(Yhat, Y):
+def get_confusion_matrix(Yhat, Y):
     if len(Yhat) != len(Y):
         raise NameError('Yhat has different length')
     TP = np.dot(np.array(Y), np.array(Yhat))
@@ -417,8 +441,8 @@ def getConfusion(Yhat, Y):
 def extract_rules(tree, feature_names):
     left = tree.tree_.children_left
     right = tree.tree_.children_right
-    threshold = tree.tree_.threshold
     features = [feature_names[i] for i in tree.tree_.feature]
+
     # get ids of child nodes
     idx = np.argwhere(left == -1)[:, 0]
 
