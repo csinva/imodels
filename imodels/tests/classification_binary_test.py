@@ -1,10 +1,11 @@
-import numpy as np
 import random
 from functools import partial
 
-from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, BayesianRuleListClassifier, \
-    OneRClassifier, BoostedRulesClassifier, RuleFitClassifier, FPLassoClassifier, FPSkopeClassifier, \
-    SLIMClassifier, SlipperClassifier # IRFClassifier
+import numpy as np
+
+from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, OneRClassifier, BoostedRulesClassifier, \
+    RuleFitClassifier, FPLassoClassifier, FPSkopeClassifier, \
+    SlipperClassifier  # IRFClassifier
 
 
 class TestClassClassificationBinary:
@@ -17,7 +18,7 @@ class TestClassClassificationBinary:
         self.n = 40
         self.p = 2
         self.X_classification_binary = np.random.randn(self.n, self.p)
-        self.y_classification_binary = (self.X_classification_binary[:, 0] > 0).astype(int) # y = x0 > 0
+        self.y_classification_binary = (self.X_classification_binary[:, 0] > 0).astype(int)  # y = x0 > 0
         self.y_classification_binary[-2:] = 1 - self.y_classification_binary[-2:]  # flip labels for last few
 
     def test_classification_binary(self):
@@ -25,7 +26,7 @@ class TestClassClassificationBinary:
         '''
         for model_type in [RuleFitClassifier, GreedyRuleListClassifier,
                            FPLassoClassifier, SkopeRulesClassifier,
-                           FPSkopeClassifier, BoostedRulesClassifier, 
+                           FPSkopeClassifier, BoostedRulesClassifier,
                            OneRClassifier, SlipperClassifier]:  # IRFClassifier, SLIMClassifier
 
             init_kwargs = {}
@@ -44,7 +45,6 @@ class TestClassClassificationBinary:
             m.fit(X, self.y_classification_binary)
 
             preds_proba = m.predict_proba(X)
-            
 
             assert len(preds_proba.shape) == 2, 'preds_proba has 2 columns'
             assert preds_proba.shape[1] == 2, 'preds_proba has 2 columns'
@@ -53,7 +53,6 @@ class TestClassClassificationBinary:
             preds = m.predict(X)  # > 0.5).astype(int)
             assert preds.size == self.n, 'predict() yields right size'
             assert (np.argmax(preds_proba, axis=1) == preds).all(), "predict_proba and predict correspond"
-            
 
             acc_train = np.mean(preds == self.y_classification_binary)
 

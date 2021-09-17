@@ -1,10 +1,9 @@
 import numpy as np
-
-from sklearn.utils._testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
+from sklearn.utils._testing import ignore_warnings
 
-from imodels.util.transforms import FriedScale
 from imodels.rule_set.rule_fit import RuleFitRegressor
+from imodels.util.transforms import FriedScale
 
 
 ## Testing FriedScale():
@@ -27,7 +26,6 @@ def test_fried_scale():
 
 @ignore_warnings(category=ConvergenceWarning)
 def test_integration():
-
     X = np.array([[1, 99, 43, 34],
                   [1, 76, 22, 10],
                   [0, 83, 11, 0],
@@ -35,7 +33,8 @@ def test_integration():
                   [0, 53, 40, 34]])
     y = np.array([1, 0, 1, 1, 0])
 
-    rfr = RuleFitRegressor(exp_rand_tree_size=False, n_estimators=500, random_state=1, include_linear=False, max_rules=None, alpha=0.1)
+    rfr = RuleFitRegressor(exp_rand_tree_size=False, n_estimators=500, random_state=1, include_linear=False,
+                           max_rules=None, alpha=0.1)
     rfr.fit(X, y)
     print(len(rfr.get_rules()))
     expected = np.array([0.83333333, 0.25, 0.83333333, 0.83333333, 0.25])

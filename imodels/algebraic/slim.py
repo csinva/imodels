@@ -61,8 +61,8 @@ class SLIMRegressor(BaseEstimator, RegressorMixin):
             self.model_.intercept_ = 0
 
         except SolverError as e:
-            warnings.warn("gurobi, mosek, or cplex solver required for mixed-integer linear "
-                          "regression. rounding non-integer coefficients instead")
+            warnings.warn("gurobi, mosek, or cplex solver required for sparse integer linear "
+                          "regression. Rounding non-integer coefficients instead.")
             m = Lasso(alpha=self.alpha)
             m.fit(X, y, sample_weight=sample_weight)
             self.model_.coef_ = np.round(m.coef_).astype(int)

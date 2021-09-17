@@ -1,5 +1,7 @@
 import unittest
+
 import numpy as np
+
 from imodels.rule_list.greedy_rule_list import GreedyRuleListClassifier
 
 
