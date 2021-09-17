@@ -27,9 +27,9 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
     '''
 
     def __init__(self, binary_data, Y,
-                 N: int = 2000,
+                 n_rules: int = 2000,
                  supp=5, maxlen: int = 10,
-                 Niteration=5000, Nchain=3, q=0.1,
+                 num_iterations=5000, num_chains=3, q=0.1,
                  alpha_pos=100, beta_pos=1, alpha_neg=1, beta_neg=100,
                  al=None, bl=None,
                  method='randomforest', ):
@@ -38,15 +38,15 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         ------
         binary_data
         Y
-        N
+        n_rules
             number of rules to be used in SA_patternbased and also the output of generate_rules
         supp
             The higher this supp, the 'larger' a pattern is. 5% is a generally good number
         maxlen
             maximum length of a pattern
-        Niteration
+        num_iterations
             number of iterations in each chain
-        Nchain
+        num_chains
             number of chains in the simulated annealing search algorithm
         q
         alpha_1
@@ -70,12 +70,12 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             self.attributeNames.append(attribute)
         self.attributeNames = list(set(self.attributeNames))
 
-        self.N = N
+        self.n_rules = n_rules
         self.supp = supp
         self.maxlen = maxlen
 
-        self.Niteration = Niteration
-        self.Nchain = Nchain
+        self.num_iterations = num_iterations
+        self.num_chains = num_chains
         self.q = q
 
         self.alpha_pos = alpha_pos
@@ -100,8 +100,8 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         self.rules_len = [len(rule) for rule in self.rules_]
         maps = defaultdict(list)
         T0 = 1000
-        split = 0.7 * self.Niteration
-        for chain in range(self.Nchain):
+        split = 0.7 * self.num_iterations
+        for chain in range(self.num_chains):
             # initialize with a random pattern set
             if init != []:
                 rules_curr = init.copy()
@@ -113,7 +113,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             maps[chain].append(
                 [-1, [pt_curr / 3, pt_curr / 3, pt_curr / 3], rules_curr, [self.rules_[i] for i in rules_curr]])
 
-            for iter in range(self.Niteration):
+            for iter in range(self.num_iterations):
                 if iter >= split:
                     p = np.array(range(1 + len(maps[chain])))
                     p = np.array(list(accumulate(p)))
@@ -123,7 +123,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                     rules_curr_norm = maps[chain][index][2].copy()
                 rules_new, rules_norm = self.propose(rules_curr.copy(), rules_curr_norm.copy(), self.q)
                 cfmatrix, prob = self.compute_prob(rules_new)
-                T = T0 ** (1 - iter / self.Niteration)
+                T = T0 ** (1 - iter / self.num_iterations)
                 pt_new = sum(prob)
                 alpha = np.exp(float(pt_new - pt_curr) / T)
 
@@ -138,7 +138,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                         print(rules_new)
                 if random() <= alpha:
                     rules_curr_norm, rules_curr, pt_curr = rules_norm.copy(), rules_new.copy(), pt_new
-        pt_max = [sum(maps[chain][-1][1]) for chain in range(self.Nchain)]
+        pt_max = [sum(maps[chain][-1][1]) for chain in range(self.num_chains)]
         index = pt_max.index(max(pt_max))
         self.rules_ = maps[index][-1][3]
         return self
@@ -171,7 +171,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                 self.patternSpace[k] = self.patternSpace[k] + tmp
 
     def generate_rules(self):
-        '''This function generates rules that satisfy supp and maxlen using fpgrowth, then it selects the top N rules that make data have the biggest decrease in entropy
+        '''This function generates rules that satisfy supp and maxlen using fpgrowth, then it selects the top n_rules rules that make data have the biggest decrease in entropy
         there are two ways to generate rules. fpgrowth can handle cases where the maxlen is small. If maxlen<=3, fpgrowth can generates rules much faster than randomforest.
         If maxlen is big, fpgrowh tends to generate too many rules that overflow the memories.
         '''
@@ -195,7 +195,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                     rules.extend(extract_rules(clf.estimators_[n], df.columns))
             rules = [list(x) for x in set(tuple(x) for x in rules)]
         self.rules_ = rules
-        self.screen_rules(rules, df, self.N)  # select the top N rules using secondary criteria, information gain
+        self.screen_rules(rules, df, self.n_rules)  # select the top n_rules rules using secondary criteria, information gain
         self.set_pattern_space()
 
     def screen_rules(self, rules, df, N):

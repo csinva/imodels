@@ -1,7 +1,6 @@
-from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
-from sklearn.utils.multiclass import check_classification_targets
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from typing import List
+
+from sklearn.base import ClassifierMixin, RegressorMixin
 
 from imodels.rule_set.rule_fit import RuleFit
 from imodels.util.convert import itemsets_to_rules

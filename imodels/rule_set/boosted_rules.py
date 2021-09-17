@@ -9,8 +9,8 @@ from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.rule_set.slipper import SlipperClassifier 
-from imodels.util.convert import tree_to_code, tree_to_rules, dict_to_rule 
+from imodels.rule_set.slipper_util import SlipperBaseEstimator
+from imodels.util.convert import tree_to_code, tree_to_rules, dict_to_rule
 from imodels.util.rule import Rule, get_feature_dict, replace_feature_name
 
 
@@ -21,8 +21,8 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
     Params
     ------
     estimator: object with fit and predict methods
-        defaults to DecisionTreeClassifier with AdaBoost
-        for SLIPPER, pass imodels.SlipperClassifier        
+        Defaults to DecisionTreeClassifier with AdaBoost.
+        For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator
     '''
 
     def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1)):
@@ -112,7 +112,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
                 compos_score = est_weight * rule_scores
                 rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
 
-            if type(clf) == SlipperClassifier:
+            if type(clf) == SlipperBaseEstimator:
                 # SLIPPER uses uniform confidence over in rule observations
                 est_rule = dict_to_rule(est.rule, est.feature_dict)
                 rules += [Rule(est_rule, args=[est_weight])]

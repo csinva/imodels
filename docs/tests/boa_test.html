@@ -47,9 +47,6 @@ class TestBoaClassifier(unittest.TestCase):
 
         &#34;&#34;&#34; parameters &#34;&#34;&#34;
         # The following parameters are recommended to change depending on the size and complexity of the data
-        N = 2000  # number of rules to be used in SA_patternbased and also the output of generate_rules
-        Niteration = 500  # number of iterations in each chain
-        Nchain = 2  # number of chains in the simulated annealing search algorithm
 
         supp = 5  # 5% is a generally good number. The higher this supp, the &#39;larger&#39; a pattern is
         maxlen = 3  # maximum length of a pattern
@@ -60,24 +57,19 @@ class TestBoaClassifier(unittest.TestCase):
         alpha_neg = 500  # alpha_-
         beta_neg = 1  # beta_-
 
-        &#34;&#34;&#34; input file &#34;&#34;&#34;
-        # notice that in the example, X is already binary coded.
-        # Data has to be binary coded and the column name shd have the form: attributename_attributevalue
-        filepathX = oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_X.txt&#39;)  # input file X
-        filepathY = oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_Y.txt&#39;)  # input file Y
-        df = read_csv(filepathX, header=0, sep=&#34; &#34;)
-        Y = np.loadtxt(open(filepathY, &#34;rb&#34;), delimiter=&#34; &#34;)
+        df = read_csv(oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_X.txt&#39;), header=0, sep=&#34; &#34;)
+        Y = np.loadtxt(open(oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_Y.txt&#39;), &#34;rb&#34;), delimiter=&#34; &#34;)
 
         lenY = len(Y)
         train_index = sample(range(lenY), int(0.70 * lenY))
         test_index = [i for i in range(lenY) if i not in train_index]
 
         model = BOAClassifier(df.iloc[train_index], Y[train_index],
-                              N=N,
+                              n_rules=2000,
                               supp=supp,
                               maxlen=maxlen,
-                              Niteration=Niteration,
-                              Nchain=Nchain,
+                              num_iterations=500,
+                              num_chains=2,
                               alpha_pos=alpha_pos, beta_pos=beta_pos, alpha_neg=alpha_neg, beta_neg=beta_neg,
                               al=None, bl=None)
         # model.generate_rules()
@@ -164,9 +156,6 @@ not have a method with the specified name.</p></section>
 
         &#34;&#34;&#34; parameters &#34;&#34;&#34;
         # The following parameters are recommended to change depending on the size and complexity of the data
-        N = 2000  # number of rules to be used in SA_patternbased and also the output of generate_rules
-        Niteration = 500  # number of iterations in each chain
-        Nchain = 2  # number of chains in the simulated annealing search algorithm
 
         supp = 5  # 5% is a generally good number. The higher this supp, the &#39;larger&#39; a pattern is
         maxlen = 3  # maximum length of a pattern
@@ -177,24 +166,19 @@ not have a method with the specified name.</p></section>
         alpha_neg = 500  # alpha_-
         beta_neg = 1  # beta_-
 
-        &#34;&#34;&#34; input file &#34;&#34;&#34;
-        # notice that in the example, X is already binary coded.
-        # Data has to be binary coded and the column name shd have the form: attributename_attributevalue
-        filepathX = oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_X.txt&#39;)  # input file X
-        filepathY = oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_Y.txt&#39;)  # input file Y
-        df = read_csv(filepathX, header=0, sep=&#34; &#34;)
-        Y = np.loadtxt(open(filepathY, &#34;rb&#34;), delimiter=&#34; &#34;)
+        df = read_csv(oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_X.txt&#39;), header=0, sep=&#34; &#34;)
+        Y = np.loadtxt(open(oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_Y.txt&#39;), &#34;rb&#34;), delimiter=&#34; &#34;)
 
         lenY = len(Y)
         train_index = sample(range(lenY), int(0.70 * lenY))
         test_index = [i for i in range(lenY) if i not in train_index]
 
         model = BOAClassifier(df.iloc[train_index], Y[train_index],
-                              N=N,
+                              n_rules=2000,
                               supp=supp,
                               maxlen=maxlen,
-                              Niteration=Niteration,
-                              Nchain=Nchain,
+                              num_iterations=500,
+                              num_chains=2,
                               alpha_pos=alpha_pos, beta_pos=beta_pos, alpha_neg=alpha_neg, beta_neg=beta_neg,
                               al=None, bl=None)
         # model.generate_rules()
@@ -258,9 +242,6 @@ not have a method with the specified name.</p></section>
 
     &#34;&#34;&#34; parameters &#34;&#34;&#34;
     # The following parameters are recommended to change depending on the size and complexity of the data
-    N = 2000  # number of rules to be used in SA_patternbased and also the output of generate_rules
-    Niteration = 500  # number of iterations in each chain
-    Nchain = 2  # number of chains in the simulated annealing search algorithm
 
     supp = 5  # 5% is a generally good number. The higher this supp, the &#39;larger&#39; a pattern is
     maxlen = 3  # maximum length of a pattern
@@ -271,24 +252,19 @@ not have a method with the specified name.</p></section>
     alpha_neg = 500  # alpha_-
     beta_neg = 1  # beta_-
 
-    &#34;&#34;&#34; input file &#34;&#34;&#34;
-    # notice that in the example, X is already binary coded.
-    # Data has to be binary coded and the column name shd have the form: attributename_attributevalue
-    filepathX = oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_X.txt&#39;)  # input file X
-    filepathY = oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_Y.txt&#39;)  # input file Y
-    df = read_csv(filepathX, header=0, sep=&#34; &#34;)
-    Y = np.loadtxt(open(filepathY, &#34;rb&#34;), delimiter=&#34; &#34;)
+    df = read_csv(oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_X.txt&#39;), header=0, sep=&#34; &#34;)
+    Y = np.loadtxt(open(oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_Y.txt&#39;), &#34;rb&#34;), delimiter=&#34; &#34;)
 
     lenY = len(Y)
     train_index = sample(range(lenY), int(0.70 * lenY))
     test_index = [i for i in range(lenY) if i not in train_index]
 
     model = BOAClassifier(df.iloc[train_index], Y[train_index],
-                          N=N,
+                          n_rules=2000,
                           supp=supp,
                           maxlen=maxlen,
-                          Niteration=Niteration,
-                          Nchain=Nchain,
+                          num_iterations=500,
+                          num_chains=2,
                           alpha_pos=alpha_pos, beta_pos=beta_pos, alpha_neg=alpha_neg, beta_neg=beta_neg,
                           al=None, bl=None)
     # model.generate_rules()

@@ -52,15 +52,16 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | :-------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | Rulefit rule set            | [🗂️](https://csinva.io/imodels/rule_set/rule_fit.html), [🔗](https://github.com/christophM/rulefit), [📄](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf) | Extracts rules from a decision tree then builds a sparse linear model with them |
 | Skope rule set              | [🗂️](https://csinva.io/imodels/rule_set/skope_rules.html), [🔗](https://github.com/scikit-learn-contrib/skope-rules) | Extracts rules from gradient-boosted trees, deduplicates them, then forms a linear combination of them based on their OOB precision |
-| Boosted rule set            | [🗂️](https://csinva.io/imodels/rule_set/boosted_rules.html), [🔗](https://github.com/jaimeps/adaboost-implementation), [📄](https://www.sciencedirect.com/science/article/pii/S002200009791504X) | Uses Adaboost or SLIPPER to sequentially learn a set of rules |
-| BOA rule set                | [🗂️](https://csinva.io/imodels/rule_set/boa.html), [🔗](https://github.com/wangtongada/BOA), [📄](https://www.jmlr.org/papers/volume18/16-003/16-003.pdf) | Uses a Bayesian or-of-and algorithm to find a concise rule set
+| Boosted rule set            | [🗂️](https://csinva.io/imodels/rule_set/boosted_rules.html), [🔗](https://github.com/jaimeps/adaboost-implementation), [📄](https://www.sciencedirect.com/science/article/pii/S002200009791504X) | Uses Adaboost to sequentially learn a set of rules           |
+| Slipper rule set            | [🗂️](https://csinva.io/imodels/rule_set/slipper.html), [📄](https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf) | Uses SLIPPER to sequentially learn a set of rules           |
+| BOA rule set                | [🗂️](https://csinva.io/imodels/rule_set/boa.html), [🔗](https://github.com/wangtongada/BOA), [📄](https://www.jmlr.org/papers/volume18/16-003/16-003.pdf) | Uses a Bayesian or-of-and algorithm to find a concise rule set |
 | Bayesian rule list          | [🗂️](https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html), [🔗](https://github.com/tmadl/sklearn-expertsys), [📄](https://arxiv.org/abs/1602.08610) | Learns a compact rule list by sampling rule lists (rather than using a greedy heuristic) |
 | Greedy rule list            | [🗂️](https://csinva.io/imodels/rule_list/greedy_rule_list.html), [🔗](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea) | Uses CART to learn a list (only a single path), rather than a decision tree |
 | OneR rule list              | [🗂️](https://csinva.io/imodels/rule_list/one_r.html), [📄](https://link.springer.com/article/10.1023/A:1022631118932) | Learns rule list restricted to only one feature              |
 | Optimal rule tree           | [🗂️](https://csinva.io/imodels/tree/optimal_classification_tree/index.html), [🔗](https://github.com/pan5431333/pyoptree), [📄](https://link.springer.com/article/10.1007/s10994-017-5633-9) | (In progress) Learns succinct trees using global optimization rather than greedy heuristics |
 | Iterative random forest     | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [🔗](https://github.com/Yu-Group/iterative-Random-Forest), [📄](https://www.pnas.org/content/115/8/1943) | (In progress) Repeatedly fit random forest, giving features with high importance a higher chance of being selected |
 | Sparse integer linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Forces coefficients to be integers                           |
-| Rule sets                   | ⌛                                                            | (Coming soon!) Many popular rule sets including Lightweight Rule Induction, MLRules |
+| More Rule sets              | ⌛                                                            | (Coming soon!) Many popular rule sets including Lightweight Rule Induction, MLRules |
 
 <p align="center">
 Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementation 🔗, Research paper 📄
@@ -129,19 +130,21 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 
 ## Support for different tasks
 
-Different models support different machine-learning tasks. Current support for different models is given below:
+Different models support different machine-learning tasks. Current support for different models is given below (each of these models can be imported directly from imodels (e.g. `from imodels import RuleFitClassifier`):
 
 | Model                       | Binary classification | Regression |
 | :-------------------------- | :-------------------: | :--------: |
-| Rulefit rule set            |           ✔️           |     ✔️      |
-| Skope rule set              |           ✔️           |            |
-| Boosted rule set            |           ✔️           |            |
-| Bayesian rule list          |           ✔️           |            |
-| Greedy rule list            |           ✔️           |            |
-| OneR rule list              |           ✔️           |            |
+| Rulefit rule set            |           [RuleFitClassifier](https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier)           |     [RuleFitRegressor](https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor)     |
+| Skope rule set              |           [SkopeRulesClassifier](https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier)           |            |
+| Boosted rule set            |           [BoostedRulesClassifier](https://csinva.io/imodels/rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier)           |            |
+| SLIPPER rule set            |           [SlipperClassifier](https://csinva.io/imodels/rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier)           |            |
+| BOA rule set                |           [BOAClassifier](https://csinva.io/imodels/rule_set/boa.html#imodels.rule_set.boa.BOAClassifier)           |            |
+| Bayesian rule list          |           [BayesianRuleListClassifier](https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier)           |            |
+| Greedy rule list            |           [GreedyRuleListClassifier](https://csinva.io/imodels/rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier)           |            |
+| OneR rule list              |           [OneRClassifier](https://csinva.io/imodels/rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier)           |            |
 | Optimal rule tree           |                       |            |
 | Iterative random forest     |                       |            |
-| Sparse integer linear model |           ✔️           |     ✔️      |
+| Sparse integer linear model |           [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier)           |     [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor)     |
 
 ## References
 - Readings
@@ -153,6 +156,7 @@ Different models support different machine-learning tasks. Current support for d
     - [sklearn-expertsys](https://github.com/tmadl/sklearn-expertsys) - by [@tmadl](https://github.com/tmadl) and [@kenben](https://github.com/kenben) based on original code by [Ben Letham](http://lethalletham.com/)
     - [rulefit](https://github.com/christophM/rulefit) - by [@christophM](https://github.com/christophM)
     - [skope-rules](https://github.com/scikit-learn-contrib/skope-rules) - by the [skope-rules team](https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst) (including [@ngoix](https://github.com/ngoix), [@floriangardin](https://github.com/floriangardin), [@datajms](https://github.com/datajms), [Bibi Ndiaye](), [Ronan Gautier]())
+    - [boa](https://github.com/wangtongada/BOA) - by [@wangtongada](https://github.com/wangtongada)
 - Related packages
     - [gplearn](https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e): symbolic regression/classification
     - [pygam](https://github.com/dswah/pyGAM): generative additive models

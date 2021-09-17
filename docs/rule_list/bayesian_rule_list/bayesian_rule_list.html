@@ -129,7 +129,13 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.feature_names = feature_names
 
     def fit(self, X, y, feature_names: list = None, undiscretized_features=[], verbose=False):
-        &#34;&#34;&#34;Fit rule lists to data
+        &#34;&#34;&#34;Fit rule lists to data.
+        Note: Numerical data in `X` is automatically discretized.
+        To prevent discretization (e.g. to protect columns containing categorical data represented as integers),
+        pass the list of protected column names in the `fit` method,
+        e.g. `model.fit(X,y,undiscretized_features=[&#39;CAT_COLUMN_NAME&#39;])`
+        (entries in undiscretized columns will be converted to strings and used as categorical values)
+
 
         Parameters
         ----------
@@ -469,7 +475,13 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         self.feature_names = feature_names
 
     def fit(self, X, y, feature_names: list = None, undiscretized_features=[], verbose=False):
-        &#34;&#34;&#34;Fit rule lists to data
+        &#34;&#34;&#34;Fit rule lists to data.
+        Note: Numerical data in `X` is automatically discretized.
+        To prevent discretization (e.g. to protect columns containing categorical data represented as integers),
+        pass the list of protected column names in the `fit` method,
+        e.g. `model.fit(X,y,undiscretized_features=[&#39;CAT_COLUMN_NAME&#39;])`
+        (entries in undiscretized columns will be converted to strings and used as categorical values)
+
 
         Parameters
         ----------
@@ -687,7 +699,12 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, undiscretized_features=[], verbose=False)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Fit rule lists to data</p>
+<section class="desc"><p>Fit rule lists to data.
+Note: Numerical data in <code>X</code> is automatically discretized.
+To prevent discretization (e.g. to protect columns containing categorical data represented as integers),
+pass the list of protected column names in the <code>fit</code> method,
+e.g. <code>model.fit(X,y,undiscretized_features=['CAT_COLUMN_NAME'])</code>
+(entries in undiscretized columns will be converted to strings and used as categorical values)</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>X</code></strong> :&ensp;<code>array</code>-<code>like</code>, <code>shape</code> = [<code>n_samples</code>, <code>n_features</code>]</dt>
@@ -711,7 +728,13 @@ If empty, all numeric features are discretized</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fit(self, X, y, feature_names: list = None, undiscretized_features=[], verbose=False):
-    &#34;&#34;&#34;Fit rule lists to data
+    &#34;&#34;&#34;Fit rule lists to data.
+    Note: Numerical data in `X` is automatically discretized.
+    To prevent discretization (e.g. to protect columns containing categorical data represented as integers),
+    pass the list of protected column names in the `fit` method,
+    e.g. `model.fit(X,y,undiscretized_features=[&#39;CAT_COLUMN_NAME&#39;])`
+    (entries in undiscretized columns will be converted to strings and used as categorical values)
+
 
     Parameters
     ----------

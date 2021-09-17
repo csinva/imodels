@@ -1,5 +1,4 @@
 import random
-from functools import partial
 
 import numpy as np
 
@@ -36,9 +35,7 @@ class TestClassClassificationBinary:
                 init_kwargs['random_state'] = 0
                 init_kwargs['max_samples_features'] = 1.
             if model_type == SlipperClassifier:
-                model_type = BoostedRulesClassifier
                 init_kwargs['n_estimators'] = 1
-                init_kwargs['estimator'] = partial(SlipperClassifier)
             m = model_type(**init_kwargs)
 
             X = self.X_classification_binary

@@ -35,8 +35,8 @@ from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.rule_set.slipper import SlipperClassifier 
-from imodels.util.convert import tree_to_code, tree_to_rules, dict_to_rule 
+from imodels.rule_set.slipper_util import SlipperBaseEstimator
+from imodels.util.convert import tree_to_code, tree_to_rules, dict_to_rule
 from imodels.util.rule import Rule, get_feature_dict, replace_feature_name
 
 
@@ -47,8 +47,8 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
     Params
     ------
     estimator: object with fit and predict methods
-        defaults to DecisionTreeClassifier with AdaBoost
-        for SLIPPER, pass imodels.SlipperClassifier        
+        Defaults to DecisionTreeClassifier with AdaBoost.
+        For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator
     &#39;&#39;&#39;
 
     def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1)):
@@ -138,7 +138,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
                 compos_score = est_weight * rule_scores
                 rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
 
-            if type(clf) == SlipperClassifier:
+            if type(clf) == SlipperBaseEstimator:
                 # SLIPPER uses uniform confidence over in rule observations
                 est_rule = dict_to_rule(est.rule, est.feature_dict)
                 rules += [Rule(est_rule, args=[est_weight])]
@@ -201,8 +201,8 @@ Currently limited to only binary classification.</p>
 <h2 id="params">Params</h2>
 <dl>
 <dt><strong><code>estimator</code></strong> :&ensp;<code>object</code> <code>with</code> <code>fit</code> <code>and</code> <code>predict</code> <code>methods</code></dt>
-<dd>defaults to DecisionTreeClassifier with AdaBoost
-for SLIPPER, pass imodels.SlipperClassifier</dd>
+<dd>Defaults to DecisionTreeClassifier with AdaBoost.
+For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</dd>
 </dl></section>
 <details class="source">
 <summary>
@@ -215,8 +215,8 @@ for SLIPPER, pass imodels.SlipperClassifier</dd>
     Params
     ------
     estimator: object with fit and predict methods
-        defaults to DecisionTreeClassifier with AdaBoost
-        for SLIPPER, pass imodels.SlipperClassifier        
+        Defaults to DecisionTreeClassifier with AdaBoost.
+        For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator
     &#39;&#39;&#39;
 
     def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1)):
@@ -306,7 +306,7 @@ for SLIPPER, pass imodels.SlipperClassifier</dd>
                 compos_score = est_weight * rule_scores
                 rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
 
-            if type(clf) == SlipperClassifier:
+            if type(clf) == SlipperBaseEstimator:
                 # SLIPPER uses uniform confidence over in rule observations
                 est_rule = dict_to_rule(est.rule, est.feature_dict)
                 rules += [Rule(est_rule, args=[est_weight])]
@@ -355,6 +355,10 @@ for SLIPPER, pass imodels.SlipperClassifier</dd>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.base.MetaEstimatorMixin</li>
 <li>sklearn.base.ClassifierMixin</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.rule_set.slipper.SlipperClassifier" href="slipper.html#imodels.rule_set.slipper.SlipperClassifier">SlipperClassifier</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -469,7 +473,7 @@ If not provided, then each sample is given unit weight.</dd>
             compos_score = est_weight * rule_scores
             rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
 
-        if type(clf) == SlipperClassifier:
+        if type(clf) == SlipperBaseEstimator:
             # SLIPPER uses uniform confidence over in rule observations
             est_rule = dict_to_rule(est.rule, est.feature_dict)
             rules += [Rule(est_rule, args=[est_weight])]

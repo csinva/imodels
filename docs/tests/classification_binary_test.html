@@ -25,7 +25,6 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import random
-from functools import partial
 
 import numpy as np
 
@@ -62,9 +61,7 @@ class TestClassClassificationBinary:
                 init_kwargs[&#39;random_state&#39;] = 0
                 init_kwargs[&#39;max_samples_features&#39;] = 1.
             if model_type == SlipperClassifier:
-                model_type = BoostedRulesClassifier
                 init_kwargs[&#39;n_estimators&#39;] = 1
-                init_kwargs[&#39;estimator&#39;] = partial(SlipperClassifier)
             m = model_type(**init_kwargs)
 
             X = self.X_classification_binary
@@ -133,9 +130,7 @@ class TestClassClassificationBinary:
                 init_kwargs[&#39;random_state&#39;] = 0
                 init_kwargs[&#39;max_samples_features&#39;] = 1.
             if model_type == SlipperClassifier:
-                model_type = BoostedRulesClassifier
                 init_kwargs[&#39;n_estimators&#39;] = 1
-                init_kwargs[&#39;estimator&#39;] = partial(SlipperClassifier)
             m = model_type(**init_kwargs)
 
             X = self.X_classification_binary
@@ -201,9 +196,7 @@ class TestClassClassificationBinary:
             init_kwargs[&#39;random_state&#39;] = 0
             init_kwargs[&#39;max_samples_features&#39;] = 1.
         if model_type == SlipperClassifier:
-            model_type = BoostedRulesClassifier
             init_kwargs[&#39;n_estimators&#39;] = 1
-            init_kwargs[&#39;estimator&#39;] = partial(SlipperClassifier)
         m = model_type(**init_kwargs)
 
         X = self.X_classification_binary

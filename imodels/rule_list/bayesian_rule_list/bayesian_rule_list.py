@@ -103,7 +103,13 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.feature_names = feature_names
 
     def fit(self, X, y, feature_names: list = None, undiscretized_features=[], verbose=False):
-        """Fit rule lists to data
+        """Fit rule lists to data.
+        Note: Numerical data in `X` is automatically discretized.
+        To prevent discretization (e.g. to protect columns containing categorical data represented as integers),
+        pass the list of protected column names in the `fit` method,
+        e.g. `model.fit(X,y,undiscretized_features=['CAT_COLUMN_NAME'])`
+        (entries in undiscretized columns will be converted to strings and used as categorical values)
+
 
         Parameters
         ----------

@@ -82,7 +82,12 @@ print(model) # print the rule-based model
 <tr>
 <td align="left">Boosted rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/boosted_rules.html">🗂️</a>, <a href="https://github.com/jaimeps/adaboost-implementation">🔗</a>, <a href="https://www.sciencedirect.com/science/article/pii/S002200009791504X">📄</a></td>
-<td>Uses Adaboost or SLIPPER to sequentially learn a set of rules</td>
+<td>Uses Adaboost to sequentially learn a set of rules</td>
+</tr>
+<tr>
+<td align="left">Slipper rule set</td>
+<td><a href="https://csinva.io/imodels/rule_set/slipper.html">🗂️</a>, <a href="https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf">📄</a></td>
+<td>Uses SLIPPER to sequentially learn a set of rules</td>
 </tr>
 <tr>
 <td align="left">BOA rule set</td>
@@ -120,7 +125,7 @@ print(model) # print the rule-based model
 <td>Forces coefficients to be integers</td>
 </tr>
 <tr>
-<td align="left">Rule sets</td>
+<td align="left">More Rule sets</td>
 <td>⌛</td>
 <td>(Coming soon!) Many popular rule sets including Lightweight Rule Induction, MLRules</td>
 </tr>
@@ -202,7 +207,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
 </details>
 <h2 id="support-for-different-tasks">Support for different tasks</h2>
-<p>Different models support different machine-learning tasks. Current support for different models is given below:</p>
+<p>Different models support different machine-learning tasks. Current support for different models is given below (each of these models can be imported directly from imodels (e.g. <code>from imodels import RuleFitClassifier</code>):</p>
 <table>
 <thead>
 <tr>
@@ -214,32 +219,42 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <tbody>
 <tr>
 <td align="left">Rulefit rule set</td>
-<td align="center">✔️</td>
-<td align="center">✔️</td>
+<td align="center"><a href="https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></td>
+<td align="center"><a href="https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></td>
 </tr>
 <tr>
 <td align="left">Skope rule set</td>
-<td align="center">✔️</td>
+<td align="center"><a href="https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SkopeRulesClassifier</a></td>
 <td align="center"></td>
 </tr>
 <tr>
 <td align="left">Boosted rule set</td>
-<td align="center">✔️</td>
+<td align="center"><a href="https://csinva.io/imodels/rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="left">SLIPPER rule set</td>
+<td align="center"><a href="https://csinva.io/imodels/rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">SlipperClassifier</a></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="left">BOA rule set</td>
+<td align="center"><a href="https://csinva.io/imodels/rule_set/boa.html#imodels.rule_set.boa.BOAClassifier">BOAClassifier</a></td>
 <td align="center"></td>
 </tr>
 <tr>
 <td align="left">Bayesian rule list</td>
-<td align="center">✔️</td>
+<td align="center"><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">BayesianRuleListClassifier</a></td>
 <td align="center"></td>
 </tr>
 <tr>
 <td align="left">Greedy rule list</td>
-<td align="center">✔️</td>
+<td align="center"><a href="https://csinva.io/imodels/rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></td>
 <td align="center"></td>
 </tr>
 <tr>
 <td align="left">OneR rule list</td>
-<td align="center">✔️</td>
+<td align="center"><a href="https://csinva.io/imodels/rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier">OneRClassifier</a></td>
 <td align="center"></td>
 </tr>
 <tr>
@@ -254,8 +269,8 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 </tr>
 <tr>
 <td align="left">Sparse integer linear model</td>
-<td align="center">✔️</td>
-<td align="center">✔️</td>
+<td align="center"><a href="https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></td>
+<td align="center"><a href="https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></td>
 </tr>
 </tbody>
 </table>
@@ -272,6 +287,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <li><a href="https://github.com/tmadl/sklearn-expertsys">sklearn-expertsys</a> - by <a href="https://github.com/tmadl">@tmadl</a> and <a href="https://github.com/kenben">@kenben</a> based on original code by <a href="http://lethalletham.com/">Ben Letham</a></li>
 <li><a href="https://github.com/christophM/rulefit">rulefit</a> - by <a href="https://github.com/christophM">@christophM</a></li>
 <li><a href="https://github.com/scikit-learn-contrib/skope-rules">skope-rules</a> - by the <a href="https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst">skope-rules team</a> (including <a href="https://github.com/ngoix">@ngoix</a>, <a href="https://github.com/floriangardin">@floriangardin</a>, <a href="https://github.com/datajms">@datajms</a>, <a href="">Bibi Ndiaye</a>, <a href="">Ronan Gautier</a>)</li>
+<li><a href="https://github.com/wangtongada/BOA">boa</a> - by <a href="https://github.com/wangtongada">@wangtongada</a></li>
 </ul>
 </li>
 <li>Related packages<ul>
@@ -325,9 +341,11 @@ from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.slipper import SlipperClassifier
 from .rule_set.boa import BOAClassifier
+from .rule_set import boosted_rules
+from .rule_set.boosted_rules import *
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
-               BoostedRulesClassifier, SLIMClassifier, SlipperClassifier]  # , IRFClassifier
+               BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BOAClassifier]  # , IRFClassifier
 REGRESSORS = [RuleFitRegressor, SLIMRegressor]</code></pre>
 </details>
 </section>

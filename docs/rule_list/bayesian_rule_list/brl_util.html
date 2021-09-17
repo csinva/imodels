@@ -290,12 +290,12 @@ def get_rule_rhs(Xtrain, Ytrain, d_t, alpha, intervals):
     theta = []  # P(Y=1)
     ci_theta = [] # confidence interval for Y=1
     for i, j in enumerate(d_t):
-        # theta ~ Dirichlet(N[j,:] + alpha)
-        # E[theta] = (N[j,:] + alpha)/float(sum(N[j,:] + alpha))
+        # theta ~ Dirichlet(n_rules[j,:] + alpha)
+        # E[theta] = (n_rules[j,:] + alpha)/float(sum(n_rules[j,:] + alpha))
         # NOTE this result is only for binary classification
         # theta = p(y=1)
         theta.append((N_t[i, 1] + alpha[1]) / float(sum(N_t[i, :] + alpha)))
-        # And now the 95% interval, for Beta(N[j,1] + alpha[1], N[j,0] + alpha[0])
+        # And now the 95% interval, for Beta(n_rules[j,1] + alpha[1], n_rules[j,0] + alpha[0])
         if intervals:
             ci_theta.append(beta.interval(0.95, N_t[i, 1] + alpha[1], N_t[i, 0] + alpha[0]))
     return theta, ci_theta
@@ -911,12 +911,12 @@ Get logalpha (length of list) (overloaded notation in this code, unrelated to th
     theta = []  # P(Y=1)
     ci_theta = [] # confidence interval for Y=1
     for i, j in enumerate(d_t):
-        # theta ~ Dirichlet(N[j,:] + alpha)
-        # E[theta] = (N[j,:] + alpha)/float(sum(N[j,:] + alpha))
+        # theta ~ Dirichlet(n_rules[j,:] + alpha)
+        # E[theta] = (n_rules[j,:] + alpha)/float(sum(n_rules[j,:] + alpha))
         # NOTE this result is only for binary classification
         # theta = p(y=1)
         theta.append((N_t[i, 1] + alpha[1]) / float(sum(N_t[i, :] + alpha)))
-        # And now the 95% interval, for Beta(N[j,1] + alpha[1], N[j,0] + alpha[0])
+        # And now the 95% interval, for Beta(n_rules[j,1] + alpha[1], n_rules[j,0] + alpha[0])
         if intervals:
             ci_theta.append(beta.interval(0.95, N_t[i, 1] + alpha[1], N_t[i, 0] + alpha[0]))
     return theta, ci_theta</code></pre>
