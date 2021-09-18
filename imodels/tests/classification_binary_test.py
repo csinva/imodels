@@ -4,7 +4,7 @@ import numpy as np
 
 from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, OneRClassifier, BoostedRulesClassifier, \
     RuleFitClassifier, FPLassoClassifier, FPSkopeClassifier, \
-    SlipperClassifier  # IRFClassifier
+    SlipperClassifier, CorelsRuleListClassifier  # IRFClassifier
 
 
 class TestClassClassificationBinary:
@@ -26,7 +26,8 @@ class TestClassClassificationBinary:
         for model_type in [RuleFitClassifier, GreedyRuleListClassifier,
                            FPLassoClassifier, SkopeRulesClassifier,
                            FPSkopeClassifier, BoostedRulesClassifier,
-                           OneRClassifier, SlipperClassifier]:  # IRFClassifier, SLIMClassifier
+                           OneRClassifier, SlipperClassifier,
+                           CorelsRuleListClassifier]:  # IRFClassifier, SLIMClassifier
 
             init_kwargs = {}
             if model_type == RuleFitClassifier:

@@ -4,7 +4,7 @@ from os import path
 path_to_repo = path.abspath(path.dirname(__file__))
 with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
     long_description = f.read()
-    
+
 setuptools.setup(
     name="imodels",
     version="0.2.9",
@@ -16,6 +16,7 @@ setuptools.setup(
     url="https://github.com/csinva/imodels",
     packages=setuptools.find_packages(exclude=['tests']),
     install_requires=[
+        'corels==1.1.29',  # imports corels basically from scratch
         'cvxpy',
         'cvxopt',
         'mlxtend>=0.18.0',  # some lower version are missing fpgrowth

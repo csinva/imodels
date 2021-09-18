@@ -10,6 +10,7 @@ from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
+from .rule_list.corels_wrapper import CorelsRuleListClassifier
 from .rule_set.boosted_rules import BoostedRulesClassifier
 from .rule_set.fplasso import FPLassoRegressor, FPLassoClassifier
 from .rule_set.fpskope import FPSkopeClassifier
