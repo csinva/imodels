@@ -23,12 +23,12 @@ class TestClassClassificationBinary:
     def test_classification_binary(self):
         '''Test imodels on basic binary classification task
         '''
-        for model_type in [BOAClassifier,
-                           # RuleFitClassifier, GreedyRuleListClassifier,
-                           # FPLassoClassifier, SkopeRulesClassifier,
-                           # FPSkopeClassifier, BoostedRulesClassifier,
-                           # OneRClassifier, SlipperClassifier
-                           ]:  # IRFClassifier, SLIMClassifier
+        for model_type in [
+            RuleFitClassifier, GreedyRuleListClassifier,
+            FPLassoClassifier, SkopeRulesClassifier,
+            FPSkopeClassifier, BoostedRulesClassifier,
+            OneRClassifier, SlipperClassifier,
+        ]:  # IRFClassifier, SLIMClassifier, BOAClassifier
 
             init_kwargs = {}
             if model_type == RuleFitClassifier:

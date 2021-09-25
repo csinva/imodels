@@ -72,7 +72,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         self.beta_pos = beta_pos
         self.alpha_neg = alpha_neg
         self.beta_neg = beta_neg
-        self.method = discretization_method
+        self.discretization_method = discretization_method
 
         self.alpha_l = alpha_l
         self.beta_l = beta_l
@@ -208,6 +208,9 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         Yhat = (np.sum(Z, axis=0) > 0).astype(int)
         return Yhat
 
+    def predict_proba(self, X):
+        raise Exception('BOA does not support predicted probabilities.')
+
     def set_pattern_space(self):
         """Compute the rule space from the levels in each attribute
         """
@@ -236,7 +239,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         df = 1 - X  # df has negative associations
         df.columns = [name.strip() + '_neg' for name in X.columns]
         df = pd.concat([X, df], axis=1)
-        if self.method == 'fpgrowth' and self.maxlen <= 3:
+        if self.discretization_method == 'fpgrowth' and self.maxlen <= 3:
             itemMatrix = [[item for item in df.columns if row[item] == 1] for i, row in df.iterrows()]
             pindex = np.where(y == 1)[0]
             rules = fpgrowth([itemMatrix[i] for i in pindex], supp=self.supp, zmin=1, zmax=self.maxlen)
