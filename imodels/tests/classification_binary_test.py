@@ -4,11 +4,11 @@ import numpy as np
 
 from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, OneRClassifier, BoostedRulesClassifier, \
     RuleFitClassifier, FPLassoClassifier, FPSkopeClassifier, \
-    SlipperClassifier, CorelsRuleListClassifier  # IRFClassifier
+    SlipperClassifier, CorelsRuleListClassifier, BOAClassifier  # IRFClassifier
 
 
 class TestClassClassificationBinary:
-    '''Tests simple classification for different models. Note: still doesn't test BRL!
+    '''Tests simple classification for different models. Note: still doesn't test all the models!
     '''
 
     def setup(self):
@@ -23,10 +23,12 @@ class TestClassClassificationBinary:
     def test_classification_binary(self):
         '''Test imodels on basic binary classification task
         '''
-        for model_type in [RuleFitClassifier, GreedyRuleListClassifier,
-                           FPLassoClassifier, SkopeRulesClassifier,
-                           FPSkopeClassifier, BoostedRulesClassifier,
-                           OneRClassifier, SlipperClassifier]:  # IRFClassifier, SLIMClassifier
+        for model_type in [BOAClassifier,
+                           # RuleFitClassifier, GreedyRuleListClassifier,
+                           # FPLassoClassifier, SkopeRulesClassifier,
+                           # FPSkopeClassifier, BoostedRulesClassifier,
+                           # OneRClassifier, SlipperClassifier
+                           ]:  # IRFClassifier, SLIMClassifier
 
             init_kwargs = {}
             if model_type == RuleFitClassifier:

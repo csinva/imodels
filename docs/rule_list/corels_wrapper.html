@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.rule_list API documentation</title>
-<meta name="description" content="Generic class for models that take the form of a list of rules." />
+<title>imodels.rule_list.corels_wrapper API documentation</title>
+<meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -17,49 +17,80 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.rule_list</code></h1>
+<h1 class="title">Module <code>imodels.rule_list.corels_wrapper</code></h1>
 </header>
 <section id="section-intro">
-<p>Generic class for models that take the form of a list of rules.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#39;&#39;&#39;Generic class for models that take the form of a list of rules.
-&#39;&#39;&#39;</code></pre>
+<pre><code class="python"># This is just a simple wrapper around pycorels: https://github.com/corels/pycorels
+
+from corels import CorelsClassifier
+from sklearn.base import BaseEstimator
+
+
+class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_complexity(self):
+        return None</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="imodels.rule_list.bayesian_rule_list" href="bayesian_rule_list/index.html">imodels.rule_list.bayesian_rule_list</a></code></dt>
+<dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier"><code class="flex name class">
+<span>class <span class="ident">CorelsRuleListClassifier</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
 <dd>
-<section class="desc"><p><a href="https://arxiv.org/abs/1602.08610">bayesian rule list</a> (based on <a href="https://github.com/tmadl/sklearn-expertsys">this implementation</a>) - learn a compact …</p></section>
-</dd>
-<dt><code class="name"><a title="imodels.rule_list.corels_wrapper" href="corels_wrapper.html">imodels.rule_list.corels_wrapper</a></code></dt>
+<section class="desc"><p>Base class for all estimators in scikit-learn</p>
+<h2 id="notes">Notes</h2>
+<p>All estimators should specify all the parameters that can be set
+at the class level in their <code>__init__</code> as explicit keyword
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_complexity(self):
+        return None</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+<li>corels.corels.CorelsClassifier</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.get_complexity"><code class="name flex">
+<span>def <span class="ident">get_complexity</span></span>(<span>self)</span>
+</code></dt>
 <dd>
 <section class="desc"></section>
-</dd>
-<dt><code class="name"><a title="imodels.rule_list.greedy_rule_list" href="greedy_rule_list.html">imodels.rule_list.greedy_rule_list</a></code></dt>
-<dd>
-<section class="desc"><p>Greedy rule list. Greedily splits on one feature at a time along a single path.</p></section>
-</dd>
-<dt><code class="name"><a title="imodels.rule_list.one_r" href="one_r.html">imodels.rule_list.one_r</a></code></dt>
-<dd>
-<section class="desc"><p>The oneR algorithm returns a rule list that splits on only one (usually continuous) feature
-It works by building a greedy rule list using only one …</p></section>
-</dd>
-<dt><code class="name"><a title="imodels.rule_list.rule_list" href="rule_list.html">imodels.rule_list.rule_list</a></code></dt>
-<dd>
-<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_complexity(self):
+    return None</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -70,16 +101,17 @@ It works by building a greedy rule list using only one …</p></section>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels" href="../index.html">imodels</a></code></li>
+<li><code><a title="imodels.rule_list" href="index.html">imodels.rule_list</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li><code><a title="imodels.rule_list.bayesian_rule_list" href="bayesian_rule_list/index.html">imodels.rule_list.bayesian_rule_list</a></code></li>
-<li><code><a title="imodels.rule_list.corels_wrapper" href="corels_wrapper.html">imodels.rule_list.corels_wrapper</a></code></li>
-<li><code><a title="imodels.rule_list.greedy_rule_list" href="greedy_rule_list.html">imodels.rule_list.greedy_rule_list</a></code></li>
-<li><code><a title="imodels.rule_list.one_r" href="one_r.html">imodels.rule_list.one_r</a></code></li>
-<li><code><a title="imodels.rule_list.rule_list" href="rule_list.html">imodels.rule_list.rule_list</a></code></li>
+<li>
+<h4><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier">CorelsRuleListClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.get_complexity" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.get_complexity">get_complexity</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

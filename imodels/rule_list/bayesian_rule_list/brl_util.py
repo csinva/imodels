@@ -35,24 +35,24 @@
 #
 # The highest level function, "topscript," returns:
 #
-# - permsdic - Contains the important information from the MCMC sampling. A 
+# - permsdic - Contains the important information from the MCMC sampling. A
 # dictionary whose keys are a string Pickle-dump of the antecedent list d, and
 # whose values are a list [a,b] where a is (proportional to) the log posterior of
 # d, and b is the number of times d is present in the MCMC samples.
-# - d_star - the BRL-point antecedent list. A list of indicies corresponding to 
+# - d_star - the BRL-point antecedent list. A list of indicies corresponding to
 # variable "itemsets."
-# - itemsets - A list of itemsets. itemsets[d_star[i]] is the antecedent in 
+# - itemsets - A list of itemsets. itemsets[d_star[i]] is the antecedent in
 # position i on the BRL-point list
-# - theta - A list of the expected value of the posterior consequent 
+# - theta - A list of the expected value of the posterior consequent
 # distribution for each entry in BRL-point.
-# - ci_theta - A list of tuples, each the 95% credible interval for the 
+# - ci_theta - A list of tuples, each the 95% credible interval for the
 # corresponding theta.
 # - preds_d_star - Predictions on the demo data made using d_star and theta.
-# - accur_d_star - The accuracy of the BRL-point predictions, with the decision 
+# - accur_d_star - The accuracy of the BRL-point predictions, with the decision
 # boundary at 0.5.
-# - preds_fullpost - Predictions on the demo data using the full posterior 
+# - preds_fullpost - Predictions on the demo data using the full posterior
 # (BRL-post)
-# - accur_fullpost - The accuracy of the BRL-post predictions, decision boundary 
+# - accur_fullpost - The accuracy of the BRL-post predictions, decision boundary
 # at 0.5.
 #
 import pickle as Pickle
@@ -70,7 +70,6 @@ except:
 
 
 ###############BRL
-
 
 
 def default_permsdic():
@@ -131,7 +130,6 @@ def mcmcchain(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, ma
     return res
 
 
-
 def gelmanrubin(res):
     '''Check convergence with GR diagnostic
     '''
@@ -175,6 +173,7 @@ def gelmanrubin(res):
         Rhat = 0.
     return Rhat
 
+
 def plot_chains(res):
     '''Plot the logposterior values for the samples in the chains.
     '''
@@ -182,6 +181,7 @@ def plot_chains(res):
         plt.plot([res[chain]['permsdic'][a][0] for a in res[chain]['perms']])
     plt.show()
     return
+
 
 def merge_chains(res):
     '''Merge chains into a single collection of posterior samples
@@ -192,6 +192,7 @@ def merge_chains(res):
             permsdic[perm][0] = vals[0]
             permsdic[perm][1] += vals[1]
     return permsdic
+
 
 def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, eta, verbose=True):
     '''Get a point estimate with length and width similar to the posterior average, with highest likelihood
@@ -262,7 +263,7 @@ def get_rule_rhs(Xtrain, Ytrain, d_t, alpha, intervals):
     '''
     N_t = compute_rule_usage(d_t, d_t.index(0), Xtrain, Ytrain)
     theta = []  # P(Y=1)
-    ci_theta = [] # confidence interval for Y=1
+    ci_theta = []  # confidence interval for Y=1
     for i, j in enumerate(d_t):
         # theta ~ Dirichlet(n_rules[j,:] + alpha)
         # E[theta] = (n_rules[j,:] + alpha)/float(sum(n_rules[j,:] + alpha))
@@ -299,7 +300,7 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
     perms = []
     if rseed:
         random.seed(rseed)
-        
+
     # Do some pre-computation for the prior
     beta_Z, logalpha_pmf, logbeta_pmf = prior_calculations(lbda, len(X), eta, maxlhs)
     if d_init:  # If we want to begin our chain at a specific place (e.g. to continue a chain)
@@ -310,7 +311,7 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
     else:
         d_t, R_t, N_t = initialize_d(X, Y, lbda, eta, lhs_len, maxlhs,
                                      nruleslen)  # Otherwise sample the initial value from the prior
-    
+
     # Add to dictionary which will store the sampling results
     a_t = Pickle.dumps(d_t[:R_t + 1])  # The antecedent list in string form
     if a_t not in permsdic:
@@ -318,7 +319,7 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
                                            lhs_len)  # Compute its logposterior
     if burnin == 0:
         permsdic[a_t][1] += 1  # store the initialization sample
-    
+
     # iterate!
     for itr in range(numiters):
         # Sample from proposal distribution
@@ -497,7 +498,6 @@ def fn_logliklihood(d_t, N_t, R_t, alpha):
     gammaln_Nt_j = gammaln(sum(N_t + alpha, 1))
     logliklihood = sum(gammaln_Nt_jk) - sum(gammaln_Nt_j)
     return logliklihood
-
 
 
 def fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len):

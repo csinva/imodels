@@ -30,11 +30,11 @@ import numpy as np
 
 from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, OneRClassifier, BoostedRulesClassifier, \
     RuleFitClassifier, FPLassoClassifier, FPSkopeClassifier, \
-    SlipperClassifier  # IRFClassifier
+    SlipperClassifier, CorelsRuleListClassifier, BOAClassifier  # IRFClassifier
 
 
 class TestClassClassificationBinary:
-    &#39;&#39;&#39;Tests simple classification for different models. Note: still doesn&#39;t test BRL!
+    &#39;&#39;&#39;Tests simple classification for different models. Note: still doesn&#39;t test all the models!
     &#39;&#39;&#39;
 
     def setup(self):
@@ -49,10 +49,12 @@ class TestClassClassificationBinary:
     def test_classification_binary(self):
         &#39;&#39;&#39;Test imodels on basic binary classification task
         &#39;&#39;&#39;
-        for model_type in [RuleFitClassifier, GreedyRuleListClassifier,
-                           FPLassoClassifier, SkopeRulesClassifier,
-                           FPSkopeClassifier, BoostedRulesClassifier,
-                           OneRClassifier, SlipperClassifier]:  # IRFClassifier, SLIMClassifier
+        for model_type in [BOAClassifier,
+                           # RuleFitClassifier, GreedyRuleListClassifier,
+                           # FPLassoClassifier, SkopeRulesClassifier,
+                           # FPSkopeClassifier, BoostedRulesClassifier,
+                           # OneRClassifier, SlipperClassifier
+                           ]:  # IRFClassifier, SLIMClassifier
 
             init_kwargs = {}
             if model_type == RuleFitClassifier:
@@ -97,13 +99,13 @@ class TestClassClassificationBinary:
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Tests simple classification for different models. Note: still doesn't test BRL!</p></section>
+<section class="desc"><p>Tests simple classification for different models. Note: still doesn't test all the models!</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TestClassClassificationBinary:
-    &#39;&#39;&#39;Tests simple classification for different models. Note: still doesn&#39;t test BRL!
+    &#39;&#39;&#39;Tests simple classification for different models. Note: still doesn&#39;t test all the models!
     &#39;&#39;&#39;
 
     def setup(self):
@@ -118,10 +120,12 @@ class TestClassClassificationBinary:
     def test_classification_binary(self):
         &#39;&#39;&#39;Test imodels on basic binary classification task
         &#39;&#39;&#39;
-        for model_type in [RuleFitClassifier, GreedyRuleListClassifier,
-                           FPLassoClassifier, SkopeRulesClassifier,
-                           FPSkopeClassifier, BoostedRulesClassifier,
-                           OneRClassifier, SlipperClassifier]:  # IRFClassifier, SLIMClassifier
+        for model_type in [BOAClassifier,
+                           # RuleFitClassifier, GreedyRuleListClassifier,
+                           # FPLassoClassifier, SkopeRulesClassifier,
+                           # FPSkopeClassifier, BoostedRulesClassifier,
+                           # OneRClassifier, SlipperClassifier
+                           ]:  # IRFClassifier, SLIMClassifier
 
             init_kwargs = {}
             if model_type == RuleFitClassifier:
@@ -184,10 +188,12 @@ class TestClassClassificationBinary:
 <pre><code class="python">def test_classification_binary(self):
     &#39;&#39;&#39;Test imodels on basic binary classification task
     &#39;&#39;&#39;
-    for model_type in [RuleFitClassifier, GreedyRuleListClassifier,
-                       FPLassoClassifier, SkopeRulesClassifier,
-                       FPSkopeClassifier, BoostedRulesClassifier,
-                       OneRClassifier, SlipperClassifier]:  # IRFClassifier, SLIMClassifier
+    for model_type in [BOAClassifier,
+                       # RuleFitClassifier, GreedyRuleListClassifier,
+                       # FPLassoClassifier, SkopeRulesClassifier,
+                       # FPSkopeClassifier, BoostedRulesClassifier,
+                       # OneRClassifier, SlipperClassifier
+                       ]:  # IRFClassifier, SLIMClassifier
 
         init_kwargs = {}
         if model_type == RuleFitClassifier:
