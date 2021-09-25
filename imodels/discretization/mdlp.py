@@ -28,10 +28,15 @@ class MDLPDiscretizer(object):
             self._class_name = label of class in pandas dataframe
             self._data = partition of data with only features of interest and class
             self._cuts = dictionary with cut points for each feature
-        :param dataset: pandas dataframe with data to discretize
-        :param class_label: name of the column containing class in input dataframe
-        :param features: if !None, features that the user wants to discretize specifically
-        :return:
+
+        Params
+        ------
+        dataset
+            pandas dataframe with data to discretize
+        class_label
+            name of the column containing class in input dataframe
+        features
+            if !None, features that the user wants to discretize specifically
         '''
 
         if not isinstance(dataset, pd.core.frame.DataFrame):  # class needs a pandas dataframe

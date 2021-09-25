@@ -139,9 +139,36 @@ print(model) # print the rule-based model
 <p align="center">
 Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementation 🔗, Research paper 📄
 </br>
-See also our <a href="https://csinva.io/imodels/discretization/index.html">fast and effective discretizers</a> for data preprocessing.
-</br>
 </p>
+<details>
+<summary align="center">See also our <a href="https://csinva.io/imodels/discretization/index.html">fast and effective discretizers</a> for data preprocessing.</summary>
+<table>
+<thead>
+<tr>
+<th>Discretizer</th>
+<th>Reference</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MDLP</td>
+<td><a href="https://csinva.io/imodels/discretization/mdlp.html#imodels.discretization.mdlp.MDLPDiscretizer">🗂️</a>, <a href="https://github.com/navicto/Discretization-MDLPC">🔗</a>, <a href="https://trs.jpl.nasa.gov/handle/2014/35171">📄</a></td>
+<td>Discretize using entropy minimization heuristic</td>
+</tr>
+<tr>
+<td>Simple</td>
+<td><a href="https://csinva.io/imodels/discretization/simple.html#imodels.discretization.simple.SimpleDiscretizer">🗂️</a>, <a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.KBinsDiscretizer.html">🔗</a></td>
+<td>Simple KBins discretization</td>
+</tr>
+<tr>
+<td>Random Forest</td>
+<td><a href="https://csinva.io/imodels/discretization/discretizer.html#imodels.discretization.discretizer.RFDiscretizer">🗂️</a></td>
+<td>Discretize into bins based on random forest split popularity</td>
+</tr>
+</tbody>
+</table>
+</details>
 <p>The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:</p>
 <table>
 <thead>
