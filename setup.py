@@ -8,7 +8,7 @@ with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
 
 setuptools.setup(
     name="imodels",
-    version="0.2.9",
+    version="0.3.0",
     author="Chandan Singh, Keyan Nasseri, Bin Yu, and others",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",
