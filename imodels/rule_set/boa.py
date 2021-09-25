@@ -5,6 +5,7 @@ import itertools
 import operator
 from bisect import bisect_left
 from collections import defaultdict
+from copy import deepcopy
 from itertools import combinations
 from random import sample
 
@@ -15,7 +16,8 @@ from numpy.random import random
 from scipy.sparse import csc_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.utils.validation import check_X_y
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
 
@@ -48,7 +50,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             number of chains in the simulated annealing search algorithm
         q
         alpha_1
-            \rho = alpha/(alpha+beta). Make sure \rho is close to one when choosing alpha and beta
+            $\rho = alpha/(alpha+beta)$. Make sure $\rho$ is close to one when choosing alpha and beta
             The alpha and beta parameters alter the prior distributions for different rules
         beta_pos
         alpha_neg
@@ -70,22 +72,49 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         self.beta_pos = beta_pos
         self.alpha_neg = alpha_neg
         self.beta_neg = beta_neg
-        self.method = discretization_method
+        self.discretization_method = discretization_method
 
         self.alpha_l = alpha_l
         self.beta_l = beta_l
 
-    def fit(self, X, y, init=[], verbose=False):
+    def fit(self, X, y, feature_names: list = None, init=[], verbose=False):
+        '''
+        Parameters
+        ----------
+        X : array-like, shape = [n_samples, n_features]
+            Training data
+        y : array_like, shape = [n_samples]
+            Labels
 
+        feature_names : array_like, shape = [n_features], optional (default: [])
+            String labels for each feature.
+            If empty and X is a DataFrame, column labels are used.
+            If empty and X is not a DataFrame, then features are simply enumerated
+        '''
         # check inputs
         # todo: change this so it works for np arrays in addition to just pd dataframe
-        check_X_y(X, y)
         self.attr_level_num = defaultdict(int)  # any missing value defaults to 0
         self.attr_names = []
+
+        # get feature names
+        if feature_names is None:
+            if isinstance(X, pd.DataFrame):
+                feature_names = X.columns
+            else:
+                feature_names = ['X' + str(i) for i in range(X.shape[1])]
+
+        # checks
+        X, y = check_X_y(X, y)  # converts df to ndarray
+        check_classification_targets(y)
+        assert len(feature_names) == X.shape[1], 'feature_names should be same size as X.shape[1]'
+
+        # convert to pandas DataFrame
+        X = pd.DataFrame(X, columns=feature_names)
+
         for i, name in enumerate(X.columns):
-            attribute = name.split('_')[0]  # todo: remove this hardcoded split on underscore
-            self.attr_level_num[attribute] += 1
-            self.attr_names.append(attribute)
+            self.attr_level_num[name] += 1
+            self.attr_names.append(name)
+        self.attr_names_orig = deepcopy(self.attr_names)
         self.attr_names = list(set(self.attr_names))
 
         # set up patterns
@@ -94,7 +123,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         # parameter checking
         if self.alpha_l is None or self.beta_l is None or len(self.alpha_l) != self.maxlen or len(
                 self.beta_l) != self.maxlen:
-            print('No or wrong input for alpha_l and beta_l. The model will use default parameters!')
+            print('No or wrong input for alpha_l and beta_l - the model will use default parameters.')
             self.C = [1.0 / self.maxlen] * self.maxlen
             self.C.insert(0, -1)
             self.alpha_l = [10] * (self.maxlen + 1)
@@ -117,6 +146,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             if init != []:
                 rules_curr = init.copy()
             else:
+                assert n_rules_current > 1, f'Only {n_rules_current} potential rules found, change hyperparams to allow for more'
                 N = sample(range(1, min(8, n_rules_current), 1), 1)[0]
                 rules_curr = sample(range(n_rules_current), N)
             rules_curr_norm = self.normalize(rules_curr)
@@ -163,7 +193,12 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
     def __str__(self):
         return ' '.join(str(r) for r in self.rules_)
 
-    def predict(self, df):
+    def predict(self, X):
+        check_is_fitted(self)
+        if isinstance(X, np.ndarray):
+            df = pd.DataFrame(X, columns=self.attr_names_orig)
+        else:
+            df = X
         Z = [[]] * len(self.rules_)
         dfn = 1 - df  # df has negative associations
         dfn.columns = [name.strip() + '_neg' for name in df.columns]
@@ -172,6 +207,9 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             Z[i] = (np.sum(df[list(rule)], axis=1) == len(rule)).astype(int)
         Yhat = (np.sum(Z, axis=0) > 0).astype(int)
         return Yhat
+
+    def predict_proba(self, X):
+        raise Exception('BOA does not support predicted probabilities.')
 
     def set_pattern_space(self):
         """Compute the rule space from the levels in each attribute
@@ -189,7 +227,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                 tmp = 1
                 for i in subset:
                     tmp = tmp * self.attr_level_num[i]
-                print('subset', subset, 'tmp', tmp, 'k', k)
+                # print('subset', subset, 'tmp', tmp, 'k', k)
                 self.pattern_space[k] = self.pattern_space[k] + tmp
 
     def generate_rules(self, X, y):
@@ -201,7 +239,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         df = 1 - X  # df has negative associations
         df.columns = [name.strip() + '_neg' for name in X.columns]
         df = pd.concat([X, df], axis=1)
-        if self.method == 'fpgrowth' and self.maxlen <= 3:
+        if self.discretization_method == 'fpgrowth' and self.maxlen <= 3:
             itemMatrix = [[item for item in df.columns if row[item] == 1] for i, row in df.iterrows()]
             pindex = np.where(y == 1)[0]
             rules = fpgrowth([itemMatrix[i] for i in pindex], supp=self.supp, zmin=1, zmax=self.maxlen)
@@ -238,8 +276,8 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         indptr = np.array(indptr)
         data = np.ones(len(indices))
         rule_matrix = csc_matrix((data, indices, indptr), shape=(len(df.columns), len(self.rules_)))
-        mat = np.matrix(df) * rule_matrix
-        len_matrix = np.matrix([len_rules for i in range(df.shape[0])])
+        mat = np.matrix(df) @ rule_matrix
+        len_matrix = np.array([len_rules] * df.shape[0])
         Z = (mat == len_matrix).astype(int)
         Zpos = [Z[i] for i in np.where(y > 0)][0]
         TP = np.array(np.sum(Zpos, axis=0).tolist()[0])

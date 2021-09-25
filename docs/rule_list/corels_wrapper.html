@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>imodels.rule_list.corels_wrapper API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>imodels.rule_list.corels_wrapper</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># This is just a simple wrapper around pycorels: https://github.com/corels/pycorels
+
+from corels import CorelsClassifier
+from sklearn.base import BaseEstimator
+
+
+class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
+    &#34;&#34;&#34;Certifiably Optimal RulE ListS classifier.
+    This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
+    rulelists for binary feature data and binary classification. As an alternative to other
+    tree based algorithms such as CART, CORELS provides a certificate of optimality for its
+    rulelist given a training set, leveraging multiple algorithmic bounds to do so.
+    In order to use run the algorithm, create an instance of the `CorelsClassifier` class,
+    providing any necessary parameters in its constructor, and then call `fit` to generate
+    a rulelist. `printrl` prints the generated rulelist, while `predict` provides
+    classification predictions for a separate test dataset with the same features. To determine
+    the algorithm&#39;s accuracy, run `score` on an evaluation dataset with labels.
+    To save a generated rulelist to a file, call `save`. To load it back from the file, call `load`.
+    Attributes
+    ----------
+    c : float, optional (default=0.01)
+        Regularization parameter. Higher values penalize longer rulelists.
+    n_iter : int, optional (default=10000)
+        Maximum number of nodes (rulelists) to search before exiting.
+    map_type : str, optional (default=&#34;prefix&#34;)
+        The type of prefix map to use. Supported maps are &#34;none&#34; for no map,
+        &#34;prefix&#34; for a map that uses rule prefixes for keys, &#34;captured&#34; for
+        a map with a prefix&#39;s captured vector as keys.
+    policy : str, optional (default=&#34;lower_bound&#34;)
+        The search policy for traversing the tree (i.e. the criterion with which
+        to order nodes in the queue). Supported criteria are &#34;bfs&#34;, for breadth-first
+        search; &#34;curious&#34;, which attempts to find the most promising node;
+        &#34;lower_bound&#34; which is the objective function evaluated with that rulelist
+        minus the default prediction error; &#34;objective&#34; for the objective function
+        evaluated at that rulelist; and &#34;dfs&#34; for depth-first search.
+    verbosity : list, optional (default=[&#34;rulelist&#34;])
+        The verbosity levels required. A list of strings, it can contain any
+        subset of [&#34;rulelist&#34;, &#34;rule&#34;, &#34;label&#34;, &#34;minor&#34;, &#34;samples&#34;, &#34;progress&#34;, &#34;mine&#34;, &#34;loud&#34;].
+        An empty list ([]) indicates &#39;silent&#39; mode.
+        - &#34;rulelist&#34; prints the generated rulelist at the end.
+        - &#34;rule&#34; prints a summary of each rule generated.
+        - &#34;label&#34; prints a summary of the class labels.
+        - &#34;minor&#34; prints a summary of the minority bound.
+        - &#34;samples&#34; produces a complete dump of the rules, label, and/or minor data. You must also provide at least one of &#34;rule&#34;, &#34;label&#34;, or &#34;minor&#34; to specify which data you want to dump, or &#34;loud&#34; for all data. The &#34;samples&#34; option often spits out a lot of output.
+        - &#34;progress&#34; prints periodic messages as corels runs.
+        - &#34;mine&#34; prints debug information while mining rules, including each rule as it is generated.
+        - &#34;loud&#34; is the equivalent of [&#34;progress&#34;, &#34;label&#34;, &#34;rule&#34;, &#34;mine&#34;, &#34;minor&#34;].
+    ablation : int, optional (default=0)
+        Specifies addition parameters for the bounds used while searching. Accepted
+        values are 0 (all bounds), 1 (no antecedent support bound), and 2 (no
+        lookahead bound).
+    max_card : int, optional (default=2)
+        Maximum cardinality allowed when mining rules. Can be any value greater than
+        or equal to 1. For instance, a value of 2 would only allow rules that combine
+        at most two features in their antecedents.
+    min_support : float, optional (default=0.01)
+        The fraction of samples that a rule must capture in order to be used. 1 minus
+        this value is also the maximum fraction of samples a rule can capture.
+        Can be any value between 0.0 and 0.5.
+    References
+    ----------
+    Elaine Angelino, Nicholas Larus-Stone, Daniel Alabi, Margo Seltzer, and Cynthia Rudin.
+    Learning Certifiably Optimal Rule Lists for Categorical Data. KDD 2017.
+    Journal of Machine Learning Research, 2018; 19: 1-77. arXiv:1704.01701, 2017
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; from corels import CorelsClassifier
+    &gt;&gt;&gt; X = np.array([ [1, 0, 1], [0, 1, 0], [1, 1, 1] ])
+    &gt;&gt;&gt; y = np.array([ 1, 0, 1])
+    &gt;&gt;&gt; c = CorelsRuleListClassifier(verbosity=[])
+    &gt;&gt;&gt; c.fit(X, y)
+    ...
+    &gt;&gt;&gt; print(c.predict(X))
+    [ True False  True ]
+    &#34;&#34;&#34;
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_complexity(self):
+        return None
+
+    def fit(self, X, y, feature_names=[], prediction_name=&#34;prediction&#34;):
+        &#34;&#34;&#34;
+        Build a CORELS classifier from the training set (X, y).
+        Parameters
+        ----------
+        X : array-like, shape = [n_samples, n_features]
+            The training input samples. All features must be binary, and the matrix
+            is internally converted to dtype=np.uint8.
+        y : array-line, shape = [n_samples]
+            The target values for the training input. Must be binary.
+
+        feature_names : list, optional(default=[])
+            A list of strings of length n_features. Specifies the names of each
+            of the features. If an empty list is provided, the feature names
+            are set to the default of [&#34;feature1&#34;, &#34;feature2&#34;... ].
+        prediction_name : string, optional(default=&#34;prediction&#34;)
+            The name of the feature that is being predicted.
+        Returns
+        -------
+        self : obj
+        &#34;&#34;&#34;
+        super().fit(X, y, features=feature_names, prediction_name=prediction_name)
+
+    def predict(self, X):
+        &#34;&#34;&#34;
+        Predict classifications of the input samples X.
+        Arguments
+        ---------
+        X : array-like, shape = [n_samples, n_features]
+            The training input samples. All features must be binary, and the matrix
+            is internally converted to dtype=np.uint8. The features must be the same
+            as those of the data used to train the model.
+        Returns
+        -------
+        p : array[int] of shape = [n_samples].
+            The classifications of the input samples.
+        &#34;&#34;&#34;
+        return super().predict(X).astype(int)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier"><code class="flex name class">
+<span>class <span class="ident">CorelsRuleListClassifier</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Certifiably Optimal RulE ListS classifier.
+This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
+rulelists for binary feature data and binary classification. As an alternative to other
+tree based algorithms such as CART, CORELS provides a certificate of optimality for its
+rulelist given a training set, leveraging multiple algorithmic bounds to do so.
+In order to use run the algorithm, create an instance of the <code>CorelsClassifier</code> class,
+providing any necessary parameters in its constructor, and then call <code>fit</code> to generate
+a rulelist. <code>printrl</code> prints the generated rulelist, while <code>predict</code> provides
+classification predictions for a separate test dataset with the same features. To determine
+the algorithm's accuracy, run <code>score</code> on an evaluation dataset with labels.
+To save a generated rulelist to a file, call <code>save</code>. To load it back from the file, call <code>load</code>.
+Attributes</p>
+<hr>
+<dl>
+<dt><strong><code>c</code></strong> :&ensp;<code>float</code>, optional (default=<code>0.01</code>)</dt>
+<dd>Regularization parameter. Higher values penalize longer rulelists.</dd>
+<dt><strong><code>n_iter</code></strong> :&ensp;<code>int</code>, optional (default=<code>10000</code>)</dt>
+<dd>Maximum number of nodes (rulelists) to search before exiting.</dd>
+<dt><strong><code>map_type</code></strong> :&ensp;<code>str</code>, optional (default=<code>"prefix"</code>)</dt>
+<dd>The type of prefix map to use. Supported maps are "none" for no map,
+"prefix" for a map that uses rule prefixes for keys, "captured" for
+a map with a prefix's captured vector as keys.</dd>
+<dt><strong><code>policy</code></strong> :&ensp;<code>str</code>, optional (default=<code>"lower_bound"</code>)</dt>
+<dd>The search policy for traversing the tree (i.e. the criterion with which
+to order nodes in the queue). Supported criteria are "bfs", for breadth-first
+search; "curious", which attempts to find the most promising node;
+"lower_bound" which is the objective function evaluated with that rulelist
+minus the default prediction error; "objective" for the objective function
+evaluated at that rulelist; and "dfs" for depth-first search.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>list</code>, optional (default=[<code>"rulelist"</code>])</dt>
+<dd>The verbosity levels required. A list of strings, it can contain any
+subset of ["rulelist", "rule", "label", "minor", "samples", "progress", "mine", "loud"].
+An empty list ([]) indicates 'silent' mode.
+- "rulelist" prints the generated rulelist at the end.
+- "rule" prints a summary of each rule generated.
+- "label" prints a summary of the class labels.
+- "minor" prints a summary of the minority bound.
+- "samples" produces a complete dump of the rules, label, and/or minor data. You must also provide at least one of "rule", "label", or "minor" to specify which data you want to dump, or "loud" for all data. The "samples" option often spits out a lot of output.
+- "progress" prints periodic messages as corels runs.
+- "mine" prints debug information while mining rules, including each rule as it is generated.
+- "loud" is the equivalent of ["progress", "label", "rule", "mine", "minor"].</dd>
+<dt><strong><code>ablation</code></strong> :&ensp;<code>int</code>, optional (default=<code>0</code>)</dt>
+<dd>Specifies addition parameters for the bounds used while searching. Accepted
+values are 0 (all bounds), 1 (no antecedent support bound), and 2 (no
+lookahead bound).</dd>
+<dt><strong><code>max_card</code></strong> :&ensp;<code>int</code>, optional (default=<code>2</code>)</dt>
+<dd>Maximum cardinality allowed when mining rules. Can be any value greater than
+or equal to 1. For instance, a value of 2 would only allow rules that combine
+at most two features in their antecedents.</dd>
+<dt><strong><code>min_support</code></strong> :&ensp;<code>float</code>, optional (default=<code>0.01</code>)</dt>
+<dd>The fraction of samples that a rule must capture in order to be used. 1 minus
+this value is also the maximum fraction of samples a rule can capture.
+Can be any value between 0.0 and 0.5.</dd>
+</dl>
+<h2 id="references">References</h2>
+<p>Elaine Angelino, Nicholas Larus-Stone, Daniel Alabi, Margo Seltzer, and Cynthia Rudin.
+Learning Certifiably Optimal Rule Lists for Categorical Data. KDD 2017.
+Journal of Machine Learning Research, 2018; 19: 1-77. arXiv:1704.01701, 2017
+Examples</p>
+<hr>
+<pre><code>&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from corels import CorelsClassifier
+&gt;&gt;&gt; X = np.array([ [1, 0, 1], [0, 1, 0], [1, 1, 1] ])
+&gt;&gt;&gt; y = np.array([ 1, 0, 1])
+&gt;&gt;&gt; c = CorelsRuleListClassifier(verbosity=[])
+&gt;&gt;&gt; c.fit(X, y)
+...
+&gt;&gt;&gt; print(c.predict(X))
+[ True False  True ]
+</code></pre></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
+    &#34;&#34;&#34;Certifiably Optimal RulE ListS classifier.
+    This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
+    rulelists for binary feature data and binary classification. As an alternative to other
+    tree based algorithms such as CART, CORELS provides a certificate of optimality for its
+    rulelist given a training set, leveraging multiple algorithmic bounds to do so.
+    In order to use run the algorithm, create an instance of the `CorelsClassifier` class,
+    providing any necessary parameters in its constructor, and then call `fit` to generate
+    a rulelist. `printrl` prints the generated rulelist, while `predict` provides
+    classification predictions for a separate test dataset with the same features. To determine
+    the algorithm&#39;s accuracy, run `score` on an evaluation dataset with labels.
+    To save a generated rulelist to a file, call `save`. To load it back from the file, call `load`.
+    Attributes
+    ----------
+    c : float, optional (default=0.01)
+        Regularization parameter. Higher values penalize longer rulelists.
+    n_iter : int, optional (default=10000)
+        Maximum number of nodes (rulelists) to search before exiting.
+    map_type : str, optional (default=&#34;prefix&#34;)
+        The type of prefix map to use. Supported maps are &#34;none&#34; for no map,
+        &#34;prefix&#34; for a map that uses rule prefixes for keys, &#34;captured&#34; for
+        a map with a prefix&#39;s captured vector as keys.
+    policy : str, optional (default=&#34;lower_bound&#34;)
+        The search policy for traversing the tree (i.e. the criterion with which
+        to order nodes in the queue). Supported criteria are &#34;bfs&#34;, for breadth-first
+        search; &#34;curious&#34;, which attempts to find the most promising node;
+        &#34;lower_bound&#34; which is the objective function evaluated with that rulelist
+        minus the default prediction error; &#34;objective&#34; for the objective function
+        evaluated at that rulelist; and &#34;dfs&#34; for depth-first search.
+    verbosity : list, optional (default=[&#34;rulelist&#34;])
+        The verbosity levels required. A list of strings, it can contain any
+        subset of [&#34;rulelist&#34;, &#34;rule&#34;, &#34;label&#34;, &#34;minor&#34;, &#34;samples&#34;, &#34;progress&#34;, &#34;mine&#34;, &#34;loud&#34;].
+        An empty list ([]) indicates &#39;silent&#39; mode.
+        - &#34;rulelist&#34; prints the generated rulelist at the end.
+        - &#34;rule&#34; prints a summary of each rule generated.
+        - &#34;label&#34; prints a summary of the class labels.
+        - &#34;minor&#34; prints a summary of the minority bound.
+        - &#34;samples&#34; produces a complete dump of the rules, label, and/or minor data. You must also provide at least one of &#34;rule&#34;, &#34;label&#34;, or &#34;minor&#34; to specify which data you want to dump, or &#34;loud&#34; for all data. The &#34;samples&#34; option often spits out a lot of output.
+        - &#34;progress&#34; prints periodic messages as corels runs.
+        - &#34;mine&#34; prints debug information while mining rules, including each rule as it is generated.
+        - &#34;loud&#34; is the equivalent of [&#34;progress&#34;, &#34;label&#34;, &#34;rule&#34;, &#34;mine&#34;, &#34;minor&#34;].
+    ablation : int, optional (default=0)
+        Specifies addition parameters for the bounds used while searching. Accepted
+        values are 0 (all bounds), 1 (no antecedent support bound), and 2 (no
+        lookahead bound).
+    max_card : int, optional (default=2)
+        Maximum cardinality allowed when mining rules. Can be any value greater than
+        or equal to 1. For instance, a value of 2 would only allow rules that combine
+        at most two features in their antecedents.
+    min_support : float, optional (default=0.01)
+        The fraction of samples that a rule must capture in order to be used. 1 minus
+        this value is also the maximum fraction of samples a rule can capture.
+        Can be any value between 0.0 and 0.5.
+    References
+    ----------
+    Elaine Angelino, Nicholas Larus-Stone, Daniel Alabi, Margo Seltzer, and Cynthia Rudin.
+    Learning Certifiably Optimal Rule Lists for Categorical Data. KDD 2017.
+    Journal of Machine Learning Research, 2018; 19: 1-77. arXiv:1704.01701, 2017
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; from corels import CorelsClassifier
+    &gt;&gt;&gt; X = np.array([ [1, 0, 1], [0, 1, 0], [1, 1, 1] ])
+    &gt;&gt;&gt; y = np.array([ 1, 0, 1])
+    &gt;&gt;&gt; c = CorelsRuleListClassifier(verbosity=[])
+    &gt;&gt;&gt; c.fit(X, y)
+    ...
+    &gt;&gt;&gt; print(c.predict(X))
+    [ True False  True ]
+    &#34;&#34;&#34;
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_complexity(self):
+        return None
+
+    def fit(self, X, y, feature_names=[], prediction_name=&#34;prediction&#34;):
+        &#34;&#34;&#34;
+        Build a CORELS classifier from the training set (X, y).
+        Parameters
+        ----------
+        X : array-like, shape = [n_samples, n_features]
+            The training input samples. All features must be binary, and the matrix
+            is internally converted to dtype=np.uint8.
+        y : array-line, shape = [n_samples]
+            The target values for the training input. Must be binary.
+
+        feature_names : list, optional(default=[])
+            A list of strings of length n_features. Specifies the names of each
+            of the features. If an empty list is provided, the feature names
+            are set to the default of [&#34;feature1&#34;, &#34;feature2&#34;... ].
+        prediction_name : string, optional(default=&#34;prediction&#34;)
+            The name of the feature that is being predicted.
+        Returns
+        -------
+        self : obj
+        &#34;&#34;&#34;
+        super().fit(X, y, features=feature_names, prediction_name=prediction_name)
+
+    def predict(self, X):
+        &#34;&#34;&#34;
+        Predict classifications of the input samples X.
+        Arguments
+        ---------
+        X : array-like, shape = [n_samples, n_features]
+            The training input samples. All features must be binary, and the matrix
+            is internally converted to dtype=np.uint8. The features must be the same
+            as those of the data used to train the model.
+        Returns
+        -------
+        p : array[int] of shape = [n_samples].
+            The classifications of the input samples.
+        &#34;&#34;&#34;
+        return super().predict(X).astype(int)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+<li>corels.corels.CorelsClassifier</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=[], prediction_name='prediction')</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Build a CORELS classifier from the training set (X, y).
+Parameters</p>
+<hr>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array</code>-<code>like</code>, <code>shape</code> = [<code>n_samples</code>, <code>n_features</code>]</dt>
+<dd>The training input samples. All features must be binary, and the matrix
+is internally converted to dtype=np.uint8.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array</code>-<code>line</code>, <code>shape</code> = [<code>n_samples</code>]</dt>
+<dd>The target values for the training input. Must be binary.</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code>, optional(default=[])</dt>
+<dd>A list of strings of length n_features. Specifies the names of each
+of the features. If an empty list is provided, the feature names
+are set to the default of ["feature1", "feature2"&hellip; ].</dd>
+<dt><strong><code>prediction_name</code></strong> :&ensp;<code>string</code>, optional(default=<code>"prediction"</code>)</dt>
+<dd>The name of the feature that is being predicted.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>obj</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, feature_names=[], prediction_name=&#34;prediction&#34;):
+    &#34;&#34;&#34;
+    Build a CORELS classifier from the training set (X, y).
+    Parameters
+    ----------
+    X : array-like, shape = [n_samples, n_features]
+        The training input samples. All features must be binary, and the matrix
+        is internally converted to dtype=np.uint8.
+    y : array-line, shape = [n_samples]
+        The target values for the training input. Must be binary.
+
+    feature_names : list, optional(default=[])
+        A list of strings of length n_features. Specifies the names of each
+        of the features. If an empty list is provided, the feature names
+        are set to the default of [&#34;feature1&#34;, &#34;feature2&#34;... ].
+    prediction_name : string, optional(default=&#34;prediction&#34;)
+        The name of the feature that is being predicted.
+    Returns
+    -------
+    self : obj
+    &#34;&#34;&#34;
+    super().fit(X, y, features=feature_names, prediction_name=prediction_name)</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.get_complexity"><code class="name flex">
+<span>def <span class="ident">get_complexity</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_complexity(self):
+    return None</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Predict classifications of the input samples X.
+Arguments</p>
+<hr>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array</code>-<code>like</code>, <code>shape</code> = [<code>n_samples</code>, <code>n_features</code>]</dt>
+<dd>The training input samples. All features must be binary, and the matrix
+is internally converted to dtype=np.uint8. The features must be the same
+as those of the data used to train the model.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>p : array[int] of shape = [n_samples].
+The classifications of the input samples.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    &#34;&#34;&#34;
+    Predict classifications of the input samples X.
+    Arguments
+    ---------
+    X : array-like, shape = [n_samples, n_features]
+        The training input samples. All features must be binary, and the matrix
+        is internally converted to dtype=np.uint8. The features must be the same
+        as those of the data used to train the model.
+    Returns
+    -------
+    p : array[int] of shape = [n_samples].
+        The classifications of the input samples.
+    &#34;&#34;&#34;
+    return super().predict(X).astype(int)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.rule_list" href="index.html">imodels.rule_list</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier">CorelsRuleListClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.fit" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.get_complexity" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.get_complexity">get_complexity</a></code></li>
+<li><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict">predict</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

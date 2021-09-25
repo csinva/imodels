@@ -26,3 +26,6 @@ class IRFClassifier(BaseEstimator):
         assert type(y) == np.ndarray, 'inputs should be ndarrays'
 
         self.model.fit(X, y, keep_record=False)
+
+
+

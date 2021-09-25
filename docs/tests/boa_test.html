@@ -25,23 +25,20 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import os
+import random
 import unittest
 from os.path import join as oj
 from random import sample
 
-test_dir = os.path.dirname(os.path.abspath(__file__))
-import numpy as np
 from pandas.io.parsers import read_csv
-import random
-from imodels import BOAClassifier
+
+from imodels import *
+
+test_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 class TestBoaClassifier(unittest.TestCase):
-    def setup(self):
-        np.random.seed(13)
-        random.seed(13)
-
-    def test_boa(self):
+    def test_boa_tictactoe(self):
         &#39;&#39;&#39;Test classifiers are properly sklearn-compatible
         &#39;&#39;&#39;
 
@@ -49,88 +46,36 @@ class TestBoaClassifier(unittest.TestCase):
         Y = np.loadtxt(open(oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_Y.txt&#39;), &#34;rb&#34;), delimiter=&#34; &#34;)
 
         lenY = len(Y)
-        train_index = sample(range(lenY), int(0.70 * lenY))
-        test_index = [i for i in range(lenY) if i not in train_index]
-
-        model = BOAClassifier(n_rules=1000,
+        idxs_train = sample(range(lenY), int(0.50 * lenY))
+        idxs_test = [i for i in range(lenY) if i not in idxs_train]
+        y_test = Y[idxs_test]
+        model = BOAClassifier(n_rules=100,
                               supp=5,
                               maxlen=3,
-                              num_iterations=300,
+                              num_iterations=100,
                               num_chains=2,
                               alpha_pos=500, beta_pos=1,
                               alpha_neg=500, beta_neg=1,
                               alpha_l=None, beta_l=None)
-        # model.generate_rules()
-        # model.set_parameters(alpha_1, beta_pos, alpha_neg, beta_neg, None, None)
-        model.fit(df.iloc[train_index], Y[train_index])
 
-        # test
-        print(&#39;printing rules...&#39;, model)
-        Yhat = model.predict(df.iloc[test_index])
+        # fit and check accuracy
+        np.random.seed(13)
+        random.seed(13)
+        model.fit(df.iloc[idxs_train], Y[idxs_train])
+        y_pred = model.predict(df.iloc[idxs_test])
+        acc1 = np.mean(y_pred == y_test)
+        assert acc1 &gt; 0.8
 
-        def getConfusion(Yhat, Y):
-            if len(Yhat) != len(Y):
-                raise NameError(&#39;Yhat has different length&#39;)
-            TP = np.dot(np.array(Y), np.array(Yhat))
-            FP = np.sum(Yhat) - TP
-            TN = len(Y) - np.sum(Y) - FP
-            FN = len(Yhat) - np.sum(Yhat) - TN
-            return TP, FP, TN, FN
+        # try fitting np version
+        np.random.seed(13)
+        random.seed(13)
+        model.fit(df.iloc[idxs_train].values, Y[idxs_train])
+        y_pred = model.predict(df.iloc[idxs_test].values)
+        y_test = Y[idxs_test]
+        acc2 = np.mean(y_pred == y_test)
+        assert acc2 &gt; 0.8
 
-        TP, FP, TN, FN = getConfusion(Yhat, Y[test_index])
-        tpr = float(TP) / (TP + FN)
-        fpr = float(FP) / (FP + TN)
-        print(
-            f&#39;TP = {TP}, FP = {FP}, TN = {TN}, FN = {FN}&#39;
-            &#39;\naccuracy = {float(TP + TN) / (TP + TN + FP + FN)}, tpr = {tpr}, fpr = {fpr}&#39;
-        )
-        assert tpr &gt; 0.8
-
-&#39;&#39;&#39;
-df = read_csv(oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_X.txt&#39;), header=0, sep=&#34; &#34;)
-Y = np.loadtxt(open(oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_Y.txt&#39;), &#34;rb&#34;), delimiter=&#34; &#34;)
-
-lenY = len(Y)
-train_index = sample(range(lenY), int(0.70 * lenY))
-test_index = [i for i in range(lenY) if i not in train_index]
-
-print(df.head())
-
-model = BOAClassifier(df.iloc[train_index], Y[train_index],
-                      n_rules=2000,
-                      supp=5,
-                      maxlen=3,
-                      num_iterations=500,
-                      num_chains=2,
-                      alpha_pos=500, beta_pos=1,
-                      alpha_neg=500, beta_neg=1,
-                      alpha_l=None, beta_l=None)
-# model.generate_rules()
-# model.set_parameters(alpha_1, beta_pos, alpha_neg, beta_neg, None, None)
-model.fit()
-
-# test
-print(&#39;printing rules...&#39;, model)
-Yhat = model.predict(df.iloc[test_index])
-
-def getConfusion(Yhat, Y):
-    if len(Yhat) != len(Y):
-        raise NameError(&#39;Yhat has different length&#39;)
-    TP = np.dot(np.array(Y), np.array(Yhat))
-    FP = np.sum(Yhat) - TP
-    TN = len(Y) - np.sum(Y) - FP
-    FN = len(Yhat) - np.sum(Yhat) - TN
-    return TP, FP, TN, FN
-
-TP, FP, TN, FN = getConfusion(Yhat, Y[test_index])
-tpr = float(TP) / (TP + FN)
-fpr = float(FP) / (FP + TN)
-print(
-    f&#39;TP = {TP}, FP = {FP}, TN = {TN}, FN = {FN}&#39;
-    &#39;\naccuracy = {float(TP + TN) / (TP + TN + FP + FN)}, tpr = {tpr}, fpr = {fpr}&#39;
-)
-assert tpr &gt; 0.8
-&#39;&#39;&#39;</code></pre>
+        # assert np.abs(acc1 - acc2) &lt; 0.05 # todo: fix seeding</code></pre>
 </details>
 </section>
 <section>
@@ -180,11 +125,7 @@ not have a method with the specified name.</p></section>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TestBoaClassifier(unittest.TestCase):
-    def setup(self):
-        np.random.seed(13)
-        random.seed(13)
-
-    def test_boa(self):
+    def test_boa_tictactoe(self):
         &#39;&#39;&#39;Test classifiers are properly sklearn-compatible
         &#39;&#39;&#39;
 
@@ -192,42 +133,34 @@ not have a method with the specified name.</p></section>
         Y = np.loadtxt(open(oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_Y.txt&#39;), &#34;rb&#34;), delimiter=&#34; &#34;)
 
         lenY = len(Y)
-        train_index = sample(range(lenY), int(0.70 * lenY))
-        test_index = [i for i in range(lenY) if i not in train_index]
-
-        model = BOAClassifier(n_rules=1000,
+        idxs_train = sample(range(lenY), int(0.50 * lenY))
+        idxs_test = [i for i in range(lenY) if i not in idxs_train]
+        y_test = Y[idxs_test]
+        model = BOAClassifier(n_rules=100,
                               supp=5,
                               maxlen=3,
-                              num_iterations=300,
+                              num_iterations=100,
                               num_chains=2,
                               alpha_pos=500, beta_pos=1,
                               alpha_neg=500, beta_neg=1,
                               alpha_l=None, beta_l=None)
-        # model.generate_rules()
-        # model.set_parameters(alpha_1, beta_pos, alpha_neg, beta_neg, None, None)
-        model.fit(df.iloc[train_index], Y[train_index])
 
-        # test
-        print(&#39;printing rules...&#39;, model)
-        Yhat = model.predict(df.iloc[test_index])
+        # fit and check accuracy
+        np.random.seed(13)
+        random.seed(13)
+        model.fit(df.iloc[idxs_train], Y[idxs_train])
+        y_pred = model.predict(df.iloc[idxs_test])
+        acc1 = np.mean(y_pred == y_test)
+        assert acc1 &gt; 0.8
 
-        def getConfusion(Yhat, Y):
-            if len(Yhat) != len(Y):
-                raise NameError(&#39;Yhat has different length&#39;)
-            TP = np.dot(np.array(Y), np.array(Yhat))
-            FP = np.sum(Yhat) - TP
-            TN = len(Y) - np.sum(Y) - FP
-            FN = len(Yhat) - np.sum(Yhat) - TN
-            return TP, FP, TN, FN
-
-        TP, FP, TN, FN = getConfusion(Yhat, Y[test_index])
-        tpr = float(TP) / (TP + FN)
-        fpr = float(FP) / (FP + TN)
-        print(
-            f&#39;TP = {TP}, FP = {FP}, TN = {TN}, FN = {FN}&#39;
-            &#39;\naccuracy = {float(TP + TN) / (TP + TN + FP + FN)}, tpr = {tpr}, fpr = {fpr}&#39;
-        )
-        assert tpr &gt; 0.8</code></pre>
+        # try fitting np version
+        np.random.seed(13)
+        random.seed(13)
+        model.fit(df.iloc[idxs_train].values, Y[idxs_train])
+        y_pred = model.predict(df.iloc[idxs_test].values)
+        y_test = Y[idxs_test]
+        acc2 = np.mean(y_pred == y_test)
+        assert acc2 &gt; 0.8</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -235,22 +168,8 @@ not have a method with the specified name.</p></section>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tests.boa_test.TestBoaClassifier.setup"><code class="name flex">
-<span>def <span class="ident">setup</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def setup(self):
-    np.random.seed(13)
-    random.seed(13)</code></pre>
-</details>
-</dd>
-<dt id="imodels.tests.boa_test.TestBoaClassifier.test_boa"><code class="name flex">
-<span>def <span class="ident">test_boa</span></span>(<span>self)</span>
+<dt id="imodels.tests.boa_test.TestBoaClassifier.test_boa_tictactoe"><code class="name flex">
+<span>def <span class="ident">test_boa_tictactoe</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Test classifiers are properly sklearn-compatible</p></section>
@@ -258,7 +177,7 @@ not have a method with the specified name.</p></section>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def test_boa(self):
+<pre><code class="python">def test_boa_tictactoe(self):
     &#39;&#39;&#39;Test classifiers are properly sklearn-compatible
     &#39;&#39;&#39;
 
@@ -266,42 +185,34 @@ not have a method with the specified name.</p></section>
     Y = np.loadtxt(open(oj(test_dir, &#39;test_data&#39;, &#39;tictactoe_Y.txt&#39;), &#34;rb&#34;), delimiter=&#34; &#34;)
 
     lenY = len(Y)
-    train_index = sample(range(lenY), int(0.70 * lenY))
-    test_index = [i for i in range(lenY) if i not in train_index]
-
-    model = BOAClassifier(n_rules=1000,
+    idxs_train = sample(range(lenY), int(0.50 * lenY))
+    idxs_test = [i for i in range(lenY) if i not in idxs_train]
+    y_test = Y[idxs_test]
+    model = BOAClassifier(n_rules=100,
                           supp=5,
                           maxlen=3,
-                          num_iterations=300,
+                          num_iterations=100,
                           num_chains=2,
                           alpha_pos=500, beta_pos=1,
                           alpha_neg=500, beta_neg=1,
                           alpha_l=None, beta_l=None)
-    # model.generate_rules()
-    # model.set_parameters(alpha_1, beta_pos, alpha_neg, beta_neg, None, None)
-    model.fit(df.iloc[train_index], Y[train_index])
 
-    # test
-    print(&#39;printing rules...&#39;, model)
-    Yhat = model.predict(df.iloc[test_index])
+    # fit and check accuracy
+    np.random.seed(13)
+    random.seed(13)
+    model.fit(df.iloc[idxs_train], Y[idxs_train])
+    y_pred = model.predict(df.iloc[idxs_test])
+    acc1 = np.mean(y_pred == y_test)
+    assert acc1 &gt; 0.8
 
-    def getConfusion(Yhat, Y):
-        if len(Yhat) != len(Y):
-            raise NameError(&#39;Yhat has different length&#39;)
-        TP = np.dot(np.array(Y), np.array(Yhat))
-        FP = np.sum(Yhat) - TP
-        TN = len(Y) - np.sum(Y) - FP
-        FN = len(Yhat) - np.sum(Yhat) - TN
-        return TP, FP, TN, FN
-
-    TP, FP, TN, FN = getConfusion(Yhat, Y[test_index])
-    tpr = float(TP) / (TP + FN)
-    fpr = float(FP) / (FP + TN)
-    print(
-        f&#39;TP = {TP}, FP = {FP}, TN = {TN}, FN = {FN}&#39;
-        &#39;\naccuracy = {float(TP + TN) / (TP + TN + FP + FN)}, tpr = {tpr}, fpr = {fpr}&#39;
-    )
-    assert tpr &gt; 0.8</code></pre>
+    # try fitting np version
+    np.random.seed(13)
+    random.seed(13)
+    model.fit(df.iloc[idxs_train].values, Y[idxs_train])
+    y_pred = model.predict(df.iloc[idxs_test].values)
+    y_test = Y[idxs_test]
+    acc2 = np.mean(y_pred == y_test)
+    assert acc2 &gt; 0.8</code></pre>
 </details>
 </dd>
 </dl>
@@ -325,8 +236,7 @@ not have a method with the specified name.</p></section>
 <li>
 <h4><code><a title="imodels.tests.boa_test.TestBoaClassifier" href="#imodels.tests.boa_test.TestBoaClassifier">TestBoaClassifier</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tests.boa_test.TestBoaClassifier.setup" href="#imodels.tests.boa_test.TestBoaClassifier.setup">setup</a></code></li>
-<li><code><a title="imodels.tests.boa_test.TestBoaClassifier.test_boa" href="#imodels.tests.boa_test.TestBoaClassifier.test_boa">test_boa</a></code></li>
+<li><code><a title="imodels.tests.boa_test.TestBoaClassifier.test_boa_tictactoe" href="#imodels.tests.boa_test.TestBoaClassifier.test_boa_tictactoe">test_boa_tictactoe</a></code></li>
 </ul>
 </li>
 </ul>

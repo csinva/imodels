@@ -1,5 +1,6 @@
-import setuptools
 from os import path
+
+import setuptools
 
 path_to_repo = path.abspath(path.dirname(__file__))
 with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
@@ -7,7 +8,7 @@ with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
 
 setuptools.setup(
     name="imodels",
-    version="0.2.9",
+    version="0.3.0",
     author="Chandan Singh, Keyan Nasseri, Bin Yu, and others",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",
@@ -16,7 +17,7 @@ setuptools.setup(
     url="https://github.com/csinva/imodels",
     packages=setuptools.find_packages(exclude=['tests']),
     install_requires=[
-        'corels==1.1.29',  # imports corels basically from scratch
+        'corels==1.1.29',  # we only provide a basic wrapper around corels
         'cvxpy',
         'cvxopt',
         'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
