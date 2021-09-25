@@ -95,9 +95,14 @@ print(model) # print the rule-based model
 <td>Uses a Bayesian or-of-and algorithm to find a concise rule set</td>
 </tr>
 <tr>
+<td align="left">Corels rule list</td>
+<td><a href="[CorelsRuleListClassifier](&lt;https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier&gt;)">🗂️</a>, <a href="https://github.com/corels/pycorels">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/17-716/17-716.pdf">📄</a></td>
+<td>Learns an optimal compact rule list (rather than using a greedy heuristic)</td>
+</tr>
+<tr>
 <td align="left">Bayesian rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">🗂️</a>, <a href="https://github.com/tmadl/sklearn-expertsys">🔗</a>, <a href="https://arxiv.org/abs/1602.08610">📄</a></td>
-<td>Learns a compact rule list by sampling rule lists (rather than using a greedy heuristic)</td>
+<td>Learns a compact rule list distribution by sampling rule lists (slow)</td>
 </tr>
 <tr>
 <td align="left">Greedy rule list</td>
@@ -244,6 +249,11 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <td align="center"></td>
 </tr>
 <tr>
+<td align="left">Corels rule list</td>
+<td align="center"><a href="https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier">CorelsRuleListClassifier</a></td>
+<td align="center"></td>
+</tr>
+<tr>
 <td align="left">Bayesian rule list</td>
 <td align="center"><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">BayesianRuleListClassifier</a></td>
 <td align="center"></td>
@@ -289,6 +299,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <summary>Reference implementations (also linked above)</summary>
 The code here heavily derives from the wonderful work of previous projects. We seek to to extract out, unify, and maintain key parts of these projects.
 <ul>
+<li><a href="https://github.com/corels/pycorels">pycorels</a> - by <a href="https://github.com/fingoldin">@fingoldin</a> and the <a href="https://github.com/corels/corels">original CORELS team</a>
 <li><a href="https://github.com/tmadl/sklearn-expertsys">sklearn-expertsys</a> - by <a href="https://github.com/tmadl">@tmadl</a> and <a href="https://github.com/kenben">@kenben</a> based on original code by <a href="http://lethalletham.com/">Ben Letham</a></li>
 <li><a href="https://github.com/christophM/rulefit">rulefit</a> - by <a href="https://github.com/christophM">@christophM</a></li>
 <li><a href="https://github.com/scikit-learn-contrib/skope-rules">skope-rules</a> - by the <a href="https://github.com/scikit-learn-contrib/skope-rules/blob/master/AUTHORS.rst">skope-rules team</a> (including <a href="https://github.com/ngoix">@ngoix</a>, <a href="https://github.com/floriangardin">@floriangardin</a>, <a href="https://github.com/datajms">@datajms</a>, <a href="">Bibi Ndiaye</a>, <a href="">Ronan Gautier</a>)</li>

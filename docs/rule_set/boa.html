@@ -99,7 +99,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         self.beta_pos = beta_pos
         self.alpha_neg = alpha_neg
         self.beta_neg = beta_neg
-        self.method = discretization_method
+        self.discretization_method = discretization_method
 
         self.alpha_l = alpha_l
         self.beta_l = beta_l
@@ -235,6 +235,9 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         Yhat = (np.sum(Z, axis=0) &gt; 0).astype(int)
         return Yhat
 
+    def predict_proba(self, X):
+        raise Exception(&#39;BOA does not support predicted probabilities.&#39;)
+
     def set_pattern_space(self):
         &#34;&#34;&#34;Compute the rule space from the levels in each attribute
         &#34;&#34;&#34;
@@ -263,7 +266,7 @@ class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         df = 1 - X  # df has negative associations
         df.columns = [name.strip() + &#39;_neg&#39; for name in X.columns]
         df = pd.concat([X, df], axis=1)
-        if self.method == &#39;fpgrowth&#39; and self.maxlen &lt;= 3:
+        if self.discretization_method == &#39;fpgrowth&#39; and self.maxlen &lt;= 3:
             itemMatrix = [[item for item in df.columns if row[item] == 1] for i, row in df.iterrows()]
             pindex = np.where(y == 1)[0]
             rules = fpgrowth([itemMatrix[i] for i in pindex], supp=self.supp, zmin=1, zmax=self.maxlen)
@@ -796,7 +799,7 @@ The alpha and beta parameters alter the prior distributions for different rules<
         self.beta_pos = beta_pos
         self.alpha_neg = alpha_neg
         self.beta_neg = beta_neg
-        self.method = discretization_method
+        self.discretization_method = discretization_method
 
         self.alpha_l = alpha_l
         self.beta_l = beta_l
@@ -932,6 +935,9 @@ The alpha and beta parameters alter the prior distributions for different rules<
         Yhat = (np.sum(Z, axis=0) &gt; 0).astype(int)
         return Yhat
 
+    def predict_proba(self, X):
+        raise Exception(&#39;BOA does not support predicted probabilities.&#39;)
+
     def set_pattern_space(self):
         &#34;&#34;&#34;Compute the rule space from the levels in each attribute
         &#34;&#34;&#34;
@@ -960,7 +966,7 @@ The alpha and beta parameters alter the prior distributions for different rules<
         df = 1 - X  # df has negative associations
         df.columns = [name.strip() + &#39;_neg&#39; for name in X.columns]
         df = pd.concat([X, df], axis=1)
-        if self.method == &#39;fpgrowth&#39; and self.maxlen &lt;= 3:
+        if self.discretization_method == &#39;fpgrowth&#39; and self.maxlen &lt;= 3:
             itemMatrix = [[item for item in df.columns if row[item] == 1] for i, row in df.iterrows()]
             pindex = np.where(y == 1)[0]
             rules = fpgrowth([itemMatrix[i] for i in pindex], supp=self.supp, zmin=1, zmax=self.maxlen)
@@ -1320,7 +1326,7 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
     df = 1 - X  # df has negative associations
     df.columns = [name.strip() + &#39;_neg&#39; for name in X.columns]
     df = pd.concat([X, df], axis=1)
-    if self.method == &#39;fpgrowth&#39; and self.maxlen &lt;= 3:
+    if self.discretization_method == &#39;fpgrowth&#39; and self.maxlen &lt;= 3:
         itemMatrix = [[item for item in df.columns if row[item] == 1] for i, row in df.iterrows()]
         pindex = np.where(y == 1)[0]
         rules = fpgrowth([itemMatrix[i] for i in pindex], supp=self.supp, zmin=1, zmax=self.maxlen)
@@ -1413,6 +1419,19 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
         Z[i] = (np.sum(df[list(rule)], axis=1) == len(rule)).astype(int)
     Yhat = (np.sum(Z, axis=0) &gt; 0).astype(int)
     return Yhat</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_set.boa.BOAClassifier.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    raise Exception(&#39;BOA does not support predicted probabilities.&#39;)</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_set.boa.BOAClassifier.print_rules"><code class="name flex">
@@ -1632,6 +1651,7 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
 <li><code><a title="imodels.rule_set.boa.BOAClassifier.normalize" href="#imodels.rule_set.boa.BOAClassifier.normalize">normalize</a></code></li>
 <li><code><a title="imodels.rule_set.boa.BOAClassifier.normalize_add" href="#imodels.rule_set.boa.BOAClassifier.normalize_add">normalize_add</a></code></li>
 <li><code><a title="imodels.rule_set.boa.BOAClassifier.predict" href="#imodels.rule_set.boa.BOAClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_set.boa.BOAClassifier.predict_proba" href="#imodels.rule_set.boa.BOAClassifier.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.rule_set.boa.BOAClassifier.print_rules" href="#imodels.rule_set.boa.BOAClassifier.print_rules">print_rules</a></code></li>
 <li><code><a title="imodels.rule_set.boa.BOAClassifier.propose" href="#imodels.rule_set.boa.BOAClassifier.propose">propose</a></code></li>
 <li><code><a title="imodels.rule_set.boa.BOAClassifier.screen_rules" href="#imodels.rule_set.boa.BOAClassifier.screen_rules">screen_rules</a></code></li>

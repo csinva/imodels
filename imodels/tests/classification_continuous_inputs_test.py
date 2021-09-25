@@ -41,8 +41,6 @@ class TestClassClassificationBinary:
 
             # test predict()
             preds = m.predict(X)  # > 0.5).astype(int)
-            print('preds', preds)
-            print(m.rl())
             assert preds.size == self.n, 'predict() yields right size'
 
             # test preds_proba()
