@@ -49,14 +49,14 @@ class TestBoaClassifier(unittest.TestCase):
         idxs_train = sample(range(lenY), int(0.50 * lenY))
         idxs_test = [i for i in range(lenY) if i not in idxs_train]
         y_test = Y[idxs_test]
-        model = BOAClassifier(n_rules=100,
-                              supp=5,
-                              maxlen=3,
-                              num_iterations=100,
-                              num_chains=2,
-                              alpha_pos=500, beta_pos=1,
-                              alpha_neg=500, beta_neg=1,
-                              alpha_l=None, beta_l=None)
+        model = BayesianRuleSetClassifier(n_rules=100,
+                                          supp=5,
+                                          maxlen=3,
+                                          num_iterations=100,
+                                          num_chains=2,
+                                          alpha_pos=500, beta_pos=1,
+                                          alpha_neg=500, beta_neg=1,
+                                          alpha_l=None, beta_l=None)
 
         # fit and check accuracy
         np.random.seed(13)
@@ -136,14 +136,14 @@ not have a method with the specified name.</p></section>
         idxs_train = sample(range(lenY), int(0.50 * lenY))
         idxs_test = [i for i in range(lenY) if i not in idxs_train]
         y_test = Y[idxs_test]
-        model = BOAClassifier(n_rules=100,
-                              supp=5,
-                              maxlen=3,
-                              num_iterations=100,
-                              num_chains=2,
-                              alpha_pos=500, beta_pos=1,
-                              alpha_neg=500, beta_neg=1,
-                              alpha_l=None, beta_l=None)
+        model = BayesianRuleSetClassifier(n_rules=100,
+                                          supp=5,
+                                          maxlen=3,
+                                          num_iterations=100,
+                                          num_chains=2,
+                                          alpha_pos=500, beta_pos=1,
+                                          alpha_neg=500, beta_neg=1,
+                                          alpha_l=None, beta_l=None)
 
         # fit and check accuracy
         np.random.seed(13)
@@ -188,14 +188,14 @@ not have a method with the specified name.</p></section>
     idxs_train = sample(range(lenY), int(0.50 * lenY))
     idxs_test = [i for i in range(lenY) if i not in idxs_train]
     y_test = Y[idxs_test]
-    model = BOAClassifier(n_rules=100,
-                          supp=5,
-                          maxlen=3,
-                          num_iterations=100,
-                          num_chains=2,
-                          alpha_pos=500, beta_pos=1,
-                          alpha_neg=500, beta_neg=1,
-                          alpha_l=None, beta_l=None)
+    model = BayesianRuleSetClassifier(n_rules=100,
+                                      supp=5,
+                                      maxlen=3,
+                                      num_iterations=100,
+                                      num_chains=2,
+                                      alpha_pos=500, beta_pos=1,
+                                      alpha_neg=500, beta_neg=1,
+                                      alpha_l=None, beta_l=None)
 
     # fit and check accuracy
     np.random.seed(13)

@@ -30,7 +30,7 @@ import numpy as np
 
 from imodels import GreedyRuleListClassifier, SkopeRulesClassifier, OneRClassifier, BoostedRulesClassifier, \
     RuleFitClassifier, FPLassoClassifier, FPSkopeClassifier, \
-    SlipperClassifier, CorelsRuleListClassifier, BOAClassifier  # IRFClassifier
+    SlipperClassifier, CorelsRuleListClassifier, BayesianRuleSetClassifier  # IRFClassifier
 
 
 class TestClassClassificationBinary:
@@ -49,7 +49,7 @@ class TestClassClassificationBinary:
     def test_classification_binary(self):
         &#39;&#39;&#39;Test imodels on basic binary classification task
         &#39;&#39;&#39;
-        for model_type in [BOAClassifier,
+        for model_type in [BayesianRuleSetClassifier,
                            # RuleFitClassifier, GreedyRuleListClassifier,
                            # FPLassoClassifier, SkopeRulesClassifier,
                            # FPSkopeClassifier, BoostedRulesClassifier,
@@ -120,7 +120,7 @@ class TestClassClassificationBinary:
     def test_classification_binary(self):
         &#39;&#39;&#39;Test imodels on basic binary classification task
         &#39;&#39;&#39;
-        for model_type in [BOAClassifier,
+        for model_type in [BayesianRuleSetClassifier,
                            # RuleFitClassifier, GreedyRuleListClassifier,
                            # FPLassoClassifier, SkopeRulesClassifier,
                            # FPSkopeClassifier, BoostedRulesClassifier,
@@ -188,7 +188,7 @@ class TestClassClassificationBinary:
 <pre><code class="python">def test_classification_binary(self):
     &#39;&#39;&#39;Test imodels on basic binary classification task
     &#39;&#39;&#39;
-    for model_type in [BOAClassifier,
+    for model_type in [BayesianRuleSetClassifier,
                        # RuleFitClassifier, GreedyRuleListClassifier,
                        # FPLassoClassifier, SkopeRulesClassifier,
                        # FPSkopeClassifier, BoostedRulesClassifier,

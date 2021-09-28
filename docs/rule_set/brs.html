@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2" />
-<title>imodels.rule_set.boa API documentation</title>
+<title>imodels.rule_set.brs API documentation</title>
 <meta name="description" content="Original implementation at https://github.com/wangtongada/BOA" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,7 +17,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.rule_set.boa</code></h1>
+<h1 class="title">Module <code>imodels.rule_set.brs</code></h1>
 </header>
 <section id="section-intro">
 <p>Original implementation at <a href="https://github.com/wangtongada/BOA">https://github.com/wangtongada/BOA</a></p>
@@ -49,7 +49,7 @@ from sklearn.utils.validation import check_X_y, check_is_fitted
 from imodels.rule_set.rule_set import RuleSet
 
 
-class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
+class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
     &#39;&#39;&#39;Bayesian or-of-and algorithm.
     Generates patterns that satisfy the minimum support and maximum length and then select the Nrules rules that have the highest entropy.
     In function SA_patternbased, each local maximum is stored in maps and the best BOA is returned.
@@ -544,7 +544,7 @@ def extract_rules(tree, feature_names):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="imodels.rule_set.boa.accumulate"><code class="name flex">
+<dt id="imodels.rule_set.brs.accumulate"><code class="name flex">
 <span>def <span class="ident">accumulate</span></span>(<span>iterable, func=&lt;built-in function add&gt;)</span>
 </code></dt>
 <dd>
@@ -568,7 +568,7 @@ Ex. accumulate([1,2,3,4,5], operator.mul) &ndash;&gt; 1 2 6 24 120</p></section>
         yield total</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.extract_rules"><code class="name flex">
+<dt id="imodels.rule_set.brs.extract_rules"><code class="name flex">
 <span>def <span class="ident">extract_rules</span></span>(<span>tree, feature_names)</span>
 </code></dt>
 <dd>
@@ -611,7 +611,7 @@ Ex. accumulate([1,2,3,4,5], operator.mul) &ndash;&gt; 1 2 6 24 120</p></section>
     return rules</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.find_lt"><code class="name flex">
+<dt id="imodels.rule_set.brs.find_lt"><code class="name flex">
 <span>def <span class="ident">find_lt</span></span>(<span>a, x)</span>
 </code></dt>
 <dd>
@@ -629,7 +629,7 @@ Ex. accumulate([1,2,3,4,5], operator.mul) &ndash;&gt; 1 2 6 24 120</p></section>
     raise ValueError</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.get_confusion_matrix"><code class="name flex">
+<dt id="imodels.rule_set.brs.get_confusion_matrix"><code class="name flex">
 <span>def <span class="ident">get_confusion_matrix</span></span>(<span>Yhat, Y)</span>
 </code></dt>
 <dd>
@@ -648,7 +648,7 @@ Ex. accumulate([1,2,3,4,5], operator.mul) &ndash;&gt; 1 2 6 24 120</p></section>
     return TP, FP, TN, FN</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.log_betabin"><code class="name flex">
+<dt id="imodels.rule_set.brs.log_betabin"><code class="name flex">
 <span>def <span class="ident">log_betabin</span></span>(<span>k, n, alpha, beta)</span>
 </code></dt>
 <dd>
@@ -675,7 +675,7 @@ Ex. accumulate([1,2,3,4,5], operator.mul) &ndash;&gt; 1 2 6 24 120</p></section>
         return math.lgamma(k + alpha) + math.lgamma(n - k + beta) - math.lgamma(n + alpha + beta) + const</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.log_gampoiss"><code class="name flex">
+<dt id="imodels.rule_set.brs.log_gampoiss"><code class="name flex">
 <span>def <span class="ident">log_gampoiss</span></span>(<span>k, alpha, beta)</span>
 </code></dt>
 <dd>
@@ -691,7 +691,7 @@ Ex. accumulate([1,2,3,4,5], operator.mul) &ndash;&gt; 1 2 6 24 120</p></section>
             alpha + k) * np.log(1 + beta)</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.random"><code class="name flex">
+<dt id="imodels.rule_set.brs.random"><code class="name flex">
 <span>def <span class="ident">random</span></span>(<span>...)</span>
 </code></dt>
 <dd>
@@ -704,8 +704,8 @@ Ex. accumulate([1,2,3,4,5], operator.mul) &ndash;&gt; 1 2 6 24 120</p></section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.rule_set.boa.BOAClassifier"><code class="flex name class">
-<span>class <span class="ident">BOAClassifier</span></span>
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier"><code class="flex name class">
+<span>class <span class="ident">BayesianRuleSetClassifier</span></span>
 <span>(</span><span>n_rules=2000, supp=5, maxlen=10, num_iterations=5000, num_chains=3, q=0.1, alpha_pos=100, beta_pos=1, alpha_neg=1, beta_neg=100, alpha_l=None, beta_l=None, discretization_method='randomforest')</span>
 </code></dt>
 <dd>
@@ -749,7 +749,7 @@ The alpha and beta parameters alter the prior distributions for different rules<
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
+<pre><code class="python">class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
     &#39;&#39;&#39;Bayesian or-of-and algorithm.
     Generates patterns that satisfy the minimum support and maximum length and then select the Nrules rules that have the highest entropy.
     In function SA_patternbased, each local maximum is stored in maps and the best BOA is returned.
@@ -1153,7 +1153,7 @@ The alpha and beta parameters alter the prior distributions for different rules<
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.rule_set.boa.BOAClassifier.compute_prob"><code class="name flex">
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.compute_prob"><code class="name flex">
 <span>def <span class="ident">compute_prob</span></span>(<span>self, rules, y)</span>
 </code></dt>
 <dd>
@@ -1173,7 +1173,7 @@ The alpha and beta parameters alter the prior distributions for different rules<
     return [TP, FP, TN, FN], [prior_ChsRules, likelihood_1, likelihood_2]</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.BOAClassifier.fit"><code class="name flex">
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, init=[], verbose=False)</span>
 </code></dt>
 <dd>
@@ -1306,7 +1306,7 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.BOAClassifier.generate_rules"><code class="name flex">
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.generate_rules"><code class="name flex">
 <span>def <span class="ident">generate_rules</span></span>(<span>self, X, y)</span>
 </code></dt>
 <dd>
@@ -1350,7 +1350,7 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
     self.set_pattern_space()</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.BOAClassifier.normalize"><code class="name flex">
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.normalize"><code class="name flex">
 <span>def <span class="ident">normalize</span></span>(<span>self, rules_new)</span>
 </code></dt>
 <dd>
@@ -1376,7 +1376,7 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
         return rules_new.copy()</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.BOAClassifier.normalize_add"><code class="name flex">
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.normalize_add"><code class="name flex">
 <span>def <span class="ident">normalize_add</span></span>(<span>self, rules_new, rule_index)</span>
 </code></dt>
 <dd>
@@ -1396,7 +1396,7 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
     return rules</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.BOAClassifier.predict"><code class="name flex">
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1421,7 +1421,7 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
     return Yhat</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.BOAClassifier.predict_proba"><code class="name flex">
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1434,7 +1434,7 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
     raise Exception(&#39;BOA does not support predicted probabilities.&#39;)</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.BOAClassifier.print_rules"><code class="name flex">
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.print_rules"><code class="name flex">
 <span>def <span class="ident">print_rules</span></span>(<span>self, rules_max)</span>
 </code></dt>
 <dd>
@@ -1448,7 +1448,7 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
         print(self.rules_[rule_index])</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.BOAClassifier.propose"><code class="name flex">
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.propose"><code class="name flex">
 <span>def <span class="ident">propose</span></span>(<span>self, rules_curr, rules_norm, q, y)</span>
 </code></dt>
 <dd>
@@ -1538,7 +1538,7 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
     return rules_curr, rules_norm</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.BOAClassifier.screen_rules"><code class="name flex">
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.screen_rules"><code class="name flex">
 <span>def <span class="ident">screen_rules</span></span>(<span>self, df, y)</span>
 </code></dt>
 <dd>
@@ -1584,7 +1584,7 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
     self.RMatrix = np.array(Z[:, supp_select[select]])</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boa.BOAClassifier.set_pattern_space"><code class="name flex">
+<dt id="imodels.rule_set.brs.BayesianRuleSetClassifier.set_pattern_space"><code class="name flex">
 <span>def <span class="ident">set_pattern_space</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1631,31 +1631,31 @@ If maxlen is big, fpgrowh tends to generate too many rules that overflow the mem
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="imodels.rule_set.boa.accumulate" href="#imodels.rule_set.boa.accumulate">accumulate</a></code></li>
-<li><code><a title="imodels.rule_set.boa.extract_rules" href="#imodels.rule_set.boa.extract_rules">extract_rules</a></code></li>
-<li><code><a title="imodels.rule_set.boa.find_lt" href="#imodels.rule_set.boa.find_lt">find_lt</a></code></li>
-<li><code><a title="imodels.rule_set.boa.get_confusion_matrix" href="#imodels.rule_set.boa.get_confusion_matrix">get_confusion_matrix</a></code></li>
-<li><code><a title="imodels.rule_set.boa.log_betabin" href="#imodels.rule_set.boa.log_betabin">log_betabin</a></code></li>
-<li><code><a title="imodels.rule_set.boa.log_gampoiss" href="#imodels.rule_set.boa.log_gampoiss">log_gampoiss</a></code></li>
-<li><code><a title="imodels.rule_set.boa.random" href="#imodels.rule_set.boa.random">random</a></code></li>
+<li><code><a title="imodels.rule_set.brs.accumulate" href="#imodels.rule_set.brs.accumulate">accumulate</a></code></li>
+<li><code><a title="imodels.rule_set.brs.extract_rules" href="#imodels.rule_set.brs.extract_rules">extract_rules</a></code></li>
+<li><code><a title="imodels.rule_set.brs.find_lt" href="#imodels.rule_set.brs.find_lt">find_lt</a></code></li>
+<li><code><a title="imodels.rule_set.brs.get_confusion_matrix" href="#imodels.rule_set.brs.get_confusion_matrix">get_confusion_matrix</a></code></li>
+<li><code><a title="imodels.rule_set.brs.log_betabin" href="#imodels.rule_set.brs.log_betabin">log_betabin</a></code></li>
+<li><code><a title="imodels.rule_set.brs.log_gampoiss" href="#imodels.rule_set.brs.log_gampoiss">log_gampoiss</a></code></li>
+<li><code><a title="imodels.rule_set.brs.random" href="#imodels.rule_set.brs.random">random</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.rule_set.boa.BOAClassifier" href="#imodels.rule_set.boa.BOAClassifier">BOAClassifier</a></code></h4>
+<h4><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier" href="#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></code></h4>
 <ul class="two-column">
-<li><code><a title="imodels.rule_set.boa.BOAClassifier.compute_prob" href="#imodels.rule_set.boa.BOAClassifier.compute_prob">compute_prob</a></code></li>
-<li><code><a title="imodels.rule_set.boa.BOAClassifier.fit" href="#imodels.rule_set.boa.BOAClassifier.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.boa.BOAClassifier.generate_rules" href="#imodels.rule_set.boa.BOAClassifier.generate_rules">generate_rules</a></code></li>
-<li><code><a title="imodels.rule_set.boa.BOAClassifier.normalize" href="#imodels.rule_set.boa.BOAClassifier.normalize">normalize</a></code></li>
-<li><code><a title="imodels.rule_set.boa.BOAClassifier.normalize_add" href="#imodels.rule_set.boa.BOAClassifier.normalize_add">normalize_add</a></code></li>
-<li><code><a title="imodels.rule_set.boa.BOAClassifier.predict" href="#imodels.rule_set.boa.BOAClassifier.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_set.boa.BOAClassifier.predict_proba" href="#imodels.rule_set.boa.BOAClassifier.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.rule_set.boa.BOAClassifier.print_rules" href="#imodels.rule_set.boa.BOAClassifier.print_rules">print_rules</a></code></li>
-<li><code><a title="imodels.rule_set.boa.BOAClassifier.propose" href="#imodels.rule_set.boa.BOAClassifier.propose">propose</a></code></li>
-<li><code><a title="imodels.rule_set.boa.BOAClassifier.screen_rules" href="#imodels.rule_set.boa.BOAClassifier.screen_rules">screen_rules</a></code></li>
-<li><code><a title="imodels.rule_set.boa.BOAClassifier.set_pattern_space" href="#imodels.rule_set.boa.BOAClassifier.set_pattern_space">set_pattern_space</a></code></li>
+<li><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier.compute_prob" href="#imodels.rule_set.brs.BayesianRuleSetClassifier.compute_prob">compute_prob</a></code></li>
+<li><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier.fit" href="#imodels.rule_set.brs.BayesianRuleSetClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier.generate_rules" href="#imodels.rule_set.brs.BayesianRuleSetClassifier.generate_rules">generate_rules</a></code></li>
+<li><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier.normalize" href="#imodels.rule_set.brs.BayesianRuleSetClassifier.normalize">normalize</a></code></li>
+<li><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier.normalize_add" href="#imodels.rule_set.brs.BayesianRuleSetClassifier.normalize_add">normalize_add</a></code></li>
+<li><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier.predict" href="#imodels.rule_set.brs.BayesianRuleSetClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier.predict_proba" href="#imodels.rule_set.brs.BayesianRuleSetClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier.print_rules" href="#imodels.rule_set.brs.BayesianRuleSetClassifier.print_rules">print_rules</a></code></li>
+<li><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier.propose" href="#imodels.rule_set.brs.BayesianRuleSetClassifier.propose">propose</a></code></li>
+<li><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier.screen_rules" href="#imodels.rule_set.brs.BayesianRuleSetClassifier.screen_rules">screen_rules</a></code></li>
+<li><code><a title="imodels.rule_set.brs.BayesianRuleSetClassifier.set_pattern_space" href="#imodels.rule_set.brs.BayesianRuleSetClassifier.set_pattern_space">set_pattern_space</a></code></li>
 </ul>
 </li>
 </ul>

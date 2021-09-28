@@ -17,14 +17,14 @@ from .rule_set.fpskope import FPSkopeClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.slipper import SlipperClassifier
-from .rule_set.boa import BOAClassifier
+from .rule_set.brs import BayesianRuleSetClassifier
 from .rule_set import boosted_rules
 from .rule_set.boosted_rules import *
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
-               BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BOAClassifier]  # , IRFClassifier
+               BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier]  # , IRFClassifier
 REGRESSORS = [RuleFitRegressor, SLIMRegressor]
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]
 

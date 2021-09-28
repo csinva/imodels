@@ -22,7 +22,7 @@ from sklearn.utils.validation import check_X_y, check_is_fitted
 from imodels.rule_set.rule_set import RuleSet
 
 
-class BOAClassifier(RuleSet, BaseEstimator, ClassifierMixin):
+class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
     '''Bayesian or-of-and algorithm.
     Generates patterns that satisfy the minimum support and maximum length and then select the Nrules rules that have the highest entropy.
     In function SA_patternbased, each local maximum is stored in maps and the best BOA is returned.

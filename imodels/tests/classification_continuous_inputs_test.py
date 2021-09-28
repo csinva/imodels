@@ -24,7 +24,7 @@ class TestClassClassificationBinary:
             FPLassoClassifier, SkopeRulesClassifier,
             FPSkopeClassifier, BoostedRulesClassifier,
             OneRClassifier, SlipperClassifier,
-        ]:  # IRFClassifier, SLIMClassifier, BOAClassifier
+        ]:  # IRFClassifier, SLIMClassifier, BayesianRuleSetClassifier
 
             init_kwargs = {}
             if model_type == RuleFitClassifier:

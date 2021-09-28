@@ -90,13 +90,13 @@ print(model) # print the rule-based model
 <td>Uses SLIPPER to sequentially learn a set of rules</td>
 </tr>
 <tr>
-<td align="left">BOA rule set</td>
-<td><a href="https://csinva.io/imodels/rule_set/boa.html#imodels.rule_set.boa.BOAClassifier">🗂️</a>, <a href="https://github.com/wangtongada/BOA">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/16-003/16-003.pdf">📄</a></td>
+<td align="left">Bayesian rule set</td>
+<td><a href="https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">🗂️</a>, <a href="https://github.com/wangtongada/BOA">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/16-003/16-003.pdf">📄</a></td>
 <td>Uses a Bayesian or-of-and algorithm to find a concise rule set</td>
 </tr>
 <tr>
 <td align="left">Corels rule list</td>
-<td><a href="[CorelsRuleListClassifier](&lt;https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier&gt;)">🗂️</a>, <a href="https://github.com/corels/pycorels">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/17-716/17-716.pdf">📄</a></td>
+<td><a href="https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier">🗂️</a>), <a href="https://github.com/corels/pycorels">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/17-716/17-716.pdf">📄</a></td>
 <td>Learns an optimal compact rule list (rather than using a greedy heuristic)</td>
 </tr>
 <tr>
@@ -272,7 +272,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 </tr>
 <tr>
 <td align="left">BOA rule set</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_set/boa.html#imodels.rule_set.boa.BOAClassifier">BOAClassifier</a></td>
+<td align="center"><a href="https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></td>
 <td align="center"></td>
 </tr>
 <tr>
@@ -388,14 +388,14 @@ from .rule_set.fpskope import FPSkopeClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.slipper import SlipperClassifier
-from .rule_set.boa import BOAClassifier
+from .rule_set.brs import BayesianRuleSetClassifier
 from .rule_set import boosted_rules
 from .rule_set.boosted_rules import *
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
-               BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BOAClassifier]  # , IRFClassifier
+               BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier]  # , IRFClassifier
 REGRESSORS = [RuleFitRegressor, SLIMRegressor]
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]</code></pre>
 </details>
