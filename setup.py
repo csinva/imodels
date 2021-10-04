@@ -8,14 +8,20 @@ with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
 
 setuptools.setup(
     name="imodels",
-    version="0.3.0",
+    version="1.0.0",
     author="Chandan Singh, Keyan Nasseri, Bin Yu, and others",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/csinva/imodels",
-    packages=setuptools.find_packages(exclude=['tests']),
+    packages=setuptools.find_packages(include='imodels',
+                                      exclude=['imodels.tests', 'experiments', 'notebooks', 'docs']),
+    include_package_data=False,
+    exclude_package_data={
+        '': ['experiments'],
+        'experiments': ['comparison_data']
+    },
     install_requires=[
         'corels==1.1.29',  # we only provide a basic wrapper around corels
         'cvxpy',
