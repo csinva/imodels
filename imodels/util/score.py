@@ -126,21 +126,19 @@ def get_best_alpha_under_max_rules(X, y, rules: List[str],
     for alpha in alphas:
 
         if prediction_task == 'regression':
-            m = Lasso(alpha=alpha, random_state=random_state)
+            m = Lasso(alpha=alpha, random_state=random_state, max_iter=2000)
             fold_scores = cross_val_score(m, X, y, cv=4, scoring='neg_mean_squared_error')
-            alpha_scores.append(np.mean(fold_scores))
         else:
             m = LogisticRegression(penalty=penalty, C=1/alpha, solver='liblinear', random_state=random_state)
             fold_scores = cross_val_score(m, X, y, cv=4, scoring='accuracy')
-            alpha_scores.append(np.mean(fold_scores))
         
         m.fit(X, y)
         
-        rule_coefs = m.coef_.flatten()[:X.shape[1]-len(rules)]
+        rule_coefs = m.coef_.flatten()[X.shape[1]-len(rules):]
         rule_count = np.sum(np.abs(rule_coefs) > coef_zero_threshold)
         if rule_count > max_rules:
             break
-        nonzero_rule_coefs_count.append(rule_count)
+        alpha_scores.append(np.mean(fold_scores))
 
     # rare case in which diff alphas lead to identical scores
     if np.all(alpha_scores == alpha_scores[0]):
