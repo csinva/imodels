@@ -37,13 +37,14 @@ class SLIMRegressor(BaseEstimator, RegressorMixin):
         sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         '''
+
+        X, y = check_X_y(X, y)
+        self.n_features_in_ = X.shape[1]
+        self.model_ = LinearRegression()
+
         try:
             import cvxpy as cp  # package for optimization, import here to make it optional
             # from cvxpy.error import SolverError
-
-            X, y = check_X_y(X, y)
-            self.n_features_in_ = X.shape[1]
-            self.model_ = LinearRegression()
 
             # declare the integer-valued optimization variable
             w = cp.Variable(X.shape[1], integer=True)
@@ -100,15 +101,16 @@ class SLIMClassifier(BaseEstimator, ClassifierMixin):
         sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         '''
+        X, y = check_X_y(X, y)
+        check_classification_targets(y)
+        self.n_features_in_ = X.shape[1]
+        self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
+        self.model_ = LogisticRegression()
+        self.model_.classes_ = self.classes_
+
         try:
             import cvxpy as cp  # package for optimization, import here to make it optional
             # from cvxpy.error import SolverError
-            X, y = check_X_y(X, y)
-            check_classification_targets(y)
-            self.n_features_in_ = X.shape[1]
-            self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
-            self.model_ = LogisticRegression()
-            self.model_.classes_ = self.classes_
 
             # declare the integer-valued optimization variable
             w = cp.Variable(X.shape[1], integer=True)

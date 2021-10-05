@@ -12,7 +12,7 @@ class TestCheckEstimators(unittest.TestCase):
     def test_check_classifier_compatibility(self):
         '''Test classifiers are properly sklearn-compatible
         '''
-        for classifier in []:  # BoostedRulesClassifier (multi-class not supported)
+        for classifier in [SLIMClassifier]:  # BoostedRulesClassifier (multi-class not supported)
             check_estimator(classifier())
             assert 'passed check_estimator for ' + str(classifier)
 
