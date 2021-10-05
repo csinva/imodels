@@ -1,7 +1,9 @@
 # This is just a simple wrapper around pycorels: https://github.com/corels/pycorels
-
+import numpy as np
+import pandas as pd
 from corels import CorelsClassifier
 from sklearn.base import BaseEstimator
+from sklearn.preprocessing import KBinsDiscretizer
 
 
 class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
@@ -75,8 +77,10 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
     [ True False  True ]
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, random_state=0, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.random_state = random_state
+        self.discretizer = None
 
     def get_complexity(self):
         return None
@@ -102,6 +106,18 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         -------
         self : obj
         """
+        if isinstance(X, pd.DataFrame):
+            if feature_names == []:
+                feature_names = X.columns
+            X = X.values
+
+        # check if any non-binary values
+        if not np.isin(X, [0, 1]).all().all():
+            self.discretizer = KBinsDiscretizer(encode='onehot-dense')
+            self.discretizer.fit(X, y)
+            X = self.discretizer.transform(X)
+
+        np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
 
     def predict(self, X):
@@ -118,4 +134,24 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         p : array[int] of shape = [n_samples].
             The classifications of the input samples.
         """
+        if self.discretizer is not None:
+            X = self.discretizer.transform(X)
         return super().predict(X).astype(int)
+
+    def predict_proba(self, X):
+        """
+        Predict probabilities of the input samples X.
+        todo: actually calculate these from training set
+        Arguments
+        ---------
+        X : array-like, shape = [n_samples, n_features]
+            The training input samples. All features must be binary, and the matrix
+            is internally converted to dtype=np.uint8. The features must be the same
+            as those of the data used to train the model.
+        Returns
+        -------
+        p : array[float] of shape = [n_samples, 2].
+            The probabilities of the input samples.
+        """
+        preds = self.predict(X)
+        return np.vstack((1 - preds, preds)).transpose()

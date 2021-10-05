@@ -61,7 +61,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                  num_iterations=5000, num_chains=3, q=0.1,
                  alpha_pos=100, beta_pos=1, alpha_neg=1, beta_neg=100,
                  alpha_l=None, beta_l=None,
-                 discretization_method=&#39;randomforest&#39;, ):
+                 discretization_method=&#39;randomforest&#39;, random_state=0):
         &#39;&#39;&#39;
         Params
         ------
@@ -103,6 +103,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
 
         self.alpha_l = alpha_l
         self.beta_l = beta_l
+        self.random_state = 0
 
     def fit(self, X, y, feature_names: list = None, init=[], verbose=False):
         &#39;&#39;&#39;
@@ -119,7 +120,6 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             If empty and X is not a DataFrame, then features are simply enumerated
         &#39;&#39;&#39;
         # check inputs
-        # todo: change this so it works for np arrays in addition to just pd dataframe
         self.attr_level_num = defaultdict(int)  # any missing value defaults to 0
         self.attr_names = []
 
@@ -134,6 +134,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         X, y = check_X_y(X, y)  # converts df to ndarray
         check_classification_targets(y)
         assert len(feature_names) == X.shape[1], &#39;feature_names should be same size as X.shape[1]&#39;
+        np.random.seed(self.random_state)
 
         # convert to pandas DataFrame
         X = pd.DataFrame(X, columns=feature_names)
@@ -706,7 +707,7 @@ Ex. accumulate([1,2,3,4,5], operator.mul) &ndash;&gt; 1 2 6 24 120</p></section>
 <dl>
 <dt id="imodels.rule_set.brs.BayesianRuleSetClassifier"><code class="flex name class">
 <span>class <span class="ident">BayesianRuleSetClassifier</span></span>
-<span>(</span><span>n_rules=2000, supp=5, maxlen=10, num_iterations=5000, num_chains=3, q=0.1, alpha_pos=100, beta_pos=1, alpha_neg=1, beta_neg=100, alpha_l=None, beta_l=None, discretization_method='randomforest')</span>
+<span>(</span><span>n_rules=2000, supp=5, maxlen=10, num_iterations=5000, num_chains=3, q=0.1, alpha_pos=100, beta_pos=1, alpha_neg=1, beta_neg=100, alpha_l=None, beta_l=None, discretization_method='randomforest', random_state=0)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Bayesian or-of-and algorithm.
@@ -761,7 +762,7 @@ The alpha and beta parameters alter the prior distributions for different rules<
                  num_iterations=5000, num_chains=3, q=0.1,
                  alpha_pos=100, beta_pos=1, alpha_neg=1, beta_neg=100,
                  alpha_l=None, beta_l=None,
-                 discretization_method=&#39;randomforest&#39;, ):
+                 discretization_method=&#39;randomforest&#39;, random_state=0):
         &#39;&#39;&#39;
         Params
         ------
@@ -803,6 +804,7 @@ The alpha and beta parameters alter the prior distributions for different rules<
 
         self.alpha_l = alpha_l
         self.beta_l = beta_l
+        self.random_state = 0
 
     def fit(self, X, y, feature_names: list = None, init=[], verbose=False):
         &#39;&#39;&#39;
@@ -819,7 +821,6 @@ The alpha and beta parameters alter the prior distributions for different rules<
             If empty and X is not a DataFrame, then features are simply enumerated
         &#39;&#39;&#39;
         # check inputs
-        # todo: change this so it works for np arrays in addition to just pd dataframe
         self.attr_level_num = defaultdict(int)  # any missing value defaults to 0
         self.attr_names = []
 
@@ -834,6 +835,7 @@ The alpha and beta parameters alter the prior distributions for different rules<
         X, y = check_X_y(X, y)  # converts df to ndarray
         check_classification_targets(y)
         assert len(feature_names) == X.shape[1], &#39;feature_names should be same size as X.shape[1]&#39;
+        np.random.seed(self.random_state)
 
         # convert to pandas DataFrame
         X = pd.DataFrame(X, columns=feature_names)
@@ -1207,7 +1209,6 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
         If empty and X is not a DataFrame, then features are simply enumerated
     &#39;&#39;&#39;
     # check inputs
-    # todo: change this so it works for np arrays in addition to just pd dataframe
     self.attr_level_num = defaultdict(int)  # any missing value defaults to 0
     self.attr_names = []
 
@@ -1222,6 +1223,7 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
     X, y = check_X_y(X, y)  # converts df to ndarray
     check_classification_targets(y)
     assert len(feature_names) == X.shape[1], &#39;feature_names should be same size as X.shape[1]&#39;
+    np.random.seed(self.random_state)
 
     # convert to pandas DataFrame
     X = pd.DataFrame(X, columns=feature_names)

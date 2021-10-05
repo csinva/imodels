@@ -7,10 +7,10 @@ with integer coefficients in w
 
 Requires installation of a solver for mixed-integer linear programs, e.g. gurobi, mosek, or cplex
 '''
-import cvxpy as cp  # package for optimization
-import numpy as np
+
 import warnings
-from cvxpy.error import SolverError
+
+import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LinearRegression, Lasso, LogisticRegression
 from sklearn.utils.multiclass import check_classification_targets
@@ -37,19 +37,23 @@ class SLIMRegressor(BaseEstimator, RegressorMixin):
         sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         '''
+
         X, y = check_X_y(X, y)
         self.n_features_in_ = X.shape[1]
         self.model_ = LinearRegression()
 
-        # declare the integer-valued optimization variable
-        w = cp.Variable(X.shape[1], integer=True)
-
-        # set up the minimization problem
-        residuals = X @ w - y
-        if sample_weight is not None:
-            residuals = cp.multiply(sample_weight, residuals)
-
         try:
+            import cvxpy as cp  # package for optimization, import here to make it optional
+            # from cvxpy.error import SolverError
+
+            # declare the integer-valued optimization variable
+            w = cp.Variable(X.shape[1], integer=True)
+
+            # set up the minimization problem
+            residuals = X @ w - y
+            if sample_weight is not None:
+                residuals = cp.multiply(sample_weight, residuals)
+
             mse = cp.sum_squares(residuals)
             l1_penalty = self.alpha * cp.norm(w, 1)
             obj = cp.Minimize(mse + l1_penalty)
@@ -60,8 +64,9 @@ class SLIMRegressor(BaseEstimator, RegressorMixin):
             self.model_.coef_ = w.value.astype(int)
             self.model_.intercept_ = 0
 
-        except SolverError as e:
-            warnings.warn("gurobi, mosek, or cplex solver required for sparse integer linear "
+        except:
+            warnings.warn("Should install cvxpy with pip install cvxpy."
+                          "gurobi, mosek, or cplex solver required for sparse integer linear "
                           "regression. Rounding non-integer coefficients instead.")
             m = Lasso(alpha=self.alpha)
             m.fit(X, y, sample_weight=sample_weight)
@@ -103,16 +108,19 @@ class SLIMClassifier(BaseEstimator, ClassifierMixin):
         self.model_ = LogisticRegression()
         self.model_.classes_ = self.classes_
 
-        # declare the integer-valued optimization variable
-        w = cp.Variable(X.shape[1], integer=True)
-
-        # set up the minimization problem
-        logits = -X @ w
-        residuals = cp.multiply(1 - y, logits) - cp.logistic(logits)
-        if sample_weight is not None:
-            residuals = cp.multiply(sample_weight, residuals)
-
         try:
+            import cvxpy as cp  # package for optimization, import here to make it optional
+            # from cvxpy.error import SolverError
+
+            # declare the integer-valued optimization variable
+            w = cp.Variable(X.shape[1], integer=True)
+
+            # set up the minimization problem
+            logits = -X @ w
+            residuals = cp.multiply(1 - y, logits) - cp.logistic(logits)
+            if sample_weight is not None:
+                residuals = cp.multiply(sample_weight, residuals)
+
             celoss = -cp.sum(residuals)
             l1_penalty = self.alpha * cp.norm(w, 1)
             obj = cp.Minimize(celoss + l1_penalty)
@@ -123,8 +131,9 @@ class SLIMClassifier(BaseEstimator, ClassifierMixin):
             self.model_.coef_ = np.array([w.value.astype(int)])
             self.model_.intercept_ = 0
 
-        except SolverError as e:
-            warnings.warn("mosek solver required for mixed-integer logistic regression. "
+        except:
+            warnings.warn("Should install cvxpy with pip install cvxpy."
+                          "mosek solver required for mixed-integer logistic regression. "
                           "rounding non-integer coefficients instead")
             m = LogisticRegression(C=1 / self.alpha)
             m.fit(X, y, sample_weight=sample_weight)
