@@ -25,9 +25,10 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator
     '''
 
-    def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1)):
+    def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1), random_state=0):
         self.n_estimators = n_estimators
         self.estimator = estimator
+        self.random_state = random_state
 
     def fit(self, X, y, feature_names=None, sample_weight=None):
         """Fit the model according to the given training data.
@@ -58,6 +59,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         check_classification_targets(y)
         self.n_features_ = X.shape[1]
         self.classes_ = unique_labels(y)
+        np.random.seed(self.random_state)
 
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = list(self.feature_dict_.keys())

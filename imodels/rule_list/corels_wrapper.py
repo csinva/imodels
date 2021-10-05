@@ -2,7 +2,7 @@
 
 from corels import CorelsClassifier
 from sklearn.base import BaseEstimator
-
+import numpy as np
 
 class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
     """Certifiably Optimal RulE ListS classifier.
@@ -75,8 +75,9 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
     [ True False  True ]
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, random_state=0, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.random_state = random_state
 
     def get_complexity(self):
         return None
@@ -102,6 +103,7 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         -------
         self : obj
         """
+        np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
 
     def predict(self, X):

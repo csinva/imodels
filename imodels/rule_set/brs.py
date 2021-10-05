@@ -34,7 +34,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                  num_iterations=5000, num_chains=3, q=0.1,
                  alpha_pos=100, beta_pos=1, alpha_neg=1, beta_neg=100,
                  alpha_l=None, beta_l=None,
-                 discretization_method='randomforest', ):
+                 discretization_method='randomforest', random_state=0):
         '''
         Params
         ------
@@ -76,6 +76,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
 
         self.alpha_l = alpha_l
         self.beta_l = beta_l
+        self.random_state = 0
 
     def fit(self, X, y, feature_names: list = None, init=[], verbose=False):
         '''
@@ -92,7 +93,6 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             If empty and X is not a DataFrame, then features are simply enumerated
         '''
         # check inputs
-        # todo: change this so it works for np arrays in addition to just pd dataframe
         self.attr_level_num = defaultdict(int)  # any missing value defaults to 0
         self.attr_names = []
 
@@ -107,6 +107,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         X, y = check_X_y(X, y)  # converts df to ndarray
         check_classification_targets(y)
         assert len(feature_names) == X.shape[1], 'feature_names should be same size as X.shape[1]'
+        np.random.seed(self.random_state)
 
         # convert to pandas DataFrame
         X = pd.DataFrame(X, columns=feature_names)
