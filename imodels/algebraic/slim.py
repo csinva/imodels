@@ -39,7 +39,7 @@ class SLIMRegressor(BaseEstimator, RegressorMixin):
         '''
         try:
             import cvxpy as cp  # package for optimization, import here to make it optional
-            from cvxpy.error import SolverError
+            # from cvxpy.error import SolverError
 
             X, y = check_X_y(X, y)
             self.n_features_in_ = X.shape[1]
@@ -63,7 +63,7 @@ class SLIMRegressor(BaseEstimator, RegressorMixin):
             self.model_.coef_ = w.value.astype(int)
             self.model_.intercept_ = 0
 
-        except SolverError as e:
+        except:
             warnings.warn("Should install cvxpy with pip install cvxpy."
                           "gurobi, mosek, or cplex solver required for sparse integer linear "
                           "regression. Rounding non-integer coefficients instead.")
@@ -100,23 +100,25 @@ class SLIMClassifier(BaseEstimator, ClassifierMixin):
         sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         '''
-        X, y = check_X_y(X, y)
-        check_classification_targets(y)
-        self.n_features_in_ = X.shape[1]
-        self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
-        self.model_ = LogisticRegression()
-        self.model_.classes_ = self.classes_
-
-        # declare the integer-valued optimization variable
-        w = cp.Variable(X.shape[1], integer=True)
-
-        # set up the minimization problem
-        logits = -X @ w
-        residuals = cp.multiply(1 - y, logits) - cp.logistic(logits)
-        if sample_weight is not None:
-            residuals = cp.multiply(sample_weight, residuals)
-
         try:
+            import cvxpy as cp  # package for optimization, import here to make it optional
+            # from cvxpy.error import SolverError
+            X, y = check_X_y(X, y)
+            check_classification_targets(y)
+            self.n_features_in_ = X.shape[1]
+            self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
+            self.model_ = LogisticRegression()
+            self.model_.classes_ = self.classes_
+
+            # declare the integer-valued optimization variable
+            w = cp.Variable(X.shape[1], integer=True)
+
+            # set up the minimization problem
+            logits = -X @ w
+            residuals = cp.multiply(1 - y, logits) - cp.logistic(logits)
+            if sample_weight is not None:
+                residuals = cp.multiply(sample_weight, residuals)
+
             celoss = -cp.sum(residuals)
             l1_penalty = self.alpha * cp.norm(w, 1)
             obj = cp.Minimize(celoss + l1_penalty)
@@ -127,8 +129,9 @@ class SLIMClassifier(BaseEstimator, ClassifierMixin):
             self.model_.coef_ = np.array([w.value.astype(int)])
             self.model_.intercept_ = 0
 
-        except SolverError as e:
-            warnings.warn("mosek solver required for mixed-integer logistic regression. "
+        except:
+            warnings.warn("Should install cvxpy with pip install cvxpy."
+                          "mosek solver required for mixed-integer logistic regression. "
                           "rounding non-integer coefficients instead")
             m = LogisticRegression(C=1 / self.alpha)
             m.fit(X, y, sample_weight=sample_weight)
