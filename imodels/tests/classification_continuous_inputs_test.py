@@ -27,8 +27,6 @@ class TestClassClassificationBinary:
         ]:  # IRFClassifier, SLIMClassifier, BayesianRuleSetClassifier
 
             init_kwargs = {}
-            if model_type == RuleFitClassifier:
-                init_kwargs['max_rules'] = 5
             if model_type == SkopeRulesClassifier or model_type == FPSkopeClassifier:
                 init_kwargs['random_state'] = 0
                 init_kwargs['max_samples_features'] = 1.
