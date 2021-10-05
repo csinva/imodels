@@ -92,7 +92,7 @@ print(model) # print the rule-based model
 <tr>
 <td align="left">Bayesian rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">🗂️</a>, <a href="https://github.com/wangtongada/BOA">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/16-003/16-003.pdf">📄</a></td>
-<td>Uses a Bayesian or-of-and algorithm to find a concise rule set</td>
+<td>Uses a Bayesian algorithm to find a concise rule set (slow)</td>
 </tr>
 <tr>
 <td align="left">Corels rule list</td>
@@ -377,22 +377,23 @@ The code here heavily derives from the wonderful work of previous projects. We s
 
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
+from .tree.gosdt_wrapper import GlobalSparseTreeClassifier
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
+from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
+from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
+from .rule_list.corels_wrapper import CorelsRuleListClassifier
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
-from .rule_list.corels_wrapper import CorelsRuleListClassifier
+from .rule_set import boosted_rules
+from .rule_set.boosted_rules import *
 from .rule_set.boosted_rules import BoostedRulesClassifier
+from .rule_set.brs import BayesianRuleSetClassifier
 from .rule_set.fplasso import FPLassoRegressor, FPLassoClassifier
 from .rule_set.fpskope import FPSkopeClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.slipper import SlipperClassifier
-from .rule_set.brs import BayesianRuleSetClassifier
-from .rule_set import boosted_rules
-from .rule_set.boosted_rules import *
-from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
-from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier]  # , IRFClassifier

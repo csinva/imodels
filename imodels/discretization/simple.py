@@ -17,6 +17,9 @@ class SimpleDiscretizer:
             self.discretizer = None
             return
 
+        if isinstance(feature_labels, list):
+            feature_labels = np.array(feature_labels)
+
         # X_categorical = X[:, self.is_categorical]
         X_categorical_columns = feature_labels[self.is_categorical]
         X_numeric = X[:, ~self.is_categorical]

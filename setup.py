@@ -18,8 +18,7 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=['imodels.tests', 'experiments', 'notebooks', 'docs']),
     install_requires=[
         'corels==1.1.29',  # we only provide a basic wrapper around corels
-        'cvxpy',
-        'cvxopt',
+        # optionally requires cvxpy for slim
         'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
         'numpy',
         'pandas',

@@ -108,6 +108,7 @@ class GreedyTreeModel(AbstractModel):
 class GlobalSparseTreeModel(AbstractModel):
     '''todo: properly set up GOSDT (right now it basically just uses DecisionTrees)
     '''
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._feature_generator = None
