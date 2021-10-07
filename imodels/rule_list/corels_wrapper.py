@@ -77,10 +77,11 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
     [ True False  True ]
     """
 
-    def __init__(self, random_state=0, *args, **kwargs):
+    def __init__(self, random_state=0, verbosity=[], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.random_state = random_state
         self.discretizer = None
+        self.verbosity = verbosity
 
     def get_complexity(self):
         return None
