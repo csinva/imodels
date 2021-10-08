@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>imodels.tests API documentation</title>
+<title>imodels.util.explain_errors API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,66 +19,164 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.tests</code></h1>
+<h1 class="title">Module <code>imodels.util.explain_errors</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import numpy as np
+import pandas as pd
+from sklearn.base import BaseEstimator
+from sklearn.utils.validation import check_X_y
+from sklearn.preprocessing import OneHotEncoder
+
+import imodels
+
+
+def explain_classification_errors(X, predictions, y,
+                                  feature_names: list = None,
+                                  target_name: str = None,
+                                  target_one_hot_encode: bool = False,
+                                  classifier: BaseEstimator = imodels.CorelsRuleListClassifier()):
+    &#34;&#34;&#34;Explains the classification errors of a model by fitting an interpretable model to them.
+    Currently only supports binary classification.
+
+    Parameters
+    ----------
+    X: array_like
+        (n, n_features)
+    predictions: array_like
+        (n, 1) predictions
+    y
+        (n, 1) targets with integer values representing class
+    feature_names
+        n_features
+
+    Returns
+    -------
+    model: BaseEstimator
+    &#34;&#34;&#34;
+    # deal with names
+    if feature_names is None:
+        if isinstance(X, pd.DataFrame):
+            feature_names = X.columns
+        else:
+            feature_names = [f&#39;X{i + 1}&#39; for i in range(X.shape[1])]
+
+    if target_name is None:
+        if isinstance(y, pd.DataFrame):
+            target_name = y.columns[0]
+        elif isinstance(y, pd.Series):
+            target_name = y.name
+        else:
+            target_name = &#39;target&#39;
+
+    X, y = check_X_y(X, y)  # converts to np
+    if len(y.shape) == 1:
+        y = y.reshape(-1, 1)
+    if len(predictions.shape) == 1:
+        predictions = predictions.reshape(-1, 1)
+    print(&#39;shapes&#39;, X.shape, y.shape)
+
+    errors = np.array(predictions != y).astype(int)
+
+    features = pd.DataFrame(np.hstack((X, y)))
+    features.columns = [*feature_names, target_name]
+    classifier.fit(features, errors.flatten())  # , feature_names=[*feature_names, target_name])
+    print(classifier)
+    return classifier, features.columns</code></pre>
+</details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="imodels.tests.boa_test" href="boa_test.html">imodels.tests.boa_test</a></code></dt>
+<dt id="imodels.util.explain_errors.explain_classification_errors"><code class="name flex">
+<span>def <span class="ident">explain_classification_errors</span></span>(<span>X, predictions, y, feature_names: list = None, target_name: str = None, target_one_hot_encode: bool = False, classifier: sklearn.base.BaseEstimator = CorelsRuleListClassifier())</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests.brl_test" href="brl_test.html">imodels.tests.brl_test</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests.classification_binary_inputs_test" href="classification_binary_inputs_test.html">imodels.tests.classification_binary_inputs_test</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests.classification_continuous_inputs_test" href="classification_continuous_inputs_test.html">imodels.tests.classification_continuous_inputs_test</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests.discretizer_test" href="discretizer_test.html">imodels.tests.discretizer_test</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests.estimator_checks_test" href="estimator_checks_test.html">imodels.tests.estimator_checks_test</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests.grl_test" href="grl_test.html">imodels.tests.grl_test</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests.notebooks_test" href="notebooks_test.html">imodels.tests.notebooks_test</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests.regression_test" href="regression_test.html">imodels.tests.regression_test</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests.rulefit_test" href="rulefit_test.html">imodels.tests.rulefit_test</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests.skope_rules_test" href="skope_rules_test.html">imodels.tests.skope_rules_test</a></code></dt>
-<dd>
-<div class="desc"><p>Testing for SkopeRules algorithm</p></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests.util_test" href="util_test.html">imodels.tests.util_test</a></code></dt>
-<dd>
-<div class="desc"></div>
+<div class="desc"><p>Explains the classification errors of a model by fitting an interpretable model to them.
+Currently only supports binary classification.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array_like</code></dt>
+<dd>(n, n_features)</dd>
+<dt><strong><code>predictions</code></strong> :&ensp;<code>array_like</code></dt>
+<dd>(n, 1) predictions</dd>
+<dt><strong><code>y</code></strong></dt>
+<dd>(n, 1) targets with integer values representing class</dd>
+<dt><strong><code>feature_names</code></strong></dt>
+<dd>n_features</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>model</code></strong> :&ensp;<code>BaseEstimator</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def explain_classification_errors(X, predictions, y,
+                                  feature_names: list = None,
+                                  target_name: str = None,
+                                  target_one_hot_encode: bool = False,
+                                  classifier: BaseEstimator = imodels.CorelsRuleListClassifier()):
+    &#34;&#34;&#34;Explains the classification errors of a model by fitting an interpretable model to them.
+    Currently only supports binary classification.
+
+    Parameters
+    ----------
+    X: array_like
+        (n, n_features)
+    predictions: array_like
+        (n, 1) predictions
+    y
+        (n, 1) targets with integer values representing class
+    feature_names
+        n_features
+
+    Returns
+    -------
+    model: BaseEstimator
+    &#34;&#34;&#34;
+    # deal with names
+    if feature_names is None:
+        if isinstance(X, pd.DataFrame):
+            feature_names = X.columns
+        else:
+            feature_names = [f&#39;X{i + 1}&#39; for i in range(X.shape[1])]
+
+    if target_name is None:
+        if isinstance(y, pd.DataFrame):
+            target_name = y.columns[0]
+        elif isinstance(y, pd.Series):
+            target_name = y.name
+        else:
+            target_name = &#39;target&#39;
+
+    X, y = check_X_y(X, y)  # converts to np
+    if len(y.shape) == 1:
+        y = y.reshape(-1, 1)
+    if len(predictions.shape) == 1:
+        predictions = predictions.reshape(-1, 1)
+    print(&#39;shapes&#39;, X.shape, y.shape)
+
+    errors = np.array(predictions != y).astype(int)
+
+    features = pd.DataFrame(np.hstack((X, y)))
+    features.columns = [*feature_names, target_name]
+    classifier.fit(features, errors.flatten())  # , feature_names=[*feature_names, target_name])
+    print(classifier)
+    return classifier, features.columns</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -91,23 +189,12 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels" href="../index.html">imodels</a></code></li>
+<li><code><a title="imodels.util" href="index.html">imodels.util</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="imodels.tests.boa_test" href="boa_test.html">imodels.tests.boa_test</a></code></li>
-<li><code><a title="imodels.tests.brl_test" href="brl_test.html">imodels.tests.brl_test</a></code></li>
-<li><code><a title="imodels.tests.classification_binary_inputs_test" href="classification_binary_inputs_test.html">imodels.tests.classification_binary_inputs_test</a></code></li>
-<li><code><a title="imodels.tests.classification_continuous_inputs_test" href="classification_continuous_inputs_test.html">imodels.tests.classification_continuous_inputs_test</a></code></li>
-<li><code><a title="imodels.tests.discretizer_test" href="discretizer_test.html">imodels.tests.discretizer_test</a></code></li>
-<li><code><a title="imodels.tests.estimator_checks_test" href="estimator_checks_test.html">imodels.tests.estimator_checks_test</a></code></li>
-<li><code><a title="imodels.tests.grl_test" href="grl_test.html">imodels.tests.grl_test</a></code></li>
-<li><code><a title="imodels.tests.notebooks_test" href="notebooks_test.html">imodels.tests.notebooks_test</a></code></li>
-<li><code><a title="imodels.tests.regression_test" href="regression_test.html">imodels.tests.regression_test</a></code></li>
-<li><code><a title="imodels.tests.rulefit_test" href="rulefit_test.html">imodels.tests.rulefit_test</a></code></li>
-<li><code><a title="imodels.tests.skope_rules_test" href="skope_rules_test.html">imodels.tests.skope_rules_test</a></code></li>
-<li><code><a title="imodels.tests.util_test" href="util_test.html">imodels.tests.util_test</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.util.explain_errors.explain_classification_errors" href="#imodels.util.explain_errors.explain_classification_errors">explain_classification_errors</a></code></li>
 </ul>
 </li>
 </ul>

@@ -66,22 +66,13 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
     Journal of Machine Learning Research, 2018; 19: 1-77. arXiv:1704.01701, 2017
     Examples
     --------
-    >>> import numpy as np
-    >>> from corels import CorelsClassifier
-    >>> X = np.array([ [1, 0, 1], [0, 1, 0], [1, 1, 1] ])
-    >>> y = np.array([ 1, 0, 1])
-    >>> c = CorelsRuleListClassifier(verbosity=[])
-    >>> c.fit(X, y)
-    ...
-    >>> print(c.predict(X))
-    [ True False  True ]
     """
 
-    def __init__(self, random_state=0, verbosity=[], *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, c=0.01, n_iter=10000, map_type="prefix", policy="lower_bound",
+                 verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0):
+        super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
         self.random_state = random_state
         self.discretizer = None
-        self.verbosity = verbosity
 
     def fit(self, X, y, feature_names=[], prediction_name="prediction"):
         """

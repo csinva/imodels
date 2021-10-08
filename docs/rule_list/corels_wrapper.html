@@ -94,25 +94,13 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
     Journal of Machine Learning Research, 2018; 19: 1-77. arXiv:1704.01701, 2017
     Examples
     --------
-    &gt;&gt;&gt; import numpy as np
-    &gt;&gt;&gt; from corels import CorelsClassifier
-    &gt;&gt;&gt; X = np.array([ [1, 0, 1], [0, 1, 0], [1, 1, 1] ])
-    &gt;&gt;&gt; y = np.array([ 1, 0, 1])
-    &gt;&gt;&gt; c = CorelsRuleListClassifier(verbosity=[])
-    &gt;&gt;&gt; c.fit(X, y)
-    ...
-    &gt;&gt;&gt; print(c.predict(X))
-    [ True False  True ]
     &#34;&#34;&#34;
 
-    def __init__(self, random_state=0, verbosity=[], *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, c=0.01, n_iter=10000, map_type=&#34;prefix&#34;, policy=&#34;lower_bound&#34;,
+                 verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0):
+        super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
         self.random_state = random_state
         self.discretizer = None
-        self.verbosity = verbosity
-
-    def get_complexity(self):
-        return None
 
     def fit(self, X, y, feature_names=[], prediction_name=&#34;prediction&#34;):
         &#34;&#34;&#34;
@@ -148,6 +136,7 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
+        self.complexity_ = self._get_complexity()
 
     def predict(self, X):
         &#34;&#34;&#34;
@@ -183,7 +172,13 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
             The probabilities of the input samples.
         &#34;&#34;&#34;
         preds = self.predict(X)
-        return np.vstack((1 - preds, preds)).transpose()</code></pre>
+        return np.vstack((1 - preds, preds)).transpose()
+
+    def __str__(self):
+        return &#39;CorelsClassifier &#39; + str(self.rl_)
+
+    def _get_complexity(self):
+        return len(self.rl_.rules)</code></pre>
 </details>
 </section>
 <section>
@@ -197,7 +192,7 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
 <dl>
 <dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier"><code class="flex name class">
 <span>class <span class="ident">CorelsRuleListClassifier</span></span>
-<span>(</span><span>random_state=0, verbosity=[], *args, **kwargs)</span>
+<span>(</span><span>c=0.01, n_iter=10000, map_type='prefix', policy='lower_bound', verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Certifiably Optimal RulE ListS classifier.
@@ -259,17 +254,7 @@ Can be any value between 0.0 and 0.5.</dd>
 Learning Certifiably Optimal Rule Lists for Categorical Data. KDD 2017.
 Journal of Machine Learning Research, 2018; 19: 1-77. arXiv:1704.01701, 2017
 Examples</p>
-<hr>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; from corels import CorelsClassifier
-&gt;&gt;&gt; X = np.array([ [1, 0, 1], [0, 1, 0], [1, 1, 1] ])
-&gt;&gt;&gt; y = np.array([ 1, 0, 1])
-&gt;&gt;&gt; c = CorelsRuleListClassifier(verbosity=[])
-&gt;&gt;&gt; c.fit(X, y)
-...
-&gt;&gt;&gt; print(c.predict(X))
-[ True False  True ]
-</code></pre></div>
+<hr></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -334,25 +319,13 @@ Examples</p>
     Journal of Machine Learning Research, 2018; 19: 1-77. arXiv:1704.01701, 2017
     Examples
     --------
-    &gt;&gt;&gt; import numpy as np
-    &gt;&gt;&gt; from corels import CorelsClassifier
-    &gt;&gt;&gt; X = np.array([ [1, 0, 1], [0, 1, 0], [1, 1, 1] ])
-    &gt;&gt;&gt; y = np.array([ 1, 0, 1])
-    &gt;&gt;&gt; c = CorelsRuleListClassifier(verbosity=[])
-    &gt;&gt;&gt; c.fit(X, y)
-    ...
-    &gt;&gt;&gt; print(c.predict(X))
-    [ True False  True ]
     &#34;&#34;&#34;
 
-    def __init__(self, random_state=0, verbosity=[], *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, c=0.01, n_iter=10000, map_type=&#34;prefix&#34;, policy=&#34;lower_bound&#34;,
+                 verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0):
+        super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
         self.random_state = random_state
         self.discretizer = None
-        self.verbosity = verbosity
-
-    def get_complexity(self):
-        return None
 
     def fit(self, X, y, feature_names=[], prediction_name=&#34;prediction&#34;):
         &#34;&#34;&#34;
@@ -388,6 +361,7 @@ Examples</p>
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
+        self.complexity_ = self._get_complexity()
 
     def predict(self, X):
         &#34;&#34;&#34;
@@ -423,7 +397,13 @@ Examples</p>
             The probabilities of the input samples.
         &#34;&#34;&#34;
         preds = self.predict(X)
-        return np.vstack((1 - preds, preds)).transpose()</code></pre>
+        return np.vstack((1 - preds, preds)).transpose()
+
+    def __str__(self):
+        return &#39;CorelsClassifier &#39; + str(self.rl_)
+
+    def _get_complexity(self):
+        return len(self.rl_.rules)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -494,20 +474,8 @@ are set to the default of ["feature1", "feature2"&hellip; ].</dd>
         X = self.discretizer.transform(X)
 
     np.random.seed(self.random_state)
-    super().fit(X, y, features=feature_names, prediction_name=prediction_name)</code></pre>
-</details>
-</dd>
-<dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.get_complexity"><code class="name flex">
-<span>def <span class="ident">get_complexity</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_complexity(self):
-    return None</code></pre>
+    super().fit(X, y, features=feature_names, prediction_name=prediction_name)
+    self.complexity_ = self._get_complexity()</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict"><code class="name flex">
@@ -611,7 +579,6 @@ The probabilities of the input samples.</p></div>
 <h4><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier">CorelsRuleListClassifier</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.fit" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.get_complexity" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.get_complexity">get_complexity</a></code></li>
 <li><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict">predict</a></code></li>
 <li><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict_proba" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict_proba">predict_proba</a></code></li>
 </ul>
