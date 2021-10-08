@@ -83,9 +83,6 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         self.discretizer = None
         self.verbosity = verbosity
 
-    def get_complexity(self):
-        return None
-
     def fit(self, X, y, feature_names=[], prediction_name="prediction"):
         """
         Build a CORELS classifier from the training set (X, y).
@@ -120,6 +117,7 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
+        self.complexity_ = self._get_complexity()
 
     def predict(self, X):
         """
@@ -156,3 +154,9 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         """
         preds = self.predict(X)
         return np.vstack((1 - preds, preds)).transpose()
+
+    def __str__(self):
+        return 'CorelsClassifier ' + str(self.rl_)
+
+    def _get_complexity(self):
+        return len(self.rl_.rules)
