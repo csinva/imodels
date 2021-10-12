@@ -75,6 +75,7 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
         self.random_state = random_state
         self.discretizer = None
+        self.str_print = None
 
     def fit(self, X, y, feature_names=[], prediction_name="prediction"):
         """
@@ -121,7 +122,10 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
-        self._traverse_rule(X, y, feature_names)
+        try:
+            self._traverse_rule(X, y, feature_names)
+        except:
+            self.str_print = None
         self.complexity_ = self._get_complexity()
 
     def predict(self, X):
@@ -195,11 +199,13 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
                 if not (j == len(self.rl_.rules) - 2 and i == len(antecedents) - 1):
                     str_print += '\t\u2193 \n'
 
-
         self.str_print = str_print
 
     def __str__(self):
-        return 'CorelsClassifier:\n\n' + self.str_print
+        if self.str_print is not None:
+            return 'CorelsClassifier:\n\n' + self.str_print
+        else:
+            return 'CorelsClassifier:\n\n' + self.rl_.__str__()
 
     def _get_complexity(self):
         return len(self.rl_.rules)
