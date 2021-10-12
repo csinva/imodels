@@ -70,7 +70,12 @@ Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementa
 </p>
 
 <details>
-<summary align="center">Also see our <a href="https://csinva.io/imodels/discretization/index.html">fast and effective discretizers</a> for data preprocessing.</summary>
+<summary>Also see our <a href="https://csinva.io/imodels/util/explain_errors.html">simple function</a> for explaining classification errors.</summary>
+Fit an interpretable model to explain a previous model's errors (ex. in <a href="https://github.com/csinva/imodels/blob/master/notebooks/error_detection_demo.ipynb">this notebook📓</a>).
+</details>
+
+<details>
+<summary>Also see our <a href="https://csinva.io/imodels/discretization/index.html">fast and effective discretizers</a> for data preprocessing.</summary>
 <table>
 <thead>
 <tr>
@@ -97,11 +102,6 @@ Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementa
 </tr>
 </tbody>
 </table>
-</details>
-
-<details>
-<summary align="center">Also see our <a href="https://csinva.io/imodels/util/explain_errors.html">simple function</a> for explaining classification errors.</summary>
-Fit an interpretable model to explain a previous model's errors (ex. in <a href="https://github.com/csinva/imodels/blob/master/notebooks/error_detection_demo.ipynb">this notebook📓</a>).
 </details>
 
 

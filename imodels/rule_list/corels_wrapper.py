@@ -1,4 +1,6 @@
 # This is just a simple wrapper around pycorels: https://github.com/corels/pycorels
+from typing import List
+
 import numpy as np
 import pandas as pd
 from corels import CorelsClassifier
@@ -95,19 +97,31 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         -------
         self : obj
         """
-        if isinstance(X, pd.DataFrame):
-            if feature_names == []:
-                feature_names = X.columns
-            X = X.values
 
         # check if any non-binary values
         if not np.isin(X, [0, 1]).all().all():
             self.discretizer = KBinsDiscretizer(encode='onehot-dense')
             self.discretizer.fit(X, y)
-            X = self.discretizer.transform(X)
+            # X = dft = pd.SparseDataFrame(
+            # discretizer.transform(df),
+            # columns=[f'{col}_{b}' for col, bins in zip(df.columns, discretizer.n_bins_) for b in range(bins)]
+            # )
+            X = pd.DataFrame(
+                self.discretizer.transform(X),
+                columns=[f'{col}_{b}'
+                         for col, bins in zip(X.columns, self.discretizer.n_bins_)
+                         for b in range(bins)]
+            )
+            # X = self.discretizer.transform(X)
+
+        if isinstance(X, pd.DataFrame):
+            if feature_names == []:
+                feature_names = X.columns.tolist()
+            X = X.values
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
+        self._traverse_rule(X, y, feature_names)
         self.complexity_ = self._get_complexity()
 
     def predict(self, X):
@@ -146,8 +160,46 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         preds = self.predict(X)
         return np.vstack((1 - preds, preds)).transpose()
 
+    def _traverse_rule(self, X: np.ndarray, y: np.ndarray, feature_names: List[str]):
+        """Traverse rule and build up string representation
+
+        Parameters
+        ----------
+        df_features
+
+        Returns
+        -------
+
+        """
+        str_print = f''
+        df = pd.DataFrame(X, columns=feature_names)
+        df.loc[:, 'y'] = y
+        o = 'y'
+        str_print += f'   {df[o].sum()} / {df.shape[0]} (positive class / total)\n\t\u2193 \n'
+        for j, rule in enumerate(self.rl_.rules[:-1]):
+            antecedents = rule['antecedents']
+            query = ''
+            for i, feat_idx in enumerate(antecedents):
+                if i > 0:
+                    query += ' & '
+                if feat_idx < 0:
+                    query += f'({feature_names[-feat_idx - 1]} == 0)'
+                else:
+                    query += f'({feature_names[feat_idx - 1]} == 1)'
+                df_rhs = df.query(query)
+                idxs_satisfying_rule = df_rhs.index
+                df.drop(index=idxs_satisfying_rule, inplace=True)
+                computed_prob = 100 * df_rhs[o].sum() / (df_rhs.shape[0] + 1e-10)
+                query_print = query.replace('== 1', '').replace('(', '').replace(')', '')
+                str_print += f'\033[96mIf {query_print:<35}\033[00m \u2192 {df_rhs[o].sum():>3} / {df_rhs.shape[0]:>4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():>3} / {df.shape[0]:>5}\t \n'
+                if not (j == len(self.rl_.rules) - 2 and i == len(antecedents) - 1):
+                    str_print += '\t\u2193 \n'
+
+
+        self.str_print = str_print
+
     def __str__(self):
-        return 'CorelsClassifier ' + str(self.rl_)
+        return 'CorelsClassifier:\n\n' + self.str_print
 
     def _get_complexity(self):
         return len(self.rl_.rules)
