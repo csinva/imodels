@@ -98,27 +98,23 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         -------
         self : obj
         """
+        if isinstance(X, pd.DataFrame):
+            if feature_names == []:
+                feature_names = X.columns.tolist()
+            X = X.values
+        elif feature_names == []:
+            feature_names = ['X' + str(i) for i in range(X.shape[1])]
 
         # check if any non-binary values
         if not np.isin(X, [0, 1]).all().all():
             self.discretizer = KBinsDiscretizer(encode='onehot-dense')
             self.discretizer.fit(X, y)
-            # X = dft = pd.SparseDataFrame(
-            # discretizer.transform(df),
-            # columns=[f'{col}_{b}' for col, bins in zip(df.columns, discretizer.n_bins_) for b in range(bins)]
-            # )
-            X = pd.DataFrame(
-                self.discretizer.transform(X),
-                columns=[f'{col}_{b}'
-                         for col, bins in zip(X.columns, self.discretizer.n_bins_)
+            feature_names = [f'{col}_{b}'
+                         for col, bins in zip(feature_names, self.discretizer.n_bins_)
                          for b in range(bins)]
-            )
-            # X = self.discretizer.transform(X)
+            X = self.discretizer.transform(X)
 
-        if isinstance(X, pd.DataFrame):
-            if feature_names == []:
-                feature_names = X.columns.tolist()
-            X = X.values
+
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
@@ -179,7 +175,11 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         df = pd.DataFrame(X, columns=feature_names)
         df.loc[:, 'y'] = y
         o = 'y'
-        str_print += f'   {df[o].sum()} / {df.shape[0]} (positive class / total)\n\t\u2193 \n'
+        str_print += f'   {df[o].sum()} / {df.shape[0]} (positive class / total)\n'
+        if len(self.rl_.rules) > 1:
+            str_print += f'\t\u2193 \n'
+        else:
+            str_print += '   No rules learned\n'
         for j, rule in enumerate(self.rl_.rules[:-1]):
             antecedents = rule['antecedents']
             query = ''

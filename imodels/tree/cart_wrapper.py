@@ -1,10 +1,10 @@
-# This is just a simple wrapper around gosdt: https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees
+# This is just a simple wrapper around sklearn decisiontree:https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
 
 from sklearn.tree import DecisionTreeClassifier
 
 
-class GlobalSparseTreeClassifier(DecisionTreeClassifier):
-    """Placeholder for GOSDT classifier
+class GreedyTreeClassifier(DecisionTreeClassifier):
+    """Wrapper around sklearn greedy tree
     """
 
     def __init__(self, *args, **kwargs):
@@ -12,7 +12,7 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
         self.complexity_ = 0
 
     def __str__(self):
-        return 'Global Sparse Tree ' + str(self.tree_)
+        return 'GreedyDecisionTree ' + str(self.tree_)
 
     def fit(self, X, y, sample_weight=None, check_input=True, X_idx_sorted="deprecated"):
         """Build a decision tree classifier from the training set (X, y).

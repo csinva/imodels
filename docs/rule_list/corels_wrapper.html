@@ -126,27 +126,23 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         -------
         self : obj
         &#34;&#34;&#34;
+        if isinstance(X, pd.DataFrame):
+            if feature_names == []:
+                feature_names = X.columns.tolist()
+            X = X.values
+        elif feature_names == []:
+            feature_names = [&#39;X&#39; + str(i) for i in range(X.shape[1])]
 
         # check if any non-binary values
         if not np.isin(X, [0, 1]).all().all():
             self.discretizer = KBinsDiscretizer(encode=&#39;onehot-dense&#39;)
             self.discretizer.fit(X, y)
-            # X = dft = pd.SparseDataFrame(
-            # discretizer.transform(df),
-            # columns=[f&#39;{col}_{b}&#39; for col, bins in zip(df.columns, discretizer.n_bins_) for b in range(bins)]
-            # )
-            X = pd.DataFrame(
-                self.discretizer.transform(X),
-                columns=[f&#39;{col}_{b}&#39;
-                         for col, bins in zip(X.columns, self.discretizer.n_bins_)
+            feature_names = [f&#39;{col}_{b}&#39;
+                         for col, bins in zip(feature_names, self.discretizer.n_bins_)
                          for b in range(bins)]
-            )
-            # X = self.discretizer.transform(X)
+            X = self.discretizer.transform(X)
 
-        if isinstance(X, pd.DataFrame):
-            if feature_names == []:
-                feature_names = X.columns.tolist()
-            X = X.values
+
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
@@ -207,7 +203,11 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
         df = pd.DataFrame(X, columns=feature_names)
         df.loc[:, &#39;y&#39;] = y
         o = &#39;y&#39;
-        str_print += f&#39;   {df[o].sum()} / {df.shape[0]} (positive class / total)\n\t\u2193 \n&#39;
+        str_print += f&#39;   {df[o].sum()} / {df.shape[0]} (positive class / total)\n&#39;
+        if len(self.rl_.rules) &gt; 1:
+            str_print += f&#39;\t\u2193 \n&#39;
+        else:
+            str_print += &#39;   No rules learned\n&#39;
         for j, rule in enumerate(self.rl_.rules[:-1]):
             antecedents = rule[&#39;antecedents&#39;]
             query = &#39;&#39;
@@ -407,27 +407,23 @@ Examples</p>
         -------
         self : obj
         &#34;&#34;&#34;
+        if isinstance(X, pd.DataFrame):
+            if feature_names == []:
+                feature_names = X.columns.tolist()
+            X = X.values
+        elif feature_names == []:
+            feature_names = [&#39;X&#39; + str(i) for i in range(X.shape[1])]
 
         # check if any non-binary values
         if not np.isin(X, [0, 1]).all().all():
             self.discretizer = KBinsDiscretizer(encode=&#39;onehot-dense&#39;)
             self.discretizer.fit(X, y)
-            # X = dft = pd.SparseDataFrame(
-            # discretizer.transform(df),
-            # columns=[f&#39;{col}_{b}&#39; for col, bins in zip(df.columns, discretizer.n_bins_) for b in range(bins)]
-            # )
-            X = pd.DataFrame(
-                self.discretizer.transform(X),
-                columns=[f&#39;{col}_{b}&#39;
-                         for col, bins in zip(X.columns, self.discretizer.n_bins_)
+            feature_names = [f&#39;{col}_{b}&#39;
+                         for col, bins in zip(feature_names, self.discretizer.n_bins_)
                          for b in range(bins)]
-            )
-            # X = self.discretizer.transform(X)
+            X = self.discretizer.transform(X)
 
-        if isinstance(X, pd.DataFrame):
-            if feature_names == []:
-                feature_names = X.columns.tolist()
-            X = X.values
+
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
@@ -488,7 +484,11 @@ Examples</p>
         df = pd.DataFrame(X, columns=feature_names)
         df.loc[:, &#39;y&#39;] = y
         o = &#39;y&#39;
-        str_print += f&#39;   {df[o].sum()} / {df.shape[0]} (positive class / total)\n\t\u2193 \n&#39;
+        str_print += f&#39;   {df[o].sum()} / {df.shape[0]} (positive class / total)\n&#39;
+        if len(self.rl_.rules) &gt; 1:
+            str_print += f&#39;\t\u2193 \n&#39;
+        else:
+            str_print += &#39;   No rules learned\n&#39;
         for j, rule in enumerate(self.rl_.rules[:-1]):
             antecedents = rule[&#39;antecedents&#39;]
             query = &#39;&#39;
@@ -576,27 +576,23 @@ are set to the default of ["feature1", "feature2"&hellip; ].</dd>
     -------
     self : obj
     &#34;&#34;&#34;
+    if isinstance(X, pd.DataFrame):
+        if feature_names == []:
+            feature_names = X.columns.tolist()
+        X = X.values
+    elif feature_names == []:
+        feature_names = [&#39;X&#39; + str(i) for i in range(X.shape[1])]
 
     # check if any non-binary values
     if not np.isin(X, [0, 1]).all().all():
         self.discretizer = KBinsDiscretizer(encode=&#39;onehot-dense&#39;)
         self.discretizer.fit(X, y)
-        # X = dft = pd.SparseDataFrame(
-        # discretizer.transform(df),
-        # columns=[f&#39;{col}_{b}&#39; for col, bins in zip(df.columns, discretizer.n_bins_) for b in range(bins)]
-        # )
-        X = pd.DataFrame(
-            self.discretizer.transform(X),
-            columns=[f&#39;{col}_{b}&#39;
-                     for col, bins in zip(X.columns, self.discretizer.n_bins_)
+        feature_names = [f&#39;{col}_{b}&#39;
+                     for col, bins in zip(feature_names, self.discretizer.n_bins_)
                      for b in range(bins)]
-        )
-        # X = self.discretizer.transform(X)
+        X = self.discretizer.transform(X)
 
-    if isinstance(X, pd.DataFrame):
-        if feature_names == []:
-            feature_names = X.columns.tolist()
-        X = X.values
+
 
     np.random.seed(self.random_state)
     super().fit(X, y, features=feature_names, prediction_name=prediction_name)

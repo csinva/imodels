@@ -98,7 +98,8 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         self.estimators_ = []
         self.estimator_weights_ = []
         self.estimator_errors_ = []
-        self.feature_names = feature_names
+        if feature_names is not None:
+            self.feature_names = feature_names
         for _ in range(self.n_estimators):
             # Fit a classifier with the specific weights
             clf = self.estimator()
@@ -178,7 +179,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
 
     def __str__(self):
         try:
-            s = &#39;Mined rules:\n&#39;
+            s = &#39;BoostedRules:\n&#39;
             for est in self.estimators_:
                 s += &#39;\t&#39; + tree_to_code(est, self.feature_names)
             return s
@@ -266,7 +267,8 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
         self.estimators_ = []
         self.estimator_weights_ = []
         self.estimator_errors_ = []
-        self.feature_names = feature_names
+        if feature_names is not None:
+            self.feature_names = feature_names
         for _ in range(self.n_estimators):
             # Fit a classifier with the specific weights
             clf = self.estimator()
@@ -346,7 +348,7 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 
     def __str__(self):
         try:
-            s = &#39;Mined rules:\n&#39;
+            s = &#39;BoostedRules:\n&#39;
             for est in self.estimators_:
                 s += &#39;\t&#39; + tree_to_code(est, self.feature_names)
             return s
@@ -434,7 +436,8 @@ If not provided, then each sample is given unit weight.</dd>
     self.estimators_ = []
     self.estimator_weights_ = []
     self.estimator_errors_ = []
-    self.feature_names = feature_names
+    if feature_names is not None:
+        self.feature_names = feature_names
     for _ in range(self.n_estimators):
         # Fit a classifier with the specific weights
         clf = self.estimator()

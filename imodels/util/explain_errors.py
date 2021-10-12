@@ -9,7 +9,7 @@ import imodels
 def explain_classification_errors(X, predictions, y,
                                   feature_names: list = None,
                                   target_name: str = None,
-                                  classifier: BaseEstimator = imodels.CorelsRuleListClassifier(),
+                                  classifier: BaseEstimator = imodels.CorelsRuleListClassifier(c=0.01),
                                   target_one_hot_encode: bool = False,
                                   print_rules: bool = True):
     """Explains the classification errors of a model by fitting an interpretable model to them.

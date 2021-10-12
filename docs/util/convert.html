@@ -26,11 +26,11 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import numpy as np
+<pre><code class="python">from typing import Union, List, Tuple
+
+import numpy as np
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree import _tree
-from sklearn.tree import _tree
-from typing import Union, List, Tuple
 
 
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
@@ -157,11 +157,11 @@ def dict_to_rule(rule, clf_feature_dict):
             condition[&#39;operator&#39;],
             condition[&#39;pivot&#39;]
         )
-    
+
     return output[:-5]
 
-def single_discretized_feature_to_rule(feat: str) -&gt; str:
 
+def single_discretized_feature_to_rule(feat: str) -&gt; str:
     # categorical feature
     if &#39;_to_&#39; not in feat:
         return f&#39;{feat} &gt; 0.5&#39;
@@ -173,14 +173,14 @@ def single_discretized_feature_to_rule(feat: str) -&gt; str:
 
     lower_to_upper_len = 1 + len(lower_value) + 4 + len(upper_value)
     feature_name = feat[:-lower_to_upper_len]
-    
+
     if lower_value == &#39;-inf&#39;:
         rule = f&#39;{feature_name} &lt;= {upper_value}&#39;
     elif upper_value == &#39;inf&#39;:
         rule = f&#39;{feature_name} &gt; {lower_value}&#39;
     else:
         rule = f&#39;{feature_name} &gt; {lower_value} and {feature_name} &lt;= {upper_value}&#39;
-    
+
     return rule</code></pre>
 </details>
 </section>
@@ -232,7 +232,7 @@ rule: list of dict of schema
             condition[&#39;operator&#39;],
             condition[&#39;pivot&#39;]
         )
-    
+
     return output[:-5]</code></pre>
 </details>
 </dd>
@@ -261,7 +261,6 @@ rule: list of dict of schema
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def single_discretized_feature_to_rule(feat: str) -&gt; str:
-
     # categorical feature
     if &#39;_to_&#39; not in feat:
         return f&#39;{feat} &gt; 0.5&#39;
@@ -273,14 +272,14 @@ rule: list of dict of schema
 
     lower_to_upper_len = 1 + len(lower_value) + 4 + len(upper_value)
     feature_name = feat[:-lower_to_upper_len]
-    
+
     if lower_value == &#39;-inf&#39;:
         rule = f&#39;{feature_name} &lt;= {upper_value}&#39;
     elif upper_value == &#39;inf&#39;:
         rule = f&#39;{feature_name} &gt; {lower_value}&#39;
     else:
         rule = f&#39;{feature_name} &gt; {lower_value} and {feature_name} &lt;= {upper_value}&#39;
-    
+
     return rule</code></pre>
 </details>
 </dd>

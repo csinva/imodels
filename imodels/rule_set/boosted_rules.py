@@ -70,7 +70,8 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         self.estimators_ = []
         self.estimator_weights_ = []
         self.estimator_errors_ = []
-        self.feature_names = feature_names
+        if feature_names is not None:
+            self.feature_names = feature_names
         for _ in range(self.n_estimators):
             # Fit a classifier with the specific weights
             clf = self.estimator()
@@ -150,7 +151,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
 
     def __str__(self):
         try:
-            s = 'Mined rules:\n'
+            s = 'BoostedRules:\n'
             for est in self.estimators_:
                 s += '\t' + tree_to_code(est, self.feature_names)
             return s

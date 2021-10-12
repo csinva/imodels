@@ -1,8 +1,8 @@
+from typing import Union, List, Tuple
+
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree import _tree
-from sklearn.tree import _tree
-from typing import Union, List, Tuple
 
 
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
@@ -129,11 +129,11 @@ def dict_to_rule(rule, clf_feature_dict):
             condition['operator'],
             condition['pivot']
         )
-    
+
     return output[:-5]
 
-def single_discretized_feature_to_rule(feat: str) -> str:
 
+def single_discretized_feature_to_rule(feat: str) -> str:
     # categorical feature
     if '_to_' not in feat:
         return f'{feat} > 0.5'
@@ -145,12 +145,12 @@ def single_discretized_feature_to_rule(feat: str) -> str:
 
     lower_to_upper_len = 1 + len(lower_value) + 4 + len(upper_value)
     feature_name = feat[:-lower_to_upper_len]
-    
+
     if lower_value == '-inf':
         rule = f'{feature_name} <= {upper_value}'
     elif upper_value == 'inf':
         rule = f'{feature_name} > {lower_value}'
     else:
         rule = f'{feature_name} > {lower_value} and {feature_name} <= {upper_value}'
-    
+
     return rule
