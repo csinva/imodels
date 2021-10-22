@@ -1,0 +1,10 @@
+# pip install grayskull # install grayskull
+
+# grayskull pypi imodels # create meta.yaml
+
+# move files into proper places
+mv imodels/meta.yaml .
+rm -rf imodels
+
+# build the package
+conda build . # note currently some dependencies not supported on conda

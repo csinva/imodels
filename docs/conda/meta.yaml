@@ -1,0 +1,48 @@
+{% set name = "imodels" %}
+{% set version = "1.0.2" %}
+
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/imodels-{{ version }}.tar.gz
+  sha256: 76082d76c19e58045367199cb307dd1bd02a1c7ea0bbe101da4b2cec3c765ad4
+
+build:
+  number: 0
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv
+
+requirements:
+  host:
+    - pip
+    - python >=3.6
+  run:
+    - corels ==1.1.29
+    - mlxtend >=0.18.0
+    - numpy
+    - pandas
+    - python >=3.6
+    - scikit-learn >=0.23.0
+    - scipy
+
+test:
+  imports:
+    - experiments.config
+    - imodels
+  commands:
+    - pip check
+  requires:
+    - pip
+
+about:
+  home: https://github.com/csinva/imodels
+  summary: Implementations of various interpretable models
+  license: MIT
+  license_file: license.md
+
+extra:
+  recipe-maintainers:
+    - csinva
