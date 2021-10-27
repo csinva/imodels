@@ -233,7 +233,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         Map features to place holder names
         """
         if features is None:
-            new_feats = ['feature_' + str(i) for i in range(num_features)]
+            new_feats = ['X_' + str(i) for i in range(num_features)]
         else:
             new_feats = features
 

@@ -261,7 +261,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         Map features to place holder names
         &#34;&#34;&#34;
         if features is None:
-            new_feats = [&#39;feature_&#39; + str(i) for i in range(num_features)]
+            new_feats = [&#39;X_&#39; + str(i) for i in range(num_features)]
         else:
             new_feats = features
 
@@ -554,7 +554,7 @@ as part of the SlipperRulesClassifier.</p></div>
         Map features to place holder names
         &#34;&#34;&#34;
         if features is None:
-            new_feats = [&#39;feature_&#39; + str(i) for i in range(num_features)]
+            new_feats = [&#39;X_&#39; + str(i) for i in range(num_features)]
         else:
             new_feats = features
 
@@ -648,7 +648,7 @@ as part of the SlipperRulesClassifier.</p></div>
     Map features to place holder names
     &#34;&#34;&#34;
     if features is None:
-        new_feats = [&#39;feature_&#39; + str(i) for i in range(num_features)]
+        new_feats = [&#39;X_&#39; + str(i) for i in range(num_features)]
     else:
         new_feats = features
 

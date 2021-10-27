@@ -61,6 +61,8 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         self.classes_ = unique_labels(y)
         np.random.seed(self.random_state)
 
+        if feature_names is None:
+            feature_names = [f'X_{i + 1}' for i in range(X.shape[1])]
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = list(self.feature_dict_.keys())
         self.feature_names = list(self.feature_dict_.values())
@@ -124,7 +126,8 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
 
         self.rules_without_feature_names_ = rules
         self.rules_ = [
-            replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
+            replace_feature_name(rule, self.feature_dict_)
+            for rule in self.rules_without_feature_names_
         ]
         self.complexity_ = self._get_complexity()
         return self
