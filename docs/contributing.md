@@ -8,4 +8,11 @@ Before contributing, it would be good to read the sklearn estimator [contributin
 
 [Tests](tests) are run with [pytest](https://docs.pytest.org/en/stable/) (e.g. run `pytest` in the repo directory) - make sure they pass before pushing code, and that new models pass a reasonable set of tests. Note that you might need to install some additional dependencies in order to get the tests to pass.
 
-Project is also on [pypi](https://pypi.org/project/imodels/).
+Project is also on [pypi](https://pypi.org/project/imodels/). Packaged following [this tutorial](https://realpython.com/pypi-publish-python-package/). Relevant commands:
+```bash
+python setup.py sdist bdist_wheel
+
+twine check dist/*
+
+twine upload dist/*
+```
