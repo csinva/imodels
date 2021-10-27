@@ -1,11 +1,10 @@
 # This is just a simple wrapper around pycorels: https://github.com/corels/pycorels
-from typing import List
-
 import numpy as np
 import pandas as pd
 from corels import CorelsClassifier
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import KBinsDiscretizer
+from typing import List
 
 
 class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
@@ -103,25 +102,27 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
                 feature_names = X.columns.tolist()
             X = X.values
         elif feature_names == []:
-            feature_names = ['X' + str(i) for i in range(X.shape[1])]
+            feature_names = ['X_' + str(i) for i in range(X.shape[1])]
 
         # check if any non-binary values
         if not np.isin(X, [0, 1]).all().all():
             self.discretizer = KBinsDiscretizer(encode='onehot-dense')
             self.discretizer.fit(X, y)
+            """
             feature_names = [f'{col}_{b}'
                          for col, bins in zip(feature_names, self.discretizer.n_bins_)
                          for b in range(bins)]
+            """
+            feature_names = self.discretizer.get_feature_names_out()
             X = self.discretizer.transform(X)
-
-
+        print(X.shape, feature_names)
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
-        try:
-            self._traverse_rule(X, y, feature_names)
-        except:
-            self.str_print = None
+        # try:
+        self._traverse_rule(X, y, feature_names)
+        # except:
+        #     self.str_print = None
         self.complexity_ = self._get_complexity()
 
     def predict(self, X):
@@ -187,14 +188,16 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
                 if i > 0:
                     query += ' & '
                 if feat_idx < 0:
-                    query += f'({feature_names[-feat_idx - 1]} == 0)'
+                    query += f'(`{feature_names[-feat_idx - 1]}` == 0)'
                 else:
-                    query += f'({feature_names[feat_idx - 1]} == 1)'
+                    query += f'(`{feature_names[feat_idx - 1]}` == 1)'
                 df_rhs = df.query(query)
                 idxs_satisfying_rule = df_rhs.index
                 df.drop(index=idxs_satisfying_rule, inplace=True)
                 computed_prob = 100 * df_rhs[o].sum() / (df_rhs.shape[0] + 1e-10)
-                query_print = query.replace('== 1', '').replace('(', '').replace(')', '')
+
+                # add to str_print
+                query_print = query.replace('== 1', '').replace('(', '').replace(')', '').replace('`', '')
                 str_print += f'\033[96mIf {query_print:<35}\033[00m \u2192 {df_rhs[o].sum():>3} / {df_rhs.shape[0]:>4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():>3} / {df.shape[0]:>5}\t \n'
                 if not (j == len(self.rl_.rules) - 2 and i == len(antecedents) - 1):
                     str_print += '\t\u2193 \n'

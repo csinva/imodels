@@ -7,6 +7,8 @@ that were used in the splits. The ensemble of rules together with the original i
 L1-regularized linear model, also called Lasso, which estimates the effects of each rule on the output target but at the
 same time estimating many of those effects to zero.
 """
+from typing import List, Tuple
+
 import numpy as np
 import pandas as pd
 from scipy.special import softmax
@@ -14,7 +16,6 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.base import TransformerMixin
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
-from typing import List, Tuple
 
 from imodels.rule_set.rule_set import RuleSet
 from imodels.util.extract import extract_rulefit
@@ -106,6 +107,9 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         """Fit and estimate linear combination of rule ensemble
 
         """
+        if feature_names is None and isinstance(X, pd.DataFrame):
+            feature_names = X.columns
+
         X, y = check_X_y(X, y)
         if self.prediction_task == 'classification':
             self.classes_ = unique_labels(y)
@@ -175,7 +179,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         df = pd.DataFrame(X, columns=self.feature_placeholders)
         X_transformed = np.zeros((X.shape[0], len(rules)))
         for i, r in enumerate(rules):
-            features_r_uses = [term.split(' ')[0] for term in r.split(' and ')] 
+            features_r_uses = [term.split(' ')[0] for term in r.split(' and ')]
             X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
@@ -230,11 +234,14 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             rules = rules.ix[rules.coef != 0]
         return rules
 
-    def visualize(self):
+    def visualize(self, decimals=2):
         rules = self.get_rules()
         rules = rules[rules.coef != 0].sort_values("support", ascending=False)
-        pd.set_option('display.max_colwidth', -1)
-        return rules[['rule', 'coef']].round(3)
+        pd.set_option('display.max_colwidth', None)
+        return rules[['rule', 'coef']].round(decimals)
+
+    def __str__(self):
+        return 'RuleFit:\n' + self.visualize().to_string(index=False) + '\n'
 
     def _extract_rules(self, X, y) -> List[Rule]:
         return extract_rulefit(X, y,
@@ -268,7 +275,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         X_rules = self.transform(X, rules)
         if X_rules.shape[0] > 0:
             X_concat = np.concatenate((X_concat, X_rules), axis=1)
-        
+
         # no rules fit and self.include_linear == False
         if X_concat.shape[1] == 0:
             return [], [], 0

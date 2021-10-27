@@ -82,8 +82,8 @@ def get_feature_dict(num_features: int, feature_names: Iterable[str] = None) -> 
     feature_dict = OrderedDict()
     if feature_names is not None:
         for i in range(num_features):
-            feature_dict[f'feature_{i}'] = feature_names[i]
+            feature_dict[f'X_{i}'] = feature_names[i]
     else:
         for i in range(num_features):
-            feature_dict[f'feature_{i}'] = f'feature_{i}'
+            feature_dict[f'X_{i}'] = f'X_{i}'
     return feature_dict

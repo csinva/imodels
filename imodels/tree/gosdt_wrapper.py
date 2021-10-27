@@ -1,6 +1,6 @@
 # This is just a simple wrapper around gosdt: https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees
 
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, export_text
 
 
 class GlobalSparseTreeClassifier(DecisionTreeClassifier):
@@ -10,11 +10,9 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.complexity_ = 0
+        self.feature_names = None
 
-    def __str__(self):
-        return 'Global Sparse Tree ' + str(self.tree_)
-
-    def fit(self, X, y, sample_weight=None, check_input=True, X_idx_sorted="deprecated"):
+    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted="deprecated"):
         """Build a decision tree classifier from the training set (X, y).
         Parameters
         ----------
@@ -24,6 +22,8 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
             to a sparse ``csc_matrix``.
         y : array-like of shape (n_samples,) or (n_samples, n_outputs)
             The target values (class labels) as integers or strings.
+        feature_names : array-like of shape (n_features)
+            The names of the features
         sample_weight : array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted. Splits
             that would create child nodes with net zero or negative weight are
@@ -42,6 +42,10 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
         self : DecisionTreeClassifier
             Fitted estimator.
         """
+        if feature_names is not None:
+            self.feature_names = feature_names
+        else:
+            self.feature_names = ["X" + str(i + 1) for i in range(X.shape[1])]
         super().fit(X, y, sample_weight=None, check_input=True, X_idx_sorted="deprecated")
         self._set_complexity()
 
@@ -76,3 +80,9 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
                 num_leaves += 1
 
         self.complexity_ = num_split_nodes
+
+    def __str__(self):
+        if self.feature_names is not None:
+            return 'OptimalTree:\n' + export_text(self, feature_names=self.feature_names, show_weights=True)
+        else:
+            return 'OptimalTree:\n' + export_text(self, show_weights=True)

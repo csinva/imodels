@@ -24,6 +24,7 @@ class TestClassClassificationBinary:
             FPLassoClassifier, SkopeRulesClassifier,
             FPSkopeClassifier, BoostedRulesClassifier,
             OneRClassifier, SlipperClassifier,
+            GreedyTreeClassifier
         ]:  # IRFClassifier, SLIMClassifier, BayesianRuleSetClassifier
 
             init_kwargs = {}

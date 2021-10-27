@@ -1,8 +1,7 @@
-from typing import Union, List, Tuple
-
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree import _tree
+from typing import Union, List, Tuple
 
 
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
@@ -97,7 +96,7 @@ def tree_to_code(clf, feature_names):
         # space=node_depth[i] * "\t", node=i))
         else:
             s += f"{feature_names[feature[i]]} <= {threshold[i]}"
-    return s + '\n'
+    return f"\033[96m{s}\033[00m\n"
 
 
 def itemsets_to_rules(itemsets: List[Tuple]) -> List[str]:

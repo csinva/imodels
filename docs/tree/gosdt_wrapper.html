@@ -28,7 +28,7 @@
 </summary>
 <pre><code class="python"># This is just a simple wrapper around gosdt: https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees
 
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, export_text
 
 
 class GlobalSparseTreeClassifier(DecisionTreeClassifier):
@@ -38,11 +38,9 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.complexity_ = 0
+        self.feature_names = None
 
-    def __str__(self):
-        return &#39;Global Sparse Tree &#39; + str(self.tree_)
-
-    def fit(self, X, y, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;):
+    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;):
         &#34;&#34;&#34;Build a decision tree classifier from the training set (X, y).
         Parameters
         ----------
@@ -52,6 +50,8 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
             to a sparse ``csc_matrix``.
         y : array-like of shape (n_samples,) or (n_samples, n_outputs)
             The target values (class labels) as integers or strings.
+        feature_names : array-like of shape (n_features)
+            The names of the features
         sample_weight : array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted. Splits
             that would create child nodes with net zero or negative weight are
@@ -70,6 +70,10 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
         self : DecisionTreeClassifier
             Fitted estimator.
         &#34;&#34;&#34;
+        if feature_names is not None:
+            self.feature_names = feature_names
+        else:
+            self.feature_names = [&#34;X&#34; + str(i + 1) for i in range(X.shape[1])]
         super().fit(X, y, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;)
         self._set_complexity()
 
@@ -103,7 +107,13 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
             else:
                 num_leaves += 1
 
-        self.complexity_ = num_split_nodes</code></pre>
+        self.complexity_ = num_split_nodes
+
+    def __str__(self):
+        if self.feature_names is not None:
+            return &#39;OptimalTree:\n&#39; + export_text(self, feature_names=self.feature_names, show_weights=True)
+        else:
+            return &#39;OptimalTree:\n&#39; + export_text(self, show_weights=True)</code></pre>
 </details>
 </section>
 <section>
@@ -132,11 +142,9 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.complexity_ = 0
+        self.feature_names = None
 
-    def __str__(self):
-        return &#39;Global Sparse Tree &#39; + str(self.tree_)
-
-    def fit(self, X, y, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;):
+    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;):
         &#34;&#34;&#34;Build a decision tree classifier from the training set (X, y).
         Parameters
         ----------
@@ -146,6 +154,8 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
             to a sparse ``csc_matrix``.
         y : array-like of shape (n_samples,) or (n_samples, n_outputs)
             The target values (class labels) as integers or strings.
+        feature_names : array-like of shape (n_features)
+            The names of the features
         sample_weight : array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted. Splits
             that would create child nodes with net zero or negative weight are
@@ -164,6 +174,10 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
         self : DecisionTreeClassifier
             Fitted estimator.
         &#34;&#34;&#34;
+        if feature_names is not None:
+            self.feature_names = feature_names
+        else:
+            self.feature_names = [&#34;X&#34; + str(i + 1) for i in range(X.shape[1])]
         super().fit(X, y, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;)
         self._set_complexity()
 
@@ -197,7 +211,13 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
             else:
                 num_leaves += 1
 
-        self.complexity_ = num_split_nodes</code></pre>
+        self.complexity_ = num_split_nodes
+
+    def __str__(self):
+        if self.feature_names is not None:
+            return &#39;OptimalTree:\n&#39; + export_text(self, feature_names=self.feature_names, show_weights=True)
+        else:
+            return &#39;OptimalTree:\n&#39; + export_text(self, show_weights=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -210,7 +230,7 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.gosdt_wrapper.GlobalSparseTreeClassifier.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, check_input=True, X_idx_sorted='deprecated')</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted='deprecated')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Build a decision tree classifier from the training set (X, y).
@@ -223,6 +243,8 @@ Parameters</p>
 to a sparse <code>csc_matrix</code>.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code> or <code>(n_samples, n_outputs)</code></dt>
 <dd>The target values (class labels) as integers or strings.</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_features)</code></dt>
+<dd>The names of the features</dd>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, default=<code>None</code></dt>
 <dd>Sample weights. If None, then samples are equally weighted. Splits
 that would create child nodes with net zero or negative weight are
@@ -248,7 +270,7 @@ It will be removed in 1.1 (renaming of 0.26).<div class="admonition deprecated">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;):
+<pre><code class="python">def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;):
     &#34;&#34;&#34;Build a decision tree classifier from the training set (X, y).
     Parameters
     ----------
@@ -258,6 +280,8 @@ It will be removed in 1.1 (renaming of 0.26).<div class="admonition deprecated">
         to a sparse ``csc_matrix``.
     y : array-like of shape (n_samples,) or (n_samples, n_outputs)
         The target values (class labels) as integers or strings.
+    feature_names : array-like of shape (n_features)
+        The names of the features
     sample_weight : array-like of shape (n_samples,), default=None
         Sample weights. If None, then samples are equally weighted. Splits
         that would create child nodes with net zero or negative weight are
@@ -276,6 +300,10 @@ It will be removed in 1.1 (renaming of 0.26).<div class="admonition deprecated">
     self : DecisionTreeClassifier
         Fitted estimator.
     &#34;&#34;&#34;
+    if feature_names is not None:
+        self.feature_names = feature_names
+    else:
+        self.feature_names = [&#34;X&#34; + str(i + 1) for i in range(X.shape[1])]
     super().fit(X, y, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;)
     self._set_complexity()</code></pre>
 </details>

@@ -70,6 +70,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         self.estimators_ = []
         self.estimator_weights_ = []
         self.estimator_errors_ = []
+        self.estimator_mean_prediction_ = [] # this is just for printing
         if feature_names is not None:
             self.feature_names = feature_names
         for _ in range(self.n_estimators):
@@ -77,6 +78,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
             clf = self.estimator()
             clf.fit(X, y, sample_weight=w)  # uses w as the sampling weight!
             preds = clf.predict(X)
+            self.estimator_mean_prediction_.append(np.mean(preds)) # just for printing
 
             # Indicator function
             miss = preds != y
@@ -152,8 +154,11 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
     def __str__(self):
         try:
             s = 'BoostedRules:\n'
-            for est in self.estimators_:
-                s += '\t' + tree_to_code(est, self.feature_names)
+            s += 'Rule \u2192 predicted probability (final prediction is weighted sum of all predictions)\n'
+            for i in range(len(self.estimators_)):
+                s += f'  If\033[96m {str(self.rules_[i])}\033[00m \u2192 {self.estimator_mean_prediction_[i]:.2f} (weight: {self.estimator_weights_[i]:.2f})\n'
+            # for est in self.estimators_:
+            #     s += '\t' + tree_to_code(est, self.feature_names)
             return s
         except:
             return f'BoostedRules with {len(self.estimators_)} estimators'

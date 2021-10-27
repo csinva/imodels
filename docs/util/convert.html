@@ -26,11 +26,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from typing import Union, List, Tuple
-
-import numpy as np
+<pre><code class="python">import numpy as np
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree import _tree
+from typing import Union, List, Tuple
 
 
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
@@ -125,7 +124,7 @@ def tree_to_code(clf, feature_names):
         # space=node_depth[i] * &#34;\t&#34;, node=i))
         else:
             s += f&#34;{feature_names[feature[i]]} &lt;= {threshold[i]}&#34;
-    return s + &#39;\n&#39;
+    return f&#34;\033[96m{s}\033[00m\n&#34;
 
 
 def itemsets_to_rules(itemsets: List[Tuple]) -&gt; List[str]:
@@ -330,7 +329,7 @@ rule: list of dict of schema
         # space=node_depth[i] * &#34;\t&#34;, node=i))
         else:
             s += f&#34;{feature_names[feature[i]]} &lt;= {threshold[i]}&#34;
-    return s + &#39;\n&#39;</code></pre>
+    return f&#34;\033[96m{s}\033[00m\n&#34;</code></pre>
 </details>
 </dd>
 <dt id="imodels.util.convert.tree_to_rules"><code class="name flex">
