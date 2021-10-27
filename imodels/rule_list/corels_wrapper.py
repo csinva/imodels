@@ -115,7 +115,6 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
             """
             feature_names = self.discretizer.get_feature_names_out()
             X = self.discretizer.transform(X)
-        print(X.shape, feature_names)
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
