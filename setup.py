@@ -18,6 +18,8 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=['imodels.tests', 'experiments', 'notebooks', 'docs']),
     install_requires=[
         'corels==1.1.29',  # we only provide a basic wrapper around corels
+        # need to exclude gosdt subdir and c++ dependency on Windows and non-x86 linux
+        'gosdt',
         # optionally requires cvxpy for slim
         'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
         'numpy',
@@ -36,10 +38,6 @@ setuptools.setup(
             'pytest-cov',
             'slurmpy',
             'tqdm',
-        ],
-        # need to exclude gosdt subdir and c++ dependency on Windows and non-x86 linux
-        'gosdt': [
-            'gosdt'
         ]
     },
     python_requires='>=3.6',
