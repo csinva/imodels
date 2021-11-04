@@ -14,4 +14,4 @@ python
 
 To run example notebooks and/or develop locally, clone the repo then run
 
-`pip install -e .[dev]`
+`pip install -e ".[dev]"`
