@@ -25,7 +25,7 @@ if 'x86_64' in platform.platform() and platform.system() != 'Windows':
 
 setuptools.setup(
     name="imodels",
-    version="1.0.4",
+    version="1.1.0",
     author="Chandan Singh, Keyan Nasseri, Bin Yu, and others",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",
