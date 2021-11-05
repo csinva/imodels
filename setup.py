@@ -1,10 +1,27 @@
 from os import path
 
+import platform
 import setuptools
 
 path_to_repo = path.abspath(path.dirname(__file__))
 with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
     long_description = f.read()
+
+required_pypi = [
+    'corels==1.1.29',  # we only provide a basic wrapper around corels
+    # optionally requires cvxpy for slim
+    'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
+    'numpy',
+    'pandas',
+    'scipy',
+    'scikit-learn>=0.23.0',  # 0.23+ only works on py3.6+
+]
+excluded_dirs = ['imodels.tests', 'experiments', 'notebooks', 'docs', 'imodels.tree.gosdt']
+
+# gosdt is only supported on x86 64-bit systems
+if 'x86_64' not in platform.platform() or platform.system() == 'Windows':
+    required_pypi.append('gosdt')
+    excluded_dirs.pop()
 
 setuptools.setup(
     name="imodels",
@@ -15,18 +32,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/csinva/imodels",
-    packages=setuptools.find_packages(exclude=['imodels.tests', 'experiments', 'notebooks', 'docs']),
-    install_requires=[
-        'corels==1.1.29',  # we only provide a basic wrapper around corels
-        # need to exclude gosdt subdir and c++ dependency on Windows and non-x86 linux
-        'gosdt',
-        # optionally requires cvxpy for slim
-        'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
-        'numpy',
-        'pandas',
-        'scipy',
-        'scikit-learn>=0.23.0',  # 0.23+ only works on py3.6+
-    ],
+    packages=setuptools.find_packages(exclude=excluded_dirs),
+    install_requires=required_pypi,
     extras_require={
         'dev': [
             'dvu',
