@@ -16,12 +16,10 @@ required_pypi = [
     'scipy',
     'scikit-learn>=0.23.0',  # 0.23+ only works on py3.6+
 ]
-excluded_dirs = ['imodels.tests', 'experiments', 'notebooks', 'docs', 'imodels.tree.gosdt']
 
 # gosdt is only supported on x86 64-bit systems
 if 'x86_64' in platform.platform() and platform.system() != 'Windows':
     required_pypi.append('gosdt')
-    excluded_dirs.pop()
 
 setuptools.setup(
     name="imodels",
@@ -32,7 +30,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/csinva/imodels",
-    packages=setuptools.find_packages(exclude=excluded_dirs),
+    packages=setuptools.find_packages(
+        exclude=['imodels.tests', 'experiments', 'notebooks', 'docs']),
     install_requires=required_pypi,
     extras_require={
         'dev': [
