@@ -3,7 +3,7 @@
 from sklearn.tree import DecisionTreeClassifier, export_text
 
 
-class GlobalSparseTreeClassifier(DecisionTreeClassifier):
+class DecisionTreeClassifierWithComplexity(DecisionTreeClassifier):
     """Placeholder for GOSDT classifier
     """
 
@@ -12,7 +12,12 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
         self.complexity_ = 0
         self.feature_names = None
 
-    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted="deprecated"):
+    def fit(self, X, y,
+            feature_names=None,
+            sample_weight=None,
+            check_input=True,
+            X_idx_sorted="deprecated"):
+            
         """Build a decision tree classifier from the training set (X, y).
         Parameters
         ----------
@@ -57,7 +62,7 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
         tree = self.tree_
         children_left = tree.children_left
         children_right = tree.children_right
-        n_nodes = tree.node_count
+        # n_nodes = tree.node_count
         num_split_nodes = 0
         num_leaves = 0
 
@@ -83,6 +88,7 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
 
     def __str__(self):
         if self.feature_names is not None:
-            return 'OptimalTree:\n' + export_text(self, feature_names=self.feature_names, show_weights=True)
+            return 'OptimalTree:\n' + export_text(self, feature_names=self.feature_names, 
+                                                  show_weights=True)
         else:
             return 'OptimalTree:\n' + export_text(self, show_weights=True)

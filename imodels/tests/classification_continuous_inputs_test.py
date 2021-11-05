@@ -14,8 +14,12 @@ class TestClassClassificationBinary:
         self.n = 40
         self.p = 2
         self.X_classification_binary = np.random.randn(self.n, self.p)
-        self.y_classification_binary = (self.X_classification_binary[:, 0] > 0).astype(int)  # y = x0 > 0
-        self.y_classification_binary[-2:] = 1 - self.y_classification_binary[-2:]  # flip labels for last few
+        
+        # y = x0 > 0
+        self.y_classification_binary = (self.X_classification_binary[:, 0] > 0).astype(int)
+
+        # flip labels for last few
+        self.y_classification_binary[-2:] = 1 - self.y_classification_binary[-2:]
 
     def test_classification_binary(self):
         '''Test imodels on basic binary classification task
@@ -49,7 +53,8 @@ class TestClassClassificationBinary:
                 assert len(preds_proba.shape) == 2, 'preds_proba has 2 columns'
                 assert preds_proba.shape[1] == 2, 'preds_proba has 2 columns'
                 assert np.max(preds_proba) < 1.1, 'preds_proba has no values over 1'
-                assert (np.argmax(preds_proba, axis=1) == preds).all(), "predict_proba and predict correspond"
+                assert (np.argmax(preds_proba, axis=1) == preds).all(), ("predict_proba and "
+                                                                         "predict agree")
 
             # test acc
             acc_train = np.mean(preds == self.y_classification_binary)

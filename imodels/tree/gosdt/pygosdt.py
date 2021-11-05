@@ -1,9 +1,10 @@
 import json
+import warnings
+
 import pandas as pd
 from sklearn.utils import validation
 
-import gosdt
-
+from imodels.tree.gosdt.pygosdt_backup import DecisionTreeClassifierWithComplexity
 from imodels.tree.gosdt.tree_classifier import TreeClassifier
 from imodels.util import rule
 
@@ -70,9 +71,6 @@ class GOSDTClassifier:
             result = model_source.read()
         result = json.loads(result)
         self.tree_ = TreeClassifier(result[0])
-        
-    def status(self):
-        return gosdt.status()
 
     def fit(self, X, y, feature_names=None):
         """
@@ -87,31 +85,47 @@ class GOSDTClassifier:
         ---
         trains the model so that this model instance is ready for prediction
         """
-        if not isinstance(X, pd.DataFrame):
-            self.feature_names_ = list(rule.get_feature_dict(X.shape[1], feature_names).keys())
-            X = pd.DataFrame(X, columns=self.feature_names_)
-        else:
-            self.feature_names_ = X.columns
-        
-        if not isinstance(y, pd.DataFrame):
-            y = pd.DataFrame(y, columns=['target'])
-        
-        # gosdt extension expects serialized CSV, which we generate via pandas
-        dataset_with_target = pd.concat((X, y), axis=1)
+        try:
+            import gosdt
 
-        # Perform C++ extension calls to train the model
-        configuration = self._get_configuration()
-        gosdt.configure(json.dumps(configuration, separators=(',', ':')))
-        result = gosdt.fit(dataset_with_target.to_csv(index=False))
+            if not isinstance(X, pd.DataFrame):
+                self.feature_names_ = list(rule.get_feature_dict(X.shape[1], feature_names).keys())
+                X = pd.DataFrame(X, columns=self.feature_names_)
+            else:
+                self.feature_names_ = X.columns
+            
+            if not isinstance(y, pd.DataFrame):
+                y = pd.DataFrame(y, columns=['target'])
+            
+            # gosdt extension expects serialized CSV, which we generate via pandas
+            dataset_with_target = pd.concat((X, y), axis=1)
 
-        result = json.loads(result)
-        self.tree_ = TreeClassifier(result[0])
+            # Perform C++ extension calls to train the model
+            configuration = self._get_configuration()
+            gosdt.configure(json.dumps(configuration, separators=(',', ':')))
+            result = gosdt.fit(dataset_with_target.to_csv(index=False))
 
-        # Record the training time, number of iterations, and graph size required
-        self.time_ = gosdt.time()
-        self.iterations_ = gosdt.iterations()
-        self.size_ = gosdt.size()
+            result = json.loads(result)
+            self.tree_ = TreeClassifier(result[0])
 
+            # Record the training time, number of iterations, and graph size required
+            self.time_ = gosdt.time()
+            self.iterations_ = gosdt.iterations()
+            self.size_ = gosdt.size()
+
+        except ImportError:
+
+            warnings.warn(
+                "Should install gosdt C++ extenstion. On x86_64 linux or macOS: "
+                "'pip install gosdt'. On other platforms, see "
+                "https://github.com/keyan3/GeneralizedOptimalSparseDecisionTrees. "
+                "Using DecisionTreeClassifier instead."
+            )
+
+            dtree = DecisionTreeClassifierWithComplexity()
+            dtree.fit(X, y)
+            self.tree_ = dtree
+            
         return self
 
     def predict(self, X):
@@ -128,40 +142,19 @@ class GOSDTClassifier:
             associated with each row
         """
         validation.check_is_fitted(self)
-        if not isinstance(X, pd.DataFrame):
+        if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X, columns=self.feature_names_)
         return self.tree_.predict(X)
-
-    def error(self, X, y, weight=None):
-        """
-        Parameters
-        ---
-        X : matrix-like, shape = [n_samples by m_features]
-            an n-by-m matrix of sample and their features
-        y : array-like, shape = [n_samples by 1]
-            an n-by-1 column of labels associated with each sample
-        weight : real number
-            an n-by-1 column of weights to apply to each sample's misclassification
-
-        Returns
-        ---
-        real number : the inaccuracy produced by applying this model overthe given dataset, with
-            optionals for weighted inaccuracy
-        """
-        validation.check_is_fitted(self)
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X, columns=self.feature_names_)
-        return self.tree_.error(X, y, weight=weight)
 
     def score(self, X, y, weight=None):
         """
         Parameters
         ---
-        X : matrix-like, shape = [n_samples by m_features]
+        X : matrix-like, shape = [n_samples, m_features]
             an n-by-m matrix of sample and their features
-        y : array-like, shape = [n_samples by 1]
+        y : array-like, shape = [n_samples,]
             an n-by-1 column of labels associated with each sample
-        weight : real number
+        weight : shape = [n_samples,]
             an n-by-1 column of weights to apply to each sample's misclassification
 
         Returns
@@ -170,9 +163,12 @@ class GOSDTClassifier:
             optionals for weighted accuracy
         """
         validation.check_is_fitted(self)
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X, columns=self.feature_names_)
-        return self.tree_.score(X, y, weight=weight)
+        if type(self.tree_) is TreeClassifier:
+            if not isinstance(X, pd.DataFrame):
+                X = pd.DataFrame(X, columns=self.feature_names_)
+            return self.tree_.score(X, y, weight=weight)
+        else:
+            return self.tree_.score(X, y, sample_weight=weight)
 
     def __len__(self):
         """
@@ -181,7 +177,12 @@ class GOSDTClassifier:
         natural number : The number of terminal nodes present in this tree
         """
         validation.check_is_fitted(self)
-        return len(self.tree_)
+        if type(self.tree_) is TreeClassifier:
+            return len(self.tree_)
+        else:
+            warnings.warn("Using DecisionTreeClassifier due to absence of gosdt package. "
+                          "DecisionTreeClassifier does not have this method.")
+            return None
 
     def leaves(self):
         """
@@ -190,7 +191,10 @@ class GOSDTClassifier:
         natural number : The number of terminal nodes present in this tree
         """
         validation.check_is_fitted(self)
-        return self.tree_.leaves()
+        if type(self.tree_) is TreeClassifier:
+            return self.tree_.leaves()
+        else:
+            return self.tree_.get_n_leaves()
 
     def nodes(self):
         """
@@ -199,7 +203,12 @@ class GOSDTClassifier:
         natural number : The number of nodes present in this tree
         """
         validation.check_is_fitted(self)
-        return self.tree_.nodes()
+        if type(self.tree_) is TreeClassifier:
+            return self.tree_.nodes()
+        else:
+            warnings.warn("Using DecisionTreeClassifier due to absence of gosdt package. "
+                          "DecisionTreeClassifier does not have this method.")
+            return None
 
     def max_depth(self):
         """
@@ -209,7 +218,10 @@ class GOSDTClassifier:
             will return 1.
         """
         validation.check_is_fitted(self)
-        return self.tree_.maximum_depth()
+        if type(self.tree_) is TreeClassifier:
+            return self.tree_.maximum_depth()
+        else:
+            return self.tree_.get_depth()
 
     def latex(self):
         """
@@ -223,7 +235,12 @@ class GOSDTClassifier:
         string : A LaTeX string representing the model
         """
         validation.check_is_fitted(self)
-        return self.tree_.latex()
+        if type(self.tree_) is TreeClassifier:
+            return self.tree_.latex()
+        else:
+            warnings.warn("Using DecisionTreeClassifier due to absence of gosdt package. "
+                          "DecisionTreeClassifier does not have this method.")
+            return None
 
     def json(self):
         """
@@ -232,7 +249,12 @@ class GOSDTClassifier:
         string : A JSON string representing the model
         """
         validation.check_is_fitted(self)
-        return self.tree_.json()
+        if type(self.tree_) is TreeClassifier:
+            return self.tree_.json()
+        else:
+            warnings.warn("Using DecisionTreeClassifier due to absence of gosdt package. "
+                          "DecisionTreeClassifier does not have this method.")
+            return None
 
     def _get_configuration(self):
         return {

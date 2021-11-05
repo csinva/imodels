@@ -9,6 +9,7 @@ import os
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
 from .tree.cart_wrapper import GreedyTreeClassifier
+from .tree.gosdt.pygosdt import GOSDTClassifier
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
@@ -25,11 +26,6 @@ from .rule_set.fpskope import FPSkopeClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.slipper import SlipperClassifier
-
-try:
-    from .tree.gosdt.pygosdt import GOSDTClassifier
-except ModuleNotFoundError:
-    pass
 
 from .util.explain_errors import explain_classification_errors
 
