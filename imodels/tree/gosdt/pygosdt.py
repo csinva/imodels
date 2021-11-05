@@ -118,7 +118,7 @@ class GOSDTClassifier:
             warnings.warn(
                 "Should install gosdt C++ extenstion. On x86_64 linux or macOS: "
                 "'pip install gosdt'. On other platforms, see "
-                "https://github.com/keyan3/GeneralizedOptimalSparseDecisionTrees."
+                "https://github.com/keyan3/GeneralizedOptimalSparseDecisionTrees. "
                 "Using DecisionTreeClassifier instead."
             )
 
