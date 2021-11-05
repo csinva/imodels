@@ -2,9 +2,9 @@ import json
 import warnings
 
 import pandas as pd
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils import validation
 
+from imodels.tree.gosdt.pygosdt_backup import DecisionTreeClassifierWithComplexity
 from imodels.tree.gosdt.tree_classifier import TreeClassifier
 from imodels.util import rule
 
@@ -122,7 +122,7 @@ class GOSDTClassifier:
                 "Using DecisionTreeClassifier instead."
             )
 
-            dtree = DecisionTreeClassifier()
+            dtree = DecisionTreeClassifierWithComplexity()
             dtree.fit(X, y)
             self.tree_ = dtree
             
