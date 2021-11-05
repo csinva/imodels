@@ -19,7 +19,7 @@ required_pypi = [
 excluded_dirs = ['imodels.tests', 'experiments', 'notebooks', 'docs', 'imodels.tree.gosdt']
 
 # gosdt is only supported on x86 64-bit systems
-if 'x86_64' not in platform.platform() or platform.system() == 'Windows':
+if 'x86_64' in platform.platform() and platform.system() != 'Windows':
     required_pypi.append('gosdt')
     excluded_dirs.pop()
 
