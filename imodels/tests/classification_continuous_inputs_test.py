@@ -1,6 +1,7 @@
 import random
+import numpy as np
 
-from imodels import *
+from imodels import *  # noqa: F403
 
 
 class TestClassClassificationBinary:
@@ -24,7 +25,7 @@ class TestClassClassificationBinary:
             FPLassoClassifier, SkopeRulesClassifier,
             FPSkopeClassifier, BoostedRulesClassifier,
             OneRClassifier, SlipperClassifier,
-            GreedyTreeClassifier
+            GreedyTreeClassifier, GOSDTClassifier
         ]:  # IRFClassifier, SLIMClassifier, BayesianRuleSetClassifier
 
             init_kwargs = {}
@@ -43,7 +44,7 @@ class TestClassClassificationBinary:
             assert preds.size == self.n, 'predict() yields right size'
 
             # test preds_proba()
-            if not model_type == CorelsRuleListClassifier:
+            if model_type not in {CorelsRuleListClassifier, GOSDTClassifier}:
                 preds_proba = m.predict_proba(X)
                 assert len(preds_proba.shape) == 2, 'preds_proba has 2 columns'
                 assert preds_proba.shape[1] == 2, 'preds_proba has 2 columns'
