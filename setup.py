@@ -1,7 +1,5 @@
-from os import path
-
-import platform
 import setuptools
+from os import path
 
 path_to_repo = path.abspath(path.dirname(__file__))
 with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
@@ -10,16 +8,13 @@ with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
 required_pypi = [
     'corels==1.1.29',  # we only provide a basic wrapper around corels
     # optionally requires cvxpy for slim
+    # optionally requires gosdt
     'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
     'numpy',
     'pandas',
     'scipy',
     'scikit-learn>=0.23.0',  # 0.23+ only works on py3.6+
 ]
-
-# gosdt is only supported on x86 64-bit systems
-if 'x86_64' in platform.platform() and platform.system() != 'Windows':
-    required_pypi.append('gosdt')
 
 setuptools.setup(
     name="imodels",
