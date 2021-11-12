@@ -9,7 +9,7 @@ from imodels.tree.gosdt.tree_classifier import TreeClassifier
 from imodels.util import rule
 
 
-class GOSDTClassifier:
+class OptimalTreeClassifier:
     def __init__(self,
                  balance=False,
                  cancellation=True,

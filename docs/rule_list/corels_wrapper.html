@@ -35,7 +35,7 @@ from sklearn.preprocessing import KBinsDiscretizer
 from typing import List
 
 
-class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
+class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
     &#34;&#34;&#34;Certifiably Optimal RulE ListS classifier.
     This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
     rulelists for binary feature data and binary classification. As an alternative to other
@@ -143,7 +143,6 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
             &#34;&#34;&#34;
             feature_names = self.discretizer.get_feature_names_out()
             X = self.discretizer.transform(X)
-        print(X.shape, feature_names)
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
@@ -251,8 +250,8 @@ class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier"><code class="flex name class">
-<span>class <span class="ident">CorelsRuleListClassifier</span></span>
+<dt id="imodels.rule_list.corels_wrapper.OptimalRuleListClassifier"><code class="flex name class">
+<span>class <span class="ident">OptimalRuleListClassifier</span></span>
 <span>(</span><span>c=0.01, n_iter=10000, map_type='prefix', policy='lower_bound', verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0)</span>
 </code></dt>
 <dd>
@@ -320,7 +319,7 @@ Examples</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
+<pre><code class="python">class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
     &#34;&#34;&#34;Certifiably Optimal RulE ListS classifier.
     This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
     rulelists for binary feature data and binary classification. As an alternative to other
@@ -428,7 +427,6 @@ Examples</p>
             &#34;&#34;&#34;
             feature_names = self.discretizer.get_feature_names_out()
             X = self.discretizer.transform(X)
-        print(X.shape, feature_names)
 
         np.random.seed(self.random_state)
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
@@ -533,7 +531,7 @@ Examples</p>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.fit"><code class="name flex">
+<dt id="imodels.rule_list.corels_wrapper.OptimalRuleListClassifier.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=[], prediction_name='prediction')</span>
 </code></dt>
 <dd>
@@ -601,7 +599,6 @@ are set to the default of ["feature1", "feature2"&hellip; ].</dd>
         &#34;&#34;&#34;
         feature_names = self.discretizer.get_feature_names_out()
         X = self.discretizer.transform(X)
-    print(X.shape, feature_names)
 
     np.random.seed(self.random_state)
     super().fit(X, y, features=feature_names, prediction_name=prediction_name)
@@ -612,7 +609,7 @@ are set to the default of ["feature1", "feature2"&hellip; ].</dd>
     self.complexity_ = self._get_complexity()</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict"><code class="name flex">
+<dt id="imodels.rule_list.corels_wrapper.OptimalRuleListClassifier.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -651,7 +648,7 @@ The classifications of the input samples.</p></div>
     return super().predict(X).astype(int)</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict_proba"><code class="name flex">
+<dt id="imodels.rule_list.corels_wrapper.OptimalRuleListClassifier.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -710,11 +707,11 @@ The probabilities of the input samples.</p></div>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier">CorelsRuleListClassifier</a></code></h4>
+<h4><code><a title="imodels.rule_list.corels_wrapper.OptimalRuleListClassifier" href="#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier">OptimalRuleListClassifier</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.fit" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict_proba" href="#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.rule_list.corels_wrapper.OptimalRuleListClassifier.fit" href="#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_list.corels_wrapper.OptimalRuleListClassifier.predict" href="#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_list.corels_wrapper.OptimalRuleListClassifier.predict_proba" href="#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier.predict_proba">predict_proba</a></code></li>
 </ul>
 </li>
 </ul>

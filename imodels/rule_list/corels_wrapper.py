@@ -7,7 +7,7 @@ from sklearn.preprocessing import KBinsDiscretizer
 from typing import List
 
 
-class CorelsRuleListClassifier(BaseEstimator, CorelsClassifier):
+class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
     """Certifiably Optimal RulE ListS classifier.
     This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
     rulelists for binary feature data and binary classification. As an alternative to other

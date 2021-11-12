@@ -76,7 +76,7 @@ class SLIMRegressor(BaseEstimator, RegressorMixin):
 
         try:
             import cvxpy as cp  # package for optimization, import here to make it optional
-            # from cvxpy.error import SolverError
+            from cvxpy.error import SolverError
 
             # declare the integer-valued optimization variable
             w = cp.Variable(X.shape[1], integer=True)
@@ -91,20 +91,29 @@ class SLIMRegressor(BaseEstimator, RegressorMixin):
             obj = cp.Minimize(mse + l1_penalty)
             prob = cp.Problem(obj)
 
-            # solve the problem using an appropriate solver
-            prob.solve()
-            self.model_.coef_ = w.value.astype(int)
-            self.model_.intercept_ = 0
+            try:
+                # solve the problem using an appropriate solver
+                prob.solve()
+                self.model_.coef_ = w.value.astype(int)
+                self.model_.intercept_ = 0
 
-        except:
-            warnings.warn(&#34;Should install cvxpy with pip install cvxpy.&#34;
-                          &#34;gurobi, mosek, or cplex solver required for sparse integer linear &#34;
-                          &#34;regression. Rounding non-integer coefficients instead.&#34;)
-            m = Lasso(alpha=self.alpha)
-            m.fit(X, y, sample_weight=sample_weight)
-            self.model_.coef_ = np.round(m.coef_).astype(int)
-            self.model_.intercept_ = m.intercept_
+            except SolverError:
+                warnings.warn(&#34;gurobi, mosek, or cplex solver required for mixed-integer &#34;
+                              &#34;quadratic programming. Rounding non-integer coefficients instead.&#34;)
+                self._fit_backup(X, y, sample_weight)
+        
+        except ImportError:
+            warnings.warn(&#34;Should install cvxpy with pip install cvxpy. Rounding non-integer &#34;
+                          &#34;coefficients instead.&#34;)
+            self._fit_backup(X, y, sample_weight)
+
         return self
+    
+    def _fit_backup(self, X, y, sample_weight):
+        m = Lasso(alpha=self.alpha)
+        m.fit(X, y, sample_weight=sample_weight)
+        self.model_.coef_ = np.round(m.coef_).astype(int)
+        self.model_.intercept_ = m.intercept_
 
     def predict(self, X):
         check_is_fitted(self)
@@ -142,7 +151,7 @@ class SLIMClassifier(BaseEstimator, ClassifierMixin):
 
         try:
             import cvxpy as cp  # package for optimization, import here to make it optional
-            # from cvxpy.error import SolverError
+            from cvxpy.error import SolverError
 
             # declare the integer-valued optimization variable
             w = cp.Variable(X.shape[1], integer=True)
@@ -158,21 +167,29 @@ class SLIMClassifier(BaseEstimator, ClassifierMixin):
             obj = cp.Minimize(celoss + l1_penalty)
             prob = cp.Problem(obj)
 
-            # solve the problem using an appropriate solver
-            prob.solve()
-            self.model_.coef_ = np.array([w.value.astype(int)])
-            self.model_.intercept_ = 0
+            try:
+                # solve the problem using an appropriate solver
+                prob.solve()
+                self.model_.coef_ = np.array([w.value.astype(int)])
+                self.model_.intercept_ = 0
 
-        except:
-            warnings.warn(&#34;Should install cvxpy with pip install cvxpy.&#34;
-                          &#34;mosek solver required for mixed-integer logistic regression. &#34;
-                          &#34;rounding non-integer coefficients instead&#34;)
-            m = LogisticRegression(C=1 / self.alpha)
-            m.fit(X, y, sample_weight=sample_weight)
-            self.model_.coef_ = np.round(m.coef_).astype(int)
-            self.model_.intercept_ = m.intercept_
+            except SolverError:
+                warnings.warn(&#34;mosek solver required for mixed-integer exponential cone &#34;
+                              &#34;programming. Rounding non-integer coefficients instead&#34;)
+                self._fit_backup(X, y, sample_weight)
 
+        except ImportError:
+            warnings.warn(&#34;Should install cvxpy with pip install cvxpy. Rounding non-integer &#34;
+                          &#34;coefficients instead.&#34;)
+            self._fit_backup(X, y, sample_weight)
+        
         return self
+
+    def _fit_backup(self, X, y, sample_weight=None):
+        m = LogisticRegression(C=1 / self.alpha)
+        m.fit(X, y, sample_weight=sample_weight)
+        self.model_.coef_ = np.round(m.coef_).astype(int)
+        self.model_.intercept_ = m.intercept_
 
     def predict(self, X):
         check_is_fitted(self)
@@ -242,7 +259,7 @@ weight for sparsity penalty</p></div>
 
         try:
             import cvxpy as cp  # package for optimization, import here to make it optional
-            # from cvxpy.error import SolverError
+            from cvxpy.error import SolverError
 
             # declare the integer-valued optimization variable
             w = cp.Variable(X.shape[1], integer=True)
@@ -258,21 +275,29 @@ weight for sparsity penalty</p></div>
             obj = cp.Minimize(celoss + l1_penalty)
             prob = cp.Problem(obj)
 
-            # solve the problem using an appropriate solver
-            prob.solve()
-            self.model_.coef_ = np.array([w.value.astype(int)])
-            self.model_.intercept_ = 0
+            try:
+                # solve the problem using an appropriate solver
+                prob.solve()
+                self.model_.coef_ = np.array([w.value.astype(int)])
+                self.model_.intercept_ = 0
 
-        except:
-            warnings.warn(&#34;Should install cvxpy with pip install cvxpy.&#34;
-                          &#34;mosek solver required for mixed-integer logistic regression. &#34;
-                          &#34;rounding non-integer coefficients instead&#34;)
-            m = LogisticRegression(C=1 / self.alpha)
-            m.fit(X, y, sample_weight=sample_weight)
-            self.model_.coef_ = np.round(m.coef_).astype(int)
-            self.model_.intercept_ = m.intercept_
+            except SolverError:
+                warnings.warn(&#34;mosek solver required for mixed-integer exponential cone &#34;
+                              &#34;programming. Rounding non-integer coefficients instead&#34;)
+                self._fit_backup(X, y, sample_weight)
 
+        except ImportError:
+            warnings.warn(&#34;Should install cvxpy with pip install cvxpy. Rounding non-integer &#34;
+                          &#34;coefficients instead.&#34;)
+            self._fit_backup(X, y, sample_weight)
+        
         return self
+
+    def _fit_backup(self, X, y, sample_weight=None):
+        m = LogisticRegression(C=1 / self.alpha)
+        m.fit(X, y, sample_weight=sample_weight)
+        self.model_.coef_ = np.round(m.coef_).astype(int)
+        self.model_.intercept_ = m.intercept_
 
     def predict(self, X):
         check_is_fitted(self)
@@ -322,7 +347,7 @@ weight for each individual sample</p></div>
 
     try:
         import cvxpy as cp  # package for optimization, import here to make it optional
-        # from cvxpy.error import SolverError
+        from cvxpy.error import SolverError
 
         # declare the integer-valued optimization variable
         w = cp.Variable(X.shape[1], integer=True)
@@ -338,20 +363,22 @@ weight for each individual sample</p></div>
         obj = cp.Minimize(celoss + l1_penalty)
         prob = cp.Problem(obj)
 
-        # solve the problem using an appropriate solver
-        prob.solve()
-        self.model_.coef_ = np.array([w.value.astype(int)])
-        self.model_.intercept_ = 0
+        try:
+            # solve the problem using an appropriate solver
+            prob.solve()
+            self.model_.coef_ = np.array([w.value.astype(int)])
+            self.model_.intercept_ = 0
 
-    except:
-        warnings.warn(&#34;Should install cvxpy with pip install cvxpy.&#34;
-                      &#34;mosek solver required for mixed-integer logistic regression. &#34;
-                      &#34;rounding non-integer coefficients instead&#34;)
-        m = LogisticRegression(C=1 / self.alpha)
-        m.fit(X, y, sample_weight=sample_weight)
-        self.model_.coef_ = np.round(m.coef_).astype(int)
-        self.model_.intercept_ = m.intercept_
+        except SolverError:
+            warnings.warn(&#34;mosek solver required for mixed-integer exponential cone &#34;
+                          &#34;programming. Rounding non-integer coefficients instead&#34;)
+            self._fit_backup(X, y, sample_weight)
 
+    except ImportError:
+        warnings.warn(&#34;Should install cvxpy with pip install cvxpy. Rounding non-integer &#34;
+                      &#34;coefficients instead.&#34;)
+        self._fit_backup(X, y, sample_weight)
+    
     return self</code></pre>
 </details>
 </dd>
@@ -428,7 +455,7 @@ weight for sparsity penalty</p></div>
 
         try:
             import cvxpy as cp  # package for optimization, import here to make it optional
-            # from cvxpy.error import SolverError
+            from cvxpy.error import SolverError
 
             # declare the integer-valued optimization variable
             w = cp.Variable(X.shape[1], integer=True)
@@ -443,20 +470,29 @@ weight for sparsity penalty</p></div>
             obj = cp.Minimize(mse + l1_penalty)
             prob = cp.Problem(obj)
 
-            # solve the problem using an appropriate solver
-            prob.solve()
-            self.model_.coef_ = w.value.astype(int)
-            self.model_.intercept_ = 0
+            try:
+                # solve the problem using an appropriate solver
+                prob.solve()
+                self.model_.coef_ = w.value.astype(int)
+                self.model_.intercept_ = 0
 
-        except:
-            warnings.warn(&#34;Should install cvxpy with pip install cvxpy.&#34;
-                          &#34;gurobi, mosek, or cplex solver required for sparse integer linear &#34;
-                          &#34;regression. Rounding non-integer coefficients instead.&#34;)
-            m = Lasso(alpha=self.alpha)
-            m.fit(X, y, sample_weight=sample_weight)
-            self.model_.coef_ = np.round(m.coef_).astype(int)
-            self.model_.intercept_ = m.intercept_
+            except SolverError:
+                warnings.warn(&#34;gurobi, mosek, or cplex solver required for mixed-integer &#34;
+                              &#34;quadratic programming. Rounding non-integer coefficients instead.&#34;)
+                self._fit_backup(X, y, sample_weight)
+        
+        except ImportError:
+            warnings.warn(&#34;Should install cvxpy with pip install cvxpy. Rounding non-integer &#34;
+                          &#34;coefficients instead.&#34;)
+            self._fit_backup(X, y, sample_weight)
+
         return self
+    
+    def _fit_backup(self, X, y, sample_weight):
+        m = Lasso(alpha=self.alpha)
+        m.fit(X, y, sample_weight=sample_weight)
+        self.model_.coef_ = np.round(m.coef_).astype(int)
+        self.model_.intercept_ = m.intercept_
 
     def predict(self, X):
         check_is_fitted(self)
@@ -499,7 +535,7 @@ weight for each individual sample</p></div>
 
     try:
         import cvxpy as cp  # package for optimization, import here to make it optional
-        # from cvxpy.error import SolverError
+        from cvxpy.error import SolverError
 
         # declare the integer-valued optimization variable
         w = cp.Variable(X.shape[1], integer=True)
@@ -514,19 +550,22 @@ weight for each individual sample</p></div>
         obj = cp.Minimize(mse + l1_penalty)
         prob = cp.Problem(obj)
 
-        # solve the problem using an appropriate solver
-        prob.solve()
-        self.model_.coef_ = w.value.astype(int)
-        self.model_.intercept_ = 0
+        try:
+            # solve the problem using an appropriate solver
+            prob.solve()
+            self.model_.coef_ = w.value.astype(int)
+            self.model_.intercept_ = 0
 
-    except:
-        warnings.warn(&#34;Should install cvxpy with pip install cvxpy.&#34;
-                      &#34;gurobi, mosek, or cplex solver required for sparse integer linear &#34;
-                      &#34;regression. Rounding non-integer coefficients instead.&#34;)
-        m = Lasso(alpha=self.alpha)
-        m.fit(X, y, sample_weight=sample_weight)
-        self.model_.coef_ = np.round(m.coef_).astype(int)
-        self.model_.intercept_ = m.intercept_
+        except SolverError:
+            warnings.warn(&#34;gurobi, mosek, or cplex solver required for mixed-integer &#34;
+                          &#34;quadratic programming. Rounding non-integer coefficients instead.&#34;)
+            self._fit_backup(X, y, sample_weight)
+    
+    except ImportError:
+        warnings.warn(&#34;Should install cvxpy with pip install cvxpy. Rounding non-integer &#34;
+                      &#34;coefficients instead.&#34;)
+        self._fit_backup(X, y, sample_weight)
+
     return self</code></pre>
 </details>
 </dd>

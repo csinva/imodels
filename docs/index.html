@@ -26,7 +26,7 @@
 </header>
 <section id="section-intro">
 <h1 align="center"> Interpretable machine-learning models (imodels) 🔍</h1>
-<p align="center"> Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easily customizable.
+<p align="center"> Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
 </p>
 <p align="center">
 <a href="https://csinva.github.io/imodels/">docs</a> •
@@ -97,9 +97,9 @@ print(model) # print the rule-based model
 <td>Uses a Bayesian algorithm to find a concise rule set (slow)</td>
 </tr>
 <tr>
-<td align="left">Corels rule list</td>
-<td><a href="https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier">🗂️</a>, <a href="https://github.com/corels/pycorels">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/17-716/17-716.pdf">📄</a></td>
-<td>Learns an optimal compact rule list (rather than using a greedy heuristic)</td>
+<td align="left">Optimal rule list</td>
+<td><a href="https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier">🗂️</a>, <a href="https://github.com/corels/pycorels">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/17-716/17-716.pdf">📄</a></td>
+<td>Learns succinct rule list using global optimization for sparsity (CORELS)</td>
 </tr>
 <tr>
 <td align="left">Bayesian rule list</td>
@@ -119,7 +119,7 @@ print(model) # print the rule-based model
 <tr>
 <td align="left">Optimal rule tree</td>
 <td><a href="https://csinva.io/imodels/tree/gosdt_wrapper.html">🗂️</a>, <a href="https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees">🔗</a>, <a href="https://arxiv.org/abs/2006.08690">📄</a></td>
-<td>(In progress) Learns succinct trees using global optimization rather than greedy heuristics</td>
+<td>Learns succinct trees using global optimization for sparsity (GOSDT)</td>
 </tr>
 <tr>
 <td align="left">Greedy rule tree</td>
@@ -287,8 +287,8 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <td align="center"></td>
 </tr>
 <tr>
-<td align="left">Corels rule list</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.CorelsRuleListClassifier">CorelsRuleListClassifier</a></td>
+<td align="left">Optimal rule list (CORELS)</td>
+<td align="center"><a href="https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier">OptimalRuleListClassifier</a></td>
 <td align="center"></td>
 </tr>
 <tr>
@@ -307,8 +307,13 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <td align="center"></td>
 </tr>
 <tr>
-<td align="left">Optimal rule tree</td>
+<td align="left">Optimal rule tree (GOSDT)</td>
+<td align="center"><a href="https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">OptimalTreeClassifier</a></td>
 <td align="center"></td>
+</tr>
+<tr>
+<td align="left">Greedy rule tree</td>
+<td align="center"><a href="https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></td>
 <td align="center"></td>
 </tr>
 <tr>
@@ -386,15 +391,17 @@ The code here heavily derives from the wonderful work of previous projects. We s
 # Python `imodels` package for interpretable models compatible with scikit-learn.
 # Github repo available [here](https://github.com/csinva/interpretability-implementations-demos).
 
+import os
+
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
 from .tree.cart_wrapper import GreedyTreeClassifier
-from .tree.gosdt_wrapper import GlobalSparseTreeClassifier
+from .tree.gosdt.pygosdt import OptimalTreeClassifier
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
-from .rule_list.corels_wrapper import CorelsRuleListClassifier
+from .rule_list.corels_wrapper import OptimalRuleListClassifier
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
 from .rule_set import boosted_rules

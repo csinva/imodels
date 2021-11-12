@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>imodels.tree.gosdt_wrapper API documentation</title>
+<title>imodels.tree.gosdt.pygosdt_backup API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.tree.gosdt_wrapper</code></h1>
+<h1 class="title">Module <code>imodels.tree.gosdt.pygosdt_backup</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -31,7 +31,7 @@
 from sklearn.tree import DecisionTreeClassifier, export_text
 
 
-class GlobalSparseTreeClassifier(DecisionTreeClassifier):
+class DecisionTreeClassifierWithComplexity(DecisionTreeClassifier):
     &#34;&#34;&#34;Placeholder for GOSDT classifier
     &#34;&#34;&#34;
 
@@ -40,7 +40,12 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
         self.complexity_ = 0
         self.feature_names = None
 
-    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;):
+    def fit(self, X, y,
+            feature_names=None,
+            sample_weight=None,
+            check_input=True,
+            X_idx_sorted=&#34;deprecated&#34;):
+            
         &#34;&#34;&#34;Build a decision tree classifier from the training set (X, y).
         Parameters
         ----------
@@ -85,7 +90,7 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
         tree = self.tree_
         children_left = tree.children_left
         children_right = tree.children_right
-        n_nodes = tree.node_count
+        # n_nodes = tree.node_count
         num_split_nodes = 0
         num_leaves = 0
 
@@ -111,7 +116,8 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
 
     def __str__(self):
         if self.feature_names is not None:
-            return &#39;OptimalTree:\n&#39; + export_text(self, feature_names=self.feature_names, show_weights=True)
+            return &#39;OptimalTree:\n&#39; + export_text(self, feature_names=self.feature_names, 
+                                                  show_weights=True)
         else:
             return &#39;OptimalTree:\n&#39; + export_text(self, show_weights=True)</code></pre>
 </details>
@@ -125,8 +131,8 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.tree.gosdt_wrapper.GlobalSparseTreeClassifier"><code class="flex name class">
-<span>class <span class="ident">GlobalSparseTreeClassifier</span></span>
+<dt id="imodels.tree.gosdt.pygosdt_backup.DecisionTreeClassifierWithComplexity"><code class="flex name class">
+<span>class <span class="ident">DecisionTreeClassifierWithComplexity</span></span>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -135,7 +141,7 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GlobalSparseTreeClassifier(DecisionTreeClassifier):
+<pre><code class="python">class DecisionTreeClassifierWithComplexity(DecisionTreeClassifier):
     &#34;&#34;&#34;Placeholder for GOSDT classifier
     &#34;&#34;&#34;
 
@@ -144,7 +150,12 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
         self.complexity_ = 0
         self.feature_names = None
 
-    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;):
+    def fit(self, X, y,
+            feature_names=None,
+            sample_weight=None,
+            check_input=True,
+            X_idx_sorted=&#34;deprecated&#34;):
+            
         &#34;&#34;&#34;Build a decision tree classifier from the training set (X, y).
         Parameters
         ----------
@@ -189,7 +200,7 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
         tree = self.tree_
         children_left = tree.children_left
         children_right = tree.children_right
-        n_nodes = tree.node_count
+        # n_nodes = tree.node_count
         num_split_nodes = 0
         num_leaves = 0
 
@@ -215,7 +226,8 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
 
     def __str__(self):
         if self.feature_names is not None:
-            return &#39;OptimalTree:\n&#39; + export_text(self, feature_names=self.feature_names, show_weights=True)
+            return &#39;OptimalTree:\n&#39; + export_text(self, feature_names=self.feature_names, 
+                                                  show_weights=True)
         else:
             return &#39;OptimalTree:\n&#39; + export_text(self, show_weights=True)</code></pre>
 </details>
@@ -229,7 +241,7 @@ class GlobalSparseTreeClassifier(DecisionTreeClassifier):
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.gosdt_wrapper.GlobalSparseTreeClassifier.fit"><code class="name flex">
+<dt id="imodels.tree.gosdt.pygosdt_backup.DecisionTreeClassifierWithComplexity.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted='deprecated')</span>
 </code></dt>
 <dd>
@@ -270,7 +282,12 @@ It will be removed in 1.1 (renaming of 0.26).<div class="admonition deprecated">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted=&#34;deprecated&#34;):
+<pre><code class="python">def fit(self, X, y,
+        feature_names=None,
+        sample_weight=None,
+        check_input=True,
+        X_idx_sorted=&#34;deprecated&#34;):
+        
     &#34;&#34;&#34;Build a decision tree classifier from the training set (X, y).
     Parameters
     ----------
@@ -321,15 +338,15 @@ It will be removed in 1.1 (renaming of 0.26).<div class="admonition deprecated">
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.tree" href="index.html">imodels.tree</a></code></li>
+<li><code><a title="imodels.tree.gosdt" href="index.html">imodels.tree.gosdt</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.tree.gosdt_wrapper.GlobalSparseTreeClassifier" href="#imodels.tree.gosdt_wrapper.GlobalSparseTreeClassifier">GlobalSparseTreeClassifier</a></code></h4>
+<h4><code><a title="imodels.tree.gosdt.pygosdt_backup.DecisionTreeClassifierWithComplexity" href="#imodels.tree.gosdt.pygosdt_backup.DecisionTreeClassifierWithComplexity">DecisionTreeClassifierWithComplexity</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.gosdt_wrapper.GlobalSparseTreeClassifier.fit" href="#imodels.tree.gosdt_wrapper.GlobalSparseTreeClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_backup.DecisionTreeClassifierWithComplexity.fit" href="#imodels.tree.gosdt.pygosdt_backup.DecisionTreeClassifierWithComplexity.fit">fit</a></code></li>
 </ul>
 </li>
 </ul>
