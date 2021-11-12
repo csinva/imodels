@@ -44,10 +44,10 @@
 </p>
 <h2 id="imodels-overview">imodels overview</h2>
 <p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
-<pre><code class="language-python">from imodels import BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
+<pre><code class="language-python">from imodels import BoostedRulesClassifier, BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier # see more models below
 from imodels import SLIMRegressor, RuleFitRegressor
 
-model = BayesianRuleListClassifier()  # initialize a model
+model = BoostedRulesClassifier()  # initialize a model
 model.fit(X_train, y_train)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
@@ -74,7 +74,7 @@ print(model) # print the rule-based model
 <tr>
 <td align="left">Rulefit rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/rule_fit.html">🗂️</a>, <a href="https://github.com/christophM/rulefit">🔗</a>, <a href="http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf">📄</a></td>
-<td>Extracts rules from a decision tree then builds a sparse linear model with them</td>
+<td>Extracts rules from decision trees then fits a sparse linear model with them</td>
 </tr>
 <tr>
 <td align="left">Skope rule set</td>
@@ -84,17 +84,17 @@ print(model) # print the rule-based model
 <tr>
 <td align="left">Boosted rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/boosted_rules.html">🗂️</a>, <a href="https://github.com/jaimeps/adaboost-implementation">🔗</a>, <a href="https://www.sciencedirect.com/science/article/pii/S002200009791504X">📄</a></td>
-<td>Uses Adaboost to sequentially learn a set of rules</td>
+<td>Sequentially learns a set of rules with Adaboost</td>
 </tr>
 <tr>
 <td align="left">Slipper rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/slipper.html">🗂️</a>, <a href="https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf">📄</a></td>
-<td>Uses SLIPPER to sequentially learn a set of rules</td>
+<td>Sequentially learns a set of rules with SLIPPER</td>
 </tr>
 <tr>
 <td align="left">Bayesian rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">🗂️</a>, <a href="https://github.com/wangtongada/BOA">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/16-003/16-003.pdf">📄</a></td>
-<td>Uses a Bayesian algorithm to find a concise rule set (slow)</td>
+<td>Finds concise rule set with Bayesian sampling (slow)</td>
 </tr>
 <tr>
 <td align="left">Optimal rule list</td>
@@ -104,7 +104,7 @@ print(model) # print the rule-based model
 <tr>
 <td align="left">Bayesian rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">🗂️</a>, <a href="https://github.com/tmadl/sklearn-expertsys">🔗</a>, <a href="https://arxiv.org/abs/1602.08610">📄</a></td>
-<td>Learns a compact rule list distribution by sampling rule lists (slow)</td>
+<td>Learns compact rule list distribution with Bayesian sampling (slow)</td>
 </tr>
 <tr>
 <td align="left">Greedy rule list</td>
@@ -118,8 +118,8 @@ print(model) # print the rule-based model
 </tr>
 <tr>
 <td align="left">Optimal rule tree</td>
-<td><a href="https://csinva.io/imodels/tree/gosdt_wrapper.html">🗂️</a>, <a href="https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees">🔗</a>, <a href="https://arxiv.org/abs/2006.08690">📄</a></td>
-<td>Learns succinct trees using global optimization for sparsity (GOSDT)</td>
+<td><a href="https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">🗂️</a>, <a href="https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees">🔗</a>, <a href="https://arxiv.org/abs/2006.08690">📄</a></td>
+<td>Learns succinct tree using global optimization for sparsity (GOSDT)</td>
 </tr>
 <tr>
 <td align="left">Greedy rule tree</td>
@@ -134,7 +134,7 @@ print(model) # print the rule-based model
 <tr>
 <td align="left">Sparse integer linear model</td>
 <td><a href="https://csinva.io/imodels/algebraic/slim.html">🗂️</a>, <a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">📄</a></td>
-<td>Forces coefficients to be integers</td>
+<td>Sparse linear model with integer coefficients</td>
 </tr>
 <tr>
 <td align="left">More models</td>
