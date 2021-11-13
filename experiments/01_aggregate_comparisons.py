@@ -13,23 +13,16 @@ from experiments.util import get_results_path_from_args
 from experiments.validate import compute_meta_auc
 
 
-def combine_comparisons(path, test, result_path):
+def combine_comparisons(path: str):
     """Combines comparisons output after running
-
     Parameters
     ----------
-    path
-    test
-
-    Returns
-    -------
-
+    path: str
+        path to directory containing pkl files to combine
     """
     all_files = glob.glob(oj(path, '*'))
     model_files = [f for f in all_files
                    if '_comparisons' in f]
-    print(model_files)
-    # model_files_sorted = sorted(model_files)  # , key=lambda x: int(x.split('_')[-1][:-4]))
 
     results_sorted = [pkl.load(open(f, 'rb')) for f in model_files]
 
@@ -49,22 +42,15 @@ def combine_comparisons(path, test, result_path):
         rule_df = pd.concat([r['rule_df'] for r in results_sorted])
         output_dict['rule_df'] = rule_df
 
-    if not test:
-        # easy_df = df.loc[:, ['easy' in col for col in df.columns]].copy()
-        # med_df = df.loc[:, ['med' in col for col in df.columns]].copy()
-        # hard_df = df.loc[:, ['hard' in col for col in df.columns]].copy()
-        # all_df = df.loc[:, ['all' in col for col in df.columns]].copy()
-        # level_dfs = (med_df, 'med'), (hard_df, 'hard'), (all_df, 'all')
+    # for curr_df, prefix in level_dfs:
+    try:
+        meta_auc_df = compute_meta_auc(df)
+    except Exception as e:
+        warnings.warn(f'bad complexity range')
+        # warnings.warn(e)
+        meta_auc_df = None
 
-        # for curr_df, prefix in level_dfs:
-        try:
-            meta_auc_df = compute_meta_auc(df)
-        except Exception as e:
-            warnings.warn(f'bad complexity range')
-            # warnings.warn(e)
-            meta_auc_df = None
-
-        output_dict['meta_auc_df'] = meta_auc_df
+    output_dict['meta_auc_df'] = meta_auc_df
 
     # combined_filename = '.'.join(model_files_sorted[0].split('_0.'))
     # pkl.dump(output_dict, open(combined_filename, 'wb'))
@@ -79,11 +65,10 @@ def combine_comparisons(path, test, result_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str)
-    parser.add_argument('--test', action='store_true')
-    parser.add_argument('--cv', action='store_true')
     parser.add_argument('--low_data', action='store_true')
     parser.add_argument('--results_path', type=str,
                         default=oj(os.path.dirname(os.path.realpath(__file__)), 'results'))
+    parser.add_argument('--splitting_strategy', type=str, default="train-test")
     args = parser.parse_args()
 
     datasets = DATASETS
@@ -93,4 +78,4 @@ if __name__ == "__main__":
     for dataset in datasets:
         path = get_results_path_from_args(args, dataset[0])
         print('path', path)
-        combine_comparisons(path, args.test, args.results_path)
+        combine_comparisons(path)

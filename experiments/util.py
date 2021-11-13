@@ -11,6 +11,7 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 DATASET_PATH = oj(os.path.dirname(os.path.realpath(__file__)), 'data')
 
+
 class Model:
     def __init__(self, name: str, cls, vary_param: str, vary_param_val: Any,
                  fixed_param: str = None, fixed_param_val: Any = None,
@@ -155,11 +156,6 @@ def get_results_path_from_args(args, dataset):
     else:
         path = oj(path, 'reg_data', dataset)
 
-    if args.test:
-        path = oj(path, 'test')
-    elif args.cv:
-        path = oj(path, 'cv')
-    else:
-        path = oj(path, 'val')
+    path = oj(path, args.splitting_strategy)
     os.makedirs(path, exist_ok=True)
     return path
