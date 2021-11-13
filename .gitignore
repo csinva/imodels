@@ -34,5 +34,5 @@ dist
 **.xml
 
 experiments/data/
-!experiments/data/get_datasets.ipynb
+!experiments/data/00_get_datasets.ipynb
 .hypothesis

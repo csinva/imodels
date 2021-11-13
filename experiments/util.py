@@ -2,23 +2,16 @@ import os
 import pickle as pkl
 import warnings
 from functools import partial
-from typing import Any, Dict, List, Tuple
+from os.path import join as oj
+from typing import Any, Dict, Tuple
 
 import numpy as np
-import pandas as pd
-from scipy.sparse import issparse
 from sklearn.base import BaseEstimator
-from sklearn.datasets import fetch_openml
-from sklearn.metrics import accuracy_score
-
-
-MODEL_COMPARISON_PATH = os.path.dirname(os.path.realpath(__file__)) + "/comparison_data/"
-
-DATASET_PATH = os.path.dirname(os.path.realpath(__file__)) + "/data/"
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 
 class Model:
-    def __init__(self, name: str, cls, vary_param: str, vary_param_val: Any, 
+    def __init__(self, name: str, cls, vary_param: str, vary_param_val: Any,
                  fixed_param: str = None, fixed_param_val: Any = None,
                  other_params: Dict[str, Any] = {}):
         self.name = name
@@ -31,41 +24,9 @@ class Model:
         if self.fixed_param is not None:
             self.kwargs[self.fixed_param] = self.fixed_param_val
         self.kwargs = {**self.kwargs, **other_params}
-    
+
     def __repr__(self):
         return self.name
-
-
-def get_openml_dataset(data_id: int) -> pd.DataFrame:
-    dataset = fetch_openml(data_id=data_id, as_frame=False)
-    X = dataset.data
-    if issparse(X):
-        X = X.toarray()
-    y = (dataset.target == dataset.target[0]).astype(int)
-    feature_names = dataset.feature_names
-
-    target_name = dataset.target_names
-    if target_name[0].lower() == 'class':
-        target_name = [dataset.target[0]]
-
-    X_df = pd.DataFrame(X, columns=feature_names)
-    y_df = pd.DataFrame(y, columns=target_name)
-    return pd.concat((X_df, y_df), axis=1)
-
-
-def get_clean_dataset(path: str) -> Tuple[np.array]:
-    df = pd.read_csv(path)
-    X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
-    feature_names = df.columns.values[:-1]
-    return np.nan_to_num(X.astype('float32')), y, feature_names
-
-
-def get_best_accuracy(ytest, yscore):
-    thrs = np.unique(yscore)
-    accs = []
-    for thr in thrs:
-        accs.append(accuracy_score(ytest, yscore > thr))
-    return np.max(accs)
 
 
 def get_comparison_result(path: str, estimator_name: str, dataset: str, prefix='val', low_data=False) -> Dict[str, Any]:
@@ -80,7 +41,7 @@ def get_comparison_result(path: str, estimator_name: str, dataset: str, prefix='
     return pkl.load(open(result_file, 'rb'))
 
 
-def get_best_model_under_complexity(c: int, model_name: str, 
+def get_best_model_under_complexity(c: int, model_name: str,
                                     model_cls: BaseEstimator,
                                     dataset: str,
                                     curve_params: list = None,
@@ -103,7 +64,7 @@ def get_best_model_under_complexity(c: int, model_name: str,
     else:
         # detect which curve to use
         df_best_curve = df[df.index == auc_metric.idxmax()]
-    
+
     df_under_c = df_best_curve[df_best_curve['mean_complexity'] < c]
     if df_under_c.shape[0] == 0:
         warnings.warn(f'{model_name} skipped for complexity limit {c}')
@@ -124,7 +85,7 @@ def remove_x_axis_duplicates(x: np.array, y: np.array) -> Tuple[np.array, np.arr
 
     y_for_unique_x = []
     for i, ind in enumerate(inds):
-        y_for_unique_x.append(y[ind:ind+counts[i]].max())
+        y_for_unique_x.append(y[ind:ind + counts[i]].max())
 
     return unique_arr, np.array(y_for_unique_x)
 
@@ -133,7 +94,7 @@ def merge_overlapping_curves(test_mul_curves, y_col):
     final_x = []
     final_y = []
     curves = test_mul_curves.index.unique()
-    
+
     start_compl = 0
     for i in range(curves.shape[0]):
         curr_x = test_mul_curves[test_mul_curves.index == curves[i]]['mean_complexity']
@@ -141,33 +102,63 @@ def merge_overlapping_curves(test_mul_curves, y_col):
         curr_x, curr_y = curr_x[curr_x.argsort()], curr_y[curr_x.argsort()]
         curr_x, curr_y = remove_x_axis_duplicates(curr_x, curr_y)
         curr_x, curr_y = curr_x[curr_x >= start_compl], curr_y[curr_x >= start_compl]
-        
-        if i != curves.shape[0] - 1:
 
-            next_x = test_mul_curves[test_mul_curves.index == curves[i+1]]['mean_complexity']
-            next_y = test_mul_curves[test_mul_curves.index == curves[i+1]][y_col]
+        if i != curves.shape[0] - 1:
+            next_x = test_mul_curves[test_mul_curves.index == curves[i + 1]]['mean_complexity']
+            next_y = test_mul_curves[test_mul_curves.index == curves[i + 1]][y_col]
             next_x, next_y = next_x[next_x.argsort()], next_y[next_x.argsort()]
             next_x, next_y = remove_x_axis_duplicates(next_x, next_y)
 
         found_switch_point = False
-        for j in range(curr_x.shape[0] - 1):     
-            
+        for j in range(curr_x.shape[0] - 1):
+
             final_x.append(curr_x[j])
             final_y.append(curr_y[j])
-            
+
             if i != curves.shape[0] - 1:
-            
+
                 next_x_next_val = next_x[next_x > curr_x[j]][0]
                 next_y_next_val = next_y[next_x > curr_x[j]][0]
-                curr_x_next_val = curr_x[j+1]
-                curr_y_next_val = curr_y[j+1]
-            
+                curr_x_next_val = curr_x[j + 1]
+                curr_y_next_val = curr_y[j + 1]
+
                 if next_y_next_val > curr_y_next_val and next_x_next_val - curr_x_next_val <= 5:
                     start_compl = next_x_next_val
                     found_switch_point = True
                     break
-        
+
         if not found_switch_point:
             return np.array(final_x), np.array(final_y)
-    
+
     return np.array(final_x), np.array(final_y)
+
+
+def get_complexity(estimator: BaseEstimator) -> float:
+    """Get complexity for any given estimator
+    """
+    if isinstance(estimator, (RandomForestClassifier, GradientBoostingClassifier)):
+        complexity = 0
+        for tree in estimator.estimators_:
+            if type(tree) is np.ndarray:
+                tree = tree[0]
+            complexity += (2 ** tree.get_depth()) * tree.get_depth()
+        return complexity
+    else:
+        return estimator.complexity_
+
+
+def get_results_path_from_args(args):
+    path = args.model_comparison_path
+    if args.low_data:
+        path = oj(path, 'low_data', args.dataset)
+    else:
+        path = oj(path, 'reg_data', args.dataset)
+
+    if args.test:
+        path = oj(path, 'test')
+    elif args.cv:
+        path = oj(path, 'cv')
+    else:
+        path = oj(path, 'val')
+    os.makedirs(path, exist_ok=True)
+    return path

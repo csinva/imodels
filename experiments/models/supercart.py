@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import numpy as np
+from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
@@ -31,11 +32,12 @@ class Node:
         node_type = 'split'
         if self.is_root:
             node_type = 'root'
+            return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} {node_type})'
         elif self.left is None and self.right is None:
             node_type = 'leaf'
-        if node_type == 'leaf':  # and self.feature == -2 and self.threshold == -2:
-            return f'Val: {self.value[0][0]:0.3f} (Tree #{self.tree_num} {node_type})'
-        return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} {node_type})'
+            return f'Val: {self.value[0][0]:0.3f} ({node_type})'
+        else:
+            return f'X_{self.feature} <= {self.threshold:0.3f} ({node_type})'
 
     def __repr__(self):
         return self.__str__()
@@ -44,8 +46,16 @@ class Node:
 class SuperCART(BaseEstimator):
 
     def __init__(self):
-        self.prediction_task = 'regression'
         super().__init__()
+        self._init_prediction_task()  # decides between regressor and classifier
+
+    def _init_prediction_task(self):
+        """
+        SuperCARTRegressor and SuperCARTClassifier override this method
+        to alter the prediction task. When using this class directly,
+        it is equivalent to SuperCARTRegressor
+        """
+        self.prediction_task = 'regression'
 
     def construct_node_from_stump(self, stump, idxs, X, tree_num):
         # array indices
@@ -102,13 +112,12 @@ class SuperCART(BaseEstimator):
         idxs
             indexes of subset to fit to
         """
-        if self.prediction_task == 'regression':
-            stump = tree.DecisionTreeRegressor(max_depth=1)
-        else:
-            stump = tree.DecisionTreeClassifier(max_depth=1)
+        stump = tree.DecisionTreeRegressor(max_depth=1)
         return stump.fit(X[idxs], y[idxs])
 
     def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=True, max_rules=5):
+
+        y = y.astype(float)
 
         idxs = np.ones(X.shape[0], dtype=bool)
         stump = self.fit_stump(X, y, idxs)
@@ -121,7 +130,7 @@ class SuperCART(BaseEstimator):
         self.trees_ = []
         y_predictions_per_tree = {}
         y_residuals_per_tree = {}  # based on predictions above
-        total_num_rules = 0
+        self.complexity_ = 0 # tracks the number of rules in the model
         while len(potential_splits) > 0:
             # print('potential_splits', [str(s) for s in potential_splits])
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it's sorted)
@@ -133,7 +142,7 @@ class SuperCART(BaseEstimator):
             # split on node
             if verbose:
                 print('\nadding ' + str(split_node))
-            total_num_rules += 1
+            self.complexity_ += 1
 
             # assign left_temp, right_temp to be proper children
             # (basically adds them to tree in predict method)
@@ -166,7 +175,7 @@ class SuperCART(BaseEstimator):
                         y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
 
             # debugging
-            if total_num_rules == 1:
+            if self.complexity_ == 1:
                 assert np.array_equal(y_predictions_per_tree[0], stump.predict(X)), \
                     'For one rule, prediction should match stump'
                 assert np.array_equal(y_residuals_per_tree[0], y), \
@@ -198,9 +207,9 @@ class SuperCART(BaseEstimator):
             # sort so largest impurity reduction comes last
             potential_splits = sorted(potential_splits_new, key=lambda x: x.impurity_reduction)
             if verbose:
-                print('updated tree\n' + str(self))
+                print(self)
 
-            if total_num_rules >= max_rules:
+            if self.complexity_ >= max_rules:
                 return self
         return self
 
@@ -214,7 +223,22 @@ class SuperCART(BaseEstimator):
         return '------------\n' + '\n\t+\n'.join([self.tree_to_str(t) for t in self.trees_])
 
     def predict(self, X):
-        return self.clf.predict(X)
+        preds = np.zeros(X.shape[0])
+        for tree in self.trees_:
+            preds += self.predict_tree(tree, X)
+        if self.prediction_task == 'regression':
+            return preds
+        elif self.prediction_task == 'classification':
+            return (preds > 0.5).astype(int)
+
+    def predict_proba(self, X):
+        if self.prediction_task == 'regression':
+            return NotImplemented
+        else:
+            preds = np.zeros(X.shape[0])
+            for tree in self.trees_:
+                preds += self.predict_tree(tree, X)
+            return np.vstack((1 - preds, preds)).transpose()
 
     def predict_tree(self, root: Node, X):
         """This can be made way faster
@@ -240,12 +264,22 @@ class SuperCART(BaseEstimator):
                 return self.predict_tree_single_point(root.right, x)
 
 
+class SuperCARTRegressor(SuperCART):
+    def _init_prediction_task(self):
+        self.prediction_task = 'regression'
+
+
+class SuperCARTClassifier(SuperCART):
+    def _init_prediction_task(self):
+        self.prediction_task = 'classification'
+
+
 if __name__ == '__main__':
     np.random.seed(13)
-    # X, y = datasets.load_breast_cancer(return_X_y=True) # binary classification
+    X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
     # X, y = datasets.load_diabetes(return_X_y=True)  # regression
-    X = np.random.randn(500, 10)
-    y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
+    # X = np.random.randn(500, 10)
+    # y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.33, random_state=42
@@ -253,5 +287,6 @@ if __name__ == '__main__':
     print('X.shape', X.shape)
     print('ys', np.unique(y_train), '\n\n')
 
-    m = SuperCART()
+    m = SuperCARTClassifier()
     m.fit(X_train, y_train)
+    print(m.predict_proba(X_train))

@@ -4,7 +4,7 @@ from experiments.util import DATASET_PATH
 DATASETS = [
     ("recidivism", DATASET_PATH + "compas-analysis/compas_two_year_clean.csv"),
     ("credit", DATASET_PATH + "credit_card/credit_card_clean.csv"),
-    ("juvenile", DATASET_PATH + "ICPSR_03986/DS0001/data_clean.csv"),
+    ("juvenile", DATASET_PATH + "ICPSR_03986/DS0001/juvenile_clean.csv"),
     ("readmission", DATASET_PATH + 'readmission/readmission_clean.csv'),
     ("breast-cancer", DATASET_PATH + "breast_cancer.csv"), 
     ("credit-g", DATASET_PATH + "credit_g.csv"), 
