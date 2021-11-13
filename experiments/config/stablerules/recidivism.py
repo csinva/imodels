@@ -8,7 +8,7 @@ from imodels import (
 from sklearn.ensemble import RandomForestClassifier as rf, GradientBoostingClassifier as gb
 from sklearn.tree import DecisionTreeClassifier
 
-from experiments.config.config_general import RULEFIT_KWARGS, BRL_KWARGS, FPL_KWARGS
+from experiments.config.datasets import RULEFIT_KWARGS, BRL_KWARGS, FPL_KWARGS
 from experiments.models.stablelinear import StableLinearClassifier as stbl
 from experiments.util import Model
 from experiments.util import get_best_model_under_complexity

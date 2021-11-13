@@ -11,7 +11,7 @@ from experiments.util import remove_x_axis_duplicates
 
 def compute_meta_auc(result_data: pd.DataFrame,
                      prefix: str = '',
-                     low_complexity_cutoff: int = 30,
+                     max_allowable_complexity: int = 30,
                      max_start_complexity: int = 10) -> Tuple[pd.DataFrame, Tuple[float]]:
     """
 
@@ -19,7 +19,7 @@ def compute_meta_auc(result_data: pd.DataFrame,
     ----------
     result_data
     prefix
-    low_complexity_cutoff
+    max_allowable_complexity
         complexity score under which a model is considered interpretable
     max_start_complexity
         min complexity of curves included in the AUC-of-AUC comparison must be below this value
@@ -53,7 +53,7 @@ def compute_meta_auc(result_data: pd.DataFrame,
     meta_auc_lb = max([x[0] for x in xs])
     endpts = np.array([x[-1] for x in xs])
     meta_auc_ub = min(endpts[endpts > meta_auc_lb])
-    meta_auc_ub = min(meta_auc_ub, low_complexity_cutoff)
+    meta_auc_ub = min(meta_auc_ub, max_allowable_complexity)
 
     # handle non-overlapping curves
     endpt_after_lb = endpts > meta_auc_lb

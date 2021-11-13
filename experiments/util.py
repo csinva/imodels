@@ -9,6 +9,7 @@ import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
+DATASET_PATH = oj(os.path.dirname(os.path.realpath(__file__)), 'data')
 
 class Model:
     def __init__(self, name: str, cls, vary_param: str, vary_param_val: Any,
@@ -147,12 +148,12 @@ def get_complexity(estimator: BaseEstimator) -> float:
         return estimator.complexity_
 
 
-def get_results_path_from_args(args):
-    path = args.model_comparison_path
+def get_results_path_from_args(args, dataset):
+    path = args.results_path
     if args.low_data:
-        path = oj(path, 'low_data', args.dataset)
+        path = oj(path, 'low_data', dataset)
     else:
-        path = oj(path, 'reg_data', args.dataset)
+        path = oj(path, 'reg_data', dataset)
 
     if args.test:
         path = oj(path, 'test')

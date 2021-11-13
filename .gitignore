@@ -36,3 +36,4 @@ dist
 experiments/data/
 !experiments/data/00_get_datasets.ipynb
 .hypothesis
+experiments/results

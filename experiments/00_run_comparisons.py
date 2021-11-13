@@ -12,10 +12,12 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score, make_scorer
 from sklearn.model_selection import KFold, train_test_split, cross_validate
+from sklearn.tree import DecisionTreeClassifier
 from tqdm import tqdm
 
-from experiments.config.config_general import DATASETS
-from experiments.config.util import get_estimators_for_dataset, get_ensembles_for_dataset
+from experiments.config.datasets import DATASETS
+# from experiments.config.util import get_estimators_for_dataset, get_ensembles_for_dataset
+from experiments.config.supercart.models import ESTIMATORS
 from experiments.data_util import get_clean_dataset
 from experiments.util import Model, get_complexity, get_results_path_from_args
 from experiments.validate import compute_meta_auc, get_best_accuracy
@@ -89,7 +91,7 @@ def compare_estimators(estimators: List[Model],
                     X_fit, X_eval, y_fit, y_eval = X_train, X_test, y_train, y_test
 
                 start = time.time()
-                if type(est) in [RandomForestClassifier, GradientBoostingClassifier]:
+                if type(est) in [RandomForestClassifier, GradientBoostingClassifier, DecisionTreeClassifier]:
                     est.fit(X_fit, y_fit)
                 else:
                     est.fit(X_fit, y_fit, feature_names=feat_names)
@@ -213,10 +215,8 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--parallel_id', nargs='+', type=int, default=None)
     parser.add_argument('--split_seed', type=int, default=0)
-    parser.add_argument('--model_comparison_path', type=str,
+    parser.add_argument('--results_path', type=str,
                         default=oj(os.path.dirname(os.path.realpath(__file__)), 'results'))
-    parser.add_argument('--dataset_path', type=str,
-                        default=oj(os.path.dirname(os.path.realpath(__file__)), 'data'))
     args = parser.parse_args()
 
     metrics = [
@@ -233,39 +233,49 @@ if __name__ == '__main__':
         'complexity': lambda m, x, y: get_complexity(m)
     })
 
-    np.random.seed(1)
+    # data
+    datasets = DATASETS
+    if args.dataset:
+        datasets = list(filter(lambda x: args.dataset == x[0], DATASETS))
 
-    path = get_results_path_from_args(args)
+    # estimators
+    ests = ESTIMATORS
+    if args.model:
+        ests = list(filter(lambda x: args.model in x[0].name, ests))
+
+
 
     if args.test:
         cv_folds = -1
     else:
         cv_folds = 4 if args.cv else 1
 
-    datasets = list(filter(lambda x: args.dataset == x[0], DATASETS))
+    """
     if args.ensemble:
         ests = get_ensembles_for_dataset(args.dataset, test=args.test)
     else:
         ests = get_estimators_for_dataset(args.dataset, test=args.test)
-
-    if args.model:
-        ests = list(filter(lambda x: args.model in x[0].name, ests))
-
+    """
     if args.parallel_id is not None and len(args.parallel_id) > 1:
         ests = [est[args.parallel_id[0]:args.parallel_id[1] + 1] for est in ests]
     elif args.parallel_id is not None:
         ests = [[est[args.parallel_id[0]]] for est in ests]
 
-    for est in ests:
-        run_comparison(path,
-                       datasets,
-                       metrics,
-                       scorers,
-                       est,
-                       parallel_id=args.parallel_id,
-                       split_seed=args.split_seed,
-                       verbose=False,
-                       ignore_cache=args.ignore_cache,
-                       test=args.test,
-                       low_data=args.low_data,
-                       cv_folds=cv_folds)
+    print('running', 'datasets', datasets, 'ests', ests)
+
+    for dataset in datasets:
+        path = get_results_path_from_args(args, dataset[0])
+        for est in ests:
+            np.random.seed(1)
+            run_comparison(path,
+                           [dataset],
+                           metrics,
+                           scorers,
+                           est,
+                           parallel_id=args.parallel_id,
+                           split_seed=args.split_seed,
+                           verbose=False,
+                           ignore_cache=args.ignore_cache,
+                           test=args.test,
+                           low_data=args.low_data,
+                           cv_folds=cv_folds)

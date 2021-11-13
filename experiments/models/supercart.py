@@ -45,8 +45,9 @@ class Node:
 
 class SuperCART(BaseEstimator):
 
-    def __init__(self):
+    def __init__(self, max_rules: int=None):
         super().__init__()
+        self.max_rules = max_rules
         self._init_prediction_task()  # decides between regressor and classifier
 
     def _init_prediction_task(self):
@@ -115,7 +116,7 @@ class SuperCART(BaseEstimator):
         stump = tree.DecisionTreeRegressor(max_depth=1)
         return stump.fit(X[idxs], y[idxs])
 
-    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=True, max_rules=5):
+    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False):
 
         y = y.astype(float)
 
@@ -208,9 +209,9 @@ class SuperCART(BaseEstimator):
             potential_splits = sorted(potential_splits_new, key=lambda x: x.impurity_reduction)
             if verbose:
                 print(self)
-
-            if self.complexity_ >= max_rules:
-                return self
+            if self.max_rules is not None:
+                if self.complexity_ >= self.max_rules:
+                    return self
         return self
 
     def tree_to_str(self, root: Node, prefix=''):
@@ -287,6 +288,6 @@ if __name__ == '__main__':
     print('X.shape', X.shape)
     print('ys', np.unique(y_train), '\n\n')
 
-    m = SuperCARTClassifier()
+    m = SuperCARTClassifier(max_rules=5)
     m.fit(X_train, y_train)
     print(m.predict_proba(X_train))
