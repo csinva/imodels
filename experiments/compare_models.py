@@ -7,7 +7,7 @@ import pickle as pkl
 import time
 import warnings
 from collections import defaultdict, OrderedDict
-from typing import Any, Callable, List, Dict, Tuple
+from typing import Callable, List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -20,7 +20,8 @@ from tqdm import tqdm
 
 from experiments.config.config_general import DATASETS
 from experiments.config.util import get_estimators_for_dataset, get_ensembles_for_dataset
-from experiments.util import Model, MODEL_COMPARISON_PATH, get_clean_dataset, get_best_accuracy, remove_x_axis_duplicates
+from experiments.util import Model, MODEL_COMPARISON_PATH, get_clean_dataset, get_best_accuracy, \
+    remove_x_axis_duplicates
 
 warnings.filterwarnings("ignore", message="Bins whose width")
 
@@ -41,7 +42,6 @@ def compute_meta_auc(result_data: pd.DataFrame,
                      prefix: str = '',
                      low_complexity_cutoff: int = 30,
                      max_start_complexity: int = 10) -> Tuple[pd.DataFrame, Tuple[float]]:
-
     # LOW_COMPLEXITY_CUTOFF: complexity score under which a model is considered interpretable
     # MAX_START_COMPLEXITY: min complexity of curves included in the AUC-of-AUC comparison must be below this value
 
@@ -53,7 +53,6 @@ def compute_meta_auc(result_data: pd.DataFrame,
     ys = xs.copy()
 
     for i, est in enumerate(estimators):
-
         est_result_df = result_data[result_data.index.str.fullmatch(est)]
         complexities_unsorted = est_result_df[x_column]
         complexity_sort_indices = complexities_unsorted.argsort()
@@ -77,7 +76,7 @@ def compute_meta_auc(result_data: pd.DataFrame,
     eligible = start_under_10 & endpt_after_lb
 
     # compute AUC of interpolated curves in overlap region
-    meta_aucs = defaultdict(lambda:[])
+    meta_aucs = defaultdict(lambda: [])
     for i in range(len(xs)):
         for c, col in enumerate(compute_columns):
             if eligible[i]:
@@ -138,7 +137,7 @@ def compare_estimators(estimators: List[Model],
                 metric_results = {k.split('_')[1]: np.mean(v) for k, v in cv_scores.items() if k != 'score_time'}
             else:
                 if n_cv_folds == 1:
-                    X_fit, X_eval, y_fit, y_eval = train_test_split(X_train, y_train, 
+                    X_fit, X_eval, y_fit, y_eval = train_test_split(X_train, y_train,
                                                                     test_size=0.2, random_state=split_seed)
                 else:
                     X_fit, X_eval, y_fit, y_eval = X_train, X_test, y_train, y_test
@@ -173,19 +172,18 @@ def compare_estimators(estimators: List[Model],
     return mean_results, rules
 
 
-def run_comparison(path: str, 
-                   datasets: List[Tuple], 
+def run_comparison(path: str,
+                   datasets: List[Tuple],
                    metrics: List[Tuple[str, Callable]],
                    scorers: Dict[str, Callable],
-                   estimators: List[Model], 
-                   parallel_id: int = None, 
-                   split_seed: int = 0, 
-                   verbose: bool = False, 
-                   ignore_cache: bool = False, 
+                   estimators: List[Model],
+                   parallel_id: int = None,
+                   split_seed: int = 0,
+                   verbose: bool = False,
+                   ignore_cache: bool = False,
                    test: bool = False,
-                   low_data: bool = False, 
+                   low_data: bool = False,
                    cv_folds: int = 4):
-
     estimator_name = estimators[0].name.split(' - ')[0]
     if test:
         model_comparison_file = path + f'{estimator_name}_test_comparisons.pkl'
@@ -199,13 +197,13 @@ def run_comparison(path: str,
         return
 
     mean_results, rules = compare_estimators(estimators=estimators,
-                                      datasets=datasets,
-                                      metrics=metrics,
-                                      scorers=scorers,
-                                      verbose=verbose,
-                                      n_cv_folds=cv_folds,
-                                      low_data=low_data,
-                                      split_seed=split_seed)
+                                             datasets=datasets,
+                                             metrics=metrics,
+                                             scorers=scorers,
+                                             verbose=verbose,
+                                             n_cv_folds=cv_folds,
+                                             low_data=low_data,
+                                             split_seed=split_seed)
 
     estimators_list = [e.name for e in estimators]
     metrics_list = [m[0] for m in metrics]
@@ -259,7 +257,6 @@ def run_comparison(path: str,
 
 
 def main():
-
     metrics = [
         ('rocauc', roc_auc_score),
         ('avg_precision', average_precision_score),
@@ -269,7 +266,7 @@ def main():
     ]
     scorers = OrderedDict({
         'accuracy': make_scorer(accuracy_score),
-        'ROCAUC': make_scorer(roc_auc_score, needs_proba=True), 
+        'ROCAUC': make_scorer(roc_auc_score, needs_proba=True),
         'PRAUC': make_scorer(average_precision_score, needs_proba=True),
         'complexity': lambda m, x, y: get_complexity(m)
     })
@@ -309,15 +306,13 @@ def main():
     else:
         ests = get_estimators_for_dataset(args.dataset, test=args.test)
 
-
     if args.model:
         ests = list(filter(lambda x: args.model in x[0].name, ests))
-    
+
     if args.parallel_id is not None and len(args.parallel_id) > 1:
-            ests = [est[args.parallel_id[0]:args.parallel_id[1]+1] for est in ests]
+        ests = [est[args.parallel_id[0]:args.parallel_id[1] + 1] for est in ests]
     elif args.parallel_id is not None:
         ests = [[est[args.parallel_id[0]]] for est in ests]
-
 
     for est in ests:
         run_comparison(path,
