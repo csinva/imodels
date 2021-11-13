@@ -45,7 +45,7 @@ class Node:
 
 class SuperCART(BaseEstimator):
 
-    def __init__(self, max_rules: int=None):
+    def __init__(self, max_rules: int = None):
         super().__init__()
         self.max_rules = max_rules
         self._init_prediction_task()  # decides between regressor and classifier
@@ -131,7 +131,7 @@ class SuperCART(BaseEstimator):
         self.trees_ = []
         y_predictions_per_tree = {}
         y_residuals_per_tree = {}  # based on predictions above
-        self.complexity_ = 0 # tracks the number of rules in the model
+        self.complexity_ = 0  # tracks the number of rules in the model
         while len(potential_splits) > 0:
             # print('potential_splits', [str(s) for s in potential_splits])
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it's sorted)
@@ -239,6 +239,7 @@ class SuperCART(BaseEstimator):
             preds = np.zeros(X.shape[0])
             for tree in self.trees_:
                 preds += self.predict_tree(tree, X)
+            preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
             return np.vstack((1 - preds, preds)).transpose()
 
     def predict_tree(self, root: Node, X):

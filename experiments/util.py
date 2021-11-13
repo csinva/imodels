@@ -13,7 +13,8 @@ DATASET_PATH = oj(os.path.dirname(os.path.realpath(__file__)), 'data')
 
 
 class Model:
-    def __init__(self, name: str, cls, vary_param: str, vary_param_val: Any,
+    def __init__(self,
+                 name: str, cls, vary_param: str, vary_param_val: Any,
                  fixed_param: str = None, fixed_param_val: Any = None,
                  other_params: Dict[str, Any] = {}):
         self.name = name

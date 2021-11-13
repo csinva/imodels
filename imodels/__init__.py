@@ -8,7 +8,7 @@ import os
 
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
-from .tree.cart_wrapper import GreedyTreeClassifier
+from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
 from .tree.gosdt.pygosdt import OptimalTreeClassifier
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer

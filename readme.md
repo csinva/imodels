@@ -182,7 +182,7 @@ Different models support different machine-learning tasks. Current support for d
 | Greedy rule list            | [GreedyRuleListClassifier](https://csinva.io/imodels/rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier) |                                                              |
 | OneR rule list              | [OneRClassifier](https://csinva.io/imodels/rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier) |                                                              |
 | Optimal rule tree (GOSDT)   | [OptimalTreeClassifier](https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier) |                                                              |
-| Greedy rule tree            | [GreedyTreeClassifier](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier) |                                                              |
+| Greedy rule tree            | [GreedyTreeClassifier](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier) |      [GreedyTreeClassifier](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor)                                                        |
 | Iterative random forest     |                                                              |                                                              |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) |
 

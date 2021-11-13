@@ -8,7 +8,7 @@ from os.path import join as oj
 import numpy as np
 import pandas as pd
 
-from experiments.config.datasets import DATASETS
+from experiments.config.datasets import DATASETS_CLASSIFICATION
 from experiments.util import get_results_path_from_args
 from experiments.validate import compute_meta_auc
 
@@ -58,9 +58,6 @@ def combine_comparisons(path: str):
     combined_filename = oj(path, 'combined.pkl')
     pkl.dump(output_dict, open(combined_filename, 'wb'))
 
-    # for f in model_files_sorted:
-    #     os.remove(f)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -71,9 +68,9 @@ if __name__ == "__main__":
     parser.add_argument('--splitting_strategy', type=str, default="train-test")
     args = parser.parse_args()
 
-    datasets = DATASETS
+    datasets = DATASETS_CLASSIFICATION
     if args.dataset:
-        datasets = list(filter(lambda x: args.dataset == x[0], DATASETS))
+        datasets = list(filter(lambda x: args.dataset == x[0], DATASETS_CLASSIFICATION))
 
     for dataset in datasets:
         path = get_results_path_from_args(args, dataset[0])

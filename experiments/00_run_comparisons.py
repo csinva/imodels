@@ -11,14 +11,14 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score, f1_score, recall_score, \
-    precision_score
+    precision_score, r2_score, explained_variance_score, mean_absolute_error
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from tqdm import tqdm
 
-from experiments.config.datasets import DATASETS
+from experiments.config.datasets import DATASETS_CLASSIFICATION, DATASETS_REGRESSION
 # from experiments.config.util import get_estimators_for_dataset, get_ensembles_for_dataset
-from experiments.config.supercart.models import ESTIMATORS
+from experiments.config.supercart.models import ESTIMATORS_CLASSIFICATION, ESTIMATORS_REGRESSION
 from experiments.data_util import get_clean_dataset
 from experiments.util import Model, get_complexity, get_results_path_from_args
 from experiments.validate import compute_meta_auc, get_best_accuracy
@@ -50,7 +50,7 @@ def compare_estimators(estimators: List[Model],
     for d in datasets:
         if args.verbose:
             print("comparing on dataset", d[0])
-        X, y, feat_names = get_clean_dataset(d[1])
+        X, y, feat_names = get_clean_dataset(d[1], data_source=d[2])
         if args.low_data:
             test_size = X.shape[0] - 1000
         else:
@@ -87,11 +87,14 @@ def compare_estimators(estimators: List[Model],
                 datas.append([X_tune, y_tune])
             metric_results = {}
             for suffix, (X_, y_) in zip(suffixes, datas):
-                y_pred_proba = est.predict_proba(X_)[:, 1]
+
                 y_pred = est.predict(X_)
+                if args.classification_or_regression == 'classification':
+                    y_pred_proba = est.predict_proba(X_)[:, 1]
                 for i, (met_name, met) in enumerate(metrics):
                     if met is not None:
-                        if met_name in ['accuracy', 'f1', 'precision', 'recall']:
+                        if args.classification_or_regression == 'regression' \
+                                or met_name in ['accuracy', 'f1', 'precision', 'recall']:
                             metric_results[met_name + suffix] = met(y_, y_pred)
                         else:
                             metric_results[met_name + suffix] = met(y_, y_pred_proba)
@@ -164,18 +167,24 @@ def run_comparison(path: str,
     pkl.dump(output_dict, open(model_comparison_file, 'wb'))
 
 
-def get_metrics():
-    return [
-        ('rocauc', roc_auc_score),
-        ('accuracy', accuracy_score),
-        ('f1', f1_score),
-        ('recall', recall_score),
-        ('precision', precision_score),
-        ('avg_precision', average_precision_score),
-        ('best_accuracy', get_best_accuracy),
-        ('complexity', None),
-        ('time', None)
-    ]
+def get_metrics(classification_or_regression: str = 'classification'):
+    mutual = [('complexity', None), ('time', None)]
+    if classification_or_regression == 'classification':
+        return [
+                   ('rocauc', roc_auc_score),
+                   ('accuracy', accuracy_score),
+                   ('f1', f1_score),
+                   ('recall', recall_score),
+                   ('precision', precision_score),
+                   ('avg_precision', average_precision_score),
+                   ('best_accuracy', get_best_accuracy),
+               ] + mutual
+    elif classification_or_regression == 'regression':
+        return [
+                   ('r2', r2_score),
+                   ('explained_variance', explained_variance_score),
+                   ('neg_mean_squared_error', mean_absolute_error),
+               ] + mutual
 
 
 if __name__ == '__main__':
@@ -190,18 +199,27 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--parallel_id', nargs='+', type=int, default=None)
     parser.add_argument('--split_seed', type=int, default=0)
+    parser.add_argument('--classification_or_regression', type=str, default='regression')
     parser.add_argument('--results_path', type=str,
                         default=oj(os.path.dirname(os.path.realpath(__file__)), 'results'))
     args = parser.parse_args()
     assert args.splitting_strategy in ['train-test', 'train-tune-test']
 
-    datasets = DATASETS
+    # basic setup
+    if args.classification_or_regression == 'classification':
+        datasets = DATASETS_CLASSIFICATION
+        ests = ESTIMATORS_CLASSIFICATION
+    elif args.classification_or_regression == 'regression':
+        datasets = DATASETS_REGRESSION
+        ests = ESTIMATORS_REGRESSION
+
+    metrics = get_metrics(args.classification_or_regression)
+
+    # filter based on args
     if args.dataset:
-        datasets = list(filter(lambda x: args.dataset == x[0], DATASETS))
-    ests = ESTIMATORS
+        datasets = list(filter(lambda x: args.dataset == x[0], datasets))
     if args.model:
         ests = list(filter(lambda x: args.model in x[0].name, ests))
-    metrics = get_metrics()
 
     """
     if args.ensemble:
