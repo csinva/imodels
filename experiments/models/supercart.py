@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 from sklearn import datasets
 from sklearn import tree
@@ -19,6 +21,8 @@ class Node:
         self.value = value
         self.impurity_reduction = impurity_reduction
         self.tree_num = tree_num
+        self.left_temp = None
+        self.right_temp = None
 
     def setattrs(self, **kwargs):
         for k, v in kwargs.items():
@@ -71,20 +75,29 @@ class SuperCART(BaseEstimator):
             impurity = stump.tree_.impurity
             n_node_samples = stump.tree_.n_node_samples
             value = stump.tree_.value
-            # print('impurity', impurity, 'n_node_samples', n_node_samples, 'value', value)
+
+            # no split
+            if len(feature) == 1:
+                # print('no split found!', idxs.sum(), impurity, feature)
+                return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
+                            feature=feature[SPLIT], threshold=threshold[SPLIT],
+                            impurity_reduction=None)
+
+            # split node
             impurity_reduction = impurity[SPLIT] - (
                     impurity[LEFT] * n_node_samples[LEFT] + impurity[RIGHT] * n_node_samples[RIGHT]) / n_node_samples[
                                      SPLIT]
+            node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
+                              feature=feature[SPLIT], threshold=threshold[SPLIT],
+                              impurity_reduction=impurity_reduction)
+
             # manage children
             idxs_split = X[:, feature[SPLIT]] <= threshold[SPLIT]
             idxs_left = idxs_split & idxs
             idxs_right = ~idxs_split & idxs
             node_left = Node(idxs=idxs_left, value=value[LEFT], tree_num=tree_num)
             node_right = Node(idxs=idxs_right, value=value[RIGHT], tree_num=tree_num)
-            node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
-                              feature=feature[SPLIT], threshold=threshold[SPLIT],
-                              impurity_reduction=impurity_reduction)
-            node_split.setattrs(left_temp=node_left, right_temp=node_right,)
+            node_split.setattrs(left_temp=node_left, right_temp=node_right, )
             return node_split
 
         idxs = np.ones(X.shape[0], dtype=bool)
@@ -95,17 +108,17 @@ class SuperCART(BaseEstimator):
         # should eventually make this a heap, for now just sort so largest impurity reduction comes last
         potential_splits = [node_init]
 
-        trees = []
+        self.trees_ = []
         y_predictions_per_tree = {}
         y_residuals_per_tree = {}  # based on predictions above
         total_num_rules = 0
         while len(potential_splits) > 0:
+            # print('potential_splits', [str(s) for s in potential_splits])
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it's sorted)
-            print([str(s) for s in potential_splits])
 
             # don't split on node
             if split_node.impurity_reduction < impurity_dec_thresh:
-                break
+                return self
 
             # split on node
             if verbose:
@@ -114,7 +127,7 @@ class SuperCART(BaseEstimator):
 
             # assign left_temp, right_temp to be proper children
             # (basically adds them to tree in predict method)
-            split_node.setattrs(left=split_node.left_temp, right=split_node.right_temp)
+            split_node.setattrs(left=deepcopy(split_node.left_temp), right=deepcopy(split_node.right_temp))
             split_node.setattrs(left_temp=None, right_temp=None)  # clean up some memory
 
             # add children to potential_splits
@@ -123,28 +136,29 @@ class SuperCART(BaseEstimator):
 
             # if added a tree root
             if split_node.is_root:
-                trees.append(split_node)  # add to trees
+                self.trees_.append(split_node)  # start a new tree
 
                 # add new root potential node
-                node_new_root = Node(is_root=True, idxs=np.ones(X.shape[0], dtype=bool), tree_num=len(trees))
+                node_new_root = Node(is_root=True, idxs=np.ones(X.shape[0], dtype=bool), tree_num=len(self.trees_))
                 potential_splits.append(node_new_root)
 
             # update predictions for altered tree
-            for tree_num_ in range(len(trees)):
+            for tree_num_ in range(len(self.trees_)):
                 """
-                predictor, n_rules = self.root_to_sklearn_tree(trees[tree_num])
+                predictor, n_rules = self.root_to_sklearn_tree(self.trees_[tree_num])
                 y_predictions_per_tree[tree_num_] = predictor.predict(X)
                 """
-                y_predictions_per_tree[tree_num_] = self.predict_tree(trees[tree_num_], X)
-            y_predictions_per_tree[len(trees)] = np.zeros(X.shape[0])  # dummy 0 preds for possible new tree
+                y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
+            y_predictions_per_tree[len(self.trees_)] = np.zeros(X.shape[0])  # dummy 0 preds for possible new tree
 
             # update residuals for each tree
-            for tree_num_ in range(len(trees) + 1):
-                y_residual = y
-                for tree_num_2_ in range(len(trees) + 1):
+            for tree_num_ in range(len(self.trees_) + 1):
+                y_residuals_per_tree[tree_num_] = deepcopy(y)
+
+                # subtract predictions of all other trees
+                for tree_num_2_ in range(len(self.trees_) + 1):
                     if not tree_num_2_ == tree_num_:
-                        y_residual -= y_predictions_per_tree[tree_num_2_]
-                y_residuals_per_tree[tree_num_] = y_residual
+                        y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
 
             # debugging
             if total_num_rules == 1:
@@ -159,21 +173,35 @@ class SuperCART(BaseEstimator):
             for potential_split in potential_splits:
                 y_target = y_residuals_per_tree[potential_split.tree_num]
                 stump = fit_stump(X, y_=y_target, idxs=potential_split.idxs)
-                potential_split_updated = construct_node_from_stump(stump, idxs=idxs, tree_num=0)
+                potential_split_updated = construct_node_from_stump(stump, idxs=potential_split.idxs,
+                                                                    tree_num=potential_split.tree_num)
 
-                # need to preserve certain attributes from before
+                # need to preserve certain attributes from before (value + is_root)
                 # value may change because we are predicting something different (e.g. residuals)
-                potential_split_updated.setattrs(
-                    value=potential_split.value,
-                    is_root=potential_split.is_root,
+                potential_split.setattrs(
+                    feature=potential_split_updated.feature,
+                    threshold=potential_split_updated.threshold,
+                    left_temp=potential_split_updated.left_temp,
+                    right_temp=potential_split_updated.right_temp,
+                    impurity_reduction=potential_split_updated.impurity_reduction,
                 )
-                potential_splits_new.append(potential_split_updated)
+
+                if potential_split_updated.impurity_reduction is not None:  # there was a split found
+                    potential_splits_new.append(potential_split_updated)
 
             # sort so largest impurity reduction comes last
             potential_splits = sorted(potential_splits_new, key=lambda x: x.impurity_reduction)
-
-        self.trees_ = trees
+            print('updated tree\n' + str(self))
         return self
+
+    def tree_to_str(self, root: Node, prefix=''):
+        if root is None or root.threshold is None:
+            return ''
+        pprefix = prefix + '\t'
+        return prefix + str(root) + '\n' + self.tree_to_str(root.left, pprefix) + self.tree_to_str(root.right, pprefix)
+
+    def __str__(self):
+        return '------------\n' + '\n\t+\n'.join([self.tree_to_str(t) for t in self.trees_])
 
     def predict(self, X):
         return self.clf.predict(X)
@@ -246,6 +274,7 @@ def root_to_sklearn_tree(self, root):
 '''
 
 if __name__ == '__main__':
+    np.random.seed(13)
     # X, y = datasets.load_breast_cancer(return_X_y=True) # binary classification
     X, y = datasets.load_diabetes(return_X_y=True)  # regression
 
