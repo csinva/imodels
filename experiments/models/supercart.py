@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 import numpy as np
-from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
@@ -34,7 +33,7 @@ class Node:
             node_type = 'root'
         elif self.left is None and self.right is None:
             node_type = 'leaf'
-        if node_type == 'leaf' and self.feature == -2 and self.threshold == -2:
+        if node_type == 'leaf':  # and self.feature == -2 and self.threshold == -2:
             return f'Val: {self.value[0][0]:0.3f} (Tree #{self.tree_num} {node_type})'
         return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} {node_type})'
 
@@ -72,15 +71,15 @@ class SuperCART(BaseEstimator):
 
         # split node
         impurity_reduction = (
-                impurity[SPLIT] -
-                impurity[LEFT] * n_node_samples[LEFT] / n_node_samples[SPLIT] -
-                impurity[RIGHT] * n_node_samples[RIGHT] / n_node_samples[SPLIT]
-        )
+                                     impurity[SPLIT] -
+                                     impurity[LEFT] * n_node_samples[LEFT] / n_node_samples[SPLIT] -
+                                     impurity[RIGHT] * n_node_samples[RIGHT] / n_node_samples[SPLIT]
+                             ) * idxs.sum()
 
         node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                           feature=feature[SPLIT], threshold=threshold[SPLIT],
                           impurity_reduction=impurity_reduction)
-        print('\t>>>', node_split, 'impurity', impurity)
+        # print('\t>>>', node_split, 'impurity', impurity, 'num_pts', idxs.sum(), 'imp_reduc', impurity_reduction)
 
         # manage children
         idxs_split = X[:, feature[SPLIT]] <= threshold[SPLIT]
@@ -91,28 +90,28 @@ class SuperCART(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=True):
+    def fit_stump(self, X, y, idxs):
+        """
 
-        def fit_stump(X_, y_, idxs):
-            """
+        Parameters
+        ----------
+        X_
+            probably the same as X
+        y_
+            might change if we are predicting residuals
+        idxs
+            indexes of subset to fit to
+        """
+        if self.prediction_task == 'regression':
+            stump = tree.DecisionTreeRegressor(max_depth=1)
+        else:
+            stump = tree.DecisionTreeClassifier(max_depth=1)
+        return stump.fit(X[idxs], y[idxs])
 
-            Parameters
-            ----------
-            X_
-                probably the same as X
-            y_
-                might change if we are predicting residuals
-            idxs
-                indexes of subset to fit to
-            """
-            if self.prediction_task == 'regression':
-                stump = tree.DecisionTreeRegressor(max_depth=1)
-            else:
-                stump = tree.DecisionTreeClassifier(max_depth=1)
-            return stump.fit(X_[idxs], y_[idxs])
+    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=True, max_rules=5):
 
         idxs = np.ones(X.shape[0], dtype=bool)
-        stump = fit_stump(X, y, idxs)
+        stump = self.fit_stump(X, y, idxs)
         node_init = self.construct_node_from_stump(stump, idxs=idxs, X=X, tree_num=0)
         node_init.setattrs(is_root=True)
 
@@ -133,7 +132,7 @@ class SuperCART(BaseEstimator):
 
             # split on node
             if verbose:
-                print('adding ' + str(split_node))
+                print('\nadding ' + str(split_node))
             total_num_rules += 1
 
             # assign left_temp, right_temp to be proper children
@@ -177,7 +176,7 @@ class SuperCART(BaseEstimator):
             potential_splits_new = []
             for potential_split in potential_splits:
                 y_target = y_residuals_per_tree[potential_split.tree_num]
-                stump = fit_stump(X, y_=y_target, idxs=potential_split.idxs)
+                stump = self.fit_stump(X, y_target, idxs=potential_split.idxs)
                 potential_split_updated = self.construct_node_from_stump(stump,
                                                                          idxs=potential_split.idxs,
                                                                          X=X,
@@ -198,7 +197,11 @@ class SuperCART(BaseEstimator):
 
             # sort so largest impurity reduction comes last
             potential_splits = sorted(potential_splits_new, key=lambda x: x.impurity_reduction)
-            print('updated tree\n' + str(self))
+            if verbose:
+                print('updated tree\n' + str(self))
+
+            if total_num_rules >= max_rules:
+                return self
         return self
 
     def tree_to_str(self, root: Node, prefix=''):
@@ -248,7 +251,7 @@ if __name__ == '__main__':
         X, y, test_size=0.33, random_state=42
     )
     print('X.shape', X.shape)
-    print('ys', np.unique(y_train),'\n\n')
+    print('ys', np.unique(y_train), '\n\n')
 
     m = SuperCART()
     m.fit(X_train, y_train)
