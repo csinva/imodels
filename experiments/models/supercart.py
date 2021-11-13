@@ -34,7 +34,9 @@ class Node:
             node_type = 'root'
         elif self.left is None and self.right is None:
             node_type = 'leaf'
-        return f'{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} {node_type})'
+        if node_type == 'leaf' and self.feature == -2 and self.threshold == -2:
+            return f'Val: {self.value[0][0]:0.3f} (Tree #{self.tree_num} {node_type})'
+        return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} {node_type})'
 
     def __repr__(self):
         return self.__str__()
@@ -53,8 +55,10 @@ class SuperCART(BaseEstimator):
         RIGHT = 2
 
         # these are all arrays, arr[0] is split node
+        # note: -2 is dummy
         feature = stump.tree_.feature
         threshold = stump.tree_.threshold
+
         impurity = stump.tree_.impurity
         n_node_samples = stump.tree_.n_node_samples
         value = stump.tree_.value
@@ -76,6 +80,7 @@ class SuperCART(BaseEstimator):
         node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                           feature=feature[SPLIT], threshold=threshold[SPLIT],
                           impurity_reduction=impurity_reduction)
+        print('\t>>>', node_split, 'impurity', impurity)
 
         # manage children
         idxs_split = X[:, feature[SPLIT]] <= threshold[SPLIT]
@@ -86,7 +91,7 @@ class SuperCART(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, impurity_dec_thresh=10, verbose=True):
+    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=True):
 
         def fit_stump(X_, y_, idxs):
             """
@@ -123,7 +128,7 @@ class SuperCART(BaseEstimator):
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it's sorted)
 
             # don't split on node
-            if split_node.impurity_reduction < impurity_dec_thresh:
+            if split_node.impurity_reduction < min_impurity_decrease:
                 return self
 
             # split on node
@@ -163,11 +168,10 @@ class SuperCART(BaseEstimator):
 
             # debugging
             if total_num_rules == 1:
-                assert np.array_equal(y_predictions_per_tree[0],
-                                      stump.predict(X)), 'For one rule, prediction should match stump'
-                assert np.array_equal(y_residuals_per_tree[0],
-                                      y), 'For one rule, residual should match y since there are no other trees'
-                print('passed basic rule1 checks!')
+                assert np.array_equal(y_predictions_per_tree[0], stump.predict(X)), \
+                    'For one rule, prediction should match stump'
+                assert np.array_equal(y_residuals_per_tree[0], y), \
+                    'For one rule, residual should match y since there are no other trees'
 
             # recompute all impurities + update potential_split children
             potential_splits_new = []
@@ -236,13 +240,15 @@ class SuperCART(BaseEstimator):
 if __name__ == '__main__':
     np.random.seed(13)
     # X, y = datasets.load_breast_cancer(return_X_y=True) # binary classification
-    X, y = datasets.load_diabetes(return_X_y=True)  # regression
+    # X, y = datasets.load_diabetes(return_X_y=True)  # regression
+    X = np.random.randn(500, 10)
+    y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.33, random_state=42
     )
     print('X.shape', X.shape)
-    print('ys', np.unique(y_train))
+    print('ys', np.unique(y_train),'\n\n')
 
     m = SuperCART()
     m.fit(X_train, y_train)
