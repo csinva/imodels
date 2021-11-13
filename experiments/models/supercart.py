@@ -29,12 +29,15 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-        node_type = ''
+        node_type = 'split'
         if self.is_root:
             node_type = 'root'
         elif self.left is None and self.right is None:
             node_type = 'leaf'
         return f'{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} {node_type})'
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class SuperCART(BaseEstimator):
@@ -42,6 +45,46 @@ class SuperCART(BaseEstimator):
     def __init__(self):
         self.prediction_task = 'regression'
         super().__init__()
+
+    def construct_node_from_stump(self, stump, idxs, X, tree_num):
+        # array indices
+        SPLIT = 0
+        LEFT = 1
+        RIGHT = 2
+
+        # these are all arrays, arr[0] is split node
+        feature = stump.tree_.feature
+        threshold = stump.tree_.threshold
+        impurity = stump.tree_.impurity
+        n_node_samples = stump.tree_.n_node_samples
+        value = stump.tree_.value
+
+        # no split
+        if len(feature) == 1:
+            # print('no split found!', idxs.sum(), impurity, feature)
+            return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
+                        feature=feature[SPLIT], threshold=threshold[SPLIT],
+                        impurity_reduction=None)
+
+        # split node
+        impurity_reduction = (
+                impurity[SPLIT] -
+                impurity[LEFT] * n_node_samples[LEFT] / n_node_samples[SPLIT] -
+                impurity[RIGHT] * n_node_samples[RIGHT] / n_node_samples[SPLIT]
+        )
+
+        node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
+                          feature=feature[SPLIT], threshold=threshold[SPLIT],
+                          impurity_reduction=impurity_reduction)
+
+        # manage children
+        idxs_split = X[:, feature[SPLIT]] <= threshold[SPLIT]
+        idxs_left = idxs_split & idxs
+        idxs_right = ~idxs_split & idxs
+        node_left = Node(idxs=idxs_left, value=value[LEFT], tree_num=tree_num)
+        node_right = Node(idxs=idxs_right, value=value[RIGHT], tree_num=tree_num)
+        node_split.setattrs(left_temp=node_left, right_temp=node_right, )
+        return node_split
 
     def fit(self, X, y=None, feature_names=None, impurity_dec_thresh=10, verbose=True):
 
@@ -63,46 +106,9 @@ class SuperCART(BaseEstimator):
                 stump = tree.DecisionTreeClassifier(max_depth=1)
             return stump.fit(X_[idxs], y_[idxs])
 
-        def construct_node_from_stump(stump, idxs, tree_num):
-            # array indices
-            SPLIT = 0
-            LEFT = 1
-            RIGHT = 2
-
-            # these are all arrays, arr[0] is split node
-            feature = stump.tree_.feature
-            threshold = stump.tree_.threshold
-            impurity = stump.tree_.impurity
-            n_node_samples = stump.tree_.n_node_samples
-            value = stump.tree_.value
-
-            # no split
-            if len(feature) == 1:
-                # print('no split found!', idxs.sum(), impurity, feature)
-                return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
-                            feature=feature[SPLIT], threshold=threshold[SPLIT],
-                            impurity_reduction=None)
-
-            # split node
-            impurity_reduction = impurity[SPLIT] - (
-                    impurity[LEFT] * n_node_samples[LEFT] + impurity[RIGHT] * n_node_samples[RIGHT]) / n_node_samples[
-                                     SPLIT]
-            node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
-                              feature=feature[SPLIT], threshold=threshold[SPLIT],
-                              impurity_reduction=impurity_reduction)
-
-            # manage children
-            idxs_split = X[:, feature[SPLIT]] <= threshold[SPLIT]
-            idxs_left = idxs_split & idxs
-            idxs_right = ~idxs_split & idxs
-            node_left = Node(idxs=idxs_left, value=value[LEFT], tree_num=tree_num)
-            node_right = Node(idxs=idxs_right, value=value[RIGHT], tree_num=tree_num)
-            node_split.setattrs(left_temp=node_left, right_temp=node_right, )
-            return node_split
-
         idxs = np.ones(X.shape[0], dtype=bool)
         stump = fit_stump(X, y, idxs)
-        node_init = construct_node_from_stump(stump, idxs=idxs, tree_num=0)
+        node_init = self.construct_node_from_stump(stump, idxs=idxs, X=X, tree_num=0)
         node_init.setattrs(is_root=True)
 
         # should eventually make this a heap, for now just sort so largest impurity reduction comes last
@@ -127,8 +133,7 @@ class SuperCART(BaseEstimator):
 
             # assign left_temp, right_temp to be proper children
             # (basically adds them to tree in predict method)
-            split_node.setattrs(left=deepcopy(split_node.left_temp), right=deepcopy(split_node.right_temp))
-            split_node.setattrs(left_temp=None, right_temp=None)  # clean up some memory
+            split_node.setattrs(left=split_node.left_temp, right=split_node.right_temp)
 
             # add children to potential_splits
             potential_splits.append(split_node.left)
@@ -144,10 +149,6 @@ class SuperCART(BaseEstimator):
 
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
-                """
-                predictor, n_rules = self.root_to_sklearn_tree(self.trees_[tree_num])
-                y_predictions_per_tree[tree_num_] = predictor.predict(X)
-                """
                 y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
             y_predictions_per_tree[len(self.trees_)] = np.zeros(X.shape[0])  # dummy 0 preds for possible new tree
 
@@ -173,8 +174,10 @@ class SuperCART(BaseEstimator):
             for potential_split in potential_splits:
                 y_target = y_residuals_per_tree[potential_split.tree_num]
                 stump = fit_stump(X, y_=y_target, idxs=potential_split.idxs)
-                potential_split_updated = construct_node_from_stump(stump, idxs=potential_split.idxs,
-                                                                    tree_num=potential_split.tree_num)
+                potential_split_updated = self.construct_node_from_stump(stump,
+                                                                         idxs=potential_split.idxs,
+                                                                         X=X,
+                                                                         tree_num=potential_split.tree_num)
 
                 # need to preserve certain attributes from before (value + is_root)
                 # value may change because we are predicting something different (e.g. residuals)
@@ -186,8 +189,8 @@ class SuperCART(BaseEstimator):
                     impurity_reduction=potential_split_updated.impurity_reduction,
                 )
 
-                if potential_split_updated.impurity_reduction is not None:  # there was a split found
-                    potential_splits_new.append(potential_split_updated)
+                if potential_split.impurity_reduction is not None:  # there was a split found
+                    potential_splits_new.append(potential_split)
 
             # sort so largest impurity reduction comes last
             potential_splits = sorted(potential_splits_new, key=lambda x: x.impurity_reduction)
@@ -229,49 +232,6 @@ class SuperCART(BaseEstimator):
             else:
                 return self.predict_tree_single_point(root.right, x)
 
-
-'''
-def root_to_sklearn_tree(self, root):
-    """Try converting to sklearn format
-    """
-    # start with a deep tree
-    if self.prediction_task == 'regression':
-        stump = tree.DecisionTreeRegressor(max_depth=100).fit(X, y)
-    else:
-        stump = tree.DecisionTreeClassifier().fit(X[:1], y[:1])
-
-    # traverse tree and convert to sklearn format
-    feature = []
-    threshold = []
-    impurity = []
-    # n_node_samples = []
-    value = []
-    q = [root]
-    node_index = 0
-    while len(q) > 0:
-        node = q.pop(0)  # pop off front
-        feature.append(node.feature)
-        threshold.append(node.threshold)
-        # t.impurity.append(node.impurity)
-        value.append(node.value)
-        if node.left is not None:
-            q.append(node.left)
-        if node.right is not None:
-            q.append(node.right)
-
-    t = stump.tree_
-    assert len(t.feature) >= len(feature), 'dummy tree must be at least as big as new tree'
-    for i in range(len(feature)):
-        t.feature[i] = feature[i]
-        t.threshold[i] = threshold[i]
-        t.value[i] = value[i]
-    for i in range(len(feature), len(t.feature)):
-        t.children_left[i] = -1
-        t.children_right[i] = -1
-    t.node_count = len(feature)
-
-    return stump, t.node_count
-'''
 
 if __name__ == '__main__':
     np.random.seed(13)
