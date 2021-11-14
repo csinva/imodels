@@ -21,7 +21,7 @@ DATASETS_CLASSIFICATION = [
 DATASETS_REGRESSION = [
     ("diabetes", "diabetes", 'sklearn'),
     ("california-housing", "diabetes", 'sklearn'),
-    ("breast-tumor", "1201_BNG_breastTumor", 'pmlb'),
+    # ("breast-tumor", "1201_BNG_breastTumor", 'pmlb'), # this one is v big (100k examples)
     ("echo-months", "1199_BNG_echoMonths", 'pmlb'),
     ("satellite-image", "294_satellite_image", 'pmlb'),
 ]

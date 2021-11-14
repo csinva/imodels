@@ -63,7 +63,9 @@ def compare_estimators(estimators: List[Model],
 
         # loop over estimators
         for model in tqdm(estimators, leave=False):
+            # print('kwargs', model.kwargs)
             est = model.cls(**model.kwargs)
+            # print(est.criterion)
 
             start = time.time()
             if type(est) in [RandomForestClassifier, GradientBoostingClassifier, DecisionTreeClassifier]:
@@ -217,9 +219,9 @@ if __name__ == '__main__':
 
     # filter based on args
     if args.dataset:
-        datasets = list(filter(lambda x: args.dataset == x[0], datasets))
+        datasets = list(filter(lambda x: args.dataset.lower() in x[0].lower(), datasets))
     if args.model:
-        ests = list(filter(lambda x: args.model in x[0].name, ests))
+        ests = list(filter(lambda x: args.model.lower() in x[0].name.lower(), ests))
 
     """
     if args.ensemble:
@@ -231,6 +233,11 @@ if __name__ == '__main__':
         ests = [est[args.parallel_id[0]:args.parallel_id[1] + 1] for est in ests]
     elif args.parallel_id is not None:
         ests = [[est[args.parallel_id[0]]] for est in ests]
+
+    if len(ests) == 0:
+        raise ValueError('No valid estimators!')
+    if len(datasets) == 0:
+        raise ValueError('No valid datasets!')
     if args.verbose:
         print('running',
               'datasets', [d[0] for d in datasets],
@@ -246,3 +253,4 @@ if __name__ == '__main__':
                            metrics,
                            est,
                            args)
+    print('completed all experiments successfully!')

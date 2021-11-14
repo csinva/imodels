@@ -39,7 +39,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         if feature_names is None:
             self.feature_names = [f'X_{x}' for x in range(X.shape[1])]
         else:
-            self.feature_names = feature_names
+            self.feature_names = list(feature_names)
 
         assert len(self.feature_names) == X.shape[1]
 

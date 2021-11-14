@@ -120,23 +120,23 @@ def add(d1, d2):
     return d
 
 
-def decision(root, obs, attrs_names, p):
+def decision(root, obs, feature_names: list, p):
     if root.hasChildNodes():
         att_name = root.firstChild.nodeName
         if att_name == "#text":
-            return decision(root.firstChild, obs, attrs_names, p)
+            return decision(root.firstChild, obs, feature_names, p)
         else:
-            att = obs[attrs_names.index(att_name)]
+            att = obs[feature_names.index(att_name)]
             if att == "?":
                 d = {}
                 for child in root.childNodes:
-                    d = add(d, decision(child, obs, attrs_names, p * float(child.getAttribute("p"))))
+                    d = add(d, decision(child, obs, feature_names, p * float(child.getAttribute("p"))))
                 return d
             else:
                 for child in root.childNodes:
                     if child.getAttribute("flag") == "m" and child.getAttribute("feature") == att or \
                             child.getAttribute("flag") == "l" and float(att) < float(child.getAttribute("feature")) or \
                             child.getAttribute("flag") == "r" and float(att) >= float(child.getAttribute("feature")):
-                        return decision(child, obs, attrs_names, p)
+                        return decision(child, obs, feature_names, p)
     else:
         return {root.nodeValue: root.parentNode.getAttribute('p')}
