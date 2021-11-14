@@ -49,7 +49,7 @@ def compare_estimators(estimators: List[Model],
     # loop over datasets
     for d in datasets:
         if args.verbose:
-            print("comparing on dataset", d[0])
+            print("\tdataset", d[0], 'ests', estimators)
         X, y, feat_names = get_clean_dataset(d[1], data_source=d[2])
         if args.low_data:
             test_size = X.shape[0] - 1000

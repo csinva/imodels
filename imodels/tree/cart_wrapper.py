@@ -12,7 +12,7 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
         self.complexity_ = 0
         self.feature_names = None
 
-    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted="deprecated"):
+    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         """Build a decision tree classifier from the training set (X, y).
         Parameters
         ----------
@@ -33,10 +33,7 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
         check_input : bool, default=True
             Allow to bypass several input checking.
             Don't use this parameter unless you know what you do.
-        X_idx_sorted : deprecated, default="deprecated"
-            This parameter is deprecated and has no effect.
-            It will be removed in 1.1 (renaming of 0.26).
-            .. deprecated:: 0.24
+        
         Returns
         -------
         self : DecisionTreeClassifier
@@ -46,7 +43,7 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
             self.feature_names = feature_names
         else:
             self.feature_names = ["X" + str(i + 1) for i in range(X.shape[1])]
-        super().fit(X, y, sample_weight=None, check_input=True, X_idx_sorted="deprecated")
+        super().fit(X, y, sample_weight=sample_weight, check_input=check_input)
         self._set_complexity()
 
     def _set_complexity(self):
@@ -70,7 +67,7 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
         self.complexity_ = 0
         self.feature_names = None
 
-    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True, X_idx_sorted="deprecated"):
+    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         """Build a decision tree regressor from the training set (X, y).
         Parameters
         ----------
@@ -88,10 +85,6 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
         check_input : bool, default=True
             Allow to bypass several input checking.
             Don't use this parameter unless you know what you do.
-        X_idx_sorted : deprecated, default="deprecated"
-            This parameter is deprecated and has no effect.
-            It will be removed in 1.1 (renaming of 0.26).
-            .. deprecated:: 0.24
         Returns
         -------
         self : DecisionTreeRegressor
@@ -101,7 +94,7 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
             self.feature_names = feature_names
         else:
             self.feature_names = ["X" + str(i + 1) for i in range(X.shape[1])]
-        super().fit(X, y, sample_weight=None, check_input=True, X_idx_sorted="deprecated")
+        super().fit(X, y, sample_weight=sample_weight, check_input=check_input)
         self._set_complexity()
 
     def _set_complexity(self):

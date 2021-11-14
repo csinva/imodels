@@ -38,6 +38,9 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
             # only include alphanumeric chars / replace spaces with underscores
             self.feature_names = [''.join([i for i in x if i.isalnum()]).replace(' ', '_')
                                   for x in feature_names]
+            self.feature_names = ['X_' + x if x[0].isdigit()
+                                  else x
+                                  for x in feature_names]
 
         assert len(self.feature_names) == X.shape[1]
 
@@ -51,6 +54,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         root = ET.Element('GreedyTree')
         self.grow_tree(data, categories, root, self.feature_names)  # adds to root
         self.tree_ = ET.tostring(root, encoding="unicode")
+        # print('self.tree_', self.tree_)
         self.dom_ = minidom.parseString(self.tree_)
         return self
 

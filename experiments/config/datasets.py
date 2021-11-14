@@ -20,7 +20,7 @@ DATASETS_CLASSIFICATION = [
     ("juvenile", oj(DATASET_PATH, "ICPSR_03986/DS0001/juvenile_clean.csv"), 'local'),
     ("recidivism", oj(DATASET_PATH, "compas-analysis/compas_two_year_clean.csv"), 'local'),
     ("credit", oj(DATASET_PATH, "credit_card/credit_card_clean.csv"), 'local'),
-    # ("readmission", oj(DATASET_PATH, 'readmission/readmission_clean.csv'), 'local'), # v big
+    ("readmission", oj(DATASET_PATH, 'readmission/readmission_clean.csv'), 'local'), # v big
 ]
 
 DATASETS_REGRESSION = [
@@ -30,10 +30,10 @@ DATASETS_REGRESSION = [
     ('friedman2', 'friedman2', 'synthetic'),
     ('friedman3', 'friedman3', 'synthetic'),
 
-    ("diabetes", "diabetes", 'sklearn'),
-    ("california-housing", "diabetes", 'sklearn'),
+    ("diabetes-regr", "diabetes", 'sklearn'),
+    ("california-housing", "california_housing", 'sklearn'),
     ("satellite-image", "294_satellite_image", 'pmlb'),
     ("echo-months", "1199_BNG_echoMonths", 'pmlb'),
-    # ("breast-tumor", "1201_BNG_breastTumor", 'pmlb'), # this one is v big (100k examples)
+    ("breast-tumor", "1201_BNG_breastTumor", 'pmlb'), # this one is v big (100k examples)
 
 ]

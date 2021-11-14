@@ -24,9 +24,9 @@ def combine_comparisons(path: str):
     model_files = [f for f in all_files
                    if '_comparisons' in f]
     if len(model_files) == 0:
-        print('No files found to concatenate at ', path)
+        print('No files found at ', path)
         return
-    print('processing path', path)
+    print('\tprocessing path', path)
     results_sorted = [pkl.load(open(f, 'rb')) for f in model_files]
 
     df = pd.concat([r['df'] for r in results_sorted])
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     datasets = DATASETS_CLASSIFICATION + DATASETS_REGRESSION
-
+    
     for dataset in datasets:
         path = get_results_path_from_args(args, dataset[0])
         combine_comparisons(path)
