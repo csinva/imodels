@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score, f1_score, recall_score, \
-    precision_score, r2_score, explained_variance_score, mean_absolute_error
+    precision_score, r2_score, explained_variance_score, mean_absolute_error, mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from tqdm import tqdm
@@ -183,7 +183,7 @@ def get_metrics(classification_or_regression: str = 'classification'):
         return [
                    ('r2', r2_score),
                    ('explained_variance', explained_variance_score),
-                   ('neg_mean_squared_error', mean_absolute_error),
+                   ('neg_mean_squared_error', mean_squared_error),
                ] + mutual
 
 
