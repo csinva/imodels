@@ -28,6 +28,12 @@ def get_openml_dataset(data_id: int) -> pd.DataFrame:
     return pd.concat((X_df, y_df), axis=1)
 
 
+def define_openml_outcomes(y, data_id: str):
+    if data_id == '59':  # ionosphere, positive is "good" class
+        y = (y == 'g').astype(int)
+    return y
+
+
 def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[np.ndarray, np.ndarray, list]:
     """Return
 
@@ -38,12 +44,12 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
     data_source: str
         options: 'local', 'pmlb', 'sklearn'
         boolean - whether dataset is a pmlb dataset name
-    sklearn
+
     Returns
     -------
-    X, y, feature
+    X, y, feature_names
     """
-    assert data_source in ['local', 'pmlb', 'sklearn']
+    assert data_source in ['local', 'pmlb', 'sklearn', 'openml']
     if data_source == 'local':
         df = pd.read_csv(dataset)
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
@@ -59,6 +65,10 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
         elif dataset == 'california_housing':
             data = sklearn.datasets.fetch_california_housing(data_home=oj(DATASET_PATH, 'sklearn_data'))
         return data['data'], data['target'], data['feature_names']
-
-
-
+    elif data_source == 'openml':  # note this api might change in newer sklearn - should give dataset-id not name
+        data = sklearn.datasets.fetch_openml(data_id=dataset, data_home=oj(DATASET_PATH, 'openml_data'))
+        X, y, feature_names = data['data'], data['target'], data['feature_names']
+        y = define_openml_outcomes(y, dataset)
+        if issparse(X):
+            X = X.toarray()
+        return X, y, feature_names

@@ -29,8 +29,10 @@ class TestClassClassificationBinary:
             FPLassoClassifier, SkopeRulesClassifier,
             FPSkopeClassifier, BoostedRulesClassifier,
             OneRClassifier, SlipperClassifier,
-            GreedyTreeClassifier, OptimalTreeClassifier
-        ]:  # IRFClassifier, SLIMClassifier, BayesianRuleSetClassifier
+            GreedyTreeClassifier,
+            OptimalTreeClassifier,
+            C45TreeClassifier,
+        ]:  # IRFClassifier, SLIMClassifier, BayesianRuleSetClassifier,
 
             init_kwargs = {}
             if model_type == SkopeRulesClassifier or model_type == FPSkopeClassifier:

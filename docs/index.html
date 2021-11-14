@@ -127,9 +127,19 @@ print(model) # print the rule-based model
 <td>Greedily learns tree using CART</td>
 </tr>
 <tr>
-<td align="left">Iterative random forest</td>
-<td><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html">🗂️</a>, <a href="https://github.com/Yu-Group/iterative-Random-Forest">🔗</a>, <a href="https://www.pnas.org/content/115/8/1943">📄</a></td>
+<td align="left">C4.5 rule tree</td>
+<td><a href="https://csinva.io/imodels/tree/cart_wrapper.html">🗂️</a>, <a href="https://scikit-learn.org/stable/modules/tree.html">🔗</a>, <a href="https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone">📄</a></td>
+<td>Greedily learns tree using CART</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td>Iterative random forest</td>
+<td>[🗂️]</td>
+</tr>
+<tr>
+<td align="left">(<a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html">https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html</a>), <a href="https://github.com/Yu-Group/iterative-Random-Forest">🔗</a>, <a href="https://www.pnas.org/content/115/8/1943">📄</a></td>
 <td>(In progress) Repeatedly fit random forest, giving features with high importance a higher chance of being selected</td>
+<td></td>
 </tr>
 <tr>
 <td align="left">Sparse integer linear model</td>
@@ -312,9 +322,14 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <td align="center"></td>
 </tr>
 <tr>
-<td align="left">Greedy rule tree</td>
+<td align="left">Greedy rule tree (CART)</td>
 <td align="center"><a href="https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></td>
 <td align="center"><a href="https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor">GreedyTreeRegressor</a></td>
+</tr>
+<tr>
+<td align="left">C4.5 rule tree</td>
+<td align="center"><a href="https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></td>
+<td align="center"></td>
 </tr>
 <tr>
 <td align="left">Iterative random forest</td>
@@ -397,6 +412,7 @@ import os
 # from .tree.optimal_classification_tree import OptimalTreeModel
 from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
 from .tree.gosdt.pygosdt import OptimalTreeClassifier
+from .tree.c45_tree.c45_tree import C45TreeClassifier
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer

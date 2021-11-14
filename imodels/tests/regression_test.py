@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from imodels import RuleFitRegressor, SLIMRegressor
+from imodels import RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor
 
 
 class TestClassRegression:
@@ -16,7 +16,7 @@ class TestClassRegression:
     def test_regression(self):
         '''Test imodels on basic binary classification task
         '''
-        for model_type in [RuleFitRegressor, SLIMRegressor]:
+        for model_type in [RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor]:
             if model_type == RuleFitRegressor:
                 m = model_type(include_linear=False, max_rules=3)
             else:
