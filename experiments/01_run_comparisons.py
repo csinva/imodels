@@ -193,7 +193,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # often-chaning args
-    parser.add_argument('--classification_or_regression', type=str, default='classification')
+    parser.add_argument('--classification_or_regression', type=str, default=None)
     parser.add_argument('--model', type=str, default=None)  # , default='c4')
     parser.add_argument('--dataset', type=str, default=None)  # default='reci')
 
@@ -210,6 +210,15 @@ if __name__ == '__main__':
     args = parser.parse_args()
     assert args.splitting_strategy in ['train-test', 'train-tune-test']
 
+    if args.classification_or_regression is None:
+        if args.dataset in [d[0] for d in DATASETS_CLASSIFICATION]:
+            args.classification_or_regression = 'classification'
+        elif args.dataset in [d[0] for d in DATASETS_REGRESSION]:
+            args.classification_or_regression = 'regression'
+        else:
+            raise ValueError('Either args.classification_or_regression or args.dataset must be properly set!')
+            
+            
     # basic setup
     if args.classification_or_regression == 'classification':
         datasets = DATASETS_CLASSIFICATION

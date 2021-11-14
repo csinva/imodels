@@ -4,7 +4,6 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 import sklearn.datasets
-from pmlb import fetch_data
 from scipy.sparse import issparse
 from sklearn.datasets import fetch_openml
 
@@ -56,7 +55,9 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
         feature_names = df.columns.values[:-1]
         return np.nan_to_num(X.astype('float32')), y, feature_names
     elif data_source == 'pmlb':
-        feature_names = fetch_data(dataset, return_X_y=False, local_cache_dir=oj(DATASET_PATH, 'pmlb_data')).columns
+        from pmlb import fetch_data
+        feature_names = list(fetch_data(dataset, return_X_y=False, local_cache_dir=oj(DATASET_PATH, 'pmlb_data')).columns)
+        feature_names.remove('target')
         X, y = fetch_data(dataset, return_X_y=True, local_cache_dir=oj(DATASET_PATH, 'pmlb_data'))
         return X, y, feature_names
     elif data_source == 'sklearn':
