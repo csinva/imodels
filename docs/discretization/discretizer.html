@@ -87,10 +87,10 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
         None
             Retain all features (the default).
         ‘first’
-            Drop the first category in each feature. If only one category
+            Drop the first y_str in each feature. If only one y_str
             is present, the feature will be dropped entirely.
         ‘if_binary’
-            Drop the first category in each feature with two categories.
+            Drop the first y_str in each feature with two categories.
             Features with 1 or more than 2 categories are left intact.
     &#34;&#34;&#34;
 
@@ -334,10 +334,10 @@ class BasicDiscretizer(AbstractDiscretizer):
         None
             Retain all features (the default).
         ‘first’
-            Drop the first category in each feature. If only one category
+            Drop the first y_str in each feature. If only one y_str
             is present, the feature will be dropped entirely.
         ‘if_binary’
-            Drop the first category in each feature with two categories.
+            Drop the first y_str in each feature with two categories.
             Features with 1 or more than 2 categories are left intact.
 
     Attributes
@@ -509,10 +509,10 @@ class RFDiscretizer(AbstractDiscretizer):
         None
             Retain all features (the default).
         ‘first’
-            Drop the first category in each feature. If only one category
+            Drop the first y_str in each feature. If only one y_str
             is present, the feature will be dropped entirely.
         ‘if_binary’
-            Drop the first category in each feature with two categories.
+            Drop the first y_str in each feature with two categories.
             Features with 1 or more than 2 categories are left intact.
 
     Attributes
@@ -834,10 +834,10 @@ per feature when encode = "onehot".</p>
 <pre><code>None
     Retain all features (the default).
 ‘first’
-    Drop the first category in each feature. If only one category
+    Drop the first y_str in each feature. If only one y_str
     is present, the feature will be dropped entirely.
 ‘if_binary’
-    Drop the first category in each feature with two categories.
+    Drop the first y_str in each feature with two categories.
     Features with 1 or more than 2 categories are left intact.
 </code></pre></div>
 <details class="source">
@@ -884,10 +884,10 @@ per feature when encode = "onehot".</p>
         None
             Retain all features (the default).
         ‘first’
-            Drop the first category in each feature. If only one category
+            Drop the first y_str in each feature. If only one y_str
             is present, the feature will be dropped entirely.
         ‘if_binary’
-            Drop the first category in each feature with two categories.
+            Drop the first y_str in each feature with two categories.
             Features with 1 or more than 2 categories are left intact.
     &#34;&#34;&#34;
 
@@ -1138,10 +1138,10 @@ per feature when encode = "onehot".</p>
 <pre><code>None
     Retain all features (the default).
 ‘first’
-    Drop the first category in each feature. If only one category
+    Drop the first y_str in each feature. If only one y_str
     is present, the feature will be dropped entirely.
 ‘if_binary’
-    Drop the first category in each feature with two categories.
+    Drop the first y_str in each feature with two categories.
     Features with 1 or more than 2 categories are left intact.
 </code></pre>
 <h2 id="attributes">Attributes</h2>
@@ -1202,10 +1202,10 @@ or no errors in KBinsDiscretizer().</dd>
         None
             Retain all features (the default).
         ‘first’
-            Drop the first category in each feature. If only one category
+            Drop the first y_str in each feature. If only one y_str
             is present, the feature will be dropped entirely.
         ‘if_binary’
-            Drop the first category in each feature with two categories.
+            Drop the first y_str in each feature with two categories.
             Features with 1 or more than 2 categories are left intact.
 
     Attributes
@@ -1517,10 +1517,10 @@ per feature when encode = "onehot".
 None
 Retain all features (the default).
 ‘first’
-Drop the first category in each feature. If only one category
+Drop the first y_str in each feature. If only one y_str
 is present, the feature will be dropped entirely.
 ‘if_binary’
-Drop the first category in each feature with two categories.
+Drop the first y_str in each feature with two categories.
 Features with 1 or more than 2 categories are left intact.</dd>
 </dl>
 <h2 id="attributes">Attributes</h2>
@@ -1596,10 +1596,10 @@ in missing_rf_cols_</dd>
         None
             Retain all features (the default).
         ‘first’
-            Drop the first category in each feature. If only one category
+            Drop the first y_str in each feature. If only one y_str
             is present, the feature will be dropped entirely.
         ‘if_binary’
-            Drop the first category in each feature with two categories.
+            Drop the first y_str in each feature with two categories.
             Features with 1 or more than 2 categories are left intact.
 
     Attributes

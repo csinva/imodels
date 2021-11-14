@@ -59,10 +59,10 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
         None
             Retain all features (the default).
         ‘first’
-            Drop the first category in each feature. If only one category
+            Drop the first y_str in each feature. If only one y_str
             is present, the feature will be dropped entirely.
         ‘if_binary’
-            Drop the first category in each feature with two categories.
+            Drop the first y_str in each feature with two categories.
             Features with 1 or more than 2 categories are left intact.
     """
 
@@ -306,10 +306,10 @@ class BasicDiscretizer(AbstractDiscretizer):
         None
             Retain all features (the default).
         ‘first’
-            Drop the first category in each feature. If only one category
+            Drop the first y_str in each feature. If only one y_str
             is present, the feature will be dropped entirely.
         ‘if_binary’
-            Drop the first category in each feature with two categories.
+            Drop the first y_str in each feature with two categories.
             Features with 1 or more than 2 categories are left intact.
 
     Attributes
@@ -481,10 +481,10 @@ class RFDiscretizer(AbstractDiscretizer):
         None
             Retain all features (the default).
         ‘first’
-            Drop the first category in each feature. If only one category
+            Drop the first y_str in each feature. If only one y_str
             is present, the feature will be dropped entirely.
         ‘if_binary’
-            Drop the first category in each feature with two categories.
+            Drop the first y_str in each feature with two categories.
             Features with 1 or more than 2 categories are left intact.
 
     Attributes

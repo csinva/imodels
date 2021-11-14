@@ -8,7 +8,7 @@ from os.path import join as oj
 import numpy as np
 import pandas as pd
 
-from experiments.config.datasets import DATASETS_CLASSIFICATION
+from experiments.config.datasets import DATASETS_CLASSIFICATION, DATASETS_REGRESSION
 from experiments.util import get_results_path_from_args
 from experiments.validate import compute_meta_auc
 
@@ -23,7 +23,10 @@ def combine_comparisons(path: str):
     all_files = glob.glob(oj(path, '*'))
     model_files = [f for f in all_files
                    if '_comparisons' in f]
-
+    if len(model_files) == 0:
+        print('No files found at ', path)
+        return
+    print('\tprocessing path', path)
     results_sorted = [pkl.load(open(f, 'rb')) for f in model_files]
 
     df = pd.concat([r['df'] for r in results_sorted])
@@ -61,18 +64,14 @@ def combine_comparisons(path: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str)
     parser.add_argument('--low_data', action='store_true')
     parser.add_argument('--results_path', type=str,
                         default=oj(os.path.dirname(os.path.realpath(__file__)), 'results'))
     parser.add_argument('--splitting_strategy', type=str, default="train-test")
     args = parser.parse_args()
 
-    datasets = DATASETS_CLASSIFICATION
-    if args.dataset:
-        datasets = list(filter(lambda x: args.dataset == x[0], DATASETS_CLASSIFICATION))
-
+    datasets = DATASETS_CLASSIFICATION + DATASETS_REGRESSION
+    
     for dataset in datasets:
         path = get_results_path_from_args(args, dataset[0])
-        print('path', path)
         combine_comparisons(path)

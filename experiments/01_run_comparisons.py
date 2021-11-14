@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score, f1_score, recall_score, \
-    precision_score, r2_score, explained_variance_score, mean_absolute_error
+    precision_score, r2_score, explained_variance_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from tqdm import tqdm
@@ -49,7 +49,7 @@ def compare_estimators(estimators: List[Model],
     # loop over datasets
     for d in datasets:
         if args.verbose:
-            print("comparing on dataset", d[0])
+            print("\tdataset", d[0], 'ests', estimators)
         X, y, feat_names = get_clean_dataset(d[1], data_source=d[2])
         if args.low_data:
             test_size = X.shape[0] - 1000
@@ -63,7 +63,9 @@ def compare_estimators(estimators: List[Model],
 
         # loop over estimators
         for model in tqdm(estimators, leave=False):
+            # print('kwargs', model.kwargs)
             est = model.cls(**model.kwargs)
+            # print(est.criterion)
 
             start = time.time()
             if type(est) in [RandomForestClassifier, GradientBoostingClassifier, DecisionTreeClassifier]:
@@ -183,28 +185,40 @@ def get_metrics(classification_or_regression: str = 'classification'):
         return [
                    ('r2', r2_score),
                    ('explained_variance', explained_variance_score),
-                   ('neg_mean_squared_error', mean_absolute_error),
+                   ('neg_mean_squared_error', mean_squared_error),
                ] + mutual
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+
+    # often-chaning args
+    parser.add_argument('--classification_or_regression', type=str, default=None)
+    parser.add_argument('--model', type=str, default=None)  # , default='c4')
+    parser.add_argument('--dataset', type=str, default=None)  # default='reci')
+
     # for multiple reruns, should support varying split_seed
+    parser.add_argument('--ignore_cache', action='store_true', default=False)
     parser.add_argument('--splitting_strategy', type=str, default="train-test")
-    parser.add_argument('--dataset', type=str)
-    parser.add_argument('--ignore_cache', action='store_true', default=True)
     parser.add_argument('--low_data', action='store_true', help='whether to subsample the data')
-    parser.add_argument('--ensemble', action='store_true', default=False)
     parser.add_argument('--verbose', action='store_true', default=True)
-    parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--parallel_id', nargs='+', type=int, default=None)
     parser.add_argument('--split_seed', type=int, default=0)
-    parser.add_argument('--classification_or_regression', type=str, default='regression')
+    parser.add_argument('--ensemble', action='store_true', default=False)
     parser.add_argument('--results_path', type=str,
                         default=oj(os.path.dirname(os.path.realpath(__file__)), 'results'))
     args = parser.parse_args()
     assert args.splitting_strategy in ['train-test', 'train-tune-test']
 
+    if args.classification_or_regression is None:
+        if args.dataset in [d[0] for d in DATASETS_CLASSIFICATION]:
+            args.classification_or_regression = 'classification'
+        elif args.dataset in [d[0] for d in DATASETS_REGRESSION]:
+            args.classification_or_regression = 'regression'
+        else:
+            raise ValueError('Either args.classification_or_regression or args.dataset must be properly set!')
+            
+            
     # basic setup
     if args.classification_or_regression == 'classification':
         datasets = DATASETS_CLASSIFICATION
@@ -217,9 +231,9 @@ if __name__ == '__main__':
 
     # filter based on args
     if args.dataset:
-        datasets = list(filter(lambda x: args.dataset == x[0], datasets))
+        datasets = list(filter(lambda x: args.dataset.lower() in x[0].lower(), datasets))
     if args.model:
-        ests = list(filter(lambda x: args.model in x[0].name, ests))
+        ests = list(filter(lambda x: args.model.lower() in x[0].name.lower(), ests))
 
     """
     if args.ensemble:
@@ -231,6 +245,11 @@ if __name__ == '__main__':
         ests = [est[args.parallel_id[0]:args.parallel_id[1] + 1] for est in ests]
     elif args.parallel_id is not None:
         ests = [[est[args.parallel_id[0]]] for est in ests]
+
+    if len(ests) == 0:
+        raise ValueError('No valid estimators!')
+    if len(datasets) == 0:
+        raise ValueError('No valid datasets!')
     if args.verbose:
         print('running',
               'datasets', [d[0] for d in datasets],
@@ -246,3 +265,4 @@ if __name__ == '__main__':
                            metrics,
                            est,
                            args)
+    print('completed all experiments successfully!')

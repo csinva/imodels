@@ -39,6 +39,7 @@ setuptools.setup(
             'pytest-cov',
             'slurmpy',
             'tqdm',
+            'pmlb',
         ]
     },
     python_requires='>=3.6',
