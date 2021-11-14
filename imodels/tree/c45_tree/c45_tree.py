@@ -3,10 +3,6 @@ References
 ----------
 .. [1] https://en.wikipedia.org/wiki/Decision_tree_learning
 .. [2] https://en.wikipedia.org/wiki/C4.5_algorithm
-.. [3] L. Breiman, J. Friedman, R. Olshen, and C. Stone, "Classification
-       and Regression Trees", Wadsworth, Belmont, CA, 1984.
-.. [4] J. R. Quinlain, "C4.5: Programs for Machine Learning",
-       Morgan Kaufmann Publishers, 1993
 """
 from typing import List
 from xml.dom import minidom
@@ -39,7 +35,9 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         if feature_names is None:
             self.feature_names = [f'X_{x}' for x in range(X.shape[1])]
         else:
-            self.feature_names = list(feature_names)
+            # only include alphanumeric chars / replace spaces with underscores
+            self.feature_names = [''.join([i for i in x if i.isalnum()]).replace(' ', '_')
+                                  for x in feature_names]
 
         assert len(self.feature_names) == X.shape[1]
 
@@ -53,13 +51,13 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         root = ET.Element('GreedyTree')
         self.grow_tree(data, categories, root, self.feature_names)  # adds to root
         self.tree_ = ET.tostring(root, encoding="unicode")
+        self.dom_ = minidom.parseString(self.tree_)
         return self
 
     def raw_preds(self, X):
         check_is_fitted(self, ['tree_', 'resultType', 'feature_names'])
         X = check_array(X)
-        dom = minidom.parseString(self.tree_)
-        root = dom.childNodes[0]
+        root = self.dom_.childNodes[0]
         prediction = []
         for i in range(X.shape[0]):
             answerlist = decision(root, X[i], self.feature_names, 1)
@@ -77,8 +75,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
 
     def __str__(self):
         check_is_fitted(self, ['tree_'])
-        dom = minidom.parseString(self.tree_)
-        return dom.toprettyxml(newl="\r\n")
+        return self.dom_.toprettyxml(newl="\r\n")
 
     def grow_tree(self, X_t: List[list], y_str: List[str], parent, attrs_names):
         """

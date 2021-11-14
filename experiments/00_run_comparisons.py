@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score, f1_score, recall_score, \
-    precision_score, r2_score, explained_variance_score, mean_absolute_error, mean_squared_error
+    precision_score, r2_score, explained_variance_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from tqdm import tqdm
@@ -191,17 +191,20 @@ def get_metrics(classification_or_regression: str = 'classification'):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+
+    # often-chaning args
+    parser.add_argument('--classification_or_regression', type=str, default='classification')
+    parser.add_argument('--model', type=str, default=None)  # , default='c4')
+    parser.add_argument('--dataset', type=str, default=None)  # default='reci')
+
     # for multiple reruns, should support varying split_seed
+    parser.add_argument('--ignore_cache', action='store_true', default=False)
     parser.add_argument('--splitting_strategy', type=str, default="train-test")
-    parser.add_argument('--dataset', type=str)
-    parser.add_argument('--ignore_cache', action='store_true', default=True)
     parser.add_argument('--low_data', action='store_true', help='whether to subsample the data')
-    parser.add_argument('--ensemble', action='store_true', default=False)
     parser.add_argument('--verbose', action='store_true', default=True)
-    parser.add_argument('--model', type=str, default=None)
     parser.add_argument('--parallel_id', nargs='+', type=int, default=None)
     parser.add_argument('--split_seed', type=int, default=0)
-    parser.add_argument('--classification_or_regression', type=str, default='regression')
+    parser.add_argument('--ensemble', action='store_true', default=False)
     parser.add_argument('--results_path', type=str,
                         default=oj(os.path.dirname(os.path.realpath(__file__)), 'results'))
     args = parser.parse_args()
