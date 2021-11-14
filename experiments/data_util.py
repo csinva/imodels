@@ -80,7 +80,7 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
         if dataset == 'friedman1':
             X, y = sklearn.datasets.make_friedman1(n_samples=200, n_features=10)
         elif dataset == 'friedman2':
-            X, y = sklearn.datasets.make_friedman2(n_samples=200, n_features=4)
+            X, y = sklearn.datasets.make_friedman2(n_samples=200)
         elif dataset == 'friedman3':
-            X, y = sklearn.datasets.make_friedman3(n_samples=200, n_features=4)
+            X, y = sklearn.datasets.make_friedman3(n_samples=200)
         return X, y, ['X_' + str(i + 1) for i in range(X.shape[1])]
