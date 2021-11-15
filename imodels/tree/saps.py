@@ -4,6 +4,7 @@ import numpy as np
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
+from sklearn.linear_model import RidgeCV, RidgeClassifierCV
 from sklearn.model_selection import train_test_split
 
 
@@ -11,16 +12,25 @@ class Node:
     def __init__(self, feature: int = None, threshold: int = None,
                  value=None, idxs=None, is_root: bool = False, left=None,
                  impurity_reduction: float = None, tree_num: int = None,
-                 right=None):
+                 right=None, split_or_linear='split'):
+        """Node class for splitting
+        """
+
+        # split or linear
         self.feature = feature
-        self.threshold = threshold
         self.is_root = is_root
         self.idxs = idxs
-        self.left = left
-        self.right = right
-        self.value = value
         self.impurity_reduction = impurity_reduction
         self.tree_num = tree_num
+        self.split_or_linear = split_or_linear
+
+        # different meanings
+        self.value = value  # for split this is mean, for linear this is weight
+
+        # split-specific (for linear these should all be None)
+        self.threshold = threshold
+        self.left = left
+        self.right = right
         self.left_temp = None
         self.right_temp = None
 
@@ -29,15 +39,15 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-        node_type = 'split'
+
+        # if self.split_or_linear:
+
         if self.is_root:
-            node_type = 'root'
-            return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} {node_type})'
+            return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
         elif self.left is None and self.right is None:
-            node_type = 'leaf'
-            return f'Val: {self.value[0][0]:0.3f} ({node_type})'
+            return f'Val: {self.value[0][0]:0.3f} (leaf})'
         else:
-            return f'X_{self.feature} <= {self.threshold:0.3f} ({node_type})'
+            return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
 
     def __repr__(self):
         return self.__str__()
@@ -46,9 +56,13 @@ class Node:
 class SAPS(BaseEstimator):
     """Experimental SAPS (sum of saplings) classifier
     """
-    def __init__(self, max_rules: int = None):
+
+    def __init__(self, max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False):
         super().__init__()
         self.max_rules = max_rules
+        self.posthoc_ridge = posthoc_ridge
+        self.include_linear = include_linear
+        self.weighted_model_ = None  # set if using posthoc_ridge
         self._init_prediction_task()  # decides between regressor and classifier
 
     def _init_prediction_task(self):
@@ -213,6 +227,16 @@ class SAPS(BaseEstimator):
             if self.max_rules is not None:
                 if self.complexity_ >= self.max_rules:
                     return self
+
+        # potentially fit linear model on the tree preds
+        if self.posthoc_ridge:
+            if self.prediction_task == 'regression':
+                self.weighted_model_ = RidgeCV(alphas=(0.01, 0.1, 0.5, 1.0, 5, 10))
+            elif self.prediction_task == 'classification':
+                self.weighted_model_ = RidgeClassifierCV(alphas=(0.01, 0.1, 0.5, 1.0, 5, 10))
+            X_feats = self.extract_tree_predictions(X)
+            self.weighted_model_.fit(X_feats, y)
+
         return self
 
     def tree_to_str(self, root: Node, prefix=''):
@@ -225,6 +249,9 @@ class SAPS(BaseEstimator):
         return '------------\n' + '\n\t+\n'.join([self.tree_to_str(t) for t in self.trees_])
 
     def predict(self, X):
+        if self.posthoc_ridge and self.weighted_model_:  # note, during fitting don't use the weighted moel
+            X_feats = self.extract_tree_predictions(X)
+            return self.weighted_model_.predict(X_feats)
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
             preds += self.predict_tree(tree, X)
@@ -236,6 +263,11 @@ class SAPS(BaseEstimator):
     def predict_proba(self, X):
         if self.prediction_task == 'regression':
             return NotImplemented
+        elif self.posthoc_ridge and self.weighted_model_:  # note, during fitting don't use the weighted moel
+            X_feats = self.extract_tree_predictions(X)
+            d = self.weighted_model_.decision_function(X_feats)  # for 2 classes, this (n_samples,)
+            probs = np.exp(d) / (1 + np.exp(d))
+            return np.vstack((1 - probs, probs)).transpose()
         else:
             preds = np.zeros(X.shape[0])
             for tree in self.trees_:
@@ -243,28 +275,39 @@ class SAPS(BaseEstimator):
             preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
             return np.vstack((1 - preds, preds)).transpose()
 
-    def predict_tree(self, root: Node, X):
-        """This can be made way faster
+    def extract_tree_predictions(self, X):
+        """Extract predictions for all trees
         """
+        X_feats = np.zeros((X.shape[0], len(self.trees_)))
+        for tree_num_ in range(len(self.trees_)):
+            preds_tree = self.predict_tree(self.trees_[tree_num_], X)
+            X_feats[:, tree_num_] = preds_tree
+        return X_feats
+
+    def predict_tree(self, root: Node, X):
+        """Predict for a single tree
+        This can be made way faster
+        """
+
+        def predict_tree_single_point(root: Node, x):
+            if root.left is None and root.right is None:
+                return root.value
+            left = x[root.feature] <= root.threshold
+            if left:
+                if root.left is None:  # we don't actually have to worry about this case
+                    return root.value
+                else:
+                    return predict_tree_single_point(root.left, x)
+            else:
+                if root.right is None:  # we don't actually have to worry about this case
+                    return root.value
+                else:
+                    return predict_tree_single_point(root.right, x)
+
         preds = np.zeros(X.shape[0])
         for i in range(X.shape[0]):
-            preds[i] = self.predict_tree_single_point(root, X[i])
+            preds[i] = predict_tree_single_point(root, X[i])
         return preds
-
-    def predict_tree_single_point(self, root: Node, x):
-        if root.left is None and root.right is None:
-            return root.value
-        left = x[root.feature] <= root.threshold
-        if left:
-            if root.left is None:  # we don't actually have to worry about this case
-                return root.value
-            else:
-                return self.predict_tree_single_point(root.left, x)
-        else:
-            if root.right is None:  # we don't actually have to worry about this case
-                return root.value
-            else:
-                return self.predict_tree_single_point(root.right, x)
 
 
 class SaplingSumRegressor(SAPS):
