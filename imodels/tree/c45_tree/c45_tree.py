@@ -4,15 +4,17 @@ References
 .. [1] https://en.wikipedia.org/wiki/Decision_tree_learning
 .. [2] https://en.wikipedia.org/wiki/C4.5_algorithm
 """
+from copy import deepcopy
 from typing import List
 from xml.dom import minidom
 from xml.etree import ElementTree as ET
-import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 
+import numpy as np
+import pandas as pd
 from imodels.tree.c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
     set_as_leaf_node
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 
 
 class C45TreeClassifier(BaseEstimator, ClassifierMixin):
@@ -40,7 +42,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
                                   for x in feature_names]
             self.feature_names = ['X_' + x if x[0].isdigit()
                                   else x
-                                  for x in feature_names]
+                                  for x in self.feature_names]
 
         assert len(self.feature_names) == X.shape[1]
 
@@ -61,6 +63,9 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
     def raw_preds(self, X):
         check_is_fitted(self, ['tree_', 'resultType', 'feature_names'])
         X = check_array(X)
+        if isinstance(X, pd.DataFrame):
+            X = deepcopy(X)
+            X.columns = self.feature_names
         root = self.dom_.childNodes[0]
         prediction = []
         for i in range(X.shape[0]):
@@ -184,9 +189,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
 
 
 if __name__ == '__main__':
-    from imodels import C45TreeClassifier
-    import numpy as np
-    from experiments.data_util import get_clean_dataset
+    from imodels.util.data_util import get_clean_dataset
 
     X, y, feature_names = get_clean_dataset('ionosphere', data_source='pmlb')
     m = C45TreeClassifier(max_rules=3)
