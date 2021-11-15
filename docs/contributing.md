@@ -10,6 +10,8 @@ Before contributing, it would be good to read the sklearn estimator [contributin
 
 Project is also on [pypi](https://pypi.org/project/imodels/). Packaged following [this tutorial](https://realpython.com/pypi-publish-python-package/). Relevant commands:
 ```bash
+pip install twine
+
 python setup.py sdist bdist_wheel
 
 twine check dist/*

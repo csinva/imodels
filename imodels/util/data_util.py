@@ -43,7 +43,7 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
         df = pd.read_csv(dataset)
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
         feature_names = df.columns.values[:-1]
-        return np.nan_to_num(X.astype('float32')), y, feature_names
+        return np.nan_to_num(X.astype('float32')), y, clean_feat_names(feature_names)
     elif data_source == 'pmlb':
         from pmlb import fetch_data
         feature_names = list(
@@ -61,7 +61,7 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
         return data['data'], data['target'], clean_feat_names(data['feature_names'])
     elif data_source == 'openml':  # note this api might change in newer sklearn - should give dataset-id not name
         data = sklearn.datasets.fetch_openml(data_id=dataset, data_home=oj(DATASET_PATH, 'openml_data'))
-        X, y, feature_names = data['data'], data['target'], data['feature_names']
+        X, y, feature_names = data['data'], data['target'], clean_feat_names(data['feature_names'])
         if isinstance(X, pd.DataFrame):
             X = X.values
         if isinstance(y, pd.Series):

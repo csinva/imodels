@@ -44,7 +44,8 @@ class Node:
 
 
 class SAPS(BaseEstimator):
-
+    """Experimental SAPS (sum of saplings) classifier
+    """
     def __init__(self, max_rules: int = None):
         super().__init__()
         self.max_rules = max_rules
