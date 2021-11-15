@@ -39,13 +39,12 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-
-        # if self.split_or_linear:
-
+        if self.split_or_linear:
+            return f'X_{self.feature} * {self.value:0.3f} (linear)'
         if self.is_root:
             return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
         elif self.left is None and self.right is None:
-            return f'Val: {self.value[0][0]:0.3f} (leaf})'
+            return f'Val: {self.value[0][0]:0.3f} (leaf)'
         else:
             return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
 
@@ -73,11 +72,18 @@ class SAPS(BaseEstimator):
         """
         self.prediction_task = 'regression'
 
-    def construct_node_from_stump(self, stump, idxs, X, tree_num):
+    def construct_node_linear(self, X, y, idxs, tree_num=0):
+        return
+
+    def construct_node_with_stump(self, idxs, X, y, tree_num):
         # array indices
         SPLIT = 0
         LEFT = 1
         RIGHT = 2
+
+        # fit stump
+        stump = tree.DecisionTreeRegressor(max_depth=1)
+        stump.fit(X[idxs], y[idxs])
 
         # these are all arrays, arr[0] is split node
         # note: -2 is dummy
@@ -128,8 +134,7 @@ class SAPS(BaseEstimator):
         idxs
             indexes of subset to fit to
         """
-        stump = tree.DecisionTreeRegressor(max_depth=1)
-        return stump.fit(X[idxs], y[idxs])
+
 
     def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False):
 
@@ -137,11 +142,13 @@ class SAPS(BaseEstimator):
 
         idxs = np.ones(X.shape[0], dtype=bool)
         stump = self.fit_stump(X, y, idxs)
-        node_init = self.construct_node_from_stump(stump, idxs=idxs, X=X, tree_num=0)
+        node_init = self.construct_node_with_stump(idxs=idxs, X=X, y=y, tree_num=0)
         node_init.setattrs(is_root=True)
-
-        # should eventually make this a heap, for now just sort so largest impurity reduction comes last
         potential_splits = [node_init]
+        if self.include_linear:
+            node_init_linear = self.construct_node_linear(X, y, idxs, tree_num=0)
+            node_init_linear.setattrs(is_root=True)
+            potential_splits.append(node_init_linear)
 
         self.trees_ = []
         y_predictions_per_tree = {}
@@ -190,21 +197,13 @@ class SAPS(BaseEstimator):
                     if not tree_num_2_ == tree_num_:
                         y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
 
-            # debugging
-            if self.complexity_ == 1:
-                assert np.array_equal(y_predictions_per_tree[0], stump.predict(X)), \
-                    'For one rule, prediction should match stump'
-                assert np.array_equal(y_residuals_per_tree[0], y), \
-                    'For one rule, residual should match y since there are no other trees'
-
             # recompute all impurities + update potential_split children
             potential_splits_new = []
             for potential_split in potential_splits:
                 y_target = y_residuals_per_tree[potential_split.tree_num]
-                stump = self.fit_stump(X, y_target, idxs=potential_split.idxs)
-                potential_split_updated = self.construct_node_from_stump(stump,
-                                                                         idxs=potential_split.idxs,
+                potential_split_updated = self.construct_node_with_stump(idxs=potential_split.idxs,
                                                                          X=X,
+                                                                         y=y_target,
                                                                          tree_num=potential_split.tree_num)
 
                 # need to preserve certain attributes from before (value + is_root)
@@ -220,7 +219,7 @@ class SAPS(BaseEstimator):
                 if potential_split.impurity_reduction is not None:  # there was a split found
                     potential_splits_new.append(potential_split)
 
-            # sort so largest impurity reduction comes last
+            # sort so largest impurity reduction comes last (should probs make this a heap later)
             potential_splits = sorted(potential_splits_new, key=lambda x: x.impurity_reduction)
             if verbose:
                 print(self)
