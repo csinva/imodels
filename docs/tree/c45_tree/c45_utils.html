@@ -148,24 +148,24 @@ def add(d1, d2):
     return d
 
 
-def decision(root, obs, attrs_names, p):
+def decision(root, obs, feature_names: list, p):
     if root.hasChildNodes():
         att_name = root.firstChild.nodeName
         if att_name == &#34;#text&#34;:
-            return decision(root.firstChild, obs, attrs_names, p)
+            return decision(root.firstChild, obs, feature_names, p)
         else:
-            att = obs[attrs_names.index(att_name)]
+            att = obs[feature_names.index(att_name)]
             if att == &#34;?&#34;:
                 d = {}
                 for child in root.childNodes:
-                    d = add(d, decision(child, obs, attrs_names, p * float(child.getAttribute(&#34;p&#34;))))
+                    d = add(d, decision(child, obs, feature_names, p * float(child.getAttribute(&#34;p&#34;))))
                 return d
             else:
                 for child in root.childNodes:
                     if child.getAttribute(&#34;flag&#34;) == &#34;m&#34; and child.getAttribute(&#34;feature&#34;) == att or \
                             child.getAttribute(&#34;flag&#34;) == &#34;l&#34; and float(att) &lt; float(child.getAttribute(&#34;feature&#34;)) or \
                             child.getAttribute(&#34;flag&#34;) == &#34;r&#34; and float(att) &gt;= float(child.getAttribute(&#34;feature&#34;)):
-                        return decision(child, obs, attrs_names, p)
+                        return decision(child, obs, feature_names, p)
     else:
         return {root.nodeValue: root.parentNode.getAttribute(&#39;p&#39;)}</code></pre>
 </details>
@@ -197,7 +197,7 @@ def decision(root, obs, attrs_names, p):
 </details>
 </dd>
 <dt id="imodels.tree.c45_tree.c45_utils.decision"><code class="name flex">
-<span>def <span class="ident">decision</span></span>(<span>root, obs, attrs_names, p)</span>
+<span>def <span class="ident">decision</span></span>(<span>root, obs, feature_names: list, p)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -205,24 +205,24 @@ def decision(root, obs, attrs_names, p):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def decision(root, obs, attrs_names, p):
+<pre><code class="python">def decision(root, obs, feature_names: list, p):
     if root.hasChildNodes():
         att_name = root.firstChild.nodeName
         if att_name == &#34;#text&#34;:
-            return decision(root.firstChild, obs, attrs_names, p)
+            return decision(root.firstChild, obs, feature_names, p)
         else:
-            att = obs[attrs_names.index(att_name)]
+            att = obs[feature_names.index(att_name)]
             if att == &#34;?&#34;:
                 d = {}
                 for child in root.childNodes:
-                    d = add(d, decision(child, obs, attrs_names, p * float(child.getAttribute(&#34;p&#34;))))
+                    d = add(d, decision(child, obs, feature_names, p * float(child.getAttribute(&#34;p&#34;))))
                 return d
             else:
                 for child in root.childNodes:
                     if child.getAttribute(&#34;flag&#34;) == &#34;m&#34; and child.getAttribute(&#34;feature&#34;) == att or \
                             child.getAttribute(&#34;flag&#34;) == &#34;l&#34; and float(att) &lt; float(child.getAttribute(&#34;feature&#34;)) or \
                             child.getAttribute(&#34;flag&#34;) == &#34;r&#34; and float(att) &gt;= float(child.getAttribute(&#34;feature&#34;)):
-                        return decision(child, obs, attrs_names, p)
+                        return decision(child, obs, feature_names, p)
     else:
         return {root.nodeValue: root.parentNode.getAttribute(&#39;p&#39;)}</code></pre>
 </details>
