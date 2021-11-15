@@ -43,7 +43,7 @@ class Node:
         return self.__str__()
 
 
-class SuperCART(BaseEstimator):
+class SAPS(BaseEstimator):
 
     def __init__(self, max_rules: int = None):
         super().__init__()
@@ -266,12 +266,12 @@ class SuperCART(BaseEstimator):
                 return self.predict_tree_single_point(root.right, x)
 
 
-class SuperCARTRegressor(SuperCART):
+class SaplingSumRegressor(SAPS):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
 
 
-class SuperCARTClassifier(SuperCART):
+class SaplingSumClassifier(SAPS):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'
 
@@ -289,6 +289,6 @@ if __name__ == '__main__':
     print('X.shape', X.shape)
     print('ys', np.unique(y_train), '\n\n')
 
-    m = SuperCARTClassifier(max_rules=5)
+    m = SaplingSumClassifier(max_rules=5)
     m.fit(X_train, y_train)
     print(m.predict_proba(X_train))

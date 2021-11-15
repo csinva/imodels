@@ -18,7 +18,7 @@ from tqdm import tqdm
 
 from experiments.config.datasets import DATASETS_CLASSIFICATION, DATASETS_REGRESSION
 # from experiments.config.util import get_estimators_for_dataset, get_ensembles_for_dataset
-from experiments.config.supercart.models import ESTIMATORS_CLASSIFICATION, ESTIMATORS_REGRESSION
+from experiments.config.saps.models import ESTIMATORS_CLASSIFICATION, ESTIMATORS_REGRESSION
 from experiments.data_util import get_clean_dataset
 from experiments.util import Model, get_complexity, get_results_path_from_args
 from experiments.validate import compute_meta_auc, get_best_accuracy
@@ -210,6 +210,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     assert args.splitting_strategy in ['train-test', 'train-tune-test']
 
+    print('dset', args.dataset, [d[0] for d in DATASETS_CLASSIFICATION])
     if args.classification_or_regression is None:
         if args.dataset in [d[0] for d in DATASETS_CLASSIFICATION]:
             args.classification_or_regression = 'classification'
