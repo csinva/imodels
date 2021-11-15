@@ -18,7 +18,7 @@ required_pypi = [
 
 setuptools.setup(
     name="imodels",
-    version="1.1.2",
+    version="1.1.3",
     author="Chandan Singh, Keyan Nasseri, Bin Yu, and others",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",
@@ -26,7 +26,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/csinva/imodels",
     packages=setuptools.find_packages(
-        exclude=['imodels.tests', 'experiments', 'notebooks', 'docs']),
+        exclude=['tests', 'tests.*', '*.test.*']
+    ),
     install_requires=required_pypi,
     extras_require={
         'dev': [
@@ -40,6 +41,8 @@ setuptools.setup(
             'slurmpy',
             'tqdm',
             'pmlb',
+
+            # docs also require pdoc3, irf, torch
         ]
     },
     python_requires='>=3.6',
