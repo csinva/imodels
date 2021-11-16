@@ -13,6 +13,8 @@ from experiments.util import DATASET_PATH
 def define_openml_outcomes(y, data_id: str):
     if data_id == '59':  # ionosphere, positive is "good" class
         y = (y == 'g').astype(int)
+    if data_id == '183': # abalone, need to convert strings to floats
+        y = y.astype(float)
     return y
 
 
