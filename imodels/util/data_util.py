@@ -24,6 +24,20 @@ def clean_feat_names(feature_names):
             else x
             for x in feature_names]
 
+def clean_features(X):
+    if issparse(X):
+        X = X.toarray()
+    try:
+        return X.astype(float)
+    except:
+        for j in range(X.shape[1]):
+            try:
+                X[:, j].astype(float)
+            except:
+                # non-numeric get replaced with numerical values
+                classes, X[:, j] = np.unique(X[:, j], return_inverse=True) 
+    return X.astype(float)
+
 
 def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[np.ndarray, np.ndarray, list]:
     """Return
@@ -54,7 +68,7 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
         X, y = fetch_data(dataset, return_X_y=True, local_cache_dir=oj(DATASET_PATH, 'pmlb_data'))
         if np.unique(y).size == 2:  # if binary classification, ensure that the classes are 0 and 1
             y -= np.min(y)
-        return X, y, clean_feat_names(feature_names)
+        return clean_features(X), y, clean_feat_names(feature_names)
     elif data_source == 'sklearn':
         if dataset == 'diabetes':
             data = sklearn.datasets.load_diabetes()
@@ -69,9 +83,7 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
         if isinstance(y, pd.Series):
             y = y.values
         y = define_openml_outcomes(y, dataset)
-        if issparse(X):
-            X = X.toarray()
-        return X, y, clean_feat_names(feature_names)
+        return clean_features(X), y, clean_feat_names(feature_names)
     elif data_source == 'synthetic':
         if dataset == 'friedman1':
             X, y = sklearn.datasets.make_friedman1(n_samples=200, n_features=10)
