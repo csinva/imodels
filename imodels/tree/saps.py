@@ -17,12 +17,12 @@ class Node:
         """
 
         # split or linear
-        self.feature = feature
         self.is_root = is_root
         self.idxs = idxs
-        self.impurity_reduction = impurity_reduction
         self.tree_num = tree_num
         self.split_or_linear = split_or_linear
+        self.feature = feature
+        self.impurity_reduction = impurity_reduction
 
         # different meanings
         self.value = value  # for split this is mean, for linear this is weight
@@ -73,9 +73,42 @@ class SAPS(BaseEstimator):
         self.prediction_task = 'regression'
 
     def construct_node_linear(self, X, y, idxs, tree_num=0):
-        return
+        """This can be made a lot faster
+        Assumes there are at least 5 points in node
+        """
+        y_target = y[idxs]
+        # print(np.unique(y_target))
+        impurity_orig = np.mean(np.square(y_target)) * idxs.sum()
 
-    def construct_node_with_stump(self, idxs, X, y, tree_num):
+        # find best linear split
+        best_impurity = impurity_orig
+        best_linear_coef = None
+        best_feature = None
+        for feature_num in range(X.shape[1]):
+            x = X[idxs, feature_num].reshape(-1, 1)
+            m = RidgeCV(fit_intercept=False)
+            m.fit(x, y_target)
+            impurity = np.min(-m.best_score_) * idxs.sum()
+            assert impurity >= 0, 'impurity should not be negative'
+            if impurity < best_impurity:
+                best_impurity = impurity
+                best_linear_coef = m.coef_[0]
+                best_feature = feature_num
+        impurity_reduction = impurity_orig - best_impurity
+
+        # no good linear fit found
+        if impurity_reduction == 0:
+            print('no good linear fit found!')
+            return Node(idxs=idxs, value=np.mean(y_target), tree_num=tree_num,
+                        feature=None, threshold=None,
+                        impurity_reduction=None, split_or_linear='split')  # leaf node that just returns its value
+        else:
+            assert isinstance(best_linear_coef, float), 'coef should be a float'
+            return Node(idxs=idxs, value=best_linear_coef, tree_num=tree_num,
+                        feature=best_feature, threshold=None,
+                        impurity_reduction=impurity_reduction, split_or_linear='linear')
+
+    def construct_node_with_stump(self, X, y, idxs, tree_num):
         # array indices
         SPLIT = 0
         LEFT = 1
@@ -122,38 +155,28 @@ class SAPS(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit_stump(self, X, y, idxs):
-        """
-
-        Parameters
-        ----------
-        X_
-            probably the same as X
-        y_
-            might change if we are predicting residuals
-        idxs
-            indexes of subset to fit to
-        """
-
-
-    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False):
+    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=True):
 
         y = y.astype(float)
-
-        idxs = np.ones(X.shape[0], dtype=bool)
-        stump = self.fit_stump(X, y, idxs)
-        node_init = self.construct_node_with_stump(idxs=idxs, X=X, y=y, tree_num=0)
-        node_init.setattrs(is_root=True)
-        potential_splits = [node_init]
-        if self.include_linear:
-            node_init_linear = self.construct_node_linear(X, y, idxs, tree_num=0)
-            node_init_linear.setattrs(is_root=True)
-            potential_splits.append(node_init_linear)
-
-        self.trees_ = []
-        y_predictions_per_tree = {}
-        y_residuals_per_tree = {}  # based on predictions above
+        self.trees_ = []  # list of the root nodes of added trees
         self.complexity_ = 0  # tracks the number of rules in the model
+        y_predictions_per_tree = {}  # predictions for each tree
+        y_residuals_per_tree = {}  # based on predictions above
+
+        # set up initial potential_splits
+        # everything in potential_splits either is_root (so it can be added directly to self.trees_)
+        # or it is a child of a root node that has already been added
+        idxs = np.ones(X.shape[0], dtype=bool)
+        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=0)
+        potential_splits = [node_init]
+        if self.include_linear and idxs.sum() >= 5:
+            node_init_linear = self.construct_node_linear(X=X, y=y, idxs=idxs, tree_num=1)
+            potential_splits.append(node_init_linear)
+        for node in potential_splits:
+            node.setattrs(is_root=True)
+        potential_splits = sorted(potential_splits, key=lambda x: x.impurity_reduction)
+
+        # start the greedy fitting algorithm\
         while len(potential_splits) > 0:
             # print('potential_splits', [str(s) for s in potential_splits])
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it's sorted)
@@ -167,33 +190,39 @@ class SAPS(BaseEstimator):
                 print('\nadding ' + str(split_node))
             self.complexity_ += 1
 
-            # assign left_temp, right_temp to be proper children
-            # (basically adds them to tree in predict method)
-            split_node.setattrs(left=split_node.left_temp, right=split_node.right_temp)
+            if split_node.split_or_linear == 'split':
+                # assign left_temp, right_temp to be proper children
+                # (basically adds them to tree in predict method)
+                split_node.setattrs(left=split_node.left_temp, right=split_node.right_temp)
 
-            # add children to potential_splits
-            potential_splits.append(split_node.left)
-            potential_splits.append(split_node.right)
+                # add children to potential_splits
+                potential_splits.append(split_node.left)
+                potential_splits.append(split_node.right)
 
             # if added a tree root
             if split_node.is_root:
-                self.trees_.append(split_node)  # start a new tree
+                # start a new tree
+                self.trees_.append(split_node)
 
                 # add new root potential node
-                node_new_root = Node(is_root=True, idxs=np.ones(X.shape[0], dtype=bool), tree_num=len(self.trees_))
+                node_new_root = Node(is_root=True, idxs=np.ones(X.shape[0], dtype=bool),
+                                     tree_num=len(self.trees_), split_or_linear=split_node.split_or_linear)
                 potential_splits.append(node_new_root)
 
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
                 y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
             y_predictions_per_tree[len(self.trees_)] = np.zeros(X.shape[0])  # dummy 0 preds for possible new tree
+            y_predictions_per_tree[len(self.trees_) + 1] = np.zeros(
+                X.shape[0])  # dummy 0 preds for possible new 2nd tree
 
             # update residuals for each tree
-            for tree_num_ in range(len(self.trees_) + 1):
+            # plus 2 is because we may have (1) a potential new tree split or (2) new tree linear
+            for tree_num_ in range(len(self.trees_) + 2):
                 y_residuals_per_tree[tree_num_] = deepcopy(y)
 
                 # subtract predictions of all other trees
-                for tree_num_2_ in range(len(self.trees_) + 1):
+                for tree_num_2_ in range(len(self.trees_) + 2):
                     if not tree_num_2_ == tree_num_:
                         y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
 
@@ -201,22 +230,40 @@ class SAPS(BaseEstimator):
             potential_splits_new = []
             for potential_split in potential_splits:
                 y_target = y_residuals_per_tree[potential_split.tree_num]
-                potential_split_updated = self.construct_node_with_stump(idxs=potential_split.idxs,
+
+                if potential_split.split_or_linear == 'split':
+                    # re-calculate the best split
+                    potential_split_updated = self.construct_node_with_stump(X=X,
+                                                                             y=y_target,
+                                                                             idxs=potential_split.idxs,
+                                                                             tree_num=potential_split.tree_num)
+
+                    # need to preserve certain attributes from before (value at this split + is_root)
+                    # value may change because residuals may have changed, but we want it to store the value from before
+                    potential_split.setattrs(
+                        feature=potential_split_updated.feature,
+                        threshold=potential_split_updated.threshold,
+                        impurity_reduction=potential_split_updated.impurity_reduction,
+                        left_temp=potential_split_updated.left_temp,
+                        right_temp=potential_split_updated.right_temp,
+                    )
+                elif potential_split.split_or_linear == 'linear':
+                    assert potential_split.is_root, 'Currently, linear node only supported as root'
+                    assert potential_split.idxs.sum() == X.shape[0], 'Currently, linear node only supported as root'
+                    potential_split_updated = self.construct_node_linear(idxs=potential_split.idxs,
                                                                          X=X,
                                                                          y=y_target,
                                                                          tree_num=potential_split.tree_num)
 
-                # need to preserve certain attributes from before (value + is_root)
-                # value may change because we are predicting something different (e.g. residuals)
-                potential_split.setattrs(
-                    feature=potential_split_updated.feature,
-                    threshold=potential_split_updated.threshold,
-                    left_temp=potential_split_updated.left_temp,
-                    right_temp=potential_split_updated.right_temp,
-                    impurity_reduction=potential_split_updated.impurity_reduction,
-                )
+                    # don't need to retain anything from before (besides maybe is_root)
+                    potential_split.setattrs(
+                        feature=potential_split_updated.feature,
+                        impurity_reduction=potential_split_updated.impurity_reduction,
+                        value=potential_split_updated.value,
+                    )
 
-                if potential_split.impurity_reduction is not None:  # there was a split found
+                # this is a valid split
+                if potential_split.impurity_reduction is not None:
                     potential_splits_new.append(potential_split)
 
             # sort so largest impurity reduction comes last (should probs make this a heap later)
@@ -239,7 +286,7 @@ class SAPS(BaseEstimator):
         return self
 
     def tree_to_str(self, root: Node, prefix=''):
-        if root is None or root.threshold is None:
+        if root is None or root.value is None:
             return ''
         pprefix = prefix + '\t'
         return prefix + str(root) + '\n' + self.tree_to_str(root.left, pprefix) + self.tree_to_str(root.right, pprefix)
@@ -289,7 +336,9 @@ class SAPS(BaseEstimator):
         """
 
         def predict_tree_single_point(root: Node, x):
-            if root.left is None and root.right is None:
+            if root.split_or_linear == 'linear':
+                return x[root.feature] * root.value
+            elif root.left is None and root.right is None:
                 return root.value
             left = x[root.feature] <= root.threshold
             if left:
