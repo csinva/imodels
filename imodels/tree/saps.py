@@ -39,14 +39,18 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-        if self.split_or_linear:
-            return f'X_{self.feature} * {self.value:0.3f} (linear)'
-        if self.is_root:
-            return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
-        elif self.left is None and self.right is None:
-            return f'Val: {self.value[0][0]:0.3f} (leaf)'
+        if self.split_or_linear == 'linear':
+            if self.is_root:
+                return f'X_{self.feature} * {self.value:0.3f} (Tree #{self.tree_num} linear root)'
+            else:
+                return f'X_{self.feature} * {self.value:0.3f} (linear)'
         else:
-            return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
+            if self.is_root:
+                return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
+            elif self.left is None and self.right is None:
+                return f'Val: {self.value[0][0]:0.3f} (leaf)'
+            else:
+                return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
 
     def __repr__(self):
         return self.__str__()
@@ -155,7 +159,7 @@ class SAPS(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=True):
+    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False):
 
         y = y.astype(float)
         self.trees_ = []  # list of the root nodes of added trees
@@ -167,10 +171,10 @@ class SAPS(BaseEstimator):
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
         # or it is a child of a root node that has already been added
         idxs = np.ones(X.shape[0], dtype=bool)
-        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=0)
+        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1)
         potential_splits = [node_init]
         if self.include_linear and idxs.sum() >= 5:
-            node_init_linear = self.construct_node_linear(X=X, y=y, idxs=idxs, tree_num=1)
+            node_init_linear = self.construct_node_linear(X=X, y=y, idxs=idxs, tree_num=-1)
             potential_splits.append(node_init_linear)
         for node in potential_splits:
             node.setattrs(is_root=True)
@@ -190,6 +194,22 @@ class SAPS(BaseEstimator):
                 print('\nadding ' + str(split_node))
             self.complexity_ += 1
 
+            # if added a tree root
+            if split_node.is_root:
+                # start a new tree
+                self.trees_.append(split_node)
+
+                # update tree_num
+                for node_ in [split_node, split_node.left_temp, split_node.right_temp]:
+                    if node_ is not None:
+                        node_.tree_num = len(self.trees_) - 1
+
+                # add new root potential node
+                node_new_root = Node(is_root=True, idxs=np.ones(X.shape[0], dtype=bool),
+                                     tree_num=-1, split_or_linear=split_node.split_or_linear)
+                potential_splits.append(node_new_root)
+
+            # add children to potential splits (note this doesn't currently add linear potential splits)
             if split_node.split_or_linear == 'split':
                 # assign left_temp, right_temp to be proper children
                 # (basically adds them to tree in predict method)
@@ -199,30 +219,18 @@ class SAPS(BaseEstimator):
                 potential_splits.append(split_node.left)
                 potential_splits.append(split_node.right)
 
-            # if added a tree root
-            if split_node.is_root:
-                # start a new tree
-                self.trees_.append(split_node)
-
-                # add new root potential node
-                node_new_root = Node(is_root=True, idxs=np.ones(X.shape[0], dtype=bool),
-                                     tree_num=len(self.trees_), split_or_linear=split_node.split_or_linear)
-                potential_splits.append(node_new_root)
-
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
                 y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
-            y_predictions_per_tree[len(self.trees_)] = np.zeros(X.shape[0])  # dummy 0 preds for possible new tree
-            y_predictions_per_tree[len(self.trees_) + 1] = np.zeros(
-                X.shape[0])  # dummy 0 preds for possible new 2nd tree
+            y_predictions_per_tree[-1] = np.zeros(X.shape[0])  # dummy 0 preds for possible new trees
 
             # update residuals for each tree
-            # plus 2 is because we may have (1) a potential new tree split or (2) new tree linear
-            for tree_num_ in range(len(self.trees_) + 2):
+            # -1 is key for potential new tree
+            for tree_num_ in list(range(len(self.trees_))) + [-1]:
                 y_residuals_per_tree[tree_num_] = deepcopy(y)
 
                 # subtract predictions of all other trees
-                for tree_num_2_ in range(len(self.trees_) + 2):
+                for tree_num_2_ in range(len(self.trees_)):
                     if not tree_num_2_ == tree_num_:
                         y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
 
@@ -286,7 +294,11 @@ class SAPS(BaseEstimator):
         return self
 
     def tree_to_str(self, root: Node, prefix=''):
-        if root is None or root.value is None:
+        if root is None:
+            return ''
+        elif root.split_or_linear == 'linear':
+            return prefix + str(root)
+        elif root.threshold is None:
             return ''
         pprefix = prefix + '\t'
         return prefix + str(root) + '\n' + self.tree_to_str(root.left, pprefix) + self.tree_to_str(root.right, pprefix)
