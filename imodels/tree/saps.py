@@ -102,7 +102,6 @@ class SAPS(BaseEstimator):
 
         # no good linear fit found
         if impurity_reduction == 0:
-            print('no good linear fit found!')
             return Node(idxs=idxs, value=np.mean(y_target), tree_num=tree_num,
                         feature=None, threshold=None,
                         impurity_reduction=None, split_or_linear='split')  # leaf node that just returns its value
@@ -160,7 +159,6 @@ class SAPS(BaseEstimator):
         return node_split
 
     def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False):
-
         y = y.astype(float)
         self.trees_ = []  # list of the root nodes of added trees
         self.complexity_ = 0  # tracks the number of rules in the model
@@ -180,14 +178,16 @@ class SAPS(BaseEstimator):
             node.setattrs(is_root=True)
         potential_splits = sorted(potential_splits, key=lambda x: x.impurity_reduction)
 
-        # start the greedy fitting algorithm\
-        while len(potential_splits) > 0:
+        # start the greedy fitting algorithm
+        finished = False
+        while len(potential_splits) > 0 and not finished:
             # print('potential_splits', [str(s) for s in potential_splits])
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it's sorted)
 
             # don't split on node
             if split_node.impurity_reduction < min_impurity_decrease:
-                return self
+                finished = True
+                break
 
             # split on node
             if verbose:
@@ -278,9 +278,9 @@ class SAPS(BaseEstimator):
             potential_splits = sorted(potential_splits_new, key=lambda x: x.impurity_reduction)
             if verbose:
                 print(self)
-            if self.max_rules is not None:
-                if self.complexity_ >= self.max_rules:
-                    return self
+            if self.max_rules is not None and self.complexity_ >= self.max_rules:
+                finished = True
+                break
 
         # potentially fit linear model on the tree preds
         if self.posthoc_ridge:
@@ -290,7 +290,6 @@ class SAPS(BaseEstimator):
                 self.weighted_model_ = RidgeClassifierCV(alphas=(0.01, 0.1, 0.5, 1.0, 5, 10))
             X_feats = self.extract_tree_predictions(X)
             self.weighted_model_.fit(X_feats, y)
-
         return self
 
     def tree_to_str(self, root: Node, prefix=''):
