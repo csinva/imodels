@@ -76,9 +76,10 @@ class SAPS(BaseEstimator):
         """
         self.prediction_task = 'regression'
 
-    def construct_node_linear(self, X, y, idxs, tree_num=0):
+    def construct_node_linear(self, X, y, idxs, tree_num=0, sample_weight=None):
         """This can be made a lot faster
         Assumes there are at least 5 points in node
+        Doesn't currently support sample_weight!
         """
         y_target = y[idxs]
         # print(np.unique(y_target))
@@ -111,7 +112,7 @@ class SAPS(BaseEstimator):
                         feature=best_feature, threshold=None,
                         impurity_reduction=impurity_reduction, split_or_linear='linear')
 
-    def construct_node_with_stump(self, X, y, idxs, tree_num):
+    def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
         # array indices
         SPLIT = 0
         LEFT = 1
@@ -119,7 +120,7 @@ class SAPS(BaseEstimator):
 
         # fit stump
         stump = tree.DecisionTreeRegressor(max_depth=1)
-        stump.fit(X[idxs], y[idxs])
+        stump.fit(X[idxs], y[idxs], sample_weight=sample_weight[idxs])
 
         # these are all arrays, arr[0] is split node
         # note: -2 is dummy
@@ -158,8 +159,19 @@ class SAPS(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False):
+    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None):
+        """
+        Params
+        ------
+        sample_weight: array-like of shape (n_samples,), default=None
+            Sample weights. If None, then samples are equally weighted.
+            Splits that would create child nodes with net zero or negative weight
+            are ignored while searching for a split in each node.
+        """
         y = y.astype(float)
+        if feature_names is not None:
+            self.feature_names_ = feature_names
+
         self.trees_ = []  # list of the root nodes of added trees
         self.complexity_ = 0  # tracks the number of rules in the model
         y_predictions_per_tree = {}  # predictions for each tree
@@ -169,10 +181,10 @@ class SAPS(BaseEstimator):
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
         # or it is a child of a root node that has already been added
         idxs = np.ones(X.shape[0], dtype=bool)
-        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1)
+        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
         potential_splits = [node_init]
         if self.include_linear and idxs.sum() >= 5:
-            node_init_linear = self.construct_node_linear(X=X, y=y, idxs=idxs, tree_num=-1)
+            node_init_linear = self.construct_node_linear(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
             potential_splits.append(node_init_linear)
         for node in potential_splits:
             node.setattrs(is_root=True)
@@ -244,7 +256,8 @@ class SAPS(BaseEstimator):
                     potential_split_updated = self.construct_node_with_stump(X=X,
                                                                              y=y_target,
                                                                              idxs=potential_split.idxs,
-                                                                             tree_num=potential_split.tree_num)
+                                                                             tree_num=potential_split.tree_num,
+                                                                             sample_weight=sample_weight,)
 
                     # need to preserve certain attributes from before (value at this split + is_root)
                     # value may change because residuals may have changed, but we want it to store the value from before
@@ -261,7 +274,8 @@ class SAPS(BaseEstimator):
                     potential_split_updated = self.construct_node_linear(idxs=potential_split.idxs,
                                                                          X=X,
                                                                          y=y_target,
-                                                                         tree_num=potential_split.tree_num)
+                                                                         tree_num=potential_split.tree_num,
+                                                                         sample_weight=sample_weight)
 
                     # don't need to retain anything from before (besides maybe is_root)
                     potential_split.setattrs(
@@ -303,7 +317,11 @@ class SAPS(BaseEstimator):
         return prefix + str(root) + '\n' + self.tree_to_str(root.left, pprefix) + self.tree_to_str(root.right, pprefix)
 
     def __str__(self):
-        return '------------\n' + '\n\t+\n'.join([self.tree_to_str(t) for t in self.trees_])
+        s = '------------\n' + '\n\t+\n'.join([self.tree_to_str(t) for t in self.trees_])
+        if self.feature_names_ is not None:
+            for i in range(len(self.feature_names_))[::-1]:
+                s = s.replace(f'X_{i}', self.feature_names_[i])
+        return s
 
     def predict(self, X):
         if self.posthoc_ridge and self.weighted_model_:  # note, during fitting don't use the weighted moel
