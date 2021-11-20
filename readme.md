@@ -64,6 +64,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | C4.5 rule tree        | [🗂️](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier), [🔗](https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier), [📄](https://link.springer.com/article/10.1007/BF00993309) | Greedily learns tree using C4.5                           |
 | Iterative random forest     | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [🔗](https://github.com/Yu-Group/iterative-Random-Forest), [📄](https://www.pnas.org/content/115/8/1943) | (In progress) Repeatedly fit random forest, giving features with high importance a higher chance of being selected ||
 | Sparse integer linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
+| Sapling Sums | [🗂️](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps), [📄]() | Sum of small trees with very few total rules (SAPS)                          |
 | More models                 | ⌛                                                            | (Coming soon!) Popular rule sets including Lightweight Rule Induction, MLRules |
 
 <p align="center">
@@ -133,7 +134,7 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 
 See the docs for individual models for futher descriptions.
 
-|                  Rule candidate generation                   |                       Rule selection                       |                Rule pruning / combination                 |
+|                  Rule candidate generation                   |                       Rule selection                       |                Rule postprocessing
 | :----------------------------------------------------------: | :--------------------------------------------------------: | :-------------------------------------------------------: |
 | <img src="https://csinva.io/imodels/img/rule_candidates.jpg" width="100%"> | <img src="https://csinva.io/imodels/img/rule_overfit.jpg"> | <img src="https://csinva.io/imodels/img/rule_pruned.jpg"> |
 
@@ -187,6 +188,7 @@ Different models support different machine-learning tasks. Current support for d
 | C4.5 rule tree              | [C45TreeClassifier](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier) |           |
 | Iterative random forest     |                                                              |                                                              |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) |
+| Sapling Sums (SAPS) | [SaplingSumClassifier](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumClassifier) | [SaplingSumRegressor](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumRegressor) |
 
 ## References
 
@@ -215,7 +217,8 @@ The code here heavily derives from the wonderful work of previous projects. We s
 <details>
 <summary>Related packages</summary>
 <ul>
-	<li><a href="https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e">gplearn</a>: symbolic regression/classification</li>
+  <li><a href="https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e">gplearn</a>: symbolic regression/classification</li>
+  <li><a href="https://github.com/MilesCranmer/PySR">pysr</a>: fast symbolic regression</li>
   <li><a href="https://github.com/dswah/pyGAM">pygam</a>: generative additive models</li>
   <li><a href="https://github.com/interpretml/interpret">interpretml</a>: boosting-based gam</li>
 </ul>
