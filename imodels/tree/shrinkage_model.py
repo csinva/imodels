@@ -1,6 +1,10 @@
+from copy import deepcopy
+from typing import List
+
 import numpy as np
 from sklearn import datasets
 from sklearn.base import BaseEstimator
+from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
@@ -17,13 +21,12 @@ class ShrunkTree(BaseEstimator):
     """Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.
     """
 
-    def __init__(self, estimator: BaseEstimator, reg_param: float):
+    def __init__(self, estimator_: BaseEstimator, reg_param: float):
         super().__init__()
         self.reg_param = reg_param
-        self.estimator_ = estimator
+        self.estimator_ = estimator_
 
-        fitted = checks.check_is_fitted(estimator)
-        if fitted:
+        if checks.check_is_fitted(self.estimator_):
             self.shrink()
 
     def fit(self, *args, **kwargs):
@@ -53,15 +56,29 @@ class ShrunkTree(BaseEstimator):
             return NotImplemented
 
 
-class ShrunkTreeCV(BaseEstimator, ShrunkTree):
-    def __init__(self, estimator: BaseEstimator, reg_param: float):
-        super().__init__()
-        self.reg_param = reg_param
+class ShrunkTreeCV(ShrunkTree):
+    def __init__(self, estimator: BaseEstimator,
+                 reg_param_list: List[float] = [0.1, 0.3, 0.5],
+                 cv: int = 3, scoring=None):
+        super().__init__(estimator, reg_param=None)
+        self.reg_param_list = np.array(reg_param_list)
         self.estimator_ = estimator
+        self.cv = cv
+        self.scoring = scoring
+        print('estimator', self.estimator_,
+              'checks.check_is_fitted(estimator)', checks.check_is_fitted(self.estimator_))
+        if checks.check_is_fitted(self.estimator_):
+            raise Warning('Passed an already fitted estimator,'
+                          'but shrinking not applied until fit method is called.')
 
-        fitted = checks.check_is_fitted(estimator)
-        if fitted:
-            self.shrink()
+    def fit(self, X, y, *args, **kwargs):
+        self.scores_ = []
+        for reg_param in self.reg_param_list:
+            est = ShrunkTree(deepcopy(self.estimator_), reg_param)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            self.scores_.append(np.mean(cv_scores))
+        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        super().fit(X, y)
 
 
 if __name__ == '__main__':
@@ -77,7 +94,9 @@ if __name__ == '__main__':
     print('X.shape', X.shape)
     print('ys', np.unique(y_train))
 
-    m = ShrunkTree(estimator=DecisionTreeClassifier(), reg_param=0.1)
+    m = ShrunkTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
+    # m = ShrunkTreeCV(estimator=DecisionTreeClassifier())
+    print('best alpha', m.reg_param)
     m.fit(X_train, y_train)
     m.predict_proba(X_train)  # just run this
     print('score', m.score(X_test, y_test))

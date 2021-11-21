@@ -41,12 +41,10 @@ def check_is_fitted(estimator, attributes=None, *, msg=None, all_or_any=all):
     if attributes is not None:
         if not isinstance(attributes, (list, tuple)):
             attributes = [attributes]
-        fitted = all_or_any([hasattr(estimator, attr) for attr in attributes])
+        return all_or_any([hasattr(estimator, attr) for attr in attributes])
     elif hasattr(estimator, "__sklearn_is_fitted__"):
-        fitted = estimator.__sklearn_is_fitted__()
+        return estimator.__sklearn_is_fitted__()
     else:
-        fitted = all([
+        return len([
             v for v in vars(estimator) if v.endswith("_") and not v.startswith("__")
-        ])
-
-    return fitted
+        ]) > 0
