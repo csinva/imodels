@@ -1,8 +1,10 @@
+import os.path
 from os.path import join as oj
 from typing import Tuple
 
 import numpy as np
 import pandas as pd
+import requests
 import sklearn.datasets
 from scipy.sparse import issparse
 from sklearn.datasets import fetch_openml
@@ -13,6 +15,8 @@ from experiments.util import DATASET_PATH
 def define_openml_outcomes(y, data_id: str):
     if data_id == '59':  # ionosphere, positive is "good" class
         y = (y == 'g').astype(int)
+    if data_id == '183':  # abalone, need to convert strings to floats
+        y = y.astype(float)
     return y
 
 
@@ -21,6 +25,21 @@ def clean_feat_names(feature_names):
     return ['X_' + x if x[0].isdigit()
             else x
             for x in feature_names]
+
+
+def clean_features(X):
+    if issparse(X):
+        X = X.toarray()
+    try:
+        return X.astype(float)
+    except:
+        for j in range(X.shape[1]):
+            try:
+                X[:, j].astype(float)
+            except:
+                # non-numeric get replaced with numerical values
+                classes, X[:, j] = np.unique(X[:, j], return_inverse=True)
+    return X.astype(float)
 
 
 def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[np.ndarray, np.ndarray, list]:
@@ -40,6 +59,8 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
     """
     assert data_source in ['local', 'pmlb', 'sklearn', 'openml', 'synthetic']
     if data_source == 'local':
+        if not os.path.isfile(dataset):
+            download_imodels_dataset(dataset)
         df = pd.read_csv(dataset)
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
         feature_names = df.columns.values[:-1]
@@ -52,7 +73,7 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
         X, y = fetch_data(dataset, return_X_y=True, local_cache_dir=oj(DATASET_PATH, 'pmlb_data'))
         if np.unique(y).size == 2:  # if binary classification, ensure that the classes are 0 and 1
             y -= np.min(y)
-        return X, y, clean_feat_names(feature_names)
+        return clean_features(X), y, clean_feat_names(feature_names)
     elif data_source == 'sklearn':
         if dataset == 'diabetes':
             data = sklearn.datasets.load_diabetes()
@@ -67,9 +88,7 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
         if isinstance(y, pd.Series):
             y = y.values
         y = define_openml_outcomes(y, dataset)
-        if issparse(X):
-            X = X.toarray()
-        return X, y, clean_feat_names(feature_names)
+        return clean_features(X), y, clean_feat_names(feature_names)
     elif data_source == 'synthetic':
         if dataset == 'friedman1':
             X, y = sklearn.datasets.make_friedman1(n_samples=200, n_features=10)
@@ -95,3 +114,12 @@ def get_openml_dataset(data_id: int) -> pd.DataFrame:
     X_df = pd.DataFrame(X, columns=feature_names)
     y_df = pd.DataFrame(y, columns=target_name)
     return pd.concat((X_df, y_df), axis=1)
+
+
+def download_imodels_dataset(dataset_path: str):
+    dataset_fname = dataset_path.split('/')[-1]
+    download_path = f'https://raw.githubusercontent.com/csinva/imodels-data/master/data_cleaned/{dataset_fname}'
+    data = requests.get(download_path).text
+    os.makedirs(os.path.dirname(dataset_path), exist_ok=True)
+    with open(dataset_path, 'w') as f:
+        f.write(data)
