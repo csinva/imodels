@@ -120,7 +120,10 @@ def get_openml_dataset(data_id: int) -> pd.DataFrame:
 def download_imodels_dataset(dataset_fname, data_path: str):
     dataset_fname = dataset_fname.split('/')[-1]  # remove anything about the path
     download_path = f'https://raw.githubusercontent.com/csinva/imodels-data/master/data_cleaned/{dataset_fname}'
-    data = requests.get(download_path).text
+    r = requests.get(download_path)
+    if r.status_code == 404:
+        raise Exception(f'404 Error for dataset {dataset_fname} (see valid files at https://github.com/csinva/imodels-data/tree/master/data_cleaned)')
+
     os.makedirs(oj(data_path, 'imodels_data'), exist_ok=True)
     with open(oj(data_path, 'imodels_data', dataset_fname), 'w') as f:
-        f.write(data)
+        f.write(r.text)
