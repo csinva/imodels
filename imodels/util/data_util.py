@@ -9,8 +9,6 @@ import sklearn.datasets
 from scipy.sparse import issparse
 from sklearn.datasets import fetch_openml
 
-from experiments.util import DATASET_PATH
-
 
 def define_openml_outcomes(y, data_id: str):
     if data_id == '59':  # ionosphere, positive is "good" class
@@ -42,7 +40,8 @@ def clean_features(X):
     return X.astype(float)
 
 
-def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[np.ndarray, np.ndarray, list]:
+def get_clean_dataset(dataset: str = None, data_source: str = 'imodels', data_path='data') -> Tuple[
+    np.ndarray, np.ndarray, list]:
     """Return
 
     Parameters
@@ -50,27 +49,29 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
     dataset: str
         csv_file path or dataset id if data_source is specified
     data_source: str
-        options: 'local', 'pmlb', 'sklearn', 'openml', 'synthetic'
+        options: 'imodels', 'pmlb', 'sklearn', 'openml', 'synthetic'
         boolean - whether dataset is a pmlb dataset name
 
     Returns
     -------
     X, y, feature_names
     """
-    assert data_source in ['local', 'pmlb', 'sklearn', 'openml', 'synthetic']
-    if data_source == 'local':
+    assert data_source in ['imodels', 'pmlb', 'sklearn', 'openml', 'synthetic'], data_source + ' not correct'
+    if data_source == 'imodels':
+        if not dataset.endswith('csv'):
+            dataset = dataset + '.csv'
         if not os.path.isfile(dataset):
-            download_imodels_dataset(dataset)
-        df = pd.read_csv(dataset)
+            download_imodels_dataset(dataset, data_path)
+        df = pd.read_csv(oj(data_path, 'imodels_data', dataset))
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
         feature_names = df.columns.values[:-1]
         return np.nan_to_num(X.astype('float32')), y, clean_feat_names(feature_names)
     elif data_source == 'pmlb':
         from pmlb import fetch_data
         feature_names = list(
-            fetch_data(dataset, return_X_y=False, local_cache_dir=oj(DATASET_PATH, 'pmlb_data')).columns)
+            fetch_data(dataset, return_X_y=False, local_cache_dir=oj(data_path, 'pmlb_data')).columns)
         feature_names.remove('target')
-        X, y = fetch_data(dataset, return_X_y=True, local_cache_dir=oj(DATASET_PATH, 'pmlb_data'))
+        X, y = fetch_data(dataset, return_X_y=True, local_cache_dir=oj(data_path, 'pmlb_data'))
         if np.unique(y).size == 2:  # if binary classification, ensure that the classes are 0 and 1
             y -= np.min(y)
         return clean_features(X), y, clean_feat_names(feature_names)
@@ -78,10 +79,10 @@ def get_clean_dataset(dataset: str = None, data_source: str = 'local') -> Tuple[
         if dataset == 'diabetes':
             data = sklearn.datasets.load_diabetes()
         elif dataset == 'california_housing':
-            data = sklearn.datasets.fetch_california_housing(data_home=oj(DATASET_PATH, 'sklearn_data'))
+            data = sklearn.datasets.fetch_california_housing(data_home=oj(data_path, 'sklearn_data'))
         return data['data'], data['target'], clean_feat_names(data['feature_names'])
     elif data_source == 'openml':  # note this api might change in newer sklearn - should give dataset-id not name
-        data = sklearn.datasets.fetch_openml(data_id=dataset, data_home=oj(DATASET_PATH, 'openml_data'))
+        data = sklearn.datasets.fetch_openml(data_id=dataset, data_home=oj(data_path, 'openml_data'))
         X, y, feature_names = data['data'], data['target'], clean_feat_names(data['feature_names'])
         if isinstance(X, pd.DataFrame):
             X = X.values
@@ -116,10 +117,13 @@ def get_openml_dataset(data_id: int) -> pd.DataFrame:
     return pd.concat((X_df, y_df), axis=1)
 
 
-def download_imodels_dataset(dataset_path: str):
-    dataset_fname = dataset_path.split('/')[-1]
+def download_imodels_dataset(dataset_fname, data_path: str):
+    dataset_fname = dataset_fname.split('/')[-1]  # remove anything about the path
     download_path = f'https://raw.githubusercontent.com/csinva/imodels-data/master/data_cleaned/{dataset_fname}'
-    data = requests.get(download_path).text
-    os.makedirs(os.path.dirname(dataset_path), exist_ok=True)
-    with open(dataset_path, 'w') as f:
-        f.write(data)
+    r = requests.get(download_path)
+    if r.status_code == 404:
+        raise Exception(f'404 Error for dataset {dataset_fname} (see valid files at https://github.com/csinva/imodels-data/tree/master/data_cleaned)')
+
+    os.makedirs(oj(data_path, 'imodels_data'), exist_ok=True)
+    with open(oj(data_path, 'imodels_data', dataset_fname), 'w') as f:
+        f.write(r.text)
