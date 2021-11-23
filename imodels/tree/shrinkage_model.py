@@ -18,15 +18,14 @@ class ShrunkTree(BaseEstimator):
     """Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.
     """
 
-    def __init__(self, estimator_: BaseEstimator, reg_param: float, max_depth=10,):
+    def __init__(self, estimator_: BaseEstimator, reg_param: float):
         super().__init__()
         self.reg_param = reg_param
-        self.max_depth = max_depth
         # print('est', estimator_)
         self.estimator_ = estimator_ #(max_depth=max_depth)
 
-        if checks.check_is_fitted(self.estimator_):
-            self.shrink()
+        # if checks.check_is_fitted(self.estimator_):
+        #     self.shrink()
 
     def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
@@ -91,28 +90,30 @@ class ShrunkTree(BaseEstimator):
 
 
 class ShrunkTreeCV(ShrunkTree):
-    def __init__(self, estimator: BaseEstimator,
+    def __init__(self, estimator_: BaseEstimator,
                  reg_param_list: List[float] = [0.1, 1, 5, 10, 100],
-                 cv: int = 3, scoring=None, max_depth=None):
-        super().__init__(estimator, reg_param=None)
+                 cv: int = 3, scoring=None):
+        super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
-        self.estimator_ = estimator #max_depth=max_depth) #(*args, **kwargs)
         self.cv = cv
         self.scoring = scoring
-        print('estimator', self.estimator_,
-              'checks.check_is_fitted(estimator)', checks.check_is_fitted(self.estimator_))
-        if checks.check_is_fitted(self.estimator_):
-            raise Warning('Passed an already fitted estimator,'
-                          'but shrinking not applied until fit method is called.')
+        # print('estimator', self.estimator_,
+        #       'checks.check_is_fitted(estimator)', checks.check_is_fitted(self.estimator_))
+        # if checks.check_is_fitted(self.estimator_):
+        #     raise Warning('Passed an already fitted estimator,'
+        #                   'but shrinking not applied until fit method is called.')
 
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTree(deepcopy(self.estimator_), reg_param, max_depth=self.max_depth)
+            est = ShrunkTree(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X, y)
+        super().fit(X=X, y=y)
+
+    def predict(self, X):
+        return self.estimator_.predict(X)
 
 
 if __name__ == '__main__':
