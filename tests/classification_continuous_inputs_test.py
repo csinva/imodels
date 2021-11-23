@@ -33,7 +33,7 @@ class TestClassClassificationBinary:
             GreedyTreeClassifier,
             OptimalTreeClassifier,
             C45TreeClassifier,
-            SaplingSumClassifier, partial(ShrunkTree, estimator_=DecisionTreeClassifier()),
+            SaplingSumClassifier,
         ]:  # IRFClassifier, SLIMClassifier, BayesianRuleSetClassifier,
 
             init_kwargs = {}
