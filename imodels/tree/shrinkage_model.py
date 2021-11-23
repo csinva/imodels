@@ -13,7 +13,7 @@ class ShrunkTree(BaseEstimator):
     """Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.
     """
 
-    def __init__(self, estimator_: BaseEstimator, reg_param: float):
+    def __init__(self, estimator_: BaseEstimator, reg_param: float = 1):
         super().__init__()
         self.reg_param = reg_param
         # print('est', estimator_)
@@ -69,7 +69,7 @@ class ShrunkTree(BaseEstimator):
                 self.shrink_tree(t.tree_, self.reg_param)
 
     def predict(self, *args, **kwargs):
-        self.estimator_.predict(*args, **kwargs)
+        return self.estimator_.predict(*args, **kwargs)
 
     def predict_proba(self, *args, **kwargs):
         if hasattr(self.estimator_, 'predict_proba'):
@@ -106,9 +106,6 @@ class ShrunkTreeCV(ShrunkTree):
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y)
-
-    def predict(self, X):
-        return self.estimator_.predict(X)
 
 
 if __name__ == '__main__':

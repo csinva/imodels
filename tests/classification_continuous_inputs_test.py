@@ -24,6 +24,7 @@ class TestClassClassificationBinary:
     def test_classification_binary(self):
         '''Test imodels on basic binary classification task
         '''
+
         for model_type in [
             RuleFitClassifier, GreedyRuleListClassifier,
             FPLassoClassifier, SkopeRulesClassifier,
@@ -32,6 +33,7 @@ class TestClassClassificationBinary:
             GreedyTreeClassifier,
             OptimalTreeClassifier,
             C45TreeClassifier,
+            SaplingSumClassifier, partial(ShrunkTree, estimator_=DecisionTreeClassifier()),
         ]:  # IRFClassifier, SLIMClassifier, BayesianRuleSetClassifier,
 
             init_kwargs = {}

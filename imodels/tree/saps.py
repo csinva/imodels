@@ -120,7 +120,9 @@ class SAPS(BaseEstimator):
 
         # fit stump
         stump = tree.DecisionTreeRegressor(max_depth=1)
-        stump.fit(X[idxs], y[idxs], sample_weight=sample_weight[idxs])
+        if sample_weight is not None:
+            sample_weight = sample_weight[idxs]
+        stump.fit(X[idxs], y[idxs], sample_weight=sample_weight)
 
         # these are all arrays, arr[0] is split node
         # note: -2 is dummy
@@ -318,7 +320,7 @@ class SAPS(BaseEstimator):
 
     def __str__(self):
         s = '------------\n' + '\n\t+\n'.join([self.tree_to_str(t) for t in self.trees_])
-        if self.feature_names_ is not None:
+        if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f'X_{i}', self.feature_names_[i])
         return s
