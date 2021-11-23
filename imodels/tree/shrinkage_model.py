@@ -63,6 +63,9 @@ class ShrunkTree(BaseEstimator):
             self.shrink_tree(self.estimator_.tree_, self.reg_param)
         elif hasattr(self.estimator_, 'estimators_'):
             for t in self.estimator_.estimators_:
+                if isinstance(t, np.ndarray):
+                    assert t.size == 1, 'multiple trees stored under tree_?'
+                    t = t[0]
                 self.shrink_tree(t.tree_, self.reg_param)
 
     def predict(self, *args, **kwargs):
@@ -83,7 +86,7 @@ class ShrunkTree(BaseEstimator):
 
 class ShrunkTreeCV(ShrunkTree):
     def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 5, 10, 100],
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  cv: int = 3, scoring=None):
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
