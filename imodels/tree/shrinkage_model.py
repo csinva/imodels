@@ -6,12 +6,7 @@ from sklearn import datasets
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-
-from imodels.util import checks
-
-
-
+from sklearn.tree import DecisionTreeRegressor
 
 
 class ShrunkTree(BaseEstimator):
@@ -22,7 +17,7 @@ class ShrunkTree(BaseEstimator):
         super().__init__()
         self.reg_param = reg_param
         # print('est', estimator_)
-        self.estimator_ = estimator_ #(max_depth=max_depth)
+        self.estimator_ = estimator_  # (max_depth=max_depth)
 
         # if checks.check_is_fitted(self.estimator_):
         #     self.shrink()
@@ -34,8 +29,6 @@ class ShrunkTree(BaseEstimator):
     def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         """Shrink the tree
         """
-        # if not hasattr(self, 'final_values_'):
-        #     self.final_values = np.zeros_like(tree.children_left)
         left = tree.children_left[i]
         right = tree.children_right[i]
         is_leaf = left == right
@@ -62,7 +55,6 @@ class ShrunkTree(BaseEstimator):
                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
                 self.shrink_tree(tree, reg_param, right,
                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
-                # self.final_values[val]
 
         return tree
 
@@ -71,7 +63,7 @@ class ShrunkTree(BaseEstimator):
             self.shrink_tree(self.estimator_.tree_, self.reg_param)
         elif hasattr(self.estimator_, 'estimators_'):
             for t in self.estimator_.estimators_:
-                self.shrink_tree(t, self.reg_param)
+                self.shrink_tree(t.tree_, self.reg_param)
 
     def predict(self, *args, **kwargs):
         self.estimator_.predict(*args, **kwargs)
