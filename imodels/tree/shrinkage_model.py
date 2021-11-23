@@ -6,25 +6,24 @@ from sklearn import datasets
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels.util import checks
 
 
-def shrink_tree(tree, reg_param):
-    """Shrink the tree
-    """
-    return tree
+
 
 
 class ShrunkTree(BaseEstimator):
     """Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.
     """
 
-    def __init__(self, estimator_: BaseEstimator, reg_param: float):
+    def __init__(self, estimator_: BaseEstimator, reg_param: float, max_depth=10,):
         super().__init__()
         self.reg_param = reg_param
-        self.estimator_ = estimator_
+        self.max_depth = max_depth
+        # print('est', estimator_)
+        self.estimator_ = estimator_ #(max_depth=max_depth)
 
         if checks.check_is_fitted(self.estimator_):
             self.shrink()
@@ -33,12 +32,47 @@ class ShrunkTree(BaseEstimator):
         self.estimator_.fit(*args, **kwargs)
         self.shrink()
 
+    def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
+        """Shrink the tree
+        """
+        # if not hasattr(self, 'final_values_'):
+        #     self.final_values = np.zeros_like(tree.children_left)
+        left = tree.children_left[i]
+        right = tree.children_right[i]
+        is_leaf = left == right
+        n_samples = tree.n_node_samples[i]
+        val = tree.value[i][0, 0]
+        # val = val[1] / val[2] # for binary cls
+
+        # if root
+        if parent_val is None and parent_num is None:
+            if not is_leaf:
+                self.shrink_tree(tree, reg_param, left,
+                                 parent_val=val, parent_num=n_samples, cum_sum=val)
+                self.shrink_tree(tree, reg_param, right,
+                                 parent_val=val, parent_num=n_samples, cum_sum=val)
+
+        # if has parent
+        else:
+            val_new = (val - parent_val) / (1 + reg_param / parent_num)
+            cum_sum += val_new
+            if is_leaf:
+                tree.value[i, 0, 0] = cum_sum
+            else:
+                self.shrink_tree(tree, reg_param, left,
+                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+                self.shrink_tree(tree, reg_param, right,
+                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+                # self.final_values[val]
+
+        return tree
+
     def shrink(self):
         if hasattr(self.estimator_, 'tree_'):
-            shrink_tree(self.estimator_.tree_, self.reg_param)
+            self.shrink_tree(self.estimator_.tree_, self.reg_param)
         elif hasattr(self.estimator_, 'estimators_'):
             for t in self.estimator_.estimators_:
-                shrink_tree(t, self.reg_param)
+                self.shrink_tree(t, self.reg_param)
 
     def predict(self, *args, **kwargs):
         self.estimator_.predict(*args, **kwargs)
@@ -58,11 +92,11 @@ class ShrunkTree(BaseEstimator):
 
 class ShrunkTreeCV(ShrunkTree):
     def __init__(self, estimator: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 0.3, 0.5],
-                 cv: int = 3, scoring=None):
+                 reg_param_list: List[float] = [0.1, 1, 5, 10, 100],
+                 cv: int = 3, scoring=None, max_depth=None):
         super().__init__(estimator, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
-        self.estimator_ = estimator
+        self.estimator_ = estimator #max_depth=max_depth) #(*args, **kwargs)
         self.cv = cv
         self.scoring = scoring
         print('estimator', self.estimator_,
@@ -74,7 +108,7 @@ class ShrunkTreeCV(ShrunkTree):
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTree(deepcopy(self.estimator_), reg_param)
+            est = ShrunkTree(deepcopy(self.estimator_), reg_param, max_depth=self.max_depth)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -82,21 +116,34 @@ class ShrunkTreeCV(ShrunkTree):
 
 
 if __name__ == '__main__':
-    np.random.seed(13)
-    X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
+    np.random.seed(15)
+    X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
+    # X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
     # X, y = datasets.load_diabetes(return_X_y=True)  # regression
     # X = np.random.randn(500, 10)
     # y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=42
+        X, y, test_size=0.33, random_state=43
     )
     print('X.shape', X.shape)
     print('ys', np.unique(y_train))
 
-    m = ShrunkTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
-    # m = ShrunkTreeCV(estimator=DecisionTreeClassifier())
-    print('best alpha', m.reg_param)
+    # m = ShrunkTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
+    # m = DecisionTreeClassifier(random_state=42, max_features=None)
+    m = DecisionTreeRegressor(random_state=42)
+    # print('best alpha', m.reg_param)
     m.fit(X_train, y_train)
-    m.predict_proba(X_train)  # just run this
+    # m.predict_proba(X_train)  # just run this
+    print('score', m.score(X_test, y_test))
+    print('running again....')
+
+    # m = ShrunkTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
+    # m = ShrunkTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
+    m = ShrunkTreeCV(estimator=DecisionTreeRegressor(), reg_param_list=[0.1, 1, 10, 100])
+    # m = ShrunkTreeCV(estimator=DecisionTreeClassifier())
+
+    m.fit(X_train, y_train)
+    print('best alpha', m.reg_param)
+    # m.predict_proba(X_train)  # just run this
     print('score', m.score(X_test, y_test))
