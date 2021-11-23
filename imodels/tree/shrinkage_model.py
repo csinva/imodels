@@ -133,8 +133,8 @@ if __name__ == '__main__':
 
     # m = ShrunkTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
     # m = ShrunkTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
-    m = ShrunkTreeCV(estimator=DecisionTreeRegressor(), reg_param_list=[0.1, 1, 10, 100])
-    # m = ShrunkTreeCV(estimator=DecisionTreeClassifier())
+    m = ShrunkTreeCV(estimator_=DecisionTreeRegressor(), reg_param_list=[0.1, 1, 10, 100])
+    # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
 
     m.fit(X_train, y_train)
     print('best alpha', m.reg_param)
