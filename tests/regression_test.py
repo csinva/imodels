@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from sklearn.tree import DecisionTreeRegressor
 
-from imodels import RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor, ShrunkTree, ShrunkTreeCV, SaplingSumRegressor
+from imodels import RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor, ShrunkTreeRegressor, ShrunkTreeRegressorCV, SaplingSumRegressor
 
 
 class TestClassRegression:
@@ -19,8 +19,8 @@ class TestClassRegression:
     def test_regression(self):
         '''Test imodels on basic binary classification task
         '''
-        for model_type in [partial(ShrunkTree, estimator_=DecisionTreeRegressor()),
-                           partial(ShrunkTreeCV, estimator_=DecisionTreeRegressor()),
+        for model_type in [partial(ShrunkTreeRegressor, estimator_=DecisionTreeRegressor()),
+                           partial(ShrunkTreeRegressorCV, estimator_=DecisionTreeRegressor()),
                            RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor,
                            SaplingSumRegressor]:
             if model_type == RuleFitRegressor:
