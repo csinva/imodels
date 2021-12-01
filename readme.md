@@ -221,6 +221,8 @@ The code here heavily derives from the wonderful work of previous projects. We s
   <li><a href="https://github.com/MilesCranmer/PySR">pysr</a>: fast symbolic regression</li>
   <li><a href="https://github.com/dswah/pyGAM">pygam</a>: generative additive models</li>
   <li><a href="https://github.com/interpretml/interpret">interpretml</a>: boosting-based gam</li>
+  <li><a href="https://github.com/h2oai/h2o-3">h20 ai</a>: gams + glms (and more)</li>
+  <li><a href="https://github.com/guillermo-navas-palencia/optbinning">optbinning</a>: data discretization / scoring models</li>	
 </ul>
 </details>
 
