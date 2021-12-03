@@ -1,6 +1,6 @@
-<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True"> </img>
-
-<p align="center"> Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
+<p align="center">
+	<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True"> </img>	 <br/>
+	Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
 </p>
 
 
