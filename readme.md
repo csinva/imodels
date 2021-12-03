@@ -1,6 +1,8 @@
-<h1 align="center"> Interpretable machine-learning models (imodels) 🔍</h1>
+<img align="center" src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True"> </img>
+
 <p align="center"> Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
 </p>
+
 
 
 <p align="center">
