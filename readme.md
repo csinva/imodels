@@ -1,4 +1,4 @@
-<img align="center" src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True"> </img>
+<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True"> </img>
 
 <p align="center"> Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
 </p>
@@ -19,7 +19,6 @@
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
   <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=11">
 </p>  
-
 
 
 
