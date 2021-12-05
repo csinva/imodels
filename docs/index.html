@@ -7,8 +7,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>imodels API documentation</title>
-<meta name="description" content="&lt;h1 align=&#34;center&#34;&gt; Interpretable machine-learning models (imodels) 🔍&lt;/h1&gt;
-&lt;p align=&#34;center&#34;&gt; Python package for concise, transparent, and accurate …" />
+<meta name="description" content="&lt;p align=&#34;center&#34;&gt;
+&lt;img align=&#34;center&#34; width=60% src=&#34;https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&#34;&gt; &lt;/img&gt;
+&lt;br/&gt;
+Python package …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,11 +24,13 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>imodels</code></h1>
+
 </header>
 <section id="section-intro">
-<h1 align="center"> Interpretable machine-learning models (imodels) 🔍</h1>
-<p align="center"> Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
+<p align="center">
+<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True"> </img>
+<br/>
+Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
 </p>
 <p align="center">
 <a href="https://csinva.github.io/imodels/">docs</a> •
@@ -142,6 +146,11 @@ print(model) # print the rule-based model
 <td>Sparse linear model with integer coefficients</td>
 </tr>
 <tr>
+<td align="left">Sapling Sums</td>
+<td><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps">🗂️</a>, <a href="">📄</a></td>
+<td>Sum of small trees with very few total rules (SAPS)</td>
+</tr>
+<tr>
 <td align="left">More models</td>
 <td>⌛</td>
 <td>(Coming soon!) Popular rule sets including Lightweight Rule Induction, MLRules</td>
@@ -223,7 +232,7 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <tr>
 <th align="center">Rule candidate generation</th>
 <th align="center">Rule selection</th>
-<th align="center">Rule pruning / combination</th>
+<th align="center">Rule postprocessing</th>
 </tr>
 </thead>
 <tbody>
@@ -287,7 +296,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <td align="center"></td>
 </tr>
 <tr>
-<td align="left">BOA rule set</td>
+<td align="left">Bayesian rule set</td>
 <td align="center"><a href="https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></td>
 <td align="center"></td>
 </tr>
@@ -336,6 +345,11 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <td align="center"><a href="https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></td>
 <td align="center"><a href="https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></td>
 </tr>
+<tr>
+<td align="left">Sapling Sums (SAPS)</td>
+<td align="center"><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumClassifier">SaplingSumClassifier</a></td>
+<td align="center"><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumRegressor">SaplingSumRegressor</a></td>
+</tr>
 </tbody>
 </table>
 <h2 id="references">References</h2>
@@ -363,8 +377,11 @@ The code here heavily derives from the wonderful work of previous projects. We s
 <summary>Related packages</summary>
 <ul>
 <li><a href="https://github.com/trevorstephens/gplearn/tree/ad57cb18caafdb02cca861aea712f1bf3ed5016e">gplearn</a>: symbolic regression/classification</li>
+<li><a href="https://github.com/MilesCranmer/PySR">pysr</a>: fast symbolic regression</li>
 <li><a href="https://github.com/dswah/pyGAM">pygam</a>: generative additive models</li>
 <li><a href="https://github.com/interpretml/interpret">interpretml</a>: boosting-based gam</li>
+<li><a href="https://github.com/h2oai/h2o-3">h20 ai</a>: gams + glms (and more)</li>
+<li><a href="https://github.com/guillermo-navas-palencia/optbinning">optbinning</a>: data discretization / scoring models</li>
 </ul>
 </details>
 <details>
@@ -409,6 +426,7 @@ from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
 from .tree.gosdt.pygosdt import OptimalTreeClassifier
 from .tree.c45_tree.c45_tree import C45TreeClassifier
 from .tree.saps import SaplingSumRegressor, SaplingSumClassifier
+from .tree.shrinkage_model import ShrunkTree, ShrunkTreeCV
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
@@ -448,6 +466,10 @@ DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="imodels.experimental" href="experimental/index.html">experimental</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="imodels.rule_list" href="rule_list/index.html">rule_list</a></code></dt>
 <dd>
 <div class="desc"><p>Generic class for models that take the form of a list of rules.</p></div>
@@ -455,10 +477,6 @@ DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer
 <dt><code class="name"><a title="imodels.rule_set" href="rule_set/index.html">rule_set</a></code></dt>
 <dd>
 <div class="desc"><p>Generic class for models that take the form of a set of (potentially overlapping) rules.</p></div>
-</dd>
-<dt><code class="name"><a title="imodels.tests" href="tests/index.html">tests</a></code></dt>
-<dd>
-<div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="imodels.tree" href="tree/index.html">tree</a></code></dt>
 <dd>
@@ -496,9 +514,9 @@ DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer
 <ul>
 <li><code><a title="imodels.algebraic" href="algebraic/index.html">algebraic</a></code></li>
 <li><code><a title="imodels.discretization" href="discretization/index.html">discretization</a></code></li>
+<li><code><a title="imodels.experimental" href="experimental/index.html">experimental</a></code></li>
 <li><code><a title="imodels.rule_list" href="rule_list/index.html">rule_list</a></code></li>
 <li><code><a title="imodels.rule_set" href="rule_set/index.html">rule_set</a></code></li>
-<li><code><a title="imodels.tests" href="tests/index.html">tests</a></code></li>
 <li><code><a title="imodels.tree" href="tree/index.html">tree</a></code></li>
 <li><code><a title="imodels.util" href="util/index.html">util</a></code></li>
 </ul>

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>imodels.util API documentation</title>
-<meta name="description" content="Shared utilities for implementing different interpretable models." />
+<title>imodels.util.tree API documentation</title>
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,75 +19,80 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.util</code></h1>
+<h1 class="title">Module <code>imodels.util.tree</code></h1>
 </header>
 <section id="section-intro">
-<p>Shared utilities for implementing different interpretable models.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#39;&#39;&#39;Shared utilities for implementing different interpretable models.
-&#39;&#39;&#39;</code></pre>
+<pre><code class="python">def compute_tree_complexity(tree):
+    &#34;&#34;&#34;Calculate number of non-leaf nodes
+    &#34;&#34;&#34;
+    children_left = tree.children_left
+    children_right = tree.children_right
+    num_split_nodes = 0
+
+    stack = [(0, 0)]  # start with the root node id (0) and its depth (0)
+    while len(stack) &gt; 0:
+        # `pop` ensures each node is only visited once
+        node_id, depth = stack.pop()
+
+        # If the left and right child of a node is not the same we have a split
+        # node
+        is_split_node = children_left[node_id] != children_right[node_id]
+
+        # If a split node, append left and right children and depth to `stack`
+        # so we can loop through them
+        if is_split_node:
+            num_split_nodes += 1
+            stack.append((children_left[node_id], depth + 1))
+            stack.append((children_right[node_id], depth + 1))
+    return num_split_nodes</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="imodels.util.checks" href="checks.html">imodels.util.checks</a></code></dt>
+<dt id="imodels.util.tree.compute_tree_complexity"><code class="name flex">
+<span>def <span class="ident">compute_tree_complexity</span></span>(<span>tree)</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.util.convert" href="convert.html">imodels.util.convert</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.util.data_util" href="data_util.html">imodels.util.data_util</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.util.explain_errors" href="explain_errors.html">imodels.util.explain_errors</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.util.extract" href="extract.html">imodels.util.extract</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.util.metrics" href="metrics.html">imodels.util.metrics</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.util.neural_nets" href="neural_nets.html">imodels.util.neural_nets</a></code></dt>
-<dd>
-<div class="desc"><p>Bridging random forests and deep neural networks. Code to convert a sklearn decision tree to a pytorch neural network
-following "Neural Random …</p></div>
-</dd>
-<dt><code class="name"><a title="imodels.util.prune" href="prune.html">imodels.util.prune</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.util.rule" href="rule.html">imodels.util.rule</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.util.score" href="score.html">imodels.util.score</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.util.transforms" href="transforms.html">imodels.util.transforms</a></code></dt>
-<dd>
-<div class="desc"><p>Shared transforms between different interpretable models</p></div>
-</dd>
-<dt><code class="name"><a title="imodels.util.tree" href="tree.html">imodels.util.tree</a></code></dt>
-<dd>
-<div class="desc"></div>
+<div class="desc"><p>Calculate number of non-leaf nodes</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_tree_complexity(tree):
+    &#34;&#34;&#34;Calculate number of non-leaf nodes
+    &#34;&#34;&#34;
+    children_left = tree.children_left
+    children_right = tree.children_right
+    num_split_nodes = 0
+
+    stack = [(0, 0)]  # start with the root node id (0) and its depth (0)
+    while len(stack) &gt; 0:
+        # `pop` ensures each node is only visited once
+        node_id, depth = stack.pop()
+
+        # If the left and right child of a node is not the same we have a split
+        # node
+        is_split_node = children_left[node_id] != children_right[node_id]
+
+        # If a split node, append left and right children and depth to `stack`
+        # so we can loop through them
+        if is_split_node:
+            num_split_nodes += 1
+            stack.append((children_left[node_id], depth + 1))
+            stack.append((children_right[node_id], depth + 1))
+    return num_split_nodes</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -100,23 +105,12 @@ following "Neural Random …</p></div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels" href="../index.html">imodels</a></code></li>
+<li><code><a title="imodels.util" href="index.html">imodels.util</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="imodels.util.checks" href="checks.html">imodels.util.checks</a></code></li>
-<li><code><a title="imodels.util.convert" href="convert.html">imodels.util.convert</a></code></li>
-<li><code><a title="imodels.util.data_util" href="data_util.html">imodels.util.data_util</a></code></li>
-<li><code><a title="imodels.util.explain_errors" href="explain_errors.html">imodels.util.explain_errors</a></code></li>
-<li><code><a title="imodels.util.extract" href="extract.html">imodels.util.extract</a></code></li>
-<li><code><a title="imodels.util.metrics" href="metrics.html">imodels.util.metrics</a></code></li>
-<li><code><a title="imodels.util.neural_nets" href="neural_nets.html">imodels.util.neural_nets</a></code></li>
-<li><code><a title="imodels.util.prune" href="prune.html">imodels.util.prune</a></code></li>
-<li><code><a title="imodels.util.rule" href="rule.html">imodels.util.rule</a></code></li>
-<li><code><a title="imodels.util.score" href="score.html">imodels.util.score</a></code></li>
-<li><code><a title="imodels.util.transforms" href="transforms.html">imodels.util.transforms</a></code></li>
-<li><code><a title="imodels.util.tree" href="tree.html">imodels.util.tree</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.util.tree.compute_tree_complexity" href="#imodels.util.tree.compute_tree_complexity">compute_tree_complexity</a></code></li>
 </ul>
 </li>
 </ul>
