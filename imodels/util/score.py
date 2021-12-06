@@ -75,26 +75,28 @@ def score_linear(X, y, rules: List[str],
                  alpha=None,
                  random_state=None) -> Tuple[List[Rule], List[float], float]:
 
-    if alpha is not None and max_rules is None:
+    if alpha is not None:
         final_alpha = alpha
-    elif max_rules is not None and alpha is None:
+        if max_rules is not None:
+            warn("Ignoring max_rules parameter since alpha passed explicitly")
+
+    elif max_rules is not None:
         final_alpha = get_best_alpha_under_max_rules(X, y, rules,
                                                      penalty=penalty,
                                                      prediction_task=prediction_task,
                                                      max_rules=max_rules, 
                                                      random_state=random_state)
     else:
-        raise ValueError("max_rules and alpha cannot be used together")
-
+        raise ValueError("Invalid alpha and max_rules passed")
 
     if prediction_task == 'regression':
-        lscv = Lasso(alpha=final_alpha, random_state=random_state, max_iter=2000)
+        lin_model = Lasso(alpha=final_alpha, random_state=random_state, max_iter=2000)
     else:
-        lscv = LogisticRegression(penalty=penalty, C=1/final_alpha, solver='liblinear',
+        lin_model = LogisticRegression(penalty=penalty, C=1/final_alpha, solver='liblinear',
                                   random_state=random_state, max_iter=200)
-    lscv.fit(X, y)
+    lin_model.fit(X, y)
 
-    coef_ = lscv.coef_.flatten()
+    coef_ = lin_model.coef_.flatten()
     coefs = list(coef_[:coef_.shape[0]-len(rules)])
     support = np.sum(X[:, -len(rules):], axis=0) / X.shape[0]
 
@@ -105,7 +107,7 @@ def score_linear(X, y, rules: List[str],
             nonzero_rules.append(Rule(r, args=[w], support=s))
             coefs.append(w)
     
-    return nonzero_rules, coefs, lscv.intercept_
+    return nonzero_rules, coefs, lin_model.intercept_
 
 
 def get_best_alpha_under_max_rules(X, y, rules: List[str],
