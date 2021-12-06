@@ -1,6 +1,8 @@
-<h1 align="center"> Interpretable machine-learning models (imodels) 🔍</h1>
-<p align="center"> Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
+<p align="center">
+	<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True"> </img>	 <br/>
+	Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
 </p>
+
 
 
 <p align="center">
@@ -17,7 +19,6 @@
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
   <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=11">
 </p>  
-
 
 
 
@@ -221,6 +222,8 @@ The code here heavily derives from the wonderful work of previous projects. We s
   <li><a href="https://github.com/MilesCranmer/PySR">pysr</a>: fast symbolic regression</li>
   <li><a href="https://github.com/dswah/pyGAM">pygam</a>: generative additive models</li>
   <li><a href="https://github.com/interpretml/interpret">interpretml</a>: boosting-based gam</li>
+  <li><a href="https://github.com/h2oai/h2o-3">h20 ai</a>: gams + glms (and more)</li>
+  <li><a href="https://github.com/guillermo-navas-palencia/optbinning">optbinning</a>: data discretization / scoring models</li>	
 </ul>
 </details>
 

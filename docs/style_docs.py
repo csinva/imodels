@@ -16,6 +16,7 @@ data = data.replace('<a href="https://csinva.github.io/imodels/">Docs</a>',
 
 data = data.replace('.html">imodels.', '.html">')
 data = data.replace('<h1 class="title">Module <code>imodels</code></h1>', '') # remove header
+data = data.replace('<h1 class="title">Package <code>imodels</code></h1>', '') # remove header
 # data = data.replace('<th>Reference</th>', '<th white-space: nowrap>Reference</th>')
 
 # add github corner

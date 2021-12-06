@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>imodels.experimental.stableskope API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>imodels.experimental.stableskope</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import numpy as np
+from typing import List
+
+from imodels.rule_set.skope_rules import SkopeRulesClassifier
+from imodels.util.rule import Rule
+from imodels.util.score import score_precision_recall
+from sklearn.base import BaseEstimator
+
+from .util import extract_ensemble
+
+
+class StableSkopeClassifier(SkopeRulesClassifier):
+
+    def __init__(self,
+                 weak_learners: List[BaseEstimator],
+                 max_complexity: int,
+                 min_mult: int = 1,
+                 precision_min=0.5,
+                 recall_min=0.4,
+                 n_estimators=10,
+                 max_samples=.8,
+                 max_samples_features=.8,
+                 bootstrap=False,
+                 bootstrap_features=False,
+                 max_depth=3,
+                 max_depth_duplication=None,
+                 max_features=1.,
+                 min_samples_split=2,
+                 n_jobs=1,
+                 random_state=None):
+        super().__init__(precision_min,
+                         recall_min,
+                         n_estimators,
+                         max_samples,
+                         max_samples_features,
+                         bootstrap,
+                         bootstrap_features,
+                         max_depth,
+                         max_depth_duplication,
+                         max_features,
+                         min_samples_split,
+                         n_jobs,
+                         random_state)
+        self.weak_learners = weak_learners
+        self.max_complexity = max_complexity
+        self.min_mult = min_mult
+
+    def fit(self, X, y=None, feature_names=None, sample_weight=None):
+        super().fit(X, y, feature_names=feature_names, sample_weight=sample_weight)
+        return self
+
+    def _extract_rules(self, X, y) -&gt; List[str]:
+        return [extract_ensemble(self.weak_learners, X, y, self.min_mult)], [np.arange(X.shape[0])], [np.arange(len(self.feature_names))]
+
+    def _score_rules(self, X, y, rules) -&gt; List[Rule]:
+        return score_precision_recall(X, y,
+                                      rules,
+                                      self.estimators_samples_,
+                                      self.estimators_features_,
+                                      self.feature_placeholders,
+                                      oob=False)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.experimental.stableskope.StableSkopeClassifier"><code class="flex name class">
+<span>class <span class="ident">StableSkopeClassifier</span></span>
+<span>(</span><span>weak_learners: List[sklearn.base.BaseEstimator], max_complexity: int, min_mult: int = 1, precision_min=0.5, recall_min=0.4, n_estimators=10, max_samples=0.8, max_samples_features=0.8, bootstrap=False, bootstrap_features=False, max_depth=3, max_depth_duplication=None, max_features=1.0, min_samples_split=2, n_jobs=1, random_state=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An easy-interpretable classifier optimizing simple logical rules.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>str</code>, optional</dt>
+<dd>The names of each feature to be used for returning rules in string
+format.</dd>
+<dt><strong><code>precision_min</code></strong> :&ensp;<code>float</code>, optional <code>(default=0.5)</code></dt>
+<dd>The minimal precision of a rule to be selected.</dd>
+<dt><strong><code>recall_min</code></strong> :&ensp;<code>float</code>, optional <code>(default=0.01)</code></dt>
+<dd>The minimal recall of a rule to be selected.</dd>
+<dt><strong><code>n_estimators</code></strong> :&ensp;<code>int</code>, optional <code>(default=10)</code></dt>
+<dd>The number of base estimators (rules) to use for prediction. More are
+built before selection. All are available in the estimators_ attribute.</dd>
+<dt><strong><code>max_samples</code></strong> :&ensp;<code>int</code> or <code>float</code>, optional <code>(default=.8)</code></dt>
+<dd>The number of samples to draw from X to train each decision tree, from
+which rules are generated and selected.
+- If int, then draw <code>max_samples</code> samples.
+- If float, then draw <code>max_samples * X.shape[0]</code> samples.
+If max_samples is larger than the number of samples provided,
+all samples will be used for all trees (no sampling).</dd>
+<dt><strong><code>max_samples_features</code></strong> :&ensp;<code>int</code> or <code>float</code>, optional <code>(default=1.0)</code></dt>
+<dd>The number of features to draw from X to train each decision tree, from
+which rules are generated and selected.
+- If int, then draw <code>max_features</code> features.
+- If float, then draw <code>max_features * X.shape[1]</code> features.</dd>
+<dt><strong><code>bootstrap</code></strong> :&ensp;<code>boolean</code>, optional <code>(default=False)</code></dt>
+<dd>Whether samples are drawn with replacement.</dd>
+<dt><strong><code>bootstrap_features</code></strong> :&ensp;<code>boolean</code>, optional <code>(default=False)</code></dt>
+<dd>Whether features are drawn with replacement.</dd>
+<dt><strong><code>max_depth</code></strong> :&ensp;<code>integer</code> or <code>List</code> or <code>None</code>, optional <code>(default=3)</code></dt>
+<dd>The maximum depth of the decision trees. If None, then nodes are
+expanded until all leaves are pure or until all leaves contain less
+than min_samples_split samples.
+If an iterable is passed, you will train n_estimators
+for each tree depth. It allows you to create and compare
+rules of different length.</dd>
+<dt><strong><code>max_depth_duplication</code></strong> :&ensp;<code>integer</code>, optional <code>(default=None)</code></dt>
+<dd>The maximum depth of the decision tree for rule deduplication,
+if None then no deduplication occurs.</dd>
+<dt><strong><code>max_features</code></strong> :&ensp;<code>int, float, string</code> or <code>None</code>, optional <code>(default="auto")</code></dt>
+<dd>
+<p>The number of features considered (by each decision tree) when looking
+for the best split:</p>
+<ul>
+<li>If int, then consider <code>max_features</code> features at each split.</li>
+<li>If float, then <code>max_features</code> is a percentage and
+<code>int(max_features * n_features)</code> features are considered at each
+split.</li>
+<li>If "auto", then <code>max_features=sqrt(n_features)</code>.</li>
+<li>If "sqrt", then <code>max_features=sqrt(n_features)</code> (same as "auto").</li>
+<li>If "log2", then <code>max_features=log2(n_features)</code>.</li>
+<li>If None, then <code>max_features=n_features</code>.</li>
+</ul>
+<p>Note: the search for a split does not stop until at least one
+valid partition of the node samples is found, even if it requires to
+effectively inspect more than <code>max_features</code> features.</p>
+</dd>
+<dt><strong><code>min_samples_split</code></strong> :&ensp;<code>int, float</code>, optional <code>(default=2)</code></dt>
+<dd>The minimum number of samples required to split an internal node for
+each decision tree.
+- If int, then consider <code>min_samples_split</code> as the minimum number.
+- If float, then <code>min_samples_split</code> is a percentage and
+<code>ceil(min_samples_split * n_samples)</code> are the minimum
+number of samples for each split.</dd>
+<dt><strong><code>n_jobs</code></strong> :&ensp;<code>integer</code>, optional <code>(default=1)</code></dt>
+<dd>The number of jobs to run in parallel for both <code>fit</code> and <code>predict</code>.
+If -1, then the number of jobs is set to the number of cores.</dd>
+<dt><strong><code>random_state</code></strong> :&ensp;<code>int, RandomState instance</code> or <code>None</code>, optional</dt>
+<dd>
+<ul>
+<li>If int, random_state is the seed used by the random number generator.</li>
+<li>If RandomState instance, random_state is the random number generator.</li>
+<li>If None, the random number generator is the RandomState instance used
+by <code>np.random</code>.</li>
+</ul>
+</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, optional <code>(default=0)</code></dt>
+<dd>Controls the verbosity of the tree building process.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<p>rules_ : dict of tuples (rule, precision, recall, nb).
+The collection of <code>n_estimators</code> rules used in the <code>predict</code> method.
+The rules are generated by fitted sub-estimators (decision trees). Each
+rule satisfies recall_min and precision_min conditions. The selection
+is done according to OOB precisions.</p>
+<dl>
+<dt><strong><code>estimators_</code></strong> :&ensp;<code>list</code> of <code>DecisionTreeClassifier</code></dt>
+<dd>The collection of fitted sub-estimators used to generate candidate
+rules.</dd>
+<dt><strong><code>estimators_samples_</code></strong> :&ensp;<code>list</code> of <code>arrays</code></dt>
+<dd>The subset of drawn samples (i.e., the in-bag samples) for each base
+estimator.</dd>
+<dt><strong><code>estimators_features_</code></strong> :&ensp;<code>list</code> of <code>arrays</code></dt>
+<dd>The subset of drawn features for each base estimator.</dd>
+<dt><strong><code>max_samples_</code></strong> :&ensp;<code>integer</code></dt>
+<dd>The actual number of samples</dd>
+<dt><strong><code>n_features_</code></strong> :&ensp;<code>integer</code></dt>
+<dd>The number of features when <code>fit</code> is performed.</dd>
+<dt><strong><code>classes_</code></strong> :&ensp;<code>array, shape (n_classes,)</code></dt>
+<dd>The classes labels.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class StableSkopeClassifier(SkopeRulesClassifier):
+
+    def __init__(self,
+                 weak_learners: List[BaseEstimator],
+                 max_complexity: int,
+                 min_mult: int = 1,
+                 precision_min=0.5,
+                 recall_min=0.4,
+                 n_estimators=10,
+                 max_samples=.8,
+                 max_samples_features=.8,
+                 bootstrap=False,
+                 bootstrap_features=False,
+                 max_depth=3,
+                 max_depth_duplication=None,
+                 max_features=1.,
+                 min_samples_split=2,
+                 n_jobs=1,
+                 random_state=None):
+        super().__init__(precision_min,
+                         recall_min,
+                         n_estimators,
+                         max_samples,
+                         max_samples_features,
+                         bootstrap,
+                         bootstrap_features,
+                         max_depth,
+                         max_depth_duplication,
+                         max_features,
+                         min_samples_split,
+                         n_jobs,
+                         random_state)
+        self.weak_learners = weak_learners
+        self.max_complexity = max_complexity
+        self.min_mult = min_mult
+
+    def fit(self, X, y=None, feature_names=None, sample_weight=None):
+        super().fit(X, y, feature_names=feature_names, sample_weight=sample_weight)
+        return self
+
+    def _extract_rules(self, X, y) -&gt; List[str]:
+        return [extract_ensemble(self.weak_learners, X, y, self.min_mult)], [np.arange(X.shape[0])], [np.arange(len(self.feature_names))]
+
+    def _score_rules(self, X, y, rules) -&gt; List[Rule]:
+        return score_precision_recall(X, y,
+                                      rules,
+                                      self.estimators_samples_,
+                                      self.estimators_features_,
+                                      self.feature_placeholders,
+                                      oob=False)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier" href="../rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li><a title="imodels.rule_set.rule_set.RuleSet" href="../rule_set/rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
+<li>sklearn.base.ClassifierMixin</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier" href="../rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.fit" href="../rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict" href="../rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_proba" href="../rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_top_rules" href="../rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_top_rules">predict_top_rules</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.rules_vote" href="../rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier.rules_vote">rules_vote</a></code></li>
+<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.score_top_rules" href="../rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier.score_top_rules">score_top_rules</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.experimental" href="index.html">imodels.experimental</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.experimental.stableskope.StableSkopeClassifier" href="#imodels.experimental.stableskope.StableSkopeClassifier">StableSkopeClassifier</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
