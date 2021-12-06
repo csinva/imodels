@@ -103,26 +103,28 @@ def score_linear(X, y, rules: List[str],
                  alpha=None,
                  random_state=None) -&gt; Tuple[List[Rule], List[float], float]:
 
-    if alpha is not None and max_rules is None:
+    if alpha is not None:
         final_alpha = alpha
-    elif max_rules is not None and alpha is None:
+        if max_rules is not None:
+            warn(&#34;Ignoring max_rules parameter since alpha passed explicitly&#34;)
+
+    elif max_rules is not None:
         final_alpha = get_best_alpha_under_max_rules(X, y, rules,
                                                      penalty=penalty,
                                                      prediction_task=prediction_task,
                                                      max_rules=max_rules, 
                                                      random_state=random_state)
     else:
-        raise ValueError(&#34;max_rules and alpha cannot be used together&#34;)
-
+        raise ValueError(&#34;Invalid alpha and max_rules passed&#34;)
 
     if prediction_task == &#39;regression&#39;:
-        lscv = Lasso(alpha=final_alpha, random_state=random_state, max_iter=2000)
+        lin_model = Lasso(alpha=final_alpha, random_state=random_state, max_iter=2000)
     else:
-        lscv = LogisticRegression(penalty=penalty, C=1/final_alpha, solver=&#39;liblinear&#39;,
+        lin_model = LogisticRegression(penalty=penalty, C=1/final_alpha, solver=&#39;liblinear&#39;,
                                   random_state=random_state, max_iter=200)
-    lscv.fit(X, y)
+    lin_model.fit(X, y)
 
-    coef_ = lscv.coef_.flatten()
+    coef_ = lin_model.coef_.flatten()
     coefs = list(coef_[:coef_.shape[0]-len(rules)])
     support = np.sum(X[:, -len(rules):], axis=0) / X.shape[0]
 
@@ -133,7 +135,7 @@ def score_linear(X, y, rules: List[str],
             nonzero_rules.append(Rule(r, args=[w], support=s))
             coefs.append(w)
     
-    return nonzero_rules, coefs, lscv.intercept_
+    return nonzero_rules, coefs, lin_model.intercept_
 
 
 def get_best_alpha_under_max_rules(X, y, rules: List[str],
@@ -250,26 +252,28 @@ def get_best_alpha_under_max_rules(X, y, rules: List[str],
                  alpha=None,
                  random_state=None) -&gt; Tuple[List[Rule], List[float], float]:
 
-    if alpha is not None and max_rules is None:
+    if alpha is not None:
         final_alpha = alpha
-    elif max_rules is not None and alpha is None:
+        if max_rules is not None:
+            warn(&#34;Ignoring max_rules parameter since alpha passed explicitly&#34;)
+
+    elif max_rules is not None:
         final_alpha = get_best_alpha_under_max_rules(X, y, rules,
                                                      penalty=penalty,
                                                      prediction_task=prediction_task,
                                                      max_rules=max_rules, 
                                                      random_state=random_state)
     else:
-        raise ValueError(&#34;max_rules and alpha cannot be used together&#34;)
-
+        raise ValueError(&#34;Invalid alpha and max_rules passed&#34;)
 
     if prediction_task == &#39;regression&#39;:
-        lscv = Lasso(alpha=final_alpha, random_state=random_state, max_iter=2000)
+        lin_model = Lasso(alpha=final_alpha, random_state=random_state, max_iter=2000)
     else:
-        lscv = LogisticRegression(penalty=penalty, C=1/final_alpha, solver=&#39;liblinear&#39;,
+        lin_model = LogisticRegression(penalty=penalty, C=1/final_alpha, solver=&#39;liblinear&#39;,
                                   random_state=random_state, max_iter=200)
-    lscv.fit(X, y)
+    lin_model.fit(X, y)
 
-    coef_ = lscv.coef_.flatten()
+    coef_ = lin_model.coef_.flatten()
     coefs = list(coef_[:coef_.shape[0]-len(rules)])
     support = np.sum(X[:, -len(rules):], axis=0) / X.shape[0]
 
@@ -280,7 +284,7 @@ def get_best_alpha_under_max_rules(X, y, rules: List[str],
             nonzero_rules.append(Rule(r, args=[w], support=s))
             coefs.append(w)
     
-    return nonzero_rules, coefs, lscv.intercept_</code></pre>
+    return nonzero_rules, coefs, lin_model.intercept_</code></pre>
 </details>
 </dd>
 <dt id="imodels.util.score.score_precision_recall"><code class="name flex">

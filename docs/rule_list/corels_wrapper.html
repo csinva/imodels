@@ -27,12 +27,13 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># This is just a simple wrapper around pycorels: https://github.com/corels/pycorels
+from typing import List
+
 import numpy as np
 import pandas as pd
 from corels import CorelsClassifier
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import KBinsDiscretizer
-from typing import List
 
 
 class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
@@ -188,7 +189,7 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
         preds = self.predict(X)
         return np.vstack((1 - preds, preds)).transpose()
 
-    def _traverse_rule(self, X: np.ndarray, y: np.ndarray, feature_names: List[str]):
+    def _traverse_rule(self, X: np.ndarray, y: np.ndarray, feature_names: List[str], print_colors=False):
         &#34;&#34;&#34;Traverse rule and build up string representation
 
         Parameters
@@ -204,6 +205,12 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
         df.loc[:, &#39;y&#39;] = y
         o = &#39;y&#39;
         str_print += f&#39;   {df[o].sum()} / {df.shape[0]} (positive class / total)\n&#39;
+        if print_colors:
+            color_start = &#39;\033[96m&#39;
+            color_end = &#39;\033[00m&#39;
+        else:
+            color_start = &#39;&#39;
+            color_end = &#39;&#39;
         if len(self.rl_.rules) &gt; 1:
             str_print += f&#39;\t\u2193 \n&#39;
         else:
@@ -225,7 +232,7 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
 
                 # add to str_print
                 query_print = query.replace(&#39;== 1&#39;, &#39;&#39;).replace(&#39;(&#39;, &#39;&#39;).replace(&#39;)&#39;, &#39;&#39;).replace(&#39;`&#39;, &#39;&#39;)
-                str_print += f&#39;\033[96mIf {query_print:&lt;35}\033[00m \u2192 {df_rhs[o].sum():&gt;3} / {df_rhs.shape[0]:&gt;4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():&gt;3} / {df.shape[0]:&gt;5}\t \n&#39;
+                str_print += f&#39;{color_start}If {query_print:&lt;35}{color_end} \u2192 {df_rhs[o].sum():&gt;3} / {df_rhs.shape[0]:&gt;4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():&gt;3} / {df.shape[0]:&gt;5}\t \n&#39;
                 if not (j == len(self.rl_.rules) - 2 and i == len(antecedents) - 1):
                     str_print += &#39;\t\u2193 \n&#39;
 
@@ -233,9 +240,9 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
 
     def __str__(self):
         if self.str_print is not None:
-            return &#39;CorelsClassifier:\n\n&#39; + self.str_print
+            return &#39;OptimalRuleList:\n\n&#39; + self.str_print
         else:
-            return &#39;CorelsClassifier:\n\n&#39; + self.rl_.__str__()
+            return &#39;OptimalRuleList:\n\n&#39; + self.rl_.__str__()
 
     def _get_complexity(self):
         return len(self.rl_.rules)</code></pre>
@@ -472,7 +479,7 @@ Examples</p>
         preds = self.predict(X)
         return np.vstack((1 - preds, preds)).transpose()
 
-    def _traverse_rule(self, X: np.ndarray, y: np.ndarray, feature_names: List[str]):
+    def _traverse_rule(self, X: np.ndarray, y: np.ndarray, feature_names: List[str], print_colors=False):
         &#34;&#34;&#34;Traverse rule and build up string representation
 
         Parameters
@@ -488,6 +495,12 @@ Examples</p>
         df.loc[:, &#39;y&#39;] = y
         o = &#39;y&#39;
         str_print += f&#39;   {df[o].sum()} / {df.shape[0]} (positive class / total)\n&#39;
+        if print_colors:
+            color_start = &#39;\033[96m&#39;
+            color_end = &#39;\033[00m&#39;
+        else:
+            color_start = &#39;&#39;
+            color_end = &#39;&#39;
         if len(self.rl_.rules) &gt; 1:
             str_print += f&#39;\t\u2193 \n&#39;
         else:
@@ -509,7 +522,7 @@ Examples</p>
 
                 # add to str_print
                 query_print = query.replace(&#39;== 1&#39;, &#39;&#39;).replace(&#39;(&#39;, &#39;&#39;).replace(&#39;)&#39;, &#39;&#39;).replace(&#39;`&#39;, &#39;&#39;)
-                str_print += f&#39;\033[96mIf {query_print:&lt;35}\033[00m \u2192 {df_rhs[o].sum():&gt;3} / {df_rhs.shape[0]:&gt;4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():&gt;3} / {df.shape[0]:&gt;5}\t \n&#39;
+                str_print += f&#39;{color_start}If {query_print:&lt;35}{color_end} \u2192 {df_rhs[o].sum():&gt;3} / {df_rhs.shape[0]:&gt;4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():&gt;3} / {df.shape[0]:&gt;5}\t \n&#39;
                 if not (j == len(self.rl_.rules) - 2 and i == len(antecedents) - 1):
                     str_print += &#39;\t\u2193 \n&#39;
 
@@ -517,9 +530,9 @@ Examples</p>
 
     def __str__(self):
         if self.str_print is not None:
-            return &#39;CorelsClassifier:\n\n&#39; + self.str_print
+            return &#39;OptimalRuleList:\n\n&#39; + self.str_print
         else:
-            return &#39;CorelsClassifier:\n\n&#39; + self.rl_.__str__()
+            return &#39;OptimalRuleList:\n\n&#39; + self.rl_.__str__()
 
     def _get_complexity(self):
         return len(self.rl_.rules)</code></pre>

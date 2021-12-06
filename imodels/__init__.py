@@ -2,9 +2,7 @@
 .. include:: ../readme.md
 """
 # Python `imodels` package for interpretable models compatible with scikit-learn.
-# Github repo available [here](https://github.com/csinva/interpretability-implementations-demos).
-
-import os
+# Github repo available [here](https://github.com/csinva/imodels)
 
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
@@ -12,7 +10,7 @@ from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
 from .tree.gosdt.pygosdt import OptimalTreeClassifier
 from .tree.c45_tree.c45_tree import C45TreeClassifier
 from .tree.saps import SaplingSumRegressor, SaplingSumClassifier
-from .tree.shrinkage_model import ShrunkTree, ShrunkTreeCV
+from .tree.shrunk_tree import ShrunkTreeRegressor, ShrunkTreeClassifier, ShrunkTreeRegressorCV, ShrunkTreeClassifierCV
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer

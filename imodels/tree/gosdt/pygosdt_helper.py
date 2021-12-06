@@ -28,8 +28,9 @@ class TreeClassifier:
     Additional support for encoding/decoding layer can be layers if the feature-space of the model
     differs from the feature space of the original data.
     """
+
     def __init__(self, source, encoder=None, X=None, y=None):
-        
+
         # The classifier stored in a recursive dictionary structure
         self.source = source
 
@@ -39,7 +40,7 @@ class TreeClassifier:
         # Original training features and labels to fill in missing training loss values
         if X is not None and y is not None:
             self.__initialize_training_loss__(X, y)
-   
+
     def __initialize_training_loss__(self, X, y):
         """
         Compares every prediction y_hat against the labels y, then incorporates the misprediction
@@ -162,7 +163,7 @@ class TreeClassifier:
         # Perform an encoding if an encoding unit is specified
         if self.encoder is not None:
             X = pd.DataFrame(self.encoder.encode(X.values[:, :]), columns=self.encoder.headers)
-        
+
         predictions = []
         (n, m) = X.shape
         for i in range(n):
@@ -197,7 +198,7 @@ class TreeClassifier:
             _, conditional_probability = self.classify(X.values[i, :])
             conditional_probabilities.append(conditional_probability)
         return array(conditional_probabilities)
-    
+
     def error(self, X, y, weight=None):
         """
         Parameters
@@ -262,7 +263,7 @@ class TreeClassifier:
                 nodes.append(node["true"])
                 nodes.append(node["false"])
         return leaves_counter
-    
+
     def nodes(self):
         """
         Returns
@@ -352,7 +353,7 @@ class TreeClassifier:
                     if domain["max"] != float("INF"):
                         predicate = predicate + " < {}".format(domain["max"])
                     predicates.append(predicate)
-            
+
             if len(predicates) == 0:
                 condition = "if true then:"
             else:
@@ -365,7 +366,7 @@ class TreeClassifier:
             result = "\n".join(outcomes)
             cases.append("{}\n{}".format(condition, result))
         return "\n\nelse ".join(cases)
-    
+
     def __repr__(self):
         """
         Returns
@@ -404,8 +405,8 @@ class TreeClassifier:
                     node["feature"], node["relation"], node["reference"])
             return (
                 "[ ${}$ {} {} ]"
-                .format(name, self.latex(node["true"]), self.latex(node["false"]))
-                .replace("==", " \eq ").replace(">=", " \ge ").replace("<=", " \le ")
+                    .format(name, self.latex(node["true"]), self.latex(node["false"]))
+                    .replace("==", " \eq ").replace(">=", " \ge ").replace("<=", " \le ")
             )
 
     def json(self):
@@ -474,7 +475,7 @@ class TreeClassifier:
                             raise "OptimalSparseDecisionTree: Malformatted source {}".format(node)
                     else:
                         raise "Unsupported relational operator {}".format(node["relation"])
-                    
+
                     # Add the modified group to the group list
                     groups.append(group)
             return groups

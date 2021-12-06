@@ -29,15 +29,16 @@
 <pre><code class="python">import json
 import warnings
 
+import numpy as np
 import pandas as pd
 from sklearn.utils import validation
 
-from imodels.tree.gosdt.pygosdt_backup import DecisionTreeClassifierWithComplexity
-from imodels.tree.gosdt.tree_classifier import TreeClassifier
+from imodels import GreedyTreeClassifier
+from imodels.tree.gosdt.pygosdt_helper import TreeClassifier
 from imodels.util import rule
 
 
-class OptimalTreeClassifier:
+class OptimalTreeClassifier(GreedyTreeClassifier):
     def __init__(self,
                  balance=False,
                  cancellation=True,
@@ -57,12 +58,15 @@ class OptimalTreeClassifier:
                  tile_limit=0,
                  time_limit=0,
                  worker_limit=1,
+                 random_state=None,
                  costs=&#34;&#34;,
                  model=&#34;&#34;,
                  profile=&#34;&#34;,
                  timing=&#34;&#34;,
                  trace=&#34;&#34;,
-                 tree=&#34;&#34;):
+                 tree=&#34;&#34;,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.balance = balance
         self.cancellation = cancellation
         self.look_ahead = look_ahead
@@ -87,6 +91,10 @@ class OptimalTreeClassifier:
         self.timing = timing
         self.trace = trace
         self.tree = tree
+        self.tree_type = &#39;gosdt&#39;
+        self.random_state = random_state
+        if random_state is not None:
+            np.random.seed(random_state)
 
     def load(self, path):
         &#34;&#34;&#34;
@@ -144,15 +152,17 @@ class OptimalTreeClassifier:
         except ImportError:
 
             warnings.warn(
-                &#34;Should install gosdt C++ extenstion. On x86_64 linux or macOS: &#34;
+                &#34;Should install gosdt extension. On x86_64 linux or macOS: &#34;
                 &#34;&#39;pip install gosdt&#39;. On other platforms, see &#34;
                 &#34;https://github.com/keyan3/GeneralizedOptimalSparseDecisionTrees. &#34;
-                &#34;Using DecisionTreeClassifier instead.&#34;
+                &#34;Defaulting to Non-optimal DecisionTreeClassifier.&#34;
             )
 
-            dtree = DecisionTreeClassifierWithComplexity()
-            dtree.fit(X, y)
-            self.tree_ = dtree
+            # dtree = DecisionTreeClassifierWithComplexity()
+            # dtree.fit(X, y)
+            # self.tree_ = dtree
+            super().fit(X, y, feature_names=feature_names)
+            self.tree_type = &#39;dt&#39;
             
         return self
 
@@ -160,19 +170,32 @@ class OptimalTreeClassifier:
         &#34;&#34;&#34;
         Parameters
         ---
-        X : matrix-like, shape = [n_samples by m_features]
+        X : matrix-like, shape = [n_samples, m_features]
             a matrix where each row is a sample to be predicted and each column is a feature to
             be used for prediction
 
         Returns
         ---
-        array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+        array-like, shape = [n_samples, 1] : a column where each element is the prediction
             associated with each row
         &#34;&#34;&#34;
         validation.check_is_fitted(self)
-        if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X, columns=self.feature_names_)
-        return self.tree_.predict(X)
+        if self.tree_type == &#39;gosdt&#39;:
+            if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
+                X = pd.DataFrame(X, columns=self.feature_names_)
+            return self.tree_.predict(X)
+        else:
+            return super().predict(X)
+
+    def predict_proba(self, X):
+        validation.check_is_fitted(self)
+        if self.tree_type == &#39;gosdt&#39;:
+            if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
+                X = pd.DataFrame(X, columns=self.feature_names_)
+            probs = self.tree_.confidence(X)
+            return np.hstack((1 - probs), probs)
+        else:
+            return super().predict_proba(X)
 
     def score(self, X, y, weight=None):
         &#34;&#34;&#34;
@@ -328,15 +351,15 @@ class OptimalTreeClassifier:
 <dl>
 <dt id="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">OptimalTreeClassifier</span></span>
-<span>(</span><span>balance=False, cancellation=True, look_ahead=True, similar_support=True, feature_exchange=True, continuous_feature_exchange=True, rule_list=False, diagnostics=False, verbose=False, regularization=0.05, uncertainty_tolerance=0.0, upperbound=0.0, model_limit=1, precision_limit=0, stack_limit=0, tile_limit=0, time_limit=0, worker_limit=1, costs='', model='', profile='', timing='', trace='', tree='')</span>
+<span>(</span><span>balance=False, cancellation=True, look_ahead=True, similar_support=True, feature_exchange=True, continuous_feature_exchange=True, rule_list=False, diagnostics=False, verbose=False, regularization=0.05, uncertainty_tolerance=0.0, upperbound=0.0, model_limit=1, precision_limit=0, stack_limit=0, tile_limit=0, time_limit=0, worker_limit=1, random_state=None, costs='', model='', profile='', timing='', trace='', tree='', *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Wrapper around sklearn greedy tree classifier</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class OptimalTreeClassifier:
+<pre><code class="python">class OptimalTreeClassifier(GreedyTreeClassifier):
     def __init__(self,
                  balance=False,
                  cancellation=True,
@@ -356,12 +379,15 @@ class OptimalTreeClassifier:
                  tile_limit=0,
                  time_limit=0,
                  worker_limit=1,
+                 random_state=None,
                  costs=&#34;&#34;,
                  model=&#34;&#34;,
                  profile=&#34;&#34;,
                  timing=&#34;&#34;,
                  trace=&#34;&#34;,
-                 tree=&#34;&#34;):
+                 tree=&#34;&#34;,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.balance = balance
         self.cancellation = cancellation
         self.look_ahead = look_ahead
@@ -386,6 +412,10 @@ class OptimalTreeClassifier:
         self.timing = timing
         self.trace = trace
         self.tree = tree
+        self.tree_type = &#39;gosdt&#39;
+        self.random_state = random_state
+        if random_state is not None:
+            np.random.seed(random_state)
 
     def load(self, path):
         &#34;&#34;&#34;
@@ -443,15 +473,17 @@ class OptimalTreeClassifier:
         except ImportError:
 
             warnings.warn(
-                &#34;Should install gosdt C++ extenstion. On x86_64 linux or macOS: &#34;
+                &#34;Should install gosdt extension. On x86_64 linux or macOS: &#34;
                 &#34;&#39;pip install gosdt&#39;. On other platforms, see &#34;
                 &#34;https://github.com/keyan3/GeneralizedOptimalSparseDecisionTrees. &#34;
-                &#34;Using DecisionTreeClassifier instead.&#34;
+                &#34;Defaulting to Non-optimal DecisionTreeClassifier.&#34;
             )
 
-            dtree = DecisionTreeClassifierWithComplexity()
-            dtree.fit(X, y)
-            self.tree_ = dtree
+            # dtree = DecisionTreeClassifierWithComplexity()
+            # dtree.fit(X, y)
+            # self.tree_ = dtree
+            super().fit(X, y, feature_names=feature_names)
+            self.tree_type = &#39;dt&#39;
             
         return self
 
@@ -459,19 +491,32 @@ class OptimalTreeClassifier:
         &#34;&#34;&#34;
         Parameters
         ---
-        X : matrix-like, shape = [n_samples by m_features]
+        X : matrix-like, shape = [n_samples, m_features]
             a matrix where each row is a sample to be predicted and each column is a feature to
             be used for prediction
 
         Returns
         ---
-        array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+        array-like, shape = [n_samples, 1] : a column where each element is the prediction
             associated with each row
         &#34;&#34;&#34;
         validation.check_is_fitted(self)
-        if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X, columns=self.feature_names_)
-        return self.tree_.predict(X)
+        if self.tree_type == &#39;gosdt&#39;:
+            if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
+                X = pd.DataFrame(X, columns=self.feature_names_)
+            return self.tree_.predict(X)
+        else:
+            return super().predict(X)
+
+    def predict_proba(self, X):
+        validation.check_is_fitted(self)
+        if self.tree_type == &#39;gosdt&#39;:
+            if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
+                X = pd.DataFrame(X, columns=self.feature_names_)
+            probs = self.tree_.confidence(X)
+            return np.hstack((1 - probs), probs)
+        else:
+            return super().predict_proba(X)
 
     def score(self, X, y, weight=None):
         &#34;&#34;&#34;
@@ -615,6 +660,15 @@ class OptimalTreeClassifier:
             &#34;tree&#34;: self.tree
         }</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.cart_wrapper.GreedyTreeClassifier" href="../cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></li>
+<li>sklearn.tree._classes.DecisionTreeClassifier</li>
+<li>sklearn.base.ClassifierMixin</li>
+<li>sklearn.tree._classes.BaseDecisionTree</li>
+<li>sklearn.base.MultiOutputMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.fit"><code class="name flex">
@@ -678,15 +732,17 @@ class OptimalTreeClassifier:
     except ImportError:
 
         warnings.warn(
-            &#34;Should install gosdt C++ extenstion. On x86_64 linux or macOS: &#34;
+            &#34;Should install gosdt extension. On x86_64 linux or macOS: &#34;
             &#34;&#39;pip install gosdt&#39;. On other platforms, see &#34;
             &#34;https://github.com/keyan3/GeneralizedOptimalSparseDecisionTrees. &#34;
-            &#34;Using DecisionTreeClassifier instead.&#34;
+            &#34;Defaulting to Non-optimal DecisionTreeClassifier.&#34;
         )
 
-        dtree = DecisionTreeClassifierWithComplexity()
-        dtree.fit(X, y)
-        self.tree_ = dtree
+        # dtree = DecisionTreeClassifierWithComplexity()
+        # dtree.fit(X, y)
+        # self.tree_ = dtree
+        super().fit(X, y, feature_names=feature_names)
+        self.tree_type = &#39;dt&#39;
         
     return self</code></pre>
 </details>
@@ -868,13 +924,13 @@ being a reserved character in LaTeX</p>
 <dd>
 <div class="desc"><h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>matrix-like, shape = [n_samples by m_features]</code></dt>
+<dt><strong><code>X</code></strong> :&ensp;<code>matrix-like, shape = [n_samples, m_features]</code></dt>
 <dd>a matrix where each row is a sample to be predicted and each column is a feature to
 be used for prediction</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>array-like, shape = [n_sampels by 1] : a column where each element is the prediction</code></dt>
+<dt><code>array-like, shape = [n_samples, 1] : a column where each element is the prediction</code></dt>
 <dd>associated with each row</dd>
 </dl></div>
 <details class="source">
@@ -885,19 +941,61 @@ be used for prediction</dd>
     &#34;&#34;&#34;
     Parameters
     ---
-    X : matrix-like, shape = [n_samples by m_features]
+    X : matrix-like, shape = [n_samples, m_features]
         a matrix where each row is a sample to be predicted and each column is a feature to
         be used for prediction
 
     Returns
     ---
-    array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+    array-like, shape = [n_samples, 1] : a column where each element is the prediction
         associated with each row
     &#34;&#34;&#34;
     validation.check_is_fitted(self)
-    if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
-        X = pd.DataFrame(X, columns=self.feature_names_)
-    return self.tree_.predict(X)</code></pre>
+    if self.tree_type == &#39;gosdt&#39;:
+        if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X, columns=self.feature_names_)
+        return self.tree_.predict(X)
+    else:
+        return super().predict(X)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Predict class probabilities of the input samples X.</p>
+<p>The predicted class probability is the fraction of samples of the same
+class in a leaf.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>{array-like, sparse matrix}</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>The input samples. Internally, it will be converted to
+<code>dtype=np.float32</code> and if a sparse matrix is provided
+to a sparse <code>csr_matrix</code>.</dd>
+<dt><strong><code>check_input</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>Allow to bypass several input checking.
+Don't use this parameter unless you know what you do.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>proba</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_classes)</code> or <code>list</code> of <code>n_outputs
+such arrays if n_outputs &gt; 1</code></dt>
+<dd>The class probabilities of the input samples. The order of the
+classes corresponds to that in the attribute :term:<code>classes_</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    validation.check_is_fitted(self)
+    if self.tree_type == &#39;gosdt&#39;:
+        if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X, columns=self.feature_names_)
+        probs = self.tree_.confidence(X)
+        return np.hstack((1 - probs), probs)
+    else:
+        return super().predict_proba(X)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.score"><code class="name flex">
@@ -976,6 +1074,7 @@ be used for prediction</dd>
 <li><code><a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.max_depth" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.max_depth">max_depth</a></code></li>
 <li><code><a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.nodes" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.nodes">nodes</a></code></li>
 <li><code><a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.predict" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.predict_proba" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.score" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.score">score</a></code></li>
 </ul>
 </li>

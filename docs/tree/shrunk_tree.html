@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>imodels.tree.shrunk_tree API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>imodels.tree.shrunk_tree</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from copy import deepcopy
+from typing import List
+
+import numpy as np
+from sklearn import datasets
+from sklearn.base import BaseEstimator
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
+
+
+class ShrunkTree(BaseEstimator):
+    &#34;&#34;&#34;Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator_: BaseEstimator, reg_param: float = 1):
+        super().__init__()
+        self.reg_param = reg_param
+        # print(&#39;est&#39;, estimator_)
+        self.estimator_ = estimator_
+        self._init_prediction_task()
+
+    # (max_depth=max_depth)
+
+    # if checks.check_is_fitted(self.estimator_):
+    #     self.shrink()
+
+    def __init__prediction_task(self):
+
+        self.prediction_task = &#39;regression&#39;
+
+    def fit(self, *args, **kwargs):
+        self.estimator_.fit(*args, **kwargs)
+        self.shrink()
+
+    def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
+        &#34;&#34;&#34;Shrink the tree
+        &#34;&#34;&#34;
+        left = tree.children_left[i]
+        right = tree.children_right[i]
+        is_leaf = left == right
+        n_samples = tree.n_node_samples[i]
+        if self.prediction_task == &#39;regression&#39;:
+            val = tree.value[i][0, 0]
+        else:
+            val = tree.value[i][0, 1] / (tree.value[i][0, 0] + tree.value[i][0, 1])  # binary classification
+        # val = val[1] / val[2] # for binary cls
+
+        # if root
+        if parent_val is None and parent_num is None:
+            if not is_leaf:
+                self.shrink_tree(tree, reg_param, left,
+                                 parent_val=val, parent_num=n_samples, cum_sum=val)
+                self.shrink_tree(tree, reg_param, right,
+                                 parent_val=val, parent_num=n_samples, cum_sum=val)
+
+        # if has parent
+        else:
+            val_new = (val - parent_val) / (1 + reg_param / parent_num)
+            cum_sum += val_new
+            if is_leaf:
+                if self.prediction_task == &#39;regression&#39;:
+                    tree.value[i, 0, 0] = cum_sum
+                else:
+                    tree.value[i, 0, 1] = cum_sum
+                    tree.value[i, 0, 0] = 1.0 - cum_sum
+            else:
+                self.shrink_tree(tree, reg_param, left,
+                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+                self.shrink_tree(tree, reg_param, right,
+                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+
+        return tree
+
+    def shrink(self):
+        if hasattr(self.estimator_, &#39;tree_&#39;):
+            self.shrink_tree(self.estimator_.tree_, self.reg_param)
+        elif hasattr(self.estimator_, &#39;estimators_&#39;):
+            for t in self.estimator_.estimators_:
+                if isinstance(t, np.ndarray):
+                    assert t.size == 1, &#39;multiple trees stored under tree_?&#39;
+                    t = t[0]
+                self.shrink_tree(t.tree_, self.reg_param)
+
+    def predict(self, *args, **kwargs):
+        return self.estimator_.predict(*args, **kwargs)
+
+    def predict_proba(self, *args, **kwargs):
+        if hasattr(self.estimator_, &#39;predict_proba&#39;):
+            return self.estimator_.predict_proba(*args, **kwargs)
+        else:
+            return NotImplemented
+
+    def score(self, *args, **kwargs):
+        if hasattr(self.estimator_, &#39;score&#39;):
+            return self.estimator_.score(*args, **kwargs)
+        else:
+            return NotImplemented
+
+
+class ShrunkTreeRegressor(ShrunkTree):
+    def _init_prediction_task(self):
+        self.prediction_task = &#39;regression&#39;
+
+
+class ShrunkTreeClassifier(ShrunkTree):
+    def _init_prediction_task(self):
+        self.prediction_task = &#39;classification&#39;
+
+
+class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
+    def __init__(self, estimator_: BaseEstimator,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 cv: int = 3, scoring=None):
+        super().__init__(estimator_, reg_param=None)
+        self.reg_param_list = np.array(reg_param_list)
+        self.cv = cv
+        self.scoring = scoring
+        # print(&#39;estimator&#39;, self.estimator_,
+        #       &#39;checks.check_is_fitted(estimator)&#39;, checks.check_is_fitted(self.estimator_))
+        # if checks.check_is_fitted(self.estimator_):
+        #     raise Warning(&#39;Passed an already fitted estimator,&#39;
+        #                   &#39;but shrinking not applied until fit method is called.&#39;)
+
+    def fit(self, X, y, *args, **kwargs):
+        self.scores_ = []
+        for reg_param in self.reg_param_list:
+            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            self.scores_.append(np.mean(cv_scores))
+        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        super().fit(X=X, y=y)
+
+
+class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
+    def __init__(self, estimator_: BaseEstimator,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 cv: int = 3, scoring=None):
+        super().__init__(estimator_, reg_param=None)
+        self.reg_param_list = np.array(reg_param_list)
+        self.cv = cv
+        self.scoring = scoring
+        # print(&#39;estimator&#39;, self.estimator_,
+        #       &#39;checks.check_is_fitted(estimator)&#39;, checks.check_is_fitted(self.estimator_))
+        # if checks.check_is_fitted(self.estimator_):
+        #     raise Warning(&#39;Passed an already fitted estimator,&#39;
+        #                   &#39;but shrinking not applied until fit method is called.&#39;)
+
+    def fit(self, X, y, *args, **kwargs):
+        self.scores_ = []
+        for reg_param in self.reg_param_list:
+            est = ShrunkTreeRegressor(deepcopy(self.estimator_), reg_param)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            self.scores_.append(np.mean(cv_scores))
+        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        super().fit(X=X, y=y)
+
+
+# class ShrunkTreeCV(ShrunkTree):
+#    def __init__(self, estimator_: BaseEstimator,
+#                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+#                 cv: int = 3, scoring=None):
+#        super().__init__(estimator_, reg_param=None)
+#        self.reg_param_list = np.array(reg_param_list)
+#        self.cv = cv
+#        self.scoring = scoring
+# print(&#39;estimator&#39;, self.estimator_,
+#       &#39;checks.check_is_fitted(estimator)&#39;, checks.check_is_fitted(self.estimator_))
+# if checks.check_is_fitted(self.estimator_):
+#     raise Warning(&#39;Passed an already fitted estimator,&#39;
+#                   &#39;but shrinking not applied until fit method is called.&#39;)
+
+#    def fit(self, X, y, *args, **kwargs):
+#        self.scores_ = []
+#        for reg_param in self.reg_param_list:
+#            est = ShrunkTree(deepcopy(self.estimator_), reg_param)
+#            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+#            self.scores_.append(np.mean(cv_scores))
+#        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+#        super().fit(X=X, y=y)
+
+
+if __name__ == &#39;__main__&#39;:
+    np.random.seed(15)
+    X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
+    # X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
+    # X, y = datasets.load_diabetes(return_X_y=True)  # regression
+    # X = np.random.randn(500, 10)
+    # y = (X[:, 0] &gt; 0).astype(float) + (X[:, 1] &gt; 1).astype(float)
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=42
+    )
+    print(&#39;X.shape&#39;, X.shape)
+    print(&#39;ys&#39;, np.unique(y_train))
+
+    # m = ShrunkTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
+    # m = DecisionTreeClassifier(random_state=42, max_features=None)
+    m = DecisionTreeRegressor(random_state=42, max_leaf_nodes=20)
+    # print(&#39;best alpha&#39;, m.reg_param)
+    m.fit(X_train, y_train)
+    # m.predict_proba(X_train)  # just run this
+    print(&#39;score&#39;, m.score(X_test, y_test))
+    print(&#39;running again....&#39;)
+
+    # m = ShrunkTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
+    # m = ShrunkTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
+    m = ShrunkTreeRegressorCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=20, random_state=42),
+                              reg_param_list=[0.1, 1, 10, 100])
+    # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
+
+    m.fit(X_train, y_train)
+    print(&#39;best alpha&#39;, m.reg_param)
+    # m.predict_proba(X_train)  # just run this
+    print(&#39;score&#39;, m.score(X_test, y_test))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.tree.shrunk_tree.ShrunkTree"><code class="flex name class">
+<span>class <span class="ident">ShrunkTree</span></span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param: float = 1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShrunkTree(BaseEstimator):
+    &#34;&#34;&#34;Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator_: BaseEstimator, reg_param: float = 1):
+        super().__init__()
+        self.reg_param = reg_param
+        # print(&#39;est&#39;, estimator_)
+        self.estimator_ = estimator_
+        self._init_prediction_task()
+
+    # (max_depth=max_depth)
+
+    # if checks.check_is_fitted(self.estimator_):
+    #     self.shrink()
+
+    def __init__prediction_task(self):
+
+        self.prediction_task = &#39;regression&#39;
+
+    def fit(self, *args, **kwargs):
+        self.estimator_.fit(*args, **kwargs)
+        self.shrink()
+
+    def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
+        &#34;&#34;&#34;Shrink the tree
+        &#34;&#34;&#34;
+        left = tree.children_left[i]
+        right = tree.children_right[i]
+        is_leaf = left == right
+        n_samples = tree.n_node_samples[i]
+        if self.prediction_task == &#39;regression&#39;:
+            val = tree.value[i][0, 0]
+        else:
+            val = tree.value[i][0, 1] / (tree.value[i][0, 0] + tree.value[i][0, 1])  # binary classification
+        # val = val[1] / val[2] # for binary cls
+
+        # if root
+        if parent_val is None and parent_num is None:
+            if not is_leaf:
+                self.shrink_tree(tree, reg_param, left,
+                                 parent_val=val, parent_num=n_samples, cum_sum=val)
+                self.shrink_tree(tree, reg_param, right,
+                                 parent_val=val, parent_num=n_samples, cum_sum=val)
+
+        # if has parent
+        else:
+            val_new = (val - parent_val) / (1 + reg_param / parent_num)
+            cum_sum += val_new
+            if is_leaf:
+                if self.prediction_task == &#39;regression&#39;:
+                    tree.value[i, 0, 0] = cum_sum
+                else:
+                    tree.value[i, 0, 1] = cum_sum
+                    tree.value[i, 0, 0] = 1.0 - cum_sum
+            else:
+                self.shrink_tree(tree, reg_param, left,
+                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+                self.shrink_tree(tree, reg_param, right,
+                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+
+        return tree
+
+    def shrink(self):
+        if hasattr(self.estimator_, &#39;tree_&#39;):
+            self.shrink_tree(self.estimator_.tree_, self.reg_param)
+        elif hasattr(self.estimator_, &#39;estimators_&#39;):
+            for t in self.estimator_.estimators_:
+                if isinstance(t, np.ndarray):
+                    assert t.size == 1, &#39;multiple trees stored under tree_?&#39;
+                    t = t[0]
+                self.shrink_tree(t.tree_, self.reg_param)
+
+    def predict(self, *args, **kwargs):
+        return self.estimator_.predict(*args, **kwargs)
+
+    def predict_proba(self, *args, **kwargs):
+        if hasattr(self.estimator_, &#39;predict_proba&#39;):
+            return self.estimator_.predict_proba(*args, **kwargs)
+        else:
+            return NotImplemented
+
+    def score(self, *args, **kwargs):
+        if hasattr(self.estimator_, &#39;score&#39;):
+            return self.estimator_.score(*args, **kwargs)
+        else:
+            return NotImplemented</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifier" href="#imodels.tree.shrunk_tree.ShrunkTreeClassifier">ShrunkTreeClassifier</a></li>
+<li><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressor" href="#imodels.tree.shrunk_tree.ShrunkTreeRegressor">ShrunkTreeRegressor</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.shrunk_tree.ShrunkTree.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, *args, **kwargs):
+    self.estimator_.fit(*args, **kwargs)
+    self.shrink()</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.shrunk_tree.ShrunkTree.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, *args, **kwargs):
+    return self.estimator_.predict(*args, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.shrunk_tree.ShrunkTree.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, *args, **kwargs):
+    if hasattr(self.estimator_, &#39;predict_proba&#39;):
+        return self.estimator_.predict_proba(*args, **kwargs)
+    else:
+        return NotImplemented</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.shrunk_tree.ShrunkTree.score"><code class="name flex">
+<span>def <span class="ident">score</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def score(self, *args, **kwargs):
+    if hasattr(self.estimator_, &#39;score&#39;):
+        return self.estimator_.score(*args, **kwargs)
+    else:
+        return NotImplemented</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.shrunk_tree.ShrunkTree.shrink"><code class="name flex">
+<span>def <span class="ident">shrink</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def shrink(self):
+    if hasattr(self.estimator_, &#39;tree_&#39;):
+        self.shrink_tree(self.estimator_.tree_, self.reg_param)
+    elif hasattr(self.estimator_, &#39;estimators_&#39;):
+        for t in self.estimator_.estimators_:
+            if isinstance(t, np.ndarray):
+                assert t.size == 1, &#39;multiple trees stored under tree_?&#39;
+                t = t[0]
+            self.shrink_tree(t.tree_, self.reg_param)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.shrunk_tree.ShrunkTree.shrink_tree"><code class="name flex">
+<span>def <span class="ident">shrink_tree</span></span>(<span>self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Shrink the tree</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
+    &#34;&#34;&#34;Shrink the tree
+    &#34;&#34;&#34;
+    left = tree.children_left[i]
+    right = tree.children_right[i]
+    is_leaf = left == right
+    n_samples = tree.n_node_samples[i]
+    if self.prediction_task == &#39;regression&#39;:
+        val = tree.value[i][0, 0]
+    else:
+        val = tree.value[i][0, 1] / (tree.value[i][0, 0] + tree.value[i][0, 1])  # binary classification
+    # val = val[1] / val[2] # for binary cls
+
+    # if root
+    if parent_val is None and parent_num is None:
+        if not is_leaf:
+            self.shrink_tree(tree, reg_param, left,
+                             parent_val=val, parent_num=n_samples, cum_sum=val)
+            self.shrink_tree(tree, reg_param, right,
+                             parent_val=val, parent_num=n_samples, cum_sum=val)
+
+    # if has parent
+    else:
+        val_new = (val - parent_val) / (1 + reg_param / parent_num)
+        cum_sum += val_new
+        if is_leaf:
+            if self.prediction_task == &#39;regression&#39;:
+                tree.value[i, 0, 0] = cum_sum
+            else:
+                tree.value[i, 0, 1] = cum_sum
+                tree.value[i, 0, 0] = 1.0 - cum_sum
+        else:
+            self.shrink_tree(tree, reg_param, left,
+                             parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+            self.shrink_tree(tree, reg_param, right,
+                             parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+
+    return tree</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.tree.shrunk_tree.ShrunkTreeClassifier"><code class="flex name class">
+<span>class <span class="ident">ShrunkTreeClassifier</span></span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param: float = 1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShrunkTreeClassifier(ShrunkTree):
+    def _init_prediction_task(self):
+        self.prediction_task = &#39;classification&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.shrunk_tree.ShrunkTree" href="#imodels.tree.shrunk_tree.ShrunkTree">ShrunkTree</a></li>
+<li>sklearn.base.BaseEstimator</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifierCV" href="#imodels.tree.shrunk_tree.ShrunkTreeClassifierCV">ShrunkTreeClassifierCV</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.tree.shrunk_tree.ShrunkTree" href="#imodels.tree.shrunk_tree.ShrunkTree">ShrunkTree</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTree.shrink_tree" href="#imodels.tree.shrunk_tree.ShrunkTree.shrink_tree">shrink_tree</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.tree.shrunk_tree.ShrunkTreeClassifierCV"><code class="flex name class">
+<span>class <span class="ident">ShrunkTreeClassifierCV</span></span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], cv: int = 3, scoring=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
+    def __init__(self, estimator_: BaseEstimator,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 cv: int = 3, scoring=None):
+        super().__init__(estimator_, reg_param=None)
+        self.reg_param_list = np.array(reg_param_list)
+        self.cv = cv
+        self.scoring = scoring
+        # print(&#39;estimator&#39;, self.estimator_,
+        #       &#39;checks.check_is_fitted(estimator)&#39;, checks.check_is_fitted(self.estimator_))
+        # if checks.check_is_fitted(self.estimator_):
+        #     raise Warning(&#39;Passed an already fitted estimator,&#39;
+        #                   &#39;but shrinking not applied until fit method is called.&#39;)
+
+    def fit(self, X, y, *args, **kwargs):
+        self.scores_ = []
+        for reg_param in self.reg_param_list:
+            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            self.scores_.append(np.mean(cv_scores))
+        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        super().fit(X=X, y=y)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifier" href="#imodels.tree.shrunk_tree.ShrunkTreeClassifier">ShrunkTreeClassifier</a></li>
+<li><a title="imodels.tree.shrunk_tree.ShrunkTree" href="#imodels.tree.shrunk_tree.ShrunkTree">ShrunkTree</a></li>
+<li>sklearn.base.BaseEstimator</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.shrunk_tree.ShrunkTreeClassifierCV.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, *args, **kwargs):
+    self.scores_ = []
+    for reg_param in self.reg_param_list:
+        est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param)
+        cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+        self.scores_.append(np.mean(cv_scores))
+    self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+    super().fit(X=X, y=y)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifier" href="#imodels.tree.shrunk_tree.ShrunkTreeClassifier">ShrunkTreeClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifier.shrink_tree" href="#imodels.tree.shrunk_tree.ShrunkTree.shrink_tree">shrink_tree</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.tree.shrunk_tree.ShrunkTreeRegressor"><code class="flex name class">
+<span>class <span class="ident">ShrunkTreeRegressor</span></span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param: float = 1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShrunkTreeRegressor(ShrunkTree):
+    def _init_prediction_task(self):
+        self.prediction_task = &#39;regression&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.shrunk_tree.ShrunkTree" href="#imodels.tree.shrunk_tree.ShrunkTree">ShrunkTree</a></li>
+<li>sklearn.base.BaseEstimator</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressorCV" href="#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV">ShrunkTreeRegressorCV</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.tree.shrunk_tree.ShrunkTree" href="#imodels.tree.shrunk_tree.ShrunkTree">ShrunkTree</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTree.shrink_tree" href="#imodels.tree.shrunk_tree.ShrunkTree.shrink_tree">shrink_tree</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.tree.shrunk_tree.ShrunkTreeRegressorCV"><code class="flex name class">
+<span>class <span class="ident">ShrunkTreeRegressorCV</span></span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], cv: int = 3, scoring=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
+    def __init__(self, estimator_: BaseEstimator,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 cv: int = 3, scoring=None):
+        super().__init__(estimator_, reg_param=None)
+        self.reg_param_list = np.array(reg_param_list)
+        self.cv = cv
+        self.scoring = scoring
+        # print(&#39;estimator&#39;, self.estimator_,
+        #       &#39;checks.check_is_fitted(estimator)&#39;, checks.check_is_fitted(self.estimator_))
+        # if checks.check_is_fitted(self.estimator_):
+        #     raise Warning(&#39;Passed an already fitted estimator,&#39;
+        #                   &#39;but shrinking not applied until fit method is called.&#39;)
+
+    def fit(self, X, y, *args, **kwargs):
+        self.scores_ = []
+        for reg_param in self.reg_param_list:
+            est = ShrunkTreeRegressor(deepcopy(self.estimator_), reg_param)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            self.scores_.append(np.mean(cv_scores))
+        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        super().fit(X=X, y=y)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressor" href="#imodels.tree.shrunk_tree.ShrunkTreeRegressor">ShrunkTreeRegressor</a></li>
+<li><a title="imodels.tree.shrunk_tree.ShrunkTree" href="#imodels.tree.shrunk_tree.ShrunkTree">ShrunkTree</a></li>
+<li>sklearn.base.BaseEstimator</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.shrunk_tree.ShrunkTreeRegressorCV.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, *args, **kwargs):
+    self.scores_ = []
+    for reg_param in self.reg_param_list:
+        est = ShrunkTreeRegressor(deepcopy(self.estimator_), reg_param)
+        cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+        self.scores_.append(np.mean(cv_scores))
+    self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+    super().fit(X=X, y=y)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressor" href="#imodels.tree.shrunk_tree.ShrunkTreeRegressor">ShrunkTreeRegressor</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressor.shrink_tree" href="#imodels.tree.shrunk_tree.ShrunkTree.shrink_tree">shrink_tree</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.tree" href="index.html">imodels.tree</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.tree.shrunk_tree.ShrunkTree" href="#imodels.tree.shrunk_tree.ShrunkTree">ShrunkTree</a></code></h4>
+<ul class="two-column">
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTree.fit" href="#imodels.tree.shrunk_tree.ShrunkTree.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTree.predict" href="#imodels.tree.shrunk_tree.ShrunkTree.predict">predict</a></code></li>
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTree.predict_proba" href="#imodels.tree.shrunk_tree.ShrunkTree.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTree.score" href="#imodels.tree.shrunk_tree.ShrunkTree.score">score</a></code></li>
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTree.shrink" href="#imodels.tree.shrunk_tree.ShrunkTree.shrink">shrink</a></code></li>
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTree.shrink_tree" href="#imodels.tree.shrunk_tree.ShrunkTree.shrink_tree">shrink_tree</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifier" href="#imodels.tree.shrunk_tree.ShrunkTreeClassifier">ShrunkTreeClassifier</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifierCV" href="#imodels.tree.shrunk_tree.ShrunkTreeClassifierCV">ShrunkTreeClassifierCV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifierCV.fit" href="#imodels.tree.shrunk_tree.ShrunkTreeClassifierCV.fit">fit</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressor" href="#imodels.tree.shrunk_tree.ShrunkTreeRegressor">ShrunkTreeRegressor</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressorCV" href="#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV">ShrunkTreeRegressorCV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressorCV.fit" href="#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV.fit">fit</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
