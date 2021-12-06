@@ -339,14 +339,20 @@ class ExtraBasicDiscretizer(TransformerMixin):
         self
         """
 
-        # apply KBinsDiscretizer to the selected columns
+        # Fit KBinsDiscretizer to the selected columns
         discretizer = KBinsDiscretizer(
-            n_bins=self.n_bins,
-            strategy=self.strategy,
-            encode='ordinal')
-
+            n_bins=self.n_bins, strategy=self.strategy, encode='ordinal')
         discretizer.fit(X[self.dcols])
         self.discretizer_ = discretizer
+
+        # Fit OneHotEncoder to the ordinal output of KBinsDiscretizer
+        disc_ordinal_np = discretizer.transform(X[self.dcols])
+        disc_ordinal_df = pd.DataFrame(disc_ordinal_np, columns=self.dcols)
+        disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
+
+        encoder = OneHotEncoder(drop=self.onehot_drop, sparse=False)
+        encoder.fit(disc_ordinal_df_str)
+        self.encoder_ = encoder
 
         return self
 
@@ -372,8 +378,7 @@ class ExtraBasicDiscretizer(TransformerMixin):
         disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
 
         # One-hot encode the ordinal DF
-        self.encoder_ = OneHotEncoder(drop=self.onehot_drop, sparse=False)
-        disc_onehot_np = self.encoder_.fit_transform(disc_ordinal_df_str)
+        disc_onehot_np = self.encoder_.transform(disc_ordinal_df_str)
         disc_onehot = pd.DataFrame(disc_onehot_np, columns=self.encoder_.get_feature_names_out())
 
         # Name columns after the interval they represent (e.g. 0.1_to_0.5)
