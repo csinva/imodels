@@ -1,15 +1,16 @@
 import json
 import warnings
 
+import numpy as np
 import pandas as pd
 from sklearn.utils import validation
 
-from imodels.tree.gosdt.pygosdt_backup import DecisionTreeClassifierWithComplexity
-from imodels.tree.gosdt.tree_classifier import TreeClassifier
+from imodels import GreedyTreeClassifier
+from imodels.tree.gosdt.pygosdt_helper import TreeClassifier
 from imodels.util import rule
 
 
-class OptimalTreeClassifier:
+class OptimalTreeClassifier(GreedyTreeClassifier):
     def __init__(self,
                  balance=False,
                  cancellation=True,
@@ -29,12 +30,15 @@ class OptimalTreeClassifier:
                  tile_limit=0,
                  time_limit=0,
                  worker_limit=1,
+                 random_state=None,
                  costs="",
                  model="",
                  profile="",
                  timing="",
                  trace="",
-                 tree=""):
+                 tree="",
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.balance = balance
         self.cancellation = cancellation
         self.look_ahead = look_ahead
@@ -59,6 +63,10 @@ class OptimalTreeClassifier:
         self.timing = timing
         self.trace = trace
         self.tree = tree
+        self.tree_type = 'gosdt'
+        self.random_state = random_state
+        if random_state is not None:
+            np.random.seed(random_state)
 
     def load(self, path):
         """
@@ -116,15 +124,17 @@ class OptimalTreeClassifier:
         except ImportError:
 
             warnings.warn(
-                "Should install gosdt C++ extenstion. On x86_64 linux or macOS: "
+                "Should install gosdt extension. On x86_64 linux or macOS: "
                 "'pip install gosdt'. On other platforms, see "
                 "https://github.com/keyan3/GeneralizedOptimalSparseDecisionTrees. "
-                "Using DecisionTreeClassifier instead."
+                "Defaulting to Non-optimal DecisionTreeClassifier."
             )
 
-            dtree = DecisionTreeClassifierWithComplexity()
-            dtree.fit(X, y)
-            self.tree_ = dtree
+            # dtree = DecisionTreeClassifierWithComplexity()
+            # dtree.fit(X, y)
+            # self.tree_ = dtree
+            super().fit(X, y, feature_names=feature_names)
+            self.tree_type = 'dt'
             
         return self
 
@@ -132,19 +142,32 @@ class OptimalTreeClassifier:
         """
         Parameters
         ---
-        X : matrix-like, shape = [n_samples by m_features]
+        X : matrix-like, shape = [n_samples, m_features]
             a matrix where each row is a sample to be predicted and each column is a feature to
             be used for prediction
 
         Returns
         ---
-        array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+        array-like, shape = [n_samples, 1] : a column where each element is the prediction
             associated with each row
         """
         validation.check_is_fitted(self)
-        if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X, columns=self.feature_names_)
-        return self.tree_.predict(X)
+        if self.tree_type == 'gosdt':
+            if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
+                X = pd.DataFrame(X, columns=self.feature_names_)
+            return self.tree_.predict(X)
+        else:
+            return super().predict(X)
+
+    def predict_proba(self, X):
+        validation.check_is_fitted(self)
+        if self.tree_type == 'gosdt':
+            if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
+                X = pd.DataFrame(X, columns=self.feature_names_)
+            probs = self.tree_.confidence(X)
+            return np.hstack((1 - probs), probs)
+        else:
+            return super().predict_proba(X)
 
     def score(self, X, y, weight=None):
         """
@@ -287,3 +310,6 @@ class OptimalTreeClassifier:
             "trace": self.trace,
             "tree": self.tree
         }
+
+
+
