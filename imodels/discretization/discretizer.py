@@ -268,13 +268,14 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
 
 class ExtraBasicDiscretizer(TransformerMixin):
     """
-    Discretize numeric data into bins. Provides a wrapper around
-    KBinsDiscretizer from sklearn
+    Discretize provided columns into bins and return in one-hot format. 
+    Generates meaningful column names based on bin edges.
+    Wraps KBinsDiscretizer from sklearn.
 
     Params
     ------
     dcols : list of strings
-        The names of the columns to be discretized (mandatory).
+        The names of the columns to be discretized.
 
     n_bins : int or array-like of shape (len(dcols),), default=4
         Number of bins to discretize each feature into.
@@ -350,6 +351,20 @@ class ExtraBasicDiscretizer(TransformerMixin):
         return self
 
     def transform(self, X):
+        """
+        Discretize the data.
+
+        Parameters
+        ----------
+        X : data frame of shape (n_samples, n_features)
+            Data to be discretized.
+
+        Returns
+        -------
+        X_discretized : data frame
+            Data with features in dcols transformed to the
+            binned space. All other features remain unchanged.
+        """
 
         # Apply discretizer transform to get ordinally coded DF
         disc_ordinal_np = self.discretizer_.transform(X[self.dcols])
