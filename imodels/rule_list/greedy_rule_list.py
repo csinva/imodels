@@ -106,7 +106,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             }]
 
             # generate tree for the non-leaf data
-            par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)
+            par_node = par_node + self.fit(x_left, y_left, depth + 1, feature_names=feature_names, verbose=verbose)
 
             self.depth += 1  # increase the depth since we call fit once
             self.rules_ = par_node
