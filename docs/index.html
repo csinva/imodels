@@ -151,6 +151,11 @@ print(model) # print the rule-based model
 <td>Sum of small trees with very few total rules (SAPS)</td>
 </tr>
 <tr>
+<td align="left">Shrunk trees</td>
+<td><a href="https://csinva.io/imodels/tree/shrunk_tree.html#imodels.tree.saps">🗂️</a>, <a href="">📄</a></td>
+<td>Sum of small trees with very few total rules (SAPS)</td>
+</tr>
+<tr>
 <td align="left">More models</td>
 <td>⌛</td>
 <td>(Coming soon!) Popular rule sets including Lightweight Rule Induction, MLRules</td>
@@ -416,9 +421,7 @@ The code here heavily derives from the wonderful work of previous projects. We s
 .. include:: ../readme.md
 &#34;&#34;&#34;
 # Python `imodels` package for interpretable models compatible with scikit-learn.
-# Github repo available [here](https://github.com/csinva/interpretability-implementations-demos).
-
-import os
+# Github repo available [here](https://github.com/csinva/imodels)
 
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
@@ -426,7 +429,7 @@ from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
 from .tree.gosdt.pygosdt import OptimalTreeClassifier
 from .tree.c45_tree.c45_tree import C45TreeClassifier
 from .tree.saps import SaplingSumRegressor, SaplingSumClassifier
-from .tree.shrinkage_model import ShrunkTree, ShrunkTreeCV
+from .tree.shrunk_tree import ShrunkTreeRegressor, ShrunkTreeClassifier, ShrunkTreeRegressorCV, ShrunkTreeClassifierCV
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer

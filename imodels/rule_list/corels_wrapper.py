@@ -1,10 +1,11 @@
 # This is just a simple wrapper around pycorels: https://github.com/corels/pycorels
+from typing import List
+
 import numpy as np
 import pandas as pd
 from corels import CorelsClassifier
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import KBinsDiscretizer
-from typing import List
 
 
 class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
@@ -160,7 +161,7 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
         preds = self.predict(X)
         return np.vstack((1 - preds, preds)).transpose()
 
-    def _traverse_rule(self, X: np.ndarray, y: np.ndarray, feature_names: List[str]):
+    def _traverse_rule(self, X: np.ndarray, y: np.ndarray, feature_names: List[str], print_colors=False):
         """Traverse rule and build up string representation
 
         Parameters
@@ -176,6 +177,12 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
         df.loc[:, 'y'] = y
         o = 'y'
         str_print += f'   {df[o].sum()} / {df.shape[0]} (positive class / total)\n'
+        if print_colors:
+            color_start = '\033[96m'
+            color_end = '\033[00m'
+        else:
+            color_start = ''
+            color_end = ''
         if len(self.rl_.rules) > 1:
             str_print += f'\t\u2193 \n'
         else:
@@ -197,7 +204,7 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
 
                 # add to str_print
                 query_print = query.replace('== 1', '').replace('(', '').replace(')', '').replace('`', '')
-                str_print += f'\033[96mIf {query_print:<35}\033[00m \u2192 {df_rhs[o].sum():>3} / {df_rhs.shape[0]:>4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():>3} / {df.shape[0]:>5}\t \n'
+                str_print += f'{color_start}If {query_print:<35}{color_end} \u2192 {df_rhs[o].sum():>3} / {df_rhs.shape[0]:>4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():>3} / {df.shape[0]:>5}\t \n'
                 if not (j == len(self.rl_.rules) - 2 and i == len(antecedents) - 1):
                     str_print += '\t\u2193 \n'
 
@@ -205,9 +212,9 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
 
     def __str__(self):
         if self.str_print is not None:
-            return 'CorelsClassifier:\n\n' + self.str_print
+            return 'OptimalRuleList:\n\n' + self.str_print
         else:
-            return 'CorelsClassifier:\n\n' + self.rl_.__str__()
+            return 'OptimalRuleList:\n\n' + self.rl_.__str__()
 
     def _get_complexity(self):
         return len(self.rl_.rules)

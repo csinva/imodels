@@ -1,0 +1,1650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>imodels.tree.gosdt.pygosdt_helper API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>imodels.tree.gosdt.pygosdt_helper</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import pandas as pd
+import numpy as np
+from json import dumps, JSONEncoder
+from numpy import array
+from sklearn.metrics import accuracy_score, balanced_accuracy_score
+
+
+# Supporting Override for Converting Numpy Types into Python Values
+class NumpyEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyEncoder, self).default(obj)
+
+
+class TreeClassifier:
+    &#34;&#34;&#34;
+    Unified representation of a tree classifier in Python
+
+    This class accepts a dictionary representation of a tree classifier and decodes it into an
+    interactive object.
+
+    Additional support for encoding/decoding layer can be layers if the feature-space of the model
+    differs from the feature space of the original data.
+    &#34;&#34;&#34;
+
+    def __init__(self, source, encoder=None, X=None, y=None):
+
+        # The classifier stored in a recursive dictionary structure
+        self.source = source
+
+        # Optional encoder / decoder unit to run before / after prediction
+        self.encoder = encoder
+
+        # Original training features and labels to fill in missing training loss values
+        if X is not None and y is not None:
+            self.__initialize_training_loss__(X, y)
+
+    def __initialize_training_loss__(self, X, y):
+        &#34;&#34;&#34;
+        Compares every prediction y_hat against the labels y, then incorporates the misprediction
+        into the stored loss values
+
+        This is used when parsing models from an algorithm that doesn&#39;t provide the training loss
+        in the output
+        &#34;&#34;&#34;
+        for node in self.__all_leaves__():
+            node[&#34;loss&#34;] = 0.0
+        (n, m) = X.shape
+        for i in range(n):
+            node = self.__find_leaf__(X.values[i, :])
+            label = y.values[i, -1]
+            weight = 1 / n
+            if node[&#34;prediction&#34;] != label:
+                node[&#34;loss&#34;] += weight
+        return
+
+    def __find_leaf__(self, sample):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        the leaf by which this sample would be classified
+        &#34;&#34;&#34;
+        nodes = [self.source]
+        while len(nodes) &gt; 0:
+            node = nodes.pop()
+            if &#34;prediction&#34; in node:
+                return node
+            else:
+                value = sample[node[&#34;feature&#34;]]
+                reference = node[&#34;reference&#34;]
+                if node[&#34;relation&#34;] == &#34;==&#34;:
+                    if value == reference:
+                        nodes.append(node[&#34;true&#34;])
+                    else:
+                        nodes.append(node[&#34;false&#34;])
+                elif node[&#34;relation&#34;] == &#34;&gt;=&#34;:
+                    if value &gt;= reference:
+                        nodes.append(node[&#34;true&#34;])
+                    else:
+                        nodes.append(node[&#34;false&#34;])
+                elif node[&#34;relation&#34;] == &#34;&lt;=&#34;:
+                    if value &lt;= reference:
+                        nodes.append(node[&#34;true&#34;])
+                    else:
+                        nodes.append(node[&#34;false&#34;])
+                elif node[&#34;relation&#34;] == &#34;&gt;&#34;:
+                    if value &gt; reference:
+                        nodes.append(node[&#34;true&#34;])
+                    else:
+                        nodes.append(node[&#34;false&#34;])
+                elif node[&#34;relation&#34;] == &#34;&lt;&#34;:
+                    if value &lt; reference:
+                        nodes.append(node[&#34;true&#34;])
+                    else:
+                        nodes.append(node[&#34;false&#34;])
+                else:
+                    raise &#34;Unsupported relational operator {}&#34;.format(node[&#34;relation&#34;])
+
+    def __all_leaves__(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        list : a list of all leaves in this model
+        &#34;&#34;&#34;
+        nodes = [self.source]
+        leaf_list = []
+        while len(nodes) &gt; 0:
+            node = nodes.pop()
+            if &#34;prediction&#34; in node:
+                leaf_list.append(node)
+            else:
+                nodes.append(node[&#34;true&#34;])
+                nodes.append(node[&#34;false&#34;])
+        return leaf_list
+
+    def loss(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        real number : values between [0,1]
+            the training loss of this model
+        &#34;&#34;&#34;
+        return sum(node[&#34;loss&#34;] for node in self.__all_leaves__())
+
+    def classify(self, sample):
+        &#34;&#34;&#34;
+        Parameters
+        ---
+        sample : array-like, shape = [m_features]
+            a 1-by-m row representing each feature of a single sample
+
+        Returns
+        ---
+        string : the prediction for a given sample and conditional probability (given the
+            observations along the decision path) of it being correct
+        &#34;&#34;&#34;
+        node = self.__find_leaf__(sample)
+        return node[&#34;prediction&#34;], 1 - node[&#34;loss&#34;]
+
+    def predict(self, X):
+        &#34;&#34;&#34;
+        Requires
+        ---
+        the set of features used should be pre-encoding if an encoder is used
+
+        Parameters
+        ---
+        X : matrix-like, shape = [n_samples by m_features]
+            a matrix where each row is a sample to be predicted and each column is a feature to be
+            used for prediction
+
+        Returns
+        ---
+        array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+            associated with each row
+        &#34;&#34;&#34;
+        # Perform an encoding if an encoding unit is specified
+        if self.encoder is not None:
+            X = pd.DataFrame(self.encoder.encode(X.values[:, :]), columns=self.encoder.headers)
+
+        predictions = []
+        (n, m) = X.shape
+        for i in range(n):
+            prediction, _ = self.classify(X.values[i, :])
+            predictions.append(prediction)
+        return array(predictions)
+
+    def confidence(self, X):
+        &#34;&#34;&#34;
+        Requires
+        ---
+        the set of features used should be pre-encoding if an encoder is used
+
+        Parameters
+        ---
+        X : matrix-like, shape = [n_samples by m_features]
+            a matrix where each row is a sample to be predicted and each column is a feature to be
+            used for prediction
+
+        Returns
+        ---
+        array-like, shape = [n_samples by 1] : a column where each element is the conditional
+            probability of each prediction (conditioned only on the features that were used in
+            prediction)
+        &#34;&#34;&#34;
+        if self.encoder is not None:
+            X = pd.DataFrame(self.encoder.encode(X.values[:, :]), columns=self.encoder.headers)
+
+        conditional_probabilities = []
+        n = X.shape[0]
+        for i in range(n):
+            _, conditional_probability = self.classify(X.values[i, :])
+            conditional_probabilities.append(conditional_probability)
+        return array(conditional_probabilities)
+
+    def error(self, X, y, weight=None):
+        &#34;&#34;&#34;
+        Parameters
+        ---
+        X : matrix-like, shape = [n_samples by m_features]
+            an n-by-m matrix of sample and their features
+        y : array-like, shape = [n_samples by 1]
+            an n-by-1 column of labels associated with each sample
+        weight : real number
+            an n-by-1 column of weights to apply to each sample&#39;s misclassification
+
+        Returns
+        ---
+        real number : the inaccuracy produced by applying this model overthe given dataset, with
+            optionals for weighted inaccuracy
+        &#34;&#34;&#34;
+        return 1 - self.score(X, y, weight=weight)
+
+    def score(self, X, y, weight=None):
+        &#34;&#34;&#34;
+        Parameters
+        ---
+        X : matrix-like, shape = [n_samples by m_features]
+            an n-by-m matrix of sample and their features
+        y : array-like, shape = [n_samples by 1]
+            an n-by-1 column of labels associated with each sample
+        weight : real number
+            an n-by-1 column of weights to apply to each sample&#39;s misclassification
+
+        Returns
+        ---
+        real number : the accuracy produced by applying this model overthe given dataset, with
+            optionals for weighted accuracy
+        &#34;&#34;&#34;
+        y_hat = self.predict(X)
+        if weight == &#34;balanced&#34;:
+            return balanced_accuracy_score(y, y_hat)
+        else:
+            return accuracy_score(y, y_hat, normalize=True, sample_weight=weight)
+
+    def __len__(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        natural number : The number of terminal nodes present in this tree
+        &#34;&#34;&#34;
+        return self.leaves()
+
+    def leaves(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        natural number : The number of terminal nodes present in this tree
+        &#34;&#34;&#34;
+        leaves_counter = 0
+        nodes = [self.source]
+        while len(nodes) &gt; 0:
+            node = nodes.pop()
+            if &#34;prediction&#34; in node:
+                leaves_counter += 1
+            else:
+                nodes.append(node[&#34;true&#34;])
+                nodes.append(node[&#34;false&#34;])
+        return leaves_counter
+
+    def nodes(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        natural number : The number of nodes present in this tree
+        &#34;&#34;&#34;
+        nodes_counter = 0
+        nodes = [self.source]
+        while len(nodes) &gt; 0:
+            node = nodes.pop()
+            if &#34;prediction&#34; in node:
+                nodes_counter += 1
+            else:
+                nodes_counter += 1
+                nodes.append(node[&#34;true&#34;])
+                nodes.append(node[&#34;false&#34;])
+        return nodes_counter
+
+    def features(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        set : A set of strings each describing the features used by this model
+        &#34;&#34;&#34;
+        feature_set = set()
+        nodes = [self.source]
+        while len(nodes) &gt; 0:
+            node = nodes.pop()
+            if &#34;prediction&#34; in node:
+                continue
+            else:
+                feature_set.add(node[&#34;name&#34;])
+                nodes.append(node[&#34;true&#34;])
+                nodes.append(node[&#34;false&#34;])
+        return feature_set
+
+    def encoded_features(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        natural number : The number of encoded features used by the supplied encoder to represent
+            the data set
+        &#34;&#34;&#34;
+        return len(self.encoder.headers) if self.encoder is not None else None
+
+    def maximum_depth(self, node=None):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        natural number : the length of the longest decision path in this tree. A single-node tree
+            will return 1.
+        &#34;&#34;&#34;
+        if node is None:
+            node = self.source
+        if &#34;prediction&#34; in node:
+            return 1
+        else:
+            return 1 + max(self.maximum_depth(node[&#34;true&#34;]), self.maximum_depth(node[&#34;false&#34;]))
+
+    def __str__(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        string : pseuodocode representing the logic of this classifier
+        &#34;&#34;&#34;
+        cases = []
+        for group in self.__groups__():
+            predicates = []
+            for name in sorted(group[&#34;rules&#34;].keys()):
+                domain = group[&#34;rules&#34;][name]
+                if domain[&#34;type&#34;] == &#34;Categorical&#34;:
+                    if len(domain[&#34;positive&#34;]) &gt; 0:
+                        predicates.append(&#34;{} = {}&#34;.format(name, list(domain[&#34;positive&#34;])[0]))
+                    elif len(domain[&#34;negative&#34;]) &gt; 0:
+                        if len(domain[&#34;negative&#34;]) &gt; 1:
+                            predicates.append(&#34;{} not in {{ {} }}&#34;.format(
+                                name, &#34;, &#34;.join([str(v) for v in domain[&#34;negative&#34;]])))
+                        else:
+                            predicates.append(&#34;{} != {}&#34;.format(
+                                name, str(list(domain[&#34;negative&#34;])[0])))
+                    else:
+                        raise &#34;Invalid Rule&#34;
+                elif domain[&#34;type&#34;] == &#34;Numerical&#34;:
+                    predicate = name
+                    if domain[&#34;min&#34;] != -float(&#34;INF&#34;):
+                        predicate = &#34;{} &lt;= &#34;.format(domain[&#34;min&#34;]) + predicate
+                    if domain[&#34;max&#34;] != float(&#34;INF&#34;):
+                        predicate = predicate + &#34; &lt; {}&#34;.format(domain[&#34;max&#34;])
+                    predicates.append(predicate)
+
+            if len(predicates) == 0:
+                condition = &#34;if true then:&#34;
+            else:
+                condition = &#34;if {} then:&#34;.format(&#34; and &#34;.join(predicates))
+            outcomes = []
+            # for outcome, probability in group[&#34;distribution&#34;].items():
+            outcomes.append(&#34;    predicted {}: {}&#34;.format(group[&#34;name&#34;], group[&#34;prediction&#34;]))
+            outcomes.append(&#34;    misclassification penalty: {}&#34;.format(round(group[&#34;loss&#34;], 3)))
+            outcomes.append(&#34;    complexity penalty: {}&#34;.format(round(group[&#34;complexity&#34;], 3)))
+            result = &#34;\n&#34;.join(outcomes)
+            cases.append(&#34;{}\n{}&#34;.format(condition, result))
+        return &#34;\n\nelse &#34;.join(cases)
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        dictionary : The recursive dictionary used to represent the model
+        &#34;&#34;&#34;
+        return self.source
+
+    def latex(self, node=None):
+        &#34;&#34;&#34;
+        Note
+        ---
+        This method doesn&#39;t work well for label headers that contain underscores due to underscore
+        being a reserved character in LaTeX
+
+        Returns
+        ---
+        string : A LaTeX string representing the model
+        &#34;&#34;&#34;
+        if node is None:
+            node = self.source
+        if &#34;prediction&#34; in node:
+            if &#34;name&#34; in node:
+                name = node[&#34;name&#34;]
+            else:
+                name = &#34;feature_{}&#34;.format(node[&#34;feature&#34;])
+            return &#34;[ ${}$ [ ${}$ ] ]&#34;.format(name, node[&#34;prediction&#34;])
+        else:
+            if &#34;name&#34; in node:
+                if &#34;=&#34; in node[&#34;name&#34;]:
+                    name = &#34;{}&#34;.format(node[&#34;name&#34;])
+                else:
+                    name = &#34;{} {} {}&#34;.format(node[&#34;name&#34;], node[&#34;relation&#34;], node[&#34;reference&#34;])
+            else:
+                name = &#34;feature_{} {} {}&#34;.format(
+                    node[&#34;feature&#34;], node[&#34;relation&#34;], node[&#34;reference&#34;])
+            return (
+                &#34;[ ${}$ {} {} ]&#34;
+                    .format(name, self.latex(node[&#34;true&#34;]), self.latex(node[&#34;false&#34;]))
+                    .replace(&#34;==&#34;, &#34; \eq &#34;).replace(&#34;&gt;=&#34;, &#34; \ge &#34;).replace(&#34;&lt;=&#34;, &#34; \le &#34;)
+            )
+
+    def json(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        string : A JSON string representing the model
+        &#34;&#34;&#34;
+        return dumps(self.source, cls=NumpyEncoder)
+
+    def __groups__(self, node=None):
+        &#34;&#34;&#34;
+        Parameters
+        ---
+        node : node within the tree from which to start
+        Returns
+        ---
+        list : Object representation of each leaf for conversion to a case in an if-then-else
+            statement
+        &#34;&#34;&#34;
+        if node is None:
+            node = self.source
+        if &#34;prediction&#34; in node:
+            node[&#34;rules&#34;] = {}
+            groups = [node]
+            return groups
+        else:
+            if &#34;name&#34; in node:
+                name = node[&#34;name&#34;]
+            else:
+                name = &#34;feature_{}&#34;.format(node[&#34;feature&#34;])
+            reference = node[&#34;reference&#34;]
+            groups = []
+            for condition_result in [&#34;true&#34;, &#34;false&#34;]:
+                subtree = node[condition_result]
+                for group in self.__groups__(subtree):
+
+                    # For each group, add the corresponding rule
+                    rules = group[&#34;rules&#34;]
+                    if name not in rules:
+                        rules[name] = {}
+                    rule = rules[name]
+                    if node[&#34;relation&#34;] == &#34;==&#34;:
+                        rule[&#34;type&#34;] = &#34;Categorical&#34;
+                        if &#34;positive&#34; not in rule:
+                            rule[&#34;positive&#34;] = set()
+                        if &#34;negative&#34; not in rule:
+                            rule[&#34;negative&#34;] = set()
+                        if condition_result == &#34;true&#34;:
+                            rule[&#34;positive&#34;].add(reference)
+                        elif condition_result == &#34;false&#34;:
+                            rule[&#34;negative&#34;].add(reference)
+                        else:
+                            raise &#34;OptimalSparseDecisionTree: Malformatted source {}&#34;.format(node)
+                    elif node[&#34;relation&#34;] == &#34;&gt;=&#34;:
+                        rule[&#34;type&#34;] = &#34;Numerical&#34;
+                        if &#34;max&#34; not in rule:
+                            rule[&#34;max&#34;] = float(&#34;INF&#34;)
+                        if &#34;min&#34; not in rule:
+                            rule[&#34;min&#34;] = -float(&#34;INF&#34;)
+                        if condition_result == &#34;true&#34;:
+                            rule[&#34;min&#34;] = max(reference, rule[&#34;min&#34;])
+                        elif condition_result == &#34;false&#34;:
+                            rule[&#34;max&#34;] = min(reference, rule[&#34;max&#34;])
+                        else:
+                            raise &#34;OptimalSparseDecisionTree: Malformatted source {}&#34;.format(node)
+                    else:
+                        raise &#34;Unsupported relational operator {}&#34;.format(node[&#34;relation&#34;])
+
+                    # Add the modified group to the group list
+                    groups.append(group)
+            return groups</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.tree.gosdt.pygosdt_helper.NumpyEncoder"><code class="flex name class">
+<span>class <span class="ident">NumpyEncoder</span></span>
+<span>(</span><span>*, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, sort_keys=False, indent=None, separators=None, default=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extensible JSON <a href="http://json.org">http://json.org</a> encoder for Python data structures.</p>
+<p>Supports the following objects and types by default:</p>
+<p>+-------------------+---------------+
+| Python
+| JSON
+|
++===================+===============+
+| dict
+| object
+|
++-------------------+---------------+
+| list, tuple
+| array
+|
++-------------------+---------------+
+| str
+| string
+|
++-------------------+---------------+
+| int, float
+| number
+|
++-------------------+---------------+
+| True
+| true
+|
++-------------------+---------------+
+| False
+| false
+|
++-------------------+---------------+
+| None
+| null
+|
++-------------------+---------------+</p>
+<p>To extend this to recognize other objects, subclass and implement a
+<code>.default()</code> method with another method that returns a serializable
+object for <code>o</code> if possible, otherwise it should call the superclass
+implementation (to raise <code>TypeError</code>).</p>
+<p>Constructor for JSONEncoder, with sensible defaults.</p>
+<p>If skipkeys is false, then it is a TypeError to attempt
+encoding of keys that are not str, int, float or None.
+If
+skipkeys is True, such items are simply skipped.</p>
+<p>If ensure_ascii is true, the output is guaranteed to be str
+objects with all incoming non-ASCII characters escaped.
+If
+ensure_ascii is false, the output can contain non-ASCII characters.</p>
+<p>If check_circular is true, then lists, dicts, and custom encoded
+objects will be checked for circular references during encoding to
+prevent an infinite recursion (which would cause an OverflowError).
+Otherwise, no such check takes place.</p>
+<p>If allow_nan is true, then NaN, Infinity, and -Infinity will be
+encoded as such.
+This behavior is not JSON specification compliant,
+but is consistent with most JavaScript based encoders and decoders.
+Otherwise, it will be a ValueError to encode such floats.</p>
+<p>If sort_keys is true, then the output of dictionaries will be
+sorted by key; this is useful for regression tests to ensure
+that JSON serializations can be compared on a day-to-day basis.</p>
+<p>If indent is a non-negative integer, then JSON array
+elements and object members will be pretty-printed with that
+indent level.
+An indent level of 0 will only insert newlines.
+None is the most compact representation.</p>
+<p>If specified, separators should be an (item_separator, key_separator)
+tuple.
+The default is (', ', ': ') if <em>indent</em> is <code>None</code> and
+(',', ': ') otherwise.
+To get the most compact JSON representation,
+you should specify (',', ':') to eliminate whitespace.</p>
+<p>If specified, default is a function that gets called for objects
+that can't otherwise be serialized.
+It should return a JSON encodable
+version of the object or raise a <code>TypeError</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NumpyEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyEncoder, self).default(obj)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>json.encoder.JSONEncoder</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.gosdt.pygosdt_helper.NumpyEncoder.default"><code class="name flex">
+<span>def <span class="ident">default</span></span>(<span>self, obj)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Implement this method in a subclass such that it returns
+a serializable object for <code>o</code>, or calls the base implementation
+(to raise a <code>TypeError</code>).</p>
+<p>For example, to support arbitrary iterators, you could
+implement default like this::</p>
+<pre><code>def default(self, o):
+    try:
+        iterable = iter(o)
+    except TypeError:
+        pass
+    else:
+        return list(iterable)
+    # Let the base class default method raise the TypeError
+    return JSONEncoder.default(self, o)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def default(self, obj):
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    else:
+        return super(NumpyEncoder, self).default(obj)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier"><code class="flex name class">
+<span>class <span class="ident">TreeClassifier</span></span>
+<span>(</span><span>source, encoder=None, X=None, y=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Unified representation of a tree classifier in Python</p>
+<p>This class accepts a dictionary representation of a tree classifier and decodes it into an
+interactive object.</p>
+<p>Additional support for encoding/decoding layer can be layers if the feature-space of the model
+differs from the feature space of the original data.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TreeClassifier:
+    &#34;&#34;&#34;
+    Unified representation of a tree classifier in Python
+
+    This class accepts a dictionary representation of a tree classifier and decodes it into an
+    interactive object.
+
+    Additional support for encoding/decoding layer can be layers if the feature-space of the model
+    differs from the feature space of the original data.
+    &#34;&#34;&#34;
+
+    def __init__(self, source, encoder=None, X=None, y=None):
+
+        # The classifier stored in a recursive dictionary structure
+        self.source = source
+
+        # Optional encoder / decoder unit to run before / after prediction
+        self.encoder = encoder
+
+        # Original training features and labels to fill in missing training loss values
+        if X is not None and y is not None:
+            self.__initialize_training_loss__(X, y)
+
+    def __initialize_training_loss__(self, X, y):
+        &#34;&#34;&#34;
+        Compares every prediction y_hat against the labels y, then incorporates the misprediction
+        into the stored loss values
+
+        This is used when parsing models from an algorithm that doesn&#39;t provide the training loss
+        in the output
+        &#34;&#34;&#34;
+        for node in self.__all_leaves__():
+            node[&#34;loss&#34;] = 0.0
+        (n, m) = X.shape
+        for i in range(n):
+            node = self.__find_leaf__(X.values[i, :])
+            label = y.values[i, -1]
+            weight = 1 / n
+            if node[&#34;prediction&#34;] != label:
+                node[&#34;loss&#34;] += weight
+        return
+
+    def __find_leaf__(self, sample):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        the leaf by which this sample would be classified
+        &#34;&#34;&#34;
+        nodes = [self.source]
+        while len(nodes) &gt; 0:
+            node = nodes.pop()
+            if &#34;prediction&#34; in node:
+                return node
+            else:
+                value = sample[node[&#34;feature&#34;]]
+                reference = node[&#34;reference&#34;]
+                if node[&#34;relation&#34;] == &#34;==&#34;:
+                    if value == reference:
+                        nodes.append(node[&#34;true&#34;])
+                    else:
+                        nodes.append(node[&#34;false&#34;])
+                elif node[&#34;relation&#34;] == &#34;&gt;=&#34;:
+                    if value &gt;= reference:
+                        nodes.append(node[&#34;true&#34;])
+                    else:
+                        nodes.append(node[&#34;false&#34;])
+                elif node[&#34;relation&#34;] == &#34;&lt;=&#34;:
+                    if value &lt;= reference:
+                        nodes.append(node[&#34;true&#34;])
+                    else:
+                        nodes.append(node[&#34;false&#34;])
+                elif node[&#34;relation&#34;] == &#34;&gt;&#34;:
+                    if value &gt; reference:
+                        nodes.append(node[&#34;true&#34;])
+                    else:
+                        nodes.append(node[&#34;false&#34;])
+                elif node[&#34;relation&#34;] == &#34;&lt;&#34;:
+                    if value &lt; reference:
+                        nodes.append(node[&#34;true&#34;])
+                    else:
+                        nodes.append(node[&#34;false&#34;])
+                else:
+                    raise &#34;Unsupported relational operator {}&#34;.format(node[&#34;relation&#34;])
+
+    def __all_leaves__(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        list : a list of all leaves in this model
+        &#34;&#34;&#34;
+        nodes = [self.source]
+        leaf_list = []
+        while len(nodes) &gt; 0:
+            node = nodes.pop()
+            if &#34;prediction&#34; in node:
+                leaf_list.append(node)
+            else:
+                nodes.append(node[&#34;true&#34;])
+                nodes.append(node[&#34;false&#34;])
+        return leaf_list
+
+    def loss(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        real number : values between [0,1]
+            the training loss of this model
+        &#34;&#34;&#34;
+        return sum(node[&#34;loss&#34;] for node in self.__all_leaves__())
+
+    def classify(self, sample):
+        &#34;&#34;&#34;
+        Parameters
+        ---
+        sample : array-like, shape = [m_features]
+            a 1-by-m row representing each feature of a single sample
+
+        Returns
+        ---
+        string : the prediction for a given sample and conditional probability (given the
+            observations along the decision path) of it being correct
+        &#34;&#34;&#34;
+        node = self.__find_leaf__(sample)
+        return node[&#34;prediction&#34;], 1 - node[&#34;loss&#34;]
+
+    def predict(self, X):
+        &#34;&#34;&#34;
+        Requires
+        ---
+        the set of features used should be pre-encoding if an encoder is used
+
+        Parameters
+        ---
+        X : matrix-like, shape = [n_samples by m_features]
+            a matrix where each row is a sample to be predicted and each column is a feature to be
+            used for prediction
+
+        Returns
+        ---
+        array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+            associated with each row
+        &#34;&#34;&#34;
+        # Perform an encoding if an encoding unit is specified
+        if self.encoder is not None:
+            X = pd.DataFrame(self.encoder.encode(X.values[:, :]), columns=self.encoder.headers)
+
+        predictions = []
+        (n, m) = X.shape
+        for i in range(n):
+            prediction, _ = self.classify(X.values[i, :])
+            predictions.append(prediction)
+        return array(predictions)
+
+    def confidence(self, X):
+        &#34;&#34;&#34;
+        Requires
+        ---
+        the set of features used should be pre-encoding if an encoder is used
+
+        Parameters
+        ---
+        X : matrix-like, shape = [n_samples by m_features]
+            a matrix where each row is a sample to be predicted and each column is a feature to be
+            used for prediction
+
+        Returns
+        ---
+        array-like, shape = [n_samples by 1] : a column where each element is the conditional
+            probability of each prediction (conditioned only on the features that were used in
+            prediction)
+        &#34;&#34;&#34;
+        if self.encoder is not None:
+            X = pd.DataFrame(self.encoder.encode(X.values[:, :]), columns=self.encoder.headers)
+
+        conditional_probabilities = []
+        n = X.shape[0]
+        for i in range(n):
+            _, conditional_probability = self.classify(X.values[i, :])
+            conditional_probabilities.append(conditional_probability)
+        return array(conditional_probabilities)
+
+    def error(self, X, y, weight=None):
+        &#34;&#34;&#34;
+        Parameters
+        ---
+        X : matrix-like, shape = [n_samples by m_features]
+            an n-by-m matrix of sample and their features
+        y : array-like, shape = [n_samples by 1]
+            an n-by-1 column of labels associated with each sample
+        weight : real number
+            an n-by-1 column of weights to apply to each sample&#39;s misclassification
+
+        Returns
+        ---
+        real number : the inaccuracy produced by applying this model overthe given dataset, with
+            optionals for weighted inaccuracy
+        &#34;&#34;&#34;
+        return 1 - self.score(X, y, weight=weight)
+
+    def score(self, X, y, weight=None):
+        &#34;&#34;&#34;
+        Parameters
+        ---
+        X : matrix-like, shape = [n_samples by m_features]
+            an n-by-m matrix of sample and their features
+        y : array-like, shape = [n_samples by 1]
+            an n-by-1 column of labels associated with each sample
+        weight : real number
+            an n-by-1 column of weights to apply to each sample&#39;s misclassification
+
+        Returns
+        ---
+        real number : the accuracy produced by applying this model overthe given dataset, with
+            optionals for weighted accuracy
+        &#34;&#34;&#34;
+        y_hat = self.predict(X)
+        if weight == &#34;balanced&#34;:
+            return balanced_accuracy_score(y, y_hat)
+        else:
+            return accuracy_score(y, y_hat, normalize=True, sample_weight=weight)
+
+    def __len__(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        natural number : The number of terminal nodes present in this tree
+        &#34;&#34;&#34;
+        return self.leaves()
+
+    def leaves(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        natural number : The number of terminal nodes present in this tree
+        &#34;&#34;&#34;
+        leaves_counter = 0
+        nodes = [self.source]
+        while len(nodes) &gt; 0:
+            node = nodes.pop()
+            if &#34;prediction&#34; in node:
+                leaves_counter += 1
+            else:
+                nodes.append(node[&#34;true&#34;])
+                nodes.append(node[&#34;false&#34;])
+        return leaves_counter
+
+    def nodes(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        natural number : The number of nodes present in this tree
+        &#34;&#34;&#34;
+        nodes_counter = 0
+        nodes = [self.source]
+        while len(nodes) &gt; 0:
+            node = nodes.pop()
+            if &#34;prediction&#34; in node:
+                nodes_counter += 1
+            else:
+                nodes_counter += 1
+                nodes.append(node[&#34;true&#34;])
+                nodes.append(node[&#34;false&#34;])
+        return nodes_counter
+
+    def features(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        set : A set of strings each describing the features used by this model
+        &#34;&#34;&#34;
+        feature_set = set()
+        nodes = [self.source]
+        while len(nodes) &gt; 0:
+            node = nodes.pop()
+            if &#34;prediction&#34; in node:
+                continue
+            else:
+                feature_set.add(node[&#34;name&#34;])
+                nodes.append(node[&#34;true&#34;])
+                nodes.append(node[&#34;false&#34;])
+        return feature_set
+
+    def encoded_features(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        natural number : The number of encoded features used by the supplied encoder to represent
+            the data set
+        &#34;&#34;&#34;
+        return len(self.encoder.headers) if self.encoder is not None else None
+
+    def maximum_depth(self, node=None):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        natural number : the length of the longest decision path in this tree. A single-node tree
+            will return 1.
+        &#34;&#34;&#34;
+        if node is None:
+            node = self.source
+        if &#34;prediction&#34; in node:
+            return 1
+        else:
+            return 1 + max(self.maximum_depth(node[&#34;true&#34;]), self.maximum_depth(node[&#34;false&#34;]))
+
+    def __str__(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        string : pseuodocode representing the logic of this classifier
+        &#34;&#34;&#34;
+        cases = []
+        for group in self.__groups__():
+            predicates = []
+            for name in sorted(group[&#34;rules&#34;].keys()):
+                domain = group[&#34;rules&#34;][name]
+                if domain[&#34;type&#34;] == &#34;Categorical&#34;:
+                    if len(domain[&#34;positive&#34;]) &gt; 0:
+                        predicates.append(&#34;{} = {}&#34;.format(name, list(domain[&#34;positive&#34;])[0]))
+                    elif len(domain[&#34;negative&#34;]) &gt; 0:
+                        if len(domain[&#34;negative&#34;]) &gt; 1:
+                            predicates.append(&#34;{} not in {{ {} }}&#34;.format(
+                                name, &#34;, &#34;.join([str(v) for v in domain[&#34;negative&#34;]])))
+                        else:
+                            predicates.append(&#34;{} != {}&#34;.format(
+                                name, str(list(domain[&#34;negative&#34;])[0])))
+                    else:
+                        raise &#34;Invalid Rule&#34;
+                elif domain[&#34;type&#34;] == &#34;Numerical&#34;:
+                    predicate = name
+                    if domain[&#34;min&#34;] != -float(&#34;INF&#34;):
+                        predicate = &#34;{} &lt;= &#34;.format(domain[&#34;min&#34;]) + predicate
+                    if domain[&#34;max&#34;] != float(&#34;INF&#34;):
+                        predicate = predicate + &#34; &lt; {}&#34;.format(domain[&#34;max&#34;])
+                    predicates.append(predicate)
+
+            if len(predicates) == 0:
+                condition = &#34;if true then:&#34;
+            else:
+                condition = &#34;if {} then:&#34;.format(&#34; and &#34;.join(predicates))
+            outcomes = []
+            # for outcome, probability in group[&#34;distribution&#34;].items():
+            outcomes.append(&#34;    predicted {}: {}&#34;.format(group[&#34;name&#34;], group[&#34;prediction&#34;]))
+            outcomes.append(&#34;    misclassification penalty: {}&#34;.format(round(group[&#34;loss&#34;], 3)))
+            outcomes.append(&#34;    complexity penalty: {}&#34;.format(round(group[&#34;complexity&#34;], 3)))
+            result = &#34;\n&#34;.join(outcomes)
+            cases.append(&#34;{}\n{}&#34;.format(condition, result))
+        return &#34;\n\nelse &#34;.join(cases)
+
+    def __repr__(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        dictionary : The recursive dictionary used to represent the model
+        &#34;&#34;&#34;
+        return self.source
+
+    def latex(self, node=None):
+        &#34;&#34;&#34;
+        Note
+        ---
+        This method doesn&#39;t work well for label headers that contain underscores due to underscore
+        being a reserved character in LaTeX
+
+        Returns
+        ---
+        string : A LaTeX string representing the model
+        &#34;&#34;&#34;
+        if node is None:
+            node = self.source
+        if &#34;prediction&#34; in node:
+            if &#34;name&#34; in node:
+                name = node[&#34;name&#34;]
+            else:
+                name = &#34;feature_{}&#34;.format(node[&#34;feature&#34;])
+            return &#34;[ ${}$ [ ${}$ ] ]&#34;.format(name, node[&#34;prediction&#34;])
+        else:
+            if &#34;name&#34; in node:
+                if &#34;=&#34; in node[&#34;name&#34;]:
+                    name = &#34;{}&#34;.format(node[&#34;name&#34;])
+                else:
+                    name = &#34;{} {} {}&#34;.format(node[&#34;name&#34;], node[&#34;relation&#34;], node[&#34;reference&#34;])
+            else:
+                name = &#34;feature_{} {} {}&#34;.format(
+                    node[&#34;feature&#34;], node[&#34;relation&#34;], node[&#34;reference&#34;])
+            return (
+                &#34;[ ${}$ {} {} ]&#34;
+                    .format(name, self.latex(node[&#34;true&#34;]), self.latex(node[&#34;false&#34;]))
+                    .replace(&#34;==&#34;, &#34; \eq &#34;).replace(&#34;&gt;=&#34;, &#34; \ge &#34;).replace(&#34;&lt;=&#34;, &#34; \le &#34;)
+            )
+
+    def json(self):
+        &#34;&#34;&#34;
+        Returns
+        ---
+        string : A JSON string representing the model
+        &#34;&#34;&#34;
+        return dumps(self.source, cls=NumpyEncoder)
+
+    def __groups__(self, node=None):
+        &#34;&#34;&#34;
+        Parameters
+        ---
+        node : node within the tree from which to start
+        Returns
+        ---
+        list : Object representation of each leaf for conversion to a case in an if-then-else
+            statement
+        &#34;&#34;&#34;
+        if node is None:
+            node = self.source
+        if &#34;prediction&#34; in node:
+            node[&#34;rules&#34;] = {}
+            groups = [node]
+            return groups
+        else:
+            if &#34;name&#34; in node:
+                name = node[&#34;name&#34;]
+            else:
+                name = &#34;feature_{}&#34;.format(node[&#34;feature&#34;])
+            reference = node[&#34;reference&#34;]
+            groups = []
+            for condition_result in [&#34;true&#34;, &#34;false&#34;]:
+                subtree = node[condition_result]
+                for group in self.__groups__(subtree):
+
+                    # For each group, add the corresponding rule
+                    rules = group[&#34;rules&#34;]
+                    if name not in rules:
+                        rules[name] = {}
+                    rule = rules[name]
+                    if node[&#34;relation&#34;] == &#34;==&#34;:
+                        rule[&#34;type&#34;] = &#34;Categorical&#34;
+                        if &#34;positive&#34; not in rule:
+                            rule[&#34;positive&#34;] = set()
+                        if &#34;negative&#34; not in rule:
+                            rule[&#34;negative&#34;] = set()
+                        if condition_result == &#34;true&#34;:
+                            rule[&#34;positive&#34;].add(reference)
+                        elif condition_result == &#34;false&#34;:
+                            rule[&#34;negative&#34;].add(reference)
+                        else:
+                            raise &#34;OptimalSparseDecisionTree: Malformatted source {}&#34;.format(node)
+                    elif node[&#34;relation&#34;] == &#34;&gt;=&#34;:
+                        rule[&#34;type&#34;] = &#34;Numerical&#34;
+                        if &#34;max&#34; not in rule:
+                            rule[&#34;max&#34;] = float(&#34;INF&#34;)
+                        if &#34;min&#34; not in rule:
+                            rule[&#34;min&#34;] = -float(&#34;INF&#34;)
+                        if condition_result == &#34;true&#34;:
+                            rule[&#34;min&#34;] = max(reference, rule[&#34;min&#34;])
+                        elif condition_result == &#34;false&#34;:
+                            rule[&#34;max&#34;] = min(reference, rule[&#34;max&#34;])
+                        else:
+                            raise &#34;OptimalSparseDecisionTree: Malformatted source {}&#34;.format(node)
+                    else:
+                        raise &#34;Unsupported relational operator {}&#34;.format(node[&#34;relation&#34;])
+
+                    # Add the modified group to the group list
+                    groups.append(group)
+            return groups</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.classify"><code class="name flex">
+<span>def <span class="ident">classify</span></span>(<span>self, sample)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample</code></strong> :&ensp;<code>array-like, shape = [m_features]</code></dt>
+<dd>a 1-by-m row representing each feature of a single sample</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>string</code></strong> :&ensp;<code>the prediction for a given sample and conditional probability (given the</code></dt>
+<dd>observations along the decision path) of it being correct</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def classify(self, sample):
+    &#34;&#34;&#34;
+    Parameters
+    ---
+    sample : array-like, shape = [m_features]
+        a 1-by-m row representing each feature of a single sample
+
+    Returns
+    ---
+    string : the prediction for a given sample and conditional probability (given the
+        observations along the decision path) of it being correct
+    &#34;&#34;&#34;
+    node = self.__find_leaf__(sample)
+    return node[&#34;prediction&#34;], 1 - node[&#34;loss&#34;]</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.confidence"><code class="name flex">
+<span>def <span class="ident">confidence</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="requires">Requires</h2>
+<p>the set of features used should be pre-encoding if an encoder is used</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>matrix-like, shape = [n_samples by m_features]</code></dt>
+<dd>a matrix where each row is a sample to be predicted and each column is a feature to be
+used for prediction</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>array-like, shape = [n_samples by 1] : a column where each element is the conditional</code></dt>
+<dd>probability of each prediction (conditioned only on the features that were used in
+prediction)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def confidence(self, X):
+    &#34;&#34;&#34;
+    Requires
+    ---
+    the set of features used should be pre-encoding if an encoder is used
+
+    Parameters
+    ---
+    X : matrix-like, shape = [n_samples by m_features]
+        a matrix where each row is a sample to be predicted and each column is a feature to be
+        used for prediction
+
+    Returns
+    ---
+    array-like, shape = [n_samples by 1] : a column where each element is the conditional
+        probability of each prediction (conditioned only on the features that were used in
+        prediction)
+    &#34;&#34;&#34;
+    if self.encoder is not None:
+        X = pd.DataFrame(self.encoder.encode(X.values[:, :]), columns=self.encoder.headers)
+
+    conditional_probabilities = []
+    n = X.shape[0]
+    for i in range(n):
+        _, conditional_probability = self.classify(X.values[i, :])
+        conditional_probabilities.append(conditional_probability)
+    return array(conditional_probabilities)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.encoded_features"><code class="name flex">
+<span>def <span class="ident">encoded_features</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><code>natural number : The number</code> of <code>encoded features used by the supplied encoder to represent</code></dt>
+<dd>the data set</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def encoded_features(self):
+    &#34;&#34;&#34;
+    Returns
+    ---
+    natural number : The number of encoded features used by the supplied encoder to represent
+        the data set
+    &#34;&#34;&#34;
+    return len(self.encoder.headers) if self.encoder is not None else None</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.error"><code class="name flex">
+<span>def <span class="ident">error</span></span>(<span>self, X, y, weight=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>matrix-like, shape = [n_samples by m_features]</code></dt>
+<dd>an n-by-m matrix of sample and their features</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like, shape = [n_samples by 1]</code></dt>
+<dd>an n-by-1 column of labels associated with each sample</dd>
+<dt><strong><code>weight</code></strong> :&ensp;<code>real number</code></dt>
+<dd>an n-by-1 column of weights to apply to each sample's misclassification</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>real number : the inaccuracy produced by applying this model overthe given dataset, with</code></dt>
+<dd>optionals for weighted inaccuracy</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def error(self, X, y, weight=None):
+    &#34;&#34;&#34;
+    Parameters
+    ---
+    X : matrix-like, shape = [n_samples by m_features]
+        an n-by-m matrix of sample and their features
+    y : array-like, shape = [n_samples by 1]
+        an n-by-1 column of labels associated with each sample
+    weight : real number
+        an n-by-1 column of weights to apply to each sample&#39;s misclassification
+
+    Returns
+    ---
+    real number : the inaccuracy produced by applying this model overthe given dataset, with
+        optionals for weighted inaccuracy
+    &#34;&#34;&#34;
+    return 1 - self.score(X, y, weight=weight)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.features"><code class="name flex">
+<span>def <span class="ident">features</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>set</code></strong> :&ensp;<code>A set</code> of <code>strings each describing the features used by this model</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def features(self):
+    &#34;&#34;&#34;
+    Returns
+    ---
+    set : A set of strings each describing the features used by this model
+    &#34;&#34;&#34;
+    feature_set = set()
+    nodes = [self.source]
+    while len(nodes) &gt; 0:
+        node = nodes.pop()
+        if &#34;prediction&#34; in node:
+            continue
+        else:
+            feature_set.add(node[&#34;name&#34;])
+            nodes.append(node[&#34;true&#34;])
+            nodes.append(node[&#34;false&#34;])
+    return feature_set</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.json"><code class="name flex">
+<span>def <span class="ident">json</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>string</code></strong> :&ensp;<code>A JSON string representing the model</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def json(self):
+    &#34;&#34;&#34;
+    Returns
+    ---
+    string : A JSON string representing the model
+    &#34;&#34;&#34;
+    return dumps(self.source, cls=NumpyEncoder)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.latex"><code class="name flex">
+<span>def <span class="ident">latex</span></span>(<span>self, node=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="note">Note</h2>
+<p>This method doesn't work well for label headers that contain underscores due to underscore
+being a reserved character in LaTeX</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>string</code></strong> :&ensp;<code>A LaTeX string representing the model</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def latex(self, node=None):
+    &#34;&#34;&#34;
+    Note
+    ---
+    This method doesn&#39;t work well for label headers that contain underscores due to underscore
+    being a reserved character in LaTeX
+
+    Returns
+    ---
+    string : A LaTeX string representing the model
+    &#34;&#34;&#34;
+    if node is None:
+        node = self.source
+    if &#34;prediction&#34; in node:
+        if &#34;name&#34; in node:
+            name = node[&#34;name&#34;]
+        else:
+            name = &#34;feature_{}&#34;.format(node[&#34;feature&#34;])
+        return &#34;[ ${}$ [ ${}$ ] ]&#34;.format(name, node[&#34;prediction&#34;])
+    else:
+        if &#34;name&#34; in node:
+            if &#34;=&#34; in node[&#34;name&#34;]:
+                name = &#34;{}&#34;.format(node[&#34;name&#34;])
+            else:
+                name = &#34;{} {} {}&#34;.format(node[&#34;name&#34;], node[&#34;relation&#34;], node[&#34;reference&#34;])
+        else:
+            name = &#34;feature_{} {} {}&#34;.format(
+                node[&#34;feature&#34;], node[&#34;relation&#34;], node[&#34;reference&#34;])
+        return (
+            &#34;[ ${}$ {} {} ]&#34;
+                .format(name, self.latex(node[&#34;true&#34;]), self.latex(node[&#34;false&#34;]))
+                .replace(&#34;==&#34;, &#34; \eq &#34;).replace(&#34;&gt;=&#34;, &#34; \ge &#34;).replace(&#34;&lt;=&#34;, &#34; \le &#34;)
+        )</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.leaves"><code class="name flex">
+<span>def <span class="ident">leaves</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><code>natural number : The number</code> of <code>terminal nodes present in this tree</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def leaves(self):
+    &#34;&#34;&#34;
+    Returns
+    ---
+    natural number : The number of terminal nodes present in this tree
+    &#34;&#34;&#34;
+    leaves_counter = 0
+    nodes = [self.source]
+    while len(nodes) &gt; 0:
+        node = nodes.pop()
+        if &#34;prediction&#34; in node:
+            leaves_counter += 1
+        else:
+            nodes.append(node[&#34;true&#34;])
+            nodes.append(node[&#34;false&#34;])
+    return leaves_counter</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.loss"><code class="name flex">
+<span>def <span class="ident">loss</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><code>real number : values between [0,1]</code></dt>
+<dd>the training loss of this model</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def loss(self):
+    &#34;&#34;&#34;
+    Returns
+    ---
+    real number : values between [0,1]
+        the training loss of this model
+    &#34;&#34;&#34;
+    return sum(node[&#34;loss&#34;] for node in self.__all_leaves__())</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.maximum_depth"><code class="name flex">
+<span>def <span class="ident">maximum_depth</span></span>(<span>self, node=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><code>natural number : the length</code> of <code>the longest decision path in this tree. A single-node tree</code></dt>
+<dd>will return 1.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def maximum_depth(self, node=None):
+    &#34;&#34;&#34;
+    Returns
+    ---
+    natural number : the length of the longest decision path in this tree. A single-node tree
+        will return 1.
+    &#34;&#34;&#34;
+    if node is None:
+        node = self.source
+    if &#34;prediction&#34; in node:
+        return 1
+    else:
+        return 1 + max(self.maximum_depth(node[&#34;true&#34;]), self.maximum_depth(node[&#34;false&#34;]))</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.nodes"><code class="name flex">
+<span>def <span class="ident">nodes</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><code>natural number : The number</code> of <code>nodes present in this tree</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def nodes(self):
+    &#34;&#34;&#34;
+    Returns
+    ---
+    natural number : The number of nodes present in this tree
+    &#34;&#34;&#34;
+    nodes_counter = 0
+    nodes = [self.source]
+    while len(nodes) &gt; 0:
+        node = nodes.pop()
+        if &#34;prediction&#34; in node:
+            nodes_counter += 1
+        else:
+            nodes_counter += 1
+            nodes.append(node[&#34;true&#34;])
+            nodes.append(node[&#34;false&#34;])
+    return nodes_counter</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="requires">Requires</h2>
+<p>the set of features used should be pre-encoding if an encoder is used</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>matrix-like, shape = [n_samples by m_features]</code></dt>
+<dd>a matrix where each row is a sample to be predicted and each column is a feature to be
+used for prediction</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>array-like, shape = [n_sampels by 1] : a column where each element is the prediction</code></dt>
+<dd>associated with each row</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    &#34;&#34;&#34;
+    Requires
+    ---
+    the set of features used should be pre-encoding if an encoder is used
+
+    Parameters
+    ---
+    X : matrix-like, shape = [n_samples by m_features]
+        a matrix where each row is a sample to be predicted and each column is a feature to be
+        used for prediction
+
+    Returns
+    ---
+    array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+        associated with each row
+    &#34;&#34;&#34;
+    # Perform an encoding if an encoding unit is specified
+    if self.encoder is not None:
+        X = pd.DataFrame(self.encoder.encode(X.values[:, :]), columns=self.encoder.headers)
+
+    predictions = []
+    (n, m) = X.shape
+    for i in range(n):
+        prediction, _ = self.classify(X.values[i, :])
+        predictions.append(prediction)
+    return array(predictions)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.score"><code class="name flex">
+<span>def <span class="ident">score</span></span>(<span>self, X, y, weight=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>matrix-like, shape = [n_samples by m_features]</code></dt>
+<dd>an n-by-m matrix of sample and their features</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like, shape = [n_samples by 1]</code></dt>
+<dd>an n-by-1 column of labels associated with each sample</dd>
+<dt><strong><code>weight</code></strong> :&ensp;<code>real number</code></dt>
+<dd>an n-by-1 column of weights to apply to each sample's misclassification</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>real number : the accuracy produced by applying this model overthe given dataset, with</code></dt>
+<dd>optionals for weighted accuracy</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def score(self, X, y, weight=None):
+    &#34;&#34;&#34;
+    Parameters
+    ---
+    X : matrix-like, shape = [n_samples by m_features]
+        an n-by-m matrix of sample and their features
+    y : array-like, shape = [n_samples by 1]
+        an n-by-1 column of labels associated with each sample
+    weight : real number
+        an n-by-1 column of weights to apply to each sample&#39;s misclassification
+
+    Returns
+    ---
+    real number : the accuracy produced by applying this model overthe given dataset, with
+        optionals for weighted accuracy
+    &#34;&#34;&#34;
+    y_hat = self.predict(X)
+    if weight == &#34;balanced&#34;:
+        return balanced_accuracy_score(y, y_hat)
+    else:
+        return accuracy_score(y, y_hat, normalize=True, sample_weight=weight)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.tree.gosdt" href="index.html">imodels.tree.gosdt</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.tree.gosdt.pygosdt_helper.NumpyEncoder" href="#imodels.tree.gosdt.pygosdt_helper.NumpyEncoder">NumpyEncoder</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.NumpyEncoder.default" href="#imodels.tree.gosdt.pygosdt_helper.NumpyEncoder.default">default</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier">TreeClassifier</a></code></h4>
+<ul class="two-column">
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.classify" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.classify">classify</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.confidence" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.confidence">confidence</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.encoded_features" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.encoded_features">encoded_features</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.error" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.error">error</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.features" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.features">features</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.json" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.json">json</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.latex" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.latex">latex</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.leaves" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.leaves">leaves</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.loss" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.loss">loss</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.maximum_depth" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.maximum_depth">maximum_depth</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.nodes" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.nodes">nodes</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.predict" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.tree.gosdt.pygosdt_helper.TreeClassifier.score" href="#imodels.tree.gosdt.pygosdt_helper.TreeClassifier.score">score</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

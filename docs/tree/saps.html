@@ -148,7 +148,9 @@ class SAPS(BaseEstimator):
 
         # fit stump
         stump = tree.DecisionTreeRegressor(max_depth=1)
-        stump.fit(X[idxs], y[idxs], sample_weight=sample_weight[idxs])
+        if sample_weight is not None:
+            sample_weight = sample_weight[idxs]
+        stump.fit(X[idxs], y[idxs], sample_weight=sample_weight)
 
         # these are all arrays, arr[0] is split node
         # note: -2 is dummy
@@ -346,7 +348,7 @@ class SAPS(BaseEstimator):
 
     def __str__(self):
         s = &#39;------------\n&#39; + &#39;\n\t+\n&#39;.join([self.tree_to_str(t) for t in self.trees_])
-        if self.feature_names_ is not None:
+        if hasattr(self, &#39;feature_names_&#39;) and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f&#39;X_{i}&#39;, self.feature_names_[i])
         return s
@@ -601,7 +603,9 @@ if __name__ == &#39;__main__&#39;:
 
         # fit stump
         stump = tree.DecisionTreeRegressor(max_depth=1)
-        stump.fit(X[idxs], y[idxs], sample_weight=sample_weight[idxs])
+        if sample_weight is not None:
+            sample_weight = sample_weight[idxs]
+        stump.fit(X[idxs], y[idxs], sample_weight=sample_weight)
 
         # these are all arrays, arr[0] is split node
         # note: -2 is dummy
@@ -799,7 +803,7 @@ if __name__ == &#39;__main__&#39;:
 
     def __str__(self):
         s = &#39;------------\n&#39; + &#39;\n\t+\n&#39;.join([self.tree_to_str(t) for t in self.trees_])
-        if self.feature_names_ is not None:
+        if hasattr(self, &#39;feature_names_&#39;) and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f&#39;X_{i}&#39;, self.feature_names_[i])
         return s
@@ -943,7 +947,9 @@ Doesn't currently support sample_weight!</p></div>
 
     # fit stump
     stump = tree.DecisionTreeRegressor(max_depth=1)
-    stump.fit(X[idxs], y[idxs], sample_weight=sample_weight[idxs])
+    if sample_weight is not None:
+        sample_weight = sample_weight[idxs]
+    stump.fit(X[idxs], y[idxs], sample_weight=sample_weight)
 
     # these are all arrays, arr[0] is split node
     # note: -2 is dummy
