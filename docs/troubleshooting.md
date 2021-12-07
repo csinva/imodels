@@ -4,6 +4,17 @@ If you don't have permissions to install on your machine, use the --user flag:
 
 `pip install git+https://github.com/csinva/imodels --user`
 
+Note that some models (e.g. the ones below) require extra dependencies:
+
+```python
+extra_deps = [
+    'cvxpy',  # optionally requires cvxpy for slim
+    'corels',  # optinally requires corels for optimalrulelistclassifier
+    'gosdt',  # optionally requires gosdt for optimaltreeclassifier
+    'irf',  # optionally require irf for iterativeRandomForestClassifier
+]
+```
+
 
 To test if everything is successfully installed, just try importing imodels from python:
 

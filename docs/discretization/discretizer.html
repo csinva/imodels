@@ -367,14 +367,20 @@ class ExtraBasicDiscretizer(TransformerMixin):
         self
         &#34;&#34;&#34;
 
-        # apply KBinsDiscretizer to the selected columns
+        # Fit KBinsDiscretizer to the selected columns
         discretizer = KBinsDiscretizer(
-            n_bins=self.n_bins,
-            strategy=self.strategy,
-            encode=&#39;ordinal&#39;)
-
+            n_bins=self.n_bins, strategy=self.strategy, encode=&#39;ordinal&#39;)
         discretizer.fit(X[self.dcols])
         self.discretizer_ = discretizer
+
+        # Fit OneHotEncoder to the ordinal output of KBinsDiscretizer
+        disc_ordinal_np = discretizer.transform(X[self.dcols])
+        disc_ordinal_df = pd.DataFrame(disc_ordinal_np, columns=self.dcols)
+        disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
+
+        encoder = OneHotEncoder(drop=self.onehot_drop, sparse=False)
+        encoder.fit(disc_ordinal_df_str)
+        self.encoder_ = encoder
 
         return self
 
@@ -400,8 +406,7 @@ class ExtraBasicDiscretizer(TransformerMixin):
         disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
 
         # One-hot encode the ordinal DF
-        self.encoder_ = OneHotEncoder(drop=self.onehot_drop, sparse=False)
-        disc_onehot_np = self.encoder_.fit_transform(disc_ordinal_df_str)
+        disc_onehot_np = self.encoder_.transform(disc_ordinal_df_str)
         disc_onehot = pd.DataFrame(disc_onehot_np, columns=self.encoder_.get_feature_names_out())
 
         # Name columns after the interval they represent (e.g. 0.1_to_0.5)
@@ -1722,14 +1727,20 @@ per feature when encode = "onehot".</p>
         self
         &#34;&#34;&#34;
 
-        # apply KBinsDiscretizer to the selected columns
+        # Fit KBinsDiscretizer to the selected columns
         discretizer = KBinsDiscretizer(
-            n_bins=self.n_bins,
-            strategy=self.strategy,
-            encode=&#39;ordinal&#39;)
-
+            n_bins=self.n_bins, strategy=self.strategy, encode=&#39;ordinal&#39;)
         discretizer.fit(X[self.dcols])
         self.discretizer_ = discretizer
+
+        # Fit OneHotEncoder to the ordinal output of KBinsDiscretizer
+        disc_ordinal_np = discretizer.transform(X[self.dcols])
+        disc_ordinal_df = pd.DataFrame(disc_ordinal_np, columns=self.dcols)
+        disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
+
+        encoder = OneHotEncoder(drop=self.onehot_drop, sparse=False)
+        encoder.fit(disc_ordinal_df_str)
+        self.encoder_ = encoder
 
         return self
 
@@ -1755,8 +1766,7 @@ per feature when encode = "onehot".</p>
         disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
 
         # One-hot encode the ordinal DF
-        self.encoder_ = OneHotEncoder(drop=self.onehot_drop, sparse=False)
-        disc_onehot_np = self.encoder_.fit_transform(disc_ordinal_df_str)
+        disc_onehot_np = self.encoder_.transform(disc_ordinal_df_str)
         disc_onehot = pd.DataFrame(disc_onehot_np, columns=self.encoder_.get_feature_names_out())
 
         # Name columns after the interval they represent (e.g. 0.1_to_0.5)
@@ -1821,14 +1831,20 @@ per feature when encode = "onehot".</p>
     self
     &#34;&#34;&#34;
 
-    # apply KBinsDiscretizer to the selected columns
+    # Fit KBinsDiscretizer to the selected columns
     discretizer = KBinsDiscretizer(
-        n_bins=self.n_bins,
-        strategy=self.strategy,
-        encode=&#39;ordinal&#39;)
-
+        n_bins=self.n_bins, strategy=self.strategy, encode=&#39;ordinal&#39;)
     discretizer.fit(X[self.dcols])
     self.discretizer_ = discretizer
+
+    # Fit OneHotEncoder to the ordinal output of KBinsDiscretizer
+    disc_ordinal_np = discretizer.transform(X[self.dcols])
+    disc_ordinal_df = pd.DataFrame(disc_ordinal_np, columns=self.dcols)
+    disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
+
+    encoder = OneHotEncoder(drop=self.onehot_drop, sparse=False)
+    encoder.fit(disc_ordinal_df_str)
+    self.encoder_ = encoder
 
     return self</code></pre>
 </details>
@@ -1875,8 +1891,7 @@ binned space. All other features remain unchanged.</dd>
     disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
 
     # One-hot encode the ordinal DF
-    self.encoder_ = OneHotEncoder(drop=self.onehot_drop, sparse=False)
-    disc_onehot_np = self.encoder_.fit_transform(disc_ordinal_df_str)
+    disc_onehot_np = self.encoder_.transform(disc_ordinal_df_str)
     disc_onehot = pd.DataFrame(disc_onehot_np, columns=self.encoder_.get_feature_names_out())
 
     # Name columns after the interval they represent (e.g. 0.1_to_0.5)
