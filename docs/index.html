@@ -152,8 +152,8 @@ print(model) # print the rule-based model
 </tr>
 <tr>
 <td align="left">Shrunk trees</td>
-<td><a href="https://csinva.io/imodels/tree/shrunk_tree.html#imodels.tree.saps">🗂️</a>, <a href="">📄</a></td>
-<td>Sum of small trees with very few total rules (SAPS)</td>
+<td><a href="https://csinva.io/imodels/tree/shrunk_tree.html">🗂️</a>, <a href="">📄</a></td>
+<td>Use regularization to improve trees</td>
 </tr>
 <tr>
 <td align="left">More models</td>
@@ -166,6 +166,10 @@ print(model) # print the rule-based model
 Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementation 🔗, Research paper 📄
 </br>
 </p>
+<details>
+<summary>Also see our <a href="https://csinva.io/imodels/util/data_util.html#imodels.util.data_util.get_clean_dataset">util functions</a> for downloading popular tabular datasets (e.g. compas).</summary>
+These functions, in conjunction with <a href="https://github.com/csinva/imodels-data">imodels-data</a> and <a href="https://github.com/Yu-Group/imodels-experiments">imodels-experiments</a>, make it simple to download data and run experiments on new models.
+</details>
 <details>
 <summary>Also see our <a href="https://csinva.io/imodels/util/explain_errors.html">simple function</a> for explaining classification errors.</summary>
 Fit an interpretable model to explain a previous model's errors (ex. in <a href="https://github.com/csinva/imodels/blob/master/notebooks/error_detection_demo.ipynb">this notebook📓</a>).
@@ -342,7 +346,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 </tr>
 <tr>
 <td align="left">Iterative random forest</td>
-<td align="center"></td>
+<td align="center"><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a></td>
 <td align="center"></td>
 </tr>
 <tr>
@@ -354,6 +358,11 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <td align="left">Sapling Sums (SAPS)</td>
 <td align="center"><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumClassifier">SaplingSumClassifier</a></td>
 <td align="center"><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumRegressor">SaplingSumRegressor</a></td>
+</tr>
+<tr>
+<td align="left">Shrunk trees</td>
+<td align="center"><a href="https://csinva.io/imodels/tree//shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifierCVr">ShrunkTreeClassifierCV</a></td>
+<td align="center"><a href="https://csinva.io/imodels/tree/shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV">ShrunkTreeRegressorCV</a></td>
 </tr>
 </tbody>
 </table>

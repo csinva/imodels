@@ -135,7 +135,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             }]
 
             # generate tree for the non-leaf data
-            par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)
+            par_node = par_node + self.fit(x_left, y_left, depth + 1, feature_names=feature_names, verbose=verbose)
 
             self.depth += 1  # increase the depth since we call fit once
             self.rules_ = par_node
@@ -484,7 +484,7 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</p
             }]
 
             # generate tree for the non-leaf data
-            par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)
+            par_node = par_node + self.fit(x_left, y_left, depth + 1, feature_names=feature_names, verbose=verbose)
 
             self.depth += 1  # increase the depth since we call fit once
             self.rules_ = par_node
@@ -898,7 +898,7 @@ the depth of the current layer (used to recurse)</p></div>
         }]
 
         # generate tree for the non-leaf data
-        par_node = par_node + self.fit(x_left, y_left, depth + 1, verbose=verbose)
+        par_node = par_node + self.fit(x_left, y_left, depth + 1, feature_names=feature_names, verbose=verbose)
 
         self.depth += 1  # increase the depth since we call fit once
         self.rules_ = par_node

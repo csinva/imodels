@@ -11,10 +11,11 @@ from xml.etree import ElementTree as ET
 
 import numpy as np
 import pandas as pd
-from imodels.tree.c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
-    set_as_leaf_node
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
+
+from imodels.tree.c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
+    set_as_leaf_node
 
 
 class C45TreeClassifier(BaseEstimator, ClassifierMixin):

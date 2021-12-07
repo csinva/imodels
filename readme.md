@@ -75,6 +75,11 @@ Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementa
 </p>
 
 <details>
+<summary>Also see our <a href="https://csinva.io/imodels/util/data_util.html#imodels.util.data_util.get_clean_dataset">util functions</a> for downloading popular tabular datasets (e.g. compas).</summary>
+These functions, in conjunction with <a href="https://github.com/csinva/imodels-data">imodels-data</a> and <a href="https://github.com/Yu-Group/imodels-experiments">imodels-experiments</a>, make it simple to download data and run experiments on new models.
+</details>
+
+<details>
 <summary>Also see our <a href="https://csinva.io/imodels/util/explain_errors.html">simple function</a> for explaining classification errors.</summary>
 Fit an interpretable model to explain a previous model's errors (ex. in <a href="https://github.com/csinva/imodels/blob/master/notebooks/error_detection_demo.ipynb">this notebook📓</a>).
 </details>
@@ -188,7 +193,7 @@ Different models support different machine-learning tasks. Current support for d
 | Optimal rule tree (GOSDT)   | [OptimalTreeClassifier](https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier) |                                                              |
 | Greedy rule tree (CART)     | [GreedyTreeClassifier](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier) |      [GreedyTreeRegressor](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor)                                                        |
 | C4.5 rule tree              | [C45TreeClassifier](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier) |           |
-| Iterative random forest     |                                                              |                                                              |
+| Iterative random forest     | [IRFClassifier](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier)                                                             |                                                              |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) |
 | Sapling Sums (SAPS) | [SaplingSumClassifier](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumClassifier) | [SaplingSumRegressor](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumRegressor) |
 | Shrunk trees | [ShrunkTreeClassifierCV](https://csinva.io/imodels/tree//shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifierCVr) | [ShrunkTreeRegressorCV](https://csinva.io/imodels/tree/shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV) |

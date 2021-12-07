@@ -192,8 +192,8 @@ class OptimalTreeClassifier(GreedyTreeClassifier):
         if self.tree_type == &#39;gosdt&#39;:
             if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
                 X = pd.DataFrame(X, columns=self.feature_names_)
-            probs = self.tree_.confidence(X)
-            return np.hstack((1 - probs), probs)
+            probs = np.expand_dims(self.tree_.confidence(X), axis=1)
+            return np.hstack((1 - probs, probs))
         else:
             return super().predict_proba(X)
 
@@ -513,8 +513,8 @@ class OptimalTreeClassifier(GreedyTreeClassifier):
         if self.tree_type == &#39;gosdt&#39;:
             if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
                 X = pd.DataFrame(X, columns=self.feature_names_)
-            probs = self.tree_.confidence(X)
-            return np.hstack((1 - probs), probs)
+            probs = np.expand_dims(self.tree_.confidence(X), axis=1)
+            return np.hstack((1 - probs, probs))
         else:
             return super().predict_proba(X)
 
@@ -992,8 +992,8 @@ classes corresponds to that in the attribute :term:<code>classes_</code>.</dd>
     if self.tree_type == &#39;gosdt&#39;:
         if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X, columns=self.feature_names_)
-        probs = self.tree_.confidence(X)
-        return np.hstack((1 - probs), probs)
+        probs = np.expand_dims(self.tree_.confidence(X), axis=1)
+        return np.hstack((1 - probs, probs))
     else:
         return super().predict_proba(X)</code></pre>
 </details>

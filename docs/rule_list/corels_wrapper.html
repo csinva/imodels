@@ -27,16 +27,25 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># This is just a simple wrapper around pycorels: https://github.com/corels/pycorels
+import warnings
 from typing import List
 
 import numpy as np
 import pandas as pd
-from corels import CorelsClassifier
-from sklearn.base import BaseEstimator
 from sklearn.preprocessing import KBinsDiscretizer
 
+from imodels.rule_list.greedy_rule_list import GreedyRuleListClassifier
 
-class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
+corels_supported = False
+try:
+    from corels import CorelsClassifier
+
+    corels_supported = True
+except:
+    pass
+
+
+class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported else CorelsClassifier):
     &#34;&#34;&#34;Certifiably Optimal RulE ListS classifier.
     This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
     rulelists for binary feature data and binary classification. As an alternative to other
@@ -100,12 +109,21 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
 
     def __init__(self, c=0.01, n_iter=10000, map_type=&#34;prefix&#34;, policy=&#34;lower_bound&#34;,
                  verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0):
-        super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
+        if corels_supported:
+            super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
+        else:
+            warnings.warn(&#34;Should install cvxpy with pip install corels. Using GreedyRuleList instead.&#34;)
+            super().__init__()
+            self.fit = super().fit
+            self.predict = super().predict
+            self.predict_proba = super().predict_proba
+            self.__str__ = super().__str__
+
         self.random_state = random_state
         self.discretizer = None
         self.str_print = None
 
-    def fit(self, X, y, feature_names=[], prediction_name=&#34;prediction&#34;):
+    def fit(self, X, y, feature_names=None, prediction_name=&#34;prediction&#34;):
         &#34;&#34;&#34;
         Build a CORELS classifier from the training set (X, y).
         Parameters
@@ -116,7 +134,7 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
         y : array-line, shape = [n_samples]
             The target values for the training input. Must be binary.
 
-        feature_names : list, optional(default=[])
+        feature_names : list, optional(default=None)
             A list of strings of length n_features. Specifies the names of each
             of the features. If an empty list is provided, the feature names
             are set to the default of [&#34;feature1&#34;, &#34;feature2&#34;... ].
@@ -127,10 +145,10 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
         self : obj
         &#34;&#34;&#34;
         if isinstance(X, pd.DataFrame):
-            if feature_names == []:
+            if feature_names is None:
                 feature_names = X.columns.tolist()
             X = X.values
-        elif feature_names == []:
+        elif feature_names is None:
             feature_names = [&#39;X_&#39; + str(i) for i in range(X.shape[1])]
 
         # check if any non-binary values
@@ -146,12 +164,15 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
             X = self.discretizer.transform(X)
 
         np.random.seed(self.random_state)
+        # feature_names = feature_names.tolist()
+
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
         # try:
         self._traverse_rule(X, y, feature_names)
         # except:
         #     self.str_print = None
         self.complexity_ = self._get_complexity()
+        return self
 
     def predict(self, X):
         &#34;&#34;&#34;
@@ -239,13 +260,25 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
         self.str_print = str_print
 
     def __str__(self):
-        if self.str_print is not None:
-            return &#39;OptimalRuleList:\n\n&#39; + self.str_print
+        if corels_supported:
+            if self.str_print is not None:
+                return &#39;OptimalRuleList:\n\n&#39; + self.str_print
+            else:
+                return &#39;OptimalRuleList:\n\n&#39; + self.rl_.__str__()
         else:
-            return &#39;OptimalRuleList:\n\n&#39; + self.rl_.__str__()
+            return super().__str__()
 
     def _get_complexity(self):
-        return len(self.rl_.rules)</code></pre>
+        return len(self.rl_.rules)
+
+
+if __name__ == &#39;__main__&#39;:
+    X = (np.random.randn(40, 2) &gt; 0).astype(int)
+    y = (X[:, 0] &gt; 0).astype(int)
+    y[-2:] = 1 - y[-2:]
+    m = OptimalRuleListClassifier()
+    m.fit(X, y)
+    print(str(m))</code></pre>
 </details>
 </section>
 <section>
@@ -326,7 +359,7 @@ Examples</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
+<pre><code class="python">class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported else CorelsClassifier):
     &#34;&#34;&#34;Certifiably Optimal RulE ListS classifier.
     This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
     rulelists for binary feature data and binary classification. As an alternative to other
@@ -390,12 +423,21 @@ Examples</p>
 
     def __init__(self, c=0.01, n_iter=10000, map_type=&#34;prefix&#34;, policy=&#34;lower_bound&#34;,
                  verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0):
-        super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
+        if corels_supported:
+            super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
+        else:
+            warnings.warn(&#34;Should install cvxpy with pip install corels. Using GreedyRuleList instead.&#34;)
+            super().__init__()
+            self.fit = super().fit
+            self.predict = super().predict
+            self.predict_proba = super().predict_proba
+            self.__str__ = super().__str__
+
         self.random_state = random_state
         self.discretizer = None
         self.str_print = None
 
-    def fit(self, X, y, feature_names=[], prediction_name=&#34;prediction&#34;):
+    def fit(self, X, y, feature_names=None, prediction_name=&#34;prediction&#34;):
         &#34;&#34;&#34;
         Build a CORELS classifier from the training set (X, y).
         Parameters
@@ -406,7 +448,7 @@ Examples</p>
         y : array-line, shape = [n_samples]
             The target values for the training input. Must be binary.
 
-        feature_names : list, optional(default=[])
+        feature_names : list, optional(default=None)
             A list of strings of length n_features. Specifies the names of each
             of the features. If an empty list is provided, the feature names
             are set to the default of [&#34;feature1&#34;, &#34;feature2&#34;... ].
@@ -417,10 +459,10 @@ Examples</p>
         self : obj
         &#34;&#34;&#34;
         if isinstance(X, pd.DataFrame):
-            if feature_names == []:
+            if feature_names is None:
                 feature_names = X.columns.tolist()
             X = X.values
-        elif feature_names == []:
+        elif feature_names is None:
             feature_names = [&#39;X_&#39; + str(i) for i in range(X.shape[1])]
 
         # check if any non-binary values
@@ -436,12 +478,15 @@ Examples</p>
             X = self.discretizer.transform(X)
 
         np.random.seed(self.random_state)
+        # feature_names = feature_names.tolist()
+
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
         # try:
         self._traverse_rule(X, y, feature_names)
         # except:
         #     self.str_print = None
         self.complexity_ = self._get_complexity()
+        return self
 
     def predict(self, X):
         &#34;&#34;&#34;
@@ -529,23 +574,25 @@ Examples</p>
         self.str_print = str_print
 
     def __str__(self):
-        if self.str_print is not None:
-            return &#39;OptimalRuleList:\n\n&#39; + self.str_print
+        if corels_supported:
+            if self.str_print is not None:
+                return &#39;OptimalRuleList:\n\n&#39; + self.str_print
+            else:
+                return &#39;OptimalRuleList:\n\n&#39; + self.rl_.__str__()
         else:
-            return &#39;OptimalRuleList:\n\n&#39; + self.rl_.__str__()
+            return super().__str__()
 
     def _get_complexity(self):
         return len(self.rl_.rules)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>sklearn.base.BaseEstimator</li>
 <li>corels.corels.CorelsClassifier</li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.rule_list.corels_wrapper.OptimalRuleListClassifier.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=[], prediction_name='prediction')</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, prediction_name='prediction')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Build a CORELS classifier from the training set (X, y).
@@ -557,7 +604,7 @@ Parameters</p>
 is internally converted to dtype=np.uint8.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>array-line, shape = [n_samples]</code></dt>
 <dd>The target values for the training input. Must be binary.</dd>
-<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code>, optional<code>(default=[])</code></dt>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code>, optional<code>(default=None)</code></dt>
 <dd>A list of strings of length n_features. Specifies the names of each
 of the features. If an empty list is provided, the feature names
 are set to the default of ["feature1", "feature2"&hellip; ].</dd>
@@ -573,7 +620,7 @@ are set to the default of ["feature1", "feature2"&hellip; ].</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y, feature_names=[], prediction_name=&#34;prediction&#34;):
+<pre><code class="python">def fit(self, X, y, feature_names=None, prediction_name=&#34;prediction&#34;):
     &#34;&#34;&#34;
     Build a CORELS classifier from the training set (X, y).
     Parameters
@@ -584,7 +631,7 @@ are set to the default of ["feature1", "feature2"&hellip; ].</dd>
     y : array-line, shape = [n_samples]
         The target values for the training input. Must be binary.
 
-    feature_names : list, optional(default=[])
+    feature_names : list, optional(default=None)
         A list of strings of length n_features. Specifies the names of each
         of the features. If an empty list is provided, the feature names
         are set to the default of [&#34;feature1&#34;, &#34;feature2&#34;... ].
@@ -595,10 +642,10 @@ are set to the default of ["feature1", "feature2"&hellip; ].</dd>
     self : obj
     &#34;&#34;&#34;
     if isinstance(X, pd.DataFrame):
-        if feature_names == []:
+        if feature_names is None:
             feature_names = X.columns.tolist()
         X = X.values
-    elif feature_names == []:
+    elif feature_names is None:
         feature_names = [&#39;X_&#39; + str(i) for i in range(X.shape[1])]
 
     # check if any non-binary values
@@ -614,12 +661,15 @@ are set to the default of ["feature1", "feature2"&hellip; ].</dd>
         X = self.discretizer.transform(X)
 
     np.random.seed(self.random_state)
+    # feature_names = feature_names.tolist()
+
     super().fit(X, y, features=feature_names, prediction_name=prediction_name)
     # try:
     self._traverse_rule(X, y, feature_names)
     # except:
     #     self.str_print = None
-    self.complexity_ = self._get_complexity()</code></pre>
+    self.complexity_ = self._get_complexity()
+    return self</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_list.corels_wrapper.OptimalRuleListClassifier.predict"><code class="name flex">
