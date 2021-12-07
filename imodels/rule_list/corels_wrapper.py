@@ -1,14 +1,23 @@
 # This is just a simple wrapper around pycorels: https://github.com/corels/pycorels
+import warnings
 from typing import List
 
 import numpy as np
 import pandas as pd
-from corels import CorelsClassifier
-from sklearn.base import BaseEstimator
 from sklearn.preprocessing import KBinsDiscretizer
 
+from imodels.rule_list.greedy_rule_list import GreedyRuleListClassifier
 
-class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
+corels_supported = False
+try:
+    from corels import CorelsClassifier
+
+    corels_supported = True
+except:
+    pass
+
+
+class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported else CorelsClassifier):
     """Certifiably Optimal RulE ListS classifier.
     This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
     rulelists for binary feature data and binary classification. As an alternative to other
@@ -72,12 +81,21 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
 
     def __init__(self, c=0.01, n_iter=10000, map_type="prefix", policy="lower_bound",
                  verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0):
-        super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
+        if corels_supported:
+            super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
+        else:
+            warnings.warn("Should install cvxpy with pip install corels. Using GreedyRuleList instead.")
+            super().__init__()
+            self.fit = super().fit
+            self.predict = super().predict
+            self.predict_proba = super().predict_proba
+            self.__str__ = super().__str__
+
         self.random_state = random_state
         self.discretizer = None
         self.str_print = None
 
-    def fit(self, X, y, feature_names=[], prediction_name="prediction"):
+    def fit(self, X, y, feature_names=None, prediction_name="prediction"):
         """
         Build a CORELS classifier from the training set (X, y).
         Parameters
@@ -88,7 +106,7 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
         y : array-line, shape = [n_samples]
             The target values for the training input. Must be binary.
 
-        feature_names : list, optional(default=[])
+        feature_names : list, optional(default=None)
             A list of strings of length n_features. Specifies the names of each
             of the features. If an empty list is provided, the feature names
             are set to the default of ["feature1", "feature2"... ].
@@ -99,10 +117,10 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
         self : obj
         """
         if isinstance(X, pd.DataFrame):
-            if feature_names == []:
+            if feature_names is None:
                 feature_names = X.columns.tolist()
             X = X.values
-        elif feature_names == []:
+        elif feature_names is None:
             feature_names = ['X_' + str(i) for i in range(X.shape[1])]
 
         # check if any non-binary values
@@ -118,12 +136,15 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
             X = self.discretizer.transform(X)
 
         np.random.seed(self.random_state)
+        # feature_names = feature_names.tolist()
+
         super().fit(X, y, features=feature_names, prediction_name=prediction_name)
         # try:
         self._traverse_rule(X, y, feature_names)
         # except:
         #     self.str_print = None
         self.complexity_ = self._get_complexity()
+        return self
 
     def predict(self, X):
         """
@@ -211,10 +232,22 @@ class OptimalRuleListClassifier(BaseEstimator, CorelsClassifier):
         self.str_print = str_print
 
     def __str__(self):
-        if self.str_print is not None:
-            return 'OptimalRuleList:\n\n' + self.str_print
+        if corels_supported:
+            if self.str_print is not None:
+                return 'OptimalRuleList:\n\n' + self.str_print
+            else:
+                return 'OptimalRuleList:\n\n' + self.rl_.__str__()
         else:
-            return 'OptimalRuleList:\n\n' + self.rl_.__str__()
+            return super().__str__()
 
     def _get_complexity(self):
         return len(self.rl_.rules)
+
+
+if __name__ == '__main__':
+    X = (np.random.randn(40, 2) > 0).astype(int)
+    y = (X[:, 0] > 0).astype(int)
+    y[-2:] = 1 - y[-2:]
+    m = OptimalRuleListClassifier()
+    m.fit(X, y)
+    print(str(m))

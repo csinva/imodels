@@ -1,19 +1,24 @@
-import setuptools
 from os import path
+
+import setuptools
 
 path_to_repo = path.abspath(path.dirname(__file__))
 with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 required_pypi = [
-    'corels==1.1.29',  # we only provide a basic wrapper around corels
-    # optionally requires cvxpy for slim
-    # optionally requires gosdt
     'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
     'numpy',
     'pandas',
     'scipy',
     'scikit-learn>=0.23.0',  # 0.23+ only works on py3.6+
+]
+
+extra_deps = [
+    'cvxpy',  # optionally requires cvxpy for slim
+    'corels',  # optinally requires corels for optimalrulelistclassifier
+    'gosdt',  # optionally requires gosdt for optimaltreeclassifier
+    'irf',  # optionally require irf for iterativeRandomForestClassifier
 ]
 
 setuptools.setup(
