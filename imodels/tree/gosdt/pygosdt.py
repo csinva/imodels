@@ -45,7 +45,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
                  timing="",
                  trace="",
                  tree=""):
-        # super().__init__(*args, **kwargs)
+        super().__init__()
         self.balance = balance
         self.cancellation = cancellation
         self.look_ahead = look_ahead
