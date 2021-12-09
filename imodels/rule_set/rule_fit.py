@@ -47,6 +47,10 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                     terminal nodes based on an exponential distribution about tree_size. 
                     (Friedman Sec 3.3)
     include_linear: Include linear terms as opposed to only rules
+    alpha:          Regularization strength, will override max_rules parameter
+    cv:             Whether to use cross-validation scores to select the regularization strength 
+                    the final regularization value out of all that satisfy max_rules. If False, the
+                    least regularization possible is used.
     random_state:   Integer to initialise random objects and provide repeatability.
     tree_generator: Optional: this object will be used as provided to generate the rules. 
                     This will override almost all the other properties above. 
@@ -74,6 +78,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                  exp_rand_tree_size=True,
                  include_linear=True,
                  alpha=None,
+                 cv=True,
                  random_state=None):
         self.n_estimators = n_estimators
         self.tree_size = tree_size
@@ -86,6 +91,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.exp_rand_tree_size = exp_rand_tree_size
         self.include_linear = include_linear
         self.alpha = alpha
+        self.cv = cv
         self.random_state = random_state
 
         self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
@@ -208,7 +214,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         n_features = len(self.coef) - len(self.rules_)
         rule_ensemble = list(self.rules_without_feature_names_)
         output_rules = []
-        ## Add coefficients for linear effects
+        # Add coefficients for linear effects
         for i in range(0, n_features):
             if self.lin_standardise:
                 coef = self.coef[i] * self.friedscale.scale_multipliers[i]
@@ -222,7 +228,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                     subregion)
             output_rules += [(self.feature_names[i], 'linear', coef, 1, importance)]
 
-        ## Add rules
+        # Add rules
         for i in range(0, len(self.rules_)):
             rule = rule_ensemble[i]
             coef = self.coef[i + n_features]
@@ -289,6 +295,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                             prediction_task=self.prediction_task,
                             max_rules=self.max_rules,
                             alpha=self.alpha,
+                            cv=self.cv,
                             random_state=self.random_state)
 
 

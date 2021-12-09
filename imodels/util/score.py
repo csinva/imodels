@@ -73,6 +73,7 @@ def score_linear(X, y, rules: List[str],
                  prediction_task='regression',
                  max_rules=30,
                  alpha=None,
+                 cv=True,
                  random_state=None) -> Tuple[List[Rule], List[float], float]:
 
     if alpha is not None:
@@ -84,7 +85,8 @@ def score_linear(X, y, rules: List[str],
         final_alpha = get_best_alpha_under_max_rules(X, y, rules,
                                                      penalty=penalty,
                                                      prediction_task=prediction_task,
-                                                     max_rules=max_rules, 
+                                                     max_rules=max_rules,
+                                                     cv=cv,
                                                      random_state=random_state)
     else:
         raise ValueError("Invalid alpha and max_rules passed")
@@ -92,12 +94,14 @@ def score_linear(X, y, rules: List[str],
     if prediction_task == 'regression':
         lin_model = Lasso(alpha=final_alpha, random_state=random_state, max_iter=2000)
     else:
-        lin_model = LogisticRegression(penalty=penalty, C=1/final_alpha, solver='liblinear',
-                                  random_state=random_state, max_iter=200)
+        lin_model = LogisticRegression(
+            penalty=penalty, C=(1 / final_alpha), solver='liblinear',
+            random_state=random_state, max_iter=200)
+
     lin_model.fit(X, y)
 
     coef_ = lin_model.coef_.flatten()
-    coefs = list(coef_[:coef_.shape[0]-len(rules)])
+    coefs = list(coef_[:coef_.shape[0] - len(rules)])
     support = np.sum(X[:, -len(rules):], axis=0) / X.shape[0]
 
     nonzero_rules = []
@@ -114,38 +118,42 @@ def get_best_alpha_under_max_rules(X, y, rules: List[str],
                                    penalty='l1',
                                    prediction_task='regression',
                                    max_rules=30,
+                                   cv=True,
                                    random_state=None) -> float:
     coef_zero_threshold = 1e-6 / np.mean(np.abs(y))
     alpha_scores = []
-    nonzero_rule_coefs_count = []
 
     if prediction_task == 'regression':
         alphas = _alpha_grid(X, y)
     elif prediction_task == 'classification':
-        alphas = [1 / alpha for alpha in np.logspace(-4, 4, num=10, base=10)]
+        # LogisticRegression accepts inverse of regularization
+        alphas = np.flip(np.logspace(-4, 4, num=100, base=10))
 
-    # alphas are sorted from most reg. to least reg.
-    for alpha in alphas:
+    # alphas are sorted from highest to lowest regularization
+    for i, alpha in enumerate(alphas):
 
         if prediction_task == 'regression':
             m = Lasso(alpha=alpha, random_state=random_state, max_iter=2000)
-            fold_scores = cross_val_score(m, X, y, cv=4, scoring='neg_mean_squared_error')
+            cv_scoring = 'neg_mean_squared_error'
         else:
-            m = LogisticRegression(penalty=penalty, C=1/alpha, solver='liblinear', random_state=random_state)
-            fold_scores = cross_val_score(m, X, y, cv=4, scoring='accuracy')
+            m = LogisticRegression(penalty=penalty, C=(1 / alpha), solver='liblinear', random_state=random_state)
+            cv_scoring = 'accuracy'
         
         m.fit(X, y)
-        
-        rule_coefs = m.coef_.flatten()[X.shape[1]-len(rules):]
+        rule_coefs = m.coef_.flatten()
         rule_count = np.sum(np.abs(rule_coefs) > coef_zero_threshold)
+
         if rule_count > max_rules:
             break
-        alpha_scores.append(np.mean(fold_scores))
 
-    # rare case in which diff alphas lead to identical scores
-    if np.all(alpha_scores == alpha_scores[0]):
-        best_alpha = alphas[len(alpha_scores) - 1]
+        if cv:
+            fold_scores = cross_val_score(m, X, y, cv=5, scoring=cv_scoring)
+            alpha_scores.append(np.mean(fold_scores))
+
+    if cv and np.all(alpha_scores != alpha_scores[0]):
+        # check for rare case in which diff alphas lead to identical scores
+        final_alpha = alphas[np.argmax(alpha_scores)]
     else:
-        best_alpha = alphas[np.argmax(alpha_scores)]
-    
-    return best_alpha
+        final_alpha = alphas[i - 1]
+        
+    return final_alpha
