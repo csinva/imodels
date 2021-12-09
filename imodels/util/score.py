@@ -6,8 +6,7 @@ import numpy as np
 from sklearn.utils import indices_to_mask
 from sklearn.linear_model import Lasso, LogisticRegression
 from sklearn.linear_model._coordinate_descent import _alpha_grid
-from sklearn.model_selection import KFold, cross_val_score
-from sklearn.metrics import accuracy_score
+from sklearn.model_selection import cross_val_score
 
 from imodels.util.rule import Rule
 
@@ -29,8 +28,9 @@ def score_precision_recall(X,
         if sum(mask) == 0:
             if oob:
                 warn(
-                    "OOB evaluation not possible: doing it in-bag. Performance evaluation is likely to be wrong"
-                    " (overfitting) and selected rules are likely to not perform well! Please use max_samples < 1."
+                    "OOB evaluation not possible: doing it in-bag. Performance evaluation is "
+                    "likely to be wrong (overfitting) and selected rules are likely to not "
+                    "perform well! Please use max_samples < 1."
                 )
             mask = curr_samples
 
@@ -68,7 +68,7 @@ def _eval_rule_perf(rule: str, X, y) -> Tuple[float, float]:
     return y_detected.mean(), float(true_pos) / pos
 
 
-def score_linear(X, y, rules: List[str], 
+def score_linear(X, y, rules: List[str],
                  penalty='l1',
                  prediction_task='regression',
                  max_rules=30,
@@ -136,7 +136,8 @@ def get_best_alpha_under_max_rules(X, y, rules: List[str],
             m = Lasso(alpha=alpha, random_state=random_state, max_iter=2000)
             cv_scoring = 'neg_mean_squared_error'
         else:
-            m = LogisticRegression(penalty=penalty, C=(1 / alpha), solver='liblinear', random_state=random_state)
+            m = LogisticRegression(
+                penalty=penalty, C=(1 / alpha), solver='liblinear', random_state=random_state)
             cv_scoring = 'accuracy'
         
         m.fit(X, y)
