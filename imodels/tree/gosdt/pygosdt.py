@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator
 from sklearn.utils import validation
 
 from imodels import GreedyTreeClassifier
@@ -10,7 +11,14 @@ from imodels.tree.gosdt.pygosdt_helper import TreeClassifier
 from imodels.util import rule
 
 
-class OptimalTreeClassifier(GreedyTreeClassifier):
+try:
+    import gosdt
+    gosdt_supported = True
+except ImportError:
+    gosdt_supported = False
+
+
+class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else BaseEstimator):
     def __init__(self,
                  balance=False,
                  cancellation=True,
@@ -36,9 +44,8 @@ class OptimalTreeClassifier(GreedyTreeClassifier):
                  profile="",
                  timing="",
                  trace="",
-                 tree="",
-                 *args, **kwargs):
-        super().__init__(*args, **kwargs)
+                 tree=""):
+        super().__init__()
         self.balance = balance
         self.cancellation = cancellation
         self.look_ahead = look_ahead

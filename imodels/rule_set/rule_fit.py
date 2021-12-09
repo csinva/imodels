@@ -125,7 +125,12 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
+
+        # count total rule terms, plus nonzero linear terms
         self.complexity_ = self._get_complexity()
+        if self.include_linear:
+            self.complexity_ += np.sum(
+                np.array(self.coef[:X.shape[1]]) != 0)
 
         return self
 
