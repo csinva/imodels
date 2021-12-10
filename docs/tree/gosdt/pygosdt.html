@@ -31,6 +31,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator
 from sklearn.utils import validation
 
 from imodels import GreedyTreeClassifier
@@ -38,7 +39,14 @@ from imodels.tree.gosdt.pygosdt_helper import TreeClassifier
 from imodels.util import rule
 
 
-class OptimalTreeClassifier(GreedyTreeClassifier):
+try:
+    import gosdt
+    gosdt_supported = True
+except ImportError:
+    gosdt_supported = False
+
+
+class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else BaseEstimator):
     def __init__(self,
                  balance=False,
                  cancellation=True,
@@ -64,9 +72,8 @@ class OptimalTreeClassifier(GreedyTreeClassifier):
                  profile=&#34;&#34;,
                  timing=&#34;&#34;,
                  trace=&#34;&#34;,
-                 tree=&#34;&#34;,
-                 *args, **kwargs):
-        super().__init__(*args, **kwargs)
+                 tree=&#34;&#34;):
+        super().__init__()
         self.balance = balance
         self.cancellation = cancellation
         self.look_ahead = look_ahead
@@ -351,7 +358,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier):
 <dl>
 <dt id="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">OptimalTreeClassifier</span></span>
-<span>(</span><span>balance=False, cancellation=True, look_ahead=True, similar_support=True, feature_exchange=True, continuous_feature_exchange=True, rule_list=False, diagnostics=False, verbose=False, regularization=0.05, uncertainty_tolerance=0.0, upperbound=0.0, model_limit=1, precision_limit=0, stack_limit=0, tile_limit=0, time_limit=0, worker_limit=1, random_state=None, costs='', model='', profile='', timing='', trace='', tree='', *args, **kwargs)</span>
+<span>(</span><span>balance=False, cancellation=True, look_ahead=True, similar_support=True, feature_exchange=True, continuous_feature_exchange=True, rule_list=False, diagnostics=False, verbose=False, regularization=0.05, uncertainty_tolerance=0.0, upperbound=0.0, model_limit=1, precision_limit=0, stack_limit=0, tile_limit=0, time_limit=0, worker_limit=1, random_state=None, costs='', model='', profile='', timing='', trace='', tree='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Wrapper around sklearn greedy tree classifier</p></div>
@@ -359,7 +366,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class OptimalTreeClassifier(GreedyTreeClassifier):
+<pre><code class="python">class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else BaseEstimator):
     def __init__(self,
                  balance=False,
                  cancellation=True,
@@ -385,9 +392,8 @@ class OptimalTreeClassifier(GreedyTreeClassifier):
                  profile=&#34;&#34;,
                  timing=&#34;&#34;,
                  trace=&#34;&#34;,
-                 tree=&#34;&#34;,
-                 *args, **kwargs):
-        super().__init__(*args, **kwargs)
+                 tree=&#34;&#34;):
+        super().__init__()
         self.balance = balance
         self.cancellation = cancellation
         self.look_ahead = look_ahead

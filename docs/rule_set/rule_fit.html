@@ -82,6 +82,10 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                     terminal nodes based on an exponential distribution about tree_size. 
                     (Friedman Sec 3.3)
     include_linear: Include linear terms as opposed to only rules
+    alpha:          Regularization strength, will override max_rules parameter
+    cv:             Whether to use cross-validation scores to select the regularization strength 
+                    the final regularization value out of all that satisfy max_rules. If False, the
+                    least regularization possible is used.
     random_state:   Integer to initialise random objects and provide repeatability.
     tree_generator: Optional: this object will be used as provided to generate the rules. 
                     This will override almost all the other properties above. 
@@ -109,6 +113,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                  exp_rand_tree_size=True,
                  include_linear=True,
                  alpha=None,
+                 cv=True,
                  random_state=None):
         self.n_estimators = n_estimators
         self.tree_size = tree_size
@@ -121,6 +126,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.exp_rand_tree_size = exp_rand_tree_size
         self.include_linear = include_linear
         self.alpha = alpha
+        self.cv = cv
         self.random_state = random_state
 
         self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
@@ -160,7 +166,12 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
+
+        # count total rule terms, plus nonzero linear terms
         self.complexity_ = self._get_complexity()
+        if self.include_linear:
+            self.complexity_ += np.sum(
+                np.array(self.coef[:X.shape[1]]) != 0)
 
         return self
 
@@ -238,7 +249,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         n_features = len(self.coef) - len(self.rules_)
         rule_ensemble = list(self.rules_without_feature_names_)
         output_rules = []
-        ## Add coefficients for linear effects
+        # Add coefficients for linear effects
         for i in range(0, n_features):
             if self.lin_standardise:
                 coef = self.coef[i] * self.friedscale.scale_multipliers[i]
@@ -252,7 +263,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                     subregion)
             output_rules += [(self.feature_names[i], &#39;linear&#39;, coef, 1, importance)]
 
-        ## Add rules
+        # Add rules
         for i in range(0, len(self.rules_)):
             rule = rule_ensemble[i]
             coef = self.coef[i + n_features]
@@ -319,6 +330,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                             prediction_task=self.prediction_task,
                             max_rules=self.max_rules,
                             alpha=self.alpha,
+                            cv=self.cv,
                             random_state=self.random_state)
 
 
@@ -343,7 +355,7 @@ class RuleFitClassifier(RuleFit, ClassifierMixin):
 <dl>
 <dt id="imodels.rule_set.rule_fit.RuleFit"><code class="flex name class">
 <span>class <span class="ident">RuleFit</span></span>
-<span>(</span><span>n_estimators=100, tree_size=4, sample_fract='default', max_rules=30, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
+<span>(</span><span>n_estimators=100, tree_size=4, sample_fract='default', max_rules=30, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, cv=True, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
@@ -371,6 +383,12 @@ scale multiplier (shrinkage factor) applied to each new tree when </code></dt>
 (Friedman Sec 3.3)</dd>
 <dt><strong><code>include_linear</code></strong> :&ensp;<code>Include linear terms as opposed to only rules</code></dt>
 <dd>&nbsp;</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>
+Regularization strength, will override max_rules parameter</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>cv</code></strong> :&ensp;<code>Whether to use cross-validation scores to select the regularization strength</code></dt>
+<dd>the final regularization value out of all that satisfy max_rules. If False, the
+least regularization possible is used.</dd>
 <dt>random_state:
 Integer to initialise random objects and provide repeatability.</dt>
 <dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
@@ -411,6 +429,10 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
                     terminal nodes based on an exponential distribution about tree_size. 
                     (Friedman Sec 3.3)
     include_linear: Include linear terms as opposed to only rules
+    alpha:          Regularization strength, will override max_rules parameter
+    cv:             Whether to use cross-validation scores to select the regularization strength 
+                    the final regularization value out of all that satisfy max_rules. If False, the
+                    least regularization possible is used.
     random_state:   Integer to initialise random objects and provide repeatability.
     tree_generator: Optional: this object will be used as provided to generate the rules. 
                     This will override almost all the other properties above. 
@@ -438,6 +460,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
                  exp_rand_tree_size=True,
                  include_linear=True,
                  alpha=None,
+                 cv=True,
                  random_state=None):
         self.n_estimators = n_estimators
         self.tree_size = tree_size
@@ -450,6 +473,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
         self.exp_rand_tree_size = exp_rand_tree_size
         self.include_linear = include_linear
         self.alpha = alpha
+        self.cv = cv
         self.random_state = random_state
 
         self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
@@ -489,7 +513,12 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
+
+        # count total rule terms, plus nonzero linear terms
         self.complexity_ = self._get_complexity()
+        if self.include_linear:
+            self.complexity_ += np.sum(
+                np.array(self.coef[:X.shape[1]]) != 0)
 
         return self
 
@@ -567,7 +596,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
         n_features = len(self.coef) - len(self.rules_)
         rule_ensemble = list(self.rules_without_feature_names_)
         output_rules = []
-        ## Add coefficients for linear effects
+        # Add coefficients for linear effects
         for i in range(0, n_features):
             if self.lin_standardise:
                 coef = self.coef[i] * self.friedscale.scale_multipliers[i]
@@ -581,7 +610,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
                     subregion)
             output_rules += [(self.feature_names[i], &#39;linear&#39;, coef, 1, importance)]
 
-        ## Add rules
+        # Add rules
         for i in range(0, len(self.rules_)):
             rule = rule_ensemble[i]
             coef = self.coef[i + n_features]
@@ -648,6 +677,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
                             prediction_task=self.prediction_task,
                             max_rules=self.max_rules,
                             alpha=self.alpha,
+                            cv=self.cv,
                             random_state=self.random_state)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -696,7 +726,12 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
     self.rules_ = [
         replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
     ]
+
+    # count total rule terms, plus nonzero linear terms
     self.complexity_ = self._get_complexity()
+    if self.include_linear:
+        self.complexity_ += np.sum(
+            np.array(self.coef[:X.shape[1]]) != 0)
 
     return self</code></pre>
 </details>
@@ -744,7 +779,7 @@ data set (X)</dd>
     n_features = len(self.coef) - len(self.rules_)
     rule_ensemble = list(self.rules_without_feature_names_)
     output_rules = []
-    ## Add coefficients for linear effects
+    # Add coefficients for linear effects
     for i in range(0, n_features):
         if self.lin_standardise:
             coef = self.coef[i] * self.friedscale.scale_multipliers[i]
@@ -758,7 +793,7 @@ data set (X)</dd>
                 subregion)
         output_rules += [(self.feature_names[i], &#39;linear&#39;, coef, 1, importance)]
 
-    ## Add rules
+    # Add rules
     for i in range(0, len(self.rules_)):
         rule = rule_ensemble[i]
         coef = self.coef[i + n_features]
@@ -902,7 +937,7 @@ efficiency.</dd>
 </dd>
 <dt id="imodels.rule_set.rule_fit.RuleFitClassifier"><code class="flex name class">
 <span>class <span class="ident">RuleFitClassifier</span></span>
-<span>(</span><span>n_estimators=100, tree_size=4, sample_fract='default', max_rules=30, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
+<span>(</span><span>n_estimators=100, tree_size=4, sample_fract='default', max_rules=30, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, cv=True, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
@@ -930,6 +965,12 @@ scale multiplier (shrinkage factor) applied to each new tree when </code></dt>
 (Friedman Sec 3.3)</dd>
 <dt><strong><code>include_linear</code></strong> :&ensp;<code>Include linear terms as opposed to only rules</code></dt>
 <dd>&nbsp;</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>
+Regularization strength, will override max_rules parameter</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>cv</code></strong> :&ensp;<code>Whether to use cross-validation scores to select the regularization strength</code></dt>
+<dd>the final regularization value out of all that satisfy max_rules. If False, the
+least regularization possible is used.</dd>
 <dt>random_state:
 Integer to initialise random objects and provide repeatability.</dt>
 <dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
@@ -974,7 +1015,7 @@ Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (defau
 </dd>
 <dt id="imodels.rule_set.rule_fit.RuleFitRegressor"><code class="flex name class">
 <span>class <span class="ident">RuleFitRegressor</span></span>
-<span>(</span><span>n_estimators=100, tree_size=4, sample_fract='default', max_rules=30, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
+<span>(</span><span>n_estimators=100, tree_size=4, sample_fract='default', max_rules=30, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, cv=True, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
@@ -1002,6 +1043,12 @@ scale multiplier (shrinkage factor) applied to each new tree when </code></dt>
 (Friedman Sec 3.3)</dd>
 <dt><strong><code>include_linear</code></strong> :&ensp;<code>Include linear terms as opposed to only rules</code></dt>
 <dd>&nbsp;</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>
+Regularization strength, will override max_rules parameter</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>cv</code></strong> :&ensp;<code>Whether to use cross-validation scores to select the regularization strength</code></dt>
+<dd>the final regularization value out of all that satisfy max_rules. If False, the
+least regularization possible is used.</dd>
 <dt>random_state:
 Integer to initialise random objects and provide repeatability.</dt>
 <dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
