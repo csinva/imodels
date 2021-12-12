@@ -110,7 +110,7 @@ class ShrunkTreeClassifier(ShrunkTree):
 
 class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], max_leaf_nodes: int = None,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  cv: int = 3, scoring=None,*args,**kwargs):
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
@@ -125,7 +125,7 @@ class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param,max_leaf_nodes = max_leaf_nodes)
+            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
