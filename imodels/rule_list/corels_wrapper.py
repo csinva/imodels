@@ -84,7 +84,7 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
         if corels_supported:
             super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
         else:
-            warnings.warn("Should install cvxpy with pip install corels. Using GreedyRuleList instead.")
+            warnings.warn("Should install corels with pip install corels. Using GreedyRuleList instead.")
             super().__init__()
             self.fit = super().fit
             self.predict = super().predict
