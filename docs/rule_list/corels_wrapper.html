@@ -269,7 +269,7 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
             return super().__str__()
 
     def _get_complexity(self):
-        return len(self.rl_.rules)
+        return sum([len(corule[&#39;antecedents&#39;]) for corule in self.rl_.rules])
 
 
 if __name__ == &#39;__main__&#39;:
@@ -583,7 +583,7 @@ Examples</p>
             return super().__str__()
 
     def _get_complexity(self):
-        return len(self.rl_.rules)</code></pre>
+        return sum([len(corule[&#39;antecedents&#39;]) for corule in self.rl_.rules])</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
