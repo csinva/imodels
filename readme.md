@@ -1,8 +1,7 @@
 <p align="center">
-	<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True"> </img>	 <br/>
+	<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"> </img>	 <br/>
 	Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
 </p>
-
 
 
 <p align="center">
@@ -17,8 +16,9 @@
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
   <!--img src="https://img.shields.io/github/checks-status/csinva/imodels/master"-->
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=11">
+  <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=12">
 </p>  
+
 
 
 
@@ -179,24 +179,24 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 
 Different models support different machine-learning tasks. Current support for different models is given below (each of these models can be imported directly from imodels (e.g. `from imodels import RuleFitClassifier`):
 
-| Model                       |                    Binary classification                     |                          Regression                          |
-| :-------------------------- | :----------------------------------------------------------: | :----------------------------------------------------------: |
-| Rulefit rule set            | [RuleFitClassifier](https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier) | [RuleFitRegressor](https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor) |
-| Skope rule set              | [SkopeRulesClassifier](https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier) |                                                              |
-| Boosted rule set            | [BoostedRulesClassifier](https://csinva.io/imodels/rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier) |                                                              |
-| SLIPPER rule set            | [SlipperClassifier](https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier) |                                                              |
-| Bayesian rule set                | [BayesianRuleSetClassifier](https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier) |                                                              |
-| Optimal rule list (CORELS)  | [OptimalRuleListClassifier](https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier) |                                                              |
-| Bayesian rule list          | [BayesianRuleListClassifier](https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier) |                                                              |
-| Greedy rule list            | [GreedyRuleListClassifier](https://csinva.io/imodels/rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier) |                                                              |
-| OneR rule list              | [OneRClassifier](https://csinva.io/imodels/rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier) |                                                              |
-| Optimal rule tree (GOSDT)   | [OptimalTreeClassifier](https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier) |                                                              |
-| Greedy rule tree (CART)     | [GreedyTreeClassifier](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier) |      [GreedyTreeRegressor](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor)                                                        |
-| C4.5 rule tree              | [C45TreeClassifier](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier) |           |
-| Iterative random forest     | [IRFClassifier](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier)                                                             |                                                              |
-| Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) |
-| Sapling Sums (SAPS) | [SaplingSumClassifier](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumClassifier) | [SaplingSumRegressor](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumRegressor) |
-| Shrunk trees | [ShrunkTreeClassifierCV](https://csinva.io/imodels/tree//shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifierCVr) | [ShrunkTreeRegressorCV](https://csinva.io/imodels/tree/shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV) |
+| Model                       |                    Binary classification                     |                          Regression                          | Notes |
+| :-------------------------- | :----------------------------------------------------------: | :----------------------------------------------------------: | --------------------------- |
+| Rulefit rule set            | [RuleFitClassifier](https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier) | [RuleFitRegressor](https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor) |  |
+| Skope rule set              | [SkopeRulesClassifier](https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier) |                                                              |  |
+| Boosted rule set            | [BoostedRulesClassifier](https://csinva.io/imodels/rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier) |                                                              |  |
+| SLIPPER rule set            | [SlipperClassifier](https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier) |                                                              |  |
+| Bayesian rule set                | [BayesianRuleSetClassifier](https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier) |                                                              | Fails for large problems |
+| Optimal rule list (CORELS)  | [OptimalRuleListClassifier](https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier) |                                                              | Requires [corels](https://pypi.org/project/corels/), fails for large problems |
+| Bayesian rule list          | [BayesianRuleListClassifier](https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier) |                                                              |  |
+| Greedy rule list            | [GreedyRuleListClassifier](https://csinva.io/imodels/rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier) |                                                              |  |
+| OneR rule list              | [OneRClassifier](https://csinva.io/imodels/rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier) |                                                              |  |
+| Optimal rule tree (GOSDT)   | [OptimalTreeClassifier](https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier) |                                                              | Requires [gosdt](https://pypi.org/project/gosdt/), fails for large problems |
+| Greedy rule tree (CART)     | [GreedyTreeClassifier](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier) |      [GreedyTreeRegressor](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor)                                                        |  |
+| C4.5 rule tree              | [C45TreeClassifier](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier) |           |  |
+| Iterative random forest     | [IRFClassifier](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier)                                                             |                                                              | Requires [irf](https://pypi.org/project/irf/) |
+| Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
+| Sapling Sums (SAPS) | [SaplingSumClassifier](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumClassifier) | [SaplingSumRegressor](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumRegressor) |                                                              |
+| Shrunk trees | [ShrunkTreeClassifierCV](https://csinva.io/imodels/tree//shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifierCVr) | [ShrunkTreeRegressorCV](https://csinva.io/imodels/tree/shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV) | Wraps any sklearn tree-based model |
 
 ## References
 

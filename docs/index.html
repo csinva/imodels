@@ -8,9 +8,9 @@
 <meta name="generator" content="pdoc 0.10.0" />
 <title>imodels API documentation</title>
 <meta name="description" content="&lt;p align=&#34;center&#34;&gt;
-&lt;img align=&#34;center&#34; width=60% src=&#34;https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&#34;&gt; &lt;/img&gt;
+&lt;img align=&#34;center&#34; width=60% src=&#34;https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&amp;kill_cache=1&#34;&gt; &lt;/img&gt;
 &lt;br/&gt;
-Python package …" />
+…" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -28,7 +28,7 @@ Python package …" />
 </header>
 <section id="section-intro">
 <p align="center">
-<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True"> </img>
+<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"> </img>
 <br/>
 Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
 </p>
@@ -44,7 +44,7 @@ Python package for concise, transparent, and accurate predictive modeling. All s
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
 <!--img src="https://img.shields.io/github/checks-status/csinva/imodels/master"-->
 <img src="https://img.shields.io/pypi/v/imodels?color=orange">
-<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=11">
+<img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=12">
 </p>
 <h2 id="imodels-overview">imodels overview</h2>
 <p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
@@ -281,6 +281,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <th align="left">Model</th>
 <th align="center">Binary classification</th>
 <th align="center">Regression</th>
+<th>Notes</th>
 </tr>
 </thead>
 <tbody>
@@ -288,81 +289,97 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <td align="left">Rulefit rule set</td>
 <td align="center"><a href="https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></td>
 <td align="center"><a href="https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></td>
+<td></td>
 </tr>
 <tr>
 <td align="left">Skope rule set</td>
 <td align="center"><a href="https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SkopeRulesClassifier</a></td>
 <td align="center"></td>
+<td></td>
 </tr>
 <tr>
 <td align="left">Boosted rule set</td>
 <td align="center"><a href="https://csinva.io/imodels/rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></td>
 <td align="center"></td>
+<td></td>
 </tr>
 <tr>
 <td align="left">SLIPPER rule set</td>
 <td align="center"><a href="https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SlipperClassifier</a></td>
 <td align="center"></td>
+<td></td>
 </tr>
 <tr>
 <td align="left">Bayesian rule set</td>
 <td align="center"><a href="https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></td>
 <td align="center"></td>
+<td>Fails for large problems</td>
 </tr>
 <tr>
 <td align="left">Optimal rule list (CORELS)</td>
 <td align="center"><a href="https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier">OptimalRuleListClassifier</a></td>
 <td align="center"></td>
+<td>Requires <a href="https://pypi.org/project/corels/">corels</a>, fails for large problems</td>
 </tr>
 <tr>
 <td align="left">Bayesian rule list</td>
 <td align="center"><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">BayesianRuleListClassifier</a></td>
 <td align="center"></td>
+<td></td>
 </tr>
 <tr>
 <td align="left">Greedy rule list</td>
 <td align="center"><a href="https://csinva.io/imodels/rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></td>
 <td align="center"></td>
+<td></td>
 </tr>
 <tr>
 <td align="left">OneR rule list</td>
 <td align="center"><a href="https://csinva.io/imodels/rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier">OneRClassifier</a></td>
 <td align="center"></td>
+<td></td>
 </tr>
 <tr>
 <td align="left">Optimal rule tree (GOSDT)</td>
 <td align="center"><a href="https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">OptimalTreeClassifier</a></td>
 <td align="center"></td>
+<td>Requires <a href="https://pypi.org/project/gosdt/">gosdt</a>, fails for large problems</td>
 </tr>
 <tr>
 <td align="left">Greedy rule tree (CART)</td>
 <td align="center"><a href="https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></td>
 <td align="center"><a href="https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor">GreedyTreeRegressor</a></td>
+<td></td>
 </tr>
 <tr>
 <td align="left">C4.5 rule tree</td>
 <td align="center"><a href="https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></td>
 <td align="center"></td>
+<td></td>
 </tr>
 <tr>
 <td align="left">Iterative random forest</td>
 <td align="center"><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a></td>
 <td align="center"></td>
+<td>Requires <a href="https://pypi.org/project/irf/">irf</a></td>
 </tr>
 <tr>
 <td align="left">Sparse integer linear model</td>
 <td align="center"><a href="https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></td>
 <td align="center"><a href="https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></td>
+<td>Requires extra dependencies for speed</td>
 </tr>
 <tr>
 <td align="left">Sapling Sums (SAPS)</td>
 <td align="center"><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumClassifier">SaplingSumClassifier</a></td>
 <td align="center"><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumRegressor">SaplingSumRegressor</a></td>
+<td></td>
 </tr>
 <tr>
 <td align="left">Shrunk trees</td>
 <td align="center"><a href="https://csinva.io/imodels/tree//shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifierCVr">ShrunkTreeClassifierCV</a></td>
 <td align="center"><a href="https://csinva.io/imodels/tree/shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV">ShrunkTreeRegressorCV</a></td>
+<td>Wraps any sklearn tree-based model</td>
 </tr>
 </tbody>
 </table>

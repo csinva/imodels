@@ -36,25 +36,32 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
+from imodels.util import checks
+
 
 class ShrunkTree(BaseEstimator):
     &#34;&#34;&#34;Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.
     &#34;&#34;&#34;
 
     def __init__(self, estimator_: BaseEstimator, reg_param: float = 1):
+        &#34;&#34;&#34;
+        Params
+        ------
+        reg_param: float
+            Higher is more regularization (can be arbitrarily large, should not be &lt; 0)
+        &#34;&#34;&#34;
         super().__init__()
         self.reg_param = reg_param
         # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
         self._init_prediction_task()
 
-    # (max_depth=max_depth)
+        # (max_depth=max_depth)
 
-    # if checks.check_is_fitted(self.estimator_):
-    #     self.shrink()
+        if checks.check_is_fitted(self.estimator_):
+            self.shrink()
 
     def __init__prediction_task(self):
-
         self.prediction_task = &#39;regression&#39;
 
     def fit(self, *args, **kwargs):
@@ -97,6 +104,14 @@ class ShrunkTree(BaseEstimator):
                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
                 self.shrink_tree(tree, reg_param, right,
                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+
+                # edit the non-leaf nodes for later visualization (doesn&#39;t effect predictions)
+                &#34;&#34;&#34;
+                if self.prediction_task == &#39;regression&#39;:
+                    tree.value[i][0, 0] = parent_val + val_new
+                else:
+                    pass  # not sure exactly what to put here
+                &#34;&#34;&#34;
 
         return tree
 
@@ -138,8 +153,10 @@ class ShrunkTreeClassifier(ShrunkTree):
 
 class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-                 cv: int = 3, scoring=None):
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], max_leaf_nodes: int = None,
+                 cv: int = 3, scoring=None, *args, **kwargs):
+        &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
+        &#34;&#34;&#34;
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -153,7 +170,7 @@ class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param)
+            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param, max_leaf_nodes=max_leaf_nodes)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -163,7 +180,9 @@ class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
 class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
     def __init__(self, estimator_: BaseEstimator,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-                 cv: int = 3, scoring=None):
+                 cv: int = 3, scoring=None, *args, **kwargs):
+        &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
+        &#34;&#34;&#34;
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -174,7 +193,7 @@ class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
         #     raise Warning(&#39;Passed an already fitted estimator,&#39;
         #                   &#39;but shrinking not applied until fit method is called.&#39;)
 
-    def fit(self, X, y, *args, **kwargs):
+    def fit(self, X, y):
         self.scores_ = []
         for reg_param in self.reg_param_list:
             est = ShrunkTreeRegressor(deepcopy(self.estimator_), reg_param)
@@ -210,8 +229,8 @@ class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
 
 if __name__ == &#39;__main__&#39;:
     np.random.seed(15)
-    X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
-    # X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
+    # X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
+    X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
     # X, y = datasets.load_diabetes(return_X_y=True)  # regression
     # X = np.random.randn(500, 10)
     # y = (X[:, 0] &gt; 0).astype(float) + (X[:, 1] &gt; 1).astype(float)
@@ -234,7 +253,7 @@ if __name__ == &#39;__main__&#39;:
     # m = ShrunkTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
     # m = ShrunkTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
     m = ShrunkTreeRegressorCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=20, random_state=42),
-                              reg_param_list=[0.1, 1, 10, 100])
+                              reg_param_list=[0.1, 1, 10, 100], max_leaf_nodes=20)
     # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
 
     m.fit(X_train, y_train)
@@ -257,7 +276,10 @@ if __name__ == &#39;__main__&#39;:
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param: float = 1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p></div>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
+<h2 id="params">Params</h2>
+<p>reg_param: float
+Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -267,19 +289,24 @@ if __name__ == &#39;__main__&#39;:
     &#34;&#34;&#34;
 
     def __init__(self, estimator_: BaseEstimator, reg_param: float = 1):
+        &#34;&#34;&#34;
+        Params
+        ------
+        reg_param: float
+            Higher is more regularization (can be arbitrarily large, should not be &lt; 0)
+        &#34;&#34;&#34;
         super().__init__()
         self.reg_param = reg_param
         # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
         self._init_prediction_task()
 
-    # (max_depth=max_depth)
+        # (max_depth=max_depth)
 
-    # if checks.check_is_fitted(self.estimator_):
-    #     self.shrink()
+        if checks.check_is_fitted(self.estimator_):
+            self.shrink()
 
     def __init__prediction_task(self):
-
         self.prediction_task = &#39;regression&#39;
 
     def fit(self, *args, **kwargs):
@@ -322,6 +349,14 @@ if __name__ == &#39;__main__&#39;:
                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
                 self.shrink_tree(tree, reg_param, right,
                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+
+                # edit the non-leaf nodes for later visualization (doesn&#39;t effect predictions)
+                &#34;&#34;&#34;
+                if self.prediction_task == &#39;regression&#39;:
+                    tree.value[i][0, 0] = parent_val + val_new
+                else:
+                    pass  # not sure exactly what to put here
+                &#34;&#34;&#34;
 
         return tree
 
@@ -486,6 +521,14 @@ if __name__ == &#39;__main__&#39;:
             self.shrink_tree(tree, reg_param, right,
                              parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
 
+            # edit the non-leaf nodes for later visualization (doesn&#39;t effect predictions)
+            &#34;&#34;&#34;
+            if self.prediction_task == &#39;regression&#39;:
+                tree.value[i][0, 0] = parent_val + val_new
+            else:
+                pass  # not sure exactly what to put here
+            &#34;&#34;&#34;
+
     return tree</code></pre>
 </details>
 </dd>
@@ -496,7 +539,10 @@ if __name__ == &#39;__main__&#39;:
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param: float = 1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p></div>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
+<h2 id="params">Params</h2>
+<p>reg_param: float
+Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -525,18 +571,21 @@ if __name__ == &#39;__main__&#39;:
 </dd>
 <dt id="imodels.tree.shrunk_tree.ShrunkTreeClassifierCV"><code class="flex name class">
 <span>class <span class="ident">ShrunkTreeClassifierCV</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], cv: int = 3, scoring=None)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], max_leaf_nodes: int = None, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p></div>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
+<p>Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-                 cv: int = 3, scoring=None):
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], max_leaf_nodes: int = None,
+                 cv: int = 3, scoring=None, *args, **kwargs):
+        &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
+        &#34;&#34;&#34;
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -550,7 +599,7 @@ if __name__ == &#39;__main__&#39;:
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param)
+            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param, max_leaf_nodes=max_leaf_nodes)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -576,7 +625,7 @@ if __name__ == &#39;__main__&#39;:
 <pre><code class="python">def fit(self, X, y, *args, **kwargs):
     self.scores_ = []
     for reg_param in self.reg_param_list:
-        est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param)
+        est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param, max_leaf_nodes=max_leaf_nodes)
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
     self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -598,7 +647,10 @@ if __name__ == &#39;__main__&#39;:
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param: float = 1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p></div>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
+<h2 id="params">Params</h2>
+<p>reg_param: float
+Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -627,10 +679,11 @@ if __name__ == &#39;__main__&#39;:
 </dd>
 <dt id="imodels.tree.shrunk_tree.ShrunkTreeRegressorCV"><code class="flex name class">
 <span>class <span class="ident">ShrunkTreeRegressorCV</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], cv: int = 3, scoring=None)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p></div>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
+<p>Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -638,7 +691,9 @@ if __name__ == &#39;__main__&#39;:
 <pre><code class="python">class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
     def __init__(self, estimator_: BaseEstimator,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-                 cv: int = 3, scoring=None):
+                 cv: int = 3, scoring=None, *args, **kwargs):
+        &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
+        &#34;&#34;&#34;
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -649,7 +704,7 @@ if __name__ == &#39;__main__&#39;:
         #     raise Warning(&#39;Passed an already fitted estimator,&#39;
         #                   &#39;but shrinking not applied until fit method is called.&#39;)
 
-    def fit(self, X, y, *args, **kwargs):
+    def fit(self, X, y):
         self.scores_ = []
         for reg_param in self.reg_param_list:
             est = ShrunkTreeRegressor(deepcopy(self.estimator_), reg_param)
@@ -667,7 +722,7 @@ if __name__ == &#39;__main__&#39;:
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.shrunk_tree.ShrunkTreeRegressorCV.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y, *args, **kwargs)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -675,7 +730,7 @@ if __name__ == &#39;__main__&#39;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y, *args, **kwargs):
+<pre><code class="python">def fit(self, X, y):
     self.scores_ = []
     for reg_param in self.reg_param_list:
         est = ShrunkTreeRegressor(deepcopy(self.estimator_), reg_param)

@@ -8,25 +8,32 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
+from imodels.util import checks
+
 
 class ShrunkTree(BaseEstimator):
     """Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.
     """
 
     def __init__(self, estimator_: BaseEstimator, reg_param: float = 1):
+        """
+        Params
+        ------
+        reg_param: float
+            Higher is more regularization (can be arbitrarily large, should not be < 0)
+        """
         super().__init__()
         self.reg_param = reg_param
         # print('est', estimator_)
         self.estimator_ = estimator_
         self._init_prediction_task()
 
-    # (max_depth=max_depth)
+        # (max_depth=max_depth)
 
-    # if checks.check_is_fitted(self.estimator_):
-    #     self.shrink()
+        if checks.check_is_fitted(self.estimator_):
+            self.shrink()
 
     def __init__prediction_task(self):
-
         self.prediction_task = 'regression'
 
     def fit(self, *args, **kwargs):
@@ -70,6 +77,14 @@ class ShrunkTree(BaseEstimator):
                 self.shrink_tree(tree, reg_param, right,
                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
 
+                # edit the non-leaf nodes for later visualization (doesn't effect predictions)
+                """
+                if self.prediction_task == 'regression':
+                    tree.value[i][0, 0] = parent_val + val_new
+                else:
+                    pass  # not sure exactly what to put here
+                """
+
         return tree
 
     def shrink(self):
@@ -111,7 +126,9 @@ class ShrunkTreeClassifier(ShrunkTree):
 class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def __init__(self, estimator_: BaseEstimator,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], max_leaf_nodes: int = None,
-                 cv: int = 3, scoring=None,*args,**kwargs):
+                 cv: int = 3, scoring=None, *args, **kwargs):
+        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
+        """
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -125,7 +142,7 @@ class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param,max_leaf_nodes = max_leaf_nodes)
+            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param, max_leaf_nodes=max_leaf_nodes)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -135,7 +152,9 @@ class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
 class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
     def __init__(self, estimator_: BaseEstimator,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-                 cv: int = 3, scoring=None,*args,**kwargs):
+                 cv: int = 3, scoring=None, *args, **kwargs):
+        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
+        """
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -182,7 +201,7 @@ class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
 
 if __name__ == '__main__':
     np.random.seed(15)
-    #X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
+    # X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
     X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
     # X, y = datasets.load_diabetes(return_X_y=True)  # regression
     # X = np.random.randn(500, 10)
@@ -205,8 +224,8 @@ if __name__ == '__main__':
 
     # m = ShrunkTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
     # m = ShrunkTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
-    m = ShrunkTreeRegressorCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=20, random_state=42), 
-                              reg_param_list=[0.1, 1, 10, 100], max_leaf_nodes = 20)
+    m = ShrunkTreeRegressorCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=20, random_state=42),
+                              reg_param_list=[0.1, 1, 10, 100], max_leaf_nodes=20)
     # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
 
     m.fit(X_train, y_train)
