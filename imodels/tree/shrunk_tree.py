@@ -177,30 +177,6 @@ class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
         super().fit(X=X, y=y)
 
 
-# class ShrunkTreeCV(ShrunkTree):
-#    def __init__(self, estimator_: BaseEstimator,
-#                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-#                 cv: int = 3, scoring=None):
-#        super().__init__(estimator_, reg_param=None)
-#        self.reg_param_list = np.array(reg_param_list)
-#        self.cv = cv
-#        self.scoring = scoring
-# print('estimator', self.estimator_,
-#       'checks.check_is_fitted(estimator)', checks.check_is_fitted(self.estimator_))
-# if checks.check_is_fitted(self.estimator_):
-#     raise Warning('Passed an already fitted estimator,'
-#                   'but shrinking not applied until fit method is called.')
-
-#    def fit(self, X, y, *args, **kwargs):
-#        self.scores_ = []
-#        for reg_param in self.reg_param_list:
-#            est = ShrunkTree(deepcopy(self.estimator_), reg_param)
-#            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
-#            self.scores_.append(np.mean(cv_scores))
-#        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-#        super().fit(X=X, y=y)
-
-
 if __name__ == '__main__':
     np.random.seed(15)
     # X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
