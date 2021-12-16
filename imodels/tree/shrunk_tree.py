@@ -43,6 +43,8 @@ class ShrunkTree(BaseEstimator):
     def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         """Shrink the tree
         """
+        if reg_param is None: 
+            reg_param = 1.0
         left = tree.children_left[i]
         right = tree.children_right[i]
         is_leaf = left == right
@@ -222,10 +224,14 @@ if __name__ == '__main__':
     print('score', m.score(X_test, y_test))
     print('running again....')
 
+    
+    x = DecisionTreeRegressor(random_state = 42, ccp_alpha = 0.3)
+    x.fit(X_train,y_train)
+    
     # m = ShrunkTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
     # m = ShrunkTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
     m = ShrunkTreeRegressorCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=20, random_state=42),
-                              reg_param_list=[0.1, 1, 10, 100], max_leaf_nodes=20)
+                              reg_param_list=[0.1, 1, 2,5,10,25,50,100])
     # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
 
     m.fit(X_train, y_train)
