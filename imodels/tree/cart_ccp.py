@@ -13,7 +13,7 @@ sys.path.append(".")
 from shrunk_tree import ShrunkTreeRegressor,ShrunkTreeClassifier
 
 class DecisionTreeClassifierCCP(DecisionTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1):
+    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1,*args,**kwargs):
         self.desired_complexity = desired_complexity
         #print('est', estimator_)
         self.estimator_ = estimator_
@@ -78,7 +78,7 @@ class DecisionTreeClassifierCCP(DecisionTreeClassifier):
         
 class DecisionTreeRegressorCCP(BaseEstimator):
     
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1):
+    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1,*args,**kwargs):
         self.desired_complexity = desired_complexity
         #print('est', estimator_)
         self.estimator_ = estimator_
