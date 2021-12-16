@@ -34,20 +34,36 @@ class DecisionTreeClassifierCCP(DecisionTreeClassifier):
      #   params_for_fitting['ccp_alpha'] = closest_alpha
      #   self.estimator_.set_params(**params_for_fitting)
      #   self.estimator_.fit(X,y,*args, **kwargs)
-    
-        
+
     def _get_alpha(self,X,y,sample_weight = None,*args,**kwargs):
         path = self.estimator_.cost_complexity_pruning_path(X,y)
         ccp_alphas, impurities = path.ccp_alphas, path.impurities
         complexities = {}
-        for alpha in ccp_alphas: 
+        low = 0 
+        high = len(ccp_alphas) - 1 
+        cur = 0 
+        while low <= high:
+            cur = (high + low) //2
             est_params = self.estimator_.get_params()
-            est_params['ccp_alpha'] = alpha
+            est_params['ccp_alpha'] = ccp_alphas[cur]
             copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
             copied_estimator.fit(X, y)
-            complexities[alpha] = self._get_complexity(copied_estimator,self.complexity_measure)
-        closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
-        self.alpha = closest_alpha
+            if self._get_complexity(copied_estimator,self.complexity_measure) < self.desired_complexity:
+                high = cur - 1
+            elif self._get_complexity(copied_estimator,self.complexity_measure) > self.desired_complexity:
+                low = cur + 1
+            else:
+                break
+        self.alpha = ccp_alphas[cur]
+        
+        #for alpha in ccp_alphas: 
+        #    est_params = self.estimator_.get_params()
+        #    est_params['ccp_alpha'] = alpha
+        #    copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
+        #    copied_estimator.fit(X, y)
+        #    complexities[alpha] = self._get_complexity(copied_estimator,self.complexity_measure)
+        #closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+        #self.alpha = closest_alpha
     
     def fit(self,X,y,sample_weight=None,*args,**kwargs):
         params_for_fitting = self.estimator_.get_params()
@@ -90,14 +106,33 @@ class DecisionTreeRegressorCCP(BaseEstimator):
         path = self.estimator_.cost_complexity_pruning_path(X,y)
         ccp_alphas, impurities = path.ccp_alphas, path.impurities
         complexities = {}
-        for alpha in ccp_alphas: 
+        low = 0 
+        high = len(ccp_alphas) - 1 
+        cur = 0 
+        while low <= high:
+            cur = (high + low) //2
             est_params = self.estimator_.get_params()
-            est_params['ccp_alpha'] = alpha
+            est_params['ccp_alpha'] = ccp_alphas[cur]
             copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
             copied_estimator.fit(X, y)
-            complexities[alpha] = self._get_complexity(copied_estimator,self.complexity_measure)
-        closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
-        self.alpha = closest_alpha
+            if self._get_complexity(copied_estimator,self.complexity_measure) < self.desired_complexity:
+                high = cur - 1
+            elif self._get_complexity(copied_estimator,self.complexity_measure) > self.desired_complexity:
+                low = cur + 1
+            else:
+                break
+        self.alpha = ccp_alphas[cur]
+      #  path = self.estimator_.cost_complexity_pruning_path(X,y)
+      #  ccp_alphas, impurities = path.ccp_alphas, path.impurities
+      #  complexities = {}
+      #  for alpha in ccp_alphas: 
+      #      est_params = self.estimator_.get_params()
+      #      est_params['ccp_alpha'] = alpha
+      #      copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
+      #      copied_estimator.fit(X, y)
+      #      complexities[alpha] = self._get_complexity(copied_estimator,self.complexity_measure)
+      #  closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+      #  self.alpha = closest_alpha
     
     def fit(self,X,y,sample_weight=None):
         params_for_fitting = self.estimator_.get_params()
@@ -163,7 +198,6 @@ class ShrunkDecisionTreeClassifierCCP_CV(ShrunkTreeClassifier):
         
 
 if __name__ == '__main__':
-    f = partial(DecireeClassifierCCP(estimator_=DecisionTreeClassifier(random_state = 1),desired_complexity = 10,complexity_measure = 'max_leaf_nodes'))
     m = DecisionTreeClassifierCCP(estimator_=DecisionTreeClassifier(random_state = 1),desired_complexity = 10,complexity_measure = 'max_leaf_nodes')
     #X,y = make_friedman1() #For regression 
     X, y = datasets.load_breast_cancer(return_X_y=True)
