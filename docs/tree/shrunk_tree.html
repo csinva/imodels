@@ -71,6 +71,8 @@ class ShrunkTree(BaseEstimator):
     def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         &#34;&#34;&#34;Shrink the tree
         &#34;&#34;&#34;
+        if reg_param is None: 
+            reg_param = 1.0
         left = tree.children_left[i]
         right = tree.children_right[i]
         is_leaf = left == right
@@ -153,7 +155,7 @@ class ShrunkTreeClassifier(ShrunkTree):
 
 class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], max_leaf_nodes: int = None,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  cv: int = 3, scoring=None, *args, **kwargs):
         &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
         &#34;&#34;&#34;
@@ -170,7 +172,7 @@ class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param, max_leaf_nodes=max_leaf_nodes)
+            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -203,30 +205,6 @@ class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
         super().fit(X=X, y=y)
 
 
-# class ShrunkTreeCV(ShrunkTree):
-#    def __init__(self, estimator_: BaseEstimator,
-#                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-#                 cv: int = 3, scoring=None):
-#        super().__init__(estimator_, reg_param=None)
-#        self.reg_param_list = np.array(reg_param_list)
-#        self.cv = cv
-#        self.scoring = scoring
-# print(&#39;estimator&#39;, self.estimator_,
-#       &#39;checks.check_is_fitted(estimator)&#39;, checks.check_is_fitted(self.estimator_))
-# if checks.check_is_fitted(self.estimator_):
-#     raise Warning(&#39;Passed an already fitted estimator,&#39;
-#                   &#39;but shrinking not applied until fit method is called.&#39;)
-
-#    def fit(self, X, y, *args, **kwargs):
-#        self.scores_ = []
-#        for reg_param in self.reg_param_list:
-#            est = ShrunkTree(deepcopy(self.estimator_), reg_param)
-#            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
-#            self.scores_.append(np.mean(cv_scores))
-#        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-#        super().fit(X=X, y=y)
-
-
 if __name__ == &#39;__main__&#39;:
     np.random.seed(15)
     # X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
@@ -250,10 +228,14 @@ if __name__ == &#39;__main__&#39;:
     print(&#39;score&#39;, m.score(X_test, y_test))
     print(&#39;running again....&#39;)
 
+    
+    x = DecisionTreeRegressor(random_state = 42, ccp_alpha = 0.3)
+    x.fit(X_train,y_train)
+    
     # m = ShrunkTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
     # m = ShrunkTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
     m = ShrunkTreeRegressorCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=20, random_state=42),
-                              reg_param_list=[0.1, 1, 10, 100], max_leaf_nodes=20)
+                              reg_param_list=[0.1, 1, 2,5,10,25,50,100])
     # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
 
     m.fit(X_train, y_train)
@@ -316,6 +298,8 @@ Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</
     def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         &#34;&#34;&#34;Shrink the tree
         &#34;&#34;&#34;
+        if reg_param is None: 
+            reg_param = 1.0
         left = tree.children_left[i]
         right = tree.children_right[i]
         is_leaf = left == right
@@ -487,6 +471,8 @@ Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</
 <pre><code class="python">def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
     &#34;&#34;&#34;Shrink the tree
     &#34;&#34;&#34;
+    if reg_param is None: 
+        reg_param = 1.0
     left = tree.children_left[i]
     right = tree.children_right[i]
     is_leaf = left == right
@@ -558,6 +544,7 @@ Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV" href="cart_ccp.html#imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV">ShrunkDecisionTreeClassifierCCP_CV</a></li>
 <li><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifierCV" href="#imodels.tree.shrunk_tree.ShrunkTreeClassifierCV">ShrunkTreeClassifierCV</a></li>
 </ul>
 <h3>Inherited members</h3>
@@ -571,7 +558,7 @@ Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</
 </dd>
 <dt id="imodels.tree.shrunk_tree.ShrunkTreeClassifierCV"><code class="flex name class">
 <span>class <span class="ident">ShrunkTreeClassifierCV</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], max_leaf_nodes: int = None, cv: int = 3, scoring=None, *args, **kwargs)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
@@ -582,7 +569,7 @@ Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</
 </summary>
 <pre><code class="python">class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], max_leaf_nodes: int = None,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  cv: int = 3, scoring=None, *args, **kwargs):
         &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
         &#34;&#34;&#34;
@@ -599,7 +586,7 @@ Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param, max_leaf_nodes=max_leaf_nodes)
+            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -625,7 +612,7 @@ Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</
 <pre><code class="python">def fit(self, X, y, *args, **kwargs):
     self.scores_ = []
     for reg_param in self.reg_param_list:
-        est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param, max_leaf_nodes=max_leaf_nodes)
+        est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param)
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
     self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -666,6 +653,7 @@ Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV" href="cart_ccp.html#imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV">ShrunkDecisionTreeRegressorCCP_CV</a></li>
 <li><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressorCV" href="#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV">ShrunkTreeRegressorCV</a></li>
 </ul>
 <h3>Inherited members</h3>

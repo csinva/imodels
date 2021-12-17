@@ -26,99 +26,219 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from sklearn.tree import DecisionTreeClassifier, export_text, DecisionTreeRegressor
-from sklearn.base import BaseEstimator
-from sklearn import datasets
-from sklearn.datasets import make_friedman1,make_friedman2,make_friedman3
-from imodels.util.tree import compute_tree_complexity
-from copy import deepcopy
+<pre><code class="python">from copy import deepcopy
+from typing import List
 
+import numpy as np
+from sklearn import datasets
+from sklearn.base import BaseEstimator
+from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.tree import DecisionTreeClassifier
+
+from imodels.tree.shrunk_tree import ShrunkTreeRegressor, ShrunkTreeClassifier
+from imodels.util.tree import compute_tree_complexity
 
 
 class DecisionTreeClassifierCCP(DecisionTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1):
+    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
+                 **kwargs):
         self.desired_complexity = desired_complexity
-        #print(&#39;est&#39;, estimator_)
+        # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
-    
-    def fit(self,X,y,sample_weight=None,*args, **kwargs):
-        path = self.estimator_.cost_complexity_pruning_path(X,y)
+        self.complexity_measure = complexity_measure
+
+    # def fit(self,X,y,sample_weight=None,*args, **kwargs):
+    #    path = self.estimator_.cost_complexity_pruning_path(X,y)
+    #    ccp_alphas, impurities = path.ccp_alphas, path.impurities
+    #    complexities = {}
+    #    for alpha in ccp_alphas: 
+    #        est_params = self.estimator_.get_params()
+    #        est_params[&#39;ccp_alpha&#39;] = alpha
+    ##        copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
+    #       copied_estimator.fit(X, y)
+    #       complexities[alpha] = self._get_complexity(copied_estimator)
+    #   closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+    #   params_for_fitting = self.estimator_.get_params()
+    #   params_for_fitting[&#39;ccp_alpha&#39;] = closest_alpha
+    #   self.estimator_.set_params(**params_for_fitting)
+    #   self.estimator_.fit(X,y,*args, **kwargs)
+
+    def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
+        path = self.estimator_.cost_complexity_pruning_path(X, y)
         ccp_alphas, impurities = path.ccp_alphas, path.impurities
         complexities = {}
-        for alpha in ccp_alphas: 
+        low = 0
+        high = len(ccp_alphas) - 1
+        cur = 0
+        while low &lt;= high:
+            cur = (high + low) // 2
             est_params = self.estimator_.get_params()
-            est_params[&#39;ccp_alpha&#39;] = alpha
-            copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
+            est_params[&#39;ccp_alpha&#39;] = ccp_alphas[cur]
+            copied_estimator = deepcopy(self.estimator_).set_params(**est_params)
             copied_estimator.fit(X, y)
-            complexities[alpha] = self._get_complexity(copied_estimator)
-        closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+            if self._get_complexity(copied_estimator, self.complexity_measure) &lt; self.desired_complexity:
+                high = cur - 1
+            elif self._get_complexity(copied_estimator, self.complexity_measure) &gt; self.desired_complexity:
+                low = cur + 1
+            else:
+                break
+        self.alpha = ccp_alphas[cur]
+
+        # for alpha in ccp_alphas:
+        #    est_params = self.estimator_.get_params()
+        #    est_params[&#39;ccp_alpha&#39;] = alpha
+        #    copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
+        #    copied_estimator.fit(X, y)
+        #    complexities[alpha] = self._get_complexity(copied_estimator,self.complexity_measure)
+        # closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+        # self.alpha = closest_alpha
+
+    def fit(self, X, y, sample_weight=None, *args, **kwargs):
         params_for_fitting = self.estimator_.get_params()
-        params_for_fitting[&#39;ccp_alpha&#39;] = closest_alpha
+        self._get_alpha(X, y, sample_weight, *args, **kwargs)
+        params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
-        self.estimator_.fit(X,y,*args, **kwargs)
-    
-    def _get_complexity(self,BaseEstimator):
-        return compute_tree_complexity(BaseEstimator.tree_)
-    
+        self.estimator_.fit(X, y, *args, **kwargs)
+
+    def _get_complexity(self, BaseEstimator, complexity_measure):
+        return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
+
     def predict_proba(self, *args, **kwargs):
         if hasattr(self.estimator_, &#39;predict_proba&#39;):
             return self.estimator_.predict_proba(*args, **kwargs)
         else:
             return NotImplemented
 
-    
-    def predict(self,X,*args, **kwargs):
-        return self.estimator_.predict(X,*args, **kwargs)
-    
-    def score(self, *args, **kwargs):
-        if hasattr(self.estimator_, &#39;score&#39;):
-            return self.estimator_.score(*args, **kwargs)
-        else:
-            return NotImplemented
-        
-        
-class DecisionTreeRegressorCCP(BaseEstimator):
-    
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1):
-        self.desired_complexity = desired_complexity
-        #print(&#39;est&#39;, estimator_)
-        self.estimator_ = estimator_
-    
-    def fit(self,X,y,sample_weight=None,*args, **kwargs):
-        path = self.estimator_.cost_complexity_pruning_path(X,y)
-        ccp_alphas, impurities = path.ccp_alphas, path.impurities
-        complexities = {}
-        for alpha in ccp_alphas: 
-            est_params = self.estimator_.get_params()
-            est_params[&#39;ccp_alpha&#39;] = alpha
-            copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
-            copied_estimator.fit(X, y)
-            complexities[alpha] = self._get_complexity(copied_estimator)
-        closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
-        params_for_fitting = self.estimator_.get_params()
-        params_for_fitting[&#39;ccp_alpha&#39;] = closest_alpha
-        self.estimator_.set_params(**params_for_fitting)
-        self.estimator_.fit(X,y,*args, **kwargs)
-    
-    def _get_complexity(self,BaseEstimator):
-        return compute_tree_complexity(BaseEstimator.tree_)
-    
-    def predict(self,X,*args, **kwargs):
-        return self.estimator_.predict(X,*args, **kwargs)
-    
+    def predict(self, X, *args, **kwargs):
+        return self.estimator_.predict(X, *args, **kwargs)
+
     def score(self, *args, **kwargs):
         if hasattr(self.estimator_, &#39;score&#39;):
             return self.estimator_.score(*args, **kwargs)
         else:
             return NotImplemented
 
+
+class DecisionTreeRegressorCCP(BaseEstimator):
+
+    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
+                 **kwargs):
+        self.desired_complexity = desired_complexity
+        # print(&#39;est&#39;, estimator_)
+        self.estimator_ = estimator_
+        self.alpha = 0.0
+        self.complexity_measure = complexity_measure
+
+    def _get_alpha(self, X, y, sample_weight=None):
+        path = self.estimator_.cost_complexity_pruning_path(X, y)
+        ccp_alphas, impurities = path.ccp_alphas, path.impurities
+        complexities = {}
+        low = 0
+        high = len(ccp_alphas) - 1
+        cur = 0
+        while low &lt;= high:
+            cur = (high + low) // 2
+            est_params = self.estimator_.get_params()
+            est_params[&#39;ccp_alpha&#39;] = ccp_alphas[cur]
+            copied_estimator = deepcopy(self.estimator_).set_params(**est_params)
+            copied_estimator.fit(X, y)
+            if self._get_complexity(copied_estimator, self.complexity_measure) &lt; self.desired_complexity:
+                high = cur - 1
+            elif self._get_complexity(copied_estimator, self.complexity_measure) &gt; self.desired_complexity:
+                low = cur + 1
+            else:
+                break
+        self.alpha = ccp_alphas[cur]
+
+    #  path = self.estimator_.cost_complexity_pruning_path(X,y)
+    #  ccp_alphas, impurities = path.ccp_alphas, path.impurities
+    #  complexities = {}
+    #  for alpha in ccp_alphas:
+    #      est_params = self.estimator_.get_params()
+    #      est_params[&#39;ccp_alpha&#39;] = alpha
+    #      copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
+    #      copied_estimator.fit(X, y)
+    #      complexities[alpha] = self._get_complexity(copied_estimator,self.complexity_measure)
+    #  closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+    #  self.alpha = closest_alpha
+
+    def fit(self, X, y, sample_weight=None):
+        params_for_fitting = self.estimator_.get_params()
+        self._get_alpha(X, y, sample_weight)
+        params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
+        self.estimator_.set_params(**params_for_fitting)
+        self.estimator_.fit(X, y)
+
+    def _get_complexity(self, BaseEstimator, complexity_measure):
+        return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
+
+    def predict(self, X, *args, **kwargs):
+        return self.estimator_.predict(X, *args, **kwargs)
+
+    def score(self, *args, **kwargs):
+        if hasattr(self.estimator_, &#39;score&#39;):
+            return self.estimator_.score(*args, **kwargs)
+        else:
+            return NotImplemented
+
+
+class ShrunkDecisionTreeRegressorCCP_CV(ShrunkTreeRegressor):
+    def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
+        super().__init__(estimator_=estimator_, reg_param=None)
+        self.reg_param_list = np.array(reg_param_list)
+        self.cv = cv
+        self.scoring = scoring
+        self.desired_complexity = desired_complexity
+
+    def fit(self, X, y, sample_weight=None, *args, **kwargs):
+        m = DecisionTreeRegressorCCP(self.estimator_, desired_complexity=self.desired_complexity)
+        m.fit(X, y, sample_weight, *args, **kwargs)
+        self.scores_ = []
+        for reg_param in self.reg_param_list:
+            est = ShrunkTreeRegressor(deepcopy(m.estimator_), reg_param)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            self.scores_.append(np.mean(cv_scores))
+        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        super().fit(X=X, y=y)
+
+
+class ShrunkDecisionTreeClassifierCCP_CV(ShrunkTreeClassifier):
+    def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
+        super().__init__(estimator_=estimator_, reg_param=None)
+        self.reg_param_list = np.array(reg_param_list)
+        self.cv = cv
+        self.scoring = scoring
+        self.desired_complexity = desired_complexity
+
+    def fit(self, X, y, sample_weight=None, *args, **kwargs):
+        m = DecisionTreeClassifierCCP(self.estimator_, desired_complexity=self.desired_complexity)
+        m.fit(X, y, sample_weight, *args, **kwargs)
+        self.scores_ = []
+        for reg_param in self.reg_param_list:
+            est = ShrunkTreeClassifier(deepcopy(m.estimator_), reg_param)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            self.scores_.append(np.mean(cv_scores))
+        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        super().fit(X=X, y=y)
+
+
 if __name__ == &#39;__main__&#39;:
-    m = DecisionTreeClassifierCCP(estimator_=DecisionTreeClassifier(min_samples_leaf = 5),desired_complexity = 10)
-    #X,y = make_friedman1()
+    m = DecisionTreeClassifierCCP(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
+                                  complexity_measure=&#39;max_leaf_nodes&#39;)
+    # X,y = make_friedman1() #For regression
     X, y = datasets.load_breast_cancer(return_X_y=True)
-    m.fit(X,y)
-    m.predict(X)
-    m.score(X,y)</code></pre>
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.33, random_state=42)
+    m.fit(X_train, y_train)
+    m.predict(X_test)
+    print(m.score(X_test, y_test))
+
+    m = ShrunkDecisionTreeClassifierCCP_CV(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
+                                           reg_param_list=[0.0, 0.1, 1.0, 5.0, 10.0, 25.0, 50.0, 100.0])
+    m.fit(X_train, y_train)
+    print(m.score(X_test, y_test))</code></pre>
 </details>
 </section>
 <section>
@@ -132,7 +252,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="imodels.tree.cart_ccp.DecisionTreeClassifierCCP"><code class="flex name class">
 <span>class <span class="ident">DecisionTreeClassifierCCP</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, desired_complexity: int = 1)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A decision tree classifier.</p>
@@ -359,40 +479,78 @@ array([ 1.     ,  0.93...,  0.86...,  0.93...,  0.93...,
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DecisionTreeClassifierCCP(DecisionTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1):
+    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
+                 **kwargs):
         self.desired_complexity = desired_complexity
-        #print(&#39;est&#39;, estimator_)
+        # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
-    
-    def fit(self,X,y,sample_weight=None,*args, **kwargs):
-        path = self.estimator_.cost_complexity_pruning_path(X,y)
+        self.complexity_measure = complexity_measure
+
+    # def fit(self,X,y,sample_weight=None,*args, **kwargs):
+    #    path = self.estimator_.cost_complexity_pruning_path(X,y)
+    #    ccp_alphas, impurities = path.ccp_alphas, path.impurities
+    #    complexities = {}
+    #    for alpha in ccp_alphas: 
+    #        est_params = self.estimator_.get_params()
+    #        est_params[&#39;ccp_alpha&#39;] = alpha
+    ##        copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
+    #       copied_estimator.fit(X, y)
+    #       complexities[alpha] = self._get_complexity(copied_estimator)
+    #   closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+    #   params_for_fitting = self.estimator_.get_params()
+    #   params_for_fitting[&#39;ccp_alpha&#39;] = closest_alpha
+    #   self.estimator_.set_params(**params_for_fitting)
+    #   self.estimator_.fit(X,y,*args, **kwargs)
+
+    def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
+        path = self.estimator_.cost_complexity_pruning_path(X, y)
         ccp_alphas, impurities = path.ccp_alphas, path.impurities
         complexities = {}
-        for alpha in ccp_alphas: 
+        low = 0
+        high = len(ccp_alphas) - 1
+        cur = 0
+        while low &lt;= high:
+            cur = (high + low) // 2
             est_params = self.estimator_.get_params()
-            est_params[&#39;ccp_alpha&#39;] = alpha
-            copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
+            est_params[&#39;ccp_alpha&#39;] = ccp_alphas[cur]
+            copied_estimator = deepcopy(self.estimator_).set_params(**est_params)
             copied_estimator.fit(X, y)
-            complexities[alpha] = self._get_complexity(copied_estimator)
-        closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+            if self._get_complexity(copied_estimator, self.complexity_measure) &lt; self.desired_complexity:
+                high = cur - 1
+            elif self._get_complexity(copied_estimator, self.complexity_measure) &gt; self.desired_complexity:
+                low = cur + 1
+            else:
+                break
+        self.alpha = ccp_alphas[cur]
+
+        # for alpha in ccp_alphas:
+        #    est_params = self.estimator_.get_params()
+        #    est_params[&#39;ccp_alpha&#39;] = alpha
+        #    copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
+        #    copied_estimator.fit(X, y)
+        #    complexities[alpha] = self._get_complexity(copied_estimator,self.complexity_measure)
+        # closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+        # self.alpha = closest_alpha
+
+    def fit(self, X, y, sample_weight=None, *args, **kwargs):
         params_for_fitting = self.estimator_.get_params()
-        params_for_fitting[&#39;ccp_alpha&#39;] = closest_alpha
+        self._get_alpha(X, y, sample_weight, *args, **kwargs)
+        params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
-        self.estimator_.fit(X,y,*args, **kwargs)
-    
-    def _get_complexity(self,BaseEstimator):
-        return compute_tree_complexity(BaseEstimator.tree_)
-    
+        self.estimator_.fit(X, y, *args, **kwargs)
+
+    def _get_complexity(self, BaseEstimator, complexity_measure):
+        return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
+
     def predict_proba(self, *args, **kwargs):
         if hasattr(self.estimator_, &#39;predict_proba&#39;):
             return self.estimator_.predict_proba(*args, **kwargs)
         else:
             return NotImplemented
 
-    
-    def predict(self,X,*args, **kwargs):
-        return self.estimator_.predict(X,*args, **kwargs)
-    
+    def predict(self, X, *args, **kwargs):
+        return self.estimator_.predict(X, *args, **kwargs)
+
     def score(self, *args, **kwargs):
         if hasattr(self.estimator_, &#39;score&#39;):
             return self.estimator_.score(*args, **kwargs)
@@ -449,21 +607,12 @@ It will be removed in 1.1 (renaming of 0.26).</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self,X,y,sample_weight=None,*args, **kwargs):
-    path = self.estimator_.cost_complexity_pruning_path(X,y)
-    ccp_alphas, impurities = path.ccp_alphas, path.impurities
-    complexities = {}
-    for alpha in ccp_alphas: 
-        est_params = self.estimator_.get_params()
-        est_params[&#39;ccp_alpha&#39;] = alpha
-        copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
-        copied_estimator.fit(X, y)
-        complexities[alpha] = self._get_complexity(copied_estimator)
-    closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+<pre><code class="python">def fit(self, X, y, sample_weight=None, *args, **kwargs):
     params_for_fitting = self.estimator_.get_params()
-    params_for_fitting[&#39;ccp_alpha&#39;] = closest_alpha
+    self._get_alpha(X, y, sample_weight, *args, **kwargs)
+    params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
     self.estimator_.set_params(**params_for_fitting)
-    self.estimator_.fit(X,y,*args, **kwargs)</code></pre>
+    self.estimator_.fit(X, y, *args, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeClassifierCCP.predict"><code class="name flex">
@@ -493,8 +642,8 @@ Don't use this parameter unless you know what you do.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self,X,*args, **kwargs):
-    return self.estimator_.predict(X,*args, **kwargs)</code></pre>
+<pre><code class="python">def predict(self, X, *args, **kwargs):
+    return self.estimator_.predict(X, *args, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeClassifierCCP.predict_proba"><code class="name flex">
@@ -569,7 +718,7 @@ each label set be correctly predicted.</p>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeRegressorCCP"><code class="flex name class">
 <span>class <span class="ident">DecisionTreeRegressorCCP</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, desired_complexity: int = 1)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -582,34 +731,61 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DecisionTreeRegressorCCP(BaseEstimator):
-    
-    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1):
+
+    def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
+                 **kwargs):
         self.desired_complexity = desired_complexity
-        #print(&#39;est&#39;, estimator_)
+        # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
-    
-    def fit(self,X,y,sample_weight=None,*args, **kwargs):
-        path = self.estimator_.cost_complexity_pruning_path(X,y)
+        self.alpha = 0.0
+        self.complexity_measure = complexity_measure
+
+    def _get_alpha(self, X, y, sample_weight=None):
+        path = self.estimator_.cost_complexity_pruning_path(X, y)
         ccp_alphas, impurities = path.ccp_alphas, path.impurities
         complexities = {}
-        for alpha in ccp_alphas: 
+        low = 0
+        high = len(ccp_alphas) - 1
+        cur = 0
+        while low &lt;= high:
+            cur = (high + low) // 2
             est_params = self.estimator_.get_params()
-            est_params[&#39;ccp_alpha&#39;] = alpha
-            copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
+            est_params[&#39;ccp_alpha&#39;] = ccp_alphas[cur]
+            copied_estimator = deepcopy(self.estimator_).set_params(**est_params)
             copied_estimator.fit(X, y)
-            complexities[alpha] = self._get_complexity(copied_estimator)
-        closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+            if self._get_complexity(copied_estimator, self.complexity_measure) &lt; self.desired_complexity:
+                high = cur - 1
+            elif self._get_complexity(copied_estimator, self.complexity_measure) &gt; self.desired_complexity:
+                low = cur + 1
+            else:
+                break
+        self.alpha = ccp_alphas[cur]
+
+    #  path = self.estimator_.cost_complexity_pruning_path(X,y)
+    #  ccp_alphas, impurities = path.ccp_alphas, path.impurities
+    #  complexities = {}
+    #  for alpha in ccp_alphas:
+    #      est_params = self.estimator_.get_params()
+    #      est_params[&#39;ccp_alpha&#39;] = alpha
+    #      copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
+    #      copied_estimator.fit(X, y)
+    #      complexities[alpha] = self._get_complexity(copied_estimator,self.complexity_measure)
+    #  closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+    #  self.alpha = closest_alpha
+
+    def fit(self, X, y, sample_weight=None):
         params_for_fitting = self.estimator_.get_params()
-        params_for_fitting[&#39;ccp_alpha&#39;] = closest_alpha
+        self._get_alpha(X, y, sample_weight)
+        params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
-        self.estimator_.fit(X,y,*args, **kwargs)
-    
-    def _get_complexity(self,BaseEstimator):
-        return compute_tree_complexity(BaseEstimator.tree_)
-    
-    def predict(self,X,*args, **kwargs):
-        return self.estimator_.predict(X,*args, **kwargs)
-    
+        self.estimator_.fit(X, y)
+
+    def _get_complexity(self, BaseEstimator, complexity_measure):
+        return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
+
+    def predict(self, X, *args, **kwargs):
+        return self.estimator_.predict(X, *args, **kwargs)
+
     def score(self, *args, **kwargs):
         if hasattr(self.estimator_, &#39;score&#39;):
             return self.estimator_.score(*args, **kwargs)
@@ -623,7 +799,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, *args, **kwargs)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -631,21 +807,12 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self,X,y,sample_weight=None,*args, **kwargs):
-    path = self.estimator_.cost_complexity_pruning_path(X,y)
-    ccp_alphas, impurities = path.ccp_alphas, path.impurities
-    complexities = {}
-    for alpha in ccp_alphas: 
-        est_params = self.estimator_.get_params()
-        est_params[&#39;ccp_alpha&#39;] = alpha
-        copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
-        copied_estimator.fit(X, y)
-        complexities[alpha] = self._get_complexity(copied_estimator)
-    closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
+<pre><code class="python">def fit(self, X, y, sample_weight=None):
     params_for_fitting = self.estimator_.get_params()
-    params_for_fitting[&#39;ccp_alpha&#39;] = closest_alpha
+    self._get_alpha(X, y, sample_weight)
+    params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
     self.estimator_.set_params(**params_for_fitting)
-    self.estimator_.fit(X,y,*args, **kwargs)</code></pre>
+    self.estimator_.fit(X, y)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.predict"><code class="name flex">
@@ -657,8 +824,8 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self,X,*args, **kwargs):
-    return self.estimator_.predict(X,*args, **kwargs)</code></pre>
+<pre><code class="python">def predict(self, X, *args, **kwargs):
+    return self.estimator_.predict(X, *args, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.score"><code class="name flex">
@@ -678,6 +845,150 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 </details>
 </dd>
 </dl>
+</dd>
+<dt id="imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV"><code class="flex name class">
+<span>class <span class="ident">ShrunkDecisionTreeClassifierCCP_CV</span></span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
+<h2 id="params">Params</h2>
+<p>reg_param: float
+Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShrunkDecisionTreeClassifierCCP_CV(ShrunkTreeClassifier):
+    def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
+        super().__init__(estimator_=estimator_, reg_param=None)
+        self.reg_param_list = np.array(reg_param_list)
+        self.cv = cv
+        self.scoring = scoring
+        self.desired_complexity = desired_complexity
+
+    def fit(self, X, y, sample_weight=None, *args, **kwargs):
+        m = DecisionTreeClassifierCCP(self.estimator_, desired_complexity=self.desired_complexity)
+        m.fit(X, y, sample_weight, *args, **kwargs)
+        self.scores_ = []
+        for reg_param in self.reg_param_list:
+            est = ShrunkTreeClassifier(deepcopy(m.estimator_), reg_param)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            self.scores_.append(np.mean(cv_scores))
+        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        super().fit(X=X, y=y)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifier" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifier">ShrunkTreeClassifier</a></li>
+<li><a title="imodels.tree.shrunk_tree.ShrunkTree" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTree">ShrunkTree</a></li>
+<li>sklearn.base.BaseEstimator</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, sample_weight=None, *args, **kwargs):
+    m = DecisionTreeClassifierCCP(self.estimator_, desired_complexity=self.desired_complexity)
+    m.fit(X, y, sample_weight, *args, **kwargs)
+    self.scores_ = []
+    for reg_param in self.reg_param_list:
+        est = ShrunkTreeClassifier(deepcopy(m.estimator_), reg_param)
+        cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+        self.scores_.append(np.mean(cv_scores))
+    self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+    super().fit(X=X, y=y)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifier" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifier">ShrunkTreeClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifier.shrink_tree" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTree.shrink_tree">shrink_tree</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV"><code class="flex name class">
+<span>class <span class="ident">ShrunkDecisionTreeRegressorCCP_CV</span></span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
+<h2 id="params">Params</h2>
+<p>reg_param: float
+Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShrunkDecisionTreeRegressorCCP_CV(ShrunkTreeRegressor):
+    def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
+        super().__init__(estimator_=estimator_, reg_param=None)
+        self.reg_param_list = np.array(reg_param_list)
+        self.cv = cv
+        self.scoring = scoring
+        self.desired_complexity = desired_complexity
+
+    def fit(self, X, y, sample_weight=None, *args, **kwargs):
+        m = DecisionTreeRegressorCCP(self.estimator_, desired_complexity=self.desired_complexity)
+        m.fit(X, y, sample_weight, *args, **kwargs)
+        self.scores_ = []
+        for reg_param in self.reg_param_list:
+            est = ShrunkTreeRegressor(deepcopy(m.estimator_), reg_param)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            self.scores_.append(np.mean(cv_scores))
+        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        super().fit(X=X, y=y)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressor" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressor">ShrunkTreeRegressor</a></li>
+<li><a title="imodels.tree.shrunk_tree.ShrunkTree" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTree">ShrunkTree</a></li>
+<li>sklearn.base.BaseEstimator</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, sample_weight=None, *args, **kwargs):
+    m = DecisionTreeRegressorCCP(self.estimator_, desired_complexity=self.desired_complexity)
+    m.fit(X, y, sample_weight, *args, **kwargs)
+    self.scores_ = []
+    for reg_param in self.reg_param_list:
+        est = ShrunkTreeRegressor(deepcopy(m.estimator_), reg_param)
+        cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+        self.scores_.append(np.mean(cv_scores))
+    self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+    super().fit(X=X, y=y)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressor" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressor">ShrunkTreeRegressor</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressor.shrink_tree" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTree.shrink_tree">shrink_tree</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -710,6 +1021,18 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.fit" href="#imodels.tree.cart_ccp.DecisionTreeRegressorCCP.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.predict" href="#imodels.tree.cart_ccp.DecisionTreeRegressorCCP.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.score" href="#imodels.tree.cart_ccp.DecisionTreeRegressorCCP.score">score</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV" href="#imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV">ShrunkDecisionTreeClassifierCCP_CV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV.fit" href="#imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV.fit">fit</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV" href="#imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV">ShrunkDecisionTreeRegressorCCP_CV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV.fit" href="#imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV.fit">fit</a></code></li>
 </ul>
 </li>
 </ul>
