@@ -2,8 +2,6 @@
 	<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"> </img>	 <br/>
 	Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use.
 </p>
-
-
 <p align="center">
   <a href="https://csinva.github.io/imodels/">docs</a> •
   <a href="#imodels-overview">imodels overview</a> •
@@ -22,8 +20,9 @@
 
 
 
-
 ## imodels overview
+
+<img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img>
 
 Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the `fit` and `predict` methods, same as standard scikit-learn models.
 
