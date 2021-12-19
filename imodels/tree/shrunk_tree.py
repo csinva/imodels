@@ -52,10 +52,10 @@ class ShrunkTree(BaseEstimator):
         if self.prediction_task == 'regression':
             val = tree.value[i][0, 0]
         else:
-            if(len(tree.value[i]) == 1):
-                val = tree.value[i][0,0]
-            else:
-                val = tree.value[i][0, 1] / (tree.value[i][0, 0] + tree.value[i][0, 1])  # binary classification
+            #if(len(tree.value[i]) == 1):
+            #    val = tree.value[i][0,0]
+            #else:
+            val = tree.value[i][0, 1] / (tree.value[i][0, 0] + tree.value[i][0, 1])  # binary classification
         # val = val[1] / val[2] # for binary cls
 
         # if root
@@ -74,11 +74,11 @@ class ShrunkTree(BaseEstimator):
                 if self.prediction_task == 'regression':
                     tree.value[i, 0, 0] = cum_sum
                 else:
-                    if len(tree.value[i] == 1):
-                        tree.value[i,0,0,] = cum_sum
-                    else:
-                        tree.value[i, 0, 1] = cum_sum
-                        tree.value[i, 0, 0] = 1.0 - cum_sum
+                    #if len(tree.value[i] == 1):
+                    #    tree.value[i,0,0,] = cum_sum
+                    #else:
+                    tree.value[i, 0, 1] = cum_sum
+                    tree.value[i, 0, 0] = 1.0 - cum_sum
             else:
                 self.shrink_tree(tree, reg_param, left,
                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
