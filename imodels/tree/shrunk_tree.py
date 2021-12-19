@@ -53,9 +53,10 @@ class ShrunkTree(BaseEstimator):
             val = tree.value[i][0, 0]
         else:
             #print(len(tree.value[i][0]))
-            if(len(tree.value[i][0]) == 1):
+            if len(tree.value[i][0]) == 1:
                 val = tree.value[i][0,0]
             else:
+                #print("OK")
                 val = tree.value[i][0, 1] / (tree.value[i][0, 0] + tree.value[i][0, 1])  # binary classification
         # val = val[1] / val[2] # for binary cls
 
@@ -75,11 +76,11 @@ class ShrunkTree(BaseEstimator):
                 if self.prediction_task == 'regression':
                     tree.value[i, 0, 0] = cum_sum
                 else:
-                    if len(tree.value[i][0] == 1):
+                    if len(tree.value[i][0]) == 1:
                         tree.value[i,0,0,] = cum_sum
                     else:
-                    	tree.value[i, 0, 1] = cum_sum
-                    	tree.value[i, 0, 0] = 1.0 - cum_sum
+                        tree.value[i, 0, 1] = cum_sum
+                        tree.value[i, 0, 0] = 1.0 - cum_sum
             else:
                 self.shrink_tree(tree, reg_param, left,
                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
@@ -87,12 +88,19 @@ class ShrunkTree(BaseEstimator):
                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
 
                 # edit the non-leaf nodes for later visualization (doesn't effect predictions)
-                """
+            
                 if self.prediction_task == 'regression':
                     tree.value[i][0, 0] = parent_val + val_new
                 else:
-                    pass  # not sure exactly what to put here
-                """
+                    if len(tree.value[i][0]) == 1:
+                        tree.value[i][0,0] = parent_val + val_new
+                    else:
+                        tree.value[i][0,1] = parent_val + val_new
+                        tree.value[i][0,0] = 1.0 - parent_val + val_new
+                        
+    
+                    #pass  # not sure exactly what to put here
+            
 
         return tree
 
