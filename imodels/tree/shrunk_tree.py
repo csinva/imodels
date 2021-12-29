@@ -8,6 +8,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.metrics import roc_auc_score,r2_score
 from imodels.util import checks
 
 
@@ -86,28 +87,22 @@ class ShrunkTree(BaseEstimator):
                         tree.value[i, 0, 0] = cum_sum
                     else:
                         #tree.value[i, 0, 0] = cum_sum/(1 + reg_param/n_samples)
-                        tree.value[i,0,0] = np.mean(y) + (val - np.mean(y))/(1 + reg_param/n_samples)
+                        tree.value[i,0,0] = tree.value[0][0,0] + (val - tree.value[0][0,0])/(1 + reg_param/n_samples)
                 else:
                     if len(tree.value[i][0]) == 1:
                         if self.shrinkage_scheme_ == 'node_based' or self.shrinkage_scheme_ == 'constant':
                             tree.value[i,0,0,] = cum_sum
                         else:
-                            tree.value[i,0,0,] = np.mean(y) + (val - np.mean(y))/(1 + reg_param/n_samples)
+                            tree.value[i,0,0,] = tree.value[0][0,0] + (val - tree.value[0][0,0])/(1 + reg_param/n_samples)
                     else:
                         if self.shrinkage_scheme_ == 'node_based' or  self.shrinkage_scheme_ == 'constant':
                             tree.value[i, 0, 1] = cum_sum
                             tree.value[i, 0, 0] = 1.0 - cum_sum
                         else:
-                            tree.value[i, 0, 1] = np.mean(y) + (val - np.mean(y))/(1 + reg_param/n_samples)
+                            root_prediction = tree.value[0][0, 1] / (tree.value[0][0, 0] + tree.value[0][0, 1])
+                            tree.value[i, 0, 1] = root_prediction + (val - root_prediction)/(1 + reg_param/n_samples)
                             tree.value[i, 0, 0] = 1.0 - tree.value[i, 0, 1]
             else:
-                self.shrink_tree(tree, reg_param, left,
-                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
-                self.shrink_tree(tree, reg_param, right,
-                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
-
-                # edit the non-leaf nodes for later visualization (doesn't effect predictions)
-            
                 if self.prediction_task == 'regression':
                     tree.value[i][0, 0] = parent_val + val_new
                 else:
@@ -116,11 +111,16 @@ class ShrunkTree(BaseEstimator):
                     else:
                         tree.value[i][0,1] = parent_val + val_new
                         tree.value[i][0,0] = 1.0 - parent_val + val_new
-                        
-    
-                    #pass  # not sure exactly what to put here
-            
+                
+                self.shrink_tree(tree, reg_param, left,
+                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+                self.shrink_tree(tree, reg_param, right,
+                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
 
+                # edit the non-leaf nodes for later visualization (doesn't effect predictions)
+            
+                    #pass  # not sure exactly what to put here
+        
         return tree
 
     def shrink(self):
@@ -221,18 +221,18 @@ if __name__ == '__main__':
     # y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=42
+        X, y, test_size=0.33, random_state=10
     )
     print('X.shape', X.shape)
     print('ys', np.unique(y_train))
 
     # m = ShrunkTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
-    #m = DecisionTreeClassifier(max_leaf_nodes = 20,random_state=42, max_features=None)
+    #m = DecisionTreeClassifier(max_leaf_nodes = 20,random_state=1, max_features=None)
     m = DecisionTreeRegressor(random_state=42, max_leaf_nodes=20)
     # print('best alpha', m.reg_param)
     m.fit(X_train, y_train)
     # m.predict_proba(X_train)  # just run this
-    print('score', m.score(X_test, y_test))
+    print('score', r2_score(y_test,m.predict(X_test)))
     print('running again....')
 
 
@@ -241,13 +241,15 @@ if __name__ == '__main__':
 
     # m = ShrunkTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
     # m = ShrunkTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
-    m = ShrunkTreeRegressorCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=20, random_state=42),
+    m = ShrunkTreeClassifierCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=10, random_state=1),
                               shrinkage_scheme_ = 'node_based',
-                              reg_param_list=[0.1, 1, 2,5,10,25,50,100])
+                              reg_param_list=[0.1,1,2,5,10,25,50,100,500])
     # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
 
     #m = ShrunkTreeClassifier(estimator_ = GradientBoostingClassifier(random_state = 10),reg_param = 5)
     m.fit(X_train, y_train)
     print('best alpha', m.reg_param)
     # m.predict_proba(X_train)  # just run this
-    print('score', m.score(X_test, y_test))
+    #print('score', m.score(X_test, y_test))
+    print('score', r2_score(y_test,m.predict(X_test)))
+
