@@ -140,9 +140,9 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 
 See the docs for individual models for futher descriptions.
 
-|                  Rule candidate generation                   |                       Rule selection                       |                Rule postprocessing
+|                  Rule candidate generation                   |                       Rule selection                       |                Rule postprocessing|
 | :----------------------------------------------------------: | :--------------------------------------------------------: | :-------------------------------------------------------: |
-| <img src="https://csinva.io/imodels/img/rule_candidates.jpg" width="100%"> | <img src="https://csinva.io/imodels/img/rule_overfit.jpg"> | <img src="https://csinva.io/imodels/img/rule_pruned.jpg"> |
+| <img src="https://csinva.io/imodels/img/rule_candidates.svg?sanitize=True"> | <img src="https://csinva.io/imodels/img/rule_overfit.svg?sanitize=True"> | <img src="https://csinva.io/imodels/img/rule_pruned.svg?sanitize=True"> |
 
 The code here contains many useful and customizable functions for rule-based learning in the [util folder](https://csinva.io/imodels/util/index.html). This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.
 
