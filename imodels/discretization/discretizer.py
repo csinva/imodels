@@ -2,7 +2,6 @@ import numbers
 
 import numpy as np
 import pandas as pd
-
 from pandas.api.types import is_numeric_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -253,7 +252,10 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
         # return onehot encoded X if specified
         if self.encode == "onehot":
             colnames = [str(col) for col in self.dcols_]
-            onehot_col_names = self.onehot_.get_feature_names_out(colnames)
+            try:
+                onehot_col_names = self.onehot_.get_feature_names_out(colnames)
+            except:
+                onehot_col_names = self.onehot_.get_feature_names(colnames)  # older versions of sklearn
             discretized_df = self.onehot_.transform(discretized_df.astype(str))
             discretized_df = pd.DataFrame(discretized_df,
                                           columns=onehot_col_names,
@@ -312,6 +314,7 @@ class ExtraBasicDiscretizer(TransformerMixin):
     Examples
     --------
     """
+
     def __init__(self,
                  dcols,
                  n_bins=4,
