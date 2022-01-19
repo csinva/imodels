@@ -2,9 +2,11 @@ from functools import partial
 
 import numpy as np
 import pytest
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 
-from imodels import RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor, ShrunkTreeRegressor, ShrunkTreeRegressorCV, SaplingSumRegressor
+from imodels import RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor, ShrunkTreeRegressor, ShrunkTreeRegressorCV, \
+    SaplingSumRegressor, DistilledRegressor
 
 
 class TestClassRegression:
@@ -22,7 +24,9 @@ class TestClassRegression:
         for model_type in [partial(ShrunkTreeRegressor, estimator_=DecisionTreeRegressor()),
                            partial(ShrunkTreeRegressorCV, estimator_=DecisionTreeRegressor()),
                            RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor,
-                           SaplingSumRegressor]:
+                           SaplingSumRegressor,
+                           partial(DistilledRegressor, teacher=RandomForestRegressor(n_estimators=3),
+                                   student=DecisionTreeRegressor())]:
             if model_type == RuleFitRegressor:
                 m = model_type(include_linear=False, max_rules=3)
             else:

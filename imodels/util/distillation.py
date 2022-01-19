@@ -1,14 +1,16 @@
-import numpy as np
-from typing import List
-
 from sklearn.base import RegressorMixin, BaseEstimator, is_regressor
 
-class DistilledModel(BaseEstimator, RegressorMixin):
+
+class DistilledRegressor(BaseEstimator, RegressorMixin):
     """
-    Experimental class to implement distillation.
+    Class to implement distillation. Currently only supports regression.
+    Params
+    ------
+    teacher: initial model to be trained
+    student: model to be distilled from teacher's predictions
     """
 
-    def __init__(self, teacher: BaseEstimator, student : BaseEstimator):
+    def __init__(self, teacher: BaseEstimator, student: BaseEstimator):
         self.teacher = teacher
         self.student = student
         self._validate_student()
@@ -43,7 +45,7 @@ class DistilledModel(BaseEstimator, RegressorMixin):
         if self.teacher_type == "regression":
             preds = self.teacher.predict(X)
         else:
-            preds = self.teacher.predict_proba(X)[:,1]
+            preds = self.teacher.predict_proba(X)[:, 1]
         self.student.fit(X, preds)
 
     def predict(self, X):

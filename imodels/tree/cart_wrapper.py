@@ -1,4 +1,5 @@
-# This is just a simple wrapper around sklearn decisiontree:https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+# This is just a simple wrapper around sklearn decisiontree
+# https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
 
 from sklearn.tree import DecisionTreeClassifier, export_text, DecisionTreeRegressor
 
@@ -8,11 +9,6 @@ from imodels.util.tree import compute_tree_complexity
 class GreedyTreeClassifier(DecisionTreeClassifier):
     """Wrapper around sklearn greedy tree classifier
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.complexity_ = 0
-        self.feature_names = None
 
     def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         """Build a decision tree classifier from the training set (X, y).
@@ -63,11 +59,6 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
 class GreedyTreeRegressor(DecisionTreeRegressor):
     """Wrapper around sklearn greedy tree regressor
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.complexity_ = 0
-        self.feature_names = None
 
     def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         """Build a decision tree regressor from the training set (X, y).

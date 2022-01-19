@@ -253,7 +253,7 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
         # return onehot encoded X if specified
         if self.encode == "onehot":
             colnames = [str(col) for col in self.dcols_]
-            onehot_col_names = self.onehot_.get_feature_names(colnames)
+            onehot_col_names = self.onehot_.get_feature_names_out(colnames)
             discretized_df = self.onehot_.transform(discretized_df.astype(str))
             discretized_df = pd.DataFrame(discretized_df,
                                           columns=onehot_col_names,

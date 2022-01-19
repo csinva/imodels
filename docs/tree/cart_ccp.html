@@ -854,7 +854,12 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 <div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
 <h2 id="params">Params</h2>
 <p>reg_param: float
-Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p></div>
+Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
+<p>shrinkage_scheme: str
+Experimental: Used to experiment with different forms of shrinkage. options are:
+(i) node_based shrinks based on number of samples in parent node
+(ii) leaf_based only shrinks leaf nodes based on number of leaf samples
+(iii) constant shrinks every node by a constant lambda</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -926,7 +931,12 @@ Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</
 <div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
 <h2 id="params">Params</h2>
 <p>reg_param: float
-Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p></div>
+Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
+<p>shrinkage_scheme: str
+Experimental: Used to experiment with different forms of shrinkage. options are:
+(i) node_based shrinks based on number of samples in parent node
+(ii) leaf_based only shrinks leaf nodes based on number of leaf samples
+(iii) constant shrinks every node by a constant lambda</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>

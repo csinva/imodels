@@ -79,21 +79,21 @@ print(model) # print the rule-based model
 <tr>
 <td align="left">Rulefit rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/rule_fit.html">🗂️</a>, <a href="https://github.com/christophM/rulefit">🔗</a>, <a href="http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf">📄</a></td>
-<td>Extracts rules from decision trees then fits a sparse linear model with them</td>
+<td>Fits a sparse linear model on rules extracted from decision trees</td>
 </tr>
 <tr>
 <td align="left">Skope rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier">🗂️</a>, <a href="https://github.com/scikit-learn-contrib/skope-rules">🔗</a></td>
-<td>Extracts rules from gradient-boosted trees, deduplicates them, then forms a linear combination of them based on their OOB precision</td>
+<td>Extracts rules from gradient-boosted trees, deduplicates them,<br/>then linearly combines them based on their OOB precision</td>
 </tr>
 <tr>
 <td align="left">Boosted rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/boosted_rules.html">🗂️</a>, <a href="https://github.com/jaimeps/adaboost-implementation">🔗</a>, <a href="https://www.sciencedirect.com/science/article/pii/S002200009791504X">📄</a></td>
-<td>Sequentially learns a set of rules with Adaboost</td>
+<td>Sequentially fits a set of rules with Adaboost</td>
 </tr>
 <tr>
 <td align="left">Slipper rule set</td>
-<td><a href="https://csinva.io/imodels/rule_set/slipper.html">🗂️</a>, <a href="https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf">📄</a></td>
+<td><a href="https://csinva.io/imodels/rule_set/slipper.html">🗂️</a>, ㅤㅤ <a href="https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf">📄</a></td>
 <td>Sequentially learns a set of rules with SLIPPER</td>
 </tr>
 <tr>
@@ -104,62 +104,67 @@ print(model) # print the rule-based model
 <tr>
 <td align="left">Optimal rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier">🗂️</a>, <a href="https://github.com/corels/pycorels">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/17-716/17-716.pdf">📄</a></td>
-<td>Learns succinct rule list using global optimization for sparsity (CORELS)</td>
+<td>Fits rule list using global optimization for sparsity (CORELS)</td>
 </tr>
 <tr>
 <td align="left">Bayesian rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">🗂️</a>, <a href="https://github.com/tmadl/sklearn-expertsys">🔗</a>, <a href="https://arxiv.org/abs/1602.08610">📄</a></td>
-<td>Learns compact rule list distribution with Bayesian sampling (slow)</td>
+<td>Fits compact rule list distribution with Bayesian sampling (slow)</td>
 </tr>
 <tr>
 <td align="left">Greedy rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/greedy_rule_list.html">🗂️</a>, <a href="https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea">🔗</a></td>
-<td>Uses CART to learn a list (only a single path), rather than a decision tree</td>
+<td>Uses CART to fit a list (only a single path), rather than a tree</td>
 </tr>
 <tr>
 <td align="left">OneR rule list</td>
-<td><a href="https://csinva.io/imodels/rule_list/one_r.html">🗂️</a>, <a href="https://link.springer.com/article/10.1023/A:1022631118932">📄</a></td>
-<td>Learns rule list restricted to only one feature</td>
+<td><a href="https://csinva.io/imodels/rule_list/one_r.html">🗂️</a>, ㅤㅤ<a href="https://link.springer.com/article/10.1023/A:1022631118932">📄</a></td>
+<td>Fits rule list restricted to only one feature</td>
 </tr>
 <tr>
 <td align="left">Optimal rule tree</td>
 <td><a href="https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">🗂️</a>, <a href="https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees">🔗</a>, <a href="https://arxiv.org/abs/2006.08690">📄</a></td>
-<td>Learns succinct tree using global optimization for sparsity (GOSDT)</td>
+<td>Fits succinct tree using global optimization for sparsity (GOSDT)</td>
 </tr>
 <tr>
 <td align="left">Greedy rule tree</td>
 <td><a href="https://csinva.io/imodels/tree/cart_wrapper.html">🗂️</a>, <a href="https://scikit-learn.org/stable/modules/tree.html">🔗</a>, <a href="https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone">📄</a></td>
-<td>Greedily learns tree using CART</td>
+<td>Greedily fits tree using CART</td>
 </tr>
 <tr>
 <td align="left">C4.5 rule tree</td>
 <td><a href="https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">🗂️</a>, <a href="https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier">🔗</a>, <a href="https://link.springer.com/article/10.1007/BF00993309">📄</a></td>
-<td>Greedily learns tree using C4.5</td>
+<td>Greedily fits tree using C4.5</td>
 </tr>
 <tr>
-<td align="left">Iterative random forest</td>
+<td align="left">Iterative random<br/>forest</td>
 <td><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html">🗂️</a>, <a href="https://github.com/Yu-Group/iterative-Random-Forest">🔗</a>, <a href="https://www.pnas.org/content/115/8/1943">📄</a></td>
-<td>(In progress) Repeatedly fit random forest, giving features with high importance a higher chance of being selected</td>
+<td>Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected</td>
 </tr>
 <tr>
-<td align="left">Sparse integer linear model</td>
-<td><a href="https://csinva.io/imodels/algebraic/slim.html">🗂️</a>, <a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">📄</a></td>
+<td align="left">Sparse integer<br/>linear model</td>
+<td><a href="https://csinva.io/imodels/algebraic/slim.html">🗂️</a>, ㅤㅤ<a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">📄</a></td>
 <td>Sparse linear model with integer coefficients</td>
 </tr>
 <tr>
 <td align="left">Sapling Sums</td>
-<td><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps">🗂️</a>, <a href="">📄</a></td>
+<td><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps">🗂️</a>, ㅤㅤ<a href="">📄</a></td>
 <td>Sum of small trees with very few total rules (SAPS)</td>
 </tr>
 <tr>
-<td align="left">Shrunk trees</td>
-<td><a href="https://csinva.io/imodels/tree/shrunk_tree.html">🗂️</a>, <a href="">📄</a></td>
+<td align="left">Shrunk trees<br/>wrapper</td>
+<td><a href="https://csinva.io/imodels/tree/shrunk_tree.html">🗂️</a>, ㅤㅤ<a href="">📄</a></td>
 <td>Use regularization to improve trees</td>
+</tr>
+<tr>
+<td align="left">Distillation<br/>wrapper</td>
+<td><a href="https://csinva.io/imodels/util/distillation.html">🗂️</a>, ㅤㅤ<a href="">📄</a></td>
+<td>Train a black-box model,<br/>then distill it into an interpretable model</td>
 </tr>
 <tr>
 <td align="left">More models</td>
 <td>⌛</td>
-<td>(Coming soon!) Popular rule sets including Lightweight Rule Induction, MLRules</td>
+<td>(Coming soon!) Lightweight Rule Induction, MLRules, &hellip;</td>
 </tr>
 </tbody>
 </table>
@@ -247,7 +252,7 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 </thead>
 <tbody>
 <tr>
-<td align="center"><img src="https://csinva.io/imodels/img/rule_candidates.jpg" width="100%"></td>
+<td align="center"><img src="https://csinva.io/imodels/img/rule_candidates.jpg"></td>
 <td align="center"><img src="https://csinva.io/imodels/img/rule_overfit.jpg"></td>
 <td align="center"><img src="https://csinva.io/imodels/img/rule_pruned.jpg"></td>
 </tr>

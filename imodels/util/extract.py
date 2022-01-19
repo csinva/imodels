@@ -3,12 +3,13 @@ from typing import Iterable, Tuple, List
 import numpy as np
 import pandas as pd
 from mlxtend.frequent_patterns import fpgrowth
-from sklearn.ensemble import BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor
+from sklearn.ensemble import BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor, \
+    GradientBoostingClassifier
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_array
 
-from imodels.util.convert import tree_to_rules
 from imodels.discretization import BRLDiscretizer, SimpleDiscretizer
+from imodels.util.convert import tree_to_rules
 
 
 def extract_fpgrowth(X, y,
@@ -64,8 +65,9 @@ def extract_rulefit(X, y, feature_names,
                                                    random_state=random_state,
                                                    max_depth=100)
 
-    if type(tree_generator) not in [GradientBoostingRegressor, RandomForestRegressor]:
-        raise ValueError("RuleFit only works with RandomForest and BoostingRegressor")
+    if type(tree_generator) not in [GradientBoostingClassifier, GradientBoostingRegressor, RandomForestRegressor]:
+        raise ValueError(
+            "RuleFit only works with GradientBoostingClassifier, GradientBoostingRegressor, and RandomForestRegressor")
 
     ## fit tree generator
     if not exp_rand_tree_size:  # simply fit with constant tree size

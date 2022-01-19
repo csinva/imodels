@@ -54,7 +54,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     random_state:   Integer to initialise random objects and provide repeatability.
     tree_generator: Optional: this object will be used as provided to generate the rules. 
                     This will override almost all the other properties above. 
-                    Must be GradientBoostingRegressor or GradientBoostingClassifier, optional (default=None)
+                    Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
 
     Attributes
     ----------

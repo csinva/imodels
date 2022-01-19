@@ -65,7 +65,8 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | Iterative random<br/>forest | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [🔗](https://github.com/Yu-Group/iterative-Random-Forest), [📄](https://www.pnas.org/content/115/8/1943) | Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected |
 | Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), ㅤㅤ[📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
 | Sapling Sums | [🗂️](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps), ㅤㅤ[📄]() | Sum of small trees with very few total rules (SAPS)                          |
-| Shrunk trees | [🗂️](https://csinva.io/imodels/tree/shrunk_tree.html), ㅤㅤ[📄]() | Use regularization to improve trees |
+| Shrunk trees<br/>wrapper | [🗂️](https://csinva.io/imodels/tree/shrunk_tree.html), ㅤㅤ[📄]() | Use regularization to improve trees |
+| Distillation<br/>wrapper | [🗂️](https://csinva.io/imodels/util/distillation.html), ㅤㅤ[📄]() | Train a black-box model,<br/>then distill it into an interpretable model |
 | More models                 | ⌛                                                            | (Coming soon!) Lightweight Rule Induction, MLRules, ... |
 
 <p align="center">
@@ -195,7 +196,8 @@ Different models support different machine-learning tasks. Current support for d
 | Iterative random forest     | [IRFClassifier](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier)                                                             |                                                              | Requires [irf](https://pypi.org/project/irf/) |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
 | Sapling Sums (SAPS) | [SaplingSumClassifier](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumClassifier) | [SaplingSumRegressor](https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumRegressor) |                                                              |
-| Shrunk trees | [ShrunkTreeClassifierCV](https://csinva.io/imodels/tree//shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifierCVr) | [ShrunkTreeRegressorCV](https://csinva.io/imodels/tree/shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV) | Wraps any sklearn tree-based model |
+| Shrunk trees | [ShrunkTreeClassifierCV](https://csinva.io/imodels/tree//shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifierCV) | [ShrunkTreeRegressorCV](https://csinva.io/imodels/tree/shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV) | Wraps any sklearn tree-based model |
+| Distillation |  | [DistilledRegressor](https://csinva.io//imodels/docs/util/distillation.html#imodels.util.distillation.DistilledRegressor) | Wraps any sklearn-compatible models |
 
 ## References
 

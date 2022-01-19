@@ -26,7 +26,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># This is just a simple wrapper around sklearn decisiontree:https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+<pre><code class="python"># This is just a simple wrapper around sklearn decisiontree
+# https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
 
 from sklearn.tree import DecisionTreeClassifier, export_text, DecisionTreeRegressor
 
@@ -36,11 +37,6 @@ from imodels.util.tree import compute_tree_complexity
 class GreedyTreeClassifier(DecisionTreeClassifier):
     &#34;&#34;&#34;Wrapper around sklearn greedy tree classifier
     &#34;&#34;&#34;
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.complexity_ = 0
-        self.feature_names = None
 
     def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         &#34;&#34;&#34;Build a decision tree classifier from the training set (X, y).
@@ -91,11 +87,6 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
 class GreedyTreeRegressor(DecisionTreeRegressor):
     &#34;&#34;&#34;Wrapper around sklearn greedy tree regressor
     &#34;&#34;&#34;
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.complexity_ = 0
-        self.feature_names = None
 
     def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         &#34;&#34;&#34;Build a decision tree regressor from the training set (X, y).
@@ -150,7 +141,7 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
 <dl>
 <dt id="imodels.tree.cart_wrapper.GreedyTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">GreedyTreeClassifier</span></span>
-<span>(</span><span>*args, **kwargs)</span>
+<span>(</span><span>*, criterion='gini', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, class_weight=None, ccp_alpha=0.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Wrapper around sklearn greedy tree classifier</p></div>
@@ -161,11 +152,6 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
 <pre><code class="python">class GreedyTreeClassifier(DecisionTreeClassifier):
     &#34;&#34;&#34;Wrapper around sklearn greedy tree classifier
     &#34;&#34;&#34;
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.complexity_ = 0
-        self.feature_names = None
 
     def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         &#34;&#34;&#34;Build a decision tree classifier from the training set (X, y).
@@ -300,7 +286,7 @@ Don't use this parameter unless you know what you do.</dd>
 </dd>
 <dt id="imodels.tree.cart_wrapper.GreedyTreeRegressor"><code class="flex name class">
 <span>class <span class="ident">GreedyTreeRegressor</span></span>
-<span>(</span><span>*args, **kwargs)</span>
+<span>(</span><span>*, criterion='squared_error', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, ccp_alpha=0.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Wrapper around sklearn greedy tree regressor</p></div>
@@ -311,11 +297,6 @@ Don't use this parameter unless you know what you do.</dd>
 <pre><code class="python">class GreedyTreeRegressor(DecisionTreeRegressor):
     &#34;&#34;&#34;Wrapper around sklearn greedy tree regressor
     &#34;&#34;&#34;
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.complexity_ = 0
-        self.feature_names = None
 
     def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         &#34;&#34;&#34;Build a decision tree regressor from the training set (X, y).
