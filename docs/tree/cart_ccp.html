@@ -35,7 +35,7 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
-from imodels.tree.shrunk_tree import ShrunkTreeRegressor, ShrunkTreeClassifier
+from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier
 from imodels.util.tree import compute_tree_complexity
 
 
@@ -182,7 +182,7 @@ class DecisionTreeRegressorCCP(BaseEstimator):
             return NotImplemented
 
 
-class ShrunkDecisionTreeRegressorCCP_CV(ShrunkTreeRegressor):
+class ShrunkDecisionTreeRegressorCCP_CV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -196,14 +196,14 @@ class ShrunkDecisionTreeRegressorCCP_CV(ShrunkTreeRegressor):
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeRegressor(deepcopy(m.estimator_), reg_param)
+            est = HSTreeRegressor(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y)
 
 
-class ShrunkDecisionTreeClassifierCCP_CV(ShrunkTreeClassifier):
+class ShrunkDecisionTreeClassifierCCP_CV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -217,7 +217,7 @@ class ShrunkDecisionTreeClassifierCCP_CV(ShrunkTreeClassifier):
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeClassifier(deepcopy(m.estimator_), reg_param)
+            est = HSTreeClassifier(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -851,7 +851,8 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
+<div class="desc"><p>Experimental HSTree (Tree with hierarchical shrinkage applied).
+Gets passed a sklearn tree or tree ensemble model.</p>
 <h2 id="params">Params</h2>
 <p>reg_param: float
 Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
@@ -864,7 +865,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ShrunkDecisionTreeClassifierCCP_CV(ShrunkTreeClassifier):
+<pre><code class="python">class ShrunkDecisionTreeClassifierCCP_CV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -878,7 +879,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeClassifier(deepcopy(m.estimator_), reg_param)
+            est = HSTreeClassifier(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -886,8 +887,8 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifier" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifier">ShrunkTreeClassifier</a></li>
-<li><a title="imodels.tree.shrunk_tree.ShrunkTree" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTree">ShrunkTree</a></li>
+<li><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
+<li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Methods</h3>
@@ -906,7 +907,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
     m.fit(X, y, sample_weight, *args, **kwargs)
     self.scores_ = []
     for reg_param in self.reg_param_list:
-        est = ShrunkTreeClassifier(deepcopy(m.estimator_), reg_param)
+        est = HSTreeClassifier(deepcopy(m.estimator_), reg_param)
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
     self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -916,9 +917,9 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifier" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifier">ShrunkTreeClassifier</a></b></code>:
+<li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.shrunk_tree.ShrunkTreeClassifier.shrink_tree" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTree.shrink_tree">shrink_tree</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.shrink_tree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.shrink_tree">shrink_tree</a></code></li>
 </ul>
 </li>
 </ul>
@@ -928,7 +929,8 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.</p>
+<div class="desc"><p>Experimental HSTree (Tree with hierarchical shrinkage applied).
+Gets passed a sklearn tree or tree ensemble model.</p>
 <h2 id="params">Params</h2>
 <p>reg_param: float
 Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
@@ -941,7 +943,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ShrunkDecisionTreeRegressorCCP_CV(ShrunkTreeRegressor):
+<pre><code class="python">class ShrunkDecisionTreeRegressorCCP_CV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -955,7 +957,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeRegressor(deepcopy(m.estimator_), reg_param)
+            est = HSTreeRegressor(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -963,8 +965,8 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressor" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressor">ShrunkTreeRegressor</a></li>
-<li><a title="imodels.tree.shrunk_tree.ShrunkTree" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTree">ShrunkTree</a></li>
+<li><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
+<li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Methods</h3>
@@ -983,7 +985,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
     m.fit(X, y, sample_weight, *args, **kwargs)
     self.scores_ = []
     for reg_param in self.reg_param_list:
-        est = ShrunkTreeRegressor(deepcopy(m.estimator_), reg_param)
+        est = HSTreeRegressor(deepcopy(m.estimator_), reg_param)
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
     self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -993,9 +995,9 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressor" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressor">ShrunkTreeRegressor</a></b></code>:
+<li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.shrunk_tree.ShrunkTreeRegressor.shrink_tree" href="shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTree.shrink_tree">shrink_tree</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.shrink_tree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.shrink_tree">shrink_tree</a></code></li>
 </ul>
 </li>
 </ul>

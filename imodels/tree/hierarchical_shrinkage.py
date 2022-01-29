@@ -12,8 +12,9 @@ from sklearn.metrics import roc_auc_score, r2_score
 from imodels.util import checks
 
 
-class ShrunkTree(BaseEstimator):
-    """Experimental ShrunkTree. Gets passed a sklearn tree or tree ensemble model.
+class HSTree(BaseEstimator):
+    """Experimental HSTree (Tree with hierarchical shrinkage applied).
+    Gets passed a sklearn tree or tree ensemble model.
     """
 
     def __init__(self, estimator_: BaseEstimator, reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
@@ -151,17 +152,17 @@ class ShrunkTree(BaseEstimator):
             return NotImplemented
 
 
-class ShrunkTreeRegressor(ShrunkTree):
+class HSTreeRegressor(HSTree):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
 
 
-class ShrunkTreeClassifier(ShrunkTree):
+class HSTreeClassifier(HSTree):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'
 
 
-class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
+class HSTreeClassifierCV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based',
                  cv: int = 3, scoring=None, *args, **kwargs):
@@ -181,14 +182,14 @@ class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeClassifier(deepcopy(self.estimator_), reg_param)
+            est = HSTreeClassifier(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y)
 
 
-class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
+class HSTreeRegressorCV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based',
                  cv: int = 3, scoring=None, *args, **kwargs):
@@ -208,7 +209,7 @@ class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
     def fit(self, X, y):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeRegressor(deepcopy(self.estimator_), reg_param)
+            est = HSTreeRegressor(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -229,7 +230,7 @@ if __name__ == '__main__':
     print('X.shape', X.shape)
     print('ys', np.unique(y_train))
 
-    # m = ShrunkTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
+    # m = HSTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
     # m = DecisionTreeClassifier(max_leaf_nodes = 20,random_state=1, max_features=None)
     m = DecisionTreeRegressor(random_state=42, max_leaf_nodes=20)
     # print('best alpha', m.reg_param)
@@ -241,14 +242,14 @@ if __name__ == '__main__':
     # x = DecisionTreeRegressor(random_state = 42, ccp_alpha = 0.3)
     # x.fit(X_train,y_train)
 
-    # m = ShrunkTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
-    # m = ShrunkTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
-    m = ShrunkTreeClassifierCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=10, random_state=1),
-                               shrinkage_scheme_='node_based',
-                               reg_param_list=[0.1, 1, 2, 5, 10, 25, 50, 100, 500])
+    # m = HSTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
+    # m = HSTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
+    m = HSTreeClassifierCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=10, random_state=1),
+                           shrinkage_scheme_='node_based',
+                           reg_param_list=[0.1, 1, 2, 5, 10, 25, 50, 100, 500])
     # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
 
-    # m = ShrunkTreeClassifier(estimator_ = GradientBoostingClassifier(random_state = 10),reg_param = 5)
+    # m = HSTreeClassifier(estimator_ = GradientBoostingClassifier(random_state = 10),reg_param = 5)
     m.fit(X_train, y_train)
     print('best alpha', m.reg_param)
     # m.predict_proba(X_train)  # just run this

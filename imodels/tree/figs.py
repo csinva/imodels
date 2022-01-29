@@ -56,8 +56,8 @@ class Node:
         return self.__str__()
 
 
-class SAPS(BaseEstimator):
-    """Experimental SAPS (sum of saplings) classifier
+class FIGS(BaseEstimator):
+    """Experimental FIGS (sum of saplings) classifier
     """
 
     def __init__(self, max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False):
@@ -389,12 +389,12 @@ class SAPS(BaseEstimator):
         return preds
 
 
-class SaplingSumRegressor(SAPS):
+class FIGSRegressor(FIGS):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
 
 
-class SaplingSumClassifier(SAPS):
+class FIGSClassifier(FIGS):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'
 
@@ -412,6 +412,6 @@ if __name__ == '__main__':
     print('X.shape', X.shape)
     print('ys', np.unique(y_train), '\n\n')
 
-    m = SaplingSumClassifier(max_rules=5)
+    m = FIGSClassifier(max_rules=5)
     m.fit(X_train, y_train)
     print(m.predict_proba(X_train))

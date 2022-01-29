@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
-from imodels.tree.shrunk_tree import ShrunkTreeRegressor, ShrunkTreeClassifier
+from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier
 from imodels.util.tree import compute_tree_complexity
 
 
@@ -154,7 +154,7 @@ class DecisionTreeRegressorCCP(BaseEstimator):
             return NotImplemented
 
 
-class ShrunkDecisionTreeRegressorCCP_CV(ShrunkTreeRegressor):
+class ShrunkDecisionTreeRegressorCCP_CV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -168,14 +168,14 @@ class ShrunkDecisionTreeRegressorCCP_CV(ShrunkTreeRegressor):
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeRegressor(deepcopy(m.estimator_), reg_param)
+            est = HSTreeRegressor(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y)
 
 
-class ShrunkDecisionTreeClassifierCCP_CV(ShrunkTreeClassifier):
+class ShrunkDecisionTreeClassifierCCP_CV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -189,7 +189,7 @@ class ShrunkDecisionTreeClassifierCCP_CV(ShrunkTreeClassifier):
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkTreeClassifier(deepcopy(m.estimator_), reg_param)
+            est = HSTreeClassifier(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]

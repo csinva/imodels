@@ -9,8 +9,8 @@
 from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
 from .tree.gosdt.pygosdt import OptimalTreeClassifier
 from .tree.c45_tree.c45_tree import C45TreeClassifier
-from .tree.saps import SaplingSumRegressor, SaplingSumClassifier
-from .tree.shrunk_tree import ShrunkTreeRegressor, ShrunkTreeClassifier, ShrunkTreeRegressorCV, ShrunkTreeClassifierCV
+from .tree.figs import FIGSRegressor, FIGSClassifier
+from .tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier, HSTreeRegressorCV, HSTreeClassifierCV
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
@@ -34,6 +34,6 @@ CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesC
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier,
                C45TreeClassifier, OptimalTreeClassifier, OptimalRuleListClassifier, OneRClassifier,
                SlipperClassifier,
-               SaplingSumClassifier]  # , IRFClassifier
-REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, SaplingSumRegressor]
+               FIGSClassifier, HSTreeClassifier, HSTreeClassifierCV]  # , IRFClassifier
+REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, FIGSRegressor, HSTreeRegressor, HSTreeRegressorCV]
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]

@@ -147,12 +147,12 @@ print(model) # print the rule-based model
 <td>Sparse linear model with integer coefficients</td>
 </tr>
 <tr>
-<td align="left">Sapling Sums</td>
+<td align="left">Tree sums</td>
 <td><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps">🗂️</a>, ㅤㅤ<a href="">📄</a></td>
-<td>Sum of small trees with very few total rules (SAPS)</td>
+<td>Sum of small trees with very few total rules (FIGS)</td>
 </tr>
 <tr>
-<td align="left">Shrunk trees<br/>wrapper</td>
+<td align="left">Hierarchical shrinkage<br/>wrapper</td>
 <td><a href="https://csinva.io/imodels/tree/shrunk_tree.html">🗂️</a>, ㅤㅤ<a href="">📄</a></td>
 <td>Use regularization to improve trees</td>
 </tr>
@@ -376,16 +376,22 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <td>Requires extra dependencies for speed</td>
 </tr>
 <tr>
-<td align="left">Sapling Sums (SAPS)</td>
-<td align="center"><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumClassifier">SaplingSumClassifier</a></td>
-<td align="center"><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumRegressor">SaplingSumRegressor</a></td>
+<td align="left">Sapling Sums (FIGS)</td>
+<td align="center"><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumClassifier">FIGSClassifier</a></td>
+<td align="center"><a href="https://csinva.io/imodels/tree/saps.html#imodels.tree.saps.SaplingSumRegressor">FIGSRegressor</a></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">Shrunk trees</td>
-<td align="center"><a href="https://csinva.io/imodels/tree//shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifierCVr">ShrunkTreeClassifierCV</a></td>
-<td align="center"><a href="https://csinva.io/imodels/tree/shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV">ShrunkTreeRegressorCV</a></td>
+<td align="left">Hierarchical shrinkage</td>
+<td align="center"><a href="https://csinva.io/imodels/tree//shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeClassifierCV">HSTreeClassifierCV</a></td>
+<td align="center"><a href="https://csinva.io/imodels/tree/shrunk_tree.html#imodels.tree.shrunk_tree.ShrunkTreeRegressorCV">HSTreeRegressorCV</a></td>
 <td>Wraps any sklearn tree-based model</td>
+</tr>
+<tr>
+<td align="left">Distillation</td>
+<td align="center"></td>
+<td align="center"><a href="https://csinva.io//imodels/docs/util/distillation.html#imodels.util.distillation.DistilledRegressor">DistilledRegressor</a></td>
+<td>Wraps any sklearn-compatible models</td>
 </tr>
 </tbody>
 </table>
@@ -460,8 +466,8 @@ The code here heavily derives from the wonderful work of previous projects. We s
 from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
 from .tree.gosdt.pygosdt import OptimalTreeClassifier
 from .tree.c45_tree.c45_tree import C45TreeClassifier
-from .tree.saps import SaplingSumRegressor, SaplingSumClassifier
-from .tree.shrunk_tree import ShrunkTreeRegressor, ShrunkTreeClassifier, ShrunkTreeRegressorCV, ShrunkTreeClassifierCV
+from .tree.figs import FIGSRegressor, FIGSClassifier
+from .tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier, HSTreeRegressorCV, HSTreeClassifierCV
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
@@ -478,15 +484,15 @@ from .rule_set.fpskope import FPSkopeClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.slipper import SlipperClassifier
-
+from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier,
                C45TreeClassifier, OptimalTreeClassifier, OptimalRuleListClassifier, OneRClassifier,
                SlipperClassifier,
-               SaplingSumClassifier]  # , IRFClassifier
-REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, SaplingSumRegressor]
+               FIGSClassifier, HSTreeClassifier, HSTreeClassifierCV]  # , IRFClassifier
+REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, FIGSRegressor, HSTreeRegressor, HSTreeRegressorCV]
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]</code></pre>
 </details>
 </section>

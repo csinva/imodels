@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>imodels.tree.saps API documentation</title>
+<title>imodels.tree.figs API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>imodels.tree.saps</code></h1>
+<h1 class="title">Module <code>imodels.tree.figs</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -84,8 +84,8 @@ class Node:
         return self.__str__()
 
 
-class SAPS(BaseEstimator):
-    &#34;&#34;&#34;Experimental SAPS (sum of saplings) classifier
+class FIGS(BaseEstimator):
+    &#34;&#34;&#34;Experimental FIGS (sum of saplings) classifier
     &#34;&#34;&#34;
 
     def __init__(self, max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False):
@@ -417,12 +417,12 @@ class SAPS(BaseEstimator):
         return preds
 
 
-class SaplingSumRegressor(SAPS):
+class FIGSRegressor(FIGS):
     def _init_prediction_task(self):
         self.prediction_task = &#39;regression&#39;
 
 
-class SaplingSumClassifier(SAPS):
+class FIGSClassifier(FIGS):
     def _init_prediction_task(self):
         self.prediction_task = &#39;classification&#39;
 
@@ -440,7 +440,7 @@ if __name__ == &#39;__main__&#39;:
     print(&#39;X.shape&#39;, X.shape)
     print(&#39;ys&#39;, np.unique(y_train), &#39;\n\n&#39;)
 
-    m = SaplingSumClassifier(max_rules=5)
+    m = FIGSClassifier(max_rules=5)
     m.fit(X_train, y_train)
     print(m.predict_proba(X_train))</code></pre>
 </details>
@@ -454,93 +454,18 @@ if __name__ == &#39;__main__&#39;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.tree.saps.Node"><code class="flex name class">
-<span>class <span class="ident">Node</span></span>
-<span>(</span><span>feature: int = None, threshold: int = None, value=None, idxs=None, is_root: bool = False, left=None, impurity_reduction: float = None, tree_num: int = None, right=None, split_or_linear='split')</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Node class for splitting</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class Node:
-    def __init__(self, feature: int = None, threshold: int = None,
-                 value=None, idxs=None, is_root: bool = False, left=None,
-                 impurity_reduction: float = None, tree_num: int = None,
-                 right=None, split_or_linear=&#39;split&#39;):
-        &#34;&#34;&#34;Node class for splitting
-        &#34;&#34;&#34;
-
-        # split or linear
-        self.is_root = is_root
-        self.idxs = idxs
-        self.tree_num = tree_num
-        self.split_or_linear = split_or_linear
-        self.feature = feature
-        self.impurity_reduction = impurity_reduction
-
-        # different meanings
-        self.value = value  # for split this is mean, for linear this is weight
-
-        # split-specific (for linear these should all be None)
-        self.threshold = threshold
-        self.left = left
-        self.right = right
-        self.left_temp = None
-        self.right_temp = None
-
-    def setattrs(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-
-    def __str__(self):
-        if self.split_or_linear == &#39;linear&#39;:
-            if self.is_root:
-                return f&#39;X_{self.feature} * {self.value:0.3f} (Tree #{self.tree_num} linear root)&#39;
-            else:
-                return f&#39;X_{self.feature} * {self.value:0.3f} (linear)&#39;
-        else:
-            if self.is_root:
-                return f&#39;X_{self.feature} &lt;= {self.threshold:0.3f} (Tree #{self.tree_num} root)&#39;
-            elif self.left is None and self.right is None:
-                return f&#39;Val: {self.value[0][0]:0.3f} (leaf)&#39;
-            else:
-                return f&#39;X_{self.feature} &lt;= {self.threshold:0.3f} (split)&#39;
-
-    def __repr__(self):
-        return self.__str__()</code></pre>
-</details>
-<h3>Methods</h3>
-<dl>
-<dt id="imodels.tree.saps.Node.setattrs"><code class="name flex">
-<span>def <span class="ident">setattrs</span></span>(<span>self, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def setattrs(self, **kwargs):
-    for k, v in kwargs.items():
-        setattr(self, k, v)</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="imodels.tree.saps.SAPS"><code class="flex name class">
-<span>class <span class="ident">SAPS</span></span>
+<dt id="imodels.tree.figs.FIGS"><code class="flex name class">
+<span>class <span class="ident">FIGS</span></span>
 <span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental SAPS (sum of saplings) classifier</p></div>
+<div class="desc"><p>Experimental FIGS (sum of saplings) classifier</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SAPS(BaseEstimator):
-    &#34;&#34;&#34;Experimental SAPS (sum of saplings) classifier
+<pre><code class="python">class FIGS(BaseEstimator):
+    &#34;&#34;&#34;Experimental FIGS (sum of saplings) classifier
     &#34;&#34;&#34;
 
     def __init__(self, max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False):
@@ -877,12 +802,12 @@ if __name__ == &#39;__main__&#39;:
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="imodels.tree.saps.SaplingSumClassifier" href="#imodels.tree.saps.SaplingSumClassifier">SaplingSumClassifier</a></li>
-<li><a title="imodels.tree.saps.SaplingSumRegressor" href="#imodels.tree.saps.SaplingSumRegressor">SaplingSumRegressor</a></li>
+<li><a title="imodels.tree.figs.FIGSClassifier" href="#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></li>
+<li><a title="imodels.tree.figs.FIGSRegressor" href="#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.saps.SAPS.construct_node_linear"><code class="name flex">
+<dt id="imodels.tree.figs.FIGS.construct_node_linear"><code class="name flex">
 <span>def <span class="ident">construct_node_linear</span></span>(<span>self, X, y, idxs, tree_num=0, sample_weight=None)</span>
 </code></dt>
 <dd>
@@ -930,7 +855,7 @@ Doesn't currently support sample_weight!</p></div>
                     impurity_reduction=impurity_reduction, split_or_linear=&#39;linear&#39;)</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.saps.SAPS.construct_node_with_stump"><code class="name flex">
+<dt id="imodels.tree.figs.FIGS.construct_node_with_stump"><code class="name flex">
 <span>def <span class="ident">construct_node_with_stump</span></span>(<span>self, X, y, idxs, tree_num, sample_weight=None)</span>
 </code></dt>
 <dd>
@@ -989,7 +914,7 @@ Doesn't currently support sample_weight!</p></div>
     return node_split</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.saps.SAPS.extract_tree_predictions"><code class="name flex">
+<dt id="imodels.tree.figs.FIGS.extract_tree_predictions"><code class="name flex">
 <span>def <span class="ident">extract_tree_predictions</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1008,7 +933,7 @@ Doesn't currently support sample_weight!</p></div>
     return X_feats</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.saps.SAPS.fit"><code class="name flex">
+<dt id="imodels.tree.figs.FIGS.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None)</span>
 </code></dt>
 <dd>
@@ -1169,7 +1094,7 @@ are ignored while searching for a split in each node.</p></div>
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.saps.SAPS.predict"><code class="name flex">
+<dt id="imodels.tree.figs.FIGS.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1191,7 +1116,7 @@ are ignored while searching for a split in each node.</p></div>
         return (preds &gt; 0.5).astype(int)</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.saps.SAPS.predict_proba"><code class="name flex">
+<dt id="imodels.tree.figs.FIGS.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1216,8 +1141,8 @@ are ignored while searching for a split in each node.</p></div>
         return np.vstack((1 - preds, preds)).transpose()</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.saps.SAPS.predict_tree"><code class="name flex">
-<span>def <span class="ident">predict_tree</span></span>(<span>self, root: <a title="imodels.tree.saps.Node" href="#imodels.tree.saps.Node">Node</a>, X)</span>
+<dt id="imodels.tree.figs.FIGS.predict_tree"><code class="name flex">
+<span>def <span class="ident">predict_tree</span></span>(<span>self, root: <a title="imodels.tree.figs.Node" href="#imodels.tree.figs.Node">Node</a>, X)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Predict for a single tree
@@ -1254,8 +1179,8 @@ This can be made way faster</p></div>
     return preds</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.saps.SAPS.tree_to_str"><code class="name flex">
-<span>def <span class="ident">tree_to_str</span></span>(<span>self, root: <a title="imodels.tree.saps.Node" href="#imodels.tree.saps.Node">Node</a>, prefix='')</span>
+<dt id="imodels.tree.figs.FIGS.tree_to_str"><code class="name flex">
+<span>def <span class="ident">tree_to_str</span></span>(<span>self, root: <a title="imodels.tree.figs.Node" href="#imodels.tree.figs.Node">Node</a>, prefix='')</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1276,67 +1201,142 @@ This can be made way faster</p></div>
 </dd>
 </dl>
 </dd>
-<dt id="imodels.tree.saps.SaplingSumClassifier"><code class="flex name class">
-<span>class <span class="ident">SaplingSumClassifier</span></span>
+<dt id="imodels.tree.figs.FIGSClassifier"><code class="flex name class">
+<span>class <span class="ident">FIGSClassifier</span></span>
 <span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental SAPS (sum of saplings) classifier</p></div>
+<div class="desc"><p>Experimental FIGS (sum of saplings) classifier</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SaplingSumClassifier(SAPS):
+<pre><code class="python">class FIGSClassifier(FIGS):
     def _init_prediction_task(self):
         self.prediction_task = &#39;classification&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.tree.saps.SAPS" href="#imodels.tree.saps.SAPS">SAPS</a></li>
+<li><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></li>
 <li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="imodels.tree.saps.SAPS" href="#imodels.tree.saps.SAPS">SAPS</a></b></code>:
+<li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.saps.SAPS.construct_node_linear" href="#imodels.tree.saps.SAPS.construct_node_linear">construct_node_linear</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.extract_tree_predictions" href="#imodels.tree.saps.SAPS.extract_tree_predictions">extract_tree_predictions</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.fit" href="#imodels.tree.saps.SAPS.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.predict_tree" href="#imodels.tree.saps.SAPS.predict_tree">predict_tree</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.construct_node_linear" href="#imodels.tree.figs.FIGS.construct_node_linear">construct_node_linear</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.extract_tree_predictions" href="#imodels.tree.figs.FIGS.extract_tree_predictions">extract_tree_predictions</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.predict_tree" href="#imodels.tree.figs.FIGS.predict_tree">predict_tree</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="imodels.tree.saps.SaplingSumRegressor"><code class="flex name class">
-<span>class <span class="ident">SaplingSumRegressor</span></span>
+<dt id="imodels.tree.figs.FIGSRegressor"><code class="flex name class">
+<span>class <span class="ident">FIGSRegressor</span></span>
 <span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental SAPS (sum of saplings) classifier</p></div>
+<div class="desc"><p>Experimental FIGS (sum of saplings) classifier</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SaplingSumRegressor(SAPS):
+<pre><code class="python">class FIGSRegressor(FIGS):
     def _init_prediction_task(self):
         self.prediction_task = &#39;regression&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.tree.saps.SAPS" href="#imodels.tree.saps.SAPS">SAPS</a></li>
+<li><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></li>
 <li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="imodels.tree.saps.SAPS" href="#imodels.tree.saps.SAPS">SAPS</a></b></code>:
+<li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.saps.SAPS.construct_node_linear" href="#imodels.tree.saps.SAPS.construct_node_linear">construct_node_linear</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.extract_tree_predictions" href="#imodels.tree.saps.SAPS.extract_tree_predictions">extract_tree_predictions</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.fit" href="#imodels.tree.saps.SAPS.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.predict_tree" href="#imodels.tree.saps.SAPS.predict_tree">predict_tree</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.construct_node_linear" href="#imodels.tree.figs.FIGS.construct_node_linear">construct_node_linear</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.extract_tree_predictions" href="#imodels.tree.figs.FIGS.extract_tree_predictions">extract_tree_predictions</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.predict_tree" href="#imodels.tree.figs.FIGS.predict_tree">predict_tree</a></code></li>
 </ul>
 </li>
 </ul>
+</dd>
+<dt id="imodels.tree.figs.Node"><code class="flex name class">
+<span>class <span class="ident">Node</span></span>
+<span>(</span><span>feature: int = None, threshold: int = None, value=None, idxs=None, is_root: bool = False, left=None, impurity_reduction: float = None, tree_num: int = None, right=None, split_or_linear='split')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Node class for splitting</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Node:
+    def __init__(self, feature: int = None, threshold: int = None,
+                 value=None, idxs=None, is_root: bool = False, left=None,
+                 impurity_reduction: float = None, tree_num: int = None,
+                 right=None, split_or_linear=&#39;split&#39;):
+        &#34;&#34;&#34;Node class for splitting
+        &#34;&#34;&#34;
+
+        # split or linear
+        self.is_root = is_root
+        self.idxs = idxs
+        self.tree_num = tree_num
+        self.split_or_linear = split_or_linear
+        self.feature = feature
+        self.impurity_reduction = impurity_reduction
+
+        # different meanings
+        self.value = value  # for split this is mean, for linear this is weight
+
+        # split-specific (for linear these should all be None)
+        self.threshold = threshold
+        self.left = left
+        self.right = right
+        self.left_temp = None
+        self.right_temp = None
+
+    def setattrs(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    def __str__(self):
+        if self.split_or_linear == &#39;linear&#39;:
+            if self.is_root:
+                return f&#39;X_{self.feature} * {self.value:0.3f} (Tree #{self.tree_num} linear root)&#39;
+            else:
+                return f&#39;X_{self.feature} * {self.value:0.3f} (linear)&#39;
+        else:
+            if self.is_root:
+                return f&#39;X_{self.feature} &lt;= {self.threshold:0.3f} (Tree #{self.tree_num} root)&#39;
+            elif self.left is None and self.right is None:
+                return f&#39;Val: {self.value[0][0]:0.3f} (leaf)&#39;
+            else:
+                return f&#39;X_{self.feature} &lt;= {self.threshold:0.3f} (split)&#39;
+
+    def __repr__(self):
+        return self.__str__()</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.figs.Node.setattrs"><code class="name flex">
+<span>def <span class="ident">setattrs</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setattrs(self, **kwargs):
+    for k, v in kwargs.items():
+        setattr(self, k, v)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -1355,29 +1355,29 @@ This can be made way faster</p></div>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.tree.saps.Node" href="#imodels.tree.saps.Node">Node</a></code></h4>
+<h4><code><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.saps.Node.setattrs" href="#imodels.tree.saps.Node.setattrs">setattrs</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.construct_node_linear" href="#imodels.tree.figs.FIGS.construct_node_linear">construct_node_linear</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.construct_node_with_stump" href="#imodels.tree.figs.FIGS.construct_node_with_stump">construct_node_with_stump</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.extract_tree_predictions" href="#imodels.tree.figs.FIGS.extract_tree_predictions">extract_tree_predictions</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.predict" href="#imodels.tree.figs.FIGS.predict">predict</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.predict_tree" href="#imodels.tree.figs.FIGS.predict_tree">predict_tree</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.tree_to_str" href="#imodels.tree.figs.FIGS.tree_to_str">tree_to_str</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.tree.saps.SAPS" href="#imodels.tree.saps.SAPS">SAPS</a></code></h4>
+<h4><code><a title="imodels.tree.figs.FIGSClassifier" href="#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.tree.figs.FIGSRegressor" href="#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.tree.figs.Node" href="#imodels.tree.figs.Node">Node</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.saps.SAPS.construct_node_linear" href="#imodels.tree.saps.SAPS.construct_node_linear">construct_node_linear</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.construct_node_with_stump" href="#imodels.tree.saps.SAPS.construct_node_with_stump">construct_node_with_stump</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.extract_tree_predictions" href="#imodels.tree.saps.SAPS.extract_tree_predictions">extract_tree_predictions</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.fit" href="#imodels.tree.saps.SAPS.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.predict" href="#imodels.tree.saps.SAPS.predict">predict</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.predict_proba" href="#imodels.tree.saps.SAPS.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.predict_tree" href="#imodels.tree.saps.SAPS.predict_tree">predict_tree</a></code></li>
-<li><code><a title="imodels.tree.saps.SAPS.tree_to_str" href="#imodels.tree.saps.SAPS.tree_to_str">tree_to_str</a></code></li>
+<li><code><a title="imodels.tree.figs.Node.setattrs" href="#imodels.tree.figs.Node.setattrs">setattrs</a></code></li>
 </ul>
-</li>
-<li>
-<h4><code><a title="imodels.tree.saps.SaplingSumClassifier" href="#imodels.tree.saps.SaplingSumClassifier">SaplingSumClassifier</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.tree.saps.SaplingSumRegressor" href="#imodels.tree.saps.SaplingSumRegressor">SaplingSumRegressor</a></code></h4>
 </li>
 </ul>
 </li>

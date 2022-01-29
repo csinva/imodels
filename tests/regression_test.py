@@ -5,8 +5,8 @@ import pytest
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 
-from imodels import RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor, ShrunkTreeRegressor, ShrunkTreeRegressorCV, \
-    SaplingSumRegressor, DistilledRegressor
+from imodels import RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor, HSTreeRegressor, HSTreeRegressorCV, \
+    FIGSRegressor, DistilledRegressor
 
 
 class TestClassRegression:
@@ -21,12 +21,13 @@ class TestClassRegression:
     def test_regression(self):
         '''Test imodels on basic binary classification task
         '''
-        for model_type in [partial(ShrunkTreeRegressor, estimator_=DecisionTreeRegressor()),
-                           partial(ShrunkTreeRegressorCV, estimator_=DecisionTreeRegressor()),
+        for model_type in [partial(HSTreeRegressor, estimator_=DecisionTreeRegressor()),
+                           partial(HSTreeRegressorCV, estimator_=DecisionTreeRegressor()),
                            RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor,
-                           SaplingSumRegressor,
+                           FIGSRegressor,
                            partial(DistilledRegressor, teacher=RandomForestRegressor(n_estimators=3),
-                                   student=DecisionTreeRegressor())]:
+                                   student=DecisionTreeRegressor()),
+                           ]:
             if model_type == RuleFitRegressor:
                 m = model_type(include_linear=False, max_rules=3)
             else:
