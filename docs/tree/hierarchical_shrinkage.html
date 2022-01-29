@@ -32,15 +32,15 @@ from typing import List
 import numpy as np
 from sklearn import datasets
 from sklearn.base import BaseEstimator
+from sklearn.metrics import r2_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.metrics import roc_auc_score, r2_score
+from sklearn.tree import DecisionTreeRegressor
+
 from imodels.util import checks
 
 
-class HSTree(BaseEstimator):
+class HSTree:
     &#34;&#34;&#34;Experimental HSTree (Tree with hierarchical shrinkage applied).
     Gets passed a sklearn tree or tree ensemble model.
     &#34;&#34;&#34;
@@ -70,6 +70,15 @@ class HSTree(BaseEstimator):
 
     def __init__prediction_task(self):
         self.prediction_task = &#39;regression&#39;
+
+    def get_params(self, deep=True):
+        if deep:
+            return deepcopy({&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
+                             # &#39;prediction_task&#39;: self.prediction_task,
+                             &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_})
+        return {&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
+                # &#39;prediction_task&#39;: self.prediction_task,
+                &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
 
     def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
@@ -116,14 +125,14 @@ class HSTree(BaseEstimator):
                     else:
                         # tree.value[i, 0, 0] = cum_sum/(1 + reg_param/n_samples)
                         tree.value[i, 0, 0] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                                    1 + reg_param / n_samples)
+                                1 + reg_param / n_samples)
                 else:
                     if len(tree.value[i][0]) == 1:
                         if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
                             tree.value[i, 0, 0,] = cum_sum
                         else:
                             tree.value[i, 0, 0,] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                                        1 + reg_param / n_samples)
+                                    1 + reg_param / n_samples)
                     else:
                         if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
                             tree.value[i, 0, 1] = cum_sum
@@ -131,7 +140,7 @@ class HSTree(BaseEstimator):
                         else:
                             root_prediction = tree.value[0][0, 1] / (tree.value[0][0, 0] + tree.value[0][0, 1])
                             tree.value[i, 0, 1] = root_prediction + (val - root_prediction) / (
-                                        1 + reg_param / n_samples)
+                                    1 + reg_param / n_samples)
                             tree.value[i, 0, 0] = 1.0 - tree.value[i, 0, 1]
             else:
                 if self.prediction_task == &#39;regression&#39;:
@@ -313,7 +322,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class HSTree(BaseEstimator):
+<pre><code class="python">class HSTree:
     &#34;&#34;&#34;Experimental HSTree (Tree with hierarchical shrinkage applied).
     Gets passed a sklearn tree or tree ensemble model.
     &#34;&#34;&#34;
@@ -343,6 +352,15 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 
     def __init__prediction_task(self):
         self.prediction_task = &#39;regression&#39;
+
+    def get_params(self, deep=True):
+        if deep:
+            return deepcopy({&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
+                             # &#39;prediction_task&#39;: self.prediction_task,
+                             &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_})
+        return {&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
+                # &#39;prediction_task&#39;: self.prediction_task,
+                &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
 
     def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
@@ -389,14 +407,14 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
                     else:
                         # tree.value[i, 0, 0] = cum_sum/(1 + reg_param/n_samples)
                         tree.value[i, 0, 0] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                                    1 + reg_param / n_samples)
+                                1 + reg_param / n_samples)
                 else:
                     if len(tree.value[i][0]) == 1:
                         if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
                             tree.value[i, 0, 0,] = cum_sum
                         else:
                             tree.value[i, 0, 0,] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                                        1 + reg_param / n_samples)
+                                    1 + reg_param / n_samples)
                     else:
                         if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
                             tree.value[i, 0, 1] = cum_sum
@@ -404,7 +422,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
                         else:
                             root_prediction = tree.value[0][0, 1] / (tree.value[0][0, 0] + tree.value[0][0, 1])
                             tree.value[i, 0, 1] = root_prediction + (val - root_prediction) / (
-                                        1 + reg_param / n_samples)
+                                    1 + reg_param / n_samples)
                             tree.value[i, 0, 0] = 1.0 - tree.value[i, 0, 1]
             else:
                 if self.prediction_task == &#39;regression&#39;:
@@ -452,10 +470,6 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         else:
             return NotImplemented</code></pre>
 </details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>sklearn.base.BaseEstimator</li>
-</ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
@@ -475,6 +489,25 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <pre><code class="python">def fit(self, *args, **kwargs):
     self.estimator_.fit(*args, **kwargs)
     self.shrink()</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.hierarchical_shrinkage.HSTree.get_params"><code class="name flex">
+<span>def <span class="ident">get_params</span></span>(<span>self, deep=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_params(self, deep=True):
+    if deep:
+        return deepcopy({&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
+                         # &#39;prediction_task&#39;: self.prediction_task,
+                         &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_})
+    return {&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
+            # &#39;prediction_task&#39;: self.prediction_task,
+            &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.predict"><code class="name flex">
@@ -592,14 +625,14 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
                 else:
                     # tree.value[i, 0, 0] = cum_sum/(1 + reg_param/n_samples)
                     tree.value[i, 0, 0] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                                1 + reg_param / n_samples)
+                            1 + reg_param / n_samples)
             else:
                 if len(tree.value[i][0]) == 1:
                     if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
                         tree.value[i, 0, 0,] = cum_sum
                     else:
                         tree.value[i, 0, 0,] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                                    1 + reg_param / n_samples)
+                                1 + reg_param / n_samples)
                 else:
                     if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
                         tree.value[i, 0, 1] = cum_sum
@@ -607,7 +640,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
                     else:
                         root_prediction = tree.value[0][0, 1] / (tree.value[0][0, 0] + tree.value[0][0, 1])
                         tree.value[i, 0, 1] = root_prediction + (val - root_prediction) / (
-                                    1 + reg_param / n_samples)
+                                1 + reg_param / n_samples)
                         tree.value[i, 0, 0] = 1.0 - tree.value[i, 0, 1]
         else:
             if self.prediction_task == &#39;regression&#39;:
@@ -659,7 +692,6 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
-<li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -717,7 +749,6 @@ Gets passed a sklearn tree or tree ensemble model.</p>
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
-<li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -776,7 +807,6 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
-<li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -834,7 +864,6 @@ Gets passed a sklearn tree or tree ensemble model.</p>
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
-<li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -887,6 +916,7 @@ Gets passed a sklearn tree or tree ensemble model.</p>
 <h4><code><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></code></h4>
 <ul class="two-column">
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.fit" href="#imodels.tree.hierarchical_shrinkage.HSTree.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.predict" href="#imodels.tree.hierarchical_shrinkage.HSTree.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.predict_proba" href="#imodels.tree.hierarchical_shrinkage.HSTree.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.score" href="#imodels.tree.hierarchical_shrinkage.HSTree.score">score</a></code></li>

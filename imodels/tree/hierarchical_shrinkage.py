@@ -4,15 +4,15 @@ from typing import List
 import numpy as np
 from sklearn import datasets
 from sklearn.base import BaseEstimator
+from sklearn.metrics import r2_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.metrics import roc_auc_score, r2_score
+from sklearn.tree import DecisionTreeRegressor
+
 from imodels.util import checks
 
 
-class HSTree(BaseEstimator):
+class HSTree:
     """Experimental HSTree (Tree with hierarchical shrinkage applied).
     Gets passed a sklearn tree or tree ensemble model.
     """
@@ -42,6 +42,15 @@ class HSTree(BaseEstimator):
 
     def __init__prediction_task(self):
         self.prediction_task = 'regression'
+
+    def get_params(self, deep=True):
+        if deep:
+            return deepcopy({'reg_param': self.reg_param, 'estimator_': self.estimator_,
+                             # 'prediction_task': self.prediction_task,
+                             'shrinkage_scheme_': self.shrinkage_scheme_})
+        return {'reg_param': self.reg_param, 'estimator_': self.estimator_,
+                # 'prediction_task': self.prediction_task,
+                'shrinkage_scheme_': self.shrinkage_scheme_}
 
     def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
@@ -88,14 +97,14 @@ class HSTree(BaseEstimator):
                     else:
                         # tree.value[i, 0, 0] = cum_sum/(1 + reg_param/n_samples)
                         tree.value[i, 0, 0] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                                    1 + reg_param / n_samples)
+                                1 + reg_param / n_samples)
                 else:
                     if len(tree.value[i][0]) == 1:
                         if self.shrinkage_scheme_ == 'node_based' or self.shrinkage_scheme_ == 'constant':
                             tree.value[i, 0, 0,] = cum_sum
                         else:
                             tree.value[i, 0, 0,] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                                        1 + reg_param / n_samples)
+                                    1 + reg_param / n_samples)
                     else:
                         if self.shrinkage_scheme_ == 'node_based' or self.shrinkage_scheme_ == 'constant':
                             tree.value[i, 0, 1] = cum_sum
@@ -103,7 +112,7 @@ class HSTree(BaseEstimator):
                         else:
                             root_prediction = tree.value[0][0, 1] / (tree.value[0][0, 0] + tree.value[0][0, 1])
                             tree.value[i, 0, 1] = root_prediction + (val - root_prediction) / (
-                                        1 + reg_param / n_samples)
+                                    1 + reg_param / n_samples)
                             tree.value[i, 0, 0] = 1.0 - tree.value[i, 0, 1]
             else:
                 if self.prediction_task == 'regression':
