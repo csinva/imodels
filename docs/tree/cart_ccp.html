@@ -851,9 +851,12 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental HSTree (Tree with hierarchical shrinkage applied).
-Gets passed a sklearn tree or tree ensemble model.</p>
+<div class="desc"><p>HSTree (Tree with hierarchical shrinkage applied).
+Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
+It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
+Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.</p>
 <h2 id="params">Params</h2>
+<p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)</p>
 <p>reg_param: float
 Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
 <p>shrinkage_scheme: str
@@ -928,9 +931,12 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental HSTree (Tree with hierarchical shrinkage applied).
-Gets passed a sklearn tree or tree ensemble model.</p>
+<div class="desc"><p>HSTree (Tree with hierarchical shrinkage applied).
+Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
+It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
+Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.</p>
 <h2 id="params">Params</h2>
+<p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)</p>
 <p>reg_param: float
 Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
 <p>shrinkage_scheme: str

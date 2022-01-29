@@ -13,14 +13,16 @@ from imodels.util import checks
 
 
 class HSTree:
-    """Experimental HSTree (Tree with hierarchical shrinkage applied).
-    Gets passed a sklearn tree or tree ensemble model.
-    """
-
     def __init__(self, estimator_: BaseEstimator, reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
-        """
+        """HSTree (Tree with hierarchical shrinkage applied).
+        Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
+        It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
+        Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
+
         Params
         ------
+        estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
+
         reg_param: float
             Higher is more regularization (can be arbitrarily large, should not be < 0)
         
@@ -175,7 +177,8 @@ class HSTreeClassifierCV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based',
                  cv: int = 3, scoring=None, *args, **kwargs):
-        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
+        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
+        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
         """
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
@@ -200,9 +203,11 @@ class HSTreeClassifierCV(HSTreeClassifier):
 
 class HSTreeRegressorCV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based',
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 shrinkage_scheme_: str = 'node_based',
                  cv: int = 3, scoring=None, *args, **kwargs):
-        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
+        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
+        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
         """
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)

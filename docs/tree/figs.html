@@ -85,7 +85,11 @@ class Node:
 
 
 class FIGS(BaseEstimator):
-    &#34;&#34;&#34;Experimental FIGS (sum of saplings) classifier
+    &#34;&#34;&#34;FIGS (sum of trees) classifier.
+    Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
+    Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
+    The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
+    Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
     &#34;&#34;&#34;
 
     def __init__(self, max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False):
@@ -287,7 +291,7 @@ class FIGS(BaseEstimator):
                                                                              y=y_target,
                                                                              idxs=potential_split.idxs,
                                                                              tree_num=potential_split.tree_num,
-                                                                             sample_weight=sample_weight,)
+                                                                             sample_weight=sample_weight, )
 
                     # need to preserve certain attributes from before (value at this split + is_root)
                     # value may change because residuals may have changed, but we want it to store the value from before
@@ -459,13 +463,21 @@ if __name__ == &#39;__main__&#39;:
 <span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental FIGS (sum of saplings) classifier</p></div>
+<div class="desc"><p>FIGS (sum of trees) classifier.
+Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
+Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
+The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
+Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FIGS(BaseEstimator):
-    &#34;&#34;&#34;Experimental FIGS (sum of saplings) classifier
+    &#34;&#34;&#34;FIGS (sum of trees) classifier.
+    Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
+    Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
+    The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
+    Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
     &#34;&#34;&#34;
 
     def __init__(self, max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False):
@@ -667,7 +679,7 @@ if __name__ == &#39;__main__&#39;:
                                                                              y=y_target,
                                                                              idxs=potential_split.idxs,
                                                                              tree_num=potential_split.tree_num,
-                                                                             sample_weight=sample_weight,)
+                                                                             sample_weight=sample_weight, )
 
                     # need to preserve certain attributes from before (value at this split + is_root)
                     # value may change because residuals may have changed, but we want it to store the value from before
@@ -1044,7 +1056,7 @@ are ignored while searching for a split in each node.</p></div>
                                                                          y=y_target,
                                                                          idxs=potential_split.idxs,
                                                                          tree_num=potential_split.tree_num,
-                                                                         sample_weight=sample_weight,)
+                                                                         sample_weight=sample_weight, )
 
                 # need to preserve certain attributes from before (value at this split + is_root)
                 # value may change because residuals may have changed, but we want it to store the value from before
@@ -1206,7 +1218,11 @@ This can be made way faster</p></div>
 <span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental FIGS (sum of saplings) classifier</p></div>
+<div class="desc"><p>FIGS (sum of trees) classifier.
+Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
+Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
+The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
+Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1237,7 +1253,11 @@ This can be made way faster</p></div>
 <span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Experimental FIGS (sum of saplings) classifier</p></div>
+<div class="desc"><p>FIGS (sum of trees) classifier.
+Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
+Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
+The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
+Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
