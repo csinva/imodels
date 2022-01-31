@@ -52,7 +52,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | Rulefit rule set            | [🗂️](https://csinva.io/imodels/rule_set/rule_fit.html), [🔗](https://github.com/christophM/rulefit), [📄](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf) | Fits a sparse linear model on rules extracted from decision trees |
 | Skope rule set              | [🗂️](https://csinva.io/imodels/rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier), [🔗](https://github.com/scikit-learn-contrib/skope-rules) | Extracts rules from gradient-boosted trees, deduplicates them,<br/>then linearly combines them based on their OOB precision |
 | Boosted rule set            | [🗂️](https://csinva.io/imodels/rule_set/boosted_rules.html), [🔗](https://github.com/jaimeps/adaboost-implementation), [📄](https://www.sciencedirect.com/science/article/pii/S002200009791504X) | Sequentially fits a set of rules with Adaboost           |
-| Slipper rule set            | [🗂️](https://csinva.io/imodels/rule_set/slipper.html), ㅤㅤ [📄](https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf) | Sequentially learns a set of rules with SLIPPER            |
+| Slipper rule set            | [🗂️](https://csinva.io/imodels/rule_set/slipper.html), ㅤㅤ[📄](https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf) | Sequentially learns a set of rules with SLIPPER            |
 | Bayesian rule set           | [🗂️](https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier), [🔗](https://github.com/wangtongada/BOA), [📄](https://www.jmlr.org/papers/volume18/16-003/16-003.pdf) | Finds concise rule set with Bayesian sampling (slow)  |
 | Optimal rule list           | [🗂️](https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier), [🔗](https://github.com/corels/pycorels), [📄](https://www.jmlr.org/papers/volume18/17-716/17-716.pdf) | Fits rule list using global optimization for sparsity (CORELS) |
 | Bayesian rule list          | [🗂️](https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier), [🔗](https://github.com/tmadl/sklearn-expertsys), [📄](https://arxiv.org/abs/1602.08610) | Fits compact rule list distribution with Bayesian sampling (slow) |
@@ -63,8 +63,8 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | C4.5 rule tree        | [🗂️](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier), [🔗](https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier), [📄](https://link.springer.com/article/10.1007/BF00993309) | Greedily fits tree using C4.5                           |
 | Iterative random<br/>forest | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [🔗](https://github.com/Yu-Group/iterative-Random-Forest), [📄](https://www.pnas.org/content/115/8/1943) | Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected |
 | Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), ㅤㅤ[📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
-| <b>Greedy tree sums</b> | [🗂️](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs), ㅤㅤ[📄]() | Sum of small trees with very few total rules (FIGS)                          |
-| <b>Hierarchical shrinkage<br/>wrapper</b> | [🗂️](https://csinva.io/imodels/tree/hierarchical_shrinkage.html), ㅤㅤ[📄]() | Improve any tree-based model with ultra-fast, post-hoc regularization |
+| <b>Greedy tree sums</b> | [🗂️](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs), ㅤㅤ[📄](https://arxiv.org/abs/2201.11931) | Sum of small trees with very few total rules (FIGS)                          |
+| <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/tree/hierarchical_shrinkage.html), ㅤㅤ[📄]() | Improve any tree-based model with ultra-fast, post-hoc regularization |
 | Distillation<br/>wrapper | [🗂️](https://csinva.io/imodels/util/distillation.html), ㅤㅤ[📄]() | Train a black-box model,<br/>then distill it into an interpretable model |
 | More models                 | ⌛                                                            | (Coming soon!) Lightweight Rule Induction, MLRules, ... |
 
@@ -148,7 +148,7 @@ Different models support different machine-learning tasks. Current support for d
 | C4.5 rule tree              | [C45TreeClassifier](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier) |           |  |
 | Iterative random forest     | [IRFClassifier](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier)                                                             |                                                              | Requires [irf](https://pypi.org/project/irf/) |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
-| Tiny Tree Sums (FIGS) | [FIGSClassifier](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier) | [FIGSRegressor](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor) |                                                              |
+| Greedy tree sums (FIGS) | [FIGSClassifier](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier) | [FIGSRegressor](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor) |                                                              |
 | Hierarchical shrinkage | [HSTreeClassifierCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV) | [HSTreeRegressorCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV) | Wraps any sklearn tree-based model |
 | Distillation |  | [DistilledRegressor](https://csinva.io/imodels/docs/util/distillation.html#imodels.util.distillation.DistilledRegressor) | Wraps any sklearn-compatible models |
 
@@ -205,7 +205,7 @@ After developing and playing with `imodels`, we developed a few new models to ov
 
 ### FIGS: Fast interpretable greedy-tree sums
 
-[📄 Paper](), [🔗 Post](https://demos.csinva.io/figs/), [📌 Citation]()
+[📄 Paper](https://arxiv.org/abs/2201.11931), [🔗 Post](https://demos.csinva.io/figs/), [📌 Citation]()
 
 Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models. Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation. The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable. Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
 
