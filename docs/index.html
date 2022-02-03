@@ -151,12 +151,12 @@ print(model) # print the rule-based model
 </tr>
 <tr>
 <td align="left"><b>Hierarchical<br/> shrinkage wrapper</b></td>
-<td><a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html">🗂️</a>, ㅤㅤ<a href="">📄</a></td>
+<td><a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html">🗂️</a>, ㅤㅤ<a href="https://arxiv.org/abs/2202.00858">📄</a></td>
 <td>Improve any tree-based model with ultra-fast, post-hoc regularization</td>
 </tr>
 <tr>
 <td align="left">Distillation<br/>wrapper</td>
-<td><a href="https://csinva.io/imodels/util/distillation.html">🗂️</a>, ㅤㅤ<a href="">📄</a></td>
+<td><a href="https://csinva.io/imodels/util/distillation.html">🗂️</a></td>
 <td>Train a black-box model,<br/>then distill it into an interpretable model</td>
 </tr>
 <tr>
@@ -409,7 +409,7 @@ The code here contains many useful and customizable functions for rule-based lea
 <i>Example FIGS model. FIGS learns a sum of trees with a flexible number of trees; to make its prediction, it sums the result from each tree.</i>
 </p>
 <h3 id="hierarchical-shrinkage-post-hoc-regularization-for-tree-based-methods">Hierarchical shrinkage: post-hoc regularization for tree-based methods</h3>
-<p><a href="">📄 Paper</a>, <a href="https://demos.csinva.io/shrinkage/">🔗 Post</a>, <a href="">📌 Citation</a></p>
+<p><a href="https://arxiv.org/abs/2202.00858">📄 Paper</a>, <a href="https://demos.csinva.io/shrinkage/">🔗 Post</a>, <a href="">📌 Citation</a></p>
 <p>Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter). Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.</p>
 <h2 id="references">References</h2>
 <details>

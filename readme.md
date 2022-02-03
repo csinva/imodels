@@ -64,8 +64,8 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | Iterative random<br/>forest | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [🔗](https://github.com/Yu-Group/iterative-Random-Forest), [📄](https://www.pnas.org/content/115/8/1943) | Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected |
 | Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), ㅤㅤ[📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
 | <b>Greedy tree sums</b> | [🗂️](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs), ㅤㅤ[📄](https://arxiv.org/abs/2201.11931) | Sum of small trees with very few total rules (FIGS)                          |
-| <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/tree/hierarchical_shrinkage.html), ㅤㅤ[📄]() | Improve any tree-based model with ultra-fast, post-hoc regularization |
-| Distillation<br/>wrapper | [🗂️](https://csinva.io/imodels/util/distillation.html), ㅤㅤ[📄]() | Train a black-box model,<br/>then distill it into an interpretable model |
+| <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/tree/hierarchical_shrinkage.html), ㅤㅤ[📄](https://arxiv.org/abs/2202.00858) | Improve any tree-based model with ultra-fast, post-hoc regularization |
+| Distillation<br/>wrapper | [🗂️](https://csinva.io/imodels/util/distillation.html)  | Train a black-box model,<br/>then distill it into an interpretable model |
 | More models                 | ⌛                                                            | (Coming soon!) Lightweight Rule Induction, MLRules, ... |
 
 <p align="center">
@@ -218,7 +218,7 @@ Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise r
 
 ### Hierarchical shrinkage: post-hoc regularization for tree-based methods
 
-[📄 Paper](), [🔗 Post](https://demos.csinva.io/shrinkage/), [📌 Citation]()
+[📄 Paper](https://arxiv.org/abs/2202.00858), [🔗 Post](https://demos.csinva.io/shrinkage/), [📌 Citation]()
 
 Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter). Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
 
