@@ -32,7 +32,8 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
     def __init__(self, n_rules: int = 2000,
                  supp=5, maxlen: int = 10,
                  num_iterations=5000, num_chains=3, q=0.1,
-                 alpha_pos=100, beta_pos=1, alpha_neg=1, beta_neg=100,
+                 alpha_pos=1, beta_pos=100,
+                 alpha_neg=1, beta_neg=100,
                  alpha_l=None, beta_l=None,
                  discretization_method='randomforest', random_state=0):
         '''
@@ -49,7 +50,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         num_chains
             number of chains in the simulated annealing search algorithm
         q
-        alpha_1
+        alpha_pos
             $\rho = alpha/(alpha+beta)$. Make sure $\rho$ is close to one when choosing alpha and beta
             The alpha and beta parameters alter the prior distributions for different rules
         beta_pos
