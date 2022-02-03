@@ -32,8 +32,8 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
     def __init__(self, n_rules: int = 2000,
                  supp=5, maxlen: int = 10,
                  num_iterations=5000, num_chains=3, q=0.1,
-                 alpha_pos=1, beta_pos=100,
-                 alpha_neg=1, beta_neg=100,
+                 alpha_pos=100, beta_pos=1,
+                 alpha_neg=100, beta_neg=1,
                  alpha_l=None, beta_l=None,
                  discretization_method='randomforest', random_state=0):
         '''
