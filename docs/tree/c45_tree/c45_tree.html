@@ -373,7 +373,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         return self.dom_.childNodes[0]
 
 
-class ShrunkC45TreeClassifier(BaseEstimator):
+class HSC45TreeClassifier(BaseEstimator):
     def __init__(self, estimator_: C45TreeClassifier, reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
         &#34;&#34;&#34;
         Params
@@ -419,10 +419,10 @@ class ShrunkC45TreeClassifier(BaseEstimator):
         return self.estimator_.complexity_
 
 
-class ShrunkC45TreeClassifierCV(ShrunkC45TreeClassifier):
+class HSC45TreeClassifierCV(HSC45TreeClassifier):
     def __init__(self, estimator_: C45TreeClassifier,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = &#39;node_based&#39;,
-                 cv: int = 3, scoring=None, *args, **kwargs):
+                 cv: int = 3, scoring=&#39;accuracy&#39;, *args, **kwargs):
         &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
         &#34;&#34;&#34;
         super().__init__(estimator_, reg_param=None)
@@ -439,7 +439,7 @@ class ShrunkC45TreeClassifierCV(ShrunkC45TreeClassifier):
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
+            est = HSC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -450,7 +450,7 @@ if __name__ == &#39;__main__&#39;:
     X, y, feature_names = get_clean_dataset(&#39;ionosphere&#39;, data_source=&#39;pmlb&#39;)
     m = C45TreeClassifier(max_rules=3)
     m.fit(X, y)
-    s_m = ShrunkC45TreeClassifier(estimator_=m)
+    s_m = HSC45TreeClassifier(estimator_=m)
     s_m.fit(X, y)
     preds = s_m.predict_proba(X)</code></pre>
 </details>
@@ -1019,8 +1019,8 @@ def root(self):
 </dd>
 </dl>
 </dd>
-<dt id="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier"><code class="flex name class">
-<span>class <span class="ident">ShrunkC45TreeClassifier</span></span>
+<dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier"><code class="flex name class">
+<span>class <span class="ident">HSC45TreeClassifier</span></span>
 <span>(</span><span>estimator_: <a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a>, reg_param: float = 1, shrinkage_scheme_: str = 'node_based')</span>
 </code></dt>
 <dd>
@@ -1041,7 +1041,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ShrunkC45TreeClassifier(BaseEstimator):
+<pre><code class="python">class HSC45TreeClassifier(BaseEstimator):
     def __init__(self, estimator_: C45TreeClassifier, reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
         &#34;&#34;&#34;
         Params
@@ -1092,11 +1092,11 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifierCV" href="#imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifierCV">ShrunkC45TreeClassifierCV</a></li>
+<li><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifierCV" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifierCV">HSC45TreeClassifierCV</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.complexity_"><code class="name">var <span class="ident">complexity_</span></code></dt>
+<dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.complexity_"><code class="name">var <span class="ident">complexity_</span></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -1111,7 +1111,7 @@ def complexity_(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.fit"><code class="name flex">
+<dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -1127,7 +1127,7 @@ def complexity_(self):
     self.shrink_tree()</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.impute_nodes"><code class="name flex">
+<dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.impute_nodes"><code class="name flex">
 <span>def <span class="ident">impute_nodes</span></span>(<span>self, X, y)</span>
 </code></dt>
 <dd>
@@ -1140,7 +1140,7 @@ def complexity_(self):
     self.estimator_.impute_nodes(X, y)</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.predict"><code class="name flex">
+<dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1153,7 +1153,7 @@ def complexity_(self):
     return self.estimator_.predict(X)</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.predict_proba"><code class="name flex">
+<dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -1166,7 +1166,7 @@ def complexity_(self):
     return self.estimator_.predict_proba(X)</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.shrink_tree"><code class="name flex">
+<dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.shrink_tree"><code class="name flex">
 <span>def <span class="ident">shrink_tree</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -1181,9 +1181,9 @@ def complexity_(self):
 </dd>
 </dl>
 </dd>
-<dt id="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifierCV"><code class="flex name class">
-<span>class <span class="ident">ShrunkC45TreeClassifierCV</span></span>
-<span>(</span><span>estimator_: <a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a>, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based', cv: int = 3, scoring=None, *args, **kwargs)</span>
+<dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifierCV"><code class="flex name class">
+<span>class <span class="ident">HSC45TreeClassifierCV</span></span>
+<span>(</span><span>estimator_: <a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a>, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based', cv: int = 3, scoring='accuracy', *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -1196,10 +1196,10 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ShrunkC45TreeClassifierCV(ShrunkC45TreeClassifier):
+<pre><code class="python">class HSC45TreeClassifierCV(HSC45TreeClassifier):
     def __init__(self, estimator_: C45TreeClassifier,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = &#39;node_based&#39;,
-                 cv: int = 3, scoring=None, *args, **kwargs):
+                 cv: int = 3, scoring=&#39;accuracy&#39;, *args, **kwargs):
         &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
         &#34;&#34;&#34;
         super().__init__(estimator_, reg_param=None)
@@ -1216,7 +1216,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
+            est = HSC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -1224,12 +1224,12 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier">ShrunkC45TreeClassifier</a></li>
+<li><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier">HSC45TreeClassifier</a></li>
 <li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifierCV.fit"><code class="name flex">
+<dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifierCV.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -1241,7 +1241,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
 <pre><code class="python">def fit(self, X, y, *args, **kwargs):
     self.scores_ = []
     for reg_param in self.reg_param_list:
-        est = ShrunkC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
+        est = HSC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
     self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -1284,20 +1284,20 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier">ShrunkC45TreeClassifier</a></code></h4>
+<h4><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier">HSC45TreeClassifier</a></code></h4>
 <ul class="two-column">
-<li><code><a title="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.complexity_" href="#imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.complexity_">complexity_</a></code></li>
-<li><code><a title="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.fit" href="#imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.impute_nodes" href="#imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.impute_nodes">impute_nodes</a></code></li>
-<li><code><a title="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.predict" href="#imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.predict">predict</a></code></li>
-<li><code><a title="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.predict_proba" href="#imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.shrink_tree" href="#imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifier.shrink_tree">shrink_tree</a></code></li>
+<li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.complexity_" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.complexity_">complexity_</a></code></li>
+<li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.fit" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.impute_nodes" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.impute_nodes">impute_nodes</a></code></li>
+<li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.predict" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.predict_proba" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.shrink_tree" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.shrink_tree">shrink_tree</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifierCV" href="#imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifierCV">ShrunkC45TreeClassifierCV</a></code></h4>
+<h4><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifierCV" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifierCV">HSC45TreeClassifierCV</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifierCV.fit" href="#imodels.tree.c45_tree.c45_tree.ShrunkC45TreeClassifierCV.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifierCV.fit" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifierCV.fit">fit</a></code></li>
 </ul>
 </li>
 </ul>

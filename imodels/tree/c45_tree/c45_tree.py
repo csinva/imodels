@@ -337,7 +337,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         return self.dom_.childNodes[0]
 
 
-class ShrunkC45TreeClassifier(BaseEstimator):
+class HSC45TreeClassifier(BaseEstimator):
     def __init__(self, estimator_: C45TreeClassifier, reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
         """
         Params
@@ -383,10 +383,10 @@ class ShrunkC45TreeClassifier(BaseEstimator):
         return self.estimator_.complexity_
 
 
-class ShrunkC45TreeClassifierCV(ShrunkC45TreeClassifier):
+class HSC45TreeClassifierCV(HSC45TreeClassifier):
     def __init__(self, estimator_: C45TreeClassifier,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based',
-                 cv: int = 3, scoring=None, *args, **kwargs):
+                 cv: int = 3, scoring='accuracy', *args, **kwargs):
         """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
         """
         super().__init__(estimator_, reg_param=None)
@@ -403,7 +403,7 @@ class ShrunkC45TreeClassifierCV(ShrunkC45TreeClassifier):
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
+            est = HSC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -414,6 +414,6 @@ if __name__ == '__main__':
     X, y, feature_names = get_clean_dataset('ionosphere', data_source='pmlb')
     m = C45TreeClassifier(max_rules=3)
     m.fit(X, y)
-    s_m = ShrunkC45TreeClassifier(estimator_=m)
+    s_m = HSC45TreeClassifier(estimator_=m)
     s_m.fit(X, y)
     preds = s_m.predict_proba(X)
