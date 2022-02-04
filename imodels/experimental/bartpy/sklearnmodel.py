@@ -12,18 +12,18 @@ from sklearn.model_selection import cross_val_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import datasets, model_selection
 
-from bartpy.data import Data
-from bartpy.initializers.initializer import Initializer
-from bartpy.initializers.sklearntreeinitializer import SklearnTreeInitializer
-from bartpy.model import Model
-from bartpy.node import LeafNode, DecisionNode
-from bartpy.samplers.leafnode import LeafNodeSampler
-from bartpy.samplers.modelsampler import ModelSampler, Chain
-from bartpy.samplers.schedule import SampleSchedule
-from bartpy.samplers.sigma import SigmaSampler
-from bartpy.samplers.treemutation import TreeMutationSampler
-from bartpy.samplers.unconstrainedtree.treemutation import get_tree_sampler
-from bartpy.sigma import Sigma
+from imodels.experimental.bartpy.data import Data
+from imodels.experimental.bartpy.initializers.initializer import Initializer
+from imodels.experimental.bartpy.initializers.sklearntreeinitializer import SklearnTreeInitializer
+from imodels.experimental.bartpy.model import Model
+from imodels.experimental.bartpy.node import LeafNode, DecisionNode
+from imodels.experimental.bartpy.samplers.leafnode import LeafNodeSampler
+from imodels.experimental.bartpy.samplers.modelsampler import ModelSampler, Chain
+from imodels.experimental.bartpy.samplers.schedule import SampleSchedule
+from imodels.experimental.bartpy.samplers.sigma import SigmaSampler
+from imodels.experimental.bartpy.samplers.treemutation import TreeMutationSampler
+from imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation import get_tree_sampler
+from imodels.experimental.bartpy.sigma import Sigma
 
 
 def run_chain(model: 'SklearnModel', X: np.ndarray, y: np.ndarray):

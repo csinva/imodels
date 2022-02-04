@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from bartpy.sklearnmodel import SklearnModel
+from imodels.experimental.bartpy.sklearnmodel import SklearnModel
 
 
 def plot_tree_depth(model: SklearnModel, ax=None):

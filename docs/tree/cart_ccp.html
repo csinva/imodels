@@ -39,29 +39,13 @@ from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifie
 from imodels.util.tree import compute_tree_complexity
 
 
-class DecisionTreeClassifierCCP(DecisionTreeClassifier):
+class DecisionTreeCCPClassifier(DecisionTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
         # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
-
-    # def fit(self,X,y,sample_weight=None,*args, **kwargs):
-    #    path = self.estimator_.cost_complexity_pruning_path(X,y)
-    #    ccp_alphas, impurities = path.ccp_alphas, path.impurities
-    #    complexities = {}
-    #    for alpha in ccp_alphas: 
-    #        est_params = self.estimator_.get_params()
-    #        est_params[&#39;ccp_alpha&#39;] = alpha
-    ##        copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
-    #       copied_estimator.fit(X, y)
-    #       complexities[alpha] = self._get_complexity(copied_estimator)
-    #   closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
-    #   params_for_fitting = self.estimator_.get_params()
-    #   params_for_fitting[&#39;ccp_alpha&#39;] = closest_alpha
-    #   self.estimator_.set_params(**params_for_fitting)
-    #   self.estimator_.fit(X,y,*args, **kwargs)
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
         path = self.estimator_.cost_complexity_pruning_path(X, y)
@@ -119,7 +103,7 @@ class DecisionTreeClassifierCCP(DecisionTreeClassifier):
             return NotImplemented
 
 
-class DecisionTreeRegressorCCP(BaseEstimator):
+class DecisionTreeCCPRegressor(BaseEstimator):
 
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
@@ -182,7 +166,7 @@ class DecisionTreeRegressorCCP(BaseEstimator):
             return NotImplemented
 
 
-class ShrunkDecisionTreeRegressorCCP_CV(HSTreeRegressor):
+class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -192,7 +176,7 @@ class ShrunkDecisionTreeRegressorCCP_CV(HSTreeRegressor):
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
-        m = DecisionTreeRegressorCCP(self.estimator_, desired_complexity=self.desired_complexity)
+        m = DecisionTreeCCPRegressor(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
@@ -203,7 +187,7 @@ class ShrunkDecisionTreeRegressorCCP_CV(HSTreeRegressor):
         super().fit(X=X, y=y)
 
 
-class ShrunkDecisionTreeClassifierCCP_CV(HSTreeClassifier):
+class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -213,7 +197,7 @@ class ShrunkDecisionTreeClassifierCCP_CV(HSTreeClassifier):
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
-        m = DecisionTreeClassifierCCP(self.estimator_, desired_complexity=self.desired_complexity)
+        m = DecisionTreeCCPClassifier(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
@@ -225,7 +209,7 @@ class ShrunkDecisionTreeClassifierCCP_CV(HSTreeClassifier):
 
 
 if __name__ == &#39;__main__&#39;:
-    m = DecisionTreeClassifierCCP(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
+    m = DecisionTreeCCPClassifier(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
                                   complexity_measure=&#39;max_leaf_nodes&#39;)
     # X,y = make_friedman1() #For regression
     X, y = datasets.load_breast_cancer(return_X_y=True)
@@ -235,8 +219,8 @@ if __name__ == &#39;__main__&#39;:
     m.predict(X_test)
     print(m.score(X_test, y_test))
 
-    m = ShrunkDecisionTreeClassifierCCP_CV(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
-                                           reg_param_list=[0.0, 0.1, 1.0, 5.0, 10.0, 25.0, 50.0, 100.0])
+    m = HSDecisionTreeCCPClassifierCV(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
+                                       reg_param_list=[0.0, 0.1, 1.0, 5.0, 10.0, 25.0, 50.0, 100.0])
     m.fit(X_train, y_train)
     print(m.score(X_test, y_test))</code></pre>
 </details>
@@ -250,8 +234,8 @@ if __name__ == &#39;__main__&#39;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.tree.cart_ccp.DecisionTreeClassifierCCP"><code class="flex name class">
-<span>class <span class="ident">DecisionTreeClassifierCCP</span></span>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier"><code class="flex name class">
+<span>class <span class="ident">DecisionTreeCCPClassifier</span></span>
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -478,29 +462,13 @@ array([ 1.     ,  0.93...,  0.86...,  0.93...,  0.93...,
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DecisionTreeClassifierCCP(DecisionTreeClassifier):
+<pre><code class="python">class DecisionTreeCCPClassifier(DecisionTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
         # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
-
-    # def fit(self,X,y,sample_weight=None,*args, **kwargs):
-    #    path = self.estimator_.cost_complexity_pruning_path(X,y)
-    #    ccp_alphas, impurities = path.ccp_alphas, path.impurities
-    #    complexities = {}
-    #    for alpha in ccp_alphas: 
-    #        est_params = self.estimator_.get_params()
-    #        est_params[&#39;ccp_alpha&#39;] = alpha
-    ##        copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
-    #       copied_estimator.fit(X, y)
-    #       complexities[alpha] = self._get_complexity(copied_estimator)
-    #   closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
-    #   params_for_fitting = self.estimator_.get_params()
-    #   params_for_fitting[&#39;ccp_alpha&#39;] = closest_alpha
-    #   self.estimator_.set_params(**params_for_fitting)
-    #   self.estimator_.fit(X,y,*args, **kwargs)
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
         path = self.estimator_.cost_complexity_pruning_path(X, y)
@@ -567,7 +535,7 @@ array([ 1.     ,  0.93...,  0.86...,  0.93...,  0.93...,
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.cart_ccp.DecisionTreeClassifierCCP.fit"><code class="name flex">
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -615,7 +583,7 @@ It will be removed in 1.1 (renaming of 0.26).</p>
     self.estimator_.fit(X, y, *args, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.cart_ccp.DecisionTreeClassifierCCP.predict"><code class="name flex">
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -646,7 +614,7 @@ Don't use this parameter unless you know what you do.</dd>
     return self.estimator_.predict(X, *args, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.cart_ccp.DecisionTreeClassifierCCP.predict_proba"><code class="name flex">
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -681,7 +649,7 @@ classes corresponds to that in the attribute :term:<code>classes_</code>.</dd>
         return NotImplemented</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.cart_ccp.DecisionTreeClassifierCCP.score"><code class="name flex">
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.score"><code class="name flex">
 <span>def <span class="ident">score</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -716,8 +684,8 @@ each label set be correctly predicted.</p>
 </dd>
 </dl>
 </dd>
-<dt id="imodels.tree.cart_ccp.DecisionTreeRegressorCCP"><code class="flex name class">
-<span>class <span class="ident">DecisionTreeRegressorCCP</span></span>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor"><code class="flex name class">
+<span>class <span class="ident">DecisionTreeCCPRegressor</span></span>
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -730,7 +698,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DecisionTreeRegressorCCP(BaseEstimator):
+<pre><code class="python">class DecisionTreeCCPRegressor(BaseEstimator):
 
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
@@ -798,7 +766,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.fit"><code class="name flex">
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
 </code></dt>
 <dd>
@@ -815,7 +783,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
     self.estimator_.fit(X, y)</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.predict"><code class="name flex">
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -828,7 +796,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
     return self.estimator_.predict(X, *args, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.score"><code class="name flex">
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.score"><code class="name flex">
 <span>def <span class="ident">score</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -846,8 +814,8 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 </dd>
 </dl>
 </dd>
-<dt id="imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV"><code class="flex name class">
-<span>class <span class="ident">ShrunkDecisionTreeClassifierCCP_CV</span></span>
+<dt id="imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV"><code class="flex name class">
+<span>class <span class="ident">HSDecisionTreeCCPClassifierCV</span></span>
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -869,7 +837,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ShrunkDecisionTreeClassifierCCP_CV(HSTreeClassifier):
+<pre><code class="python">class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -879,7 +847,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
-        m = DecisionTreeClassifierCCP(self.estimator_, desired_complexity=self.desired_complexity)
+        m = DecisionTreeCCPClassifier(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
@@ -896,7 +864,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV.fit"><code class="name flex">
+<dt id="imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -906,7 +874,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fit(self, X, y, sample_weight=None, *args, **kwargs):
-    m = DecisionTreeClassifierCCP(self.estimator_, desired_complexity=self.desired_complexity)
+    m = DecisionTreeCCPClassifier(self.estimator_, desired_complexity=self.desired_complexity)
     m.fit(X, y, sample_weight, *args, **kwargs)
     self.scores_ = []
     for reg_param in self.reg_param_list:
@@ -927,8 +895,8 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </li>
 </ul>
 </dd>
-<dt id="imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV"><code class="flex name class">
-<span>class <span class="ident">ShrunkDecisionTreeRegressorCCP_CV</span></span>
+<dt id="imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV"><code class="flex name class">
+<span>class <span class="ident">HSDecisionTreeCCPRegressorCV</span></span>
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -950,7 +918,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ShrunkDecisionTreeRegressorCCP_CV(HSTreeRegressor):
+<pre><code class="python">class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -960,7 +928,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
-        m = DecisionTreeRegressorCCP(self.estimator_, desired_complexity=self.desired_complexity)
+        m = DecisionTreeCCPRegressor(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
@@ -977,7 +945,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV.fit"><code class="name flex">
+<dt id="imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
@@ -987,7 +955,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fit(self, X, y, sample_weight=None, *args, **kwargs):
-    m = DecisionTreeRegressorCCP(self.estimator_, desired_complexity=self.desired_complexity)
+    m = DecisionTreeCCPRegressor(self.estimator_, desired_complexity=self.desired_complexity)
     m.fit(X, y, sample_weight, *args, **kwargs)
     self.scores_ = []
     for reg_param in self.reg_param_list:
@@ -1025,32 +993,32 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.tree.cart_ccp.DecisionTreeClassifierCCP" href="#imodels.tree.cart_ccp.DecisionTreeClassifierCCP">DecisionTreeClassifierCCP</a></code></h4>
+<h4><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.cart_ccp.DecisionTreeClassifierCCP.fit" href="#imodels.tree.cart_ccp.DecisionTreeClassifierCCP.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.cart_ccp.DecisionTreeClassifierCCP.predict" href="#imodels.tree.cart_ccp.DecisionTreeClassifierCCP.predict">predict</a></code></li>
-<li><code><a title="imodels.tree.cart_ccp.DecisionTreeClassifierCCP.predict_proba" href="#imodels.tree.cart_ccp.DecisionTreeClassifierCCP.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.tree.cart_ccp.DecisionTreeClassifierCCP.score" href="#imodels.tree.cart_ccp.DecisionTreeClassifierCCP.score">score</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict_proba" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.score" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.score">score</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.tree.cart_ccp.DecisionTreeRegressorCCP" href="#imodels.tree.cart_ccp.DecisionTreeRegressorCCP">DecisionTreeRegressorCCP</a></code></h4>
+<h4><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.fit" href="#imodels.tree.cart_ccp.DecisionTreeRegressorCCP.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.predict" href="#imodels.tree.cart_ccp.DecisionTreeRegressorCCP.predict">predict</a></code></li>
-<li><code><a title="imodels.tree.cart_ccp.DecisionTreeRegressorCCP.score" href="#imodels.tree.cart_ccp.DecisionTreeRegressorCCP.score">score</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.fit" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict">predict</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.score" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.score">score</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV" href="#imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV">ShrunkDecisionTreeClassifierCCP_CV</a></code></h4>
+<h4><code><a title="imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV" href="#imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV">HSDecisionTreeCCPClassifierCV</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV.fit" href="#imodels.tree.cart_ccp.ShrunkDecisionTreeClassifierCCP_CV.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV.fit" href="#imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV.fit">fit</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV" href="#imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV">ShrunkDecisionTreeRegressorCCP_CV</a></code></h4>
+<h4><code><a title="imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV" href="#imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV">HSDecisionTreeCCPRegressorCV</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV.fit" href="#imodels.tree.cart_ccp.ShrunkDecisionTreeRegressorCCP_CV.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV.fit" href="#imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV.fit">fit</a></code></li>
 </ul>
 </li>
 </ul>

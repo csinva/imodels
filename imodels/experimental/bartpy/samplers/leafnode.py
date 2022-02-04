@@ -1,9 +1,9 @@
 import numpy as np
 
-from bartpy.model import Model
-from bartpy.node import LeafNode
-from bartpy.samplers.sampler import Sampler
-from bartpy.samplers.scalar import NormalScalarSampler
+from imodels.experimental.bartpy.model import Model
+from imodels.experimental.bartpy.node import LeafNode
+from imodels.experimental.bartpy.samplers.sampler import Sampler
+from imodels.experimental.bartpy.samplers.scalar import NormalScalarSampler
 
 
 class LeafNodeSampler(Sampler):

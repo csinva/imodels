@@ -1,7 +1,7 @@
 from typing import Union, Tuple
 
-from bartpy.data import Data
-from bartpy.split import Split, SplitCondition
+from imodels.experimental.bartpy.data import Data
+from imodels.experimental.bartpy.split import Split, SplitCondition
 
 
 class TreeNode(object):

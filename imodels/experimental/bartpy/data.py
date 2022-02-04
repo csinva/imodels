@@ -4,8 +4,8 @@ from typing import Any, List, Optional, Union
 import numpy as np
 import pandas as pd
 
-from bartpy.errors import NoSplittableVariableException
-from bartpy.splitcondition import SplitCondition
+from imodels.experimental.bartpy.errors import NoSplittableVariableException
+from imodels.experimental.bartpy.splitcondition import SplitCondition
 
 
 def is_not_constant(series: np.ndarray) -> bool:

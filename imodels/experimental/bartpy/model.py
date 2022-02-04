@@ -4,12 +4,12 @@ from typing import List, Generator, Optional
 import numpy as np
 import pandas as pd
 
-from bartpy.data import Data
-from bartpy.initializers.initializer import Initializer
-from bartpy.initializers.sklearntreeinitializer import SklearnTreeInitializer
-from bartpy.sigma import Sigma
-from bartpy.split import Split
-from bartpy.tree import Tree, LeafNode, deep_copy_tree
+from imodels.experimental.bartpy.data import Data
+from imodels.experimental.bartpy.initializers.initializer import Initializer
+from imodels.experimental.bartpy.initializers.sklearntreeinitializer import SklearnTreeInitializer
+from imodels.experimental.bartpy.sigma import Sigma
+from imodels.experimental.bartpy.split import Split
+from imodels.experimental.bartpy.tree import Tree, LeafNode, deep_copy_tree
 
 
 class Model:

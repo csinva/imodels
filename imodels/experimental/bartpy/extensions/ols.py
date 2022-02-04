@@ -2,7 +2,7 @@ from typing import Type
 
 import numpy as np
 
-from bartpy.sklearnmodel import SklearnModel
+from imodels.experimental.bartpy.sklearnmodel import SklearnModel
 
 
 class OLS(SklearnModel):

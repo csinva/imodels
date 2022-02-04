@@ -2,15 +2,15 @@ from typing import Optional, List
 
 import numpy as np
 
-from bartpy.model import Model
-from bartpy.mutation import TreeMutation
-from bartpy.samplers.sampler import Sampler
-from bartpy.samplers.scalar import UniformScalarSampler
-from bartpy.samplers.treemutation import TreeMutationLikihoodRatio
-from bartpy.samplers.treemutation import TreeMutationProposer
-from bartpy.samplers.oblivioustrees.likihoodratio import UniformTreeMutationLikihoodRatio
-from bartpy.samplers.oblivioustrees.proposer import UniformMutationProposer
-from bartpy.tree import Tree, mutate
+from imodels.experimental.bartpy.model import Model
+from imodels.experimental.bartpy.mutation import TreeMutation
+from imodels.experimental.bartpy.samplers.sampler import Sampler
+from imodels.experimental.bartpy.samplers.scalar import UniformScalarSampler
+from imodels.experimental.bartpy.samplers.treemutation import TreeMutationLikihoodRatio
+from imodels.experimental.bartpy.samplers.treemutation import TreeMutationProposer
+from imodels.experimental.bartpy.samplers.oblivioustrees.likihoodratio import UniformTreeMutationLikihoodRatio
+from imodels.experimental.bartpy.samplers.oblivioustrees.proposer import UniformMutationProposer
+from imodels.experimental.bartpy.tree import Tree, mutate
 
 
 class UnconstrainedTreeMutationSampler(Sampler):

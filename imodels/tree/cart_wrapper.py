@@ -31,7 +31,7 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
         check_input : bool, default=True
             Allow to bypass several input checking.
             Don't use this parameter unless you know what you do.
-        
+
         Returns
         -------
         self : DecisionTreeClassifier

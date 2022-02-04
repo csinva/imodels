@@ -1,10 +1,10 @@
 from abc import abstractmethod, ABC
 from typing import Optional
 
-from bartpy.model import Model
-from bartpy.mutation import TreeMutation
-from bartpy.samplers.sampler import Sampler
-from bartpy.tree import Tree
+from imodels.experimental.bartpy.model import Model
+from imodels.experimental.bartpy.mutation import TreeMutation
+from imodels.experimental.bartpy.samplers.sampler import Sampler
+from imodels.experimental.bartpy.tree import Tree
 
 
 class TreeMutationSampler(Sampler):

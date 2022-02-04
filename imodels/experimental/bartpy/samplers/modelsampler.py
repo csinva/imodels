@@ -5,10 +5,10 @@ from typing import List, Mapping, Union, Any, Type
 import numpy as np
 from tqdm import tqdm
 
-from bartpy.model import Model
-from bartpy.samplers.sampler import Sampler
-from bartpy.samplers.schedule import SampleSchedule
-from bartpy.trace import TraceLogger
+from imodels.experimental.bartpy.model import Model
+from imodels.experimental.bartpy.samplers.sampler import Sampler
+from imodels.experimental.bartpy.samplers.schedule import SampleSchedule
+from imodels.experimental.bartpy.trace import TraceLogger
 
 Chain = Mapping[str, Union[List[Any], np.ndarray]]
 

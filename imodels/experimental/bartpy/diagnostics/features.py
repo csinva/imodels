@@ -6,8 +6,8 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from bartpy.runner import run_models
-from bartpy.sklearnmodel import SklearnModel
+from imodels.experimental.bartpy.runner import run_models
+from imodels.experimental.bartpy.sklearnmodel import SklearnModel
 
 ImportanceMap = Mapping[int, float]
 ImportanceDistributionMap = Mapping[int, List[float]]

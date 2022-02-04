@@ -108,6 +108,57 @@ def shrink_node(node, reg_param, parent_val, parent_num, cum_sum, scheme, consta
     return node
 
 
+def _add_label(node, label):
+    if hasattr(node, &#34;labels&#34;):
+        node.labels.append(label)
+        return
+    node.labels = [label]
+    return
+
+
+def _get_next_node(children, att):
+    for child in children:
+        is_equal = child.getAttribute(&#34;flag&#34;) == &#34;m&#34; and child.getAttribute(&#34;feature&#34;) == att
+        is_less_than = child.getAttribute(&#34;flag&#34;) == &#34;l&#34; and float(att) &lt; float(child.getAttribute(&#34;feature&#34;))
+        is_greater_than = child.getAttribute(&#34;flag&#34;) == &#34;r&#34; and float(att) &gt;= float(child.getAttribute(&#34;feature&#34;))
+        if is_equal or is_less_than or is_greater_than:
+            return child
+
+
+def shrink_node(node, reg_param, parent_val, parent_num, cum_sum, scheme, constant):
+    &#34;&#34;&#34;Shrink the tree
+    &#34;&#34;&#34;
+
+    is_leaf = not node.hasChildNodes()
+    # if self.prediction_task == &#39;regression&#39;:
+    val = node.nodeValue
+    is_root = parent_val is None and parent_num is None
+    n_samples = len(node.labels) if (scheme != &#34;leaf_based&#34; or is_root) else parent_num
+
+    if is_root:
+        val_new = val
+
+    else:
+        reg_term = reg_param if scheme == &#34;constant&#34; else reg_param / parent_num
+
+        val_new = (val - parent_val) / (1 + reg_term)
+
+    cum_sum += val_new
+
+    if is_leaf:
+        if scheme == &#34;leaf_based&#34;:
+            v = constant + (val - constant) / (1 + reg_param / node.n_obs)
+            node.nodeValue = v
+        else:
+            node.nodeValue = cum_sum
+
+    else:
+        for c in node.childNodes:
+            shrink_node(c, reg_param, val, parent_num=n_samples, cum_sum=cum_sum, scheme=scheme, constant=constant)
+
+    return node
+
+
 class C45TreeClassifier(BaseEstimator, ClassifierMixin):
     &#34;&#34;&#34;A C4.5 tree classifier.
 
@@ -396,7 +447,6 @@ class ShrunkC45TreeClassifierCV(ShrunkC45TreeClassifier):
 
 
 if __name__ == &#39;__main__&#39;:
-
     X, y, feature_names = get_clean_dataset(&#39;ionosphere&#39;, data_source=&#39;pmlb&#39;)
     m = C45TreeClassifier(max_rules=3)
     m.fit(X, y)

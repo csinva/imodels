@@ -3,11 +3,11 @@ from operator import gt, le
 
 from sklearn.ensemble import GradientBoostingRegressor
 
-from bartpy.initializers.initializer import Initializer
-from bartpy.mutation import GrowMutation
-from bartpy.node import split_node, LeafNode
-from bartpy.splitcondition import SplitCondition
-from bartpy.tree import Tree, mutate
+from imodels.experimental.bartpy.initializers.initializer import Initializer
+from imodels.experimental.bartpy.mutation import GrowMutation
+from imodels.experimental.bartpy.node import split_node, LeafNode
+from imodels.experimental.bartpy.splitcondition import SplitCondition
+from imodels.experimental.bartpy.tree import Tree, mutate
 
 
 class SklearnTreeInitializer(Initializer):

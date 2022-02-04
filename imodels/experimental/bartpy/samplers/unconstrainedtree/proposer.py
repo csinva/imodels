@@ -3,13 +3,13 @@ from typing import Callable, List, Mapping, Optional, Tuple
 
 import numpy as np
 
-from bartpy.errors import NoSplittableVariableException, NoPrunableNodeException
-from bartpy.mutation import TreeMutation, GrowMutation, PruneMutation
-from bartpy.node import LeafNode, DecisionNode, split_node
-from bartpy.samplers.scalar import DiscreteSampler
-from bartpy.samplers.treemutation import TreeMutationProposer
-from bartpy.split import SplitCondition
-from bartpy.tree import Tree
+from imodels.experimental.bartpy.errors import NoSplittableVariableException, NoPrunableNodeException
+from imodels.experimental.bartpy.mutation import TreeMutation, GrowMutation, PruneMutation
+from imodels.experimental.bartpy.node import LeafNode, DecisionNode, split_node
+from imodels.experimental.bartpy.samplers.scalar import DiscreteSampler
+from imodels.experimental.bartpy.samplers.treemutation import TreeMutationProposer
+from imodels.experimental.bartpy.split import SplitCondition
+from imodels.experimental.bartpy.tree import Tree
 
 
 def uniformly_sample_grow_mutation(tree: Tree) -> TreeMutation:

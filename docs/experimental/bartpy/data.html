@@ -1,0 +1,1381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>imodels.experimental.bartpy.data API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>imodels.experimental.bartpy.data</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from operator import gt, le
+from typing import Any, List, Optional, Union
+
+import numpy as np
+import pandas as pd
+
+from imodels.experimental.bartpy.errors import NoSplittableVariableException
+from imodels.experimental.bartpy.splitcondition import SplitCondition
+
+
+def is_not_constant(series: np.ndarray) -&gt; bool:
+    &#34;&#34;&#34;
+    Quickly identify whether a series contains more than 1 distinct value
+    Parameters
+    ----------
+    series: np.ndarray
+    The series to assess
+
+    Returns
+    -------
+    bool
+        True if more than one distinct value found
+    &#34;&#34;&#34;
+    if len(series) &lt;= 1:
+        return False
+    first_value = None
+    for i in range(1, len(series)):
+        # if not series.mask[i] and series.data[i] != first_value:
+        if series[i] != first_value:
+            if first_value is None:
+                first_value = series.data[i]
+            else:
+                return True
+    return False
+
+
+def ensure_numpy_array(X: Union[np.ndarray, pd.DataFrame]) -&gt; np.ndarray:
+    if isinstance(X, pd.DataFrame):
+        return X.values
+    else:
+        return X
+
+
+def ensure_float_array(X: np.ndarray) -&gt; np.ndarray:
+    return X.astype(float)
+
+
+def format_covariate_matrix(X: Union[np.ndarray, pd.DataFrame]) -&gt; np.ndarray:
+    X = ensure_numpy_array(X)
+    return ensure_float_array(X)
+
+
+def make_bartpy_data(X: Union[np.ndarray, pd.DataFrame],
+                     y: np.ndarray,
+                     normalize: bool=True) -&gt; &#39;Data&#39;:
+    X = format_covariate_matrix(X)
+    y = y.astype(float)
+    return Data(X, y, normalize=normalize)
+
+
+class CovariateMatrix(object):
+
+    def __init__(self,
+                 X: np.ndarray,
+                 mask: np.ndarray,
+                 n_obsv: int,
+                 unique_columns: List[int],
+                 splittable_variables: List[int]):
+
+        if type(X) == pd.DataFrame:
+            X: pd.DataFrame = X
+            X = X.values
+
+        self._X = X
+        self._n_obsv = n_obsv
+        self._n_features = X.shape[1]
+        self._mask = mask
+
+        # Cache iniialization
+        if unique_columns is not None:
+            self._unique_columns = [x if x is True else None for x in unique_columns]
+        else:
+            self._unique_columns = [None for _ in range(self._n_features)]
+        if splittable_variables is not None:
+            self._splittable_variables = [x if x is False else None for x in splittable_variables]
+        else:
+            self._splittable_variables = [None for _ in range(self._n_features)]
+        self._max_values = [None] * self._n_features
+        self._X_column_cache = [None] * self._n_features
+        self._max_value_cache = [None] * self._n_features
+        self._X_cache = None
+
+    @property
+    def mask(self) -&gt; np.ndarray:
+        return self._mask
+
+    @property
+    def values(self) -&gt; np.ndarray:
+        return self._X
+
+    def get_column(self, i: int) -&gt; np.ndarray:
+        if self._X_cache is None:
+            self._X_cache = self.values[~self.mask, :]
+        return self._X_cache[:, i]
+
+    def splittable_variables(self) -&gt; List[int]:
+        &#34;&#34;&#34;
+        List of columns that can be split on, i.e. that have more than one unique value
+
+        Returns
+        -------
+        List[int]
+            List of column numbers that can be split on
+        &#34;&#34;&#34;
+        for i in range(0, self._n_features):
+            if self._splittable_variables[i] is None:
+                self._splittable_variables[i] = is_not_constant(self.get_column(i))
+        
+        return [i for (i, x) in enumerate(self._splittable_variables) if x is True]        
+
+    @property
+    def n_splittable_variables(self) -&gt; int:
+        return len(self.splittable_variables())
+
+    def is_at_least_one_splittable_variable(self) -&gt; bool:
+        if any(self._splittable_variables):
+            return True
+        else:
+            return len(self.splittable_variables()) &gt; 0
+    
+    def random_splittable_variable(self) -&gt; str:
+        &#34;&#34;&#34;
+        Choose a variable at random from the set of splittable variables
+        Returns
+        -------
+            str - a variable name that can be split on
+        &#34;&#34;&#34;
+        if self.is_at_least_one_splittable_variable():
+            return np.random.choice(np.array(self.splittable_variables()), 1)[0]
+        else:
+            raise NoSplittableVariableException()
+
+    def is_column_unique(self, i: int) -&gt; bool:
+        &#34;&#34;&#34;
+        Identify whether feature contains only unique values, i.e. it has no duplicated values
+        Useful to provide a faster way to calculate the probability of a value being selected in a variable
+
+        Returns
+        -------
+        List[int]
+        &#34;&#34;&#34;
+        if self._unique_columns[i] is None:
+            self._unique_columns[i] = len(np.unique(self.get_column(i))) == self._n_obsv
+        return self._unique_columns[i]
+
+    def max_value_of_column(self, i: int):
+        if self._max_value_cache[i] is None:
+            self._max_value_cache[i] = self.get_column(i).max()
+        return self._max_value_cache[i]
+
+    def random_splittable_value(self, variable: int) -&gt; Any:
+        &#34;&#34;&#34;
+        Return a random value of a variable
+        Useful for choosing a variable to split on
+
+        Parameters
+        ----------
+        variable - str
+            Name of the variable to split on
+
+        Returns
+        -------
+        Any
+
+        Notes
+        -----
+          - Won&#39;t create degenerate splits, all splits will have at least one row on both sides of the split
+        &#34;&#34;&#34;
+        if variable not in self.splittable_variables():
+            raise NoSplittableVariableException()
+        max_value = self.max_value_of_column(variable)
+        candidate = np.random.choice(self.get_column(variable))
+        while candidate == max_value:
+            candidate = np.random.choice(self.get_column(variable))
+        return candidate
+
+    def proportion_of_value_in_variable(self, variable: int, value: float) -&gt; float:
+        if self.is_column_unique(variable):
+            return 1. / self.n_obsv
+        else:
+            return float(np.mean(self.get_column(variable) == value))
+
+    def update_mask(self, other: SplitCondition) -&gt; np.ndarray:
+        if other.operator == gt:
+            column_mask = self.values[:, other.splitting_variable] &lt;= other.splitting_value
+        elif other.operator == le:
+            column_mask = self.values[:, other.splitting_variable] &gt; other.splitting_value
+        else:
+            raise TypeError(&#34;Operator type not matched, only {} and {} supported&#34;.format(gt, le))
+
+        return self.mask | column_mask
+
+    @property
+    def variables(self) -&gt; List[int]:
+        return list(range(self._n_features))
+
+    @property
+    def n_obsv(self) -&gt; int:
+        return self._n_obsv
+
+
+class Target(object):
+
+    def __init__(self, y, mask, n_obsv, normalize, y_sum=None):
+
+        if normalize:
+            self.original_y_min, self.original_y_max = y.min(), y.max()
+            self._y = self.normalize_y(y)
+        else:
+            self._y = y
+
+        self._mask = mask
+        self._inverse_mask_int = (~self._mask).astype(int)
+        self._n_obsv = n_obsv
+
+        if y_sum is None:
+            self.y_sum_cache_up_to_date = False
+            self._summed_y = None
+        else:
+            self.y_sum_cache_up_to_date = True
+            self._summed_y = y_sum
+
+    @staticmethod
+    def normalize_y(y: np.ndarray) -&gt; np.ndarray:
+        &#34;&#34;&#34;
+        Normalize y into the range (-0.5, 0.5)
+        Useful for allowing the leaf parameter prior to be 0, and to standardize the sigma prior
+
+        Parameters
+        ----------
+        y - np.ndarray
+
+        Returns
+        -------
+        np.ndarray
+
+        Examples
+        --------
+        &gt;&gt;&gt; Data.normalize_y([1, 2, 3])
+        array([-0.5,  0. ,  0.5])
+        &#34;&#34;&#34;
+        y_min, y_max = np.min(y), np.max(y)
+        return -0.5 + ((y - y_min) / (y_max - y_min))
+
+    def unnormalize_y(self, y: np.ndarray) -&gt; np.ndarray:
+        distance_from_min = y - (-0.5)
+        total_distance = (self.original_y_max - self.original_y_min)
+        return self.original_y_min + (distance_from_min * total_distance)
+
+    @property
+    def unnormalized_y(self) -&gt; np.ndarray:
+        return self.unnormalize_y(self.values)
+
+    @property
+    def normalizing_scale(self) -&gt; float:
+        return self.original_y_max - self.original_y_min
+
+    def summed_y(self) -&gt; float:
+        if self.y_sum_cache_up_to_date:
+            return self._summed_y
+        else:
+            self._summed_y = np.sum(self._y * self._inverse_mask_int)
+            self.y_sum_cache_up_to_date = True
+            return self._summed_y
+
+    def update_y(self, y) -&gt; None:
+        self._y = y
+        self.y_sum_cache_up_to_date = False
+
+    @property
+    def values(self):
+        return self._y
+
+class Data(object):
+    &#34;&#34;&#34;
+    Encapsulates the data within a split of feature space.
+    Primarily used to cache computations on the data for better performance
+
+    Parameters
+    ----------
+    X: np.ndarray
+        The subset of the covariate matrix that falls into the split
+    y: np.ndarray
+        The subset of the target array that falls into the split
+    normalize: bool
+        Whether to map the target into -0.5, 0.5
+    cache: bool
+        Whether to cache common values.
+        You really only want to turn this off if you&#39;re not going to the resulting object for anything (e.g. when testing)
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 X: np.ndarray,
+                 y: np.ndarray,
+                 mask: Optional[np.ndarray]=None,
+                 normalize: bool=False,
+                 unique_columns: List[int]=None,
+                 splittable_variables: Optional[List[Optional[bool]]]=None,
+                 y_sum: float=None,
+                 n_obsv: int=None):
+
+        if mask is None:
+            mask = np.zeros_like(y).astype(bool)
+        self._mask: np.ndarray = mask
+
+        if n_obsv is None:
+            n_obsv = (~self.mask).astype(int).sum()
+
+        self._n_obsv = n_obsv
+
+        self._X = CovariateMatrix(X, mask, n_obsv, unique_columns, splittable_variables)
+        self._y = Target(y, mask, n_obsv, normalize, y_sum)
+
+    @property
+    def y(self) -&gt; Target:
+        return self._y
+
+    @property
+    def X(self) -&gt; CovariateMatrix:
+        return self._X
+
+    @property
+    def mask(self) -&gt; np.ndarray:
+        return self._mask
+
+    def update_y(self, y: np.ndarray) -&gt; None:
+        self._y.update_y(y)
+
+    def __add__(self, other: SplitCondition) -&gt; &#39;Data&#39;:
+        updated_mask = self.X.update_mask(other)
+
+        return Data(self.X.values,
+                    self.y.values,
+                    updated_mask,
+                    normalize=False,
+                    unique_columns=self._X._unique_columns,
+                    splittable_variables=self._X._splittable_variables,
+                    y_sum=other.carry_y_sum,
+                    n_obsv=other.carry_n_obsv)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="imodels.experimental.bartpy.data.ensure_float_array"><code class="name flex">
+<span>def <span class="ident">ensure_float_array</span></span>(<span>X: numpy.ndarray) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ensure_float_array(X: np.ndarray) -&gt; np.ndarray:
+    return X.astype(float)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.ensure_numpy_array"><code class="name flex">
+<span>def <span class="ident">ensure_numpy_array</span></span>(<span>X: Union[numpy.ndarray, pandas.core.frame.DataFrame]) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ensure_numpy_array(X: Union[np.ndarray, pd.DataFrame]) -&gt; np.ndarray:
+    if isinstance(X, pd.DataFrame):
+        return X.values
+    else:
+        return X</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.format_covariate_matrix"><code class="name flex">
+<span>def <span class="ident">format_covariate_matrix</span></span>(<span>X: Union[numpy.ndarray, pandas.core.frame.DataFrame]) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def format_covariate_matrix(X: Union[np.ndarray, pd.DataFrame]) -&gt; np.ndarray:
+    X = ensure_numpy_array(X)
+    return ensure_float_array(X)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.is_not_constant"><code class="name flex">
+<span>def <span class="ident">is_not_constant</span></span>(<span>series: numpy.ndarray) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Quickly identify whether a series contains more than 1 distinct value
+Parameters</p>
+<hr>
+<dl>
+<dt><strong><code>series</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<p>The series to assess</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>True if more than one distinct value found</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_not_constant(series: np.ndarray) -&gt; bool:
+    &#34;&#34;&#34;
+    Quickly identify whether a series contains more than 1 distinct value
+    Parameters
+    ----------
+    series: np.ndarray
+    The series to assess
+
+    Returns
+    -------
+    bool
+        True if more than one distinct value found
+    &#34;&#34;&#34;
+    if len(series) &lt;= 1:
+        return False
+    first_value = None
+    for i in range(1, len(series)):
+        # if not series.mask[i] and series.data[i] != first_value:
+        if series[i] != first_value:
+            if first_value is None:
+                first_value = series.data[i]
+            else:
+                return True
+    return False</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.make_bartpy_data"><code class="name flex">
+<span>def <span class="ident">make_bartpy_data</span></span>(<span>X: Union[numpy.ndarray, pandas.core.frame.DataFrame], y: numpy.ndarray, normalize: bool = True) ‑> <a title="imodels.experimental.bartpy.data.Data" href="#imodels.experimental.bartpy.data.Data">Data</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_bartpy_data(X: Union[np.ndarray, pd.DataFrame],
+                     y: np.ndarray,
+                     normalize: bool=True) -&gt; &#39;Data&#39;:
+    X = format_covariate_matrix(X)
+    y = y.astype(float)
+    return Data(X, y, normalize=normalize)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix"><code class="flex name class">
+<span>class <span class="ident">CovariateMatrix</span></span>
+<span>(</span><span>X: numpy.ndarray, mask: numpy.ndarray, n_obsv: int, unique_columns: List[int], splittable_variables: List[int])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CovariateMatrix(object):
+
+    def __init__(self,
+                 X: np.ndarray,
+                 mask: np.ndarray,
+                 n_obsv: int,
+                 unique_columns: List[int],
+                 splittable_variables: List[int]):
+
+        if type(X) == pd.DataFrame:
+            X: pd.DataFrame = X
+            X = X.values
+
+        self._X = X
+        self._n_obsv = n_obsv
+        self._n_features = X.shape[1]
+        self._mask = mask
+
+        # Cache iniialization
+        if unique_columns is not None:
+            self._unique_columns = [x if x is True else None for x in unique_columns]
+        else:
+            self._unique_columns = [None for _ in range(self._n_features)]
+        if splittable_variables is not None:
+            self._splittable_variables = [x if x is False else None for x in splittable_variables]
+        else:
+            self._splittable_variables = [None for _ in range(self._n_features)]
+        self._max_values = [None] * self._n_features
+        self._X_column_cache = [None] * self._n_features
+        self._max_value_cache = [None] * self._n_features
+        self._X_cache = None
+
+    @property
+    def mask(self) -&gt; np.ndarray:
+        return self._mask
+
+    @property
+    def values(self) -&gt; np.ndarray:
+        return self._X
+
+    def get_column(self, i: int) -&gt; np.ndarray:
+        if self._X_cache is None:
+            self._X_cache = self.values[~self.mask, :]
+        return self._X_cache[:, i]
+
+    def splittable_variables(self) -&gt; List[int]:
+        &#34;&#34;&#34;
+        List of columns that can be split on, i.e. that have more than one unique value
+
+        Returns
+        -------
+        List[int]
+            List of column numbers that can be split on
+        &#34;&#34;&#34;
+        for i in range(0, self._n_features):
+            if self._splittable_variables[i] is None:
+                self._splittable_variables[i] = is_not_constant(self.get_column(i))
+        
+        return [i for (i, x) in enumerate(self._splittable_variables) if x is True]        
+
+    @property
+    def n_splittable_variables(self) -&gt; int:
+        return len(self.splittable_variables())
+
+    def is_at_least_one_splittable_variable(self) -&gt; bool:
+        if any(self._splittable_variables):
+            return True
+        else:
+            return len(self.splittable_variables()) &gt; 0
+    
+    def random_splittable_variable(self) -&gt; str:
+        &#34;&#34;&#34;
+        Choose a variable at random from the set of splittable variables
+        Returns
+        -------
+            str - a variable name that can be split on
+        &#34;&#34;&#34;
+        if self.is_at_least_one_splittable_variable():
+            return np.random.choice(np.array(self.splittable_variables()), 1)[0]
+        else:
+            raise NoSplittableVariableException()
+
+    def is_column_unique(self, i: int) -&gt; bool:
+        &#34;&#34;&#34;
+        Identify whether feature contains only unique values, i.e. it has no duplicated values
+        Useful to provide a faster way to calculate the probability of a value being selected in a variable
+
+        Returns
+        -------
+        List[int]
+        &#34;&#34;&#34;
+        if self._unique_columns[i] is None:
+            self._unique_columns[i] = len(np.unique(self.get_column(i))) == self._n_obsv
+        return self._unique_columns[i]
+
+    def max_value_of_column(self, i: int):
+        if self._max_value_cache[i] is None:
+            self._max_value_cache[i] = self.get_column(i).max()
+        return self._max_value_cache[i]
+
+    def random_splittable_value(self, variable: int) -&gt; Any:
+        &#34;&#34;&#34;
+        Return a random value of a variable
+        Useful for choosing a variable to split on
+
+        Parameters
+        ----------
+        variable - str
+            Name of the variable to split on
+
+        Returns
+        -------
+        Any
+
+        Notes
+        -----
+          - Won&#39;t create degenerate splits, all splits will have at least one row on both sides of the split
+        &#34;&#34;&#34;
+        if variable not in self.splittable_variables():
+            raise NoSplittableVariableException()
+        max_value = self.max_value_of_column(variable)
+        candidate = np.random.choice(self.get_column(variable))
+        while candidate == max_value:
+            candidate = np.random.choice(self.get_column(variable))
+        return candidate
+
+    def proportion_of_value_in_variable(self, variable: int, value: float) -&gt; float:
+        if self.is_column_unique(variable):
+            return 1. / self.n_obsv
+        else:
+            return float(np.mean(self.get_column(variable) == value))
+
+    def update_mask(self, other: SplitCondition) -&gt; np.ndarray:
+        if other.operator == gt:
+            column_mask = self.values[:, other.splitting_variable] &lt;= other.splitting_value
+        elif other.operator == le:
+            column_mask = self.values[:, other.splitting_variable] &gt; other.splitting_value
+        else:
+            raise TypeError(&#34;Operator type not matched, only {} and {} supported&#34;.format(gt, le))
+
+        return self.mask | column_mask
+
+    @property
+    def variables(self) -&gt; List[int]:
+        return list(range(self._n_features))
+
+    @property
+    def n_obsv(self) -&gt; int:
+        return self._n_obsv</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.mask"><code class="name">var <span class="ident">mask</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def mask(self) -&gt; np.ndarray:
+    return self._mask</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.n_obsv"><code class="name">var <span class="ident">n_obsv</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def n_obsv(self) -&gt; int:
+    return self._n_obsv</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.n_splittable_variables"><code class="name">var <span class="ident">n_splittable_variables</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def n_splittable_variables(self) -&gt; int:
+    return len(self.splittable_variables())</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.values"><code class="name">var <span class="ident">values</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def values(self) -&gt; np.ndarray:
+    return self._X</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.variables"><code class="name">var <span class="ident">variables</span> : List[int]</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def variables(self) -&gt; List[int]:
+    return list(range(self._n_features))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.get_column"><code class="name flex">
+<span>def <span class="ident">get_column</span></span>(<span>self, i: int) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_column(self, i: int) -&gt; np.ndarray:
+    if self._X_cache is None:
+        self._X_cache = self.values[~self.mask, :]
+    return self._X_cache[:, i]</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.is_at_least_one_splittable_variable"><code class="name flex">
+<span>def <span class="ident">is_at_least_one_splittable_variable</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_at_least_one_splittable_variable(self) -&gt; bool:
+    if any(self._splittable_variables):
+        return True
+    else:
+        return len(self.splittable_variables()) &gt; 0</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.is_column_unique"><code class="name flex">
+<span>def <span class="ident">is_column_unique</span></span>(<span>self, i: int) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Identify whether feature contains only unique values, i.e. it has no duplicated values
+Useful to provide a faster way to calculate the probability of a value being selected in a variable</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[int]</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_column_unique(self, i: int) -&gt; bool:
+    &#34;&#34;&#34;
+    Identify whether feature contains only unique values, i.e. it has no duplicated values
+    Useful to provide a faster way to calculate the probability of a value being selected in a variable
+
+    Returns
+    -------
+    List[int]
+    &#34;&#34;&#34;
+    if self._unique_columns[i] is None:
+        self._unique_columns[i] = len(np.unique(self.get_column(i))) == self._n_obsv
+    return self._unique_columns[i]</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.max_value_of_column"><code class="name flex">
+<span>def <span class="ident">max_value_of_column</span></span>(<span>self, i: int)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def max_value_of_column(self, i: int):
+    if self._max_value_cache[i] is None:
+        self._max_value_cache[i] = self.get_column(i).max()
+    return self._max_value_cache[i]</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.proportion_of_value_in_variable"><code class="name flex">
+<span>def <span class="ident">proportion_of_value_in_variable</span></span>(<span>self, variable: int, value: float) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def proportion_of_value_in_variable(self, variable: int, value: float) -&gt; float:
+    if self.is_column_unique(variable):
+        return 1. / self.n_obsv
+    else:
+        return float(np.mean(self.get_column(variable) == value))</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.random_splittable_value"><code class="name flex">
+<span>def <span class="ident">random_splittable_value</span></span>(<span>self, variable: int) ‑> Any</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a random value of a variable
+Useful for choosing a variable to split on</p>
+<h2 id="parameters">Parameters</h2>
+<p>variable - str
+Name of the variable to split on</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Any</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Won't create degenerate splits, all splits will have at least one row on both sides of the split</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def random_splittable_value(self, variable: int) -&gt; Any:
+    &#34;&#34;&#34;
+    Return a random value of a variable
+    Useful for choosing a variable to split on
+
+    Parameters
+    ----------
+    variable - str
+        Name of the variable to split on
+
+    Returns
+    -------
+    Any
+
+    Notes
+    -----
+      - Won&#39;t create degenerate splits, all splits will have at least one row on both sides of the split
+    &#34;&#34;&#34;
+    if variable not in self.splittable_variables():
+        raise NoSplittableVariableException()
+    max_value = self.max_value_of_column(variable)
+    candidate = np.random.choice(self.get_column(variable))
+    while candidate == max_value:
+        candidate = np.random.choice(self.get_column(variable))
+    return candidate</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.random_splittable_variable"><code class="name flex">
+<span>def <span class="ident">random_splittable_variable</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Choose a variable at random from the set of splittable variables
+Returns</p>
+<hr>
+<pre><code>str - a variable name that can be split on
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def random_splittable_variable(self) -&gt; str:
+    &#34;&#34;&#34;
+    Choose a variable at random from the set of splittable variables
+    Returns
+    -------
+        str - a variable name that can be split on
+    &#34;&#34;&#34;
+    if self.is_at_least_one_splittable_variable():
+        return np.random.choice(np.array(self.splittable_variables()), 1)[0]
+    else:
+        raise NoSplittableVariableException()</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.splittable_variables"><code class="name flex">
+<span>def <span class="ident">splittable_variables</span></span>(<span>self) ‑> List[int]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>List of columns that can be split on, i.e. that have more than one unique value</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[int]</code></dt>
+<dd>List of column numbers that can be split on</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def splittable_variables(self) -&gt; List[int]:
+    &#34;&#34;&#34;
+    List of columns that can be split on, i.e. that have more than one unique value
+
+    Returns
+    -------
+    List[int]
+        List of column numbers that can be split on
+    &#34;&#34;&#34;
+    for i in range(0, self._n_features):
+        if self._splittable_variables[i] is None:
+            self._splittable_variables[i] = is_not_constant(self.get_column(i))
+    
+    return [i for (i, x) in enumerate(self._splittable_variables) if x is True]        </code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.CovariateMatrix.update_mask"><code class="name flex">
+<span>def <span class="ident">update_mask</span></span>(<span>self, other: <a title="imodels.experimental.bartpy.splitcondition.SplitCondition" href="splitcondition.html#imodels.experimental.bartpy.splitcondition.SplitCondition">SplitCondition</a>) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_mask(self, other: SplitCondition) -&gt; np.ndarray:
+    if other.operator == gt:
+        column_mask = self.values[:, other.splitting_variable] &lt;= other.splitting_value
+    elif other.operator == le:
+        column_mask = self.values[:, other.splitting_variable] &gt; other.splitting_value
+    else:
+        raise TypeError(&#34;Operator type not matched, only {} and {} supported&#34;.format(gt, le))
+
+    return self.mask | column_mask</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.experimental.bartpy.data.Data"><code class="flex name class">
+<span>class <span class="ident">Data</span></span>
+<span>(</span><span>X: numpy.ndarray, y: numpy.ndarray, mask: Optional[numpy.ndarray] = None, normalize: bool = False, unique_columns: List[int] = None, splittable_variables: Optional[List[Optional[bool]]] = None, y_sum: float = None, n_obsv: int = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Encapsulates the data within a split of feature space.
+Primarily used to cache computations on the data for better performance</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The subset of the covariate matrix that falls into the split</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>The subset of the target array that falls into the split</dd>
+<dt><strong><code>normalize</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to map the target into -0.5, 0.5</dd>
+<dt><strong><code>cache</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to cache common values.
+You really only want to turn this off if you're not going to the resulting object for anything (e.g. when testing)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Data(object):
+    &#34;&#34;&#34;
+    Encapsulates the data within a split of feature space.
+    Primarily used to cache computations on the data for better performance
+
+    Parameters
+    ----------
+    X: np.ndarray
+        The subset of the covariate matrix that falls into the split
+    y: np.ndarray
+        The subset of the target array that falls into the split
+    normalize: bool
+        Whether to map the target into -0.5, 0.5
+    cache: bool
+        Whether to cache common values.
+        You really only want to turn this off if you&#39;re not going to the resulting object for anything (e.g. when testing)
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 X: np.ndarray,
+                 y: np.ndarray,
+                 mask: Optional[np.ndarray]=None,
+                 normalize: bool=False,
+                 unique_columns: List[int]=None,
+                 splittable_variables: Optional[List[Optional[bool]]]=None,
+                 y_sum: float=None,
+                 n_obsv: int=None):
+
+        if mask is None:
+            mask = np.zeros_like(y).astype(bool)
+        self._mask: np.ndarray = mask
+
+        if n_obsv is None:
+            n_obsv = (~self.mask).astype(int).sum()
+
+        self._n_obsv = n_obsv
+
+        self._X = CovariateMatrix(X, mask, n_obsv, unique_columns, splittable_variables)
+        self._y = Target(y, mask, n_obsv, normalize, y_sum)
+
+    @property
+    def y(self) -&gt; Target:
+        return self._y
+
+    @property
+    def X(self) -&gt; CovariateMatrix:
+        return self._X
+
+    @property
+    def mask(self) -&gt; np.ndarray:
+        return self._mask
+
+    def update_y(self, y: np.ndarray) -&gt; None:
+        self._y.update_y(y)
+
+    def __add__(self, other: SplitCondition) -&gt; &#39;Data&#39;:
+        updated_mask = self.X.update_mask(other)
+
+        return Data(self.X.values,
+                    self.y.values,
+                    updated_mask,
+                    normalize=False,
+                    unique_columns=self._X._unique_columns,
+                    splittable_variables=self._X._splittable_variables,
+                    y_sum=other.carry_y_sum,
+                    n_obsv=other.carry_n_obsv)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.data.Data.X"><code class="name">var <span class="ident">X</span> : <a title="imodels.experimental.bartpy.data.CovariateMatrix" href="#imodels.experimental.bartpy.data.CovariateMatrix">CovariateMatrix</a></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def X(self) -&gt; CovariateMatrix:
+    return self._X</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.Data.mask"><code class="name">var <span class="ident">mask</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def mask(self) -&gt; np.ndarray:
+    return self._mask</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.Data.y"><code class="name">var <span class="ident">y</span> : <a title="imodels.experimental.bartpy.data.Target" href="#imodels.experimental.bartpy.data.Target">Target</a></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def y(self) -&gt; Target:
+    return self._y</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.data.Data.update_y"><code class="name flex">
+<span>def <span class="ident">update_y</span></span>(<span>self, y: numpy.ndarray) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_y(self, y: np.ndarray) -&gt; None:
+    self._y.update_y(y)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.experimental.bartpy.data.Target"><code class="flex name class">
+<span>class <span class="ident">Target</span></span>
+<span>(</span><span>y, mask, n_obsv, normalize, y_sum=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Target(object):
+
+    def __init__(self, y, mask, n_obsv, normalize, y_sum=None):
+
+        if normalize:
+            self.original_y_min, self.original_y_max = y.min(), y.max()
+            self._y = self.normalize_y(y)
+        else:
+            self._y = y
+
+        self._mask = mask
+        self._inverse_mask_int = (~self._mask).astype(int)
+        self._n_obsv = n_obsv
+
+        if y_sum is None:
+            self.y_sum_cache_up_to_date = False
+            self._summed_y = None
+        else:
+            self.y_sum_cache_up_to_date = True
+            self._summed_y = y_sum
+
+    @staticmethod
+    def normalize_y(y: np.ndarray) -&gt; np.ndarray:
+        &#34;&#34;&#34;
+        Normalize y into the range (-0.5, 0.5)
+        Useful for allowing the leaf parameter prior to be 0, and to standardize the sigma prior
+
+        Parameters
+        ----------
+        y - np.ndarray
+
+        Returns
+        -------
+        np.ndarray
+
+        Examples
+        --------
+        &gt;&gt;&gt; Data.normalize_y([1, 2, 3])
+        array([-0.5,  0. ,  0.5])
+        &#34;&#34;&#34;
+        y_min, y_max = np.min(y), np.max(y)
+        return -0.5 + ((y - y_min) / (y_max - y_min))
+
+    def unnormalize_y(self, y: np.ndarray) -&gt; np.ndarray:
+        distance_from_min = y - (-0.5)
+        total_distance = (self.original_y_max - self.original_y_min)
+        return self.original_y_min + (distance_from_min * total_distance)
+
+    @property
+    def unnormalized_y(self) -&gt; np.ndarray:
+        return self.unnormalize_y(self.values)
+
+    @property
+    def normalizing_scale(self) -&gt; float:
+        return self.original_y_max - self.original_y_min
+
+    def summed_y(self) -&gt; float:
+        if self.y_sum_cache_up_to_date:
+            return self._summed_y
+        else:
+            self._summed_y = np.sum(self._y * self._inverse_mask_int)
+            self.y_sum_cache_up_to_date = True
+            return self._summed_y
+
+    def update_y(self, y) -&gt; None:
+        self._y = y
+        self.y_sum_cache_up_to_date = False
+
+    @property
+    def values(self):
+        return self._y</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.data.Target.normalize_y"><code class="name flex">
+<span>def <span class="ident">normalize_y</span></span>(<span>y: numpy.ndarray) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Normalize y into the range (-0.5, 0.5)
+Useful for allowing the leaf parameter prior to be 0, and to standardize the sigma prior</p>
+<h2 id="parameters">Parameters</h2>
+<p>y - np.ndarray</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; Data.normalize_y([1, 2, 3])
+array([-0.5,  0. ,  0.5])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def normalize_y(y: np.ndarray) -&gt; np.ndarray:
+    &#34;&#34;&#34;
+    Normalize y into the range (-0.5, 0.5)
+    Useful for allowing the leaf parameter prior to be 0, and to standardize the sigma prior
+
+    Parameters
+    ----------
+    y - np.ndarray
+
+    Returns
+    -------
+    np.ndarray
+
+    Examples
+    --------
+    &gt;&gt;&gt; Data.normalize_y([1, 2, 3])
+    array([-0.5,  0. ,  0.5])
+    &#34;&#34;&#34;
+    y_min, y_max = np.min(y), np.max(y)
+    return -0.5 + ((y - y_min) / (y_max - y_min))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.data.Target.normalizing_scale"><code class="name">var <span class="ident">normalizing_scale</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def normalizing_scale(self) -&gt; float:
+    return self.original_y_max - self.original_y_min</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.Target.unnormalized_y"><code class="name">var <span class="ident">unnormalized_y</span> : numpy.ndarray</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def unnormalized_y(self) -&gt; np.ndarray:
+    return self.unnormalize_y(self.values)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.Target.values"><code class="name">var <span class="ident">values</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def values(self):
+    return self._y</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.data.Target.summed_y"><code class="name flex">
+<span>def <span class="ident">summed_y</span></span>(<span>self) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def summed_y(self) -&gt; float:
+    if self.y_sum_cache_up_to_date:
+        return self._summed_y
+    else:
+        self._summed_y = np.sum(self._y * self._inverse_mask_int)
+        self.y_sum_cache_up_to_date = True
+        return self._summed_y</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.Target.unnormalize_y"><code class="name flex">
+<span>def <span class="ident">unnormalize_y</span></span>(<span>self, y: numpy.ndarray) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unnormalize_y(self, y: np.ndarray) -&gt; np.ndarray:
+    distance_from_min = y - (-0.5)
+    total_distance = (self.original_y_max - self.original_y_min)
+    return self.original_y_min + (distance_from_min * total_distance)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.data.Target.update_y"><code class="name flex">
+<span>def <span class="ident">update_y</span></span>(<span>self, y) ‑> None</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_y(self, y) -&gt; None:
+    self._y = y
+    self.y_sum_cache_up_to_date = False</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.experimental.bartpy" href="index.html">imodels.experimental.bartpy</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.experimental.bartpy.data.ensure_float_array" href="#imodels.experimental.bartpy.data.ensure_float_array">ensure_float_array</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.ensure_numpy_array" href="#imodels.experimental.bartpy.data.ensure_numpy_array">ensure_numpy_array</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.format_covariate_matrix" href="#imodels.experimental.bartpy.data.format_covariate_matrix">format_covariate_matrix</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.is_not_constant" href="#imodels.experimental.bartpy.data.is_not_constant">is_not_constant</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.make_bartpy_data" href="#imodels.experimental.bartpy.data.make_bartpy_data">make_bartpy_data</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.experimental.bartpy.data.CovariateMatrix" href="#imodels.experimental.bartpy.data.CovariateMatrix">CovariateMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.get_column" href="#imodels.experimental.bartpy.data.CovariateMatrix.get_column">get_column</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.is_at_least_one_splittable_variable" href="#imodels.experimental.bartpy.data.CovariateMatrix.is_at_least_one_splittable_variable">is_at_least_one_splittable_variable</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.is_column_unique" href="#imodels.experimental.bartpy.data.CovariateMatrix.is_column_unique">is_column_unique</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.mask" href="#imodels.experimental.bartpy.data.CovariateMatrix.mask">mask</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.max_value_of_column" href="#imodels.experimental.bartpy.data.CovariateMatrix.max_value_of_column">max_value_of_column</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.n_obsv" href="#imodels.experimental.bartpy.data.CovariateMatrix.n_obsv">n_obsv</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.n_splittable_variables" href="#imodels.experimental.bartpy.data.CovariateMatrix.n_splittable_variables">n_splittable_variables</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.proportion_of_value_in_variable" href="#imodels.experimental.bartpy.data.CovariateMatrix.proportion_of_value_in_variable">proportion_of_value_in_variable</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.random_splittable_value" href="#imodels.experimental.bartpy.data.CovariateMatrix.random_splittable_value">random_splittable_value</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.random_splittable_variable" href="#imodels.experimental.bartpy.data.CovariateMatrix.random_splittable_variable">random_splittable_variable</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.splittable_variables" href="#imodels.experimental.bartpy.data.CovariateMatrix.splittable_variables">splittable_variables</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.update_mask" href="#imodels.experimental.bartpy.data.CovariateMatrix.update_mask">update_mask</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.values" href="#imodels.experimental.bartpy.data.CovariateMatrix.values">values</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.variables" href="#imodels.experimental.bartpy.data.CovariateMatrix.variables">variables</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.experimental.bartpy.data.Data" href="#imodels.experimental.bartpy.data.Data">Data</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.experimental.bartpy.data.Data.X" href="#imodels.experimental.bartpy.data.Data.X">X</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.Data.mask" href="#imodels.experimental.bartpy.data.Data.mask">mask</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.Data.update_y" href="#imodels.experimental.bartpy.data.Data.update_y">update_y</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.Data.y" href="#imodels.experimental.bartpy.data.Data.y">y</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.experimental.bartpy.data.Target" href="#imodels.experimental.bartpy.data.Target">Target</a></code></h4>
+<ul class="two-column">
+<li><code><a title="imodels.experimental.bartpy.data.Target.normalize_y" href="#imodels.experimental.bartpy.data.Target.normalize_y">normalize_y</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.Target.normalizing_scale" href="#imodels.experimental.bartpy.data.Target.normalizing_scale">normalizing_scale</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.Target.summed_y" href="#imodels.experimental.bartpy.data.Target.summed_y">summed_y</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.Target.unnormalize_y" href="#imodels.experimental.bartpy.data.Target.unnormalize_y">unnormalize_y</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.Target.unnormalized_y" href="#imodels.experimental.bartpy.data.Target.unnormalized_y">unnormalized_y</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.Target.update_y" href="#imodels.experimental.bartpy.data.Target.update_y">update_y</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.data.Target.values" href="#imodels.experimental.bartpy.data.Target.values">values</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

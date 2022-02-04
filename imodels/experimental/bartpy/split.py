@@ -3,8 +3,8 @@ from typing import List, Optional
 
 import numpy as np
 
-from bartpy.data import Data
-from bartpy.splitcondition import CombinedCondition, SplitCondition
+from imodels.experimental.bartpy.data import Data
+from imodels.experimental.bartpy.splitcondition import CombinedCondition, SplitCondition
 
 
 class Split:

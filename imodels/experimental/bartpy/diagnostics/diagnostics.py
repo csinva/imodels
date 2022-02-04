@@ -1,10 +1,10 @@
 from matplotlib import pyplot as plt
 
-from bartpy.diagnostics.residuals import plot_qq, plot_homoskedasity_diagnostics
-from bartpy.diagnostics.sampling import plot_tree_mutation_acceptance_rate
-from bartpy.diagnostics.sigma import plot_sigma_convergence
-from bartpy.diagnostics.trees import plot_tree_depth
-from bartpy.sklearnmodel import SklearnModel
+from imodels.experimental.bartpy.diagnostics.residuals import plot_qq, plot_homoskedasity_diagnostics
+from imodels.experimental.bartpy.diagnostics.sampling import plot_tree_mutation_acceptance_rate
+from imodels.experimental.bartpy.diagnostics.sigma import plot_sigma_convergence
+from imodels.experimental.bartpy.diagnostics.trees import plot_tree_depth
+from imodels.experimental.bartpy.sklearnmodel import SklearnModel
 
 
 def plot_diagnostics(model: SklearnModel):

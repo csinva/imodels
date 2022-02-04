@@ -1,6 +1,6 @@
 from typing import Generator
 
-from bartpy.tree import Tree
+from imodels.experimental.bartpy.tree import Tree
 
 
 class Initializer(object):
