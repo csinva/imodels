@@ -4,6 +4,7 @@ import numpy as np
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
+from sklearn.linear_model import RidgeCV, RidgeClassifierCV
 from sklearn.model_selection import train_test_split
 
 
@@ -11,7 +12,7 @@ class Node:
     def __init__(self, feature: int = None, threshold: int = None,
                  value=None, idxs=None, is_root: bool = False, left=None,
                  impurity_reduction: float = None, tree_num: int = None,
-                 right=None):
+                 right=None, split_or_linear='split'):
         """Node class for splitting
         """
 
@@ -19,6 +20,7 @@ class Node:
         self.is_root = is_root
         self.idxs = idxs
         self.tree_num = tree_num
+        self.split_or_linear = split_or_linear
         self.feature = feature
         self.impurity_reduction = impurity_reduction
 
@@ -37,19 +39,25 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-        if self.is_root:
-            return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
-        elif self.left is None and self.right is None:
-            return f'Val: {self.value[0][0]:0.3f} (leaf)'
+        if self.split_or_linear == 'linear':
+            if self.is_root:
+                return f'X_{self.feature} * {self.value:0.3f} (Tree #{self.tree_num} linear root)'
+            else:
+                return f'X_{self.feature} * {self.value:0.3f} (linear)'
         else:
-            return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
+            if self.is_root:
+                return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
+            elif self.left is None and self.right is None:
+                return f'Val: {self.value[0][0]:0.3f} (leaf)'
+            else:
+                return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
 
     def __repr__(self):
         return self.__str__()
 
 
-class FIGS(BaseEstimator):
-    """FIGS (sum of trees) classifier.
+class FIGSExt(BaseEstimator):
+    """FIGSExt (sum of trees) classifier.
     Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
     Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
     The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
@@ -57,9 +65,12 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     """
 
-    def __init__(self, max_rules: int = None):
+    def __init__(self, max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False):
         super().__init__()
         self.max_rules = max_rules
+        self.posthoc_ridge = posthoc_ridge
+        self.include_linear = include_linear
+        self.weighted_model_ = None  # set if using posthoc_ridge
         self._init_prediction_task()  # decides between regressor and classifier
 
     def _init_prediction_task(self):
@@ -69,6 +80,42 @@ class FIGS(BaseEstimator):
         it is equivalent to SuperCARTRegressor
         """
         self.prediction_task = 'regression'
+
+    def construct_node_linear(self, X, y, idxs, tree_num=0, sample_weight=None):
+        """This can be made a lot faster
+        Assumes there are at least 5 points in node
+        Doesn't currently support sample_weight!
+        """
+        y_target = y[idxs]
+        # print(np.unique(y_target))
+        impurity_orig = np.mean(np.square(y_target)) * idxs.sum()
+
+        # find best linear split
+        best_impurity = impurity_orig
+        best_linear_coef = None
+        best_feature = None
+        for feature_num in range(X.shape[1]):
+            x = X[idxs, feature_num].reshape(-1, 1)
+            m = RidgeCV(fit_intercept=False)
+            m.fit(x, y_target)
+            impurity = np.min(-m.best_score_) * idxs.sum()
+            assert impurity >= 0, 'impurity should not be negative'
+            if impurity < best_impurity:
+                best_impurity = impurity
+                best_linear_coef = m.coef_[0]
+                best_feature = feature_num
+        impurity_reduction = impurity_orig - best_impurity
+
+        # no good linear fit found
+        if impurity_reduction == 0:
+            return Node(idxs=idxs, value=np.mean(y_target), tree_num=tree_num,
+                        feature=None, threshold=None,
+                        impurity_reduction=None, split_or_linear='split')  # leaf node that just returns its value
+        else:
+            assert isinstance(best_linear_coef, float), 'coef should be a float'
+            return Node(idxs=idxs, value=best_linear_coef, tree_num=tree_num,
+                        feature=best_feature, threshold=None,
+                        impurity_reduction=impurity_reduction, split_or_linear='linear')
 
     def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
         # array indices
@@ -143,6 +190,9 @@ class FIGS(BaseEstimator):
         idxs = np.ones(X.shape[0], dtype=bool)
         node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
         potential_splits = [node_init]
+        if self.include_linear and idxs.sum() >= 5:
+            node_init_linear = self.construct_node_linear(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
+            potential_splits.append(node_init_linear)
         for node in potential_splits:
             node.setattrs(is_root=True)
         potential_splits = sorted(potential_splits, key=lambda x: x.impurity_reduction)
@@ -175,17 +225,18 @@ class FIGS(BaseEstimator):
 
                 # add new root potential node
                 node_new_root = Node(is_root=True, idxs=np.ones(X.shape[0], dtype=bool),
-                                     tree_num=-1)
+                                     tree_num=-1, split_or_linear=split_node.split_or_linear)
                 potential_splits.append(node_new_root)
 
-            # add children to potential splits
-            # assign left_temp, right_temp to be proper children
-            # (basically adds them to tree in predict method)
-            split_node.setattrs(left=split_node.left_temp, right=split_node.right_temp)
+            # add children to potential splits (note this doesn't currently add linear potential splits)
+            if split_node.split_or_linear == 'split':
+                # assign left_temp, right_temp to be proper children
+                # (basically adds them to tree in predict method)
+                split_node.setattrs(left=split_node.left_temp, right=split_node.right_temp)
 
-            # add children to potential_splits
-            potential_splits.append(split_node.left)
-            potential_splits.append(split_node.right)
+                # add children to potential_splits
+                potential_splits.append(split_node.left)
+                potential_splits.append(split_node.right)
 
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
@@ -207,22 +258,38 @@ class FIGS(BaseEstimator):
             for potential_split in potential_splits:
                 y_target = y_residuals_per_tree[potential_split.tree_num]
 
-                # re-calculate the best split
-                potential_split_updated = self.construct_node_with_stump(X=X,
-                                                                         y=y_target,
-                                                                         idxs=potential_split.idxs,
-                                                                         tree_num=potential_split.tree_num,
-                                                                         sample_weight=sample_weight, )
+                if potential_split.split_or_linear == 'split':
+                    # re-calculate the best split
+                    potential_split_updated = self.construct_node_with_stump(X=X,
+                                                                             y=y_target,
+                                                                             idxs=potential_split.idxs,
+                                                                             tree_num=potential_split.tree_num,
+                                                                             sample_weight=sample_weight, )
 
-                # need to preserve certain attributes from before (value at this split + is_root)
-                # value may change because residuals may have changed, but we want it to store the value from before
-                potential_split.setattrs(
-                    feature=potential_split_updated.feature,
-                    threshold=potential_split_updated.threshold,
-                    impurity_reduction=potential_split_updated.impurity_reduction,
-                    left_temp=potential_split_updated.left_temp,
-                    right_temp=potential_split_updated.right_temp,
-                )
+                    # need to preserve certain attributes from before (value at this split + is_root)
+                    # value may change because residuals may have changed, but we want it to store the value from before
+                    potential_split.setattrs(
+                        feature=potential_split_updated.feature,
+                        threshold=potential_split_updated.threshold,
+                        impurity_reduction=potential_split_updated.impurity_reduction,
+                        left_temp=potential_split_updated.left_temp,
+                        right_temp=potential_split_updated.right_temp,
+                    )
+                elif potential_split.split_or_linear == 'linear':
+                    assert potential_split.is_root, 'Currently, linear node only supported as root'
+                    assert potential_split.idxs.sum() == X.shape[0], 'Currently, linear node only supported as root'
+                    potential_split_updated = self.construct_node_linear(idxs=potential_split.idxs,
+                                                                         X=X,
+                                                                         y=y_target,
+                                                                         tree_num=potential_split.tree_num,
+                                                                         sample_weight=sample_weight)
+
+                    # don't need to retain anything from before (besides maybe is_root)
+                    potential_split.setattrs(
+                        feature=potential_split_updated.feature,
+                        impurity_reduction=potential_split_updated.impurity_reduction,
+                        value=potential_split_updated.value,
+                    )
 
                 # this is a valid split
                 if potential_split.impurity_reduction is not None:
@@ -235,11 +302,22 @@ class FIGS(BaseEstimator):
             if self.max_rules is not None and self.complexity_ >= self.max_rules:
                 finished = True
                 break
+
+        # potentially fit linear model on the tree preds
+        if self.posthoc_ridge:
+            if self.prediction_task == 'regression':
+                self.weighted_model_ = RidgeCV(alphas=(0.01, 0.1, 0.5, 1.0, 5, 10))
+            elif self.prediction_task == 'classification':
+                self.weighted_model_ = RidgeClassifierCV(alphas=(0.01, 0.1, 0.5, 1.0, 5, 10))
+            X_feats = self.extract_tree_predictions(X)
+            self.weighted_model_.fit(X_feats, y)
         return self
 
     def tree_to_str(self, root: Node, prefix=''):
         if root is None:
             return ''
+        elif root.split_or_linear == 'linear':
+            return prefix + str(root)
         elif root.threshold is None:
             return ''
         pprefix = prefix + '\t'
@@ -253,6 +331,9 @@ class FIGS(BaseEstimator):
         return s
 
     def predict(self, X):
+        if self.posthoc_ridge and self.weighted_model_:  # note, during fitting don't use the weighted moel
+            X_feats = self.extract_tree_predictions(X)
+            return self.weighted_model_.predict(X_feats)
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
             preds += self.predict_tree(tree, X)
@@ -264,11 +345,17 @@ class FIGS(BaseEstimator):
     def predict_proba(self, X):
         if self.prediction_task == 'regression':
             return NotImplemented
-        preds = np.zeros(X.shape[0])
-        for tree in self.trees_:
-            preds += self.predict_tree(tree, X)
-        preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
-        return np.vstack((1 - preds, preds)).transpose()
+        elif self.posthoc_ridge and self.weighted_model_:  # note, during fitting don't use the weighted moel
+            X_feats = self.extract_tree_predictions(X)
+            d = self.weighted_model_.decision_function(X_feats)  # for 2 classes, this (n_samples,)
+            probs = np.exp(d) / (1 + np.exp(d))
+            return np.vstack((1 - probs, probs)).transpose()
+        else:
+            preds = np.zeros(X.shape[0])
+            for tree in self.trees_:
+                preds += self.predict_tree(tree, X)
+            preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
+            return np.vstack((1 - preds, preds)).transpose()
 
     def extract_tree_predictions(self, X):
         """Extract predictions for all trees
@@ -285,7 +372,9 @@ class FIGS(BaseEstimator):
         """
 
         def predict_tree_single_point(root: Node, x):
-            if root.left is None and root.right is None:
+            if root.split_or_linear == 'linear':
+                return x[root.feature] * root.value
+            elif root.left is None and root.right is None:
                 return root.value
             left = x[root.feature] <= root.threshold
             if left:
@@ -305,12 +394,12 @@ class FIGS(BaseEstimator):
         return preds
 
 
-class FIGSRegressor(FIGS):
+class FIGSExtRegressor(FIGSExt):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
 
 
-class FIGSClassifier(FIGS):
+class FIGSExtClassifier(FIGSExt):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'
 
@@ -328,6 +417,6 @@ if __name__ == '__main__':
     print('X.shape', X.shape)
     print('ys', np.unique(y_train), '\n\n')
 
-    m = FIGSClassifier(max_rules=5)
+    m = FIGSExtClassifier(max_rules=5)
     m.fit(X_train, y_train)
     print(m.predict_proba(X_train))

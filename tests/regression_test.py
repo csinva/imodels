@@ -21,9 +21,7 @@ class TestClassRegression:
     def test_regression(self):
         '''Test imodels on basic binary classification task
         '''
-        for model_type in [partial(HSTreeRegressor, estimator_=DecisionTreeRegressor()),
-                           partial(HSTreeRegressorCV, estimator_=DecisionTreeRegressor()),
-                           RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor,
+        for model_type in [RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor,
                            FIGSRegressor,
                            partial(DistilledRegressor, teacher=RandomForestRegressor(n_estimators=3),
                                    student=DecisionTreeRegressor()),
