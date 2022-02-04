@@ -10,9 +10,9 @@ from imodels import GreedyTreeClassifier
 from imodels.tree.gosdt.pygosdt_helper import TreeClassifier
 from imodels.util import rule
 
-
 try:
     import gosdt
+
     gosdt_supported = True
 except ImportError:
     gosdt_supported = False
@@ -108,10 +108,10 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
                 X = pd.DataFrame(X, columns=self.feature_names_)
             else:
                 self.feature_names_ = X.columns
-            
+
             if not isinstance(y, pd.DataFrame):
                 y = pd.DataFrame(y, columns=['target'])
-            
+
             # gosdt extension expects serialized CSV, which we generate via pandas
             dataset_with_target = pd.concat((X, y), axis=1)
 
@@ -142,7 +142,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             # self.tree_ = dtree
             super().fit(X, y, feature_names=feature_names)
             self.tree_type = 'dt'
-            
+
         return self
 
     def predict(self, X):
@@ -317,6 +317,5 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             "trace": self.trace,
             "tree": self.tree
         }
-
 
 

@@ -11,29 +11,13 @@ from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifie
 from imodels.util.tree import compute_tree_complexity
 
 
-class DecisionTreeClassifierCCP(DecisionTreeClassifier):
+class DecisionTreeCCPClassifier(DecisionTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
         # print('est', estimator_)
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
-
-    # def fit(self,X,y,sample_weight=None,*args, **kwargs):
-    #    path = self.estimator_.cost_complexity_pruning_path(X,y)
-    #    ccp_alphas, impurities = path.ccp_alphas, path.impurities
-    #    complexities = {}
-    #    for alpha in ccp_alphas: 
-    #        est_params = self.estimator_.get_params()
-    #        est_params['ccp_alpha'] = alpha
-    ##        copied_estimator =  deepcopy(self.estimator_).set_params(**est_params)
-    #       copied_estimator.fit(X, y)
-    #       complexities[alpha] = self._get_complexity(copied_estimator)
-    #   closest_alpha, closest_leaves = min(complexities.items(), key=lambda x: abs(self.desired_complexity - x[1]))
-    #   params_for_fitting = self.estimator_.get_params()
-    #   params_for_fitting['ccp_alpha'] = closest_alpha
-    #   self.estimator_.set_params(**params_for_fitting)
-    #   self.estimator_.fit(X,y,*args, **kwargs)
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
         path = self.estimator_.cost_complexity_pruning_path(X, y)
@@ -91,7 +75,7 @@ class DecisionTreeClassifierCCP(DecisionTreeClassifier):
             return NotImplemented
 
 
-class DecisionTreeRegressorCCP(BaseEstimator):
+class DecisionTreeCCPRegressor(BaseEstimator):
 
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args,
                  **kwargs):
@@ -154,7 +138,7 @@ class DecisionTreeRegressorCCP(BaseEstimator):
             return NotImplemented
 
 
-class ShrunkDecisionTreeRegressorCCP_CV(HSTreeRegressor):
+class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -164,7 +148,7 @@ class ShrunkDecisionTreeRegressorCCP_CV(HSTreeRegressor):
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
-        m = DecisionTreeRegressorCCP(self.estimator_, desired_complexity=self.desired_complexity)
+        m = DecisionTreeCCPRegressor(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
@@ -175,7 +159,7 @@ class ShrunkDecisionTreeRegressorCCP_CV(HSTreeRegressor):
         super().fit(X=X, y=y)
 
 
-class ShrunkDecisionTreeClassifierCCP_CV(HSTreeClassifier):
+class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
@@ -185,7 +169,7 @@ class ShrunkDecisionTreeClassifierCCP_CV(HSTreeClassifier):
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
-        m = DecisionTreeClassifierCCP(self.estimator_, desired_complexity=self.desired_complexity)
+        m = DecisionTreeCCPClassifier(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
@@ -197,7 +181,7 @@ class ShrunkDecisionTreeClassifierCCP_CV(HSTreeClassifier):
 
 
 if __name__ == '__main__':
-    m = DecisionTreeClassifierCCP(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
+    m = DecisionTreeCCPClassifier(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
                                   complexity_measure='max_leaf_nodes')
     # X,y = make_friedman1() #For regression
     X, y = datasets.load_breast_cancer(return_X_y=True)
@@ -207,7 +191,7 @@ if __name__ == '__main__':
     m.predict(X_test)
     print(m.score(X_test, y_test))
 
-    m = ShrunkDecisionTreeClassifierCCP_CV(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
-                                           reg_param_list=[0.0, 0.1, 1.0, 5.0, 10.0, 25.0, 50.0, 100.0])
+    m = HSDecisionTreeCCPClassifierCV(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
+                                       reg_param_list=[0.0, 0.1, 1.0, 5.0, 10.0, 25.0, 50.0, 100.0])
     m.fit(X_train, y_train)
     print(m.score(X_test, y_test))

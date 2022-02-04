@@ -72,6 +72,57 @@ def shrink_node(node, reg_param, parent_val, parent_num, cum_sum, scheme, consta
     return node
 
 
+def _add_label(node, label):
+    if hasattr(node, "labels"):
+        node.labels.append(label)
+        return
+    node.labels = [label]
+    return
+
+
+def _get_next_node(children, att):
+    for child in children:
+        is_equal = child.getAttribute("flag") == "m" and child.getAttribute("feature") == att
+        is_less_than = child.getAttribute("flag") == "l" and float(att) < float(child.getAttribute("feature"))
+        is_greater_than = child.getAttribute("flag") == "r" and float(att) >= float(child.getAttribute("feature"))
+        if is_equal or is_less_than or is_greater_than:
+            return child
+
+
+def shrink_node(node, reg_param, parent_val, parent_num, cum_sum, scheme, constant):
+    """Shrink the tree
+    """
+
+    is_leaf = not node.hasChildNodes()
+    # if self.prediction_task == 'regression':
+    val = node.nodeValue
+    is_root = parent_val is None and parent_num is None
+    n_samples = len(node.labels) if (scheme != "leaf_based" or is_root) else parent_num
+
+    if is_root:
+        val_new = val
+
+    else:
+        reg_term = reg_param if scheme == "constant" else reg_param / parent_num
+
+        val_new = (val - parent_val) / (1 + reg_term)
+
+    cum_sum += val_new
+
+    if is_leaf:
+        if scheme == "leaf_based":
+            v = constant + (val - constant) / (1 + reg_param / node.n_obs)
+            node.nodeValue = v
+        else:
+            node.nodeValue = cum_sum
+
+    else:
+        for c in node.childNodes:
+            shrink_node(c, reg_param, val, parent_num=n_samples, cum_sum=cum_sum, scheme=scheme, constant=constant)
+
+    return node
+
+
 class C45TreeClassifier(BaseEstimator, ClassifierMixin):
     """A C4.5 tree classifier.
 
@@ -286,7 +337,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         return self.dom_.childNodes[0]
 
 
-class ShrunkC45TreeClassifier(BaseEstimator):
+class HSC45TreeClassifier(BaseEstimator):
     def __init__(self, estimator_: C45TreeClassifier, reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
         """
         Params
@@ -332,10 +383,10 @@ class ShrunkC45TreeClassifier(BaseEstimator):
         return self.estimator_.complexity_
 
 
-class ShrunkC45TreeClassifierCV(ShrunkC45TreeClassifier):
+class HSC45TreeClassifierCV(HSC45TreeClassifier):
     def __init__(self, estimator_: C45TreeClassifier,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based',
-                 cv: int = 3, scoring=None, *args, **kwargs):
+                 cv: int = 3, scoring='accuracy', *args, **kwargs):
         """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
         """
         super().__init__(estimator_, reg_param=None)
@@ -352,7 +403,7 @@ class ShrunkC45TreeClassifierCV(ShrunkC45TreeClassifier):
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
-            est = ShrunkC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
+            est = HSC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
@@ -360,10 +411,9 @@ class ShrunkC45TreeClassifierCV(ShrunkC45TreeClassifier):
 
 
 if __name__ == '__main__':
-
     X, y, feature_names = get_clean_dataset('ionosphere', data_source='pmlb')
     m = C45TreeClassifier(max_rules=3)
     m.fit(X, y)
-    s_m = ShrunkC45TreeClassifier(estimator_=m)
+    s_m = HSC45TreeClassifier(estimator_=m)
     s_m.fit(X, y)
     preds = s_m.predict_proba(X)

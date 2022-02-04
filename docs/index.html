@@ -477,13 +477,6 @@ The code here heavily derives from the wonderful work of previous projects. We s
 # Python `imodels` package for interpretable models compatible with scikit-learn.
 # Github repo available [here](https://github.com/csinva/imodels)
 
-# from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
-# from .tree.optimal_classification_tree import OptimalTreeModel
-from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
-from .tree.gosdt.pygosdt import OptimalTreeClassifier
-from .tree.c45_tree.c45_tree import C45TreeClassifier
-from .tree.figs import FIGSRegressor, FIGSClassifier
-from .tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier, HSTreeRegressorCV, HSTreeClassifierCV
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
@@ -500,6 +493,16 @@ from .rule_set.fpskope import FPSkopeClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.slipper import SlipperClassifier
+from .tree.c45_tree.c45_tree import C45TreeClassifier
+from .tree.cart_ccp import DecisionTreeCCPClassifier, DecisionTreeCCPRegressor, HSDecisionTreeCCPClassifierCV, \
+    HSDecisionTreeCCPRegressorCV
+# from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
+# from .tree.optimal_classification_tree import OptimalTreeModel
+from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
+from .tree.figs import FIGSRegressor, FIGSClassifier
+from .tree.gosdt.pygosdt import OptimalTreeClassifier
+from .tree.gosdt.pygosdt_shrinkage import HSOptimalTreeClassifier, HSOptimalTreeClassifierCV
+from .tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier, HSTreeRegressorCV, HSTreeClassifierCV
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
 
