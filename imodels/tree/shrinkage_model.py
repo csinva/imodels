@@ -18,22 +18,20 @@ class ShrunkTree(BaseEstimator):
         self.reg_param = reg_param
         # print('est', estimator_)
         self.estimator_ = estimator_
-        self._init_prediction_task() 
-# (max_depth=max_depth)
+        self._init_prediction_task()
 
-        # if checks.check_is_fitted(self.estimator_):
-        #     self.shrink()
-    
+    # (max_depth=max_depth)
+
+    # if checks.check_is_fitted(self.estimator_):
+    #     self.shrink()
+
     def __init__prediction_task(self):
-        
+
         self.prediction_task = 'regression'
-        
 
     def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
         self.shrink()
-        
-        
 
     def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         """Shrink the tree
@@ -45,7 +43,7 @@ class ShrunkTree(BaseEstimator):
         if self.prediction_task == 'regression':
             val = tree.value[i][0, 0]
         else:
-            val = tree.value[i][0, 1]/(tree.value[i][0,0]+ tree.value[i][0,1]) #binary classification
+            val = tree.value[i][0, 1] / (tree.value[i][0, 0] + tree.value[i][0, 1])  # binary classification
         # val = val[1] / val[2] # for binary cls
 
         # if root
@@ -64,8 +62,8 @@ class ShrunkTree(BaseEstimator):
                 if self.prediction_task == 'regression':
                     tree.value[i, 0, 0] = cum_sum
                 else:
-                    tree.value[i,0,1] = cum_sum
-                    tree.value[i,0,0] = 1.0 - cum_sum
+                    tree.value[i, 0, 1] = cum_sum
+                    tree.value[i, 0, 0] = 1.0 - cum_sum
             else:
                 self.shrink_tree(tree, reg_param, left,
                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
@@ -103,11 +101,13 @@ class ShrunkTree(BaseEstimator):
 class ShrunkTreeRegressor(ShrunkTree):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
+
+
 class ShrunkTreeClassifier(ShrunkTree):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'
-        
-        
+
+
 class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
     def __init__(self, estimator_: BaseEstimator,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
@@ -130,8 +130,6 @@ class ShrunkTreeClassifierCV(ShrunkTreeClassifier):
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y)
-
-        
 
 
 class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
@@ -158,9 +156,7 @@ class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
         super().fit(X=X, y=y)
 
 
-
-
-#class ShrunkTreeCV(ShrunkTree):
+# class ShrunkTreeCV(ShrunkTree):
 #    def __init__(self, estimator_: BaseEstimator,
 #                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
 #                 cv: int = 3, scoring=None):
@@ -168,11 +164,11 @@ class ShrunkTreeRegressorCV(ShrunkTreeRegressor):
 #        self.reg_param_list = np.array(reg_param_list)
 #        self.cv = cv
 #        self.scoring = scoring
-        # print('estimator', self.estimator_,
-        #       'checks.check_is_fitted(estimator)', checks.check_is_fitted(self.estimator_))
-        # if checks.check_is_fitted(self.estimator_):
-        #     raise Warning('Passed an already fitted estimator,'
-        #                   'but shrinking not applied until fit method is called.')
+# print('estimator', self.estimator_,
+#       'checks.check_is_fitted(estimator)', checks.check_is_fitted(self.estimator_))
+# if checks.check_is_fitted(self.estimator_):
+#     raise Warning('Passed an already fitted estimator,'
+#                   'but shrinking not applied until fit method is called.')
 
 #    def fit(self, X, y, *args, **kwargs):
 #        self.scores_ = []
@@ -200,7 +196,7 @@ if __name__ == '__main__':
 
     # m = ShrunkTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
     # m = DecisionTreeClassifier(random_state=42, max_features=None)
-    m = DecisionTreeRegressor(random_state=42,max_leaf_nodes = 20)
+    m = DecisionTreeRegressor(random_state=42, max_leaf_nodes=20)
     # print('best alpha', m.reg_param)
     m.fit(X_train, y_train)
     # m.predict_proba(X_train)  # just run this
@@ -209,7 +205,8 @@ if __name__ == '__main__':
 
     # m = ShrunkTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
     # m = ShrunkTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
-    m = ShrunkTreeRegressorCV(estimator_=DecisionTreeRegressor(max_leaf_nodes = 20,random_state = 42), reg_param_list=[0.1, 1, 10, 100])
+    m = ShrunkTreeRegressorCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=20, random_state=42),
+                              reg_param_list=[0.1, 1, 10, 100])
     # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
 
     m.fit(X_train, y_train)

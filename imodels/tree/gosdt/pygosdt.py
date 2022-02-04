@@ -262,38 +262,6 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
                     next_node = node['true'] if is_true else node['false']
                     _add_label(next_node, label)
                     nodes.append(next_node)
-
-                    # if is_true:
-                    #     nodes.append(node['true'])
-                    # else:
-                    #     nodes.append(node['false'])
-                    # if node["relation"] == "==":
-                    #     if value == reference:
-                    #         nodes.append(node["true"])
-                    #     else:
-                    #         nodes.append(node["false"])
-                    # elif node["relation"] == ">=":
-                    #     if value >= reference:
-                    #         nodes.append(node["true"])
-                    #     else:
-                    #         nodes.append(node["false"])
-                    # elif node["relation"] == "<=":
-                    #     if value <= reference:
-                    #         nodes.append(node["true"])
-                    #     else:
-                    #         nodes.append(node["false"])
-                    # elif node["relation"] == ">":
-                    #     if value > reference:
-                    #         nodes.append(node["true"])
-                    #     else:
-                    #         nodes.append(node["false"])
-                    # elif node["relation"] == "<":
-                    #     if value < reference:
-                    #         nodes.append(node["true"])
-                    #     else:
-                    #         nodes.append(node["false"])
-                    # else:
-                    #     raise "Unsupported relational operator {}".format(node["relation"])
         self._calc_probs(source_node)
         self.tree_.source = source_node
 

@@ -411,7 +411,6 @@ class ShrunkC45TreeClassifierCV(ShrunkC45TreeClassifier):
 
 
 if __name__ == '__main__':
-
     X, y, feature_names = get_clean_dataset('ionosphere', data_source='pmlb')
     m = C45TreeClassifier(max_rules=3)
     m.fit(X, y)
