@@ -65,11 +65,18 @@ class FIGSExt(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     """
 
-    def __init__(self, max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False):
+    def __init__(self, max_rules: int = None, posthoc_ridge: bool = False,
+                 include_linear: bool = False,
+                 max_features = None):
+        """
+        max_features
+            The number of features to consider when looking for the best split
+        """
         super().__init__()
         self.max_rules = max_rules
         self.posthoc_ridge = posthoc_ridge
         self.include_linear = include_linear
+        self.max_features = max_features
         self.weighted_model_ = None  # set if using posthoc_ridge
         self._init_prediction_task()  # decides between regressor and classifier
 
@@ -87,7 +94,6 @@ class FIGSExt(BaseEstimator):
         Doesn't currently support sample_weight!
         """
         y_target = y[idxs]
-        # print(np.unique(y_target))
         impurity_orig = np.mean(np.square(y_target)) * idxs.sum()
 
         # find best linear split
@@ -117,14 +123,14 @@ class FIGSExt(BaseEstimator):
                         feature=best_feature, threshold=None,
                         impurity_reduction=impurity_reduction, split_or_linear='linear')
 
-    def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
+    def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None, max_features=None):
         # array indices
         SPLIT = 0
         LEFT = 1
         RIGHT = 2
 
         # fit stump
-        stump = tree.DecisionTreeRegressor(max_depth=1)
+        stump = tree.DecisionTreeRegressor(max_depth=1, max_features=max_features)
         if sample_weight is not None:
             sample_weight = sample_weight[idxs]
         stump.fit(X[idxs], y[idxs], sample_weight=sample_weight)
@@ -175,7 +181,9 @@ class FIGSExt(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         """
-        y = y.astype(float)
+        if self.prediction_task == 'classification':
+            self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
+        y = y.astype(float)            
         if feature_names is not None:
             self.feature_names_ = feature_names
 
@@ -188,7 +196,8 @@ class FIGSExt(BaseEstimator):
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
         # or it is a child of a root node that has already been added
         idxs = np.ones(X.shape[0], dtype=bool)
-        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
+        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1,
+                                                   sample_weight=sample_weight, max_features=self.max_features)
         potential_splits = [node_init]
         if self.include_linear and idxs.sum() >= 5:
             node_init_linear = self.construct_node_linear(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
@@ -264,7 +273,8 @@ class FIGSExt(BaseEstimator):
                                                                              y=y_target,
                                                                              idxs=potential_split.idxs,
                                                                              tree_num=potential_split.tree_num,
-                                                                             sample_weight=sample_weight, )
+                                                                             sample_weight=sample_weight,
+                                                                             max_features=self.max_features)
 
                     # need to preserve certain attributes from before (value at this split + is_root)
                     # value may change because residuals may have changed, but we want it to store the value from before
@@ -356,6 +366,8 @@ class FIGSExt(BaseEstimator):
                 preds += self.predict_tree(tree, X)
             preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
             return np.vstack((1 - preds, preds)).transpose()
+        
+    decision_function = predict_proba # used by sklearn BaggingClassifier wrapper
 
     def extract_tree_predictions(self, X):
         """Extract predictions for all trees

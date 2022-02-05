@@ -25,7 +25,7 @@ class Node:
         # different meanings
         self.value = value  # for split this is mean, for linear this is weight
 
-        # split-specific (for linear these should all be None)
+        # split-specific
         self.threshold = threshold
         self.left = left
         self.right = right
@@ -53,7 +53,7 @@ class FIGS(BaseEstimator):
     Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
     Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
     The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
-    Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
+    Experiments across real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
     https://arxiv.org/abs/2201.11931
     """
 
@@ -165,6 +165,7 @@ class FIGS(BaseEstimator):
 
             # if added a tree root
             if split_node.is_root:
+                
                 # start a new tree
                 self.trees_.append(split_node)
 
@@ -198,9 +199,9 @@ class FIGS(BaseEstimator):
                 y_residuals_per_tree[tree_num_] = deepcopy(y)
 
                 # subtract predictions of all other trees
-                for tree_num_2_ in range(len(self.trees_)):
-                    if not tree_num_2_ == tree_num_:
-                        y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
+                for tree_num_other_ in range(len(self.trees_)):
+                    if not tree_num_other_ == tree_num_:
+                        y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_other_]
 
             # recompute all impurities + update potential_split children
             potential_splits_new = []
@@ -270,18 +271,8 @@ class FIGS(BaseEstimator):
         preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
         return np.vstack((1 - preds, preds)).transpose()
 
-    def extract_tree_predictions(self, X):
-        """Extract predictions for all trees
-        """
-        X_feats = np.zeros((X.shape[0], len(self.trees_)))
-        for tree_num_ in range(len(self.trees_)):
-            preds_tree = self.predict_tree(self.trees_[tree_num_], X)
-            X_feats[:, tree_num_] = preds_tree
-        return X_feats
-
     def predict_tree(self, root: Node, X):
         """Predict for a single tree
-        This can be made way faster
         """
 
         def predict_tree_single_point(root: Node, x):
