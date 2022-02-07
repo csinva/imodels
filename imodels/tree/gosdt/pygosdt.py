@@ -132,7 +132,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
 
             warnings.warn(
                 "Should install gosdt extension. On x86_64 linux or macOS: "
-                "'pip install gosdt'. On other platforms, see "
+                "'pip install gosdt-deprecated'. On other platforms, see "
                 "https://github.com/keyan3/GeneralizedOptimalSparseDecisionTrees. "
                 "Defaulting to Non-optimal DecisionTreeClassifier."
             )
