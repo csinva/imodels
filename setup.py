@@ -11,7 +11,7 @@ required_pypi = [
     'numpy',
     'pandas',
     'scipy',
-    'scikit-learn>=1.0',  # 0.23+ only works on py3.6+
+    'scikit-learn',  # 0.23+ only works on py3.6+
 ]
 
 extra_deps = [
