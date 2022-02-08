@@ -2,50 +2,28 @@ from typing import Iterable, Tuple, List
 
 import numpy as np
 import pandas as pd
-from mlxtend.frequent_patterns import fpgrowth
+from mlxtend import frequent_patterns as mlx
 from sklearn.ensemble import BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor, \
     GradientBoostingClassifier
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_array
 
-from imodels.discretization import BRLDiscretizer, SimpleDiscretizer
 from imodels.util import rule, convert
 
 
-def extract_fpgrowth(X, y,
-                     feature_names,
+def extract_fpgrowth(X,
                      minsupport=0.1,
                      maxcardinality=2,
-                     undiscretized_features=[],
-                     disc_strategy='simple',
-                     disc_kwargs={},
-                     verbose=False) -> Tuple[List[Tuple], BRLDiscretizer]:
-    # deal with pandas data
-    if type(X) in [pd.DataFrame, pd.Series]:
-        if feature_names is None:
-            feature_names = X.columns
-        X = X.values
-    if type(y) in [pd.DataFrame, pd.Series]:
-        y = y.values
-
-    if disc_strategy == 'mdlp':
-        discretizer = BRLDiscretizer(X, y, feature_labels=feature_names, verbose=verbose)
-        discretizer.fit(X, y, undiscretized_features)
-    else:
-        discretizer = SimpleDiscretizer(**disc_kwargs)
-        discretizer.fit(X, feature_names)
-
-    X_df_onehot = discretizer.transform(X)
-
-    # Now find frequent itemsets
-    itemsets_df = fpgrowth(X_df_onehot, min_support=minsupport, max_len=maxcardinality)
+                     verbose=False) -> List[Tuple]:
+    
+    itemsets_df = mlx.fpgrowth(X, min_support=minsupport, max_len=maxcardinality)
     itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
-    itemsets = [np.array(X_df_onehot.columns)[list(inds)] for inds in itemsets_indices]
+    itemsets = [np.array(X.columns)[list(inds)] for inds in itemsets_indices]
     itemsets = list(map(tuple, itemsets))
     if verbose:
         print(len(itemsets), 'rules mined')
 
-    return itemsets, discretizer
+    return itemsets
 
 
 def extract_rulefit(X, y, feature_names,

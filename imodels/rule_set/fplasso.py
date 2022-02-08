@@ -1,5 +1,6 @@
 from typing import List
 
+import pandas as pd
 from sklearn.base import ClassifierMixin, RegressorMixin
 
 from imodels.rule_set.rule_fit import RuleFit
@@ -12,8 +13,6 @@ class FPLasso(RuleFit):
     def __init__(self,
                  minsupport=0.1,
                  maxcardinality=2,
-                 disc_strategy='mdlp',
-                 disc_kwargs={},
                  verbose=False,
                  n_estimators=100,
                  tree_size=4,
@@ -39,8 +38,6 @@ class FPLasso(RuleFit):
                          include_linear,
                          alpha,
                          random_state)
-        self.disc_strategy = disc_strategy
-        self.disc_kwargs = disc_kwargs
         self.minsupport = minsupport
         self.maxcardinality = maxcardinality
         self.verbose = verbose
@@ -51,14 +48,10 @@ class FPLasso(RuleFit):
         return self
 
     def _extract_rules(self, X, y) -> List[str]:
-        itemsets = extract_fpgrowth(X, y,
-                                    feature_names=self.feature_placeholders,
-                                    minsupport=self.minsupport,
+        X = pd.DataFrame(X, columns=self.feature_placeholders)
+        itemsets = extract_fpgrowth(X, minsupport=self.minsupport,
                                     maxcardinality=self.maxcardinality,
-                                    undiscretized_features=self.undiscretized_features,
-                                    disc_strategy=self.disc_strategy,
-                                    disc_kwargs=self.disc_kwargs,
-                                    verbose=self.verbose)[0]
+                                    verbose=self.verbose)
         return itemsets_to_rules(itemsets)
 
 

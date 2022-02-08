@@ -27,13 +27,10 @@ class TestClassClassificationBinary:
 
         for model_type in [
             RuleFitClassifier, GreedyRuleListClassifier,
-            FPLassoClassifier, SkopeRulesClassifier,
-            FPSkopeClassifier, BoostedRulesClassifier,
+            SkopeRulesClassifier, BoostedRulesClassifier,
             OneRClassifier, SlipperClassifier,
-            GreedyTreeClassifier,
-            OptimalTreeClassifier,
-            C45TreeClassifier,
-            FIGSClassifier,
+            GreedyTreeClassifier, OptimalTreeClassifier,
+            C45TreeClassifier, FIGSClassifier,
         ]:  # IRFClassifier, SLIMClassifier, BayesianRuleSetClassifier,
 
             init_kwargs = {}

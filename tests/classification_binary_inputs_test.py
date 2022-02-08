@@ -2,8 +2,8 @@ import random
 
 import numpy as np
 
-from imodels import OptimalRuleListClassifier
-from imodels import OptimalTreeClassifier
+from imodels import (
+    OptimalRuleListClassifier, OptimalTreeClassifier, FPLassoClassifier, FPSkopeClassifier)
 
 
 class TestClassClassificationBinary:
@@ -27,10 +27,13 @@ class TestClassClassificationBinary:
         '''Test imodels on basic binary classification task
         '''
         for model_type in [
-            OptimalRuleListClassifier, OptimalTreeClassifier
+            OptimalRuleListClassifier, OptimalTreeClassifier,
+            FPLassoClassifier, FPSkopeClassifier,
         ]:
 
             init_kwargs = {}
+            if model_type == FPSkopeClassifier:
+                init_kwargs['recall_min'] = 0.5
             m = model_type(**init_kwargs)
 
             X = self.X_classification_binary

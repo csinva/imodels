@@ -282,7 +282,7 @@ class ExtraBasicDiscretizer(TransformerMixin):
     n_bins : int or array-like of shape (len(dcols),), default=4
         Number of bins to discretize each feature into.
 
-    strategy : {‘uniform’, ‘quantile’, ‘kmeans’}, default='quantile'
+    strategy : {'uniform', 'quantile', 'kmeans'}, default='quantile'
         Strategy used to define the widths of the bins.
 
         uniform
@@ -293,16 +293,16 @@ class ExtraBasicDiscretizer(TransformerMixin):
             Values in each bin have the same nearest center of a 1D
             k-means cluster.
 
-    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape  (len(dcols),), default='if_binary'
+    onehot_drop : {'first', 'if_binary'} or a array-like of shape  (len(dcols),), default='if_binary'
         Specifies a methodology to use to drop one of the categories
         per feature when encode = "onehot".
 
         None
             Retain all features (the default).
-        ‘first’
+        'first'
             Drop the first y_str in each feature. If only one y_str
             is present, the feature will be dropped entirely.
-        ‘if_binary’
+        'if_binary'
             Drop the first y_str in each feature with two categories.
             Features with 1 or more than 2 categories are left intact.
 
@@ -417,7 +417,7 @@ class BasicDiscretizer(AbstractDiscretizer):
         The names of the columns to be discretized; by default,
         discretize all float and int columns in X.
 
-    encode : {‘onehot’, ‘ordinal’}, default=’onehot’
+    encode : {'onehot', 'ordinal'}, default='onehot'
         Method used to encode the transformed result.
 
         onehot
@@ -426,7 +426,7 @@ class BasicDiscretizer(AbstractDiscretizer):
         ordinal
             Return the bin identifier encoded as an integer value.
 
-    strategy : {‘uniform’, ‘quantile’, ‘kmeans’}, default=’quantile’
+    strategy : {'uniform', 'quantile', 'kmeans'}, default='quantile'
         Strategy used to define the widths of the bins.
 
         uniform
