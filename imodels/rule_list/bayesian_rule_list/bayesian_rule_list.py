@@ -102,14 +102,11 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                 feature_names = ["ft" + str(i + 1) for i in range(len(X[0]))]
         self.feature_names = feature_names
 
-    def fit(self, X, y, feature_names: list = None, undiscretized_features=[], verbose=False):
+    def fit(self, X, y, feature_names: list = None, verbose=False):
         """Fit rule lists to data.
-        Note: Numerical data in `X` is automatically discretized.
-        To prevent discretization (e.g. to protect columns containing categorical data represented as integers),
-        pass the list of protected column names in the `fit` method,
-        e.g. `model.fit(X,y,undiscretized_features=['CAT_COLUMN_NAME'])`
-        (entries in undiscretized columns will be converted to strings and used as categorical values)
-
+        Note: The BRL algorithm requires numeric features to be discretized into bins 
+            prior to fitting. See imodels.discretization or sklearn.preprocessing for 
+            helpful utilities.
 
         Parameters
         ----------
@@ -124,10 +121,6 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             If empty and X is a DataFrame, column labels are used.
             If empty and X is not a DataFrame, then features are simply enumerated
             
-        undiscretized_features : array_like, shape = [n_features], optional (default: [])
-            String labels for each feature which is NOT to be discretized.
-            If empty, all numeric features are discretized
-            
         verbose : bool
             Currently doesn't do anything
 
@@ -138,35 +131,39 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.seed()
 
         if len(set(y)) != 2:
-            raise Exception("Only binary classification is supported at this time!")
+            raise ValueError("Only binary classification is supported at this time!")
 
         X, y = check_X_y(X, y)
         check_classification_targets(y)
         self.n_features_in_ = X.shape[1]
         self.classes_ = unique_labels(y)
 
+        # Check that all features are either categorical or discretized
+        if not np.all((X == 1) | (X == 0)):
+            raise ValueError("All numeric features must be discretized prior to fitting!")
+
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
         self.feature_names = np.array(list(self.feature_dict_.values()))
 
-        itemsets, self.discretizer = extract_fpgrowth(X, y,
-                                                      feature_names=self.feature_placeholders,
-                                                      minsupport=self.minsupport,
-                                                      maxcardinality=self.maxcardinality,
-                                                      undiscretized_features=undiscretized_features,
-                                                      disc_strategy=self.disc_strategy,
-                                                      disc_kwargs=self.disc_kwargs,
-                                                      verbose=verbose)
-        X_df_onehot = self.discretizer.transform(X)
+        X_df = pd.DataFrame(X, columns=self.feature_placeholders)
+        itemsets = extract_fpgrowth(X_df, y,
+                                    feature_names=self.feature_placeholders,
+                                    minsupport=self.minsupport,
+                                    maxcardinality=self.maxcardinality,
+                                    verbose=verbose)
 
         # Now form the data-vs.-lhs set
         # X[j] is the set of data points that contain itemset j (that is, satisfy rule j)
-        for c in X_df_onehot.columns:
-            X_df_onehot[c] = [c if x == 1 else '' for x in list(X_df_onehot[c])]
-        X = [{}] * (len(itemsets) + 1)
-        X[0] = set(range(len(X_df_onehot)))  # the default rule satisfies all data
+        for col in X_df.columns:
+            # X_df[c] = [c if x == 1 else '' for x in list(X_df[c])]
+            X_df[col] = X_df[col].replace({1: col, 0: ''})
+
+        itemset_support_inds = [{}] * (len(itemsets) + 1)
+        itemset_support_inds[0] = set(range(X_df.shape[0]))  # the default rule satisfies all data
         for (j, lhs) in enumerate(itemsets):
-            X[j + 1] = set([i for (i, xi) in enumerate(X_df_onehot.values) if set(lhs).issubset(xi)])
+            itemset_support_inds[j + 1] = set(
+                [i for (i, xi) in enumerate(X_df.values) if set(lhs).issubset(xi)])
 
         # now form lhs_len
         lhs_len = [0]
@@ -176,17 +173,18 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         lhs_len = np.array(lhs_len)
         itemsets_all = ['null']
         itemsets_all.extend(itemsets)
+        self.itemsets = itemsets_all
 
-        Xtrain, Ytrain, nruleslen, lhs_len, self.itemsets = (
-            X, np.vstack((1 - np.array(y), y)).T.astype(int), nruleslen, lhs_len, itemsets_all
-        )
+        Xtrain = itemset_support_inds
+        Ytrain = np.vstack((1 - np.array(y), y)).T.astype(int)
 
         permsdic = defaultdict(default_permsdic)  # We will store here the MCMC results
         # Do MCMC
-        res, Rhat = run_bdl_multichain_serial(self.max_iter, self.thinning, self.alpha, self.listlengthprior,
-                                              self.listwidthprior, Xtrain, Ytrain, nruleslen, lhs_len,
-                                              self.maxcardinality, permsdic, self.burnin, self.n_chains,
-                                              [None] * self.n_chains, verbose=self.verbose, seed=self.random_state)
+        res, Rhat = run_bdl_multichain_serial(
+            self.max_iter, self.thinning, self.alpha, self.listlengthprior,
+            self.listwidthprior, Xtrain, Ytrain, nruleslen, lhs_len,
+            self.maxcardinality, permsdic, self.burnin, self.n_chains,
+            [None] * self.n_chains, verbose=self.verbose, seed=self.random_state)
 
         # Merge the chains
         permsdic = merge_chains(res)
