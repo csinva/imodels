@@ -2,10 +2,8 @@ import random
 
 import numpy as np
 
-from imodels import OptimalRuleListClassifier
-from imodels import OptimalTreeClassifier
-from imodels.rule_set.fplasso import FPLassoClassifier
-from imodels.rule_set.fpskope import FPSkopeClassifier
+from imodels import (
+    OptimalRuleListClassifier, OptimalTreeClassifier, FPLassoClassifier, FPSkopeClassifier)
 
 
 class TestClassClassificationBinary:

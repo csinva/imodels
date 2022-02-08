@@ -1,9 +1,7 @@
 import random
 import numpy as np
 
-from imodels import *
-from imodels.rule_set import fpskope
-from imodels.rule_set.fplasso import FPLasso  # noqa: F403
+from imodels import *  # noqa: F403
 
 
 class TestClassClassificationBinary:
