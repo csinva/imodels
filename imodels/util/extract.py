@@ -11,8 +11,7 @@ from sklearn.utils.validation import check_array
 from imodels.util import rule, convert
 
 
-def extract_fpgrowth(X, y,
-                     feature_names,
+def extract_fpgrowth(X,
                      minsupport=0.1,
                      maxcardinality=2,
                      verbose=False) -> List[Tuple]:

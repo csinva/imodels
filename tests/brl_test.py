@@ -2,10 +2,12 @@ import os
 import unittest
 
 import numpy as np
+import pandas as pd
 from scipy.io.arff import loadarff
 from sklearn.model_selection import train_test_split
 
 from imodels.rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
+from imodels.discretization import ExtraBasicDiscretizer
 
 path_to_tests = os.path.dirname(os.path.realpath(__file__))
 
@@ -44,11 +46,14 @@ class TestBRL(unittest.TestCase):
         y = (y_text == 'tested_positive').astype(int)  # labels 0-1
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.75)  # split
+        disc = ExtraBasicDiscretizer(feature_names, n_bins=3, strategy='uniform')
+        X_train_disc = disc.fit_transform(pd.DataFrame(X_train, columns=feature_names))
+        X_test_disc = disc.transform(pd.DataFrame(X_test, columns=feature_names))
 
         # train classifier (allow more iterations for better accuracy; use BigDataRuleListClassifier for large datasets)
         print('training...')
         model = BayesianRuleListClassifier(max_iter=1000, minsupport=0.4, maxcardinality=1, class1label="diabetes",
                                            verbose=False)
-        model.fit(X_train, y_train, feature_names=feature_names)
-        preds = model.predict(X_test, threshold=0.1)
+        model.fit(X_train_disc.values, y_train, feature_names=X_train_disc.columns)
+        preds = model.predict(X_test_disc.values, threshold=0.1)
         print("RuleListClassifier Accuracy:", np.mean(y_test == preds), "Learned interpretable model:\n", model)

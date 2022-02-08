@@ -60,8 +60,6 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                  listwidthprior=1,
                  maxcardinality=2,
                  minsupport=0.1,
-                 disc_strategy='mdlp',
-                 disc_kwargs={},
                  alpha=np.array([1., 1.]),
                  n_chains=3,
                  max_iter=50000,
@@ -72,8 +70,6 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.listwidthprior = listwidthprior
         self.maxcardinality = maxcardinality
         self.minsupport = minsupport
-        self.disc_strategy = disc_strategy
-        self.disc_kwargs = disc_kwargs
         self.alpha = alpha
         self.n_chains = n_chains
         self.max_iter = max_iter
@@ -84,7 +80,6 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.thinning = 1  # The thinning rate
         self.burnin = self.max_iter // 2  # the number of samples to drop as burn-in in-simulation
 
-        self.discretizer = None
         self.d_star = None
         self.random_state = random_state
         self.seed()
@@ -147,9 +142,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.feature_names = np.array(list(self.feature_dict_.values()))
 
         X_df = pd.DataFrame(X, columns=self.feature_placeholders)
-        itemsets = extract_fpgrowth(X_df, y,
-                                    feature_names=self.feature_placeholders,
-                                    minsupport=self.minsupport,
+        itemsets = extract_fpgrowth(X_df, minsupport=self.minsupport,
                                     maxcardinality=self.maxcardinality,
                                     verbose=verbose)
 
@@ -284,10 +277,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         check_is_fitted(self)
         X = check_array(X)
 
-        if self.discretizer:
-            D = self.discretizer.transform(X)
-        else:
-            D = pd.DataFrame(X, columns=self.feature_names)
+        D = pd.DataFrame(X, columns=self.feature_placeholders)
 
         N = len(D)
         X2 = self._to_itemset_indices(D)
