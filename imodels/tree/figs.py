@@ -63,6 +63,7 @@ class FIGS(BaseEstimator):
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
         self._init_prediction_task()  # decides between regressor and classifier
+        self._init_decision_function()
 
     def _init_prediction_task(self):
         """
@@ -71,6 +72,15 @@ class FIGS(BaseEstimator):
         it is equivalent to SuperCARTRegressor
         """
         self.prediction_task = 'regression'
+        
+    def _init_decision_function(self):
+        """Sets decision function based on prediction_task
+        """
+        # used by sklearn GrriidSearchCV, BaggingClassifier
+        if self.prediction_task  == 'classification':
+            decision_function = lambda x: self.predict_proba(x)[:, 1] 
+        elif self.prediction_task  == 'regression':
+            decision_function = self.predict
 
     def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
         # array indices

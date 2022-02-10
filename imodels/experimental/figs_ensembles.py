@@ -89,6 +89,15 @@ class FIGSExt(BaseEstimator):
         it is equivalent to SuperCARTRegressor
         """
         self.prediction_task = 'regression'
+        
+    def _init_decision_function(self):
+        """Sets decision function based on prediction_task
+        """
+        # used by sklearn GrriidSearchCV, BaggingClassifier
+        if self.prediction_task  == 'classification':
+            decision_function = lambda x: self.predict_proba(x)[:, 1] 
+        elif self.prediction_task  == 'regression':
+            decision_function = self.predict
 
     def construct_node_linear(self, X, y, idxs, tree_num=0, sample_weight=None):
         """This can be made a lot faster
@@ -371,7 +380,6 @@ class FIGSExt(BaseEstimator):
             preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
             return np.vstack((1 - preds, preds)).transpose()
         
-    decision_function = predict_proba # used by sklearn BaggingClassifier wrapper
 
     def extract_tree_predictions(self, X):
         """Extract predictions for all trees
