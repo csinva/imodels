@@ -45,14 +45,14 @@ class TestBRL(unittest.TestCase):
         X, y_text = data_np[:, :-1].astype('float32'), data_np[:, -1].astype('str')
         y = (y_text == 'tested_positive').astype(int)  # labels 0-1
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.75)  # split
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.6)  # split
         disc = ExtraBasicDiscretizer(feature_names, n_bins=3, strategy='uniform')
         X_train_disc = disc.fit_transform(pd.DataFrame(X_train, columns=feature_names))
         X_test_disc = disc.transform(pd.DataFrame(X_test, columns=feature_names))
 
         # train classifier (allow more iterations for better accuracy; use BigDataRuleListClassifier for large datasets)
         print('training...')
-        model = BayesianRuleListClassifier(max_iter=1000, minsupport=0.4, maxcardinality=1, class1label="diabetes",
+        model = BayesianRuleListClassifier(max_iter=300, minsupport=0.4, maxcardinality=1, class1label="diabetes",
                                            verbose=False)
         model.fit(X_train_disc.values, y_train, feature_names=X_train_disc.columns)
         preds = model.predict(X_test_disc.values, threshold=0.1)

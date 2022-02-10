@@ -5,6 +5,7 @@ from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
+from sklearn.utils import check_X_y
 
 
 class Node:
@@ -57,9 +58,10 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     """
 
-    def __init__(self, max_rules: int = None):
+    def __init__(self, max_rules: int = None, min_impurity_decrease: float=0.0):
         super().__init__()
         self.max_rules = max_rules
+        self.min_impurity_decrease = min_impurity_decrease
         self._init_prediction_task()  # decides between regressor and classifier
 
     def _init_prediction_task(self):
@@ -119,7 +121,7 @@ class FIGS(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None):
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
         """
         Params
         ------
@@ -128,6 +130,7 @@ class FIGS(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         """
+        X, y = check_X_y(X, y)
         y = y.astype(float)
         if feature_names is not None:
             self.feature_names_ = feature_names
@@ -154,7 +157,7 @@ class FIGS(BaseEstimator):
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it's sorted)
 
             # don't split on node
-            if split_node.impurity_reduction < min_impurity_decrease:
+            if split_node.impurity_reduction < self.min_impurity_decrease:
                 finished = True
                 break
 

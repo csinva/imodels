@@ -6,6 +6,7 @@ from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import RidgeCV, RidgeClassifierCV
 from sklearn.model_selection import train_test_split
+from sklearn.utils import check_X_y
 
 
 class Node:
@@ -67,7 +68,7 @@ class FIGSExt(BaseEstimator):
 
     def __init__(self, max_rules: int = None, posthoc_ridge: bool = False,
                  include_linear: bool = False,
-                 max_features = None):
+                 max_features = None, min_impurity_decrease: float=0.0):
         """
         max_features
             The number of features to consider when looking for the best split
@@ -78,6 +79,7 @@ class FIGSExt(BaseEstimator):
         self.include_linear = include_linear
         self.max_features = max_features
         self.weighted_model_ = None  # set if using posthoc_ridge
+        self.min_impurity_decrease = min_impurity_decrease
         self._init_prediction_task()  # decides between regressor and classifier
 
     def _init_prediction_task(self):
@@ -116,7 +118,7 @@ class FIGSExt(BaseEstimator):
         if impurity_reduction == 0:
             return Node(idxs=idxs, value=np.mean(y_target), tree_num=tree_num,
                         feature=None, threshold=None,
-                        impurity_reduction=None, split_or_linear='split')  # leaf node that just returns its value
+                        impurity_reduction=-1, split_or_linear='split')  # leaf node that just returns its value
         else:
             assert isinstance(best_linear_coef, float), 'coef should be a float'
             return Node(idxs=idxs, value=best_linear_coef, tree_num=tree_num,
@@ -149,7 +151,7 @@ class FIGSExt(BaseEstimator):
             # print('no split found!', idxs.sum(), impurity, feature)
             return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                         feature=feature[SPLIT], threshold=threshold[SPLIT],
-                        impurity_reduction=None)
+                        impurity_reduction=-1)
 
         # split node
         impurity_reduction = (
@@ -172,7 +174,7 @@ class FIGSExt(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None):
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
         """
         Params
         ------
@@ -181,8 +183,10 @@ class FIGSExt(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         """
+        
         if self.prediction_task == 'classification':
             self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
+        X, y = check_X_y(X, y)
         y = y.astype(float)            
         if feature_names is not None:
             self.feature_names_ = feature_names
@@ -213,7 +217,7 @@ class FIGSExt(BaseEstimator):
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it's sorted)
 
             # don't split on node
-            if split_node.impurity_reduction < min_impurity_decrease:
+            if split_node.impurity_reduction < self.min_impurity_decrease:
                 finished = True
                 break
 
