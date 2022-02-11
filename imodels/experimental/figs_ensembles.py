@@ -80,10 +80,14 @@ class FIGSExt(BaseEstimator):
 
     def __init__(self, max_rules: int = None, posthoc_ridge: bool = False,
                  include_linear: bool = False,
-                 max_features=None, min_impurity_decrease: float = 0.0):
+                 max_features=None, min_impurity_decrease: float = 0.0,
+                 k1 : int = 0, k2 : int = 0):
         """
         max_features
             The number of features to consider when looking for the best split
+        k1: number of iterations of tree-prediction backfitting to do after making each split
+        k2: number of iterations of tree-prediction backfitting to do after the end of the entire
+            tree-growing phase
         """
         super().__init__()
         self.max_rules = max_rules
@@ -92,6 +96,8 @@ class FIGSExt(BaseEstimator):
         self.max_features = max_features
         self.weighted_model_ = None  # set if using posthoc_ridge
         self.min_impurity_decrease = min_impurity_decrease
+        self.k1 = k1
+        self.k2 = k2
         self._init_prediction_task()  # decides between regressor and classifier
 
     def _init_prediction_task(self):
@@ -195,8 +201,7 @@ class FIGSExt(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None,
-            k1=0, k2=0):
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None,):
         """
         Params
         ------
@@ -204,9 +209,6 @@ class FIGSExt(BaseEstimator):
             Sample weights. If None, then samples are equally weighted.
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
-        k1: number of iterations of tree-prediction backfitting to do after making each split
-        k2: number of iterations of tree-prediction backfitting to do after the end of the entire
-            tree-growing phase
         """
 
         if self.prediction_task == 'classification':
@@ -303,7 +305,7 @@ class FIGSExt(BaseEstimator):
                     if not tree_num_2_ == tree_num_:
                         y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
 
-            _update_tree_preds(k1)
+            _update_tree_preds(self.k1)
 
             # recompute all impurities + update potential_split children
             potential_splits_new = []
@@ -356,7 +358,7 @@ class FIGSExt(BaseEstimator):
                 finished = True
                 break
 
-        _update_tree_preds(k2)
+        _update_tree_preds(self.k2)
 
         # potentially fit linear model on the tree preds
         if self.posthoc_ridge:
