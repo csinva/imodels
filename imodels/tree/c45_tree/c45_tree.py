@@ -372,6 +372,8 @@ class HSC45TreeClassifier(BaseEstimator):
     def fit(self, *args, **kwargs):
         X = kwargs['X'] if "X" in kwargs else args[0]
         y = kwargs['y'] if "y" in kwargs else args[1]
+        if not hasattr(self.estimator_, "dom_"):
+            self.estimator_.fit(X, y)
         self.impute_nodes(X, y)
         self.shrink_tree()
 
@@ -402,6 +404,7 @@ class HSC45TreeClassifierCV(HSC45TreeClassifier):
 
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
+
         for reg_param in self.reg_param_list:
             est = HSC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)

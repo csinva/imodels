@@ -69,7 +69,7 @@ class HSOptimalTreeClassifier(BaseEstimator):
         self.reg_param = reg_param
         # print('est', estimator_)
         self.estimator_ = estimator_
-        self.tree_ = estimator_.tree_
+        # self.tree_ = estimator_.tree_
         self.shrinkage_scheme_ = shrinkage_scheme_
 
     def _calc_probs(self, node):
@@ -141,6 +141,8 @@ class HSOptimalTreeClassifier(BaseEstimator):
     def fit(self, *args, **kwargs):
         X = kwargs['X'] if "X" in kwargs else args[0]
         y = kwargs['y'] if "y" in kwargs else args[1]
+        if not hasattr(self.estimator_, "tree_"):
+            self.estimator_.fit(X, y)
         self.impute_nodes(X, y)
         self.shrink_tree()
 
