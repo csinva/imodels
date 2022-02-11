@@ -1,3 +1,4 @@
+import copy
 import random
 from functools import partial
 
@@ -5,7 +6,8 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels import HSTreeClassifier, HSTreeClassifierCV, \
-    HSTreeRegressor, HSTreeRegressorCV
+    HSTreeRegressor, HSTreeRegressorCV, C45TreeClassifier, OptimalTreeClassifier, HSOptimalTreeClassifierCV
+from imodels.tree.c45_tree.c45_tree import HSC45TreeClassifierCV
 
 
 class TestShrinkage:
@@ -30,11 +32,12 @@ class TestShrinkage:
     def test_classification_shrinkage(self):
         '''Test imodels on basic binary classification task
         '''
+
         for model_type in [
             partial(HSTreeClassifier, estimator_=DecisionTreeClassifier()),
             partial(HSTreeClassifierCV, estimator_=DecisionTreeClassifier()),
-            # partial(HSC45TreeClassifierCV, estimator_=C45TreeClassifier()),
-            # partial(HSOptimalTreeClassifierCV, estimator_=OptimalTreeClassifier()),
+            partial(HSC45TreeClassifierCV, estimator_=C45TreeClassifier()),
+            partial(HSOptimalTreeClassifierCV, estimator_=OptimalTreeClassifier()),
         ]:
             init_kwargs = {}
             m = model_type(**init_kwargs)
