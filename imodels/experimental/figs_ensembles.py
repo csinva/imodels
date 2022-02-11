@@ -35,6 +35,18 @@ class Node:
         self.left_temp = None
         self.right_temp = None
 
+    def update_values(self, X, y):
+        self.value = y.mean()
+        right_indicator = np.apply_along_axis(lambda x: x[self.feature] > self.threshold, 1, X)
+        X_right = X[right_indicator, :]
+        X_left = X[~right_indicator, :]
+        y_right = y[right_indicator]
+        y_left = y[~right_indicator]
+        if self.left is not None:
+            self.left.update_values(X_left, y_left)
+        if self.right is not None:
+            self.right.update_values(X_right, y_right)
+
     def setattrs(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -68,7 +80,7 @@ class FIGSExt(BaseEstimator):
 
     def __init__(self, max_rules: int = None, posthoc_ridge: bool = False,
                  include_linear: bool = False,
-                 max_features = None, min_impurity_decrease: float=0.0):
+                 max_features=None, min_impurity_decrease: float = 0.0):
         """
         max_features
             The number of features to consider when looking for the best split
@@ -89,14 +101,14 @@ class FIGSExt(BaseEstimator):
         it is equivalent to SuperCARTRegressor
         """
         self.prediction_task = 'regression'
-        
+
     def _init_decision_function(self):
         """Sets decision function based on prediction_task
         """
         # used by sklearn GrriidSearchCV, BaggingClassifier
-        if self.prediction_task  == 'classification':
-            decision_function = lambda x: self.predict_proba(x)[:, 1] 
-        elif self.prediction_task  == 'regression':
+        if self.prediction_task == 'classification':
+            decision_function = lambda x: self.predict_proba(x)[:, 1]
+        elif self.prediction_task == 'regression':
             decision_function = self.predict
 
     def construct_node_linear(self, X, y, idxs, tree_num=0, sample_weight=None):
@@ -183,7 +195,8 @@ class FIGSExt(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None,
+            k1=0, k2=0):
         """
         Params
         ------
@@ -191,12 +204,15 @@ class FIGSExt(BaseEstimator):
             Sample weights. If None, then samples are equally weighted.
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
+        k1: number of iterations of tree-prediction backfitting to do after making each split
+        k2: number of iterations of tree-prediction backfitting to do after the end of the entire
+            tree-growing phase
         """
-        
+
         if self.prediction_task == 'classification':
             self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
         X, y = check_X_y(X, y)
-        y = y.astype(float)            
+        y = y.astype(float)
         if feature_names is not None:
             self.feature_names_ = feature_names
 
@@ -204,6 +220,18 @@ class FIGSExt(BaseEstimator):
         self.complexity_ = 0  # tracks the number of rules in the model
         y_predictions_per_tree = {}  # predictions for each tree
         y_residuals_per_tree = {}  # based on predictions above
+
+        def _update_tree_preds(n_iter):
+            for k in range(n_iter):
+                for tree_num_, tree_ in enumerate(self.trees_):
+                    y_residuals_per_tree[tree_num_] = deepcopy(y)
+
+                    # subtract predictions of all other trees
+                    for tree_num_2_ in range(len(self.trees_)):
+                        if not tree_num_2_ == tree_num_:
+                            y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
+                    tree_.update_values(X, y_residuals_per_tree[tree_num_])
+                    y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
 
         # set up initial potential_splits
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
@@ -275,6 +303,8 @@ class FIGSExt(BaseEstimator):
                     if not tree_num_2_ == tree_num_:
                         y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
 
+            _update_tree_preds(k1)
+
             # recompute all impurities + update potential_split children
             potential_splits_new = []
             for potential_split in potential_splits:
@@ -325,6 +355,8 @@ class FIGSExt(BaseEstimator):
             if self.max_rules is not None and self.complexity_ >= self.max_rules:
                 finished = True
                 break
+
+        _update_tree_preds(k2)
 
         # potentially fit linear model on the tree preds
         if self.posthoc_ridge:
@@ -379,7 +411,6 @@ class FIGSExt(BaseEstimator):
                 preds += self.predict_tree(tree, X)
             preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
             return np.vstack((1 - preds, preds)).transpose()
-        
 
     def extract_tree_predictions(self, X):
         """Extract predictions for all trees
