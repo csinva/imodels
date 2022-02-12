@@ -37,15 +37,16 @@ class Node:
 
     def update_values(self, X, y):
         self.value = y.mean()
-        right_indicator = np.apply_along_axis(lambda x: x[self.feature] > self.threshold, 1, X)
-        X_right = X[right_indicator, :]
-        X_left = X[~right_indicator, :]
-        y_right = y[right_indicator]
-        y_left = y[~right_indicator]
-        if self.left is not None:
-            self.left.update_values(X_left, y_left)
-        if self.right is not None:
-            self.right.update_values(X_right, y_right)
+        if self.threshold is not None:
+            right_indicator = np.apply_along_axis(lambda x: x[self.feature] > self.threshold, 1, X)
+            X_right = X[right_indicator, :]
+            X_left = X[~right_indicator, :]
+            y_right = y[right_indicator]
+            y_left = y[~right_indicator]
+            if self.left is not None:
+                self.left.update_values(X_left, y_left)
+            if self.right is not None:
+                self.right.update_values(X_right, y_right)
 
     def setattrs(self, **kwargs):
         for k, v in kwargs.items():
