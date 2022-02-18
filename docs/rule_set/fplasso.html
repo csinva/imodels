@@ -28,6 +28,7 @@
 </summary>
 <pre><code class="python">from typing import List
 
+import pandas as pd
 from sklearn.base import ClassifierMixin, RegressorMixin
 
 from imodels.rule_set.rule_fit import RuleFit
@@ -40,8 +41,6 @@ class FPLasso(RuleFit):
     def __init__(self,
                  minsupport=0.1,
                  maxcardinality=2,
-                 disc_strategy=&#39;mdlp&#39;,
-                 disc_kwargs={},
                  verbose=False,
                  n_estimators=100,
                  tree_size=4,
@@ -67,8 +66,6 @@ class FPLasso(RuleFit):
                          include_linear,
                          alpha,
                          random_state)
-        self.disc_strategy = disc_strategy
-        self.disc_kwargs = disc_kwargs
         self.minsupport = minsupport
         self.maxcardinality = maxcardinality
         self.verbose = verbose
@@ -79,14 +76,10 @@ class FPLasso(RuleFit):
         return self
 
     def _extract_rules(self, X, y) -&gt; List[str]:
-        itemsets = extract_fpgrowth(X, y,
-                                    feature_names=self.feature_placeholders,
-                                    minsupport=self.minsupport,
+        X = pd.DataFrame(X, columns=self.feature_placeholders)
+        itemsets = extract_fpgrowth(X, minsupport=self.minsupport,
                                     maxcardinality=self.maxcardinality,
-                                    undiscretized_features=self.undiscretized_features,
-                                    disc_strategy=self.disc_strategy,
-                                    disc_kwargs=self.disc_kwargs,
-                                    verbose=self.verbose)[0]
+                                    verbose=self.verbose)
         return itemsets_to_rules(itemsets)
 
 
@@ -111,7 +104,7 @@ class FPLassoClassifier(FPLasso, ClassifierMixin):
 <dl>
 <dt id="imodels.rule_set.fplasso.FPLasso"><code class="flex name class">
 <span>class <span class="ident">FPLasso</span></span>
-<span>(</span><span>minsupport=0.1, maxcardinality=2, disc_strategy='mdlp', disc_kwargs={}, verbose=False, n_estimators=100, tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
+<span>(</span><span>minsupport=0.1, maxcardinality=2, verbose=False, n_estimators=100, tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
@@ -167,8 +160,6 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
     def __init__(self,
                  minsupport=0.1,
                  maxcardinality=2,
-                 disc_strategy=&#39;mdlp&#39;,
-                 disc_kwargs={},
                  verbose=False,
                  n_estimators=100,
                  tree_size=4,
@@ -194,8 +185,6 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
                          include_linear,
                          alpha,
                          random_state)
-        self.disc_strategy = disc_strategy
-        self.disc_kwargs = disc_kwargs
         self.minsupport = minsupport
         self.maxcardinality = maxcardinality
         self.verbose = verbose
@@ -206,14 +195,10 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
         return self
 
     def _extract_rules(self, X, y) -&gt; List[str]:
-        itemsets = extract_fpgrowth(X, y,
-                                    feature_names=self.feature_placeholders,
-                                    minsupport=self.minsupport,
+        X = pd.DataFrame(X, columns=self.feature_placeholders)
+        itemsets = extract_fpgrowth(X, minsupport=self.minsupport,
                                     maxcardinality=self.maxcardinality,
-                                    undiscretized_features=self.undiscretized_features,
-                                    disc_strategy=self.disc_strategy,
-                                    disc_kwargs=self.disc_kwargs,
-                                    verbose=self.verbose)[0]
+                                    verbose=self.verbose)
         return itemsets_to_rules(itemsets)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -243,7 +228,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 </dd>
 <dt id="imodels.rule_set.fplasso.FPLassoClassifier"><code class="flex name class">
 <span>class <span class="ident">FPLassoClassifier</span></span>
-<span>(</span><span>minsupport=0.1, maxcardinality=2, disc_strategy='mdlp', disc_kwargs={}, verbose=False, n_estimators=100, tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
+<span>(</span><span>minsupport=0.1, maxcardinality=2, verbose=False, n_estimators=100, tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>
@@ -322,7 +307,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 </dd>
 <dt id="imodels.rule_set.fplasso.FPLassoRegressor"><code class="flex name class">
 <span>class <span class="ident">FPLassoRegressor</span></span>
-<span>(</span><span>minsupport=0.1, maxcardinality=2, disc_strategy='mdlp', disc_kwargs={}, verbose=False, n_estimators=100, tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
+<span>(</span><span>minsupport=0.1, maxcardinality=2, verbose=False, n_estimators=100, tree_size=4, sample_fract='default', max_rules=2000, memory_par=0.01, tree_generator=None, lin_trim_quantile=0.025, lin_standardise=True, exp_rand_tree_size=True, include_linear=True, alpha=None, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Rulefit class. Rather than using this class directly, should use RuleFitRegressor or RuleFitClassifier</p>

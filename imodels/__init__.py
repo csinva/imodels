@@ -32,6 +32,7 @@ from .tree.gosdt.pygosdt_shrinkage import HSOptimalTreeClassifier, HSOptimalTree
 from .tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier, HSTreeRegressorCV, HSTreeClassifierCV
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
+from .util.data_util import get_clean_dataset
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier,

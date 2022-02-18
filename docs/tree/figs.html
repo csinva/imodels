@@ -33,6 +33,7 @@ from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
+from sklearn.utils import check_X_y
 
 
 class Node:
@@ -53,7 +54,7 @@ class Node:
         # different meanings
         self.value = value  # for split this is mean, for linear this is weight
 
-        # split-specific (for linear these should all be None)
+        # split-specific
         self.threshold = threshold
         self.left = left
         self.right = right
@@ -81,14 +82,16 @@ class FIGS(BaseEstimator):
     Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
     Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
     The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
-    Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
+    Experiments across real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = None):
+    def __init__(self, max_rules: int = None, min_impurity_decrease: float=0.0):
         super().__init__()
         self.max_rules = max_rules
+        self.min_impurity_decrease = min_impurity_decrease
         self._init_prediction_task()  # decides between regressor and classifier
+        self._init_decision_function()
 
     def _init_prediction_task(self):
         &#34;&#34;&#34;
@@ -97,6 +100,15 @@ class FIGS(BaseEstimator):
         it is equivalent to SuperCARTRegressor
         &#34;&#34;&#34;
         self.prediction_task = &#39;regression&#39;
+        
+    def _init_decision_function(self):
+        &#34;&#34;&#34;Sets decision function based on prediction_task
+        &#34;&#34;&#34;
+        # used by sklearn GrriidSearchCV, BaggingClassifier
+        if self.prediction_task  == &#39;classification&#39;:
+            decision_function = lambda x: self.predict_proba(x)[:, 1] 
+        elif self.prediction_task  == &#39;regression&#39;:
+            decision_function = self.predict
 
     def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
         # array indices
@@ -147,7 +159,7 @@ class FIGS(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None):
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
         &#34;&#34;&#34;
         Params
         ------
@@ -156,6 +168,7 @@ class FIGS(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         &#34;&#34;&#34;
+        X, y = check_X_y(X, y)
         y = y.astype(float)
         if feature_names is not None:
             self.feature_names_ = feature_names
@@ -182,7 +195,7 @@ class FIGS(BaseEstimator):
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it&#39;s sorted)
 
             # don&#39;t split on node
-            if split_node.impurity_reduction &lt; min_impurity_decrease:
+            if split_node.impurity_reduction &lt; self.min_impurity_decrease:
                 finished = True
                 break
 
@@ -193,6 +206,7 @@ class FIGS(BaseEstimator):
 
             # if added a tree root
             if split_node.is_root:
+                
                 # start a new tree
                 self.trees_.append(split_node)
 
@@ -226,9 +240,9 @@ class FIGS(BaseEstimator):
                 y_residuals_per_tree[tree_num_] = deepcopy(y)
 
                 # subtract predictions of all other trees
-                for tree_num_2_ in range(len(self.trees_)):
-                    if not tree_num_2_ == tree_num_:
-                        y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
+                for tree_num_other_ in range(len(self.trees_)):
+                    if not tree_num_other_ == tree_num_:
+                        y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_other_]
 
             # recompute all impurities + update potential_split children
             potential_splits_new = []
@@ -298,18 +312,8 @@ class FIGS(BaseEstimator):
         preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
         return np.vstack((1 - preds, preds)).transpose()
 
-    def extract_tree_predictions(self, X):
-        &#34;&#34;&#34;Extract predictions for all trees
-        &#34;&#34;&#34;
-        X_feats = np.zeros((X.shape[0], len(self.trees_)))
-        for tree_num_ in range(len(self.trees_)):
-            preds_tree = self.predict_tree(self.trees_[tree_num_], X)
-            X_feats[:, tree_num_] = preds_tree
-        return X_feats
-
     def predict_tree(self, root: Node, X):
         &#34;&#34;&#34;Predict for a single tree
-        This can be made way faster
         &#34;&#34;&#34;
 
         def predict_tree_single_point(root: Node, x):
@@ -372,14 +376,14 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="imodels.tree.figs.FIGS"><code class="flex name class">
 <span>class <span class="ident">FIGS</span></span>
-<span>(</span><span>max_rules: int = None)</span>
+<span>(</span><span>max_rules: int = None, min_impurity_decrease: float = 0.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
 Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
 Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
 The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
-Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
+Experiments across real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
 <a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p></div>
 <details class="source">
 <summary>
@@ -390,14 +394,16 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
     Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
     Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
     The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
-    Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
+    Experiments across real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = None):
+    def __init__(self, max_rules: int = None, min_impurity_decrease: float=0.0):
         super().__init__()
         self.max_rules = max_rules
+        self.min_impurity_decrease = min_impurity_decrease
         self._init_prediction_task()  # decides between regressor and classifier
+        self._init_decision_function()
 
     def _init_prediction_task(self):
         &#34;&#34;&#34;
@@ -406,6 +412,15 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
         it is equivalent to SuperCARTRegressor
         &#34;&#34;&#34;
         self.prediction_task = &#39;regression&#39;
+        
+    def _init_decision_function(self):
+        &#34;&#34;&#34;Sets decision function based on prediction_task
+        &#34;&#34;&#34;
+        # used by sklearn GrriidSearchCV, BaggingClassifier
+        if self.prediction_task  == &#39;classification&#39;:
+            decision_function = lambda x: self.predict_proba(x)[:, 1] 
+        elif self.prediction_task  == &#39;regression&#39;:
+            decision_function = self.predict
 
     def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
         # array indices
@@ -456,7 +471,7 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None):
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
         &#34;&#34;&#34;
         Params
         ------
@@ -465,6 +480,7 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         &#34;&#34;&#34;
+        X, y = check_X_y(X, y)
         y = y.astype(float)
         if feature_names is not None:
             self.feature_names_ = feature_names
@@ -491,7 +507,7 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it&#39;s sorted)
 
             # don&#39;t split on node
-            if split_node.impurity_reduction &lt; min_impurity_decrease:
+            if split_node.impurity_reduction &lt; self.min_impurity_decrease:
                 finished = True
                 break
 
@@ -502,6 +518,7 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
 
             # if added a tree root
             if split_node.is_root:
+                
                 # start a new tree
                 self.trees_.append(split_node)
 
@@ -535,9 +552,9 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
                 y_residuals_per_tree[tree_num_] = deepcopy(y)
 
                 # subtract predictions of all other trees
-                for tree_num_2_ in range(len(self.trees_)):
-                    if not tree_num_2_ == tree_num_:
-                        y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
+                for tree_num_other_ in range(len(self.trees_)):
+                    if not tree_num_other_ == tree_num_:
+                        y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_other_]
 
             # recompute all impurities + update potential_split children
             potential_splits_new = []
@@ -607,18 +624,8 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
         preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
         return np.vstack((1 - preds, preds)).transpose()
 
-    def extract_tree_predictions(self, X):
-        &#34;&#34;&#34;Extract predictions for all trees
-        &#34;&#34;&#34;
-        X_feats = np.zeros((X.shape[0], len(self.trees_)))
-        for tree_num_ in range(len(self.trees_)):
-            preds_tree = self.predict_tree(self.trees_[tree_num_], X)
-            X_feats[:, tree_num_] = preds_tree
-        return X_feats
-
     def predict_tree(self, root: Node, X):
         &#34;&#34;&#34;Predict for a single tree
-        This can be made way faster
         &#34;&#34;&#34;
 
         def predict_tree_single_point(root: Node, x):
@@ -711,27 +718,8 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
     return node_split</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.figs.FIGS.extract_tree_predictions"><code class="name flex">
-<span>def <span class="ident">extract_tree_predictions</span></span>(<span>self, X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Extract predictions for all trees</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def extract_tree_predictions(self, X):
-    &#34;&#34;&#34;Extract predictions for all trees
-    &#34;&#34;&#34;
-    X_feats = np.zeros((X.shape[0], len(self.trees_)))
-    for tree_num_ in range(len(self.trees_)):
-        preds_tree = self.predict_tree(self.trees_[tree_num_], X)
-        X_feats[:, tree_num_] = preds_tree
-    return X_feats</code></pre>
-</details>
-</dd>
 <dt id="imodels.tree.figs.FIGS.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=False, sample_weight=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="params">Params</h2>
@@ -743,7 +731,7 @@ are ignored while searching for a split in each node.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None):
+<pre><code class="python">def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
     &#34;&#34;&#34;
     Params
     ------
@@ -752,6 +740,7 @@ are ignored while searching for a split in each node.</p></div>
         Splits that would create child nodes with net zero or negative weight
         are ignored while searching for a split in each node.
     &#34;&#34;&#34;
+    X, y = check_X_y(X, y)
     y = y.astype(float)
     if feature_names is not None:
         self.feature_names_ = feature_names
@@ -778,7 +767,7 @@ are ignored while searching for a split in each node.</p></div>
         split_node = potential_splits.pop()  # get node with max impurity_reduction (since it&#39;s sorted)
 
         # don&#39;t split on node
-        if split_node.impurity_reduction &lt; min_impurity_decrease:
+        if split_node.impurity_reduction &lt; self.min_impurity_decrease:
             finished = True
             break
 
@@ -789,6 +778,7 @@ are ignored while searching for a split in each node.</p></div>
 
         # if added a tree root
         if split_node.is_root:
+            
             # start a new tree
             self.trees_.append(split_node)
 
@@ -822,9 +812,9 @@ are ignored while searching for a split in each node.</p></div>
             y_residuals_per_tree[tree_num_] = deepcopy(y)
 
             # subtract predictions of all other trees
-            for tree_num_2_ in range(len(self.trees_)):
-                if not tree_num_2_ == tree_num_:
-                    y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
+            for tree_num_other_ in range(len(self.trees_)):
+                if not tree_num_other_ == tree_num_:
+                    y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_other_]
 
         # recompute all impurities + update potential_split children
         potential_splits_new = []
@@ -904,15 +894,13 @@ are ignored while searching for a split in each node.</p></div>
 <span>def <span class="ident">predict_tree</span></span>(<span>self, root: <a title="imodels.tree.figs.Node" href="#imodels.tree.figs.Node">Node</a>, X)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Predict for a single tree
-This can be made way faster</p></div>
+<div class="desc"><p>Predict for a single tree</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_tree(self, root: Node, X):
     &#34;&#34;&#34;Predict for a single tree
-    This can be made way faster
     &#34;&#34;&#34;
 
     def predict_tree_single_point(root: Node, x):
@@ -958,14 +946,14 @@ This can be made way faster</p></div>
 </dd>
 <dt id="imodels.tree.figs.FIGSClassifier"><code class="flex name class">
 <span>class <span class="ident">FIGSClassifier</span></span>
-<span>(</span><span>max_rules: int = None)</span>
+<span>(</span><span>max_rules: int = None, min_impurity_decrease: float = 0.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
 Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
 Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
 The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
-Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
+Experiments across real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
 <a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p></div>
 <details class="source">
 <summary>
@@ -984,7 +972,6 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.figs.FIGS.extract_tree_predictions" href="#imodels.tree.figs.FIGS.extract_tree_predictions">extract_tree_predictions</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_tree" href="#imodels.tree.figs.FIGS.predict_tree">predict_tree</a></code></li>
 </ul>
@@ -993,14 +980,14 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
 </dd>
 <dt id="imodels.tree.figs.FIGSRegressor"><code class="flex name class">
 <span>class <span class="ident">FIGSRegressor</span></span>
-<span>(</span><span>max_rules: int = None)</span>
+<span>(</span><span>max_rules: int = None, min_impurity_decrease: float = 0.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
 Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
 Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
 The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
-Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
+Experiments across real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
 <a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p></div>
 <details class="source">
 <summary>
@@ -1019,7 +1006,6 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.figs.FIGS.extract_tree_predictions" href="#imodels.tree.figs.FIGS.extract_tree_predictions">extract_tree_predictions</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_tree" href="#imodels.tree.figs.FIGS.predict_tree">predict_tree</a></code></li>
 </ul>
@@ -1054,7 +1040,7 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
         # different meanings
         self.value = value  # for split this is mean, for linear this is weight
 
-        # split-specific (for linear these should all be None)
+        # split-specific
         self.threshold = threshold
         self.left = left
         self.right = right
@@ -1114,7 +1100,6 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
 <h4><code><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.tree.figs.FIGS.construct_node_with_stump" href="#imodels.tree.figs.FIGS.construct_node_with_stump">construct_node_with_stump</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.extract_tree_predictions" href="#imodels.tree.figs.FIGS.extract_tree_predictions">extract_tree_predictions</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict" href="#imodels.tree.figs.FIGS.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>

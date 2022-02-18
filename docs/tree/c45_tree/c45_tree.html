@@ -408,6 +408,8 @@ class HSC45TreeClassifier(BaseEstimator):
     def fit(self, *args, **kwargs):
         X = kwargs[&#39;X&#39;] if &#34;X&#34; in kwargs else args[0]
         y = kwargs[&#39;y&#39;] if &#34;y&#34; in kwargs else args[1]
+        if not hasattr(self.estimator_, &#34;dom_&#34;):
+            self.estimator_.fit(X, y)
         self.impute_nodes(X, y)
         self.shrink_tree()
 
@@ -438,6 +440,7 @@ class HSC45TreeClassifierCV(HSC45TreeClassifier):
 
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
+
         for reg_param in self.reg_param_list:
             est = HSC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
@@ -1076,6 +1079,8 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
     def fit(self, *args, **kwargs):
         X = kwargs[&#39;X&#39;] if &#34;X&#34; in kwargs else args[0]
         y = kwargs[&#39;y&#39;] if &#34;y&#34; in kwargs else args[1]
+        if not hasattr(self.estimator_, &#34;dom_&#34;):
+            self.estimator_.fit(X, y)
         self.impute_nodes(X, y)
         self.shrink_tree()
 
@@ -1123,6 +1128,8 @@ def complexity_(self):
 <pre><code class="python">def fit(self, *args, **kwargs):
     X = kwargs[&#39;X&#39;] if &#34;X&#34; in kwargs else args[0]
     y = kwargs[&#39;y&#39;] if &#34;y&#34; in kwargs else args[1]
+    if not hasattr(self.estimator_, &#34;dom_&#34;):
+        self.estimator_.fit(X, y)
     self.impute_nodes(X, y)
     self.shrink_tree()</code></pre>
 </details>
@@ -1215,6 +1222,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
 
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
+
         for reg_param in self.reg_param_list:
             est = HSC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
@@ -1240,6 +1248,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
 </summary>
 <pre><code class="python">def fit(self, X, y, *args, **kwargs):
     self.scores_ = []
+
     for reg_param in self.reg_param_list:
         est = HSC45TreeClassifier(copy.deepcopy(self.estimator_), reg_param)
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)

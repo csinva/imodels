@@ -34,6 +34,7 @@ from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import RidgeCV, RidgeClassifierCV
 from sklearn.model_selection import train_test_split
+from sklearn.utils import check_X_y
 
 
 class Node:
@@ -93,12 +94,20 @@ class FIGSExt(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False):
+    def __init__(self, max_rules: int = None, posthoc_ridge: bool = False,
+                 include_linear: bool = False,
+                 max_features = None, min_impurity_decrease: float=0.0):
+        &#34;&#34;&#34;
+        max_features
+            The number of features to consider when looking for the best split
+        &#34;&#34;&#34;
         super().__init__()
         self.max_rules = max_rules
         self.posthoc_ridge = posthoc_ridge
         self.include_linear = include_linear
+        self.max_features = max_features
         self.weighted_model_ = None  # set if using posthoc_ridge
+        self.min_impurity_decrease = min_impurity_decrease
         self._init_prediction_task()  # decides between regressor and classifier
 
     def _init_prediction_task(self):
@@ -108,6 +117,15 @@ class FIGSExt(BaseEstimator):
         it is equivalent to SuperCARTRegressor
         &#34;&#34;&#34;
         self.prediction_task = &#39;regression&#39;
+        
+    def _init_decision_function(self):
+        &#34;&#34;&#34;Sets decision function based on prediction_task
+        &#34;&#34;&#34;
+        # used by sklearn GrriidSearchCV, BaggingClassifier
+        if self.prediction_task  == &#39;classification&#39;:
+            decision_function = lambda x: self.predict_proba(x)[:, 1] 
+        elif self.prediction_task  == &#39;regression&#39;:
+            decision_function = self.predict
 
     def construct_node_linear(self, X, y, idxs, tree_num=0, sample_weight=None):
         &#34;&#34;&#34;This can be made a lot faster
@@ -115,7 +133,6 @@ class FIGSExt(BaseEstimator):
         Doesn&#39;t currently support sample_weight!
         &#34;&#34;&#34;
         y_target = y[idxs]
-        # print(np.unique(y_target))
         impurity_orig = np.mean(np.square(y_target)) * idxs.sum()
 
         # find best linear split
@@ -138,21 +155,21 @@ class FIGSExt(BaseEstimator):
         if impurity_reduction == 0:
             return Node(idxs=idxs, value=np.mean(y_target), tree_num=tree_num,
                         feature=None, threshold=None,
-                        impurity_reduction=None, split_or_linear=&#39;split&#39;)  # leaf node that just returns its value
+                        impurity_reduction=-1, split_or_linear=&#39;split&#39;)  # leaf node that just returns its value
         else:
             assert isinstance(best_linear_coef, float), &#39;coef should be a float&#39;
             return Node(idxs=idxs, value=best_linear_coef, tree_num=tree_num,
                         feature=best_feature, threshold=None,
                         impurity_reduction=impurity_reduction, split_or_linear=&#39;linear&#39;)
 
-    def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
+    def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None, max_features=None):
         # array indices
         SPLIT = 0
         LEFT = 1
         RIGHT = 2
 
         # fit stump
-        stump = tree.DecisionTreeRegressor(max_depth=1)
+        stump = tree.DecisionTreeRegressor(max_depth=1, max_features=max_features)
         if sample_weight is not None:
             sample_weight = sample_weight[idxs]
         stump.fit(X[idxs], y[idxs], sample_weight=sample_weight)
@@ -171,7 +188,7 @@ class FIGSExt(BaseEstimator):
             # print(&#39;no split found!&#39;, idxs.sum(), impurity, feature)
             return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                         feature=feature[SPLIT], threshold=threshold[SPLIT],
-                        impurity_reduction=None)
+                        impurity_reduction=-1)
 
         # split node
         impurity_reduction = (
@@ -194,7 +211,7 @@ class FIGSExt(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None):
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
         &#34;&#34;&#34;
         Params
         ------
@@ -203,7 +220,11 @@ class FIGSExt(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         &#34;&#34;&#34;
-        y = y.astype(float)
+        
+        if self.prediction_task == &#39;classification&#39;:
+            self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
+        X, y = check_X_y(X, y)
+        y = y.astype(float)            
         if feature_names is not None:
             self.feature_names_ = feature_names
 
@@ -216,7 +237,8 @@ class FIGSExt(BaseEstimator):
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
         # or it is a child of a root node that has already been added
         idxs = np.ones(X.shape[0], dtype=bool)
-        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
+        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1,
+                                                   sample_weight=sample_weight, max_features=self.max_features)
         potential_splits = [node_init]
         if self.include_linear and idxs.sum() &gt;= 5:
             node_init_linear = self.construct_node_linear(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
@@ -232,7 +254,7 @@ class FIGSExt(BaseEstimator):
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it&#39;s sorted)
 
             # don&#39;t split on node
-            if split_node.impurity_reduction &lt; min_impurity_decrease:
+            if split_node.impurity_reduction &lt; self.min_impurity_decrease:
                 finished = True
                 break
 
@@ -292,7 +314,8 @@ class FIGSExt(BaseEstimator):
                                                                              y=y_target,
                                                                              idxs=potential_split.idxs,
                                                                              tree_num=potential_split.tree_num,
-                                                                             sample_weight=sample_weight, )
+                                                                             sample_weight=sample_weight,
+                                                                             max_features=self.max_features)
 
                     # need to preserve certain attributes from before (value at this split + is_root)
                     # value may change because residuals may have changed, but we want it to store the value from before
@@ -384,6 +407,7 @@ class FIGSExt(BaseEstimator):
                 preds += self.predict_tree(tree, X)
             preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
             return np.vstack((1 - preds, preds)).transpose()
+        
 
     def extract_tree_predictions(self, X):
         &#34;&#34;&#34;Extract predictions for all trees
@@ -461,7 +485,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="imodels.experimental.figs_ensembles.FIGSExt"><code class="flex name class">
 <span>class <span class="ident">FIGSExt</span></span>
-<span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False)</span>
+<span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False, max_features=None, min_impurity_decrease: float = 0.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGSExt (sum of trees) classifier.
@@ -469,7 +493,9 @@ Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise r
 Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
 The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
 Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
-<a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p></div>
+<a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p>
+<p>max_features
+The number of features to consider when looking for the best split</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -483,12 +509,20 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False):
+    def __init__(self, max_rules: int = None, posthoc_ridge: bool = False,
+                 include_linear: bool = False,
+                 max_features = None, min_impurity_decrease: float=0.0):
+        &#34;&#34;&#34;
+        max_features
+            The number of features to consider when looking for the best split
+        &#34;&#34;&#34;
         super().__init__()
         self.max_rules = max_rules
         self.posthoc_ridge = posthoc_ridge
         self.include_linear = include_linear
+        self.max_features = max_features
         self.weighted_model_ = None  # set if using posthoc_ridge
+        self.min_impurity_decrease = min_impurity_decrease
         self._init_prediction_task()  # decides between regressor and classifier
 
     def _init_prediction_task(self):
@@ -498,6 +532,15 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
         it is equivalent to SuperCARTRegressor
         &#34;&#34;&#34;
         self.prediction_task = &#39;regression&#39;
+        
+    def _init_decision_function(self):
+        &#34;&#34;&#34;Sets decision function based on prediction_task
+        &#34;&#34;&#34;
+        # used by sklearn GrriidSearchCV, BaggingClassifier
+        if self.prediction_task  == &#39;classification&#39;:
+            decision_function = lambda x: self.predict_proba(x)[:, 1] 
+        elif self.prediction_task  == &#39;regression&#39;:
+            decision_function = self.predict
 
     def construct_node_linear(self, X, y, idxs, tree_num=0, sample_weight=None):
         &#34;&#34;&#34;This can be made a lot faster
@@ -505,7 +548,6 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
         Doesn&#39;t currently support sample_weight!
         &#34;&#34;&#34;
         y_target = y[idxs]
-        # print(np.unique(y_target))
         impurity_orig = np.mean(np.square(y_target)) * idxs.sum()
 
         # find best linear split
@@ -528,21 +570,21 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
         if impurity_reduction == 0:
             return Node(idxs=idxs, value=np.mean(y_target), tree_num=tree_num,
                         feature=None, threshold=None,
-                        impurity_reduction=None, split_or_linear=&#39;split&#39;)  # leaf node that just returns its value
+                        impurity_reduction=-1, split_or_linear=&#39;split&#39;)  # leaf node that just returns its value
         else:
             assert isinstance(best_linear_coef, float), &#39;coef should be a float&#39;
             return Node(idxs=idxs, value=best_linear_coef, tree_num=tree_num,
                         feature=best_feature, threshold=None,
                         impurity_reduction=impurity_reduction, split_or_linear=&#39;linear&#39;)
 
-    def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
+    def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None, max_features=None):
         # array indices
         SPLIT = 0
         LEFT = 1
         RIGHT = 2
 
         # fit stump
-        stump = tree.DecisionTreeRegressor(max_depth=1)
+        stump = tree.DecisionTreeRegressor(max_depth=1, max_features=max_features)
         if sample_weight is not None:
             sample_weight = sample_weight[idxs]
         stump.fit(X[idxs], y[idxs], sample_weight=sample_weight)
@@ -561,7 +603,7 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
             # print(&#39;no split found!&#39;, idxs.sum(), impurity, feature)
             return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                         feature=feature[SPLIT], threshold=threshold[SPLIT],
-                        impurity_reduction=None)
+                        impurity_reduction=-1)
 
         # split node
         impurity_reduction = (
@@ -584,7 +626,7 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None):
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
         &#34;&#34;&#34;
         Params
         ------
@@ -593,7 +635,11 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         &#34;&#34;&#34;
-        y = y.astype(float)
+        
+        if self.prediction_task == &#39;classification&#39;:
+            self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
+        X, y = check_X_y(X, y)
+        y = y.astype(float)            
         if feature_names is not None:
             self.feature_names_ = feature_names
 
@@ -606,7 +652,8 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
         # or it is a child of a root node that has already been added
         idxs = np.ones(X.shape[0], dtype=bool)
-        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
+        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1,
+                                                   sample_weight=sample_weight, max_features=self.max_features)
         potential_splits = [node_init]
         if self.include_linear and idxs.sum() &gt;= 5:
             node_init_linear = self.construct_node_linear(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
@@ -622,7 +669,7 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
             split_node = potential_splits.pop()  # get node with max impurity_reduction (since it&#39;s sorted)
 
             # don&#39;t split on node
-            if split_node.impurity_reduction &lt; min_impurity_decrease:
+            if split_node.impurity_reduction &lt; self.min_impurity_decrease:
                 finished = True
                 break
 
@@ -682,7 +729,8 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
                                                                              y=y_target,
                                                                              idxs=potential_split.idxs,
                                                                              tree_num=potential_split.tree_num,
-                                                                             sample_weight=sample_weight, )
+                                                                             sample_weight=sample_weight,
+                                                                             max_features=self.max_features)
 
                     # need to preserve certain attributes from before (value at this split + is_root)
                     # value may change because residuals may have changed, but we want it to store the value from before
@@ -774,6 +822,7 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
                 preds += self.predict_tree(tree, X)
             preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
             return np.vstack((1 - preds, preds)).transpose()
+        
 
     def extract_tree_predictions(self, X):
         &#34;&#34;&#34;Extract predictions for all trees
@@ -839,7 +888,6 @@ Doesn't currently support sample_weight!</p></div>
     Doesn&#39;t currently support sample_weight!
     &#34;&#34;&#34;
     y_target = y[idxs]
-    # print(np.unique(y_target))
     impurity_orig = np.mean(np.square(y_target)) * idxs.sum()
 
     # find best linear split
@@ -862,7 +910,7 @@ Doesn't currently support sample_weight!</p></div>
     if impurity_reduction == 0:
         return Node(idxs=idxs, value=np.mean(y_target), tree_num=tree_num,
                     feature=None, threshold=None,
-                    impurity_reduction=None, split_or_linear=&#39;split&#39;)  # leaf node that just returns its value
+                    impurity_reduction=-1, split_or_linear=&#39;split&#39;)  # leaf node that just returns its value
     else:
         assert isinstance(best_linear_coef, float), &#39;coef should be a float&#39;
         return Node(idxs=idxs, value=best_linear_coef, tree_num=tree_num,
@@ -871,7 +919,7 @@ Doesn't currently support sample_weight!</p></div>
 </details>
 </dd>
 <dt id="imodels.experimental.figs_ensembles.FIGSExt.construct_node_with_stump"><code class="name flex">
-<span>def <span class="ident">construct_node_with_stump</span></span>(<span>self, X, y, idxs, tree_num, sample_weight=None)</span>
+<span>def <span class="ident">construct_node_with_stump</span></span>(<span>self, X, y, idxs, tree_num, sample_weight=None, max_features=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -879,14 +927,14 @@ Doesn't currently support sample_weight!</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
+<pre><code class="python">def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None, max_features=None):
     # array indices
     SPLIT = 0
     LEFT = 1
     RIGHT = 2
 
     # fit stump
-    stump = tree.DecisionTreeRegressor(max_depth=1)
+    stump = tree.DecisionTreeRegressor(max_depth=1, max_features=max_features)
     if sample_weight is not None:
         sample_weight = sample_weight[idxs]
     stump.fit(X[idxs], y[idxs], sample_weight=sample_weight)
@@ -905,7 +953,7 @@ Doesn't currently support sample_weight!</p></div>
         # print(&#39;no split found!&#39;, idxs.sum(), impurity, feature)
         return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                     feature=feature[SPLIT], threshold=threshold[SPLIT],
-                    impurity_reduction=None)
+                    impurity_reduction=-1)
 
     # split node
     impurity_reduction = (
@@ -949,7 +997,7 @@ Doesn't currently support sample_weight!</p></div>
 </details>
 </dd>
 <dt id="imodels.experimental.figs_ensembles.FIGSExt.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=False, sample_weight=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="params">Params</h2>
@@ -961,7 +1009,7 @@ are ignored while searching for a split in each node.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y=None, feature_names=None, min_impurity_decrease=0.0, verbose=False, sample_weight=None):
+<pre><code class="python">def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
     &#34;&#34;&#34;
     Params
     ------
@@ -970,7 +1018,11 @@ are ignored while searching for a split in each node.</p></div>
         Splits that would create child nodes with net zero or negative weight
         are ignored while searching for a split in each node.
     &#34;&#34;&#34;
-    y = y.astype(float)
+    
+    if self.prediction_task == &#39;classification&#39;:
+        self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
+    X, y = check_X_y(X, y)
+    y = y.astype(float)            
     if feature_names is not None:
         self.feature_names_ = feature_names
 
@@ -983,7 +1035,8 @@ are ignored while searching for a split in each node.</p></div>
     # everything in potential_splits either is_root (so it can be added directly to self.trees_)
     # or it is a child of a root node that has already been added
     idxs = np.ones(X.shape[0], dtype=bool)
-    node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
+    node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1,
+                                               sample_weight=sample_weight, max_features=self.max_features)
     potential_splits = [node_init]
     if self.include_linear and idxs.sum() &gt;= 5:
         node_init_linear = self.construct_node_linear(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
@@ -999,7 +1052,7 @@ are ignored while searching for a split in each node.</p></div>
         split_node = potential_splits.pop()  # get node with max impurity_reduction (since it&#39;s sorted)
 
         # don&#39;t split on node
-        if split_node.impurity_reduction &lt; min_impurity_decrease:
+        if split_node.impurity_reduction &lt; self.min_impurity_decrease:
             finished = True
             break
 
@@ -1059,7 +1112,8 @@ are ignored while searching for a split in each node.</p></div>
                                                                          y=y_target,
                                                                          idxs=potential_split.idxs,
                                                                          tree_num=potential_split.tree_num,
-                                                                         sample_weight=sample_weight, )
+                                                                         sample_weight=sample_weight,
+                                                                         max_features=self.max_features)
 
                 # need to preserve certain attributes from before (value at this split + is_root)
                 # value may change because residuals may have changed, but we want it to store the value from before
@@ -1218,7 +1272,7 @@ This can be made way faster</p></div>
 </dd>
 <dt id="imodels.experimental.figs_ensembles.FIGSExtClassifier"><code class="flex name class">
 <span>class <span class="ident">FIGSExtClassifier</span></span>
-<span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False)</span>
+<span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False, max_features=None, min_impurity_decrease: float = 0.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGSExt (sum of trees) classifier.
@@ -1226,7 +1280,9 @@ Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise r
 Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
 The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
 Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
-<a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p></div>
+<a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p>
+<p>max_features
+The number of features to consider when looking for the best split</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1254,7 +1310,7 @@ Experiments across a wide array of real-world datasets show that FIGS achieves s
 </dd>
 <dt id="imodels.experimental.figs_ensembles.FIGSExtRegressor"><code class="flex name class">
 <span>class <span class="ident">FIGSExtRegressor</span></span>
-<span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False)</span>
+<span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False, max_features=None, min_impurity_decrease: float = 0.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGSExt (sum of trees) classifier.
@@ -1262,7 +1318,9 @@ Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise r
 Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
 The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
 Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
-<a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p></div>
+<a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p>
+<p>max_features
+The number of features to consider when looking for the best split</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
