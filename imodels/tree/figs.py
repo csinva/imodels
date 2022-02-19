@@ -5,7 +5,7 @@ from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
-from sklearn.utils import check_X_y
+from sklearn.utils import check_X_y, check_array
 
 
 class Node:
@@ -58,7 +58,7 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     """
 
-    def __init__(self, max_rules: int = None, min_impurity_decrease: float=0.0):
+    def __init__(self, max_rules: int = 12, min_impurity_decrease: float=0.0):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
@@ -82,7 +82,7 @@ class FIGS(BaseEstimator):
         elif self.prediction_task  == 'regression':
             decision_function = self.predict
 
-    def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
+    def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
         # array indices
         SPLIT = 0
         LEFT = 1
@@ -154,7 +154,7 @@ class FIGS(BaseEstimator):
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
         # or it is a child of a root node that has already been added
         idxs = np.ones(X.shape[0], dtype=bool)
-        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
+        node_init = self._construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
         potential_splits = [node_init]
         for node in potential_splits:
             node.setattrs(is_root=True)
@@ -203,7 +203,7 @@ class FIGS(BaseEstimator):
 
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
-                y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
+                y_predictions_per_tree[tree_num_] = self._predict_tree(self.trees_[tree_num_], X)
             y_predictions_per_tree[-1] = np.zeros(X.shape[0])  # dummy 0 preds for possible new trees
 
             # update residuals for each tree
@@ -222,11 +222,11 @@ class FIGS(BaseEstimator):
                 y_target = y_residuals_per_tree[potential_split.tree_num]
 
                 # re-calculate the best split
-                potential_split_updated = self.construct_node_with_stump(X=X,
-                                                                         y=y_target,
-                                                                         idxs=potential_split.idxs,
-                                                                         tree_num=potential_split.tree_num,
-                                                                         sample_weight=sample_weight, )
+                potential_split_updated = self._construct_node_with_stump(X=X,
+                                                                          y=y_target,
+                                                                          idxs=potential_split.idxs,
+                                                                          tree_num=potential_split.tree_num,
+                                                                          sample_weight=sample_weight, )
 
                 # need to preserve certain attributes from before (value at this split + is_root)
                 # value may change because residuals may have changed, but we want it to store the value from before
@@ -251,44 +251,46 @@ class FIGS(BaseEstimator):
                 break
         return self
 
-    def tree_to_str(self, root: Node, prefix=''):
+    def _tree_to_str(self, root: Node, prefix=''):
         if root is None:
             return ''
         elif root.threshold is None:
             return ''
         pprefix = prefix + '\t'
-        return prefix + str(root) + '\n' + self.tree_to_str(root.left, pprefix) + self.tree_to_str(root.right, pprefix)
+        return prefix + str(root) + '\n' + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right, pprefix)
 
     def __str__(self):
-        s = '------------\n' + '\n\t+\n'.join([self.tree_to_str(t) for t in self.trees_])
+        s = '------------\n' + '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
         if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f'X_{i}', self.feature_names_[i])
         return s
 
     def predict(self, X):
+        X = check_array(X)
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
-            preds += self.predict_tree(tree, X)
+            preds += self._predict_tree(tree, X)
         if self.prediction_task == 'regression':
             return preds
         elif self.prediction_task == 'classification':
             return (preds > 0.5).astype(int)
 
     def predict_proba(self, X):
+        X = check_array(X)
         if self.prediction_task == 'regression':
             return NotImplemented
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
-            preds += self.predict_tree(tree, X)
+            preds += self._predict_tree(tree, X)
         preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
         return np.vstack((1 - preds, preds)).transpose()
 
-    def predict_tree(self, root: Node, X):
+    def _predict_tree(self, root: Node, X):
         """Predict for a single tree
         """
 
-        def predict_tree_single_point(root: Node, x):
+        def _predict_tree_single_point(root: Node, x):
             if root.left is None and root.right is None:
                 return root.value
             left = x[root.feature] <= root.threshold
@@ -296,16 +298,16 @@ class FIGS(BaseEstimator):
                 if root.left is None:  # we don't actually have to worry about this case
                     return root.value
                 else:
-                    return predict_tree_single_point(root.left, x)
+                    return _predict_tree_single_point(root.left, x)
             else:
                 if root.right is None:  # we don't actually have to worry about this case
                     return root.value
                 else:
-                    return predict_tree_single_point(root.right, x)
+                    return _predict_tree_single_point(root.right, x)
 
         preds = np.zeros(X.shape[0])
         for i in range(X.shape[0]):
-            preds[i] = predict_tree_single_point(root, X[i])
+            preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
 

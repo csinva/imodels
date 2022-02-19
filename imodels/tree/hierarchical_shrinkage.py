@@ -41,7 +41,7 @@ class HSTree:
         self._init_prediction_task()
 
         if checks.check_is_fitted(self.estimator_):
-            self.shrink()
+            self._shrink()
 
     def __init__prediction_task(self):
         self.prediction_task = 'regression'
@@ -57,9 +57,9 @@ class HSTree:
 
     def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
-        self.shrink()
+        self._shrink()
 
-    def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
+    def _shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         """Shrink the tree
         """
         if reg_param is None:
@@ -79,10 +79,10 @@ class HSTree:
         # if root
         if parent_val is None and parent_num is None:
             if not is_leaf:
-                self.shrink_tree(tree, reg_param, left,
-                                 parent_val=val, parent_num=n_samples, cum_sum=val)
-                self.shrink_tree(tree, reg_param, right,
-                                 parent_val=val, parent_num=n_samples, cum_sum=val)
+                self._shrink_tree(tree, reg_param, left,
+                                  parent_val=val, parent_num=n_samples, cum_sum=val)
+                self._shrink_tree(tree, reg_param, right,
+                                  parent_val=val, parent_num=n_samples, cum_sum=val)
 
         # if has parent
         else:
@@ -127,10 +127,10 @@ class HSTree:
                         tree.value[i][0, 1] = parent_val + val_new
                         tree.value[i][0, 0] = 1.0 - parent_val + val_new
 
-                self.shrink_tree(tree, reg_param, left,
-                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
-                self.shrink_tree(tree, reg_param, right,
-                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+                self._shrink_tree(tree, reg_param, left,
+                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+                self._shrink_tree(tree, reg_param, right,
+                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
 
                 # edit the non-leaf nodes for later visualization (doesn't effect predictions)
 
@@ -138,15 +138,15 @@ class HSTree:
 
         return tree
 
-    def shrink(self):
+    def _shrink(self):
         if hasattr(self.estimator_, 'tree_'):
-            self.shrink_tree(self.estimator_.tree_, self.reg_param)
+            self._shrink_tree(self.estimator_.tree_, self.reg_param)
         elif hasattr(self.estimator_, 'estimators_'):
             for t in self.estimator_.estimators_:
                 if isinstance(t, np.ndarray):
                     assert t.size == 1, 'multiple trees stored under tree_?'
                     t = t[0]
-                self.shrink_tree(t.tree_, self.reg_param)
+                self._shrink_tree(t.tree_, self.reg_param)
 
     def predict(self, *args, **kwargs):
         return self.estimator_.predict(*args, **kwargs)
