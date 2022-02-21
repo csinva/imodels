@@ -205,7 +205,7 @@ After developing and playing with `imodels`, we developed a few new models to ov
 
 ### FIGS: Fast interpretable greedy-tree sums
 
-[📄 Paper](https://arxiv.org/abs/2201.11931), [🔗 Post](https://demos.csinva.io/figs/), [📌 Citation]()
+[📄 Paper](https://arxiv.org/abs/2201.11931), [🔗 Post](https://demos.csinva.io/figs/), [📌 Citation](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=fast+interpretable+greedy-tree+sums&oq=fast#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3ADnPVL74Rop0J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den)
 
 Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models. Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation. The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable. Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
 
@@ -218,9 +218,9 @@ Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise r
 
 ### Hierarchical shrinkage: post-hoc regularization for tree-based methods
 
-[📄 Paper](https://arxiv.org/abs/2202.00858), [🔗 Post](https://demos.csinva.io/shrinkage/), [📌 Citation]()
+[📄 Paper](https://arxiv.org/abs/2202.00858), [🔗 Post](https://demos.csinva.io/shrinkage/), [📌 Citation](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=hierarchical+shrinkage+singh&btnG=&oq=hierar#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3Azc6gtLx-aL4J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den)
 
-Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter). Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
+Hierarchical shrinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter). Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
 
 ## References
 

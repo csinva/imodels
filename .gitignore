@@ -39,3 +39,4 @@ experiments/data/
 .hypothesis
 experiments/results
 experiments/*.txt
+**_site*
