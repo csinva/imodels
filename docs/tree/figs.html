@@ -33,7 +33,7 @@ from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
-from sklearn.utils import check_X_y
+from sklearn.utils import check_X_y, check_array
 
 
 class Node:
@@ -86,7 +86,7 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = None, min_impurity_decrease: float=0.0):
+    def __init__(self, max_rules: int = 12, min_impurity_decrease: float=0.0):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
@@ -110,7 +110,7 @@ class FIGS(BaseEstimator):
         elif self.prediction_task  == &#39;regression&#39;:
             decision_function = self.predict
 
-    def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
+    def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
         # array indices
         SPLIT = 0
         LEFT = 1
@@ -163,7 +163,7 @@ class FIGS(BaseEstimator):
         &#34;&#34;&#34;
         Params
         ------
-        sample_weight: array-like of shape (n_samples,), default=None
+        _sample_weight: array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
@@ -182,7 +182,7 @@ class FIGS(BaseEstimator):
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
         # or it is a child of a root node that has already been added
         idxs = np.ones(X.shape[0], dtype=bool)
-        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
+        node_init = self._construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
         potential_splits = [node_init]
         for node in potential_splits:
             node.setattrs(is_root=True)
@@ -231,7 +231,7 @@ class FIGS(BaseEstimator):
 
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
-                y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
+                y_predictions_per_tree[tree_num_] = self._predict_tree(self.trees_[tree_num_], X)
             y_predictions_per_tree[-1] = np.zeros(X.shape[0])  # dummy 0 preds for possible new trees
 
             # update residuals for each tree
@@ -250,11 +250,11 @@ class FIGS(BaseEstimator):
                 y_target = y_residuals_per_tree[potential_split.tree_num]
 
                 # re-calculate the best split
-                potential_split_updated = self.construct_node_with_stump(X=X,
-                                                                         y=y_target,
-                                                                         idxs=potential_split.idxs,
-                                                                         tree_num=potential_split.tree_num,
-                                                                         sample_weight=sample_weight, )
+                potential_split_updated = self._construct_node_with_stump(X=X,
+                                                                          y=y_target,
+                                                                          idxs=potential_split.idxs,
+                                                                          tree_num=potential_split.tree_num,
+                                                                          sample_weight=sample_weight, )
 
                 # need to preserve certain attributes from before (value at this split + is_root)
                 # value may change because residuals may have changed, but we want it to store the value from before
@@ -279,44 +279,46 @@ class FIGS(BaseEstimator):
                 break
         return self
 
-    def tree_to_str(self, root: Node, prefix=&#39;&#39;):
+    def _tree_to_str(self, root: Node, prefix=&#39;&#39;):
         if root is None:
             return &#39;&#39;
         elif root.threshold is None:
             return &#39;&#39;
         pprefix = prefix + &#39;\t&#39;
-        return prefix + str(root) + &#39;\n&#39; + self.tree_to_str(root.left, pprefix) + self.tree_to_str(root.right, pprefix)
+        return prefix + str(root) + &#39;\n&#39; + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right, pprefix)
 
     def __str__(self):
-        s = &#39;------------\n&#39; + &#39;\n\t+\n&#39;.join([self.tree_to_str(t) for t in self.trees_])
+        s = &#39;------------\n&#39; + &#39;\n\t+\n&#39;.join([self._tree_to_str(t) for t in self.trees_])
         if hasattr(self, &#39;feature_names_&#39;) and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f&#39;X_{i}&#39;, self.feature_names_[i])
         return s
 
     def predict(self, X):
+        X = check_array(X)
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
-            preds += self.predict_tree(tree, X)
+            preds += self._predict_tree(tree, X)
         if self.prediction_task == &#39;regression&#39;:
             return preds
         elif self.prediction_task == &#39;classification&#39;:
             return (preds &gt; 0.5).astype(int)
 
     def predict_proba(self, X):
+        X = check_array(X)
         if self.prediction_task == &#39;regression&#39;:
             return NotImplemented
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
-            preds += self.predict_tree(tree, X)
+            preds += self._predict_tree(tree, X)
         preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
         return np.vstack((1 - preds, preds)).transpose()
 
-    def predict_tree(self, root: Node, X):
+    def _predict_tree(self, root: Node, X):
         &#34;&#34;&#34;Predict for a single tree
         &#34;&#34;&#34;
 
-        def predict_tree_single_point(root: Node, x):
+        def _predict_tree_single_point(root: Node, x):
             if root.left is None and root.right is None:
                 return root.value
             left = x[root.feature] &lt;= root.threshold
@@ -324,16 +326,16 @@ class FIGS(BaseEstimator):
                 if root.left is None:  # we don&#39;t actually have to worry about this case
                     return root.value
                 else:
-                    return predict_tree_single_point(root.left, x)
+                    return _predict_tree_single_point(root.left, x)
             else:
                 if root.right is None:  # we don&#39;t actually have to worry about this case
                     return root.value
                 else:
-                    return predict_tree_single_point(root.right, x)
+                    return _predict_tree_single_point(root.right, x)
 
         preds = np.zeros(X.shape[0])
         for i in range(X.shape[0]):
-            preds[i] = predict_tree_single_point(root, X[i])
+            preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
 
@@ -376,7 +378,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="imodels.tree.figs.FIGS"><code class="flex name class">
 <span>class <span class="ident">FIGS</span></span>
-<span>(</span><span>max_rules: int = None, min_impurity_decrease: float = 0.0)</span>
+<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
@@ -398,7 +400,7 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = None, min_impurity_decrease: float=0.0):
+    def __init__(self, max_rules: int = 12, min_impurity_decrease: float=0.0):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
@@ -422,7 +424,7 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
         elif self.prediction_task  == &#39;regression&#39;:
             decision_function = self.predict
 
-    def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
+    def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
         # array indices
         SPLIT = 0
         LEFT = 1
@@ -475,7 +477,7 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
         &#34;&#34;&#34;
         Params
         ------
-        sample_weight: array-like of shape (n_samples,), default=None
+        _sample_weight: array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
@@ -494,7 +496,7 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
         # or it is a child of a root node that has already been added
         idxs = np.ones(X.shape[0], dtype=bool)
-        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
+        node_init = self._construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
         potential_splits = [node_init]
         for node in potential_splits:
             node.setattrs(is_root=True)
@@ -543,7 +545,7 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
-                y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
+                y_predictions_per_tree[tree_num_] = self._predict_tree(self.trees_[tree_num_], X)
             y_predictions_per_tree[-1] = np.zeros(X.shape[0])  # dummy 0 preds for possible new trees
 
             # update residuals for each tree
@@ -562,11 +564,11 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
                 y_target = y_residuals_per_tree[potential_split.tree_num]
 
                 # re-calculate the best split
-                potential_split_updated = self.construct_node_with_stump(X=X,
-                                                                         y=y_target,
-                                                                         idxs=potential_split.idxs,
-                                                                         tree_num=potential_split.tree_num,
-                                                                         sample_weight=sample_weight, )
+                potential_split_updated = self._construct_node_with_stump(X=X,
+                                                                          y=y_target,
+                                                                          idxs=potential_split.idxs,
+                                                                          tree_num=potential_split.tree_num,
+                                                                          sample_weight=sample_weight, )
 
                 # need to preserve certain attributes from before (value at this split + is_root)
                 # value may change because residuals may have changed, but we want it to store the value from before
@@ -591,44 +593,46 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
                 break
         return self
 
-    def tree_to_str(self, root: Node, prefix=&#39;&#39;):
+    def _tree_to_str(self, root: Node, prefix=&#39;&#39;):
         if root is None:
             return &#39;&#39;
         elif root.threshold is None:
             return &#39;&#39;
         pprefix = prefix + &#39;\t&#39;
-        return prefix + str(root) + &#39;\n&#39; + self.tree_to_str(root.left, pprefix) + self.tree_to_str(root.right, pprefix)
+        return prefix + str(root) + &#39;\n&#39; + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right, pprefix)
 
     def __str__(self):
-        s = &#39;------------\n&#39; + &#39;\n\t+\n&#39;.join([self.tree_to_str(t) for t in self.trees_])
+        s = &#39;------------\n&#39; + &#39;\n\t+\n&#39;.join([self._tree_to_str(t) for t in self.trees_])
         if hasattr(self, &#39;feature_names_&#39;) and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f&#39;X_{i}&#39;, self.feature_names_[i])
         return s
 
     def predict(self, X):
+        X = check_array(X)
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
-            preds += self.predict_tree(tree, X)
+            preds += self._predict_tree(tree, X)
         if self.prediction_task == &#39;regression&#39;:
             return preds
         elif self.prediction_task == &#39;classification&#39;:
             return (preds &gt; 0.5).astype(int)
 
     def predict_proba(self, X):
+        X = check_array(X)
         if self.prediction_task == &#39;regression&#39;:
             return NotImplemented
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
-            preds += self.predict_tree(tree, X)
+            preds += self._predict_tree(tree, X)
         preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
         return np.vstack((1 - preds, preds)).transpose()
 
-    def predict_tree(self, root: Node, X):
+    def _predict_tree(self, root: Node, X):
         &#34;&#34;&#34;Predict for a single tree
         &#34;&#34;&#34;
 
-        def predict_tree_single_point(root: Node, x):
+        def _predict_tree_single_point(root: Node, x):
             if root.left is None and root.right is None:
                 return root.value
             left = x[root.feature] &lt;= root.threshold
@@ -636,16 +640,16 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
                 if root.left is None:  # we don&#39;t actually have to worry about this case
                     return root.value
                 else:
-                    return predict_tree_single_point(root.left, x)
+                    return _predict_tree_single_point(root.left, x)
             else:
                 if root.right is None:  # we don&#39;t actually have to worry about this case
                     return root.value
                 else:
-                    return predict_tree_single_point(root.right, x)
+                    return _predict_tree_single_point(root.right, x)
 
         preds = np.zeros(X.shape[0])
         for i in range(X.shape[0]):
-            preds[i] = predict_tree_single_point(root, X[i])
+            preds[i] = _predict_tree_single_point(root, X[i])
         return preds</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -659,71 +663,12 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.figs.FIGS.construct_node_with_stump"><code class="name flex">
-<span>def <span class="ident">construct_node_with_stump</span></span>(<span>self, X, y, idxs, tree_num, sample_weight=None)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
-    # array indices
-    SPLIT = 0
-    LEFT = 1
-    RIGHT = 2
-
-    # fit stump
-    stump = tree.DecisionTreeRegressor(max_depth=1)
-    if sample_weight is not None:
-        sample_weight = sample_weight[idxs]
-    stump.fit(X[idxs], y[idxs], sample_weight=sample_weight)
-
-    # these are all arrays, arr[0] is split node
-    # note: -2 is dummy
-    feature = stump.tree_.feature
-    threshold = stump.tree_.threshold
-
-    impurity = stump.tree_.impurity
-    n_node_samples = stump.tree_.n_node_samples
-    value = stump.tree_.value
-
-    # no split
-    if len(feature) == 1:
-        # print(&#39;no split found!&#39;, idxs.sum(), impurity, feature)
-        return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
-                    feature=feature[SPLIT], threshold=threshold[SPLIT],
-                    impurity_reduction=None)
-
-    # split node
-    impurity_reduction = (
-                                 impurity[SPLIT] -
-                                 impurity[LEFT] * n_node_samples[LEFT] / n_node_samples[SPLIT] -
-                                 impurity[RIGHT] * n_node_samples[RIGHT] / n_node_samples[SPLIT]
-                         ) * idxs.sum()
-
-    node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
-                      feature=feature[SPLIT], threshold=threshold[SPLIT],
-                      impurity_reduction=impurity_reduction)
-    # print(&#39;\t&gt;&gt;&gt;&#39;, node_split, &#39;impurity&#39;, impurity, &#39;num_pts&#39;, idxs.sum(), &#39;imp_reduc&#39;, impurity_reduction)
-
-    # manage children
-    idxs_split = X[:, feature[SPLIT]] &lt;= threshold[SPLIT]
-    idxs_left = idxs_split &amp; idxs
-    idxs_right = ~idxs_split &amp; idxs
-    node_left = Node(idxs=idxs_left, value=value[LEFT], tree_num=tree_num)
-    node_right = Node(idxs=idxs_right, value=value[RIGHT], tree_num=tree_num)
-    node_split.setattrs(left_temp=node_left, right_temp=node_right, )
-    return node_split</code></pre>
-</details>
-</dd>
 <dt id="imodels.tree.figs.FIGS.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=False, sample_weight=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="params">Params</h2>
-<p>sample_weight: array-like of shape (n_samples,), default=None
+<p>_sample_weight: array-like of shape (n_samples,), default=None
 Sample weights. If None, then samples are equally weighted.
 Splits that would create child nodes with net zero or negative weight
 are ignored while searching for a split in each node.</p></div>
@@ -735,7 +680,7 @@ are ignored while searching for a split in each node.</p></div>
     &#34;&#34;&#34;
     Params
     ------
-    sample_weight: array-like of shape (n_samples,), default=None
+    _sample_weight: array-like of shape (n_samples,), default=None
         Sample weights. If None, then samples are equally weighted.
         Splits that would create child nodes with net zero or negative weight
         are ignored while searching for a split in each node.
@@ -754,7 +699,7 @@ are ignored while searching for a split in each node.</p></div>
     # everything in potential_splits either is_root (so it can be added directly to self.trees_)
     # or it is a child of a root node that has already been added
     idxs = np.ones(X.shape[0], dtype=bool)
-    node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
+    node_init = self._construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
     potential_splits = [node_init]
     for node in potential_splits:
         node.setattrs(is_root=True)
@@ -803,7 +748,7 @@ are ignored while searching for a split in each node.</p></div>
 
         # update predictions for altered tree
         for tree_num_ in range(len(self.trees_)):
-            y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
+            y_predictions_per_tree[tree_num_] = self._predict_tree(self.trees_[tree_num_], X)
         y_predictions_per_tree[-1] = np.zeros(X.shape[0])  # dummy 0 preds for possible new trees
 
         # update residuals for each tree
@@ -822,11 +767,11 @@ are ignored while searching for a split in each node.</p></div>
             y_target = y_residuals_per_tree[potential_split.tree_num]
 
             # re-calculate the best split
-            potential_split_updated = self.construct_node_with_stump(X=X,
-                                                                     y=y_target,
-                                                                     idxs=potential_split.idxs,
-                                                                     tree_num=potential_split.tree_num,
-                                                                     sample_weight=sample_weight, )
+            potential_split_updated = self._construct_node_with_stump(X=X,
+                                                                      y=y_target,
+                                                                      idxs=potential_split.idxs,
+                                                                      tree_num=potential_split.tree_num,
+                                                                      sample_weight=sample_weight, )
 
             # need to preserve certain attributes from before (value at this split + is_root)
             # value may change because residuals may have changed, but we want it to store the value from before
@@ -862,9 +807,10 @@ are ignored while searching for a split in each node.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict(self, X):
+    X = check_array(X)
     preds = np.zeros(X.shape[0])
     for tree in self.trees_:
-        preds += self.predict_tree(tree, X)
+        preds += self._predict_tree(tree, X)
     if self.prediction_task == &#39;regression&#39;:
         return preds
     elif self.prediction_task == &#39;classification&#39;:
@@ -881,72 +827,21 @@ are ignored while searching for a split in each node.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
+    X = check_array(X)
     if self.prediction_task == &#39;regression&#39;:
         return NotImplemented
     preds = np.zeros(X.shape[0])
     for tree in self.trees_:
-        preds += self.predict_tree(tree, X)
+        preds += self._predict_tree(tree, X)
     preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
     return np.vstack((1 - preds, preds)).transpose()</code></pre>
-</details>
-</dd>
-<dt id="imodels.tree.figs.FIGS.predict_tree"><code class="name flex">
-<span>def <span class="ident">predict_tree</span></span>(<span>self, root: <a title="imodels.tree.figs.Node" href="#imodels.tree.figs.Node">Node</a>, X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Predict for a single tree</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def predict_tree(self, root: Node, X):
-    &#34;&#34;&#34;Predict for a single tree
-    &#34;&#34;&#34;
-
-    def predict_tree_single_point(root: Node, x):
-        if root.left is None and root.right is None:
-            return root.value
-        left = x[root.feature] &lt;= root.threshold
-        if left:
-            if root.left is None:  # we don&#39;t actually have to worry about this case
-                return root.value
-            else:
-                return predict_tree_single_point(root.left, x)
-        else:
-            if root.right is None:  # we don&#39;t actually have to worry about this case
-                return root.value
-            else:
-                return predict_tree_single_point(root.right, x)
-
-    preds = np.zeros(X.shape[0])
-    for i in range(X.shape[0]):
-        preds[i] = predict_tree_single_point(root, X[i])
-    return preds</code></pre>
-</details>
-</dd>
-<dt id="imodels.tree.figs.FIGS.tree_to_str"><code class="name flex">
-<span>def <span class="ident">tree_to_str</span></span>(<span>self, root: <a title="imodels.tree.figs.Node" href="#imodels.tree.figs.Node">Node</a>, prefix='')</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def tree_to_str(self, root: Node, prefix=&#39;&#39;):
-    if root is None:
-        return &#39;&#39;
-    elif root.threshold is None:
-        return &#39;&#39;
-    pprefix = prefix + &#39;\t&#39;
-    return prefix + str(root) + &#39;\n&#39; + self.tree_to_str(root.left, pprefix) + self.tree_to_str(root.right, pprefix)</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="imodels.tree.figs.FIGSClassifier"><code class="flex name class">
 <span>class <span class="ident">FIGSClassifier</span></span>
-<span>(</span><span>max_rules: int = None, min_impurity_decrease: float = 0.0)</span>
+<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
@@ -973,14 +868,13 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 <li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.predict_tree" href="#imodels.tree.figs.FIGS.predict_tree">predict_tree</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="imodels.tree.figs.FIGSRegressor"><code class="flex name class">
 <span>class <span class="ident">FIGSRegressor</span></span>
-<span>(</span><span>max_rules: int = None, min_impurity_decrease: float = 0.0)</span>
+<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
@@ -1007,7 +901,6 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 <li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.predict_tree" href="#imodels.tree.figs.FIGS.predict_tree">predict_tree</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1099,12 +992,9 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 <li>
 <h4><code><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.figs.FIGS.construct_node_with_stump" href="#imodels.tree.figs.FIGS.construct_node_with_stump">construct_node_with_stump</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict" href="#imodels.tree.figs.FIGS.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.predict_tree" href="#imodels.tree.figs.FIGS.predict_tree">predict_tree</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.tree_to_str" href="#imodels.tree.figs.FIGS.tree_to_str">tree_to_str</a></code></li>
 </ul>
 </li>
 <li>

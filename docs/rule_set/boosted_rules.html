@@ -180,7 +180,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         &#34;&#34;&#34;
         check_is_fitted(self)
         X = check_array(X)
-        return self.eval_weighted_rule_sum(X) &gt; 0
+        return self._eval_weighted_rule_sum(X) &gt; 0
 
     def __str__(self):
         try:
@@ -357,7 +357,7 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
         &#34;&#34;&#34;
         check_is_fitted(self)
         X = check_array(X)
-        return self.eval_weighted_rule_sum(X) &gt; 0
+        return self._eval_weighted_rule_sum(X) &gt; 0
 
     def __str__(self):
         try:
@@ -529,7 +529,7 @@ If not provided, then each sample is given unit weight.</dd>
     &#34;&#34;&#34;
     check_is_fitted(self)
     X = check_array(X)
-    return self.eval_weighted_rule_sum(X) &gt; 0</code></pre>
+    return self._eval_weighted_rule_sum(X) &gt; 0</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.predict_proba"><code class="name flex">

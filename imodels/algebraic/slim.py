@@ -34,7 +34,7 @@ class SLIMRegressor(BaseEstimator, RegressorMixin):
         
         Params
         ------
-        sample_weight: np.ndarray (n,), optional
+        _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         '''
 
@@ -107,7 +107,7 @@ class SLIMClassifier(BaseEstimator, ClassifierMixin):
         
         Params
         ------
-        sample_weight: np.ndarray (n,), optional
+        _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         '''
         X, y = check_X_y(X, y)

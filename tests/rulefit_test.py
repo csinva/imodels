@@ -36,7 +36,7 @@ def test_integration():
     rfr = RuleFitRegressor(exp_rand_tree_size=False, n_estimators=500, random_state=1, include_linear=False,
                            max_rules=None, alpha=0.1)
     rfr.fit(X, y)
-    print(len(rfr.get_rules()))
+    print(len(rfr._get_rules()))
     expected = np.array([0.83333333, 0.25, 0.83333333, 0.83333333, 0.25])
     assert np.allclose(rfr.predict(X), expected, atol=1.0e-04)
 

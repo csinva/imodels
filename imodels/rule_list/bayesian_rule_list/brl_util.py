@@ -141,12 +141,12 @@ def gelmanrubin(res):
         for val in res[chain]['permsdic'].values():
             phi_bar_j[chain] += val[1] * val[0]  # numsamples*log posterior
             n += val[1]
-    # And normalize
+    # And _normalize
     n = n // m  # Number of samples per chain (assuming all m chains have same number of samples)
     # Normalize, and compute phi_bar
     phi_bar = 0.
     for chain in phi_bar_j:
-        phi_bar_j[chain] = phi_bar_j[chain] / float(n)  # normalize
+        phi_bar_j[chain] = phi_bar_j[chain] / float(n)  # _normalize
         phi_bar += phi_bar_j[chain]
     phi_bar = phi_bar / float(m)  # phi_bar = average of phi_bar_j
     # Now B

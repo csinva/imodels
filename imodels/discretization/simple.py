@@ -22,7 +22,7 @@ class SimpleDiscretizer:
 
         # X_categorical = X[:, self.is_categorical]
         X_categorical_columns = feature_labels[self.is_categorical]
-        X_numeric = X[:, ~self.is_categorical]
+        # X_numeric = X[:, ~self.is_categorical]
         X_numeric_columns = feature_labels[~self.is_categorical]
 
         self.discretizer = KBinsDiscretizer(n_bins=self.n_bins, encode='onehot', strategy=self.strategy)

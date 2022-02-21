@@ -46,7 +46,7 @@ X, y = dataset.data, dataset.target &gt; 25
 X_train, y_train = X[:len(y)//2], y[:len(y)//2]
 X_test, y_test = X[len(y)//2:], y[len(y)//2:]
 clf.fit(X_train, y_train)
-y_score = clf.score_top_rules(X_test) # Get a risk score for each test example
+y_score = clf._score_top_rules(X_test) # Get a risk score for each test example
 precision, recall, _ = precision_recall_curve(y_test, y_score)
 plt.plot(recall, precision)
 plt.xlabel('Recall')
@@ -70,8 +70,8 @@ similar or duplicated rules are then removed, based on a similarity threshold of
 <p>The main goal of this package is to provide rules verifying precision and recall conditions. It still implement a score
 (<code>decision_function</code>) method, but which does not solve the L1-regularized optimization problem as in [1]. Instead,
 weights are simply proportional to the OOB associated precision of the rule.</p>
-<p>This package also offers convenient methods to compute predictions with the k most precise rules (cf score_top_rules()
-and predict_top_rules() functions).</p>
+<p>This package also offers convenient methods to compute predictions with the k most precise rules (cf _score_top_rules()
+and _predict_top_rules() functions).</p>
 <p>[1] Friedman and Popescu, Predictive learning via rule ensembles,Technical Report, 2005.</p>
 <p>[2] Cohen and Singer, A simple, fast, and effective rule learner, National Conference on Artificial Intelligence, 1999.</p>
 <p>[3] Weiss and Indurkhya, Lightweight rule induction, ICML, 2000.</p>
@@ -109,7 +109,7 @@ Example
     X_train, y_train = X[:len(y)//2], y[:len(y)//2]
     X_test, y_test = X[len(y)//2:], y[len(y)//2:]
     clf.fit(X_train, y_train)
-    y_score = clf.score_top_rules(X_test) # Get a risk score for each test example
+    y_score = clf._score_top_rules(X_test) # Get a risk score for each test example
     precision, recall, _ = precision_recall_curve(y_test, y_score)
     plt.plot(recall, precision)
     plt.xlabel(&#39;Recall&#39;)
@@ -141,8 +141,8 @@ The main goal of this package is to provide rules verifying precision and recall
 (`decision_function`) method, but which does not solve the L1-regularized optimization problem as in [1]. Instead,
 weights are simply proportional to the OOB associated precision of the rule.
 
-This package also offers convenient methods to compute predictions with the k most precise rules (cf score_top_rules()
-and predict_top_rules() functions).
+This package also offers convenient methods to compute predictions with the k most precise rules (cf _score_top_rules()
+and _predict_top_rules() functions).
 
 
 [1] Friedman and Popescu, Predictive learning via rule ensembles,Technical Report, 2005.
@@ -439,10 +439,10 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
         weight_sum = np.sum([w[0] for (r, w) in self.rules_without_feature_names_])
         if weight_sum == 0:
             return np.vstack((np.ones(X.shape[0]), np.zeros(X.shape[0]))).transpose()
-        y = self.eval_weighted_rule_sum(X) / weight_sum
+        y = self._eval_weighted_rule_sum(X) / weight_sum
         return np.vstack((1 - y, y)).transpose()
 
-    def rules_vote(self, X) -&gt; np.ndarray:
+    def _rules_vote(self, X) -&gt; np.ndarray:
         &#34;&#34;&#34;Score representing a vote of the base classifiers (rules).
 
         The score of an input sample is computed as the sum of the binary
@@ -482,7 +482,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
 
         return scores
 
-    def score_top_rules(self, X) -&gt; np.ndarray:
+    def _score_top_rules(self, X) -&gt; np.ndarray:
         &#34;&#34;&#34;Score representing an ordering between the base classifiers (rules).
 
         The score is high when the instance is detected by a performing rule.
@@ -525,7 +525,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
 
         return scores
 
-    def predict_top_rules(self, X, n_rules) -&gt; np.ndarray:
+    def _predict_top_rules(self, X, n_rules) -&gt; np.ndarray:
         &#34;&#34;&#34;Predict if a particular sample is an outlier or not,
         using the n_rules most performing rules.
 
@@ -547,7 +547,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
             be considered as an outlier according to the selected rules.
         &#34;&#34;&#34;
 
-        return np.array((self.score_top_rules(X) &gt; len(self.rules_) - n_rules),
+        return np.array((self._score_top_rules(X) &gt; len(self.rules_) - n_rules),
                         dtype=int)
 
     def _extract_rules(self, X, y) -&gt; Tuple[List[str], List[np.array], List[np.array]]:
@@ -958,10 +958,10 @@ estimator.</dd>
         weight_sum = np.sum([w[0] for (r, w) in self.rules_without_feature_names_])
         if weight_sum == 0:
             return np.vstack((np.ones(X.shape[0]), np.zeros(X.shape[0]))).transpose()
-        y = self.eval_weighted_rule_sum(X) / weight_sum
+        y = self._eval_weighted_rule_sum(X) / weight_sum
         return np.vstack((1 - y, y)).transpose()
 
-    def rules_vote(self, X) -&gt; np.ndarray:
+    def _rules_vote(self, X) -&gt; np.ndarray:
         &#34;&#34;&#34;Score representing a vote of the base classifiers (rules).
 
         The score of an input sample is computed as the sum of the binary
@@ -1001,7 +1001,7 @@ estimator.</dd>
 
         return scores
 
-    def score_top_rules(self, X) -&gt; np.ndarray:
+    def _score_top_rules(self, X) -&gt; np.ndarray:
         &#34;&#34;&#34;Score representing an ordering between the base classifiers (rules).
 
         The score is high when the instance is detected by a performing rule.
@@ -1044,7 +1044,7 @@ estimator.</dd>
 
         return scores
 
-    def predict_top_rules(self, X, n_rules) -&gt; np.ndarray:
+    def _predict_top_rules(self, X, n_rules) -&gt; np.ndarray:
         &#34;&#34;&#34;Predict if a particular sample is an outlier or not,
         using the n_rules most performing rules.
 
@@ -1066,7 +1066,7 @@ estimator.</dd>
             be considered as an outlier according to the selected rules.
         &#34;&#34;&#34;
 
-        return np.array((self.score_top_rules(X) &gt; len(self.rules_) - n_rules),
+        return np.array((self._score_top_rules(X) &gt; len(self.rules_) - n_rules),
                         dtype=int)
 
     def _extract_rules(self, X, y) -&gt; Tuple[List[str], List[np.array], List[np.array]]:
@@ -1281,192 +1281,8 @@ be considered as an outlier according to the selected rules.</dd>
     weight_sum = np.sum([w[0] for (r, w) in self.rules_without_feature_names_])
     if weight_sum == 0:
         return np.vstack((np.ones(X.shape[0]), np.zeros(X.shape[0]))).transpose()
-    y = self.eval_weighted_rule_sum(X) / weight_sum
+    y = self._eval_weighted_rule_sum(X) / weight_sum
     return np.vstack((1 - y, y)).transpose()</code></pre>
-</details>
-</dd>
-<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_top_rules"><code class="name flex">
-<span>def <span class="ident">predict_top_rules</span></span>(<span>self, X, n_rules) ‑> numpy.ndarray</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Predict if a particular sample is an outlier or not,
-using the n_rules most performing rules.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>array-like, shape (n_samples, n_features)</code></dt>
-<dd>The input samples. Internally, it will be converted to
-<code>dtype=np.float32</code></dd>
-<dt><strong><code>n_rules</code></strong> :&ensp;<code>int</code></dt>
-<dd>The number of rules used for the prediction. If one of the
-n_rules most performing rules is activated, the prediction
-is equal to 1.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>is_outlier</code></strong> :&ensp;<code>array, shape (n_samples,)</code></dt>
-<dd>For each observations, tells whether or not (1 or 0) it should
-be considered as an outlier according to the selected rules.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def predict_top_rules(self, X, n_rules) -&gt; np.ndarray:
-    &#34;&#34;&#34;Predict if a particular sample is an outlier or not,
-    using the n_rules most performing rules.
-
-    Parameters
-    ----------
-    X : array-like, shape (n_samples, n_features)
-        The input samples. Internally, it will be converted to
-        ``dtype=np.float32``
-
-    n_rules : int
-        The number of rules used for the prediction. If one of the
-        n_rules most performing rules is activated, the prediction
-        is equal to 1.
-
-    Returns
-    -------
-    is_outlier : array, shape (n_samples,)
-        For each observations, tells whether or not (1 or 0) it should
-        be considered as an outlier according to the selected rules.
-    &#34;&#34;&#34;
-
-    return np.array((self.score_top_rules(X) &gt; len(self.rules_) - n_rules),
-                    dtype=int)</code></pre>
-</details>
-</dd>
-<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.rules_vote"><code class="name flex">
-<span>def <span class="ident">rules_vote</span></span>(<span>self, X) ‑> numpy.ndarray</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Score representing a vote of the base classifiers (rules).</p>
-<p>The score of an input sample is computed as the sum of the binary
-rules outputs: a score of k means than k rules have voted positively.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>array-like, shape (n_samples, n_features)</code></dt>
-<dd>The training input samples.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>scores</code></strong> :&ensp;<code>array, shape (n_samples,)</code></dt>
-<dd>The score of the input samples.
-The higher, the more abnormal. Positive scores represent outliers,
-null scores represent inliers.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def rules_vote(self, X) -&gt; np.ndarray:
-    &#34;&#34;&#34;Score representing a vote of the base classifiers (rules).
-
-    The score of an input sample is computed as the sum of the binary
-    rules outputs: a score of k means than k rules have voted positively.
-
-    Parameters
-    ----------
-    X : array-like, shape (n_samples, n_features)
-        The training input samples.
-
-    Returns
-    -------
-    scores : array, shape (n_samples,)
-        The score of the input samples.
-        The higher, the more abnormal. Positive scores represent outliers,
-        null scores represent inliers.
-
-    &#34;&#34;&#34;
-    # Check if fit had been called
-    check_is_fitted(self, [&#39;rules_&#39;, &#39;estimators_samples_&#39;, &#39;max_samples_&#39;])
-
-    # Input validation
-    X = check_array(X)
-
-    if X.shape[1] != self.n_features_:
-        raise ValueError(&#34;X.shape[1] = %d should be equal to %d, &#34;
-                         &#34;the number of features at training time.&#34;
-                         &#34; Please reshape your data.&#34;
-                         % (X.shape[1], self.n_features_))
-
-    df = pandas.DataFrame(X, columns=self.feature_placeholders)
-    selected_rules = self.rules_without_feature_names_
-
-    scores = np.zeros(X.shape[0])
-    for (r, _) in selected_rules:
-        scores[list(df.query(r).index)] += 1
-
-    return scores</code></pre>
-</details>
-</dd>
-<dt id="imodels.rule_set.skope_rules.SkopeRulesClassifier.score_top_rules"><code class="name flex">
-<span>def <span class="ident">score_top_rules</span></span>(<span>self, X) ‑> numpy.ndarray</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Score representing an ordering between the base classifiers (rules).</p>
-<p>The score is high when the instance is detected by a performing rule.
-If there are n rules, ordered by increasing OOB precision, a score of k
-means than the kth rule has voted positively, but not the (k-1) first
-rules.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>array-like, shape (n_samples, n_features)</code></dt>
-<dd>The training input samples.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>scores</code></strong> :&ensp;<code>array, shape (n_samples,)</code></dt>
-<dd>The score of the input samples.
-Positive scores represent outliers, null scores represent inliers.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def score_top_rules(self, X) -&gt; np.ndarray:
-    &#34;&#34;&#34;Score representing an ordering between the base classifiers (rules).
-
-    The score is high when the instance is detected by a performing rule.
-    If there are n rules, ordered by increasing OOB precision, a score of k
-    means than the kth rule has voted positively, but not the (k-1) first
-    rules.
-
-    Parameters
-    ----------
-    X : array-like, shape (n_samples, n_features)
-        The training input samples.
-
-    Returns
-    -------
-    scores : array, shape (n_samples,)
-        The score of the input samples.
-        Positive scores represent outliers, null scores represent inliers.
-
-    &#34;&#34;&#34;
-    # Check if fit had been called
-    check_is_fitted(self, [&#39;rules_&#39;, &#39;estimators_samples_&#39;, &#39;max_samples_&#39;])
-
-    # Input validation
-    X = check_array(X)
-
-    if X.shape[1] != self.n_features_:
-        raise ValueError(&#34;X.shape[1] = %d should be equal to %d, &#34;
-                         &#34;the number of features at training time.&#34;
-                         &#34; Please reshape your data.&#34;
-                         % (X.shape[1], self.n_features_))
-
-    df = pandas.DataFrame(X, columns=self.feature_placeholders)
-    selected_rules = self.rules_without_feature_names_
-
-    scores = np.zeros(X.shape[0])
-    for (k, r) in enumerate(list((selected_rules))):
-        scores[list(df.query(r.rule).index)] = np.maximum(
-            len(selected_rules) - k,
-            scores[list(df.query(r.rule).index)])
-
-    return scores</code></pre>
 </details>
 </dd>
 </dl>
@@ -1492,13 +1308,10 @@ Positive scores represent outliers, null scores represent inliers.</dd>
 <ul>
 <li>
 <h4><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.fit" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.fit">fit</a></code></li>
 <li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.predict">predict</a></code></li>
 <li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_proba" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_top_rules" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.predict_top_rules">predict_top_rules</a></code></li>
-<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.rules_vote" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.rules_vote">rules_vote</a></code></li>
-<li><code><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier.score_top_rules" href="#imodels.rule_set.skope_rules.SkopeRulesClassifier.score_top_rules">score_top_rules</a></code></li>
 </ul>
 </li>
 </ul>

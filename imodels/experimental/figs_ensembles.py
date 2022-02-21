@@ -68,7 +68,7 @@ class FIGSExt(BaseEstimator):
 
     def __init__(self, max_rules: int = None, posthoc_ridge: bool = False,
                  include_linear: bool = False,
-                 max_features = None, min_impurity_decrease: float=0.0):
+                 max_features=None, min_impurity_decrease: float = 0.0):
         """
         max_features
             The number of features to consider when looking for the best split
@@ -89,20 +89,20 @@ class FIGSExt(BaseEstimator):
         it is equivalent to SuperCARTRegressor
         """
         self.prediction_task = 'regression'
-        
+
     def _init_decision_function(self):
         """Sets decision function based on prediction_task
         """
         # used by sklearn GrriidSearchCV, BaggingClassifier
-        if self.prediction_task  == 'classification':
-            decision_function = lambda x: self.predict_proba(x)[:, 1] 
-        elif self.prediction_task  == 'regression':
+        if self.prediction_task == 'classification':
+            decision_function = lambda x: self.predict_proba(x)[:, 1]
+        elif self.prediction_task == 'regression':
             decision_function = self.predict
 
-    def construct_node_linear(self, X, y, idxs, tree_num=0, sample_weight=None):
+    def _construct_node_linear(self, X, y, idxs, tree_num=0, sample_weight=None):
         """This can be made a lot faster
         Assumes there are at least 5 points in node
-        Doesn't currently support sample_weight!
+        Doesn't currently support _sample_weight!
         """
         y_target = y[idxs]
         impurity_orig = np.mean(np.square(y_target)) * idxs.sum()
@@ -134,7 +134,7 @@ class FIGSExt(BaseEstimator):
                         feature=best_feature, threshold=None,
                         impurity_reduction=impurity_reduction, split_or_linear='linear')
 
-    def construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None, max_features=None):
+    def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None, max_features=None):
         # array indices
         SPLIT = 0
         LEFT = 1
@@ -187,16 +187,16 @@ class FIGSExt(BaseEstimator):
         """
         Params
         ------
-        sample_weight: array-like of shape (n_samples,), default=None
+        _sample_weight: array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         """
-        
+
         if self.prediction_task == 'classification':
             self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
         X, y = check_X_y(X, y)
-        y = y.astype(float)            
+        y = y.astype(float)
         if feature_names is not None:
             self.feature_names_ = feature_names
 
@@ -209,11 +209,12 @@ class FIGSExt(BaseEstimator):
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
         # or it is a child of a root node that has already been added
         idxs = np.ones(X.shape[0], dtype=bool)
-        node_init = self.construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1,
-                                                   sample_weight=sample_weight, max_features=self.max_features)
+        node_init = self._construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1,
+                                                    sample_weight=sample_weight, max_features=self.max_features)
         potential_splits = [node_init]
         if self.include_linear and idxs.sum() >= 5:
-            node_init_linear = self.construct_node_linear(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
+            node_init_linear = self._construct_node_linear(X=X, y=y, idxs=idxs, tree_num=-1,
+                                                           sample_weight=sample_weight)
             potential_splits.append(node_init_linear)
         for node in potential_splits:
             node.setattrs(is_root=True)
@@ -262,7 +263,7 @@ class FIGSExt(BaseEstimator):
 
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
-                y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
+                y_predictions_per_tree[tree_num_] = self._predict_tree(self.trees_[tree_num_], X)
             y_predictions_per_tree[-1] = np.zeros(X.shape[0])  # dummy 0 preds for possible new trees
 
             # update residuals for each tree
@@ -282,12 +283,12 @@ class FIGSExt(BaseEstimator):
 
                 if potential_split.split_or_linear == 'split':
                     # re-calculate the best split
-                    potential_split_updated = self.construct_node_with_stump(X=X,
-                                                                             y=y_target,
-                                                                             idxs=potential_split.idxs,
-                                                                             tree_num=potential_split.tree_num,
-                                                                             sample_weight=sample_weight,
-                                                                             max_features=self.max_features)
+                    potential_split_updated = self._construct_node_with_stump(X=X,
+                                                                              y=y_target,
+                                                                              idxs=potential_split.idxs,
+                                                                              tree_num=potential_split.tree_num,
+                                                                              sample_weight=sample_weight,
+                                                                              max_features=self.max_features)
 
                     # need to preserve certain attributes from before (value at this split + is_root)
                     # value may change because residuals may have changed, but we want it to store the value from before
@@ -301,11 +302,11 @@ class FIGSExt(BaseEstimator):
                 elif potential_split.split_or_linear == 'linear':
                     assert potential_split.is_root, 'Currently, linear node only supported as root'
                     assert potential_split.idxs.sum() == X.shape[0], 'Currently, linear node only supported as root'
-                    potential_split_updated = self.construct_node_linear(idxs=potential_split.idxs,
-                                                                         X=X,
-                                                                         y=y_target,
-                                                                         tree_num=potential_split.tree_num,
-                                                                         sample_weight=sample_weight)
+                    potential_split_updated = self._construct_node_linear(idxs=potential_split.idxs,
+                                                                          X=X,
+                                                                          y=y_target,
+                                                                          tree_num=potential_split.tree_num,
+                                                                          sample_weight=sample_weight)
 
                     # don't need to retain anything from before (besides maybe is_root)
                     potential_split.setattrs(
@@ -332,11 +333,11 @@ class FIGSExt(BaseEstimator):
                 self.weighted_model_ = RidgeCV(alphas=(0.01, 0.1, 0.5, 1.0, 5, 10))
             elif self.prediction_task == 'classification':
                 self.weighted_model_ = RidgeClassifierCV(alphas=(0.01, 0.1, 0.5, 1.0, 5, 10))
-            X_feats = self.extract_tree_predictions(X)
+            X_feats = self._extract_tree_predictions(X)
             self.weighted_model_.fit(X_feats, y)
         return self
 
-    def tree_to_str(self, root: Node, prefix=''):
+    def _tree_to_str(self, root: Node, prefix=''):
         if root is None:
             return ''
         elif root.split_or_linear == 'linear':
@@ -344,10 +345,11 @@ class FIGSExt(BaseEstimator):
         elif root.threshold is None:
             return ''
         pprefix = prefix + '\t'
-        return prefix + str(root) + '\n' + self.tree_to_str(root.left, pprefix) + self.tree_to_str(root.right, pprefix)
+        return prefix + str(root) + '\n' + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right,
+                                                                                                     pprefix)
 
     def __str__(self):
-        s = '------------\n' + '\n\t+\n'.join([self.tree_to_str(t) for t in self.trees_])
+        s = '------------\n' + '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
         if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f'X_{i}', self.feature_names_[i])
@@ -355,11 +357,11 @@ class FIGSExt(BaseEstimator):
 
     def predict(self, X):
         if self.posthoc_ridge and self.weighted_model_:  # note, during fitting don't use the weighted moel
-            X_feats = self.extract_tree_predictions(X)
+            X_feats = self._extract_tree_predictions(X)
             return self.weighted_model_.predict(X_feats)
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
-            preds += self.predict_tree(tree, X)
+            preds += self._predict_tree(tree, X)
         if self.prediction_task == 'regression':
             return preds
         elif self.prediction_task == 'classification':
@@ -369,33 +371,32 @@ class FIGSExt(BaseEstimator):
         if self.prediction_task == 'regression':
             return NotImplemented
         elif self.posthoc_ridge and self.weighted_model_:  # note, during fitting don't use the weighted moel
-            X_feats = self.extract_tree_predictions(X)
+            X_feats = self._extract_tree_predictions(X)
             d = self.weighted_model_.decision_function(X_feats)  # for 2 classes, this (n_samples,)
             probs = np.exp(d) / (1 + np.exp(d))
             return np.vstack((1 - probs, probs)).transpose()
         else:
             preds = np.zeros(X.shape[0])
             for tree in self.trees_:
-                preds += self.predict_tree(tree, X)
+                preds += self._predict_tree(tree, X)
             preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
             return np.vstack((1 - preds, preds)).transpose()
-        
 
-    def extract_tree_predictions(self, X):
+    def _extract_tree_predictions(self, X):
         """Extract predictions for all trees
         """
         X_feats = np.zeros((X.shape[0], len(self.trees_)))
         for tree_num_ in range(len(self.trees_)):
-            preds_tree = self.predict_tree(self.trees_[tree_num_], X)
+            preds_tree = self._predict_tree(self.trees_[tree_num_], X)
             X_feats[:, tree_num_] = preds_tree
         return X_feats
 
-    def predict_tree(self, root: Node, X):
+    def _predict_tree(self, root: Node, X):
         """Predict for a single tree
         This can be made way faster
         """
 
-        def predict_tree_single_point(root: Node, x):
+        def _predict_tree_single_point(root: Node, x):
             if root.split_or_linear == 'linear':
                 return x[root.feature] * root.value
             elif root.left is None and root.right is None:
@@ -405,16 +406,16 @@ class FIGSExt(BaseEstimator):
                 if root.left is None:  # we don't actually have to worry about this case
                     return root.value
                 else:
-                    return predict_tree_single_point(root.left, x)
+                    return _predict_tree_single_point(root.left, x)
             else:
                 if root.right is None:  # we don't actually have to worry about this case
                     return root.value
                 else:
-                    return predict_tree_single_point(root.right, x)
+                    return _predict_tree_single_point(root.right, x)
 
         preds = np.zeros(X.shape[0])
         for i in range(X.shape[0]):
-            preds[i] = predict_tree_single_point(root, X[i])
+            preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
 

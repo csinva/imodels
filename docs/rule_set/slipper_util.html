@@ -104,10 +104,10 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         equation 6 from Cohen &amp; Singer (1999)
         &#34;&#34;&#34;
         W_plus, W_minus = self._get_design_matrices(X, y, rule)
-        C_R = self.sample_weight(W_plus, W_minus)
+        # C_R = self._sample_weight(W_plus, W_minus)
         return np.sqrt(W_plus) - np.sqrt(W_minus)
 
-    def sample_weight(self, plus, minus):
+    def _sample_weight(self, plus, minus):
         &#34;&#34;&#34; Calculate learner sample weight
         in paper this is C_R, which is confidence of learner
         &#34;&#34;&#34;
@@ -234,7 +234,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         &#34;&#34;&#34;
 
         V_plus, V_minus = self._get_design_matrices(X, y, rule)
-        C_R = self.sample_weight(V_plus, V_minus)
+        C_R = self._sample_weight(V_plus, V_minus)
         return (1 - V_plus - V_minus) + V_plus * np.exp(-C_R) \
                + V_minus * np.exp(C_R)
 
@@ -256,7 +256,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         scores = [self._eq_5(X, y, rule) for rule in rules]
         self.rule = rules[scores.index(min(scores))]
 
-    def make_feature_dict(self, num_features, features):
+    def _make_feature_dict(self, num_features, features):
         &#34;&#34;&#34;
         Map features to place holder names
         &#34;&#34;&#34;
@@ -297,7 +297,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         X_grow, X_prune, y_grow, y_prune = \
             train_test_split(X, y, test_size=0.33)
 
-        self.make_feature_dict(X.shape[1], features)
+        self._make_feature_dict(X.shape[1], features)
 
         rule = self._grow_rule(X_grow, y_grow)
         rule = self._prune_rule(X_prune, y_prune, rule)
@@ -397,10 +397,10 @@ as part of the SlipperRulesClassifier.</p></div>
         equation 6 from Cohen &amp; Singer (1999)
         &#34;&#34;&#34;
         W_plus, W_minus = self._get_design_matrices(X, y, rule)
-        C_R = self.sample_weight(W_plus, W_minus)
+        # C_R = self._sample_weight(W_plus, W_minus)
         return np.sqrt(W_plus) - np.sqrt(W_minus)
 
-    def sample_weight(self, plus, minus):
+    def _sample_weight(self, plus, minus):
         &#34;&#34;&#34; Calculate learner sample weight
         in paper this is C_R, which is confidence of learner
         &#34;&#34;&#34;
@@ -527,7 +527,7 @@ as part of the SlipperRulesClassifier.</p></div>
         &#34;&#34;&#34;
 
         V_plus, V_minus = self._get_design_matrices(X, y, rule)
-        C_R = self.sample_weight(V_plus, V_minus)
+        C_R = self._sample_weight(V_plus, V_minus)
         return (1 - V_plus - V_minus) + V_plus * np.exp(-C_R) \
                + V_minus * np.exp(C_R)
 
@@ -549,7 +549,7 @@ as part of the SlipperRulesClassifier.</p></div>
         scores = [self._eq_5(X, y, rule) for rule in rules]
         self.rule = rules[scores.index(min(scores))]
 
-    def make_feature_dict(self, num_features, features):
+    def _make_feature_dict(self, num_features, features):
         &#34;&#34;&#34;
         Map features to place holder names
         &#34;&#34;&#34;
@@ -590,7 +590,7 @@ as part of the SlipperRulesClassifier.</p></div>
         X_grow, X_prune, y_grow, y_prune = \
             train_test_split(X, y, test_size=0.33)
 
-        self.make_feature_dict(X.shape[1], features)
+        self._make_feature_dict(X.shape[1], features)
 
         rule = self._grow_rule(X_grow, y_grow)
         rule = self._prune_rule(X_prune, y_prune, rule)
@@ -625,36 +625,13 @@ as part of the SlipperRulesClassifier.</p></div>
     X_grow, X_prune, y_grow, y_prune = \
         train_test_split(X, y, test_size=0.33)
 
-    self.make_feature_dict(X.shape[1], features)
+    self._make_feature_dict(X.shape[1], features)
 
     rule = self._grow_rule(X_grow, y_grow)
     rule = self._prune_rule(X_prune, y_prune, rule)
     self._set_rule_or_default(X, y, rule)
 
     return self</code></pre>
-</details>
-</dd>
-<dt id="imodels.rule_set.slipper_util.SlipperBaseEstimator.make_feature_dict"><code class="name flex">
-<span>def <span class="ident">make_feature_dict</span></span>(<span>self, num_features, features)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Map features to place holder names</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def make_feature_dict(self, num_features, features):
-    &#34;&#34;&#34;
-    Map features to place holder names
-    &#34;&#34;&#34;
-    if features is None:
-        new_feats = [&#39;X_&#39; + str(i) for i in range(num_features)]
-    else:
-        new_feats = features
-
-    self.feature_dict = {
-        old_feat: new_feat for old_feat, new_feat in enumerate(new_feats)
-    }</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_set.slipper_util.SlipperBaseEstimator.predict"><code class="name flex">
@@ -695,24 +672,6 @@ using estimators rule</p></div>
     return proba</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.slipper_util.SlipperBaseEstimator.sample_weight"><code class="name flex">
-<span>def <span class="ident">sample_weight</span></span>(<span>self, plus, minus)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Calculate learner sample weight
-in paper this is C_R, which is confidence of learner</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def sample_weight(self, plus, minus):
-    &#34;&#34;&#34; Calculate learner sample weight
-    in paper this is C_R, which is confidence of learner
-    &#34;&#34;&#34;
-    return 0.5 * np.log((plus + (1 / (2 * len(self.D)))) /
-                        (minus + 1 / (2 * len(self.D))))</code></pre>
-</details>
-</dd>
 </dl>
 </dd>
 </dl>
@@ -735,10 +694,8 @@ in paper this is C_R, which is confidence of learner</p></div>
 <h4><code><a title="imodels.rule_set.slipper_util.SlipperBaseEstimator" href="#imodels.rule_set.slipper_util.SlipperBaseEstimator">SlipperBaseEstimator</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.rule_set.slipper_util.SlipperBaseEstimator.fit" href="#imodels.rule_set.slipper_util.SlipperBaseEstimator.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.slipper_util.SlipperBaseEstimator.make_feature_dict" href="#imodels.rule_set.slipper_util.SlipperBaseEstimator.make_feature_dict">make_feature_dict</a></code></li>
 <li><code><a title="imodels.rule_set.slipper_util.SlipperBaseEstimator.predict" href="#imodels.rule_set.slipper_util.SlipperBaseEstimator.predict">predict</a></code></li>
 <li><code><a title="imodels.rule_set.slipper_util.SlipperBaseEstimator.predict_proba" href="#imodels.rule_set.slipper_util.SlipperBaseEstimator.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.rule_set.slipper_util.SlipperBaseEstimator.sample_weight" href="#imodels.rule_set.slipper_util.SlipperBaseEstimator.sample_weight">sample_weight</a></code></li>
 </ul>
 </li>
 </ul>

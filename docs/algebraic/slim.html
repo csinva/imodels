@@ -66,7 +66,7 @@ class SLIMRegressor(BaseEstimator, RegressorMixin):
         
         Params
         ------
-        sample_weight: np.ndarray (n,), optional
+        _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
 
@@ -139,7 +139,7 @@ class SLIMClassifier(BaseEstimator, ClassifierMixin):
         
         Params
         ------
-        sample_weight: np.ndarray (n,), optional
+        _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
         X, y = check_X_y(X, y)
@@ -247,7 +247,7 @@ weight for sparsity penalty</p></div>
         
         Params
         ------
-        sample_weight: np.ndarray (n,), optional
+        _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
         X, y = check_X_y(X, y)
@@ -323,7 +323,7 @@ weight for sparsity penalty</p></div>
 <div class="desc"><p>fit a logistic model with integer coefficient and L1 regularization.
 In case the optimization fails, fit lasso and round coefs.</p>
 <h2 id="params">Params</h2>
-<p>sample_weight: np.ndarray (n,), optional
+<p>_sample_weight: np.ndarray (n,), optional
 weight for each individual sample</p></div>
 <details class="source">
 <summary>
@@ -335,7 +335,7 @@ weight for each individual sample</p></div>
     
     Params
     ------
-    sample_weight: np.ndarray (n,), optional
+    _sample_weight: np.ndarray (n,), optional
         weight for each individual sample
     &#39;&#39;&#39;
     X, y = check_X_y(X, y)
@@ -445,7 +445,7 @@ weight for sparsity penalty</p></div>
         
         Params
         ------
-        sample_weight: np.ndarray (n,), optional
+        _sample_weight: np.ndarray (n,), optional
             weight for each individual sample
         &#39;&#39;&#39;
 
@@ -513,7 +513,7 @@ weight for sparsity penalty</p></div>
 <div class="desc"><p>fit a linear model with integer coefficient and L1 regularization.
 In case the optimization fails, fit lasso and round coefs.</p>
 <h2 id="params">Params</h2>
-<p>sample_weight: np.ndarray (n,), optional
+<p>_sample_weight: np.ndarray (n,), optional
 weight for each individual sample</p></div>
 <details class="source">
 <summary>
@@ -525,7 +525,7 @@ weight for each individual sample</p></div>
     
     Params
     ------
-    sample_weight: np.ndarray (n,), optional
+    _sample_weight: np.ndarray (n,), optional
         weight for each individual sample
     &#39;&#39;&#39;
 

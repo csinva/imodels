@@ -14,7 +14,7 @@ class IRFClassifier(BaseEstimator):
         
         Params
         ------
-        sample_weight: np.ndarray (n,)
+        _sample_weight: np.ndarray (n,)
             weight for each individual sample
         '''
 

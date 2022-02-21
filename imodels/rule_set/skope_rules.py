@@ -26,7 +26,7 @@ Example
     X_train, y_train = X[:len(y)//2], y[:len(y)//2]
     X_test, y_test = X[len(y)//2:], y[len(y)//2:]
     clf.fit(X_train, y_train)
-    y_score = clf.score_top_rules(X_test) # Get a risk score for each test example
+    y_score = clf._score_top_rules(X_test) # Get a risk score for each test example
     precision, recall, _ = precision_recall_curve(y_test, y_score)
     plt.plot(recall, precision)
     plt.xlabel('Recall')
@@ -58,8 +58,8 @@ The main goal of this package is to provide rules verifying precision and recall
 (`decision_function`) method, but which does not solve the L1-regularized optimization problem as in [1]. Instead,
 weights are simply proportional to the OOB associated precision of the rule.
 
-This package also offers convenient methods to compute predictions with the k most precise rules (cf score_top_rules()
-and predict_top_rules() functions).
+This package also offers convenient methods to compute predictions with the k most precise rules (cf _score_top_rules()
+and _predict_top_rules() functions).
 
 
 [1] Friedman and Popescu, Predictive learning via rule ensembles,Technical Report, 2005.
@@ -356,10 +356,10 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
         weight_sum = np.sum([w[0] for (r, w) in self.rules_without_feature_names_])
         if weight_sum == 0:
             return np.vstack((np.ones(X.shape[0]), np.zeros(X.shape[0]))).transpose()
-        y = self.eval_weighted_rule_sum(X) / weight_sum
+        y = self._eval_weighted_rule_sum(X) / weight_sum
         return np.vstack((1 - y, y)).transpose()
 
-    def rules_vote(self, X) -> np.ndarray:
+    def _rules_vote(self, X) -> np.ndarray:
         """Score representing a vote of the base classifiers (rules).
 
         The score of an input sample is computed as the sum of the binary
@@ -399,7 +399,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
 
         return scores
 
-    def score_top_rules(self, X) -> np.ndarray:
+    def _score_top_rules(self, X) -> np.ndarray:
         """Score representing an ordering between the base classifiers (rules).
 
         The score is high when the instance is detected by a performing rule.
@@ -442,7 +442,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
 
         return scores
 
-    def predict_top_rules(self, X, n_rules) -> np.ndarray:
+    def _predict_top_rules(self, X, n_rules) -> np.ndarray:
         """Predict if a particular sample is an outlier or not,
         using the n_rules most performing rules.
 
@@ -464,7 +464,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
             be considered as an outlier according to the selected rules.
         """
 
-        return np.array((self.score_top_rules(X) > len(self.rules_) - n_rules),
+        return np.array((self._score_top_rules(X) > len(self.rules_) - n_rules),
                         dtype=int)
 
     def _extract_rules(self, X, y) -> Tuple[List[str], List[np.array], List[np.array]]:

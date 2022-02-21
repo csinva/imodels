@@ -48,7 +48,7 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
     Parameters
     ----------
     dataset_name: str
-        dataset_name - unique dataset identifier
+        dataset_name - unique dataset identifier (see https://github.com/csinva/imodels-data for unique identifiers)
     data_source: str
         options: 'imodels', 'pmlb', 'sklearn', 'openml', 'synthetic'
     data_path: str

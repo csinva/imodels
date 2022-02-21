@@ -175,14 +175,14 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
         return self
 
-    def predict_continuous_output(self, X):
+    def _predict_continuous_output(self, X):
         &#34;&#34;&#34;Predict outcome of linear model for X
         &#34;&#34;&#34;
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
 
         y_pred = np.zeros(X.shape[0])
-        y_pred += self.eval_weighted_rule_sum(X)
+        y_pred += self._eval_weighted_rule_sum(X)
 
         if self.include_linear:
             if self.lin_standardise:
@@ -197,14 +197,14 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         check_is_fitted(self)
         X = check_array(X)
         if self.prediction_task == &#39;regression&#39;:
-            return self.predict_continuous_output(X)
+            return self._predict_continuous_output(X)
         else:
             return np.argmax(self.predict_proba(X), axis=1)
 
     def predict_proba(self, X):
         check_is_fitted(self)
         X = check_array(X)
-        continuous_output = self.predict_continuous_output(X)
+        continuous_output = self._predict_continuous_output(X)
         logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
         return softmax(logits, axis=1)
 
@@ -229,7 +229,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
-    def get_rules(self, exclude_zero_coef=False, subregion=None):
+    def _get_rules(self, exclude_zero_coef=False, subregion=None):
         &#34;&#34;&#34;Return the estimated rules
 
         Parameters
@@ -281,7 +281,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         return rules
 
     def visualize(self, decimals=2):
-        rules = self.get_rules()
+        rules = self._get_rules()
         rules = rules[rules.coef != 0].sort_values(&#34;support&#34;, ascending=False)
         pd.set_option(&#39;display.max_colwidth&#39;, None)
         return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(decimals)
@@ -522,14 +522,14 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 
         return self
 
-    def predict_continuous_output(self, X):
+    def _predict_continuous_output(self, X):
         &#34;&#34;&#34;Predict outcome of linear model for X
         &#34;&#34;&#34;
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
 
         y_pred = np.zeros(X.shape[0])
-        y_pred += self.eval_weighted_rule_sum(X)
+        y_pred += self._eval_weighted_rule_sum(X)
 
         if self.include_linear:
             if self.lin_standardise:
@@ -544,14 +544,14 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
         check_is_fitted(self)
         X = check_array(X)
         if self.prediction_task == &#39;regression&#39;:
-            return self.predict_continuous_output(X)
+            return self._predict_continuous_output(X)
         else:
             return np.argmax(self.predict_proba(X), axis=1)
 
     def predict_proba(self, X):
         check_is_fitted(self)
         X = check_array(X)
-        continuous_output = self.predict_continuous_output(X)
+        continuous_output = self._predict_continuous_output(X)
         logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
         return softmax(logits, axis=1)
 
@@ -576,7 +576,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
             X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
-    def get_rules(self, exclude_zero_coef=False, subregion=None):
+    def _get_rules(self, exclude_zero_coef=False, subregion=None):
         &#34;&#34;&#34;Return the estimated rules
 
         Parameters
@@ -628,7 +628,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
         return rules
 
     def visualize(self, decimals=2):
-        rules = self.get_rules()
+        rules = self._get_rules()
         rules = rules[rules.coef != 0].sort_values(&#34;support&#34;, ascending=False)
         pd.set_option(&#39;display.max_colwidth&#39;, None)
         return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(decimals)
@@ -736,81 +736,6 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.rule_fit.RuleFit.get_rules"><code class="name flex">
-<span>def <span class="ident">get_rules</span></span>(<span>self, exclude_zero_coef=False, subregion=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return the estimated rules</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>exclude_zero_coef</code></strong> :&ensp;<code>If True (default), returns only the rules with an estimated</code></dt>
-<dd>coefficient not equalt to
-zero.</dd>
-<dt><strong><code>subregion</code></strong> :&ensp;<code>If None (default) returns global importances (FP 2004 eq. 28/29), else returns importance over</code></dt>
-<dd>subregion of inputs (FP 2004 eq. 30/31/32).</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>rules</code></strong> :&ensp;<code>pandas.DataFrame with the rules. Column 'rule' describes the rule, 'coef' holds</code></dt>
-<dd>the coefficients and 'support' the support of the rule in the training
-data set (X)</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_rules(self, exclude_zero_coef=False, subregion=None):
-    &#34;&#34;&#34;Return the estimated rules
-
-    Parameters
-    ----------
-    exclude_zero_coef: If True (default), returns only the rules with an estimated
-                       coefficient not equalt to  zero.
-
-    subregion: If None (default) returns global importances (FP 2004 eq. 28/29), else returns importance over 
-                       subregion of inputs (FP 2004 eq. 30/31/32).
-
-    Returns
-    -------
-    rules: pandas.DataFrame with the rules. Column &#39;rule&#39; describes the rule, &#39;coef&#39; holds
-           the coefficients and &#39;support&#39; the support of the rule in the training
-           data set (X)
-    &#34;&#34;&#34;
-    n_features = len(self.coef) - len(self.rules_)
-    rule_ensemble = list(self.rules_without_feature_names_)
-    output_rules = []
-    # Add coefficients for linear effects
-    for i in range(0, n_features):
-        if self.lin_standardise:
-            coef = self.coef[i] * self.friedscale.scale_multipliers[i]
-        else:
-            coef = self.coef[i]
-        if subregion is None:
-            importance = abs(coef) * self.stddev[i]
-        else:
-            subregion = np.array(subregion)
-            importance = sum(abs(coef) * abs([x[i] for x in self.winsorizer.trim(subregion)] - self.mean[i])) / len(
-                subregion)
-        output_rules += [(self.feature_names[i], &#39;linear&#39;, coef, 1, importance)]
-
-    # Add rules
-    for i in range(0, len(self.rules_)):
-        rule = rule_ensemble[i]
-        coef = self.coef[i + n_features]
-
-        if subregion is None:
-            importance = abs(coef) * (rule.support * (1 - rule.support)) ** (1 / 2)
-        else:
-            rkx = self.transform(subregion, [rule])[:, -1]
-            importance = sum(abs(coef) * abs(rkx - rule.support)) / len(subregion)
-
-        output_rules += [(self.rules_[i].rule, &#39;rule&#39;, coef, rule.support, importance)]
-    rules = pd.DataFrame(output_rules, columns=[&#34;rule&#34;, &#34;type&#34;, &#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
-    if exclude_zero_coef:
-        rules = rules.ix[rules.coef != 0]
-    return rules</code></pre>
-</details>
-</dd>
 <dt id="imodels.rule_set.rule_fit.RuleFit.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
@@ -828,34 +753,9 @@ For classification, returns discrete output.</p></div>
     check_is_fitted(self)
     X = check_array(X)
     if self.prediction_task == &#39;regression&#39;:
-        return self.predict_continuous_output(X)
+        return self._predict_continuous_output(X)
     else:
         return np.argmax(self.predict_proba(X), axis=1)</code></pre>
-</details>
-</dd>
-<dt id="imodels.rule_set.rule_fit.RuleFit.predict_continuous_output"><code class="name flex">
-<span>def <span class="ident">predict_continuous_output</span></span>(<span>self, X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Predict outcome of linear model for X</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def predict_continuous_output(self, X):
-    &#34;&#34;&#34;Predict outcome of linear model for X
-    &#34;&#34;&#34;
-    if type(X) == pd.DataFrame:
-        X = X.values.astype(np.float32)
-
-    y_pred = np.zeros(X.shape[0])
-    y_pred += self.eval_weighted_rule_sum(X)
-
-    if self.include_linear:
-        if self.lin_standardise:
-            X = self.friedscale.scale(X)
-        y_pred += X @ self.coef[:X.shape[1]]
-    return y_pred + self.intercept</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_set.rule_fit.RuleFit.predict_proba"><code class="name flex">
@@ -870,7 +770,7 @@ For classification, returns discrete output.</p></div>
 <pre><code class="python">def predict_proba(self, X):
     check_is_fitted(self)
     X = check_array(X)
-    continuous_output = self.predict_continuous_output(X)
+    continuous_output = self._predict_continuous_output(X)
     logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
     return softmax(logits, axis=1)</code></pre>
 </details>
@@ -927,7 +827,7 @@ efficiency.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def visualize(self, decimals=2):
-    rules = self.get_rules()
+    rules = self._get_rules()
     rules = rules[rules.coef != 0].sort_values(&#34;support&#34;, ascending=False)
     pd.set_option(&#39;display.max_colwidth&#39;, None)
     return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(decimals)</code></pre>
@@ -1005,9 +905,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="#imodels.rule_set.rule_fit.RuleFit.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict_continuous_output" href="#imodels.rule_set.rule_fit.RuleFit.predict_continuous_output">predict_continuous_output</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
 </ul>
 </li>
@@ -1083,9 +981,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="#imodels.rule_set.rule_fit.RuleFit.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict_continuous_output" href="#imodels.rule_set.rule_fit.RuleFit.predict_continuous_output">predict_continuous_output</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
 </ul>
 </li>
@@ -1111,9 +1007,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <h4><code><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="#imodels.rule_set.rule_fit.RuleFit.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict_continuous_output" href="#imodels.rule_set.rule_fit.RuleFit.predict_continuous_output">predict_continuous_output</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict_proba" href="#imodels.rule_set.rule_fit.RuleFit.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.visualize" href="#imodels.rule_set.rule_fit.RuleFit.visualize">visualize</a></code></li>

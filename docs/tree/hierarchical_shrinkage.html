@@ -69,7 +69,7 @@ class HSTree:
         self._init_prediction_task()
 
         if checks.check_is_fitted(self.estimator_):
-            self.shrink()
+            self._shrink()
 
     def __init__prediction_task(self):
         self.prediction_task = &#39;regression&#39;
@@ -85,9 +85,9 @@ class HSTree:
 
     def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
-        self.shrink()
+        self._shrink()
 
-    def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
+    def _shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         &#34;&#34;&#34;Shrink the tree
         &#34;&#34;&#34;
         if reg_param is None:
@@ -107,10 +107,10 @@ class HSTree:
         # if root
         if parent_val is None and parent_num is None:
             if not is_leaf:
-                self.shrink_tree(tree, reg_param, left,
-                                 parent_val=val, parent_num=n_samples, cum_sum=val)
-                self.shrink_tree(tree, reg_param, right,
-                                 parent_val=val, parent_num=n_samples, cum_sum=val)
+                self._shrink_tree(tree, reg_param, left,
+                                  parent_val=val, parent_num=n_samples, cum_sum=val)
+                self._shrink_tree(tree, reg_param, right,
+                                  parent_val=val, parent_num=n_samples, cum_sum=val)
 
         # if has parent
         else:
@@ -155,10 +155,10 @@ class HSTree:
                         tree.value[i][0, 1] = parent_val + val_new
                         tree.value[i][0, 0] = 1.0 - parent_val + val_new
 
-                self.shrink_tree(tree, reg_param, left,
-                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
-                self.shrink_tree(tree, reg_param, right,
-                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+                self._shrink_tree(tree, reg_param, left,
+                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+                self._shrink_tree(tree, reg_param, right,
+                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
 
                 # edit the non-leaf nodes for later visualization (doesn&#39;t effect predictions)
 
@@ -166,15 +166,15 @@ class HSTree:
 
         return tree
 
-    def shrink(self):
+    def _shrink(self):
         if hasattr(self.estimator_, &#39;tree_&#39;):
-            self.shrink_tree(self.estimator_.tree_, self.reg_param)
+            self._shrink_tree(self.estimator_.tree_, self.reg_param)
         elif hasattr(self.estimator_, &#39;estimators_&#39;):
             for t in self.estimator_.estimators_:
                 if isinstance(t, np.ndarray):
                     assert t.size == 1, &#39;multiple trees stored under tree_?&#39;
                     t = t[0]
-                self.shrink_tree(t.tree_, self.reg_param)
+                self._shrink_tree(t.tree_, self.reg_param)
 
     def predict(self, *args, **kwargs):
         return self.estimator_.predict(*args, **kwargs)
@@ -361,7 +361,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         self._init_prediction_task()
 
         if checks.check_is_fitted(self.estimator_):
-            self.shrink()
+            self._shrink()
 
     def __init__prediction_task(self):
         self.prediction_task = &#39;regression&#39;
@@ -377,9 +377,9 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 
     def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
-        self.shrink()
+        self._shrink()
 
-    def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
+    def _shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         &#34;&#34;&#34;Shrink the tree
         &#34;&#34;&#34;
         if reg_param is None:
@@ -399,10 +399,10 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         # if root
         if parent_val is None and parent_num is None:
             if not is_leaf:
-                self.shrink_tree(tree, reg_param, left,
-                                 parent_val=val, parent_num=n_samples, cum_sum=val)
-                self.shrink_tree(tree, reg_param, right,
-                                 parent_val=val, parent_num=n_samples, cum_sum=val)
+                self._shrink_tree(tree, reg_param, left,
+                                  parent_val=val, parent_num=n_samples, cum_sum=val)
+                self._shrink_tree(tree, reg_param, right,
+                                  parent_val=val, parent_num=n_samples, cum_sum=val)
 
         # if has parent
         else:
@@ -447,10 +447,10 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
                         tree.value[i][0, 1] = parent_val + val_new
                         tree.value[i][0, 0] = 1.0 - parent_val + val_new
 
-                self.shrink_tree(tree, reg_param, left,
-                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
-                self.shrink_tree(tree, reg_param, right,
-                                 parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+                self._shrink_tree(tree, reg_param, left,
+                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
+                self._shrink_tree(tree, reg_param, right,
+                                  parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
 
                 # edit the non-leaf nodes for later visualization (doesn&#39;t effect predictions)
 
@@ -458,15 +458,15 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 
         return tree
 
-    def shrink(self):
+    def _shrink(self):
         if hasattr(self.estimator_, &#39;tree_&#39;):
-            self.shrink_tree(self.estimator_.tree_, self.reg_param)
+            self._shrink_tree(self.estimator_.tree_, self.reg_param)
         elif hasattr(self.estimator_, &#39;estimators_&#39;):
             for t in self.estimator_.estimators_:
                 if isinstance(t, np.ndarray):
                     assert t.size == 1, &#39;multiple trees stored under tree_?&#39;
                     t = t[0]
-                self.shrink_tree(t.tree_, self.reg_param)
+                self._shrink_tree(t.tree_, self.reg_param)
 
     def predict(self, *args, **kwargs):
         return self.estimator_.predict(*args, **kwargs)
@@ -501,7 +501,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </summary>
 <pre><code class="python">def fit(self, *args, **kwargs):
     self.estimator_.fit(*args, **kwargs)
-    self.shrink()</code></pre>
+    self._shrink()</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.get_params"><code class="name flex">
@@ -568,115 +568,6 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         return NotImplemented</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.hierarchical_shrinkage.HSTree.shrink"><code class="name flex">
-<span>def <span class="ident">shrink</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def shrink(self):
-    if hasattr(self.estimator_, &#39;tree_&#39;):
-        self.shrink_tree(self.estimator_.tree_, self.reg_param)
-    elif hasattr(self.estimator_, &#39;estimators_&#39;):
-        for t in self.estimator_.estimators_:
-            if isinstance(t, np.ndarray):
-                assert t.size == 1, &#39;multiple trees stored under tree_?&#39;
-                t = t[0]
-            self.shrink_tree(t.tree_, self.reg_param)</code></pre>
-</details>
-</dd>
-<dt id="imodels.tree.hierarchical_shrinkage.HSTree.shrink_tree"><code class="name flex">
-<span>def <span class="ident">shrink_tree</span></span>(<span>self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Shrink the tree</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
-    &#34;&#34;&#34;Shrink the tree
-    &#34;&#34;&#34;
-    if reg_param is None:
-        reg_param = 1.0
-    left = tree.children_left[i]
-    right = tree.children_right[i]
-    is_leaf = left == right
-    n_samples = tree.n_node_samples[i]
-    if self.prediction_task == &#39;regression&#39;:
-        val = tree.value[i][0, 0]
-    else:
-        if len(tree.value[i][0]) == 1:
-            val = tree.value[i][0, 0]
-        else:
-            val = tree.value[i][0, 1] / (tree.value[i][0, 0] + tree.value[i][0, 1])  # binary classification
-
-    # if root
-    if parent_val is None and parent_num is None:
-        if not is_leaf:
-            self.shrink_tree(tree, reg_param, left,
-                             parent_val=val, parent_num=n_samples, cum_sum=val)
-            self.shrink_tree(tree, reg_param, right,
-                             parent_val=val, parent_num=n_samples, cum_sum=val)
-
-    # if has parent
-    else:
-        if self.shrinkage_scheme_ == &#39;node_based&#39;:
-            val_new = (val - parent_val) / (1 + reg_param / parent_num)
-        elif self.shrinkage_scheme_ == &#39;constant&#39;:
-            val_new = (val - parent_val) / (1 + reg_param)
-        else:
-            val_new = val
-        cum_sum += val_new
-        if is_leaf:
-            if self.prediction_task == &#39;regression&#39;:
-                if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
-                    tree.value[i, 0, 0] = cum_sum
-                else:
-                    # tree.value[i, 0, 0] = cum_sum/(1 + reg_param/n_samples)
-                    tree.value[i, 0, 0] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                            1 + reg_param / n_samples)
-            else:
-                if len(tree.value[i][0]) == 1:
-                    if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
-                        tree.value[i, 0, 0,] = cum_sum
-                    else:
-                        tree.value[i, 0, 0,] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                                1 + reg_param / n_samples)
-                else:
-                    if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
-                        tree.value[i, 0, 1] = cum_sum
-                        tree.value[i, 0, 0] = 1.0 - cum_sum
-                    else:
-                        root_prediction = tree.value[0][0, 1] / (tree.value[0][0, 0] + tree.value[0][0, 1])
-                        tree.value[i, 0, 1] = root_prediction + (val - root_prediction) / (
-                                1 + reg_param / n_samples)
-                        tree.value[i, 0, 0] = 1.0 - tree.value[i, 0, 1]
-        else:
-            if self.prediction_task == &#39;regression&#39;:
-                tree.value[i][0, 0] = parent_val + val_new
-            else:
-                if len(tree.value[i][0]) == 1:
-                    tree.value[i][0, 0] = parent_val + val_new
-                else:
-                    tree.value[i][0, 1] = parent_val + val_new
-                    tree.value[i][0, 0] = 1.0 - parent_val + val_new
-
-            self.shrink_tree(tree, reg_param, left,
-                             parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
-            self.shrink_tree(tree, reg_param, right,
-                             parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
-
-            # edit the non-leaf nodes for later visualization (doesn&#39;t effect predictions)
-
-            # pass  # not sure exactly what to put here
-
-    return tree</code></pre>
-</details>
-</dd>
 </dl>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeClassifier"><code class="flex name class">
@@ -714,14 +605,6 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <ul class="hlist">
 <li><a title="imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV" href="cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV">HSDecisionTreeCCPClassifierCV</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></li>
-</ul>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></b></code>:
-<ul class="hlist">
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.shrink_tree" href="#imodels.tree.hierarchical_shrinkage.HSTree.shrink_tree">shrink_tree</a></code></li>
-</ul>
-</li>
 </ul>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV"><code class="flex name class">
@@ -789,14 +672,6 @@ Cross-validation is used to select the best regularization parameter for hierarc
 </details>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></b></code>:
-<ul class="hlist">
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.shrink_tree" href="#imodels.tree.hierarchical_shrinkage.HSTree.shrink_tree">shrink_tree</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressor"><code class="flex name class">
 <span>class <span class="ident">HSTreeRegressor</span></span>
@@ -833,14 +708,6 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <ul class="hlist">
 <li><a title="imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV" href="cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV">HSDecisionTreeCCPRegressorCV</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></li>
-</ul>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></b></code>:
-<ul class="hlist">
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.shrink_tree" href="#imodels.tree.hierarchical_shrinkage.HSTree.shrink_tree">shrink_tree</a></code></li>
-</ul>
-</li>
 </ul>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV"><code class="flex name class">
@@ -909,14 +776,6 @@ Cross-validation is used to select the best regularization parameter for hierarc
 </details>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></b></code>:
-<ul class="hlist">
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.shrink_tree" href="#imodels.tree.hierarchical_shrinkage.HSTree.shrink_tree">shrink_tree</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 </dl>
 </section>
@@ -936,14 +795,12 @@ Cross-validation is used to select the best regularization parameter for hierarc
 <ul>
 <li>
 <h4><code><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.fit" href="#imodels.tree.hierarchical_shrinkage.HSTree.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.predict" href="#imodels.tree.hierarchical_shrinkage.HSTree.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.predict_proba" href="#imodels.tree.hierarchical_shrinkage.HSTree.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.score" href="#imodels.tree.hierarchical_shrinkage.HSTree.score">score</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.shrink" href="#imodels.tree.hierarchical_shrinkage.HSTree.shrink">shrink</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.shrink_tree" href="#imodels.tree.hierarchical_shrinkage.HSTree.shrink_tree">shrink_tree</a></code></li>
 </ul>
 </li>
 <li>

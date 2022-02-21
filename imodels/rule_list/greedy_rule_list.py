@@ -2,12 +2,12 @@
 '''
 
 import math
-import numpy as np
 from copy import deepcopy
 
+import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.multiclass import check_classification_targets, unique_labels
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from sklearn.utils.multiclass import unique_labels
+from sklearn.utils.validation import check_array, check_is_fitted
 
 from imodels.rule_list.rule_list import RuleList
 
@@ -59,7 +59,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             return []
 
         # base case 2: all y is the same in this group
-        elif self.all_same(y):
+        elif self._all_same(y):
             return [{'val': y[0], 'num_pts': y.size}]
 
         # base case 3: max depth reached 
@@ -70,7 +70,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         else:
 
             # find a split with the best value for the criterion
-            col, cutoff, criterion_val = self.find_best_split(x, y)
+            col, cutoff, criterion_val = self._find_best_split(x, y)
 
             # put higher probability of class 1 on the right-hand side
             if self.strategy == 'max':
@@ -142,7 +142,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                 s += f"if {rule['col']} >= {rule['cutoff']} then {rule['val_right'].round(3)} ({rule['num_pts_right']} pts)\n"
         return s
 
-    def print_list(self):
+    def _print_list(self):
         '''Print out the list in a nice way
         '''
         s = ''
@@ -158,7 +158,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                 return '~' + rule['col']
             return rule['col']
 
-        rule = self.rules_[0]
+        # rule = self.rules_[0]
         #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
         for rule in self.rules_:
             s += f"\t{'':>35} => {cyan((100 * rule['val']).round(2)):>6}% risk ({rule['num_pts']} pts)\n"
@@ -168,14 +168,14 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                 prefix = f"if {rule_name(rule)}"
                 val = f"{100 * rule['val_right'].round(3):.4}"
                 s += f"{prefix:>43} ===> {red(val)}% risk ({rule['num_pts_right']} pts)\n"
-        rule = self.rules_[-1]
+        # rule = self.rules_[-1]
         #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
         print(s)
 
-    def all_same(self, items):
+    def _all_same(self, items):
         return all(x == items[0] for x in items)
 
-    def find_best_split(self, x, y):
+    def _find_best_split(self, x, y):
         """
         Find the best split from all features
         returns: the column to split on, the cutoff value, and the actual criterion_value
@@ -188,7 +188,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         for i, c in enumerate(x.T):
 
             # find the best split of that feature
-            criterion_val, cur_cutoff = self.split_on_feature(c, y)
+            criterion_val, cur_cutoff = self._split_on_feature(c, y)
 
             # found perfect cutoff
             if criterion_val == 0:
@@ -201,7 +201,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                 cutoff = cur_cutoff
         return col, cutoff, min_criterion_val
 
-    def split_on_feature(self, col, y):
+    def _split_on_feature(self, col, y):
         """
         col: the column we split on
         y: target var
@@ -215,7 +215,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             y_predict = col < value
 
             # get criterion val of this split
-            criterion_val = self.weighted_criterion(y_predict, y)
+            criterion_val = self._weighted_criterion(y_predict, y)
 
             # check if it's the smallest one so far
             if criterion_val <= min_criterion_val:
@@ -223,7 +223,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                 cutoff = value
         return min_criterion_val, cutoff
 
-    def weighted_criterion(self, split_decision, y_real):
+    def _weighted_criterion(self, split_decision, y_real):
         """Returns criterion calculated over a split
         split decision, True/False, and y_true can be multi class
         """
@@ -233,11 +233,11 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
         # choose the splitting criterion
         if self.criterion == 'entropy':
-            criterion_func = self.entropy_criterion
+            criterion_func = self._entropy_criterion
         elif self.criterion == 'gini':
-            criterion_func = self.gini_criterion
+            criterion_func = self._gini_criterion
         elif self.criterion == 'neg_corr':
-            return self.neg_corr_criterion(split_decision, y_real)
+            return self._neg_corr_criterion(split_decision, y_real)
 
         # left-hand side criterion
         s_left = criterion_func(y_real[split_decision])
@@ -262,7 +262,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         s = weight_left * s_left + (1 - weight_left) * s_right
         return s
 
-    def gini_criterion(self, y):
+    def _gini_criterion(self, y):
         '''Returns gini index for one node
         = sum(pc * (1 – pc))
         '''
@@ -281,7 +281,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
         return s
 
-    def entropy_criterion(self, y):
+    def _entropy_criterion(self, y):
         """Returns entropy of a divided group of data
         Data may have multiple classes
         """
@@ -294,7 +294,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             # weights for each class
             weight = sum(y == c) / n
 
-            def entropy_from_counts(c1, c2):
+            def _entropy_from_counts(c1, c2):
                 """Returns entropy of a group of data
                 c1: count of one class
                 c2: count of another class
@@ -302,17 +302,17 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                 if c1 == 0 or c2 == 0:  # when there is only one class in the group, entropy is 0
                     return 0
 
-                def entropy_func(p): return -p * math.log(p, 2)
+                def _entropy_func(p): return -p * math.log(p, 2)
 
                 p1 = c1 * 1.0 / (c1 + c2)
                 p2 = c2 * 1.0 / (c1 + c2)
-                return entropy_func(p1) + entropy_func(p2)
+                return _entropy_func(p1) + _entropy_func(p2)
 
             # weighted avg
-            s += weight * entropy_from_counts(sum(y == c), sum(y != c))
+            s += weight * _entropy_from_counts(sum(y == c), sum(y != c))
         return s
 
-    def neg_corr_criterion(self, split_decision, y):
+    def _neg_corr_criterion(self, split_decision, y):
         '''Returns negative correlation between y
         and the binary splitting variable split_decision
         y must be binary

@@ -152,7 +152,7 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         """
         check_is_fitted(self)
         X = check_array(X)
-        return self.eval_weighted_rule_sum(X) > 0
+        return self._eval_weighted_rule_sum(X) > 0
 
     def __str__(self):
         try:

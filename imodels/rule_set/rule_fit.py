@@ -140,14 +140,14 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
         return self
 
-    def predict_continuous_output(self, X):
+    def _predict_continuous_output(self, X):
         """Predict outcome of linear model for X
         """
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
 
         y_pred = np.zeros(X.shape[0])
-        y_pred += self.eval_weighted_rule_sum(X)
+        y_pred += self._eval_weighted_rule_sum(X)
 
         if self.include_linear:
             if self.lin_standardise:
@@ -162,14 +162,14 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         check_is_fitted(self)
         X = check_array(X)
         if self.prediction_task == 'regression':
-            return self.predict_continuous_output(X)
+            return self._predict_continuous_output(X)
         else:
             return np.argmax(self.predict_proba(X), axis=1)
 
     def predict_proba(self, X):
         check_is_fitted(self)
         X = check_array(X)
-        continuous_output = self.predict_continuous_output(X)
+        continuous_output = self._predict_continuous_output(X)
         logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
         return softmax(logits, axis=1)
 
@@ -194,7 +194,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
-    def get_rules(self, exclude_zero_coef=False, subregion=None):
+    def _get_rules(self, exclude_zero_coef=False, subregion=None):
         """Return the estimated rules
 
         Parameters
@@ -246,7 +246,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         return rules
 
     def visualize(self, decimals=2):
-        rules = self.get_rules()
+        rules = self._get_rules()
         rules = rules[rules.coef != 0].sort_values("support", ascending=False)
         pd.set_option('display.max_colwidth', None)
         return rules[['rule', 'coef']].round(decimals)

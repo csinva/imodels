@@ -76,10 +76,10 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         equation 6 from Cohen & Singer (1999)
         """
         W_plus, W_minus = self._get_design_matrices(X, y, rule)
-        C_R = self.sample_weight(W_plus, W_minus)
+        # C_R = self._sample_weight(W_plus, W_minus)
         return np.sqrt(W_plus) - np.sqrt(W_minus)
 
-    def sample_weight(self, plus, minus):
+    def _sample_weight(self, plus, minus):
         """ Calculate learner sample weight
         in paper this is C_R, which is confidence of learner
         """
@@ -206,7 +206,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         """
 
         V_plus, V_minus = self._get_design_matrices(X, y, rule)
-        C_R = self.sample_weight(V_plus, V_minus)
+        C_R = self._sample_weight(V_plus, V_minus)
         return (1 - V_plus - V_minus) + V_plus * np.exp(-C_R) \
                + V_minus * np.exp(C_R)
 
@@ -228,7 +228,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         scores = [self._eq_5(X, y, rule) for rule in rules]
         self.rule = rules[scores.index(min(scores))]
 
-    def make_feature_dict(self, num_features, features):
+    def _make_feature_dict(self, num_features, features):
         """
         Map features to place holder names
         """
@@ -269,7 +269,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         X_grow, X_prune, y_grow, y_prune = \
             train_test_split(X, y, test_size=0.33)
 
-        self.make_feature_dict(X.shape[1], features)
+        self._make_feature_dict(X.shape[1], features)
 
         rule = self._grow_rule(X_grow, y_grow)
         rule = self._prune_rule(X_prune, y_prune, rule)

@@ -65,13 +65,13 @@ class MDLPDiscretizer(object):
         self._data = self._data_raw.loc[:, self._features + [class_label]]
         self._data = self._data.infer_objects()  # convert_objects(convert_numeric=True)
         # pre-compute all boundary points in dataset
-        self._boundaries = self.compute_boundary_points_all_features()
+        self._boundaries = self._compute_boundary_points_all_features()
         # initialize feature bins with empty arrays
         self._cuts = {f: [] for f in self._features}
         # get cuts for all features
-        self.all_features_accepted_cutpoints()
+        self._all_features_accepted_cutpoints()
         # discretize self._data
-        self.apply_cutpoints(out_data_path=out_path_data, out_bins_path=out_path_bins)
+        self._apply_cutpoints(out_data_path=out_path_data, out_bins_path=out_path_bins)
 
     def MDLPC_criterion(self, data, feature, cut_point):
         '''
@@ -107,7 +107,7 @@ class MDLPDiscretizer(object):
         else:
             return False
 
-    def feature_boundary_points(self, data, feature):
+    def _feature_boundary_points(self, data, feature):
         '''
         Given an attribute, find all potential cut_points (boundary points)
         :param feature: feature of interest
@@ -141,7 +141,7 @@ class MDLPDiscretizer(object):
 
         return set(boundary_points)
 
-    def compute_boundary_points_all_features(self):
+    def _compute_boundary_points_all_features(self):
         '''
         Computes all possible boundary points for each attribute in self._features (features to discretize)
         :return:
@@ -149,10 +149,10 @@ class MDLPDiscretizer(object):
         boundaries = {}
         for attr in self._features:
             data_partition = self._data.loc[:, [attr, self._class_name]]
-            boundaries[attr] = self.feature_boundary_points(data=data_partition, feature=attr)
+            boundaries[attr] = self._feature_boundary_points(data=data_partition, feature=attr)
         return boundaries
 
-    def boundaries_in_partition(self, data, feature):
+    def _boundaries_in_partition(self, data, feature):
         '''
         From the collection of all cut points for all features, find cut points that fall within a feature-partition's
         attribute-values' range
@@ -163,14 +163,14 @@ class MDLPDiscretizer(object):
         range_min, range_max = (data[feature].min(), data[feature].max())
         return set([x for x in self._boundaries[feature] if (x > range_min) and (x < range_max)])
 
-    def best_cut_point(self, data, feature):
+    def _best_cut_point(self, data, feature):
         '''
         Selects the best cut point for a feature in a data partition based on information gain
         :param data: data partition (pandas dataframe)
         :param feature: target attribute
         :return: value of cut point with highest information gain (if many, picks first). None if no candidates
         '''
-        candidates = self.boundaries_in_partition(data=data, feature=feature)
+        candidates = self._boundaries_in_partition(data=data, feature=feature)
         # candidates = self.feature_boundary_points(data=data, feature=feature)
         if not candidates:
             return None
@@ -180,7 +180,7 @@ class MDLPDiscretizer(object):
 
         return gains[0][0]  # return cut point
 
-    def single_feature_accepted_cutpoints(self, feature, partition_index=pd.DataFrame().index):
+    def _single_feature_accepted_cutpoints(self, feature, partition_index=pd.DataFrame().index):
         '''
         Computes the cuts for binning a feature according to the MDLP criterion
         :param feature: attribute of interest
@@ -200,7 +200,7 @@ class MDLPDiscretizer(object):
         if len(data_partition[feature].unique()) < 2:
             return
         # determine whether to cut and where
-        cut_candidate = self.best_cut_point(data=data_partition, feature=feature)
+        cut_candidate = self._best_cut_point(data=data_partition, feature=feature)
         if cut_candidate == None:
             return
         decision = self.MDLPC_criterion(data=data_partition, feature=feature, cut_point=cut_candidate)
@@ -216,22 +216,22 @@ class MDLPDiscretizer(object):
             if left_partition.empty or right_partition.empty:
                 return  # extreme point selected, don't partition
             self._cuts[feature] += [cut_candidate]  # accept partition
-            self.single_feature_accepted_cutpoints(feature=feature, partition_index=left_partition.index)
-            self.single_feature_accepted_cutpoints(feature=feature, partition_index=right_partition.index)
+            self._single_feature_accepted_cutpoints(feature=feature, partition_index=left_partition.index)
+            self._single_feature_accepted_cutpoints(feature=feature, partition_index=right_partition.index)
             # order cutpoints in ascending order
             self._cuts[feature] = sorted(self._cuts[feature])
             return
 
-    def all_features_accepted_cutpoints(self):
+    def _all_features_accepted_cutpoints(self):
         '''
         Computes cut points for all numeric features (the ones in self._features)
         :return:
         '''
         for attr in self._features:
-            self.single_feature_accepted_cutpoints(feature=attr)
+            self._single_feature_accepted_cutpoints(feature=attr)
         return
 
-    def apply_cutpoints(self, out_data_path=None, out_bins_path=None):
+    def _apply_cutpoints(self, out_data_path=None, out_bins_path=None):
         '''
         Discretizes data by applying bins according to self._cuts. Saves a new, discretized file, and a description of
         the bins
@@ -274,7 +274,7 @@ class MDLPDiscretizer(object):
 
 class BRLDiscretizer:
 
-    def __init__(self, X, y, feature_labels, verbose=False):
+    def __init__(self, feature_labels, verbose=False):
         self.feature_labels_original = feature_labels
         self.verbose = verbose
 
@@ -283,7 +283,7 @@ class BRLDiscretizer:
         # check which features are numeric (to be discretized)
         self.discretized_features = []
 
-        X_str_disc = self.encode_strings(X)
+        X_str_disc = self._encode_strings(X)
 
         for fi in range(X_str_disc.shape[1]):
             # if not string, has values other than 0 and 1, and not specified as undiscretized
@@ -328,7 +328,7 @@ class BRLDiscretizer:
 
         return np.array(cat_data).tolist()
 
-    def encode_strings(self, X):
+    def _encode_strings(self, X):
         # handle string data
         X_str_disc = pd.DataFrame([])
         for fi in range(X.shape[1]):
@@ -350,8 +350,8 @@ class BRLDiscretizer:
         if self.discretizer is None:
             return pd.DataFrame(X, columns=self.feature_labels_original)
 
-        self.data = pd.DataFrame(self.encode_strings(X), columns=self.feature_labels)
-        self.apply_cutpoints()
+        self.data = pd.DataFrame(self._encode_strings(X), columns=self.feature_labels)
+        self._apply_cutpoints()
         D = np.array(self.data)
 
         # prepend feature labels
@@ -391,5 +391,5 @@ class BRLDiscretizer:
     def data(self, value):
         self.discretizer._data = value
 
-    def apply_cutpoints(self):
-        return self.discretizer.apply_cutpoints()
+    def _apply_cutpoints(self):
+        return self.discretizer._apply_cutpoints()

@@ -135,7 +135,7 @@ class FIGS(BaseEstimator):
         """
         Params
         ------
-        sample_weight: array-like of shape (n_samples,), default=None
+        _sample_weight: array-like of shape (n_samples,), default=None
             Sample weights. If None, then samples are equally weighted.
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
