@@ -33,7 +33,7 @@ from scipy.sparse import issparse
 from sklearn.datasets import fetch_openml
 
 
-def define_openml_outcomes(y, data_id: str):
+def _define_openml_outcomes(y, data_id: str):
     if data_id == &#39;59&#39;:  # ionosphere, positive is &#34;good&#34; class
         y = (y == &#39;g&#39;).astype(int)
     if data_id == &#39;183&#39;:  # abalone, need to convert strings to floats
@@ -41,14 +41,14 @@ def define_openml_outcomes(y, data_id: str):
     return y
 
 
-def clean_feat_names(feature_names):
+def _clean_feat_names(feature_names):
     # shouldn&#39;t start with a digit
     return [&#39;X_&#39; + x if x[0].isdigit()
             else x
             for x in feature_names]
 
 
-def clean_features(X):
+def _clean_features(X):
     if issparse(X):
         X = X.toarray()
     try:
@@ -66,7 +66,8 @@ def clean_features(X):
 def get_clean_dataset(dataset_name: str, data_source: str = &#39;imodels&#39;, data_path=&#39;data&#39;) -&gt; Tuple[
     np.ndarray, np.ndarray, list]:
     &#34;&#34;&#34;Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
-    If data is not downloaded, will download and cache. Otherwise will load locally
+    If data is not downloaded, will download and cache. Otherwise will load locally.
+    Cleans features so that they are type float and features names don&#39;t start with a digit.
 
     Parameters
     ----------
@@ -103,11 +104,11 @@ def get_clean_dataset(dataset_name: str, data_source: str = &#39;imodels&#39;, d
         if not dataset_name.endswith(&#39;csv&#39;):
             dataset_name = dataset_name + &#39;.csv&#39;
         if not os.path.isfile(dataset_name):
-            download_imodels_dataset(dataset_name, data_path)
+            _download_imodels_dataset(dataset_name, data_path)
         df = pd.read_csv(oj(data_path, &#39;imodels_data&#39;, dataset_name))
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
         feature_names = df.columns.values[:-1]
-        return np.nan_to_num(X.astype(&#39;float32&#39;)), y, clean_feat_names(feature_names)
+        return np.nan_to_num(X.astype(&#39;float32&#39;)), y, _clean_feat_names(feature_names)
     elif data_source == &#39;pmlb&#39;:
         from pmlb import fetch_data
         feature_names = list(
@@ -116,22 +117,22 @@ def get_clean_dataset(dataset_name: str, data_source: str = &#39;imodels&#39;, d
         X, y = fetch_data(dataset_name, return_X_y=True, local_cache_dir=oj(data_path, &#39;pmlb_data&#39;))
         if np.unique(y).size == 2:  # if binary classification, ensure that the classes are 0 and 1
             y -= np.min(y)
-        return clean_features(X), y, clean_feat_names(feature_names)
+        return _clean_features(X), y, _clean_feat_names(feature_names)
     elif data_source == &#39;sklearn&#39;:
         if dataset_name == &#39;diabetes&#39;:
             data = sklearn.datasets.load_diabetes()
         elif dataset_name == &#39;california_housing&#39;:
             data = sklearn.datasets.fetch_california_housing(data_home=oj(data_path, &#39;sklearn_data&#39;))
-        return data[&#39;data&#39;], data[&#39;target&#39;], clean_feat_names(data[&#39;feature_names&#39;])
+        return data[&#39;data&#39;], data[&#39;target&#39;], _clean_feat_names(data[&#39;feature_names&#39;])
     elif data_source == &#39;openml&#39;:  # note this api might change in newer sklearn - should give dataset-id not name
         data = sklearn.datasets.fetch_openml(data_id=dataset_name, data_home=oj(data_path, &#39;openml_data&#39;))
-        X, y, feature_names = data[&#39;data&#39;], data[&#39;target&#39;], clean_feat_names(data[&#39;feature_names&#39;])
+        X, y, feature_names = data[&#39;data&#39;], data[&#39;target&#39;], _clean_feat_names(data[&#39;feature_names&#39;])
         if isinstance(X, pd.DataFrame):
             X = X.values
         if isinstance(y, pd.Series):
             y = y.values
-        y = define_openml_outcomes(y, dataset_name)
-        return clean_features(X), y, clean_feat_names(feature_names)
+        y = _define_openml_outcomes(y, dataset_name)
+        return _clean_features(X), y, _clean_feat_names(feature_names)
     elif data_source == &#39;synthetic&#39;:
         if dataset_name == &#39;friedman1&#39;:
             X, y = sklearn.datasets.make_friedman1(n_samples=200, n_features=10)
@@ -142,7 +143,7 @@ def get_clean_dataset(dataset_name: str, data_source: str = &#39;imodels&#39;, d
         return X, y, [&#39;X_&#39; + str(i + 1) for i in range(X.shape[1])]
 
 
-def get_openml_dataset(data_id: int) -&gt; pd.DataFrame:
+def _get_openml_dataset(data_id: int) -&gt; pd.DataFrame:
     dataset = fetch_openml(data_id=data_id, as_frame=False)
     X = dataset.data
     if issparse(X):
@@ -159,7 +160,7 @@ def get_openml_dataset(data_id: int) -&gt; pd.DataFrame:
     return pd.concat((X_df, y_df), axis=1)
 
 
-def download_imodels_dataset(dataset_fname, data_path: str):
+def _download_imodels_dataset(dataset_fname, data_path: str):
     dataset_fname = dataset_fname.split(&#39;/&#39;)[-1]  # remove anything about the path
     download_path = f&#39;https://raw.githubusercontent.com/csinva/imodels-data/master/data_cleaned/{dataset_fname}&#39;
     r = requests.get(download_path)
@@ -179,91 +180,13 @@ def download_imodels_dataset(dataset_fname, data_path: str):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="imodels.util.data_util.clean_feat_names"><code class="name flex">
-<span>def <span class="ident">clean_feat_names</span></span>(<span>feature_names)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def clean_feat_names(feature_names):
-    # shouldn&#39;t start with a digit
-    return [&#39;X_&#39; + x if x[0].isdigit()
-            else x
-            for x in feature_names]</code></pre>
-</details>
-</dd>
-<dt id="imodels.util.data_util.clean_features"><code class="name flex">
-<span>def <span class="ident">clean_features</span></span>(<span>X)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def clean_features(X):
-    if issparse(X):
-        X = X.toarray()
-    try:
-        return X.astype(float)
-    except:
-        for j in range(X.shape[1]):
-            try:
-                X[:, j].astype(float)
-            except:
-                # non-numeric get replaced with numerical values
-                classes, X[:, j] = np.unique(X[:, j], return_inverse=True)
-    return X.astype(float)</code></pre>
-</details>
-</dd>
-<dt id="imodels.util.data_util.define_openml_outcomes"><code class="name flex">
-<span>def <span class="ident">define_openml_outcomes</span></span>(<span>y, data_id: str)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def define_openml_outcomes(y, data_id: str):
-    if data_id == &#39;59&#39;:  # ionosphere, positive is &#34;good&#34; class
-        y = (y == &#39;g&#39;).astype(int)
-    if data_id == &#39;183&#39;:  # abalone, need to convert strings to floats
-        y = y.astype(float)
-    return y</code></pre>
-</details>
-</dd>
-<dt id="imodels.util.data_util.download_imodels_dataset"><code class="name flex">
-<span>def <span class="ident">download_imodels_dataset</span></span>(<span>dataset_fname, data_path: str)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def download_imodels_dataset(dataset_fname, data_path: str):
-    dataset_fname = dataset_fname.split(&#39;/&#39;)[-1]  # remove anything about the path
-    download_path = f&#39;https://raw.githubusercontent.com/csinva/imodels-data/master/data_cleaned/{dataset_fname}&#39;
-    r = requests.get(download_path)
-    if r.status_code == 404:
-        raise Exception(
-            f&#39;404 Error for dataset {dataset_fname} (see valid files at https://github.com/csinva/imodels-data/tree/master/data_cleaned)&#39;)
-
-    os.makedirs(oj(data_path, &#39;imodels_data&#39;), exist_ok=True)
-    with open(oj(data_path, &#39;imodels_data&#39;, dataset_fname), &#39;w&#39;) as f:
-        f.write(r.text)</code></pre>
-</details>
-</dd>
 <dt id="imodels.util.data_util.get_clean_dataset"><code class="name flex">
 <span>def <span class="ident">get_clean_dataset</span></span>(<span>dataset_name: str, data_source: str = 'imodels', data_path='data') ‑> Tuple[numpy.ndarray, numpy.ndarray, list]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
-If data is not downloaded, will download and cache. Otherwise will load locally</p>
+If data is not downloaded, will download and cache. Otherwise will load locally.
+Cleans features so that they are type float and features names don't start with a digit.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>dataset_name</code></strong> :&ensp;<code>str</code></dt>
@@ -299,7 +222,8 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
 <pre><code class="python">def get_clean_dataset(dataset_name: str, data_source: str = &#39;imodels&#39;, data_path=&#39;data&#39;) -&gt; Tuple[
     np.ndarray, np.ndarray, list]:
     &#34;&#34;&#34;Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
-    If data is not downloaded, will download and cache. Otherwise will load locally
+    If data is not downloaded, will download and cache. Otherwise will load locally.
+    Cleans features so that they are type float and features names don&#39;t start with a digit.
 
     Parameters
     ----------
@@ -336,11 +260,11 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
         if not dataset_name.endswith(&#39;csv&#39;):
             dataset_name = dataset_name + &#39;.csv&#39;
         if not os.path.isfile(dataset_name):
-            download_imodels_dataset(dataset_name, data_path)
+            _download_imodels_dataset(dataset_name, data_path)
         df = pd.read_csv(oj(data_path, &#39;imodels_data&#39;, dataset_name))
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
         feature_names = df.columns.values[:-1]
-        return np.nan_to_num(X.astype(&#39;float32&#39;)), y, clean_feat_names(feature_names)
+        return np.nan_to_num(X.astype(&#39;float32&#39;)), y, _clean_feat_names(feature_names)
     elif data_source == &#39;pmlb&#39;:
         from pmlb import fetch_data
         feature_names = list(
@@ -349,22 +273,22 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
         X, y = fetch_data(dataset_name, return_X_y=True, local_cache_dir=oj(data_path, &#39;pmlb_data&#39;))
         if np.unique(y).size == 2:  # if binary classification, ensure that the classes are 0 and 1
             y -= np.min(y)
-        return clean_features(X), y, clean_feat_names(feature_names)
+        return _clean_features(X), y, _clean_feat_names(feature_names)
     elif data_source == &#39;sklearn&#39;:
         if dataset_name == &#39;diabetes&#39;:
             data = sklearn.datasets.load_diabetes()
         elif dataset_name == &#39;california_housing&#39;:
             data = sklearn.datasets.fetch_california_housing(data_home=oj(data_path, &#39;sklearn_data&#39;))
-        return data[&#39;data&#39;], data[&#39;target&#39;], clean_feat_names(data[&#39;feature_names&#39;])
+        return data[&#39;data&#39;], data[&#39;target&#39;], _clean_feat_names(data[&#39;feature_names&#39;])
     elif data_source == &#39;openml&#39;:  # note this api might change in newer sklearn - should give dataset-id not name
         data = sklearn.datasets.fetch_openml(data_id=dataset_name, data_home=oj(data_path, &#39;openml_data&#39;))
-        X, y, feature_names = data[&#39;data&#39;], data[&#39;target&#39;], clean_feat_names(data[&#39;feature_names&#39;])
+        X, y, feature_names = data[&#39;data&#39;], data[&#39;target&#39;], _clean_feat_names(data[&#39;feature_names&#39;])
         if isinstance(X, pd.DataFrame):
             X = X.values
         if isinstance(y, pd.Series):
             y = y.values
-        y = define_openml_outcomes(y, dataset_name)
-        return clean_features(X), y, clean_feat_names(feature_names)
+        y = _define_openml_outcomes(y, dataset_name)
+        return _clean_features(X), y, _clean_feat_names(feature_names)
     elif data_source == &#39;synthetic&#39;:
         if dataset_name == &#39;friedman1&#39;:
             X, y = sklearn.datasets.make_friedman1(n_samples=200, n_features=10)
@@ -373,32 +297,6 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
         elif dataset_name == &#39;friedman3&#39;:
             X, y = sklearn.datasets.make_friedman3(n_samples=200)
         return X, y, [&#39;X_&#39; + str(i + 1) for i in range(X.shape[1])]</code></pre>
-</details>
-</dd>
-<dt id="imodels.util.data_util.get_openml_dataset"><code class="name flex">
-<span>def <span class="ident">get_openml_dataset</span></span>(<span>data_id: int) ‑> pandas.core.frame.DataFrame</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_openml_dataset(data_id: int) -&gt; pd.DataFrame:
-    dataset = fetch_openml(data_id=data_id, as_frame=False)
-    X = dataset.data
-    if issparse(X):
-        X = X.toarray()
-    y = (dataset.target == dataset.target[0]).astype(int)
-    feature_names = dataset.feature_names
-
-    target_name = dataset.target_names
-    if target_name[0].lower() == &#39;class&#39;:
-        target_name = [dataset.target[0]]
-
-    X_df = pd.DataFrame(X, columns=feature_names)
-    y_df = pd.DataFrame(y, columns=target_name)
-    return pd.concat((X_df, y_df), axis=1)</code></pre>
 </details>
 </dd>
 </dl>
@@ -419,12 +317,7 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="imodels.util.data_util.clean_feat_names" href="#imodels.util.data_util.clean_feat_names">clean_feat_names</a></code></li>
-<li><code><a title="imodels.util.data_util.clean_features" href="#imodels.util.data_util.clean_features">clean_features</a></code></li>
-<li><code><a title="imodels.util.data_util.define_openml_outcomes" href="#imodels.util.data_util.define_openml_outcomes">define_openml_outcomes</a></code></li>
-<li><code><a title="imodels.util.data_util.download_imodels_dataset" href="#imodels.util.data_util.download_imodels_dataset">download_imodels_dataset</a></code></li>
 <li><code><a title="imodels.util.data_util.get_clean_dataset" href="#imodels.util.data_util.get_clean_dataset">get_clean_dataset</a></code></li>
-<li><code><a title="imodels.util.data_util.get_openml_dataset" href="#imodels.util.data_util.get_openml_dataset">get_openml_dataset</a></code></li>
 </ul>
 </li>
 </ul>
