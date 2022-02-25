@@ -7,12 +7,16 @@ class DistilledRegressor(BaseEstimator, RegressorMixin):
     Params
     ------
     teacher: initial model to be trained
+        must be a regressor or a binary classifier
     student: model to be distilled from teacher's predictions
+        must be a regressor
     """
 
-    def __init__(self, teacher: BaseEstimator, student: BaseEstimator):
+    def __init__(self, teacher: BaseEstimator, student: BaseEstimator, 
+                 n_iters_teacher: int=1):
         self.teacher = teacher
         self.student = student
+        self.n_iters_teacher = n_iters_teacher
         self._validate_student()
         self._check_teacher_type()
 
@@ -41,12 +45,16 @@ class DistilledRegressor(BaseEstimator, RegressorMixin):
         self.student.set_params(**params)
 
     def fit(self, X, y, **kwargs):
-        self.teacher.fit(X, y, **kwargs)
-        if self.teacher_type == "regression":
-            preds = self.teacher.predict(X)
-        else:
-            preds = self.teacher.predict_proba(X)[:, 1]
-        self.student.fit(X, preds)
+        # fit teacher
+        for iter_teacher in range(self.n_iters_teacher):
+            self.teacher.fit(X, y, **kwargs)
+            if self.teacher_type == "regression":
+                y = self.teacher.predict(X)
+            else:
+                y = self.teacher.predict_proba(X)[:, 1] # assumes binary classifier
+                
+        # fit student
+        self.student.fit(X, y)
 
     def predict(self, X):
         return self.student.predict(X)
