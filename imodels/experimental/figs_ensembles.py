@@ -84,9 +84,9 @@ class FIGSExt(BaseEstimator):
 
     def _init_prediction_task(self):
         """
-        SuperCARTRegressor and SuperCARTClassifier override this method
+        FIGSExtRegressor and FIGSExtClassifier override this method
         to alter the prediction task. When using this class directly,
-        it is equivalent to SuperCARTRegressor
+        it is equivalent to FIGSExtRegressor
         """
         self.prediction_task = 'regression'
 
