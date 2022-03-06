@@ -7,49 +7,61 @@ from sklearn import datasets
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_text
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils import check_X_y
 
 
-class Tao(BaseEstimator):
-    """TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
-    https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html
-
-    Requirements
-        - given a CART tree, posthoc improve it
-        - given a FIGS model, posthoc improve it
-        - weight binary errors more carefully
-        - learn a new model (changing the classifier at any given node) - this requires a new data structure
-        - support pruning (e.g. if weights -> 0, then remove a node)
-        - support classifiers in leaves
+class TaoTree(BaseEstimator):
+    """
     """
 
     def __init__(self, model_type: str = 'CART',
                  reg_param: float = 1e-3,
                  n_iters: int = 20,
                  model_args: dict = {'max_leaf_nodes': 15},
-                 randomize_tree=True,
-                 min_node_samples_tao=5,
-                 min_leaf_samples_tao=3,
+                 randomize_tree=False,
+                 min_node_samples_tao=3,
+                 min_leaf_samples_tao=2,
                  node_model='stump',
                  weight_errors: bool = True,
                  ):
-        """
-        Params
-        ------
+        """TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
+        https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html
+        Note: this implementation learns single-feature splits rather than oblique trees.
+
+        Currently supports
+        - given a CART tree, posthoc improve it with TAO
+
+        Requirements
+        - given a FIGS model, posthoc improve it
+        - weight binary errors more carefully
+        - learn a new model (changing the classifier at any given node) - this requires a new data structure
+        - support pruning (e.g. if weights -> 0, then remove a node)
+        - support classifiers in leaves
+
+        Parameters
+        ----------
+
         model_type: str
             'CART' or 'FIGS'
+
         reg_param
             Regularization parameter for node-wise linear model
+
         n_iters
             Number of iterations to run TAO
+
         model_args
             Arguments to pass to the model
+
         randomize_tree
             Whether to randomize the tree before each iteration
+
         min_node_samples_tao: int
             Minimum number of samples in a node to apply tao
+
         min_leaf_samples_tao: int
+
         node_model: str
             'stump' or 'linear'
         """
@@ -95,13 +107,16 @@ class Tao(BaseEstimator):
             elif self.prediction_task == 'regression':
                 self.model = DecisionTreeRegressor(**self.model_args)
             self.model.fit(X, y)
-            print(export_text(self.model))
+            # print(export_text(self.model))
             # plot_tree(self.model)
             # plt.show()
 
         if self.randomize_tree:
-            np.random.shuffle(self.model.tree_.feature)
-            np.random.shuffle(self.model.tree_.threshold)
+            np.random.shuffle(self.model.tree_.feature)  # shuffle CART features
+            # np.random.shuffle(self.model.tree_.threshold)
+            for i in range(self.model.tree_.node_count):  # split on feature medians
+                self.model.tree_.threshold[i] = np.median(
+                    X[:, self.model.tree_.feature[i]])
 
         for i in range(self.n_iters):
             num_updates = self._tao_iter_cart(X, y, self.model.tree_)
@@ -142,7 +157,7 @@ class Tao(BaseEstimator):
             if children_left[node_id] != children_right[node_id]:
                 stack.append((children_left[node_id], path_to_node_index + [(node_id, 'L')]))
                 stack.append((children_right[node_id], path_to_node_index + [(node_id, 'R')]))
-        print(indexes_with_prefix_paths)
+        # print(indexes_with_prefix_paths)
 
         # Iterate through each node and compute the path to the leaf node
         num_updates = 0
@@ -166,14 +181,16 @@ class Tao(BaseEstimator):
             X_node, y_node = filter_points_by_path(X, y, path_to_node_index)
             if children_left[node_id] == children_right[node_id]:  # is leaf node
                 if self.prediction_task == 'regression' and X_node.shape[0] >= self.min_leaf_samples_tao:
-                    old_score = self.model.score(X, y)
+                    # old_score = self.model.score(X, y)
                     value[node_id] = np.mean(y_node)
+                    """
                     new_score = self.model.score(X, y)
                     if new_score > old_score:
                         print(f'\tLeaf improved score from {old_score:0.3f} to {new_score:0.3f}')
                     if new_score < old_score:
                         print(f'\tLeaf reduced score from {old_score:0.3f} to {new_score:0.3f}')
                         # raise ValueError('Leaf update reduced score')
+                    """
                 # print('\tshapes', X_node.shape, y_node.shape)
                 # print('\tvals:', value[node_id][0][0], np.mean(y_node))
                 # assert value[node_id][0][0] == np.mean(y_node), 'unless tree changed, vals should be leaf means'
@@ -265,7 +282,7 @@ class Tao(BaseEstimator):
             else:
                 # (Track if any updates were necessary)
                 num_updates += 1
-                print(f'Improved score from {old_score:0.3f} to {new_score:0.3f}')
+                # print(f'Improved score from {old_score:0.3f} to {new_score:0.3f}')
 
         return num_updates
 
@@ -276,12 +293,12 @@ class Tao(BaseEstimator):
         return self.model.predict_proba(X)
 
 
-class TaoRegressor(Tao):
+class TaoTreeRegressor(TaoTree):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
 
 
-class TaoClassifier(Tao):
+class TaoTreeClassifier(TaoTree):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'
 
@@ -289,22 +306,24 @@ class TaoClassifier(Tao):
 if __name__ == '__main__':
     np.random.seed(13)
     random.seed(13)
-    # X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
-    X, y = datasets.load_diabetes(return_X_y=True)  # regression
-    # X = np.random.randn(500, 10)
-    # y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
-
+    X, y = datasets.load_breast_cancer(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.33, random_state=42
     )
     print('X.shape', X.shape)
     print('ys', np.unique(y_train), '\n\n')
-
     m = TaoClassifier()
     m.fit(X_train, y_train)
     print('acc', np.mean(m.predict(X_test) == y_test))
-    print(m.predict_proba(X_train))
+    # print(m.predict(X_train), m.predict_proba(X_train).shape)
+    # print(m.predict_proba(X_train))
 
+    # X, y = datasets.load_diabetes(return_X_y=True)  # regression
+    # X = np.random.randn(500, 10)
+    # y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
+    # X_train, X_test, y_train, y_test = train_test_split(
+    #     X, y, test_size=0.33, random_state=42
+    # )
     # m = TaoRegressor()
     # m.fit(X_train, y_train)
     # print('mse', np.mean(np.square(m.predict(X_test) - y_test)),

@@ -30,14 +30,16 @@ from .tree.figs import FIGSRegressor, FIGSClassifier
 from .tree.gosdt.pygosdt import OptimalTreeClassifier
 from .tree.gosdt.pygosdt_shrinkage import HSOptimalTreeClassifier, HSOptimalTreeClassifierCV
 from .tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier, HSTreeRegressorCV, HSTreeClassifierCV
+from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
+from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
-from .util.data_util import get_clean_dataset
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier,
                C45TreeClassifier, OptimalTreeClassifier, OptimalRuleListClassifier, OneRClassifier,
-               SlipperClassifier,
+               SlipperClassifier, RuleFitClassifier, TaoTreeClassifier,
                FIGSClassifier, HSTreeClassifier, HSTreeClassifierCV]  # , IRFClassifier
-REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, FIGSRegressor, HSTreeRegressor, HSTreeRegressorCV]
+REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, FIGSRegressor,
+              TaoTreeRegressor, HSTreeRegressor, HSTreeRegressorCV]
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]

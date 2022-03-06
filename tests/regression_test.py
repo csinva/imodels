@@ -6,7 +6,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 
 from imodels import RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor, HSTreeRegressor, HSTreeRegressorCV, \
-    FIGSRegressor, DistilledRegressor
+    FIGSRegressor, DistilledRegressor, TaoTreeRegressor
 
 
 class TestClassRegression:
@@ -22,7 +22,7 @@ class TestClassRegression:
         '''Test imodels on basic binary classification task
         '''
         for model_type in [RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor,
-                           FIGSRegressor,
+                           FIGSRegressor, TaoTreeRegressor,
                            partial(DistilledRegressor, teacher=RandomForestRegressor(n_estimators=3),
                                    student=DecisionTreeRegressor()),
                            ]:

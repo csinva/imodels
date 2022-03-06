@@ -125,6 +125,11 @@ print(model) # print the rule-based model
 <td>Greedily fits tree using C4.5</td>
 </tr>
 <tr>
+<td align="left">TAO rule tree</td>
+<td><a href="https://csinva.io/imodels/tree/tao.html">🗂️</a>, ㅤㅤ<a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">📄</a></td>
+<td>Fits tree using alternating optimization</td>
+</tr>
+<tr>
 <td align="left">Iterative random<br/>forest</td>
 <td><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html">🗂️</a>, <a href="https://github.com/Yu-Group/iterative-Random-Forest">🔗</a>, <a href="https://www.pnas.org/content/115/8/1943">📄</a></td>
 <td>Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected</td>
@@ -314,6 +319,12 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <td></td>
 </tr>
 <tr>
+<td align="left">TAO rule tree</td>
+<td align="center"><a href="https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoClassifier">TaoTreeClassifier</a></td>
+<td align="center"><a href="https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoClassifier">TaoTreeClassifier</a></td>
+<td></td>
+</tr>
+<tr>
 <td align="left">Iterative random forest</td>
 <td align="center"><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a></td>
 <td align="center"></td>
@@ -493,16 +504,18 @@ from .tree.figs import FIGSRegressor, FIGSClassifier
 from .tree.gosdt.pygosdt import OptimalTreeClassifier
 from .tree.gosdt.pygosdt_shrinkage import HSOptimalTreeClassifier, HSOptimalTreeClassifierCV
 from .tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier, HSTreeRegressorCV, HSTreeClassifierCV
+from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
+from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
-from .util.data_util import get_clean_dataset
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier,
                C45TreeClassifier, OptimalTreeClassifier, OptimalRuleListClassifier, OneRClassifier,
-               SlipperClassifier,
+               SlipperClassifier, RuleFitClassifier, TaoTreeClassifier,
                FIGSClassifier, HSTreeClassifier, HSTreeClassifierCV]  # , IRFClassifier
-REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, FIGSRegressor, HSTreeRegressor, HSTreeRegressorCV]
+REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, FIGSRegressor,
+              TaoTreeRegressor, HSTreeRegressor, HSTreeRegressorCV]
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]</code></pre>
 </details>
 </section>

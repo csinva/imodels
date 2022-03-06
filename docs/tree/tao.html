@@ -21,7 +21,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from copy import deepcopy
+<pre><code class="python">import random
+from copy import deepcopy
 
 import numpy as np
 from mlxtend.classifier import LogisticRegression
@@ -29,44 +30,74 @@ from sklearn import datasets
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_text
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils import check_X_y
 
 
-class Tao(BaseEstimator):
-    &#34;&#34;&#34;TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
-    https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html
+class TaoTree(BaseEstimator):
+    &#34;&#34;&#34;
+    &#34;&#34;&#34;
 
-    Requirements
-        - given a CART tree, posthoc improve it
+    def __init__(self, model_type: str = &#39;CART&#39;,
+                 reg_param: float = 1e-3,
+                 n_iters: int = 20,
+                 model_args: dict = {&#39;max_leaf_nodes&#39;: 15},
+                 randomize_tree=False,
+                 min_node_samples_tao=3,
+                 min_leaf_samples_tao=2,
+                 node_model=&#39;stump&#39;,
+                 weight_errors: bool = True,
+                 ):
+        &#34;&#34;&#34;TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
+        https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html
+        Note: this implementation learns single-feature splits rather than oblique trees.
+
+        Currently supports
+        - given a CART tree, posthoc improve it with TAO
+
+        Requirements
         - given a FIGS model, posthoc improve it
         - weight binary errors more carefully
         - learn a new model (changing the classifier at any given node) - this requires a new data structure
         - support pruning (e.g. if weights -&gt; 0, then remove a node)
         - support classifiers in leaves
-    &#34;&#34;&#34;
 
-    def __init__(self, model_type: str = &#39;CART&#39;,
-                 reg_param: float = 1e-3,
-                 n_iters: int = 10,
-                 model_args: dict = {&#39;max_leaf_nodes&#39;: 15}):
-        &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
+
         model_type: str
             &#39;CART&#39; or &#39;FIGS&#39;
+
         reg_param
             Regularization parameter for node-wise linear model
+
         n_iters
             Number of iterations to run TAO
+
         model_args
             Arguments to pass to the model
+
+        randomize_tree
+            Whether to randomize the tree before each iteration
+
+        min_node_samples_tao: int
+            Minimum number of samples in a node to apply tao
+
+        min_leaf_samples_tao: int
+
+        node_model: str
+            &#39;stump&#39; or &#39;linear&#39;
         &#34;&#34;&#34;
         super().__init__()
         self.model_type = model_type
         self.reg_param = reg_param
         self.n_iters = n_iters
         self.model_args = model_args
+        self.randomize_tree = randomize_tree
+        self.min_node_samples_tao = min_node_samples_tao
+        self.min_leaf_samples_tao = min_leaf_samples_tao
+        self.node_model = node_model
+        self.weight_errors = weight_errors
         self._init_prediction_task()  # decides between regressor and classifier
 
     def _init_prediction_task(self):
@@ -99,15 +130,25 @@ class Tao(BaseEstimator):
             elif self.prediction_task == &#39;regression&#39;:
                 self.model = DecisionTreeRegressor(**self.model_args)
             self.model.fit(X, y)
-            print(export_text(self.model))
+            # print(export_text(self.model))
+            # plot_tree(self.model)
+            # plt.show()
+
+        if self.randomize_tree:
+            np.random.shuffle(self.model.tree_.feature)  # shuffle CART features
+            # np.random.shuffle(self.model.tree_.threshold)
+            for i in range(self.model.tree_.node_count):  # split on feature medians
+                self.model.tree_.threshold[i] = np.median(
+                    X[:, self.model.tree_.feature[i]])
+
         for i in range(self.n_iters):
-            num_successful_updates = self._tao_iter_cart(X, y, self.model.tree_, self.reg_param)
-            if num_successful_updates == 0:
+            num_updates = self._tao_iter_cart(X, y, self.model.tree_)
+            if num_updates == 0:
                 break
 
         return self
 
-    def _tao_iter_cart(self, X, y, tree, reg_param, min_node_samples_tao=5):
+    def _tao_iter_cart(self, X, y, tree):
         &#34;&#34;&#34;Updates tree by applying the tao algorithm to the tree
         Params
         ------
@@ -117,10 +158,6 @@ class Tao(BaseEstimator):
             The target values.
         model: DecisionTreeClassifier.tree_ or DecisionTreeRegressor.tree_
             The model to be post-hoc improved
-        reg_param: float
-            Regularization parameter for node-wise linear model
-        min_node_samples_tao: int
-            Minimum number of samples in a node to apply tao
         &#34;&#34;&#34;
 
         # Tree properties
@@ -143,46 +180,58 @@ class Tao(BaseEstimator):
             if children_left[node_id] != children_right[node_id]:
                 stack.append((children_left[node_id], path_to_node_index + [(node_id, &#39;L&#39;)]))
                 stack.append((children_right[node_id], path_to_node_index + [(node_id, &#39;R&#39;)]))
-        print(indexes_with_prefix_paths)
-
+        # print(indexes_with_prefix_paths)
 
         # Iterate through each node and compute the path to the leaf node
-        num_successful_updates = 0
+        num_updates = 0
         for (node_id, path_to_node_index) in indexes_with_prefix_paths:
-            is_leaf = children_left[node_id] == children_right[node_id]
-            # print(&#39;node_id&#39;, node_id)
+            # print(&#39;node_id&#39;, node_id, path_to_node_index)
+
             # Compute the points being input to the node
             def filter_points_by_path(X, y, path_to_node_index):
                 &#34;&#34;&#34;
                 Returns the points in X that are in the path to the node
                 &#34;&#34;&#34;
-                for (node_id, direction) in path_to_node_index:
+                for node_id, direction in path_to_node_index:
                     idxs = X[:, feature[node_id]] &lt;= threshold[node_id]
-                    if direction == &#39;L&#39;:
-                        X = X[idxs]
-                        y = y[idxs]
-                    else:
-                        X = X[~idxs]
-                        y = y[~idxs]
+                    if direction == &#39;R&#39;:
+                        idxs = ~idxs
+                    # print(&#39;idxs&#39;, idxs.size, idxs.sum())
+                    X = X[idxs]
+                    y = y[idxs]
                 return X, y
 
             X_node, y_node = filter_points_by_path(X, y, path_to_node_index)
-            if is_leaf:
-                if self.prediction_task == &#39;regression&#39;:
+            if children_left[node_id] == children_right[node_id]:  # is leaf node
+                if self.prediction_task == &#39;regression&#39; and X_node.shape[0] &gt;= self.min_leaf_samples_tao:
+                    # old_score = self.model.score(X, y)
                     value[node_id] = np.mean(y_node)
+                    &#34;&#34;&#34;
+                    new_score = self.model.score(X, y)
+                    if new_score &gt; old_score:
+                        print(f&#39;\tLeaf improved score from {old_score:0.3f} to {new_score:0.3f}&#39;)
+                    if new_score &lt; old_score:
+                        print(f&#39;\tLeaf reduced score from {old_score:0.3f} to {new_score:0.3f}&#39;)
+                        # raise ValueError(&#39;Leaf update reduced score&#39;)
+                    &#34;&#34;&#34;
+                # print(&#39;\tshapes&#39;, X_node.shape, y_node.shape)
+                # print(&#39;\tvals:&#39;, value[node_id][0][0], np.mean(y_node))
+                # assert value[node_id][0][0] == np.mean(y_node), &#39;unless tree changed, vals should be leaf means&#39;
                 continue
-            elif X_node.shape[0] &lt; min_node_samples_tao:
+            elif X_node.shape[0] &lt; self.min_node_samples_tao:
                 continue
 
             # Compute the outputs for these points if they go left or right
             def predict_from_node(X, node_id):
-                &#34;&#34;&#34;Returns predictions for X starting at node node_id
-                &#34;&#34;&#34;
+                &#34;&#34;&#34;Returns predictions for X starting at node node_id&#34;&#34;&#34;
+
                 def predict_from_node(x, node_id):
-                    &#34;&#34;&#34;Returns predictions for x starting at node node_id
-                    &#34;&#34;&#34;
+                    &#34;&#34;&#34;Returns predictions for x starting at node node_id&#34;&#34;&#34;
                     if children_left[node_id] == children_right[node_id]:
-                        return value[node_id]
+                        if self.prediction_task == &#39;regression&#39;:
+                            return value[node_id]
+                        elif self.prediction_task == &#39;classification&#39;:
+                            return value[node_id][0, 1]
                     if x[feature[node_id]] &lt;= threshold[node_id]:
                         return predict_from_node(x, children_left[node_id])
                     else:
@@ -192,6 +241,7 @@ class Tao(BaseEstimator):
                 for i in range(X.shape[0]):
                     preds[i] = predict_from_node(X[i], node_id)
                 return preds
+
             y_node_left = predict_from_node(X_node, children_left[node_id])
             y_node_right = predict_from_node(X_node, children_right[node_id])
 
@@ -200,14 +250,15 @@ class Tao(BaseEstimator):
             # here, we weight these errors for regression
             # if self.prediction_task == &#39;regression&#39;:
             y_node_absolute_errors = np.abs(np.vstack((y_node - y_node_left, y_node - y_node_right))).T
-            # idxs_with_difference =
 
             # could screen out where this is 0 to make it faster (for classification)
             y_node_target = np.argmin(y_node_absolute_errors, axis=1)
 
             # weight by the difference in error
-            # sample_weight = np.ones(y_node.size)
-            sample_weight = np.abs(y_node_absolute_errors[:, 1], y_node_absolute_errors[:, 0])
+            if self.weight_errors:
+                sample_weight = np.abs(y_node_absolute_errors[:, 1], y_node_absolute_errors[:, 0])
+            else:
+                sample_weight = np.ones(y_node.size)
 
             # Fit a 1-variable binary classification model on these outputs
             # Note: this could be customized (e.g. for sparse oblique trees)
@@ -216,37 +267,47 @@ class Tao(BaseEstimator):
             best_model = None
             for feat_num in range(X.shape[1]):
                 if self.prediction_task == &#39;classification&#39;:
-                    m = LogisticRegression()
+                    if self.node_model == &#39;linear&#39;:
+                        m = LogisticRegression()
+                    elif self.node_model == &#39;stump&#39;:
+                        m = DecisionTreeClassifier(max_depth=1)
                 elif self.prediction_task == &#39;regression&#39;:
-                    m = LinearRegression()
+                    if self.node_model == &#39;linear&#39;:
+                        m = LinearRegression()
+                    elif self.node_model == &#39;stump&#39;:
+                        m = DecisionTreeRegressor(max_depth=1)
                 m.fit(X_node[:, feat_num: feat_num + 1], y_node_target, sample_weight=sample_weight)
                 score = m.score(X_node[:, feat_num: feat_num + 1], y_node_target, sample_weight=sample_weight)
                 if score &gt; best_score:
                     best_score = score
                     best_feat = feat_num
                     best_model = deepcopy(m)
-            best_threshold = -best_model.intercept_ / best_model.coef_[0]
+            if self.node_model == &#39;linear&#39;:
+                best_threshold = -best_model.intercept_ / best_model.coef_[0]
+            elif self.node_model == &#39;stump&#39;:
+                best_threshold = m.tree_.feature[0]
             # print((feature[node_id], threshold[node_id]), &#39;\n-&gt;&#39;,
             #       (best_feat, best_threshold))
 
             # Update the node with the new feature / threshold
-            old_score = self.model.score(X, y)
             old_feat = feature[node_id]
             old_threshold = threshold[node_id]
+            # print(X.sum(), y.sum())
+            old_score = self.model.score(X, y)
+
             feature[node_id] = best_feat
             threshold[node_id] = best_threshold
             new_score = self.model.score(X, y)
-            # print(&#39;\tscore from&#39;, old_score, &#39;to&#39;, new_score)
+            # print(f&#39;\tscore from {old_score:0.3f} to {new_score:0.3f}&#39;)
             if old_score &gt;= new_score:
                 feature[node_id] = old_feat
                 threshold[node_id] = old_threshold
             else:
-                num_successful_updates += 1
-                print(&#39;Improved score from&#39;, old_score, &#39;to&#39;, new_score)
+                # (Track if any updates were necessary)
+                num_updates += 1
+                # print(f&#39;Improved score from {old_score:0.3f} to {new_score:0.3f}&#39;)
 
-            # (Track if any updates were necessary)
-
-        return num_successful_updates
+        return num_updates
 
     def predict(self, X):
         return self.model.predict(X)
@@ -255,36 +316,41 @@ class Tao(BaseEstimator):
         return self.model.predict_proba(X)
 
 
-class TaoRegressor(Tao):
+class TaoTreeRegressor(TaoTree):
     def _init_prediction_task(self):
         self.prediction_task = &#39;regression&#39;
 
 
-class TaoClassifier(Tao):
+class TaoTreeClassifier(TaoTree):
     def _init_prediction_task(self):
         self.prediction_task = &#39;classification&#39;
 
 
 if __name__ == &#39;__main__&#39;:
     np.random.seed(13)
-    # X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
-    X, y = datasets.load_diabetes(return_X_y=True)  # regression
-    # X = np.random.randn(500, 10)
-    # y = (X[:, 0] &gt; 0).astype(float) + (X[:, 1] &gt; 1).astype(float)
-
+    random.seed(13)
+    X, y = datasets.load_breast_cancer(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.33, random_state=42
     )
     print(&#39;X.shape&#39;, X.shape)
     print(&#39;ys&#39;, np.unique(y_train), &#39;\n\n&#39;)
-
-    # m = TaoClassifier()
-    m = TaoRegressor()
+    m = TaoClassifier()
     m.fit(X_train, y_train)
-    # print(&#39;acc&#39;, np.mean(m.predict(X_test) == y_test))
-    print(&#39;mse&#39;, np.mean(np.square(m.predict(X_test) - y_test)),
-          &#39;baseline&#39;, np.mean(np.square(y_test)))
-    # print(m.predict_proba(X_train))</code></pre>
+    print(&#39;acc&#39;, np.mean(m.predict(X_test) == y_test))
+    # print(m.predict(X_train), m.predict_proba(X_train).shape)
+    # print(m.predict_proba(X_train))
+
+    # X, y = datasets.load_diabetes(return_X_y=True)  # regression
+    # X = np.random.randn(500, 10)
+    # y = (X[:, 0] &gt; 0).astype(float) + (X[:, 1] &gt; 1).astype(float)
+    # X_train, X_test, y_train, y_test = train_test_split(
+    #     X, y, test_size=0.33, random_state=42
+    # )
+    # m = TaoRegressor()
+    # m.fit(X_train, y_train)
+    # print(&#39;mse&#39;, np.mean(np.square(m.predict(X_test) - y_test)),
+    #       &#39;baseline&#39;, np.mean(np.square(y_test)))</code></pre>
 </details>
 </section>
 <section>
@@ -296,67 +362,109 @@ if __name__ == &#39;__main__&#39;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.experimental.tao.Tao"><code class="flex name class">
-<span>class <span class="ident">Tao</span></span>
-<span>(</span><span>model_type: str = 'CART', reg_param: float = 0.001, n_iters: int = 10, model_args: dict = {'max_leaf_nodes': 15})</span>
+<dt id="imodels.tree.tao.TaoTree"><code class="flex name class">
+<span>class <span class="ident">TaoTree</span></span>
+<span>(</span><span>model_type: str = 'CART', reg_param: float = 0.001, n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', weight_errors: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
-<a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a></p>
+<a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a>
+Note: this implementation learns single-feature splits rather than oblique trees.</p>
+<p>Currently supports
+- given a CART tree, posthoc improve it with TAO</p>
 <p>Requirements
-- given a CART tree, posthoc improve it
 - given a FIGS model, posthoc improve it
 - weight binary errors more carefully
 - learn a new model (changing the classifier at any given node) - this requires a new data structure
 - support pruning (e.g. if weights -&gt; 0, then remove a node)
 - support classifiers in leaves</p>
-<h2 id="params">Params</h2>
-<p>model_type: str
-'CART' or 'FIGS'
-reg_param
-Regularization parameter for node-wise linear model
-n_iters
-Number of iterations to run TAO
-model_args
-Arguments to pass to the model</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>model_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>'CART' or 'FIGS'</dd>
+<dt><strong><code>reg_param</code></strong></dt>
+<dd>Regularization parameter for node-wise linear model</dd>
+<dt><strong><code>n_iters</code></strong></dt>
+<dd>Number of iterations to run TAO</dd>
+<dt><strong><code>model_args</code></strong></dt>
+<dd>Arguments to pass to the model</dd>
+<dt><strong><code>randomize_tree</code></strong></dt>
+<dd>Whether to randomize the tree before each iteration</dd>
+<dt><strong><code>min_node_samples_tao</code></strong> :&ensp;<code>int</code></dt>
+<dd>Minimum number of samples in a node to apply tao</dd>
+<dt><strong><code>min_leaf_samples_tao</code></strong> :&ensp;<code>int</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>node_model</code></strong> :&ensp;<code>str</code></dt>
+<dd>'stump' or 'linear'</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Tao(BaseEstimator):
-    &#34;&#34;&#34;TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
-    https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html
+<pre><code class="python">class TaoTree(BaseEstimator):
+    &#34;&#34;&#34;
+    &#34;&#34;&#34;
 
-    Requirements
-        - given a CART tree, posthoc improve it
+    def __init__(self, model_type: str = &#39;CART&#39;,
+                 reg_param: float = 1e-3,
+                 n_iters: int = 20,
+                 model_args: dict = {&#39;max_leaf_nodes&#39;: 15},
+                 randomize_tree=False,
+                 min_node_samples_tao=3,
+                 min_leaf_samples_tao=2,
+                 node_model=&#39;stump&#39;,
+                 weight_errors: bool = True,
+                 ):
+        &#34;&#34;&#34;TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
+        https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html
+        Note: this implementation learns single-feature splits rather than oblique trees.
+
+        Currently supports
+        - given a CART tree, posthoc improve it with TAO
+
+        Requirements
         - given a FIGS model, posthoc improve it
         - weight binary errors more carefully
         - learn a new model (changing the classifier at any given node) - this requires a new data structure
         - support pruning (e.g. if weights -&gt; 0, then remove a node)
         - support classifiers in leaves
-    &#34;&#34;&#34;
 
-    def __init__(self, model_type: str = &#39;CART&#39;,
-                 reg_param: float = 1e-3,
-                 n_iters: int = 10,
-                 model_args: dict = {&#39;max_leaf_nodes&#39;: 15}):
-        &#34;&#34;&#34;
-        Params
-        ------
+        Parameters
+        ----------
+
         model_type: str
             &#39;CART&#39; or &#39;FIGS&#39;
+
         reg_param
             Regularization parameter for node-wise linear model
+
         n_iters
             Number of iterations to run TAO
+
         model_args
             Arguments to pass to the model
+
+        randomize_tree
+            Whether to randomize the tree before each iteration
+
+        min_node_samples_tao: int
+            Minimum number of samples in a node to apply tao
+
+        min_leaf_samples_tao: int
+
+        node_model: str
+            &#39;stump&#39; or &#39;linear&#39;
         &#34;&#34;&#34;
         super().__init__()
         self.model_type = model_type
         self.reg_param = reg_param
         self.n_iters = n_iters
         self.model_args = model_args
+        self.randomize_tree = randomize_tree
+        self.min_node_samples_tao = min_node_samples_tao
+        self.min_leaf_samples_tao = min_leaf_samples_tao
+        self.node_model = node_model
+        self.weight_errors = weight_errors
         self._init_prediction_task()  # decides between regressor and classifier
 
     def _init_prediction_task(self):
@@ -389,15 +497,25 @@ Arguments to pass to the model</p></div>
             elif self.prediction_task == &#39;regression&#39;:
                 self.model = DecisionTreeRegressor(**self.model_args)
             self.model.fit(X, y)
-            print(export_text(self.model))
+            # print(export_text(self.model))
+            # plot_tree(self.model)
+            # plt.show()
+
+        if self.randomize_tree:
+            np.random.shuffle(self.model.tree_.feature)  # shuffle CART features
+            # np.random.shuffle(self.model.tree_.threshold)
+            for i in range(self.model.tree_.node_count):  # split on feature medians
+                self.model.tree_.threshold[i] = np.median(
+                    X[:, self.model.tree_.feature[i]])
+
         for i in range(self.n_iters):
-            num_successful_updates = self._tao_iter_cart(X, y, self.model.tree_, self.reg_param)
-            if num_successful_updates == 0:
+            num_updates = self._tao_iter_cart(X, y, self.model.tree_)
+            if num_updates == 0:
                 break
 
         return self
 
-    def _tao_iter_cart(self, X, y, tree, reg_param, min_node_samples_tao=5):
+    def _tao_iter_cart(self, X, y, tree):
         &#34;&#34;&#34;Updates tree by applying the tao algorithm to the tree
         Params
         ------
@@ -407,10 +525,6 @@ Arguments to pass to the model</p></div>
             The target values.
         model: DecisionTreeClassifier.tree_ or DecisionTreeRegressor.tree_
             The model to be post-hoc improved
-        reg_param: float
-            Regularization parameter for node-wise linear model
-        min_node_samples_tao: int
-            Minimum number of samples in a node to apply tao
         &#34;&#34;&#34;
 
         # Tree properties
@@ -433,46 +547,58 @@ Arguments to pass to the model</p></div>
             if children_left[node_id] != children_right[node_id]:
                 stack.append((children_left[node_id], path_to_node_index + [(node_id, &#39;L&#39;)]))
                 stack.append((children_right[node_id], path_to_node_index + [(node_id, &#39;R&#39;)]))
-        print(indexes_with_prefix_paths)
-
+        # print(indexes_with_prefix_paths)
 
         # Iterate through each node and compute the path to the leaf node
-        num_successful_updates = 0
+        num_updates = 0
         for (node_id, path_to_node_index) in indexes_with_prefix_paths:
-            is_leaf = children_left[node_id] == children_right[node_id]
-            # print(&#39;node_id&#39;, node_id)
+            # print(&#39;node_id&#39;, node_id, path_to_node_index)
+
             # Compute the points being input to the node
             def filter_points_by_path(X, y, path_to_node_index):
                 &#34;&#34;&#34;
                 Returns the points in X that are in the path to the node
                 &#34;&#34;&#34;
-                for (node_id, direction) in path_to_node_index:
+                for node_id, direction in path_to_node_index:
                     idxs = X[:, feature[node_id]] &lt;= threshold[node_id]
-                    if direction == &#39;L&#39;:
-                        X = X[idxs]
-                        y = y[idxs]
-                    else:
-                        X = X[~idxs]
-                        y = y[~idxs]
+                    if direction == &#39;R&#39;:
+                        idxs = ~idxs
+                    # print(&#39;idxs&#39;, idxs.size, idxs.sum())
+                    X = X[idxs]
+                    y = y[idxs]
                 return X, y
 
             X_node, y_node = filter_points_by_path(X, y, path_to_node_index)
-            if is_leaf:
-                if self.prediction_task == &#39;regression&#39;:
+            if children_left[node_id] == children_right[node_id]:  # is leaf node
+                if self.prediction_task == &#39;regression&#39; and X_node.shape[0] &gt;= self.min_leaf_samples_tao:
+                    # old_score = self.model.score(X, y)
                     value[node_id] = np.mean(y_node)
+                    &#34;&#34;&#34;
+                    new_score = self.model.score(X, y)
+                    if new_score &gt; old_score:
+                        print(f&#39;\tLeaf improved score from {old_score:0.3f} to {new_score:0.3f}&#39;)
+                    if new_score &lt; old_score:
+                        print(f&#39;\tLeaf reduced score from {old_score:0.3f} to {new_score:0.3f}&#39;)
+                        # raise ValueError(&#39;Leaf update reduced score&#39;)
+                    &#34;&#34;&#34;
+                # print(&#39;\tshapes&#39;, X_node.shape, y_node.shape)
+                # print(&#39;\tvals:&#39;, value[node_id][0][0], np.mean(y_node))
+                # assert value[node_id][0][0] == np.mean(y_node), &#39;unless tree changed, vals should be leaf means&#39;
                 continue
-            elif X_node.shape[0] &lt; min_node_samples_tao:
+            elif X_node.shape[0] &lt; self.min_node_samples_tao:
                 continue
 
             # Compute the outputs for these points if they go left or right
             def predict_from_node(X, node_id):
-                &#34;&#34;&#34;Returns predictions for X starting at node node_id
-                &#34;&#34;&#34;
+                &#34;&#34;&#34;Returns predictions for X starting at node node_id&#34;&#34;&#34;
+
                 def predict_from_node(x, node_id):
-                    &#34;&#34;&#34;Returns predictions for x starting at node node_id
-                    &#34;&#34;&#34;
+                    &#34;&#34;&#34;Returns predictions for x starting at node node_id&#34;&#34;&#34;
                     if children_left[node_id] == children_right[node_id]:
-                        return value[node_id]
+                        if self.prediction_task == &#39;regression&#39;:
+                            return value[node_id]
+                        elif self.prediction_task == &#39;classification&#39;:
+                            return value[node_id][0, 1]
                     if x[feature[node_id]] &lt;= threshold[node_id]:
                         return predict_from_node(x, children_left[node_id])
                     else:
@@ -482,6 +608,7 @@ Arguments to pass to the model</p></div>
                 for i in range(X.shape[0]):
                     preds[i] = predict_from_node(X[i], node_id)
                 return preds
+
             y_node_left = predict_from_node(X_node, children_left[node_id])
             y_node_right = predict_from_node(X_node, children_right[node_id])
 
@@ -490,14 +617,15 @@ Arguments to pass to the model</p></div>
             # here, we weight these errors for regression
             # if self.prediction_task == &#39;regression&#39;:
             y_node_absolute_errors = np.abs(np.vstack((y_node - y_node_left, y_node - y_node_right))).T
-            # idxs_with_difference =
 
             # could screen out where this is 0 to make it faster (for classification)
             y_node_target = np.argmin(y_node_absolute_errors, axis=1)
 
             # weight by the difference in error
-            # sample_weight = np.ones(y_node.size)
-            sample_weight = np.abs(y_node_absolute_errors[:, 1], y_node_absolute_errors[:, 0])
+            if self.weight_errors:
+                sample_weight = np.abs(y_node_absolute_errors[:, 1], y_node_absolute_errors[:, 0])
+            else:
+                sample_weight = np.ones(y_node.size)
 
             # Fit a 1-variable binary classification model on these outputs
             # Note: this could be customized (e.g. for sparse oblique trees)
@@ -506,37 +634,47 @@ Arguments to pass to the model</p></div>
             best_model = None
             for feat_num in range(X.shape[1]):
                 if self.prediction_task == &#39;classification&#39;:
-                    m = LogisticRegression()
+                    if self.node_model == &#39;linear&#39;:
+                        m = LogisticRegression()
+                    elif self.node_model == &#39;stump&#39;:
+                        m = DecisionTreeClassifier(max_depth=1)
                 elif self.prediction_task == &#39;regression&#39;:
-                    m = LinearRegression()
+                    if self.node_model == &#39;linear&#39;:
+                        m = LinearRegression()
+                    elif self.node_model == &#39;stump&#39;:
+                        m = DecisionTreeRegressor(max_depth=1)
                 m.fit(X_node[:, feat_num: feat_num + 1], y_node_target, sample_weight=sample_weight)
                 score = m.score(X_node[:, feat_num: feat_num + 1], y_node_target, sample_weight=sample_weight)
                 if score &gt; best_score:
                     best_score = score
                     best_feat = feat_num
                     best_model = deepcopy(m)
-            best_threshold = -best_model.intercept_ / best_model.coef_[0]
+            if self.node_model == &#39;linear&#39;:
+                best_threshold = -best_model.intercept_ / best_model.coef_[0]
+            elif self.node_model == &#39;stump&#39;:
+                best_threshold = m.tree_.feature[0]
             # print((feature[node_id], threshold[node_id]), &#39;\n-&gt;&#39;,
             #       (best_feat, best_threshold))
 
             # Update the node with the new feature / threshold
-            old_score = self.model.score(X, y)
             old_feat = feature[node_id]
             old_threshold = threshold[node_id]
+            # print(X.sum(), y.sum())
+            old_score = self.model.score(X, y)
+
             feature[node_id] = best_feat
             threshold[node_id] = best_threshold
             new_score = self.model.score(X, y)
-            # print(&#39;\tscore from&#39;, old_score, &#39;to&#39;, new_score)
+            # print(f&#39;\tscore from {old_score:0.3f} to {new_score:0.3f}&#39;)
             if old_score &gt;= new_score:
                 feature[node_id] = old_feat
                 threshold[node_id] = old_threshold
             else:
-                num_successful_updates += 1
-                print(&#39;Improved score from&#39;, old_score, &#39;to&#39;, new_score)
+                # (Track if any updates were necessary)
+                num_updates += 1
+                # print(f&#39;Improved score from {old_score:0.3f} to {new_score:0.3f}&#39;)
 
-            # (Track if any updates were necessary)
-
-        return num_successful_updates
+        return num_updates
 
     def predict(self, X):
         return self.model.predict(X)
@@ -550,12 +688,12 @@ Arguments to pass to the model</p></div>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="imodels.experimental.tao.TaoClassifier" href="#imodels.experimental.tao.TaoClassifier">TaoClassifier</a></li>
-<li><a title="imodels.experimental.tao.TaoRegressor" href="#imodels.experimental.tao.TaoRegressor">TaoRegressor</a></li>
+<li><a title="imodels.tree.tao.TaoTreeClassifier" href="#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></li>
+<li><a title="imodels.tree.tao.TaoTreeRegressor" href="#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.experimental.tao.Tao.fit"><code class="name flex">
+<dt id="imodels.tree.tao.TaoTree.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None)</span>
 </code></dt>
 <dd>
@@ -590,16 +728,26 @@ are ignored while searching for a split in each node.</p></div>
         elif self.prediction_task == &#39;regression&#39;:
             self.model = DecisionTreeRegressor(**self.model_args)
         self.model.fit(X, y)
-        print(export_text(self.model))
+        # print(export_text(self.model))
+        # plot_tree(self.model)
+        # plt.show()
+
+    if self.randomize_tree:
+        np.random.shuffle(self.model.tree_.feature)  # shuffle CART features
+        # np.random.shuffle(self.model.tree_.threshold)
+        for i in range(self.model.tree_.node_count):  # split on feature medians
+            self.model.tree_.threshold[i] = np.median(
+                X[:, self.model.tree_.feature[i]])
+
     for i in range(self.n_iters):
-        num_successful_updates = self._tao_iter_cart(X, y, self.model.tree_, self.reg_param)
-        if num_successful_updates == 0:
+        num_updates = self._tao_iter_cart(X, y, self.model.tree_)
+        if num_updates == 0:
             break
 
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.experimental.tao.Tao.predict"><code class="name flex">
+<dt id="imodels.tree.tao.TaoTree.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -612,7 +760,7 @@ are ignored while searching for a split in each node.</p></div>
     return self.model.predict(X)</code></pre>
 </details>
 </dd>
-<dt id="imodels.experimental.tao.Tao.predict_proba"><code class="name flex">
+<dt id="imodels.tree.tao.TaoTree.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -627,92 +775,116 @@ are ignored while searching for a split in each node.</p></div>
 </dd>
 </dl>
 </dd>
-<dt id="imodels.experimental.tao.TaoClassifier"><code class="flex name class">
-<span>class <span class="ident">TaoClassifier</span></span>
-<span>(</span><span>model_type: str = 'CART', reg_param: float = 0.001, n_iters: int = 10, model_args: dict = {'max_leaf_nodes': 15})</span>
+<dt id="imodels.tree.tao.TaoTreeClassifier"><code class="flex name class">
+<span>class <span class="ident">TaoTreeClassifier</span></span>
+<span>(</span><span>model_type: str = 'CART', reg_param: float = 0.001, n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', weight_errors: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
-<a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a></p>
+<a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a>
+Note: this implementation learns single-feature splits rather than oblique trees.</p>
+<p>Currently supports
+- given a CART tree, posthoc improve it with TAO</p>
 <p>Requirements
-- given a CART tree, posthoc improve it
 - given a FIGS model, posthoc improve it
 - weight binary errors more carefully
 - learn a new model (changing the classifier at any given node) - this requires a new data structure
 - support pruning (e.g. if weights -&gt; 0, then remove a node)
 - support classifiers in leaves</p>
-<h2 id="params">Params</h2>
-<p>model_type: str
-'CART' or 'FIGS'
-reg_param
-Regularization parameter for node-wise linear model
-n_iters
-Number of iterations to run TAO
-model_args
-Arguments to pass to the model</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>model_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>'CART' or 'FIGS'</dd>
+<dt><strong><code>reg_param</code></strong></dt>
+<dd>Regularization parameter for node-wise linear model</dd>
+<dt><strong><code>n_iters</code></strong></dt>
+<dd>Number of iterations to run TAO</dd>
+<dt><strong><code>model_args</code></strong></dt>
+<dd>Arguments to pass to the model</dd>
+<dt><strong><code>randomize_tree</code></strong></dt>
+<dd>Whether to randomize the tree before each iteration</dd>
+<dt><strong><code>min_node_samples_tao</code></strong> :&ensp;<code>int</code></dt>
+<dd>Minimum number of samples in a node to apply tao</dd>
+<dt><strong><code>min_leaf_samples_tao</code></strong> :&ensp;<code>int</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>node_model</code></strong> :&ensp;<code>str</code></dt>
+<dd>'stump' or 'linear'</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TaoClassifier(Tao):
+<pre><code class="python">class TaoTreeClassifier(TaoTree):
     def _init_prediction_task(self):
         self.prediction_task = &#39;classification&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.experimental.tao.Tao" href="#imodels.experimental.tao.Tao">Tao</a></li>
+<li><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="imodels.experimental.tao.Tao" href="#imodels.experimental.tao.Tao">Tao</a></b></code>:
+<li><code><b><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.experimental.tao.Tao.fit" href="#imodels.experimental.tao.Tao.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="imodels.experimental.tao.TaoRegressor"><code class="flex name class">
-<span>class <span class="ident">TaoRegressor</span></span>
-<span>(</span><span>model_type: str = 'CART', reg_param: float = 0.001, n_iters: int = 10, model_args: dict = {'max_leaf_nodes': 15})</span>
+<dt id="imodels.tree.tao.TaoTreeRegressor"><code class="flex name class">
+<span>class <span class="ident">TaoTreeRegressor</span></span>
+<span>(</span><span>model_type: str = 'CART', reg_param: float = 0.001, n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', weight_errors: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
-<a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a></p>
+<a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a>
+Note: this implementation learns single-feature splits rather than oblique trees.</p>
+<p>Currently supports
+- given a CART tree, posthoc improve it with TAO</p>
 <p>Requirements
-- given a CART tree, posthoc improve it
 - given a FIGS model, posthoc improve it
 - weight binary errors more carefully
 - learn a new model (changing the classifier at any given node) - this requires a new data structure
 - support pruning (e.g. if weights -&gt; 0, then remove a node)
 - support classifiers in leaves</p>
-<h2 id="params">Params</h2>
-<p>model_type: str
-'CART' or 'FIGS'
-reg_param
-Regularization parameter for node-wise linear model
-n_iters
-Number of iterations to run TAO
-model_args
-Arguments to pass to the model</p></div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>model_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>'CART' or 'FIGS'</dd>
+<dt><strong><code>reg_param</code></strong></dt>
+<dd>Regularization parameter for node-wise linear model</dd>
+<dt><strong><code>n_iters</code></strong></dt>
+<dd>Number of iterations to run TAO</dd>
+<dt><strong><code>model_args</code></strong></dt>
+<dd>Arguments to pass to the model</dd>
+<dt><strong><code>randomize_tree</code></strong></dt>
+<dd>Whether to randomize the tree before each iteration</dd>
+<dt><strong><code>min_node_samples_tao</code></strong> :&ensp;<code>int</code></dt>
+<dd>Minimum number of samples in a node to apply tao</dd>
+<dt><strong><code>min_leaf_samples_tao</code></strong> :&ensp;<code>int</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>node_model</code></strong> :&ensp;<code>str</code></dt>
+<dd>'stump' or 'linear'</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TaoRegressor(Tao):
+<pre><code class="python">class TaoTreeRegressor(TaoTree):
     def _init_prediction_task(self):
         self.prediction_task = &#39;regression&#39;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.experimental.tao.Tao" href="#imodels.experimental.tao.Tao">Tao</a></li>
+<li><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="imodels.experimental.tao.Tao" href="#imodels.experimental.tao.Tao">Tao</a></b></code>:
+<li><code><b><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.experimental.tao.Tao.fit" href="#imodels.experimental.tao.Tao.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
 </ul>
 </li>
 </ul>
@@ -728,24 +900,24 @@ Arguments to pass to the model</p></div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.experimental" href="index.html">imodels.experimental</a></code></li>
+<li><code><a title="imodels.tree" href="index.html">imodels.tree</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.experimental.tao.Tao" href="#imodels.experimental.tao.Tao">Tao</a></code></h4>
+<h4><code><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.experimental.tao.Tao.fit" href="#imodels.experimental.tao.Tao.fit">fit</a></code></li>
-<li><code><a title="imodels.experimental.tao.Tao.predict" href="#imodels.experimental.tao.Tao.predict">predict</a></code></li>
-<li><code><a title="imodels.experimental.tao.Tao.predict_proba" href="#imodels.experimental.tao.Tao.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.predict" href="#imodels.tree.tao.TaoTree.predict">predict</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.predict_proba" href="#imodels.tree.tao.TaoTree.predict_proba">predict_proba</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.experimental.tao.TaoClassifier" href="#imodels.experimental.tao.TaoClassifier">TaoClassifier</a></code></h4>
+<h4><code><a title="imodels.tree.tao.TaoTreeClassifier" href="#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></code></h4>
 </li>
 <li>
-<h4><code><a title="imodels.experimental.tao.TaoRegressor" href="#imodels.experimental.tao.TaoRegressor">TaoRegressor</a></code></h4>
+<h4><code><a title="imodels.tree.tao.TaoTreeRegressor" href="#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></code></h4>
 </li>
 </ul>
 </li>
