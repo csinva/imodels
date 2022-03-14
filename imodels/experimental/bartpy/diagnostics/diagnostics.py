@@ -6,6 +6,7 @@ from sklearn import datasets, model_selection
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 
+from imodels.util.tree_interaction_utils import get_interacting_features
 from ..diagnostics.residuals import plot_qq, plot_homoskedasity_diagnostics
 from ..diagnostics.sampling import plot_tree_mutation_acceptance_rate, plot_tree_likelihhod, plot_tree_probs
 from ..diagnostics.sigma import plot_sigma_convergence
@@ -35,8 +36,9 @@ if __name__ == '__main__':
 
     # from sklearn.datasets import make_friedman1
     #
-    n = 4000
+    n = 60
     X, y = datasets.make_friedman1(n)
+    # dt = DecisionTreeRegressor(max_depth=3).fit(X=X, y=y)
     # y = dt.predict(X)
     # bart_tree = Tree([LeafNode(Split(self.data))])
     # p = 5
@@ -69,15 +71,15 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = model_selection.train_test_split(
         X, y, test_size=0.3, random_state=4)
-    dt = DecisionTreeRegressor(max_depth=3).fit(X=X_train, y=y_train)
+    figs = FIGSRegressor(max_rules=5).fit(X=X_train, y=y_train)
 
-    figs = FIGSRegressor(max_rules=20).fit(X=X_train, y=y_train)
+    interactions = get_interaction_score(figs, X_train, y_train)
     n_trees = len(figs.trees_)
 # clf = GradientBoostingRegressor(n_estimators=1)
 # clf.fit(X_train, y_train)
 # print(mean_squared_error(clf.predict(X_test), y_test))
 # print(dt.tree_.n_leaves)
-    bart_zero = BART(classification=False, store_acceptance_trace=True, n_trees=1, n_samples=1000, n_burn=100,
+    bart_zero = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=1000, n_burn=100,
                      n_chains=5,
                      thin=1)
     bart_zero.fit(X_train, y_train)
@@ -89,9 +91,9 @@ if __name__ == '__main__':
 #                 thin=1, initializer=SklearnTreeInitializer(
 #         tree_=DecisionTreeRegressor(max_depth=5).fit(X=X_train, y=y_train)))
 # bart_sgb.fit(X_train, y_train)
-    bart_figs = BART(classification=False, store_acceptance_trace=True, n_trees=1, n_samples=1000, n_burn=100,
+    bart_figs = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=1000, n_burn=100,
                      n_chains=5,
-                     thin=1, initializer=SklearnTreeInitializer(tree_=dt))
+                     thin=1, initializer=SklearnTreeInitializer(tree_=figs))
 
     bart_figs.fit(X_train, y_train)
 
@@ -107,8 +109,8 @@ if __name__ == '__main__':
     # plot_tree_depth(bart_sgb, ax1, f"CART initialization {np.round(mean_squared_error(bart_sgb_preds, y_test), 4)}")
     plot_tree_depth(bart_zero, ax1, f"BART initialization (MSE: {np.round(mean_squared_error(bart_preds, y_test), 4)})")
     plot_tree_depth(bart_figs, ax2,
-                    f"CART initialization (MSE: {np.round(mean_squared_error(bart_figs_preds, y_test), 4)}"
-                    f", CART MSE: {np.round(mean_squared_error(dt.predict(X_test), y_test), 2)})", x_label=True)
+                    f"FIGS initialization (MSE: {np.round(mean_squared_error(bart_figs_preds, y_test), 4)}"
+                    f", FIGS MSE: {np.round(mean_squared_error(figs_preds, y_test), 2)})", x_label=True)
     # plt.title(f"Bayesian tree with different initilization of Friedman 1 dataset n={n}")
 
     plt.show()
