@@ -3,11 +3,10 @@ from typing import Callable, Generator, Text, Tuple
 import numpy as np
 import pandas as pd
 
-from imodels.experimental.bartpy.model import Model
-from imodels.experimental.bartpy.samplers.leafnode import LeafNodeSampler
-from imodels.experimental.bartpy.samplers.sampler import Sampler
-from imodels.experimental.bartpy.samplers.sigma import SigmaSampler
-from imodels.experimental.bartpy.samplers.treemutation import TreeMutationSampler
+from ..model import Model
+from ..samplers.leafnode import LeafNodeSampler
+from ..samplers.sigma import SigmaSampler
+from ..samplers.treemutation import TreeMutationSampler
 
 
 class SampleSchedule:
