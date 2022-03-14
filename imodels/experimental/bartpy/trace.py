@@ -2,8 +2,8 @@ from typing import Any, Callable
 
 import numpy as np
 
-from imodels.experimental.bartpy.model import Model, deep_copy_model
-from imodels.experimental.bartpy.mutation import TreeMutation
+from .model import Model, deep_copy_model
+from .mutation import TreeMutation
 
 
 class TraceLogger():

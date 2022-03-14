@@ -7,8 +7,8 @@ from typing import List
 import numpy as np
 from joblib import Parallel
 
-from imodels.experimental.bartpy.samplers.modelsampler import Chain
-from imodels.experimental.bartpy.sklearnmodel import SklearnModel
+from .samplers.modelsampler import Chain
+from .sklearnmodel import SklearnModel
 
 
 def convert_chains_models(model: SklearnModel,

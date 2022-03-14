@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 
-from imodels.experimental.bartpy.sklearnmodel import SklearnModel
+from .sklearnmodel import SklearnModel
 
 
 def plot_residuals(model: SklearnModel):

@@ -1,10 +1,12 @@
-from abc import abstractmethod, ABC
-from typing import Optional
+import numpy as np
 
-from imodels.experimental.bartpy.model import Model
-from imodels.experimental.bartpy.mutation import TreeMutation
-from imodels.experimental.bartpy.samplers.sampler import Sampler
-from imodels.experimental.bartpy.tree import Tree
+from abc import abstractmethod, ABC
+from typing import Optional, Tuple
+
+from ..model import Model
+from ..mutation import TreeMutation
+from ..samplers.sampler import Sampler
+from ..tree import Tree
 
 
 class TreeMutationSampler(Sampler):
@@ -54,7 +56,7 @@ class TreeMutationLikihoodRatio(ABC):
     Responsible for evaluating the ratio of mutations to the reverse movement
     """
 
-    def log_probability_ratio(self, model: Model, tree: Tree, mutation: TreeMutation) -> float:
+    def log_probability_ratio(self, model: Model, tree: Tree, mutation: TreeMutation) -> Tuple[float, tuple, tuple]:
         """
         Calculated the ratio of the likihood of a mutation over the likihood of the reverse movement
 
@@ -74,7 +76,16 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged ratio of likelihoods
         """
-        return self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio(model, tree, mutation) + self.log_tree_ratio(model, tree, mutation)
+        log_likelihood_ratio, (l_new, l_old) = self.log_likihood_ratio(model, tree, mutation)
+        log_transition_ratio, (t_new, t_old) = self.log_transition_ratio(tree, mutation)
+        log_prior_ratio, (p_new, p_old) = self.log_tree_ratio(model, tree, mutation)
+        prob_score = log_transition_ratio + log_likelihood_ratio + log_prior_ratio
+        ratio = np.exp(prob_score)
+        p_t_new = p_new + t_new
+        p_t_old = p_old + t_old
+        prob_new = l_new+p_t_new
+        prob_old = l_old+p_t_old
+        return ratio, (l_new, l_old), (prob_new, prob_old)
 
     @abstractmethod
     def log_transition_ratio(self, tree: Tree, mutation: TreeMutation) -> float:

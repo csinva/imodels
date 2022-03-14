@@ -1,4 +1,4 @@
-from imodels.experimental.bartpy.node import TreeNode, DecisionNode, LeafNode
+from .node import TreeNode, DecisionNode, LeafNode
 
 
 class TreeMutation(object):
