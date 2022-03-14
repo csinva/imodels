@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels import HSTreeClassifier, HSTreeClassifierCV, \
-    HSTreeRegressor, HSTreeRegressorCV, C45TreeClassifier
+    HSTreeRegressor, HSTreeRegressorCV, C45TreeClassifier, BART
 # OptimalTreeClassifier, HSOptimalTreeClassifierCV
 from imodels.tree.c45_tree.c45_tree import HSC45TreeClassifierCV
 
