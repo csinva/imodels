@@ -1,10 +1,12 @@
 from copy import deepcopy
+from typing import List
 
 import numpy as np
+import sklearn.datasets
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.utils import check_X_y, check_array
 
 
@@ -58,7 +60,7 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     """
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float=0.0):
+    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
@@ -72,14 +74,14 @@ class FIGS(BaseEstimator):
         it is equivalent to FIGSRegressor
         """
         self.prediction_task = 'regression'
-        
+
     def _init_decision_function(self):
         """Sets decision function based on prediction_task
         """
         # used by sklearn GrriidSearchCV, BaggingClassifier
-        if self.prediction_task  == 'classification':
-            decision_function = lambda x: self.predict_proba(x)[:, 1] 
-        elif self.prediction_task  == 'regression':
+        if self.prediction_task == 'classification':
+            decision_function = lambda x: self.predict_proba(x)[:, 1]
+        elif self.prediction_task == 'regression':
             decision_function = self.predict
 
     def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
@@ -178,7 +180,7 @@ class FIGS(BaseEstimator):
 
             # if added a tree root
             if split_node.is_root:
-                
+
                 # start a new tree
                 self.trees_.append(split_node)
 
@@ -257,7 +259,8 @@ class FIGS(BaseEstimator):
         elif root.threshold is None:
             return ''
         pprefix = prefix + '\t'
-        return prefix + str(root) + '\n' + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right, pprefix)
+        return prefix + str(root) + '\n' + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right,
+                                                                                                     pprefix)
 
     def __str__(self):
         s = '------------\n' + '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
@@ -321,19 +324,69 @@ class FIGSClassifier(FIGS):
         self.prediction_task = 'classification'
 
 
+class FIGSCV:
+    def __init__(self, figs,
+                 n_rules_list: List[float] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring=None, *args, **kwargs):
+
+        self._figs_class = figs
+        self.n_rules_list = np.array(n_rules_list)
+        self.cv = cv
+        self.scoring = scoring
+
+    def fit(self, X, y):
+        self.scores_ = []
+        for n_rules in self.n_rules_list:
+            est = self._figs_class(max_rules=n_rules)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            mean_score = np.mean(cv_scores)
+            if len(self.scores_) == 0:
+                self.figs = est
+            elif mean_score > np.max(self.scores_):
+                self.figs = est
+
+            self.scores_.append(mean_score)
+        self.figs.fit(X=X, y=y)
+
+    def predict_proba(self, X):
+        return self.figs.predict_proba(X)
+
+    def predict(self, X):
+        return self.figs.predict(X)
+
+    @property
+    def max_rules(self):
+        return self.figs.max_rules
+
+
+class FIGSRegressorCV(FIGSCV):
+    def __init__(self,
+                 n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring='r2', *args, **kwargs):
+        super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor, n_rules_list=n_rules_list,
+                                              cv=cv, scoring=scoring, *args, **kwargs)
+
+
+class FIGSClassifierCV(FIGSCV):
+    def __init__(self,
+                 n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring="accuracy", *args, **kwargs):
+        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier, n_rules_list=n_rules_list,
+                                               cv=cv, scoring=scoring, *args, **kwargs)
+
+
 if __name__ == '__main__':
-    np.random.seed(13)
-    X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
-    # X, y = datasets.load_diabetes(return_X_y=True)  # regression
-    # X = np.random.randn(500, 10)
-    # y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
+    from sklearn import datasets
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=42
-    )
-    print('X.shape', X.shape)
-    print('ys', np.unique(y_train), '\n\n')
+    X_cls, Y_cls = datasets.load_breast_cancer(return_X_y=True)
+    X_reg, Y_reg = datasets.make_friedman1(100)
 
-    m = FIGSClassifier(max_rules=5)
-    m.fit(X_train, y_train)
-    print(m.predict_proba(X_train))
+    est = FIGSRegressorCV()
+    est.fit(X_reg, Y_reg)
+    est.predict(X_reg)
+    print(est.max_rules)
+
+    est = FIGSClassifierCV()
+    est.fit(X_cls, Y_cls)
+    est.predict(X_cls)
+    print(est.max_rules)
