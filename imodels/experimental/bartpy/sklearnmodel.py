@@ -261,6 +261,13 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             return self.fitted_
         return False
 
+    @property
+    def complexity_(self):
+        if hasattr(self.initializer, "_tree"):
+            estimator = self.initializer._tree
+            if hasattr(estimator, 'complexity_'):
+                return estimator.complexity_
+
     @staticmethod
     def _combine_chains(extract: List[Chain]) -> Chain:
         keys = list(extract[0].keys())
