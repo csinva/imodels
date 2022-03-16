@@ -318,6 +318,11 @@ class FIGSRegressor(FIGS):
         self.prediction_task = 'regression'
 
 
+class FIGSClassifier(FIGS):
+    def _init_prediction_task(self):
+        self.prediction_task = 'classification'
+
+
 class FIGSCV:
     def __init__(self,figs:FIGS,
                  n_rules_list: List[float] = [6, 12, 24, 30, 50],
@@ -359,3 +364,9 @@ class FIGSRegressorCV(FIGSCV):
                  cv: int = 3, scoring=None, *args, **kwargs):
         super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor)
 
+
+class FIGSClassifierCV(FIGSCV):
+    def __init__(self,
+                 n_rules_list: List[float] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring=None, *args, **kwargs):
+        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier)
