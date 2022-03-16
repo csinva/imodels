@@ -2,6 +2,7 @@ from copy import deepcopy
 from typing import List
 
 import numpy as np
+import sklearn.datasets
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
@@ -324,7 +325,7 @@ class FIGSClassifier(FIGS):
 
 
 class FIGSCV:
-    def __init__(self,figs:FIGS,
+    def __init__(self, figs,
                  n_rules_list: List[float] = [6, 12, 24, 30, 50],
                  cv: int = 3, scoring=None, *args, **kwargs):
 
@@ -336,7 +337,7 @@ class FIGSCV:
     def fit(self, X, y):
         self.scores_ = []
         for n_rules in self.n_rules_list:
-            est = self._figs_class(n_rules)
+            est = self._figs_class(max_rules=n_rules)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             mean_score = np.mean(cv_scores)
             if len(self.scores_) == 0:
@@ -360,13 +361,32 @@ class FIGSCV:
 
 class FIGSRegressorCV(FIGSCV):
     def __init__(self,
-                 n_rules_list: List[float] = [6, 12, 24, 30, 50],
-                 cv: int = 3, scoring=None, *args, **kwargs):
-        super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor)
+                 n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring='r2', *args, **kwargs):
+        super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor, n_rules_list=n_rules_list,
+                                              cv=cv, scoring=scoring, *args, **kwargs)
 
 
 class FIGSClassifierCV(FIGSCV):
     def __init__(self,
-                 n_rules_list: List[float] = [6, 12, 24, 30, 50],
-                 cv: int = 3, scoring=None, *args, **kwargs):
-        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier)
+                 n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring="accuracy", *args, **kwargs):
+        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier, n_rules_list=n_rules_list,
+                                               cv=cv, scoring=scoring, *args, **kwargs)
+
+
+if __name__ == '__main__':
+    from sklearn import datasets
+
+    X_cls, Y_cls = datasets.load_breast_cancer(return_X_y=True)
+    X_reg, Y_reg = datasets.make_friedman1(100)
+
+    est = FIGSRegressorCV()
+    est.fit(X_reg, Y_reg)
+    est.predict(X_reg)
+    print(est.max_rules)
+
+    est = FIGSClassifierCV()
+    est.fit(X_cls, Y_cls)
+    est.predict(X_cls)
+    print(est.max_rules)
