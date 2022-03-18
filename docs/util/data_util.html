@@ -32,6 +32,8 @@ import sklearn.datasets
 from scipy.sparse import issparse
 from sklearn.datasets import fetch_openml
 
+from ..util.tree_interaction_utils import make_rj, make_vp
+
 
 def _define_openml_outcomes(y, data_id: str):
     if data_id == &#39;59&#39;:  # ionosphere, positive is &#34;good&#34; class
@@ -140,6 +142,10 @@ def get_clean_dataset(dataset_name: str, data_source: str = &#39;imodels&#39;, d
             X, y = sklearn.datasets.make_friedman2(n_samples=200)
         elif dataset_name == &#39;friedman3&#39;:
             X, y = sklearn.datasets.make_friedman3(n_samples=200)
+        elif dataset_name == &#34;radchenko_james&#34;:
+            X, y = make_rj()
+        elif dataset_name == &#34;vo_pati&#34;:
+            X, y = make_vp()
         return X, y, [&#39;X_&#39; + str(i + 1) for i in range(X.shape[1])]
 
 
@@ -296,6 +302,10 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
             X, y = sklearn.datasets.make_friedman2(n_samples=200)
         elif dataset_name == &#39;friedman3&#39;:
             X, y = sklearn.datasets.make_friedman3(n_samples=200)
+        elif dataset_name == &#34;radchenko_james&#34;:
+            X, y = make_rj()
+        elif dataset_name == &#34;vo_pati&#34;:
+            X, y = make_vp()
         return X, y, [&#39;X_&#39; + str(i + 1) for i in range(X.shape[1])]</code></pre>
 </details>
 </dd>

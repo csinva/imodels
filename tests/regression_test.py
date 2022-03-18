@@ -22,7 +22,7 @@ class TestClassRegression:
         '''Test imodels on basic binary classification task
         '''
         for model_type in [RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor,
-                           FIGSRegressor, TaoTreeRegressor,
+                           FIGSRegressor, # TaoTreeRegressor,
                            partial(DistilledRegressor, teacher=RandomForestRegressor(n_estimators=3),
                                    student=DecisionTreeRegressor()),
                            ]:
