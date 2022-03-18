@@ -1,14 +1,16 @@
-from typing import Optional
+from typing import Optional, Tuple
 
-from imodels.experimental.bartpy.model import Model
-from imodels.experimental.bartpy.mutation import TreeMutation
-from imodels.experimental.bartpy.samplers.sampler import Sampler
-from imodels.experimental.bartpy.samplers.scalar import UniformScalarSampler
-from imodels.experimental.bartpy.samplers.treemutation import TreeMutationLikihoodRatio
-from imodels.experimental.bartpy.samplers.treemutation import TreeMutationProposer
-from imodels.experimental.bartpy.samplers.unconstrainedtree.likihoodratio import UniformTreeMutationLikihoodRatio
-from imodels.experimental.bartpy.samplers.unconstrainedtree.proposer import UniformMutationProposer
-from imodels.experimental.bartpy.tree import Tree, mutate
+import numpy as np
+
+from ...model import Model
+from ...mutation import TreeMutation
+from ...samplers.sampler import Sampler
+from ...samplers.scalar import UniformScalarSampler
+from ...samplers.treemutation import TreeMutationLikihoodRatio
+from ...samplers.treemutation import TreeMutationProposer
+from ...samplers.unconstrainedtree.likihoodratio import UniformTreeMutationLikihoodRatio
+from ...samplers.unconstrainedtree.proposer import UniformMutationProposer
+from ...tree import Tree, mutate
 
 
 class UnconstrainedTreeMutationSampler(Sampler):
@@ -35,19 +37,19 @@ class UnconstrainedTreeMutationSampler(Sampler):
         self.likihood_ratio = likihood_ratio
         self._scalar_sampler = scalar_sampler
 
-    def sample(self, model: Model, tree: Tree) -> Optional[TreeMutation]:
+    def sample(self, model: Model, tree: Tree) -> (Optional[TreeMutation], float):
         proposal = self.proposer.propose(tree)
-        ratio = self.likihood_ratio.log_probability_ratio(model, tree, proposal)
+        ratio, (l_new, l_old), (prob_new, prob_old) = self.likihood_ratio.log_probability_ratio(model, tree, proposal)
         if self._scalar_sampler.sample() < ratio:
-            return proposal
+            return proposal, np.exp(l_new) - np.exp(l_old), np.exp(prob_new) - np.exp(prob_old)
         else:
-            return None
+            return None, 0, 0
 
-    def step(self, model: Model, tree: Tree) -> Optional[TreeMutation]:
-        mutation = self.sample(model, tree)
+    def step(self, model: Model, tree: Tree) -> Tuple[Optional[TreeMutation], float]:
+        mutation, likelihood, prob = self.sample(model, tree)
         if mutation is not None:
             mutate(tree, mutation)
-        return mutation
+        return mutation, likelihood, prob
 
 
 def get_tree_sampler(p_grow: float,

@@ -7,6 +7,7 @@
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
+from .experimental.bartpy import BART
 from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
 from .rule_list.corels_wrapper import OptimalRuleListClassifier
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
@@ -41,5 +42,5 @@ CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesC
                SlipperClassifier, RuleFitClassifier, TaoTreeClassifier,
                FIGSClassifier, HSTreeClassifier, HSTreeClassifierCV]  # , IRFClassifier
 REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, FIGSRegressor,
-              TaoTreeRegressor, HSTreeRegressor, HSTreeRegressorCV]
+              TaoTreeRegressor, HSTreeRegressor, HSTreeRegressorCV, BART]
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]

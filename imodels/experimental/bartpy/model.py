@@ -1,15 +1,16 @@
 from copy import deepcopy, copy
 from typing import List, Generator, Optional
+from imodels.util.checks import check_is_fitted
 
 import numpy as np
 import pandas as pd
 
-from imodels.experimental.bartpy.data import Data
-from imodels.experimental.bartpy.initializers.initializer import Initializer
-from imodels.experimental.bartpy.initializers.sklearntreeinitializer import SklearnTreeInitializer
-from imodels.experimental.bartpy.sigma import Sigma
-from imodels.experimental.bartpy.split import Split
-from imodels.experimental.bartpy.tree import Tree, LeafNode, deep_copy_tree
+from .data import Data
+from .initializers.initializer import Initializer
+from .initializers.sklearntreeinitializer import SklearnTreeInitializer
+from .sigma import Sigma
+from .split import Split
+from .tree import Tree, LeafNode, deep_copy_tree
 
 
 class Model:
@@ -32,16 +33,31 @@ class Model:
         self._sigma = sigma
         self._prediction = None
         self._initializer = initializer
+        self._check_initilizer()
         self.classification = classification
 
         if trees is None:
             self.n_trees = n_trees
             self._trees = self.initialize_trees()
             if self._initializer is not None:
+                if hasattr(self._initializer._tree,"trees_"):
+                    self.n_trees = len(self._initializer._tree.trees_)
+                    self._trees = self.initialize_trees()
+
+                # for tree in self.trees:
                 self._initializer.initialize_trees(self.refreshed_trees())
+                # self._initializer.initialize_trees(trees=self._trees)
         else:
             self.n_trees = len(trees)
             self._trees = trees
+
+    def _check_initilizer(self):
+        if not hasattr(self._initializer, "_tree"):
+            return
+        elif self._initializer._tree is None:
+            return
+        if not check_is_fitted(self._initializer._tree):
+            self._initializer._tree.fit(self.data.X.values, self.data.y.values)
 
     def initialize_trees(self) -> List[Tree]:
         trees = [Tree([LeafNode(Split(deepcopy(self.data)))]) for _ in range(self.n_trees)]

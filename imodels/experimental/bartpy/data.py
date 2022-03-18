@@ -4,8 +4,8 @@ from typing import Any, List, Optional, Union
 import numpy as np
 import pandas as pd
 
-from imodels.experimental.bartpy.errors import NoSplittableVariableException
-from imodels.experimental.bartpy.splitcondition import SplitCondition
+from .errors import NoSplittableVariableException
+from .splitcondition import SplitCondition
 
 
 def is_not_constant(series: np.ndarray) -> bool:
@@ -215,6 +215,7 @@ class Target(object):
 
         if normalize:
             self.original_y_min, self.original_y_max = y.min(), y.max()
+            self.original_y_mean = np.mean(y)
             self._y = self.normalize_y(y)
         else:
             self._y = y
@@ -249,10 +250,14 @@ class Target(object):
         >>> Data.normalize_y([1, 2, 3])
         array([-0.5,  0. ,  0.5])
         """
+        # return y
+        # return y - np.mean(y)
         y_min, y_max = np.min(y), np.max(y)
         return -0.5 + ((y - y_min) / (y_max - y_min))
 
     def unnormalize_y(self, y: np.ndarray) -> np.ndarray:
+        # return y
+        # return y + self.original_y_mean
         distance_from_min = y - (-0.5)
         total_distance = (self.original_y_max - self.original_y_min)
         return self.original_y_min + (distance_from_min * total_distance)

@@ -5,10 +5,10 @@ from typing import List, Mapping, Union, Any, Type
 import numpy as np
 from tqdm import tqdm
 
-from imodels.experimental.bartpy.model import Model
-from imodels.experimental.bartpy.samplers.sampler import Sampler
-from imodels.experimental.bartpy.samplers.schedule import SampleSchedule
-from imodels.experimental.bartpy.trace import TraceLogger
+from ..model import Model
+from ..samplers.sampler import Sampler
+from ..samplers.schedule import SampleSchedule
+from ..trace import TraceLogger
 
 Chain = Mapping[str, Union[List[Any], np.ndarray]]
 
@@ -25,12 +25,18 @@ class ModelSampler(Sampler):
 
     def step(self, model: Model, trace_logger: TraceLogger):
         step_result = defaultdict(list)
+        likelihoods = []
+        probs = []
         for step_kind, step in self.schedule.steps(model):
             result = step()
+            if type(result) == tuple:
+                result, likelihood, prob = result
+                likelihoods.append(likelihood)
+                probs.append(prob)
             log_message = trace_logger[step_kind](result)
             if log_message is not None:
                 step_result[step_kind].append(log_message)
-        return {x: np.mean([1 if y else 0 for y in step_result[x]]) for x in step_result}
+        return {x: np.mean([1 if y else 0 for y in step_result[x]]) for x in step_result}, likelihoods, probs
 
     def samples(self, model: Model,
                 n_samples: int,
@@ -50,13 +56,15 @@ class ModelSampler(Sampler):
         trace = []
         model_trace = []
         acceptance_trace = []
+        likelihood = []
+        probs = []
         # print("Starting sampling")
 
         thin_inverse = 1. / thin
 
         for ss in range(n_samples):
             model.update_z_values(y)
-            step_trace_dict = self.step(model, trace_logger)
+            step_trace_dict, l_score, prob = self.step(model, trace_logger)
             # print(step_trace_dict)
 
             if ss % thin_inverse == 0:
@@ -66,11 +74,16 @@ class ModelSampler(Sampler):
                         trace.append(in_sample_log)
                 if store_acceptance:
                     acceptance_trace.append(step_trace_dict)
+                    likelihood.append(l_score)
+                    probs.append(prob)
+
                 model_log = trace_logger["Model"](model)
                 if model_log is not None:
                     model_trace.append(model_log)
         return {
             "model": model_trace,
             "acceptance": acceptance_trace,
-            "in_sample_predictions": trace
+            "in_sample_predictions": trace,
+            "likelihood":likelihood,
+            "probs":probs
         }

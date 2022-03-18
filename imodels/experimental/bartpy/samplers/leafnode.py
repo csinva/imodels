@@ -1,9 +1,9 @@
 import numpy as np
 
-from imodels.experimental.bartpy.model import Model
-from imodels.experimental.bartpy.node import LeafNode
-from imodels.experimental.bartpy.samplers.sampler import Sampler
-from imodels.experimental.bartpy.samplers.scalar import NormalScalarSampler
+from ..model import Model
+from ..node import LeafNode
+from ..samplers.sampler import Sampler
+from ..samplers.scalar import NormalScalarSampler
 
 
 class LeafNodeSampler(Sampler):
@@ -30,7 +30,7 @@ class LeafNodeSampler(Sampler):
         likihood_mean = node.data.y.summed_y() / n
         node.set_mean_response(likihood_mean)
         posterior_variance = 1. / (1. / prior_var + 1. / likihood_var)
-        posterior_mean = likihood_mean * (prior_var / (likihood_var + prior_var))
+        posterior_mean = likihood_mean * 1#(prior_var / (likihood_var + prior_var))
         val = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees, 0.5))
         return val
 

@@ -6,8 +6,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.model_selection import KFold
 
-from imodels.experimental.bartpy.runner import run_models
-from imodels.experimental.bartpy.sklearnmodel import SklearnModel
+from ..runner import run_models
+from ..sklearnmodel import SklearnModel
 
 
 def original_model_rmse(model: SklearnModel,
