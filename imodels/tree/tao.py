@@ -32,7 +32,9 @@ class TaoTree(BaseEstimator):
         Currently supports
         - given a CART tree, posthoc improve it with TAO
 
-        Requirements
+        Todo
+        - also update leaf nodes
+        - also support regression
         - given a FIGS model, posthoc improve it
         - weight binary errors more carefully
         - learn a new model (changing the classifier at any given node) - this requires a new data structure
@@ -113,9 +115,10 @@ class TaoTree(BaseEstimator):
             elif self.prediction_task == 'regression':
                 self.model = DecisionTreeRegressor(**self.model_args)
             self.model.fit(X, y)
-            print(export_text(self.model))
-            plot_tree(self.model)
-            plt.savefig('/Users/chandan/Desktop/tree.png', dpi=300)
+            if self.verbose:
+                print(export_text(self.model))
+            # plot_tree(self.model)
+            # plt.savefig('/Users/chandan/Desktop/tree.png', dpi=300)
             # plt.show()
 
         if self.randomize_tree:
