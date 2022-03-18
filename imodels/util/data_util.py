@@ -42,7 +42,7 @@ def _clean_features(X):
     return X.astype(float)
 
 
-def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path='data') -> Tuple[
+def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path='data', convertna=True) -> Tuple[
     np.ndarray, np.ndarray, list]:
     """Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
     If data is not downloaded, will download and cache. Otherwise will load locally.
@@ -87,7 +87,9 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
         df = pd.read_csv(oj(data_path, 'imodels_data', dataset_name))
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
         feature_names = df.columns.values[:-1]
-        return np.nan_to_num(X.astype('float32')), y, _clean_feat_names(feature_names)
+        if convertna:
+            X = np.nan_to_num(X.astype('float32'))
+        return X, y, _clean_feat_names(feature_names)
     elif data_source == 'pmlb':
         from pmlb import fetch_data
         feature_names = list(
