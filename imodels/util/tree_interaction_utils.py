@@ -111,7 +111,7 @@ def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple], p:int):
     if len(i_gt) == 0:
         return
     recall = len(i_gt.intersection(i_hat)) / len(i_gt)
-    precision = interaction_tpr(i_hat, i_gt)
+    precision = interaction_tpr(i_hat, i_gt, p)
     if recall + precision == 0:
         return 0
     return 2 * ((precision * recall) / (precision + recall))
