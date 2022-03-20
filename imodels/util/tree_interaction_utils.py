@@ -94,17 +94,17 @@ def get_interacting_features(interaction, k):
     return set(interactions)
 
 
-def interaction_fpr(i_gt: Set[Tuple], i_hat: Set[Tuple]):
+def interaction_fpr(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
     if len(i_gt) == 0:
         return
-    return len(i_hat.difference(i_gt)) / len(i_hat)
+    return len(i_hat.difference(i_gt)) / p
 
 
 def interaction_tpr(i_gt: Set[Tuple], i_hat: Set[Tuple]):
     if len(i_gt) == 0:
         return
-    n_pred_interactions = len(i_hat)
-    return len(i_hat.intersection(i_gt)) / n_pred_interactions
+    n_interactions = len(i_gt)
+    return len(i_hat.intersection(i_gt)) / n_interactions
 
 
 def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple]):

@@ -6,6 +6,7 @@ from sklearn import datasets, model_selection
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 
+from imodels.util.tree_interaction_utils import get_interacting_features
 from ..diagnostics.residuals import plot_qq, plot_homoskedasity_diagnostics
 from ..diagnostics.sampling import plot_tree_mutation_acceptance_rate, plot_tree_likelihhod, plot_tree_probs
 from ..diagnostics.sigma import plot_sigma_convergence
@@ -35,9 +36,9 @@ if __name__ == '__main__':
 
     # from sklearn.datasets import make_friedman1
     #
-    n = 1000
+    n = 60
     X, y = datasets.make_friedman1(n)
-    dt = DecisionTreeRegressor(max_depth=3).fit(X=X, y=y)
+    # dt = DecisionTreeRegressor(max_depth=3).fit(X=X, y=y)
     # y = dt.predict(X)
     # bart_tree = Tree([LeafNode(Split(self.data))])
     # p = 5
@@ -70,7 +71,9 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = model_selection.train_test_split(
         X, y, test_size=0.3, random_state=4)
-    figs = FIGSRegressor(max_rules=12).fit(X=X_train, y=y_train)
+    figs = FIGSRegressor(max_rules=5).fit(X=X_train, y=y_train)
+
+    interactions = get_interaction_score(figs, X_train, y_train)
     n_trees = len(figs.trees_)
 # clf = GradientBoostingRegressor(n_estimators=1)
 # clf.fit(X_train, y_train)
