@@ -31,7 +31,7 @@ class LeafNodeSampler(Sampler):
         node.set_mean_response(likihood_mean)
         posterior_variance = 1. / (1. / prior_var + 1. / likihood_var)
         posterior_mean = likihood_mean * 1#(prior_var / (likihood_var + prior_var))
-        val = posterior_mean + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees, 0.5))
+        val = posterior_mean# + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees, 0.5))
         return val
 
 # class VectorizedLeafNodeSampler(Sampler):
