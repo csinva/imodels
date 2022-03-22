@@ -3,7 +3,7 @@ from operator import gt, le
 
 import numpy as np
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from imodels.tree.figs import FIGSRegressor, Node, FIGSRegressorCV
+from imodels.tree.figs import FIGSRegressor, Node
 from sklearn.exceptions import NotFittedError
 from sklearn.tree import DecisionTreeRegressor
 
@@ -65,8 +65,6 @@ class SklearnTreeInitializer(Initializer):
             return self._tree.tree_
         elif isinstance(self._tree, FIGSRegressor):
             return SkTree(self._tree.trees_[tree_number])
-        elif isinstance(self._tree, FIGSRegressorCV):
-            return SkTree(self._tree.figs.trees_[tree_number])
         elif isinstance(self._tree, RandomForestRegressor):
             return self._tree.estimators_[tree_number]
 
