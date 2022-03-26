@@ -21,16 +21,22 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from typing import Tuple
+<pre><code class="python">from typing import Tuple, List
 from operator import gt, le
 
-from sklearn.ensemble import GradientBoostingRegressor
+import numpy as np
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from imodels.tree.figs import FIGSRegressor, Node
+from sklearn.exceptions import NotFittedError
+from sklearn.tree import DecisionTreeRegressor
 
-from imodels.experimental.bartpy.initializers.initializer import Initializer
-from imodels.experimental.bartpy.mutation import GrowMutation
-from imodels.experimental.bartpy.node import split_node, LeafNode
-from imodels.experimental.bartpy.splitcondition import SplitCondition
-from imodels.experimental.bartpy.tree import Tree, mutate
+from ..data import make_bartpy_data
+from ..initializers.initializer import Initializer
+from ..mutation import GrowMutation
+from ..node import split_node, LeafNode
+from ..split import Split
+from ..splitcondition import SplitCondition
+from ..tree import Tree, mutate
 
 
 class SklearnTreeInitializer(Initializer):
@@ -41,27 +47,119 @@ class SklearnTreeInitializer(Initializer):
     &#34;&#34;&#34;
 
     def __init__(self,
-                 max_depth: int=4,
-                 min_samples_split: int=2,
-                 loss: str=&#39;ls&#39;):
+                 max_depth: int = 4,
+                 min_samples_split: int = 2,
+                 loss: str = &#39;squared_error&#39;,
+                 tree_=None):
+        super().__init__()
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
         self.loss = loss
+        self._tree = tree_
 
     def initialize_tree(self,
-                        tree: Tree) -&gt; None:
-        params = {
-            &#39;n_estimators&#39;: 1,
-            &#39;max_depth&#39;: self.max_depth,
-            &#39;min_samples_split&#39;: self.min_samples_split,
-            &#39;learning_rate&#39;: 0.8,
-            &#39;loss&#39;: self.loss
-        }
+                        tree: Tree, tree_number: int) -&gt; None:
+        # # trees = list(trees)
+        # if not self._tree:
+        #     params = {
+        #         &#39;n_estimators&#39;: 1,
+        #         &#39;max_depth&#39;: self.max_depth,
+        #         &#39;min_samples_split&#39;: self.min_samples_split,
+        #         &#39;learning_rate&#39;: 0.8,
+        #         &#39;loss&#39;: self.loss
+        #     }
+        #     # for tree in trees:
+        #
+        #     self._tree = GradientBoostingRegressor(**params)
+        #     # clf = FIGSRegressor()
+        #
+        #     self._tree.fit(tree.nodes[0].data.X.values, tree.nodes[0].data.y.values)
 
-        clf = GradientBoostingRegressor(**params)
-        fit = clf.fit(tree.nodes[0].data.X.data, tree.nodes[0].data.y.data)
-        sklearn_tree = fit.estimators_[0][0].tree_
+        # for i, tree in enumerate(trees):
+        # sklearn_tree = self._tree.estimators_[0][0].tree_
+        sklearn_tree = self._get_sklearn_tree(tree_number)
         map_sklearn_tree_into_bartpy(tree, sklearn_tree)
+        pass
+
+    def _get_sklearn_tree(self, tree_number):
+        if isinstance(self._tree, GradientBoostingRegressor):
+            return self._tree.estimators_[0][tree_number].tree_
+        elif isinstance(self._tree, DecisionTreeRegressor):
+            return self._tree.tree_
+        elif isinstance(self._tree, FIGSRegressor):
+            return SkTree(self._tree.trees_[tree_number])
+        elif isinstance(self._tree, RandomForestRegressor):
+            return self._tree.estimators_[tree_number]
+
+
+def get_child(node, direction):
+    if hasattr(node, direction):
+        return getattr(node, direction)
+    elif hasattr(node, f&#34;{direction}_child&#34;):
+        return getattr(node, f&#34;{direction}_child&#34;)
+    return
+
+
+def enumarate_tree(tree: Node, num_iter=iter(range(int(1e+06)))):
+    if tree is None:
+        return
+    tree.number = next(num_iter)
+    # if hasattr(tree, &#39;left&#39;):
+    enumarate_tree(get_child(tree, &#39;left&#39;), num_iter)
+    # if hasattr(tree, &#39;right&#39;):
+    enumarate_tree(get_child(tree, &#39;right&#39;), num_iter)
+
+
+def fill_nodes_dict(tree: Node, node_dict: dict):
+    if tree is None:
+        return
+    node_dict[tree.number] = tree
+    fill_nodes_dict(get_child(tree, &#39;left&#39;), node_dict)
+    fill_nodes_dict(get_child(tree, &#39;right&#39;), node_dict)
+
+    # return node_dict
+
+
+class SkTree:
+    def __init__(self, tree: Node):
+        nodes_dict = {}
+        enumarate_tree(tree, num_iter=iter(range(int(1e+06))))
+        fill_nodes_dict(tree, nodes_dict)
+        self.children_left = []
+        self.children_right = []
+        self.feature = []
+        self.threshold = []
+        self.n_node_samples = []
+        self.impurity = []
+        self.value = []
+        for node in nodes_dict.values():
+            r_c = get_child(node, &#34;right&#34;)
+            l_c = get_child(node, &#34;left&#34;)
+            right_number = r_c.number if r_c else -1
+            left_number = l_c.number if l_c else -1
+            f_node = node.feature if l_c else -2
+            t_node = node.threshold if l_c else -2
+
+            self.children_right.append(right_number)
+            self.children_left.append(left_number)
+            self.feature.append(f_node)
+            self.threshold.append(t_node)
+            self.n_node_samples.append(np.sum(node.idxs))
+            self.impurity.append(node.impurity_reduction)
+            self.value.append(node.value)
+    #
+    # def predict(self, *args, **kwargs):
+    #     &#34;&#34;&#34; Predict target for X. &#34;&#34;&#34;
+    #     self._figs.predict(*args, **kwargs)
+
+
+class SkFigs:
+    def __init__(self, figs: FIGSRegressor):
+        self.trees_ = [SkTree(t) for t in figs.trees_]
+
+
+def get_figs_sklearn(figs: FIGSRegressor):
+    return SkFigs(figs)
 
 
 def map_sklearn_split_into_bartpy_split_conditions(sklearn_tree, index: int) -&gt; Tuple[SplitCondition, SplitCondition]:
@@ -80,15 +178,22 @@ def map_sklearn_split_into_bartpy_split_conditions(sklearn_tree, index: int) -&g
     return (
         SplitCondition(sklearn_tree.feature[index], sklearn_tree.threshold[index], le),
         SplitCondition(sklearn_tree.feature[index], sklearn_tree.threshold[index], gt)
+
     )
 
 
-def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
+def get_bartpy_tree_from_sklearn(sklearn_tree, X, y):
+    data = make_bartpy_data(X, y, normalize=False)
+    bartpy_tree = Tree([LeafNode(Split(data))])
+    map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree)
+    return bartpy_tree.nodes[0]
+
+
+def map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree):
     nodes = [None for x in sklearn_tree.children_left]
     nodes[0] = bartpy_tree.nodes[0]
 
-    def search(index: int=0):
-
+    def search(index: int = 0):
         left_child_index, right_child_index = sklearn_tree.children_left[index], sklearn_tree.children_right[index]
 
         if left_child_index == -1:  # Trees are binary splits, so only need to check left tree
@@ -124,6 +229,88 @@ def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.enumarate_tree"><code class="name flex">
+<span>def <span class="ident">enumarate_tree</span></span>(<span>tree: <a title="imodels.tree.figs.Node" href="../../../tree/figs.html#imodels.tree.figs.Node">Node</a>, num_iter=&lt;range_iterator object&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def enumarate_tree(tree: Node, num_iter=iter(range(int(1e+06)))):
+    if tree is None:
+        return
+    tree.number = next(num_iter)
+    # if hasattr(tree, &#39;left&#39;):
+    enumarate_tree(get_child(tree, &#39;left&#39;), num_iter)
+    # if hasattr(tree, &#39;right&#39;):
+    enumarate_tree(get_child(tree, &#39;right&#39;), num_iter)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.fill_nodes_dict"><code class="name flex">
+<span>def <span class="ident">fill_nodes_dict</span></span>(<span>tree: <a title="imodels.tree.figs.Node" href="../../../tree/figs.html#imodels.tree.figs.Node">Node</a>, node_dict: dict)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fill_nodes_dict(tree: Node, node_dict: dict):
+    if tree is None:
+        return
+    node_dict[tree.number] = tree
+    fill_nodes_dict(get_child(tree, &#39;left&#39;), node_dict)
+    fill_nodes_dict(get_child(tree, &#39;right&#39;), node_dict)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_bartpy_tree_from_sklearn"><code class="name flex">
+<span>def <span class="ident">get_bartpy_tree_from_sklearn</span></span>(<span>sklearn_tree, X, y)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_bartpy_tree_from_sklearn(sklearn_tree, X, y):
+    data = make_bartpy_data(X, y, normalize=False)
+    bartpy_tree = Tree([LeafNode(Split(data))])
+    map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree)
+    return bartpy_tree.nodes[0]</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_child"><code class="name flex">
+<span>def <span class="ident">get_child</span></span>(<span>node, direction)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_child(node, direction):
+    if hasattr(node, direction):
+        return getattr(node, direction)
+    elif hasattr(node, f&#34;{direction}_child&#34;):
+        return getattr(node, f&#34;{direction}_child&#34;)
+    return</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_figs_sklearn"><code class="name flex">
+<span>def <span class="ident">get_figs_sklearn</span></span>(<span>figs: <a title="imodels.tree.figs.FIGSRegressor" href="../../../tree/figs.html#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_figs_sklearn(figs: FIGSRegressor):
+    return SkFigs(figs)</code></pre>
+</details>
+</dd>
 <dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.map_sklearn_split_into_bartpy_split_conditions"><code class="name flex">
 <span>def <span class="ident">map_sklearn_split_into_bartpy_split_conditions</span></span>(<span>sklearn_tree, index: int) ‑> Tuple[<a title="imodels.experimental.bartpy.splitcondition.SplitCondition" href="../splitcondition.html#imodels.experimental.bartpy.splitcondition.SplitCondition">SplitCondition</a>, <a title="imodels.experimental.bartpy.splitcondition.SplitCondition" href="../splitcondition.html#imodels.experimental.bartpy.splitcondition.SplitCondition">SplitCondition</a>]</span>
 </code></dt>
@@ -157,11 +344,12 @@ def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
     return (
         SplitCondition(sklearn_tree.feature[index], sklearn_tree.threshold[index], le),
         SplitCondition(sklearn_tree.feature[index], sklearn_tree.threshold[index], gt)
+
     )</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.map_sklearn_tree_into_bartpy"><code class="name flex">
-<span>def <span class="ident">map_sklearn_tree_into_bartpy</span></span>(<span>bartpy_tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>, sklearn_tree)</span>
+<span>def <span class="ident">map_sklearn_tree_into_bartpy</span></span>(<span>bartpy_tree, sklearn_tree)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -169,12 +357,11 @@ def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
+<pre><code class="python">def map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree):
     nodes = [None for x in sklearn_tree.children_left]
     nodes[0] = bartpy_tree.nodes[0]
 
-    def search(index: int=0):
-
+    def search(index: int = 0):
         left_child_index, right_child_index = sklearn_tree.children_left[index], sklearn_tree.children_right[index]
 
         if left_child_index == -1:  # Trees are binary splits, so only need to check left tree
@@ -208,9 +395,63 @@ def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.SkFigs"><code class="flex name class">
+<span>class <span class="ident">SkFigs</span></span>
+<span>(</span><span>figs: <a title="imodels.tree.figs.FIGSRegressor" href="../../../tree/figs.html#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SkFigs:
+    def __init__(self, figs: FIGSRegressor):
+        self.trees_ = [SkTree(t) for t in figs.trees_]</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.SkTree"><code class="flex name class">
+<span>class <span class="ident">SkTree</span></span>
+<span>(</span><span>tree: <a title="imodels.tree.figs.Node" href="../../../tree/figs.html#imodels.tree.figs.Node">Node</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SkTree:
+    def __init__(self, tree: Node):
+        nodes_dict = {}
+        enumarate_tree(tree, num_iter=iter(range(int(1e+06))))
+        fill_nodes_dict(tree, nodes_dict)
+        self.children_left = []
+        self.children_right = []
+        self.feature = []
+        self.threshold = []
+        self.n_node_samples = []
+        self.impurity = []
+        self.value = []
+        for node in nodes_dict.values():
+            r_c = get_child(node, &#34;right&#34;)
+            l_c = get_child(node, &#34;left&#34;)
+            right_number = r_c.number if r_c else -1
+            left_number = l_c.number if l_c else -1
+            f_node = node.feature if l_c else -2
+            t_node = node.threshold if l_c else -2
+
+            self.children_right.append(right_number)
+            self.children_left.append(left_number)
+            self.feature.append(f_node)
+            self.threshold.append(t_node)
+            self.n_node_samples.append(np.sum(node.idxs))
+            self.impurity.append(node.impurity_reduction)
+            self.value.append(node.value)</code></pre>
+</details>
+</dd>
 <dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.SklearnTreeInitializer"><code class="flex name class">
 <span>class <span class="ident">SklearnTreeInitializer</span></span>
-<span>(</span><span>max_depth: int = 4, min_samples_split: int = 2, loss: str = 'ls')</span>
+<span>(</span><span>max_depth: int = 4, min_samples_split: int = 2, loss: str = 'squared_error', tree_=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Initialize tree structure and leaf node values by fitting a single Sklearn GBR tree</p>
@@ -227,27 +468,49 @@ def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
     &#34;&#34;&#34;
 
     def __init__(self,
-                 max_depth: int=4,
-                 min_samples_split: int=2,
-                 loss: str=&#39;ls&#39;):
+                 max_depth: int = 4,
+                 min_samples_split: int = 2,
+                 loss: str = &#39;squared_error&#39;,
+                 tree_=None):
+        super().__init__()
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
         self.loss = loss
+        self._tree = tree_
 
     def initialize_tree(self,
-                        tree: Tree) -&gt; None:
-        params = {
-            &#39;n_estimators&#39;: 1,
-            &#39;max_depth&#39;: self.max_depth,
-            &#39;min_samples_split&#39;: self.min_samples_split,
-            &#39;learning_rate&#39;: 0.8,
-            &#39;loss&#39;: self.loss
-        }
+                        tree: Tree, tree_number: int) -&gt; None:
+        # # trees = list(trees)
+        # if not self._tree:
+        #     params = {
+        #         &#39;n_estimators&#39;: 1,
+        #         &#39;max_depth&#39;: self.max_depth,
+        #         &#39;min_samples_split&#39;: self.min_samples_split,
+        #         &#39;learning_rate&#39;: 0.8,
+        #         &#39;loss&#39;: self.loss
+        #     }
+        #     # for tree in trees:
+        #
+        #     self._tree = GradientBoostingRegressor(**params)
+        #     # clf = FIGSRegressor()
+        #
+        #     self._tree.fit(tree.nodes[0].data.X.values, tree.nodes[0].data.y.values)
 
-        clf = GradientBoostingRegressor(**params)
-        fit = clf.fit(tree.nodes[0].data.X.data, tree.nodes[0].data.y.data)
-        sklearn_tree = fit.estimators_[0][0].tree_
-        map_sklearn_tree_into_bartpy(tree, sklearn_tree)</code></pre>
+        # for i, tree in enumerate(trees):
+        # sklearn_tree = self._tree.estimators_[0][0].tree_
+        sklearn_tree = self._get_sklearn_tree(tree_number)
+        map_sklearn_tree_into_bartpy(tree, sklearn_tree)
+        pass
+
+    def _get_sklearn_tree(self, tree_number):
+        if isinstance(self._tree, GradientBoostingRegressor):
+            return self._tree.estimators_[0][tree_number].tree_
+        elif isinstance(self._tree, DecisionTreeRegressor):
+            return self._tree.tree_
+        elif isinstance(self._tree, FIGSRegressor):
+            return SkTree(self._tree.trees_[tree_number])
+        elif isinstance(self._tree, RandomForestRegressor):
+            return self._tree.estimators_[tree_number]</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -256,7 +519,7 @@ def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.SklearnTreeInitializer.initialize_tree"><code class="name flex">
-<span>def <span class="ident">initialize_tree</span></span>(<span>self, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>) ‑> None</span>
+<span>def <span class="ident">initialize_tree</span></span>(<span>self, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>, tree_number: int) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -265,19 +528,28 @@ def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def initialize_tree(self,
-                    tree: Tree) -&gt; None:
-    params = {
-        &#39;n_estimators&#39;: 1,
-        &#39;max_depth&#39;: self.max_depth,
-        &#39;min_samples_split&#39;: self.min_samples_split,
-        &#39;learning_rate&#39;: 0.8,
-        &#39;loss&#39;: self.loss
-    }
+                    tree: Tree, tree_number: int) -&gt; None:
+    # # trees = list(trees)
+    # if not self._tree:
+    #     params = {
+    #         &#39;n_estimators&#39;: 1,
+    #         &#39;max_depth&#39;: self.max_depth,
+    #         &#39;min_samples_split&#39;: self.min_samples_split,
+    #         &#39;learning_rate&#39;: 0.8,
+    #         &#39;loss&#39;: self.loss
+    #     }
+    #     # for tree in trees:
+    #
+    #     self._tree = GradientBoostingRegressor(**params)
+    #     # clf = FIGSRegressor()
+    #
+    #     self._tree.fit(tree.nodes[0].data.X.values, tree.nodes[0].data.y.values)
 
-    clf = GradientBoostingRegressor(**params)
-    fit = clf.fit(tree.nodes[0].data.X.data, tree.nodes[0].data.y.data)
-    sklearn_tree = fit.estimators_[0][0].tree_
-    map_sklearn_tree_into_bartpy(tree, sklearn_tree)</code></pre>
+    # for i, tree in enumerate(trees):
+    # sklearn_tree = self._tree.estimators_[0][0].tree_
+    sklearn_tree = self._get_sklearn_tree(tree_number)
+    map_sklearn_tree_into_bartpy(tree, sklearn_tree)
+    pass</code></pre>
 </details>
 </dd>
 </dl>
@@ -298,12 +570,23 @@ def map_sklearn_tree_into_bartpy(bartpy_tree: Tree, sklearn_tree):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.enumarate_tree" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.enumarate_tree">enumarate_tree</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.fill_nodes_dict" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.fill_nodes_dict">fill_nodes_dict</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_bartpy_tree_from_sklearn" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_bartpy_tree_from_sklearn">get_bartpy_tree_from_sklearn</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_child" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_child">get_child</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_figs_sklearn" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_figs_sklearn">get_figs_sklearn</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.map_sklearn_split_into_bartpy_split_conditions" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.map_sklearn_split_into_bartpy_split_conditions">map_sklearn_split_into_bartpy_split_conditions</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.map_sklearn_tree_into_bartpy" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.map_sklearn_tree_into_bartpy">map_sklearn_tree_into_bartpy</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.SkFigs" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.SkFigs">SkFigs</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.SkTree" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.SkTree">SkTree</a></code></h4>
+</li>
 <li>
 <h4><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.SklearnTreeInitializer" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.SklearnTreeInitializer">SklearnTreeInitializer</a></code></h4>
 <ul class="">

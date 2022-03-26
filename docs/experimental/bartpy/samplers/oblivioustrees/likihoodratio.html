@@ -25,12 +25,12 @@
 
 import numpy as np
 
-from imodels.experimental.bartpy.model import Model
-from imodels.experimental.bartpy.mutation import TreeMutation, GrowMutation, PruneMutation
-from imodels.experimental.bartpy.node import LeafNode, TreeNode
-from imodels.experimental.bartpy.samplers.treemutation import TreeMutationLikihoodRatio
-from imodels.experimental.bartpy.sigma import Sigma
-from imodels.experimental.bartpy.tree import Tree
+from ...model import Model
+from ...mutation import TreeMutation, GrowMutation, PruneMutation
+from ...node import LeafNode, TreeNode
+from ...samplers.treemutation import TreeMutationLikihoodRatio
+from ...sigma import Sigma
+from ...tree import Tree
 
 
 def log_grow_ratio(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float):

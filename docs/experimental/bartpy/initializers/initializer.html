@@ -23,10 +23,10 @@
 </summary>
 <pre><code class="python">from typing import Generator
 
-from imodels.experimental.bartpy.tree import Tree
+from ..tree import Tree
 
 
-class Initializer(object):
+class Initializer:
     &#34;&#34;&#34;
     The abstract interface for the tree initializers.
 
@@ -40,12 +40,18 @@ class Initializer(object):
     Default behaviour is to leave trees uninitialized
     &#34;&#34;&#34;
 
-    def initialize_tree(self, tree: Tree) -&gt; None:
+    def __init__(self):
+        self.n_trees = 1
+
+    def initialize_tree(self, tree: Tree, tree_number: int) -&gt; None:
         pass
 
     def initialize_trees(self, trees: Generator[Tree, None, None]) -&gt; None:
-        for tree in trees:
-            self.initialize_tree(tree)</code></pre>
+        n_trees = 0
+        for tree_number, tree in enumerate(trees):
+            self.initialize_tree(tree, tree_number)
+            n_trees += 1
+        self.n_trees = n_trees</code></pre>
 </details>
 </section>
 <section>
@@ -72,7 +78,7 @@ class Initializer(object):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Initializer(object):
+<pre><code class="python">class Initializer:
     &#34;&#34;&#34;
     The abstract interface for the tree initializers.
 
@@ -86,12 +92,18 @@ class Initializer(object):
     Default behaviour is to leave trees uninitialized
     &#34;&#34;&#34;
 
-    def initialize_tree(self, tree: Tree) -&gt; None:
+    def __init__(self):
+        self.n_trees = 1
+
+    def initialize_tree(self, tree: Tree, tree_number: int) -&gt; None:
         pass
 
     def initialize_trees(self, trees: Generator[Tree, None, None]) -&gt; None:
-        for tree in trees:
-            self.initialize_tree(tree)</code></pre>
+        n_trees = 0
+        for tree_number, tree in enumerate(trees):
+            self.initialize_tree(tree, tree_number)
+            n_trees += 1
+        self.n_trees = n_trees</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -100,7 +112,7 @@ class Initializer(object):
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.experimental.bartpy.initializers.initializer.Initializer.initialize_tree"><code class="name flex">
-<span>def <span class="ident">initialize_tree</span></span>(<span>self, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>) ‑> None</span>
+<span>def <span class="ident">initialize_tree</span></span>(<span>self, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>, tree_number: int) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -108,7 +120,7 @@ class Initializer(object):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def initialize_tree(self, tree: Tree) -&gt; None:
+<pre><code class="python">def initialize_tree(self, tree: Tree, tree_number: int) -&gt; None:
     pass</code></pre>
 </details>
 </dd>
@@ -122,8 +134,11 @@ class Initializer(object):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def initialize_trees(self, trees: Generator[Tree, None, None]) -&gt; None:
-    for tree in trees:
-        self.initialize_tree(tree)</code></pre>
+    n_trees = 0
+    for tree_number, tree in enumerate(trees):
+        self.initialize_tree(tree, tree_number)
+        n_trees += 1
+    self.n_trees = n_trees</code></pre>
 </details>
 </dd>
 </dl>

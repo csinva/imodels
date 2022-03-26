@@ -22,7 +22,7 @@ class TaoTree(BaseEstimator):
                  min_leaf_samples_tao=2,
                  node_model='stump',
                  reg_param: float = 1e-3,
-                 weight_errors: bool = True,
+                 weight_errors: bool = False,
                  verbose: int = 0,
                  ):
         """TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
@@ -31,14 +31,17 @@ class TaoTree(BaseEstimator):
 
         Currently supports
         - given a CART tree, posthoc improve it with TAO
+            - also works with HSTreeCV
 
         Todo
-        - also update leaf nodes
-        - also support regression
-        - given a FIGS model, posthoc improve it
-        - weight binary errors more carefully
-        - learn a new model (changing the classifier at any given node) - this requires a new data structure
-        - support pruning (e.g. if weights -> 0, then remove a node)
+        - update bottom to top otherwise input points don't get updated
+        - update leaf nodes
+        - support regression
+        - support FIGS
+        - support error-weighting
+        - support oblique trees
+            - support generic models at decision node
+            - support pruning (e.g. if weights -> 0, then remove a node)
         - support classifiers in leaves
 
         Parameters
@@ -127,8 +130,8 @@ class TaoTree(BaseEstimator):
             for i in range(self.model.tree_.node_count):  # split on feature medians
                 self.model.tree_.threshold[i] = np.median(
                     X[:, self.model.tree_.feature[i]])
-
-        print('starting score', self.model.score(X, y))
+        if self.verbose:
+            print('starting score', self.model.score(X, y))
         for i in range(self.n_iters):
             num_updates = self._tao_iter_cart(X, y, self.model.tree_)
             if num_updates == 0:
@@ -245,18 +248,20 @@ class TaoTree(BaseEstimator):
 
             # screen out indexes where going left/right has no effect
             idxs_relevant = y_node_absolute_errors[:, 0] != y_node_absolute_errors[:, 1]
-            if idxs_relevant.sum() == 0:  # nothing to change
-                print('no errors to change')
+            if idxs_relevant.sum() <= 1:  # nothing to change
+                if self.verbose:
+                    print('no errors to change')
                 continue
             # assert np.all((self.model.predict(X) != y)[idxs_relevant]), 'relevant indexes should be errors'
             y_node_target = np.argmin(y_node_absolute_errors, axis=1)
             y_node_target = y_node_target[idxs_relevant]
 
             # here, we optionally weight these errors by the size of the error
+            # if we want this to work for classification, must switch to predict_proba
             # if self.prediction_task == 'regression':
             # weight by the difference in error ###############################################################
             if self.weight_errors:
-                sample_weight = np.abs(y_node_absolute_errors[:, 1], y_node_absolute_errors[:, 0])
+                sample_weight = np.abs(y_node_absolute_errors[:, 1] - y_node_absolute_errors[:, 0])
             else:
                 sample_weight = np.ones(y_node.size)
             sample_weight = sample_weight[idxs_relevant]
@@ -266,7 +271,6 @@ class TaoTree(BaseEstimator):
             # Note: this could be customized (e.g. for sparse oblique trees)
             best_score = -np.inf
             best_feat_num = None
-            best_model = None
             for feat_num in range(X.shape[1]):
                 if self.prediction_task == 'classification':
                     if self.node_model == 'linear':
@@ -335,6 +339,9 @@ class TaoTree(BaseEstimator):
 
     def predict_proba(self, X):
         return self.model.predict_proba(X)
+
+    def score(self, X, y):
+        return self.model.score(X, y)
 
 
 class TaoTreeRegressor(TaoTree):

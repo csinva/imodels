@@ -35,18 +35,17 @@ from sklearn.model_selection import cross_val_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import datasets, model_selection
 
-from imodels.experimental.bartpy.data import Data
-from imodels.experimental.bartpy.initializers.initializer import Initializer
-from imodels.experimental.bartpy.initializers.sklearntreeinitializer import SklearnTreeInitializer
-from imodels.experimental.bartpy.model import Model
-from imodels.experimental.bartpy.node import LeafNode, DecisionNode
-from imodels.experimental.bartpy.samplers.leafnode import LeafNodeSampler
-from imodels.experimental.bartpy.samplers.modelsampler import ModelSampler, Chain
-from imodels.experimental.bartpy.samplers.schedule import SampleSchedule
-from imodels.experimental.bartpy.samplers.sigma import SigmaSampler
-from imodels.experimental.bartpy.samplers.treemutation import TreeMutationSampler
-from imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation import get_tree_sampler
-from imodels.experimental.bartpy.sigma import Sigma
+from .data import Data
+from .initializers.initializer import Initializer
+from .model import Model
+from .node import LeafNode, DecisionNode
+from .samplers.leafnode import LeafNodeSampler
+from .samplers.modelsampler import ModelSampler, Chain
+from .samplers.schedule import SampleSchedule
+from .samplers.sigma import SigmaSampler
+from .samplers.treemutation import TreeMutationSampler
+from .samplers.unconstrainedtree.treemutation import get_tree_sampler
+from .sigma import Sigma
 
 
 def run_chain(model: &#39;SklearnModel&#39;, X: np.ndarray, y: np.ndarray):
@@ -225,7 +224,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  tree_sampler: TreeMutationSampler = get_tree_sampler(0.5, 0.5),
                  initializer: Optional[Initializer] = None,
                  n_jobs=-1,
-                 classification: bool = False):
+                 classification: bool = False,
+                 max_rules=None):
         self.n_trees = n_trees
         self.n_chains = n_chains
         self.sigma_a = sigma_a
@@ -246,6 +246,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         self.schedule = SampleSchedule(self.tree_sampler, LeafNodeSampler(), SigmaSampler())
         self.sampler = ModelSampler(self.schedule)
         self.classification = classification
+        self.max_rules = max_rules
 
         self.sigma, self.data, self.model, self._prediction_samples, self._model_samples, self.extract = [None] * 6
 
@@ -271,6 +272,9 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         self._model_samples, self._prediction_samples = self.combined_chains[&#34;model&#34;], self.combined_chains[
             &#34;in_sample_predictions&#34;]
         self._acceptance_trace = self.combined_chains[&#34;acceptance&#34;]
+        self._likelihood = self.combined_chains[&#34;likelihood&#34;]
+        self._probs = self.combined_chains[&#34;probs&#34;]
+
         self.fitted_ = True
         return self
 
@@ -279,6 +283,13 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         if hasattr(self, &#34;fitted_&#34;):
             return self.fitted_
         return False
+
+    @property
+    def complexity_(self):
+        if hasattr(self.initializer, &#34;_tree&#34;):
+            estimator = self.initializer._tree
+            if hasattr(estimator, &#39;complexity_&#39;):
+                return estimator.complexity_
 
     @staticmethod
     def _combine_chains(extract: List[Chain]) -&gt; Chain:
@@ -308,6 +319,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                            beta=self.beta,
                            initializer=self.initializer,
                            classification=self.classification)
+        n_trees = self.n_trees if self.initializer is None else self.initializer.n_trees
+        self.n_trees = n_trees
         return self.model
 
     def f_delayed_chains(self, X: np.ndarray, y: np.ndarray):
@@ -371,7 +384,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             return predictions
 
     def predict_proba(self, X: np.ndarray = None) -&gt; np.ndarray:
-        return self._out_of_sample_predict(X)
+        preds = self._out_of_sample_predict(X)
+        return np.stack([preds, 1-preds], axis=1)
 
 
     def residuals(self, X=None, y=None) -&gt; np.ndarray:
@@ -475,6 +489,32 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         List[Mapping[str, float]]
         &#34;&#34;&#34;
         return self._acceptance_trace
+
+    @property
+    def likelihood(self) -&gt; List:
+        &#34;&#34;&#34;
+        List of Mappings from variable name to likelihood
+
+        Each entry is the acceptance rate of the variable in each iteration of the model
+
+        Returns
+        -------
+        List[Mapping[str, float]]
+        &#34;&#34;&#34;
+        return self._likelihood
+
+    @property
+    def probs(self) -&gt; List:
+        &#34;&#34;&#34;
+        List of Mappings from variable name to likelihood
+
+        Each entry is the acceptance rate of the variable in each iteration of the model
+
+        Returns
+        -------
+        List[Mapping[str, float]]
+        &#34;&#34;&#34;
+        return self._probs
 
     @property
     def prediction_samples(self) -&gt; np.ndarray:
@@ -946,7 +986,7 @@ Primarily used as a building block for constructing a parallel run of multiple c
 <dl>
 <dt id="imodels.experimental.bartpy.sklearnmodel.BART"><code class="flex name class">
 <span>class <span class="ident">BART</span></span>
-<span>(</span><span>n_trees: int = 200, n_chains: int = 4, sigma_a: float = 0.001, sigma_b: float = 0.001, n_samples: int = 200, n_burn: int = 200, thin: float = 0.1, alpha: float = 0.95, beta: float = 2.0, store_in_sample_predictions: bool = False, store_acceptance_trace: bool = False, tree_sampler: <a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler" href="samplers/treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler">TreeMutationSampler</a> = &lt;imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler object&gt;, initializer: Optional[<a title="imodels.experimental.bartpy.initializers.initializer.Initializer" href="initializers/initializer.html#imodels.experimental.bartpy.initializers.initializer.Initializer">Initializer</a>] = None, n_jobs=-1, classification: bool = False)</span>
+<span>(</span><span>n_trees: int = 200, n_chains: int = 4, sigma_a: float = 0.001, sigma_b: float = 0.001, n_samples: int = 200, n_burn: int = 200, thin: float = 0.1, alpha: float = 0.95, beta: float = 2.0, store_in_sample_predictions: bool = False, store_acceptance_trace: bool = False, tree_sampler: <a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler" href="samplers/treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler">TreeMutationSampler</a> = &lt;imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler object&gt;, initializer: Optional[<a title="imodels.experimental.bartpy.initializers.initializer.Initializer" href="initializers/initializer.html#imodels.experimental.bartpy.initializers.initializer.Initializer">Initializer</a>] = None, n_jobs=-1, classification: bool = False, max_rules=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The main access point to building BART models in BartPy</p>
@@ -1124,9 +1164,11 @@ def trees(self):
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.fit" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.fit">fit</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.from_extract" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.from_extract">from_extract</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.l2_error" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.l2_error">l2_error</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.likelihood" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.likelihood">likelihood</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.model_samples" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.model_samples">model_samples</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict">predict</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.prediction_samples" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.prediction_samples">prediction_samples</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.probs" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.probs">probs</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.residuals" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.residuals">residuals</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.rmse" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.rmse">rmse</a></code></li>
 </ul>
@@ -1441,7 +1483,7 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 </dd>
 <dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel"><code class="flex name class">
 <span>class <span class="ident">SklearnModel</span></span>
-<span>(</span><span>n_trees: int = 200, n_chains: int = 4, sigma_a: float = 0.001, sigma_b: float = 0.001, n_samples: int = 200, n_burn: int = 200, thin: float = 0.1, alpha: float = 0.95, beta: float = 2.0, store_in_sample_predictions: bool = False, store_acceptance_trace: bool = False, tree_sampler: <a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler" href="samplers/treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler">TreeMutationSampler</a> = &lt;imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler object&gt;, initializer: Optional[<a title="imodels.experimental.bartpy.initializers.initializer.Initializer" href="initializers/initializer.html#imodels.experimental.bartpy.initializers.initializer.Initializer">Initializer</a>] = None, n_jobs=-1, classification: bool = False)</span>
+<span>(</span><span>n_trees: int = 200, n_chains: int = 4, sigma_a: float = 0.001, sigma_b: float = 0.001, n_samples: int = 200, n_burn: int = 200, thin: float = 0.1, alpha: float = 0.95, beta: float = 2.0, store_in_sample_predictions: bool = False, store_acceptance_trace: bool = False, tree_sampler: <a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler" href="samplers/treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler">TreeMutationSampler</a> = &lt;imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler object&gt;, initializer: Optional[<a title="imodels.experimental.bartpy.initializers.initializer.Initializer" href="initializers/initializer.html#imodels.experimental.bartpy.initializers.initializer.Initializer">Initializer</a>] = None, n_jobs=-1, classification: bool = False, max_rules=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The main access point to building BART models in BartPy</p>
@@ -1553,7 +1595,8 @@ set to <code>-1</code> to use all cores</dd>
                  tree_sampler: TreeMutationSampler = get_tree_sampler(0.5, 0.5),
                  initializer: Optional[Initializer] = None,
                  n_jobs=-1,
-                 classification: bool = False):
+                 classification: bool = False,
+                 max_rules=None):
         self.n_trees = n_trees
         self.n_chains = n_chains
         self.sigma_a = sigma_a
@@ -1574,6 +1617,7 @@ set to <code>-1</code> to use all cores</dd>
         self.schedule = SampleSchedule(self.tree_sampler, LeafNodeSampler(), SigmaSampler())
         self.sampler = ModelSampler(self.schedule)
         self.classification = classification
+        self.max_rules = max_rules
 
         self.sigma, self.data, self.model, self._prediction_samples, self._model_samples, self.extract = [None] * 6
 
@@ -1599,6 +1643,9 @@ set to <code>-1</code> to use all cores</dd>
         self._model_samples, self._prediction_samples = self.combined_chains[&#34;model&#34;], self.combined_chains[
             &#34;in_sample_predictions&#34;]
         self._acceptance_trace = self.combined_chains[&#34;acceptance&#34;]
+        self._likelihood = self.combined_chains[&#34;likelihood&#34;]
+        self._probs = self.combined_chains[&#34;probs&#34;]
+
         self.fitted_ = True
         return self
 
@@ -1607,6 +1654,13 @@ set to <code>-1</code> to use all cores</dd>
         if hasattr(self, &#34;fitted_&#34;):
             return self.fitted_
         return False
+
+    @property
+    def complexity_(self):
+        if hasattr(self.initializer, &#34;_tree&#34;):
+            estimator = self.initializer._tree
+            if hasattr(estimator, &#39;complexity_&#39;):
+                return estimator.complexity_
 
     @staticmethod
     def _combine_chains(extract: List[Chain]) -&gt; Chain:
@@ -1636,6 +1690,8 @@ set to <code>-1</code> to use all cores</dd>
                            beta=self.beta,
                            initializer=self.initializer,
                            classification=self.classification)
+        n_trees = self.n_trees if self.initializer is None else self.initializer.n_trees
+        self.n_trees = n_trees
         return self.model
 
     def f_delayed_chains(self, X: np.ndarray, y: np.ndarray):
@@ -1699,7 +1755,8 @@ set to <code>-1</code> to use all cores</dd>
             return predictions
 
     def predict_proba(self, X: np.ndarray = None) -&gt; np.ndarray:
-        return self._out_of_sample_predict(X)
+        preds = self._out_of_sample_predict(X)
+        return np.stack([preds, 1-preds], axis=1)
 
 
     def residuals(self, X=None, y=None) -&gt; np.ndarray:
@@ -1805,6 +1862,32 @@ set to <code>-1</code> to use all cores</dd>
         return self._acceptance_trace
 
     @property
+    def likelihood(self) -&gt; List:
+        &#34;&#34;&#34;
+        List of Mappings from variable name to likelihood
+
+        Each entry is the acceptance rate of the variable in each iteration of the model
+
+        Returns
+        -------
+        List[Mapping[str, float]]
+        &#34;&#34;&#34;
+        return self._likelihood
+
+    @property
+    def probs(self) -&gt; List:
+        &#34;&#34;&#34;
+        List of Mappings from variable name to likelihood
+
+        Each entry is the acceptance rate of the variable in each iteration of the model
+
+        Returns
+        -------
+        List[Mapping[str, float]]
+        &#34;&#34;&#34;
+        return self._probs
+
+    @property
     def prediction_samples(self) -&gt; np.ndarray:
         &#34;&#34;&#34;
         Matrix of prediction samples at each point in sampling
@@ -1882,6 +1965,21 @@ def acceptance_trace(self) -&gt; List[Mapping[str, float]]:
     return self._acceptance_trace</code></pre>
 </details>
 </dd>
+<dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.complexity_"><code class="name">var <span class="ident">complexity_</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def complexity_(self):
+    if hasattr(self.initializer, &#34;_tree&#34;):
+        estimator = self.initializer._tree
+        if hasattr(estimator, &#39;complexity_&#39;):
+            return estimator.complexity_</code></pre>
+</details>
+</dd>
 <dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.fitted"><code class="name">var <span class="ident">fitted</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1894,6 +1992,33 @@ def fitted(self):
     if hasattr(self, &#34;fitted_&#34;):
         return self.fitted_
     return False</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.likelihood"><code class="name">var <span class="ident">likelihood</span> : List[~T]</code></dt>
+<dd>
+<div class="desc"><p>List of Mappings from variable name to likelihood</p>
+<p>Each entry is the acceptance rate of the variable in each iteration of the model</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[Mapping[str, float]]</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def likelihood(self) -&gt; List:
+    &#34;&#34;&#34;
+    List of Mappings from variable name to likelihood
+
+    Each entry is the acceptance rate of the variable in each iteration of the model
+
+    Returns
+    -------
+    List[Mapping[str, float]]
+    &#34;&#34;&#34;
+    return self._likelihood</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.model_samples"><code class="name">var <span class="ident">model_samples</span> : List[<a title="imodels.experimental.bartpy.model.Model" href="model.html#imodels.experimental.bartpy.model.Model">Model</a>]</code></dt>
@@ -1957,6 +2082,33 @@ def prediction_samples(self) -&gt; np.ndarray:
         prediction samples with dimensionality n_samples * n_points
     &#34;&#34;&#34;
     return self.prediction_samples</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.probs"><code class="name">var <span class="ident">probs</span> : List[~T]</code></dt>
+<dd>
+<div class="desc"><p>List of Mappings from variable name to likelihood</p>
+<p>Each entry is the acceptance rate of the variable in each iteration of the model</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>List[Mapping[str, float]]</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def probs(self) -&gt; List:
+    &#34;&#34;&#34;
+    List of Mappings from variable name to likelihood
+
+    Each entry is the acceptance rate of the variable in each iteration of the model
+
+    Returns
+    -------
+    List[Mapping[str, float]]
+    &#34;&#34;&#34;
+    return self._probs</code></pre>
 </details>
 </dd>
 </dl>
@@ -2078,6 +2230,9 @@ e.g. when calculating a null distribution for feature importance</p>
     self._model_samples, self._prediction_samples = self.combined_chains[&#34;model&#34;], self.combined_chains[
         &#34;in_sample_predictions&#34;]
     self._acceptance_trace = self.combined_chains[&#34;acceptance&#34;]
+    self._likelihood = self.combined_chains[&#34;likelihood&#34;]
+    self._probs = self.combined_chains[&#34;probs&#34;]
+
     self.fitted_ = True
     return self</code></pre>
 </details>
@@ -2249,7 +2404,8 @@ If X is None, will predict based on training covariates</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X: np.ndarray = None) -&gt; np.ndarray:
-    return self._out_of_sample_predict(X)</code></pre>
+    preds = self._out_of_sample_predict(X)
+    return np.stack([preds, 1-preds], axis=1)</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.residuals"><code class="name flex">
@@ -2408,6 +2564,7 @@ The sum of squared errors over all observations</p>
 <h4><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel">SklearnModel</a></code></h4>
 <ul class="two-column">
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.acceptance_trace" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.acceptance_trace">acceptance_trace</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.complexity_" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.complexity_">complexity_</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_chains" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_chains">f_chains</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_delayed_chains" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_delayed_chains">f_delayed_chains</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.fit" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.fit">fit</a></code></li>
@@ -2415,10 +2572,12 @@ The sum of squared errors over all observations</p>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.fitted" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.fitted">fitted</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.from_extract" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.from_extract">from_extract</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.l2_error" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.l2_error">l2_error</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.likelihood" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.likelihood">likelihood</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.model_samples" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.model_samples">model_samples</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict">predict</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict_proba" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.prediction_samples" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.prediction_samples">prediction_samples</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.probs" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.probs">probs</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.residuals" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.residuals">residuals</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.rmse" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.rmse">rmse</a></code></li>
 </ul>

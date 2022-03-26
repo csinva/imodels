@@ -21,17 +21,19 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from typing import Optional
+<pre><code class="python">from typing import Optional, Tuple
 
-from imodels.experimental.bartpy.model import Model
-from imodels.experimental.bartpy.mutation import TreeMutation
-from imodels.experimental.bartpy.samplers.sampler import Sampler
-from imodels.experimental.bartpy.samplers.scalar import UniformScalarSampler
-from imodels.experimental.bartpy.samplers.treemutation import TreeMutationLikihoodRatio
-from imodels.experimental.bartpy.samplers.treemutation import TreeMutationProposer
-from imodels.experimental.bartpy.samplers.unconstrainedtree.likihoodratio import UniformTreeMutationLikihoodRatio
-from imodels.experimental.bartpy.samplers.unconstrainedtree.proposer import UniformMutationProposer
-from imodels.experimental.bartpy.tree import Tree, mutate
+import numpy as np
+
+from ...model import Model
+from ...mutation import TreeMutation
+from ...samplers.sampler import Sampler
+from ...samplers.scalar import UniformScalarSampler
+from ...samplers.treemutation import TreeMutationLikihoodRatio
+from ...samplers.treemutation import TreeMutationProposer
+from ...samplers.unconstrainedtree.likihoodratio import UniformTreeMutationLikihoodRatio
+from ...samplers.unconstrainedtree.proposer import UniformMutationProposer
+from ...tree import Tree, mutate
 
 
 class UnconstrainedTreeMutationSampler(Sampler):
@@ -58,19 +60,19 @@ class UnconstrainedTreeMutationSampler(Sampler):
         self.likihood_ratio = likihood_ratio
         self._scalar_sampler = scalar_sampler
 
-    def sample(self, model: Model, tree: Tree) -&gt; Optional[TreeMutation]:
+    def sample(self, model: Model, tree: Tree) -&gt; (Optional[TreeMutation], float):
         proposal = self.proposer.propose(tree)
-        ratio = self.likihood_ratio.log_probability_ratio(model, tree, proposal)
+        ratio, (l_new, l_old), (prob_new, prob_old) = self.likihood_ratio.log_probability_ratio(model, tree, proposal)
         if self._scalar_sampler.sample() &lt; ratio:
-            return proposal
+            return proposal, np.exp(l_new) - np.exp(l_old), np.exp(prob_new) - np.exp(prob_old)
         else:
-            return None
+            return None, 0, 0
 
-    def step(self, model: Model, tree: Tree) -&gt; Optional[TreeMutation]:
-        mutation = self.sample(model, tree)
+    def step(self, model: Model, tree: Tree) -&gt; Tuple[Optional[TreeMutation], float]:
+        mutation, likelihood, prob = self.sample(model, tree)
         if mutation is not None:
             mutate(tree, mutation)
-        return mutation
+        return mutation, likelihood, prob
 
 
 def get_tree_sampler(p_grow: float,
@@ -154,19 +156,19 @@ Responsible for producing samples of ways to mutate a tree within a model</p>
         self.likihood_ratio = likihood_ratio
         self._scalar_sampler = scalar_sampler
 
-    def sample(self, model: Model, tree: Tree) -&gt; Optional[TreeMutation]:
+    def sample(self, model: Model, tree: Tree) -&gt; (Optional[TreeMutation], float):
         proposal = self.proposer.propose(tree)
-        ratio = self.likihood_ratio.log_probability_ratio(model, tree, proposal)
+        ratio, (l_new, l_old), (prob_new, prob_old) = self.likihood_ratio.log_probability_ratio(model, tree, proposal)
         if self._scalar_sampler.sample() &lt; ratio:
-            return proposal
+            return proposal, np.exp(l_new) - np.exp(l_old), np.exp(prob_new) - np.exp(prob_old)
         else:
-            return None
+            return None, 0, 0
 
-    def step(self, model: Model, tree: Tree) -&gt; Optional[TreeMutation]:
-        mutation = self.sample(model, tree)
+    def step(self, model: Model, tree: Tree) -&gt; Tuple[Optional[TreeMutation], float]:
+        mutation, likelihood, prob = self.sample(model, tree)
         if mutation is not None:
             mutate(tree, mutation)
-        return mutation</code></pre>
+        return mutation, likelihood, prob</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -176,7 +178,7 @@ Responsible for producing samples of ways to mutate a tree within a model</p>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler.sample"><code class="name flex">
-<span>def <span class="ident">sample</span></span>(<span>self, model: <a title="imodels.experimental.bartpy.model.Model" href="../../model.html#imodels.experimental.bartpy.model.Model">Model</a>, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>) ‑> Optional[<a title="imodels.experimental.bartpy.mutation.TreeMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.TreeMutation">TreeMutation</a>]</span>
+<span>def <span class="ident">sample</span></span>(<span>self, model: <a title="imodels.experimental.bartpy.model.Model" href="../../model.html#imodels.experimental.bartpy.model.Model">Model</a>, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>) ‑> (typing.Union[<a title="imodels.experimental.bartpy.mutation.TreeMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.TreeMutation">TreeMutation</a>, NoneType], <class 'float'>)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -184,17 +186,17 @@ Responsible for producing samples of ways to mutate a tree within a model</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def sample(self, model: Model, tree: Tree) -&gt; Optional[TreeMutation]:
+<pre><code class="python">def sample(self, model: Model, tree: Tree) -&gt; (Optional[TreeMutation], float):
     proposal = self.proposer.propose(tree)
-    ratio = self.likihood_ratio.log_probability_ratio(model, tree, proposal)
+    ratio, (l_new, l_old), (prob_new, prob_old) = self.likihood_ratio.log_probability_ratio(model, tree, proposal)
     if self._scalar_sampler.sample() &lt; ratio:
-        return proposal
+        return proposal, np.exp(l_new) - np.exp(l_old), np.exp(prob_new) - np.exp(prob_old)
     else:
-        return None</code></pre>
+        return None, 0, 0</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler.step"><code class="name flex">
-<span>def <span class="ident">step</span></span>(<span>self, model: <a title="imodels.experimental.bartpy.model.Model" href="../../model.html#imodels.experimental.bartpy.model.Model">Model</a>, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>) ‑> Optional[<a title="imodels.experimental.bartpy.mutation.TreeMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.TreeMutation">TreeMutation</a>]</span>
+<span>def <span class="ident">step</span></span>(<span>self, model: <a title="imodels.experimental.bartpy.model.Model" href="../../model.html#imodels.experimental.bartpy.model.Model">Model</a>, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>) ‑> Tuple[Optional[<a title="imodels.experimental.bartpy.mutation.TreeMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.TreeMutation">TreeMutation</a>], float]</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -202,11 +204,11 @@ Responsible for producing samples of ways to mutate a tree within a model</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def step(self, model: Model, tree: Tree) -&gt; Optional[TreeMutation]:
-    mutation = self.sample(model, tree)
+<pre><code class="python">def step(self, model: Model, tree: Tree) -&gt; Tuple[Optional[TreeMutation], float]:
+    mutation, likelihood, prob = self.sample(model, tree)
     if mutation is not None:
         mutate(tree, mutation)
-    return mutation</code></pre>
+    return mutation, likelihood, prob</code></pre>
 </details>
 </dd>
 </dl>

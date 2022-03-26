@@ -1,6 +1,10 @@
 import numpy as np
 from sklearn.base import RegressorMixin, clone
-from sklearn.linear_model.base import LinearRegression
+try:
+    from sklearn.linear_model.base import LinearRegression
+except:
+    from sklearn.linear_model._base import LinearRegression
+
 
 from ..sklearnmodel import SklearnModel
 

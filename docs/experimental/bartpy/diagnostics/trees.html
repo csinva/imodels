@@ -24,28 +24,34 @@
 <pre><code class="python">import numpy as np
 from matplotlib import pyplot as plt
 
-from imodels.experimental.bartpy.sklearnmodel import SklearnModel
+from ..sklearnmodel import SklearnModel
 
 
-def plot_tree_depth(model: SklearnModel, ax=None):
+def plot_tree_depth(model: SklearnModel, ax=None, title=&#34;&#34;, x_label=False):
     if ax is None:
         _, ax = plt.subplots(1, 1)
-    min_depth, mean_depth, max_depth = [], [], []
+    # min_depth, mean_depth, max_depth = [], [], []
+    complexity = {i:[] for i in range(model.n_trees)}
     for sample in model.model_samples:
-        model_depths = []
-        for tree in sample.trees:
-            model_depths += [x.depth for x in tree.nodes]
-        min_depth.append(np.min(model_depths))
-        mean_depth.append(np.mean(model_depths))
-        max_depth.append(np.max(model_depths))
+        # model_depths = []
+        for i, tree in enumerate(sample.trees):
+            complexity[i].append(len(tree.leaf_nodes))
+        #     model_depths += [x.depth for x in tree.nodes]
+        # min_depth.append(np.min(model_depths))
+        # mean_depth.append(np.mean(model_depths))
+        # max_depth.append(np.max(model_depths))
 
-    ax.plot(min_depth, label=&#34;Min Depth&#34;)
-    ax.plot(mean_depth, label=&#34;Mean Depth&#34;)
-    ax.plot(max_depth, label=&#34;Max Depth&#34;)
-    ax.set_ylabel(&#34;Depth&#34;)
-    ax.set_xlabel(&#34;Iteration&#34;)
+    # ax.plot(min_depth, label=&#34;Min Depth&#34;)
+    # ax.plot(mean_depth, label=&#34;Mean Depth&#34;)
+    # ax.plot(max_depth, label=&#34;Max Depth&#34;)
+    for tree_number, comp in complexity.items():
+        ax.plot(np.arange(len(model.model_samples)), comp, label=f&#34;tree {tree_number}&#34;, alpha=0.5)
+
+    ax.set_ylabel(&#34;# Leaves&#34;)
+    if x_label:
+        ax.set_xlabel(&#34;Iteration&#34;)
     ax.legend()
-    ax.set_title(&#34;Tree Depth by Iteration&#34;)
+    ax.set_title(title)
     return ax</code></pre>
 </details>
 </section>
@@ -57,7 +63,7 @@ def plot_tree_depth(model: SklearnModel, ax=None):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="imodels.experimental.bartpy.diagnostics.trees.plot_tree_depth"><code class="name flex">
-<span>def <span class="ident">plot_tree_depth</span></span>(<span>model: <a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel">SklearnModel</a>, ax=None)</span>
+<span>def <span class="ident">plot_tree_depth</span></span>(<span>model: <a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel">SklearnModel</a>, ax=None, title='', x_label=False)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -65,25 +71,31 @@ def plot_tree_depth(model: SklearnModel, ax=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_tree_depth(model: SklearnModel, ax=None):
+<pre><code class="python">def plot_tree_depth(model: SklearnModel, ax=None, title=&#34;&#34;, x_label=False):
     if ax is None:
         _, ax = plt.subplots(1, 1)
-    min_depth, mean_depth, max_depth = [], [], []
+    # min_depth, mean_depth, max_depth = [], [], []
+    complexity = {i:[] for i in range(model.n_trees)}
     for sample in model.model_samples:
-        model_depths = []
-        for tree in sample.trees:
-            model_depths += [x.depth for x in tree.nodes]
-        min_depth.append(np.min(model_depths))
-        mean_depth.append(np.mean(model_depths))
-        max_depth.append(np.max(model_depths))
+        # model_depths = []
+        for i, tree in enumerate(sample.trees):
+            complexity[i].append(len(tree.leaf_nodes))
+        #     model_depths += [x.depth for x in tree.nodes]
+        # min_depth.append(np.min(model_depths))
+        # mean_depth.append(np.mean(model_depths))
+        # max_depth.append(np.max(model_depths))
 
-    ax.plot(min_depth, label=&#34;Min Depth&#34;)
-    ax.plot(mean_depth, label=&#34;Mean Depth&#34;)
-    ax.plot(max_depth, label=&#34;Max Depth&#34;)
-    ax.set_ylabel(&#34;Depth&#34;)
-    ax.set_xlabel(&#34;Iteration&#34;)
+    # ax.plot(min_depth, label=&#34;Min Depth&#34;)
+    # ax.plot(mean_depth, label=&#34;Mean Depth&#34;)
+    # ax.plot(max_depth, label=&#34;Max Depth&#34;)
+    for tree_number, comp in complexity.items():
+        ax.plot(np.arange(len(model.model_samples)), comp, label=f&#34;tree {tree_number}&#34;, alpha=0.5)
+
+    ax.set_ylabel(&#34;# Leaves&#34;)
+    if x_label:
+        ax.set_xlabel(&#34;Iteration&#34;)
     ax.legend()
-    ax.set_title(&#34;Tree Depth by Iteration&#34;)
+    ax.set_title(title)
     return ax</code></pre>
 </details>
 </dd>

@@ -26,13 +26,16 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.base import BaseEstimator
-from sklearn.feature_selection import SelectorMixin
 
-from imodels.experimental.bartpy.diagnostics.features import null_feature_split_proportions_distribution, \
+try:
+    from sklearn.feature_selection.base import SelectorMixin
+except:
+    from sklearn.feature_selection._base import SelectorMixin
+from ..diagnostics.features import null_feature_split_proportions_distribution, \
     local_thresholds, global_thresholds, is_kept, feature_split_proportions, \
     plot_feature_proportions_against_thresholds, plot_null_feature_importance_distributions, \
     plot_feature_split_proportions
-from imodels.experimental.bartpy.sklearnmodel import SklearnModel
+from ..sklearnmodel import SklearnModel
 
 
 class SelectSplitProportionThreshold(BaseEstimator, SelectorMixin):

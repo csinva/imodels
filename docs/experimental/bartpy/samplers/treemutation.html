@@ -21,13 +21,15 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from abc import abstractmethod, ABC
-from typing import Optional
+<pre><code class="python">import numpy as np
 
-from imodels.experimental.bartpy.model import Model
-from imodels.experimental.bartpy.mutation import TreeMutation
-from imodels.experimental.bartpy.samplers.sampler import Sampler
-from imodels.experimental.bartpy.tree import Tree
+from abc import abstractmethod, ABC
+from typing import Optional, Tuple
+
+from ..model import Model
+from ..mutation import TreeMutation
+from ..samplers.sampler import Sampler
+from ..tree import Tree
 
 
 class TreeMutationSampler(Sampler):
@@ -77,7 +79,7 @@ class TreeMutationLikihoodRatio(ABC):
     Responsible for evaluating the ratio of mutations to the reverse movement
     &#34;&#34;&#34;
 
-    def log_probability_ratio(self, model: Model, tree: Tree, mutation: TreeMutation) -&gt; float:
+    def log_probability_ratio(self, model: Model, tree: Tree, mutation: TreeMutation) -&gt; Tuple[float, tuple, tuple]:
         &#34;&#34;&#34;
         Calculated the ratio of the likihood of a mutation over the likihood of the reverse movement
 
@@ -97,7 +99,16 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged ratio of likelihoods
         &#34;&#34;&#34;
-        return self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio(model, tree, mutation) + self.log_tree_ratio(model, tree, mutation)
+        log_likelihood_ratio, (l_new, l_old) = self.log_likihood_ratio(model, tree, mutation)
+        log_transition_ratio, (t_new, t_old) = self.log_transition_ratio(tree, mutation)
+        log_prior_ratio, (p_new, p_old) = self.log_tree_ratio(model, tree, mutation)
+        prob_score = log_transition_ratio + log_likelihood_ratio + log_prior_ratio
+        ratio = np.exp(prob_score)
+        p_t_new = p_new + t_new
+        p_t_old = p_old + t_old
+        prob_new = l_new+p_t_new
+        prob_old = l_old+p_t_old
+        return ratio, (l_new, l_old), (prob_new, prob_old)
 
     @abstractmethod
     def log_transition_ratio(self, tree: Tree, mutation: TreeMutation) -&gt; float:
@@ -189,7 +200,7 @@ class TreeMutationLikihoodRatio(ABC):
     Responsible for evaluating the ratio of mutations to the reverse movement
     &#34;&#34;&#34;
 
-    def log_probability_ratio(self, model: Model, tree: Tree, mutation: TreeMutation) -&gt; float:
+    def log_probability_ratio(self, model: Model, tree: Tree, mutation: TreeMutation) -&gt; Tuple[float, tuple, tuple]:
         &#34;&#34;&#34;
         Calculated the ratio of the likihood of a mutation over the likihood of the reverse movement
 
@@ -209,7 +220,16 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged ratio of likelihoods
         &#34;&#34;&#34;
-        return self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio(model, tree, mutation) + self.log_tree_ratio(model, tree, mutation)
+        log_likelihood_ratio, (l_new, l_old) = self.log_likihood_ratio(model, tree, mutation)
+        log_transition_ratio, (t_new, t_old) = self.log_transition_ratio(tree, mutation)
+        log_prior_ratio, (p_new, p_old) = self.log_tree_ratio(model, tree, mutation)
+        prob_score = log_transition_ratio + log_likelihood_ratio + log_prior_ratio
+        ratio = np.exp(prob_score)
+        p_t_new = p_new + t_new
+        p_t_old = p_old + t_old
+        prob_new = l_new+p_t_new
+        prob_old = l_old+p_t_old
+        return ratio, (l_new, l_old), (prob_new, prob_old)
 
     @abstractmethod
     def log_transition_ratio(self, tree: Tree, mutation: TreeMutation) -&gt; float:
@@ -336,7 +356,7 @@ def log_likihood_ratio(self, model: Model, tree: Tree, mutation: TreeMutation):
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikihoodRatio.log_probability_ratio"><code class="name flex">
-<span>def <span class="ident">log_probability_ratio</span></span>(<span>self, model: <a title="imodels.experimental.bartpy.model.Model" href="../model.html#imodels.experimental.bartpy.model.Model">Model</a>, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>, mutation: <a title="imodels.experimental.bartpy.mutation.TreeMutation" href="../mutation.html#imodels.experimental.bartpy.mutation.TreeMutation">TreeMutation</a>) ‑> float</span>
+<span>def <span class="ident">log_probability_ratio</span></span>(<span>self, model: <a title="imodels.experimental.bartpy.model.Model" href="../model.html#imodels.experimental.bartpy.model.Model">Model</a>, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>, mutation: <a title="imodels.experimental.bartpy.mutation.TreeMutation" href="../mutation.html#imodels.experimental.bartpy.mutation.TreeMutation">TreeMutation</a>) ‑> Tuple[float, tuple, tuple]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Calculated the ratio of the likihood of a mutation over the likihood of the reverse movement</p>
@@ -359,7 +379,7 @@ def log_likihood_ratio(self, model: Model, tree: Tree, mutation: TreeMutation):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def log_probability_ratio(self, model: Model, tree: Tree, mutation: TreeMutation) -&gt; float:
+<pre><code class="python">def log_probability_ratio(self, model: Model, tree: Tree, mutation: TreeMutation) -&gt; Tuple[float, tuple, tuple]:
     &#34;&#34;&#34;
     Calculated the ratio of the likihood of a mutation over the likihood of the reverse movement
 
@@ -379,7 +399,16 @@ def log_likihood_ratio(self, model: Model, tree: Tree, mutation: TreeMutation):
     float
         logged ratio of likelihoods
     &#34;&#34;&#34;
-    return self.log_transition_ratio(tree, mutation) + self.log_likihood_ratio(model, tree, mutation) + self.log_tree_ratio(model, tree, mutation)</code></pre>
+    log_likelihood_ratio, (l_new, l_old) = self.log_likihood_ratio(model, tree, mutation)
+    log_transition_ratio, (t_new, t_old) = self.log_transition_ratio(tree, mutation)
+    log_prior_ratio, (p_new, p_old) = self.log_tree_ratio(model, tree, mutation)
+    prob_score = log_transition_ratio + log_likelihood_ratio + log_prior_ratio
+    ratio = np.exp(prob_score)
+    p_t_new = p_new + t_new
+    p_t_old = p_old + t_old
+    prob_new = l_new+p_t_new
+    prob_old = l_old+p_t_old
+    return ratio, (l_new, l_old), (prob_new, prob_old)</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikihoodRatio.log_transition_ratio"><code class="name flex">

@@ -117,24 +117,26 @@ def get_interacting_features(interaction, k):
     return set(interactions)
 
 
-def interaction_fpr(i_gt: Set[Tuple], i_hat: Set[Tuple]):
+def interaction_fpr(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
     if len(i_gt) == 0:
         return
-    return len(i_hat.difference(i_gt)) / len(i_hat)
+    n_pairs = 0.5 * p * (p - 1)
+    n_non_interacting_pairs = (n_pairs - len(i_gt))
+    return len(i_hat.difference(i_gt)) / n_non_interacting_pairs
 
 
-def interaction_tpr(i_gt: Set[Tuple], i_hat: Set[Tuple]):
+def interaction_tpr(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
     if len(i_gt) == 0:
         return
-    n_pred_interactions = len(i_hat)
-    return len(i_hat.intersection(i_gt)) / n_pred_interactions
+    n_interactions = len(i_gt)
+    return len(i_hat.intersection(i_gt)) / n_interactions
 
 
-def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple]):
+def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
     if len(i_gt) == 0:
         return
     recall = len(i_gt.intersection(i_hat)) / len(i_gt)
-    precision = interaction_tpr(i_hat, i_gt)
+    precision = interaction_tpr(i_hat, i_gt, p)
     if recall + precision == 0:
         return 0
     return 2 * ((precision * recall) / (precision + recall))</code></pre>
@@ -207,7 +209,7 @@ def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple]):
 </details>
 </dd>
 <dt id="imodels.util.tree_interaction_utils.interaction_f1"><code class="name flex">
-<span>def <span class="ident">interaction_f1</span></span>(<span>i_gt: Set[Tuple[]], i_hat: Set[Tuple[]])</span>
+<span>def <span class="ident">interaction_f1</span></span>(<span>i_gt: Set[Tuple[]], i_hat: Set[Tuple[]], p: int)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -215,18 +217,18 @@ def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple]):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple]):
+<pre><code class="python">def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
     if len(i_gt) == 0:
         return
     recall = len(i_gt.intersection(i_hat)) / len(i_gt)
-    precision = interaction_tpr(i_hat, i_gt)
+    precision = interaction_tpr(i_hat, i_gt, p)
     if recall + precision == 0:
         return 0
     return 2 * ((precision * recall) / (precision + recall))</code></pre>
 </details>
 </dd>
 <dt id="imodels.util.tree_interaction_utils.interaction_fpr"><code class="name flex">
-<span>def <span class="ident">interaction_fpr</span></span>(<span>i_gt: Set[Tuple[]], i_hat: Set[Tuple[]])</span>
+<span>def <span class="ident">interaction_fpr</span></span>(<span>i_gt: Set[Tuple[]], i_hat: Set[Tuple[]], p: int)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -234,14 +236,16 @@ def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple]):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def interaction_fpr(i_gt: Set[Tuple], i_hat: Set[Tuple]):
+<pre><code class="python">def interaction_fpr(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
     if len(i_gt) == 0:
         return
-    return len(i_hat.difference(i_gt)) / len(i_hat)</code></pre>
+    n_pairs = 0.5 * p * (p - 1)
+    n_non_interacting_pairs = (n_pairs - len(i_gt))
+    return len(i_hat.difference(i_gt)) / n_non_interacting_pairs</code></pre>
 </details>
 </dd>
 <dt id="imodels.util.tree_interaction_utils.interaction_tpr"><code class="name flex">
-<span>def <span class="ident">interaction_tpr</span></span>(<span>i_gt: Set[Tuple[]], i_hat: Set[Tuple[]])</span>
+<span>def <span class="ident">interaction_tpr</span></span>(<span>i_gt: Set[Tuple[]], i_hat: Set[Tuple[]], p: int)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -249,11 +253,11 @@ def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple]):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def interaction_tpr(i_gt: Set[Tuple], i_hat: Set[Tuple]):
+<pre><code class="python">def interaction_tpr(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
     if len(i_gt) == 0:
         return
-    n_pred_interactions = len(i_hat)
-    return len(i_hat.intersection(i_gt)) / n_pred_interactions</code></pre>
+    n_interactions = len(i_gt)
+    return len(i_hat.intersection(i_gt)) / n_interactions</code></pre>
 </details>
 </dd>
 <dt id="imodels.util.tree_interaction_utils.make_rj"><code class="name flex">

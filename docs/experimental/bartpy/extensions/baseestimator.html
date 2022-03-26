@@ -23,9 +23,13 @@
 </summary>
 <pre><code class="python">import numpy as np
 from sklearn.base import RegressorMixin, clone
-from sklearn.linear_model import LinearRegression
+try:
+    from sklearn.linear_model.base import LinearRegression
+except:
+    from sklearn.linear_model._base import LinearRegression
 
-from imodels.experimental.bartpy.sklearnmodel import SklearnModel
+
+from ..sklearnmodel import SklearnModel
 
 
 class ResidualBART(SklearnModel):
@@ -156,9 +160,11 @@ set to <code>-1</code> to use all cores</dd>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.fit" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.fit">fit</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.from_extract" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.from_extract">from_extract</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.l2_error" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.l2_error">l2_error</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.likelihood" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.likelihood">likelihood</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.model_samples" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.model_samples">model_samples</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict">predict</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.prediction_samples" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.prediction_samples">prediction_samples</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.probs" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.probs">probs</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.residuals" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.residuals">residuals</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.rmse" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.rmse">rmse</a></code></li>
 </ul>

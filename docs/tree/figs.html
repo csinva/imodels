@@ -22,12 +22,14 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from copy import deepcopy
+from typing import List
 
 import numpy as np
+import sklearn.datasets
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.utils import check_X_y, check_array
 
 
@@ -81,7 +83,7 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float=0.0):
+    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
@@ -95,14 +97,14 @@ class FIGS(BaseEstimator):
         it is equivalent to FIGSRegressor
         &#34;&#34;&#34;
         self.prediction_task = &#39;regression&#39;
-        
+
     def _init_decision_function(self):
         &#34;&#34;&#34;Sets decision function based on prediction_task
         &#34;&#34;&#34;
         # used by sklearn GrriidSearchCV, BaggingClassifier
-        if self.prediction_task  == &#39;classification&#39;:
-            decision_function = lambda x: self.predict_proba(x)[:, 1] 
-        elif self.prediction_task  == &#39;regression&#39;:
+        if self.prediction_task == &#39;classification&#39;:
+            decision_function = lambda x: self.predict_proba(x)[:, 1]
+        elif self.prediction_task == &#39;regression&#39;:
             decision_function = self.predict
 
     def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
@@ -201,7 +203,7 @@ class FIGS(BaseEstimator):
 
             # if added a tree root
             if split_node.is_root:
-                
+
                 # start a new tree
                 self.trees_.append(split_node)
 
@@ -280,7 +282,8 @@ class FIGS(BaseEstimator):
         elif root.threshold is None:
             return &#39;&#39;
         pprefix = prefix + &#39;\t&#39;
-        return prefix + str(root) + &#39;\n&#39; + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right, pprefix)
+        return prefix + str(root) + &#39;\n&#39; + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right,
+                                                                                                     pprefix)
 
     def __str__(self):
         s = &#39;------------\n&#39; + &#39;\n\t+\n&#39;.join([self._tree_to_str(t) for t in self.trees_])
@@ -344,22 +347,72 @@ class FIGSClassifier(FIGS):
         self.prediction_task = &#39;classification&#39;
 
 
+class FIGSCV:
+    def __init__(self, figs,
+                 n_rules_list: List[float] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring=None, *args, **kwargs):
+
+        self._figs_class = figs
+        self.n_rules_list = np.array(n_rules_list)
+        self.cv = cv
+        self.scoring = scoring
+
+    def fit(self, X, y):
+        self.scores_ = []
+        for n_rules in self.n_rules_list:
+            est = self._figs_class(max_rules=n_rules)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            mean_score = np.mean(cv_scores)
+            if len(self.scores_) == 0:
+                self.figs = est
+            elif mean_score &gt; np.max(self.scores_):
+                self.figs = est
+
+            self.scores_.append(mean_score)
+        self.figs.fit(X=X, y=y)
+
+    def predict_proba(self, X):
+        return self.figs.predict_proba(X)
+
+    def predict(self, X):
+        return self.figs.predict(X)
+
+    @property
+    def max_rules(self):
+        return self.figs.max_rules
+
+
+class FIGSRegressorCV(FIGSCV):
+    def __init__(self,
+                 n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring=&#39;r2&#39;, *args, **kwargs):
+        super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor, n_rules_list=n_rules_list,
+                                              cv=cv, scoring=scoring, *args, **kwargs)
+
+
+class FIGSClassifierCV(FIGSCV):
+    def __init__(self,
+                 n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring=&#34;accuracy&#34;, *args, **kwargs):
+        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier, n_rules_list=n_rules_list,
+                                               cv=cv, scoring=scoring, *args, **kwargs)
+
+
 if __name__ == &#39;__main__&#39;:
-    np.random.seed(13)
-    X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
-    # X, y = datasets.load_diabetes(return_X_y=True)  # regression
-    # X = np.random.randn(500, 10)
-    # y = (X[:, 0] &gt; 0).astype(float) + (X[:, 1] &gt; 1).astype(float)
+    from sklearn import datasets
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=42
-    )
-    print(&#39;X.shape&#39;, X.shape)
-    print(&#39;ys&#39;, np.unique(y_train), &#39;\n\n&#39;)
+    X_cls, Y_cls = datasets.load_breast_cancer(return_X_y=True)
+    X_reg, Y_reg = datasets.make_friedman1(100)
 
-    m = FIGSClassifier(max_rules=5)
-    m.fit(X_train, y_train)
-    print(m.predict_proba(X_train))</code></pre>
+    est = FIGSRegressorCV()
+    est.fit(X_reg, Y_reg)
+    est.predict(X_reg)
+    print(est.max_rules)
+
+    est = FIGSClassifierCV()
+    est.fit(X_cls, Y_cls)
+    est.predict(X_cls)
+    print(est.max_rules)</code></pre>
 </details>
 </section>
 <section>
@@ -395,7 +448,7 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float=0.0):
+    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
@@ -409,14 +462,14 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
         it is equivalent to FIGSRegressor
         &#34;&#34;&#34;
         self.prediction_task = &#39;regression&#39;
-        
+
     def _init_decision_function(self):
         &#34;&#34;&#34;Sets decision function based on prediction_task
         &#34;&#34;&#34;
         # used by sklearn GrriidSearchCV, BaggingClassifier
-        if self.prediction_task  == &#39;classification&#39;:
-            decision_function = lambda x: self.predict_proba(x)[:, 1] 
-        elif self.prediction_task  == &#39;regression&#39;:
+        if self.prediction_task == &#39;classification&#39;:
+            decision_function = lambda x: self.predict_proba(x)[:, 1]
+        elif self.prediction_task == &#39;regression&#39;:
             decision_function = self.predict
 
     def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
@@ -515,7 +568,7 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 
             # if added a tree root
             if split_node.is_root:
-                
+
                 # start a new tree
                 self.trees_.append(split_node)
 
@@ -594,7 +647,8 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
         elif root.threshold is None:
             return &#39;&#39;
         pprefix = prefix + &#39;\t&#39;
-        return prefix + str(root) + &#39;\n&#39; + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right, pprefix)
+        return prefix + str(root) + &#39;\n&#39; + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right,
+                                                                                                     pprefix)
 
     def __str__(self):
         s = &#39;------------\n&#39; + &#39;\n\t+\n&#39;.join([self._tree_to_str(t) for t in self.trees_])
@@ -718,7 +772,7 @@ are ignored while searching for a split in each node.</p></div>
 
         # if added a tree root
         if split_node.is_root:
-            
+
             # start a new tree
             self.trees_.append(split_node)
 
@@ -834,6 +888,124 @@ are ignored while searching for a split in each node.</p></div>
 </dd>
 </dl>
 </dd>
+<dt id="imodels.tree.figs.FIGSCV"><code class="flex name class">
+<span>class <span class="ident">FIGSCV</span></span>
+<span>(</span><span>figs, n_rules_list: List[float] = [6, 12, 24, 30, 50], cv: int = 3, scoring=None, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FIGSCV:
+    def __init__(self, figs,
+                 n_rules_list: List[float] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring=None, *args, **kwargs):
+
+        self._figs_class = figs
+        self.n_rules_list = np.array(n_rules_list)
+        self.cv = cv
+        self.scoring = scoring
+
+    def fit(self, X, y):
+        self.scores_ = []
+        for n_rules in self.n_rules_list:
+            est = self._figs_class(max_rules=n_rules)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            mean_score = np.mean(cv_scores)
+            if len(self.scores_) == 0:
+                self.figs = est
+            elif mean_score &gt; np.max(self.scores_):
+                self.figs = est
+
+            self.scores_.append(mean_score)
+        self.figs.fit(X=X, y=y)
+
+    def predict_proba(self, X):
+        return self.figs.predict_proba(X)
+
+    def predict(self, X):
+        return self.figs.predict(X)
+
+    @property
+    def max_rules(self):
+        return self.figs.max_rules</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.figs.FIGSClassifierCV" href="#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a></li>
+<li><a title="imodels.tree.figs.FIGSRegressorCV" href="#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="imodels.tree.figs.FIGSCV.max_rules"><code class="name">var <span class="ident">max_rules</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def max_rules(self):
+    return self.figs.max_rules</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.figs.FIGSCV.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y):
+    self.scores_ = []
+    for n_rules in self.n_rules_list:
+        est = self._figs_class(max_rules=n_rules)
+        cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+        mean_score = np.mean(cv_scores)
+        if len(self.scores_) == 0:
+            self.figs = est
+        elif mean_score &gt; np.max(self.scores_):
+            self.figs = est
+
+        self.scores_.append(mean_score)
+    self.figs.fit(X=X, y=y)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.figs.FIGSCV.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    return self.figs.predict(X)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.figs.FIGSCV.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    return self.figs.predict_proba(X)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="imodels.tree.figs.FIGSClassifier"><code class="flex name class">
 <span>class <span class="ident">FIGSClassifier</span></span>
 <span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0)</span>
@@ -867,6 +1039,28 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 </li>
 </ul>
 </dd>
+<dt id="imodels.tree.figs.FIGSClassifierCV"><code class="flex name class">
+<span>class <span class="ident">FIGSClassifierCV</span></span>
+<span>(</span><span>n_rules_list: List[int] = [6, 12, 24, 30, 50], cv: int = 3, scoring='accuracy', *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FIGSClassifierCV(FIGSCV):
+    def __init__(self,
+                 n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring=&#34;accuracy&#34;, *args, **kwargs):
+        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier, n_rules_list=n_rules_list,
+                                               cv=cv, scoring=scoring, *args, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></li>
+</ul>
+</dd>
 <dt id="imodels.tree.figs.FIGSRegressor"><code class="flex name class">
 <span>class <span class="ident">FIGSRegressor</span></span>
 <span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0)</span>
@@ -898,6 +1092,28 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
 </ul>
 </li>
+</ul>
+</dd>
+<dt id="imodels.tree.figs.FIGSRegressorCV"><code class="flex name class">
+<span>class <span class="ident">FIGSRegressorCV</span></span>
+<span>(</span><span>n_rules_list: List[int] = [6, 12, 24, 30, 50], cv: int = 3, scoring='r2', *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FIGSRegressorCV(FIGSCV):
+    def __init__(self,
+                 n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 cv: int = 3, scoring=&#39;r2&#39;, *args, **kwargs):
+        super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor, n_rules_list=n_rules_list,
+                                              cv=cv, scoring=scoring, *args, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></li>
 </ul>
 </dd>
 <dt id="imodels.tree.figs.Node"><code class="flex name class">
@@ -993,10 +1209,25 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 </ul>
 </li>
 <li>
+<h4><code><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.tree.figs.FIGSCV.fit" href="#imodels.tree.figs.FIGSCV.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.max_rules" href="#imodels.tree.figs.FIGSCV.max_rules">max_rules</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.predict" href="#imodels.tree.figs.FIGSCV.predict">predict</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.predict_proba" href="#imodels.tree.figs.FIGSCV.predict_proba">predict_proba</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="imodels.tree.figs.FIGSClassifier" href="#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></code></h4>
 </li>
 <li>
+<h4><code><a title="imodels.tree.figs.FIGSClassifierCV" href="#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a></code></h4>
+</li>
+<li>
 <h4><code><a title="imodels.tree.figs.FIGSRegressor" href="#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.tree.figs.FIGSRegressorCV" href="#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a></code></h4>
 </li>
 <li>
 <h4><code><a title="imodels.tree.figs.Node" href="#imodels.tree.figs.Node">Node</a></code></h4>

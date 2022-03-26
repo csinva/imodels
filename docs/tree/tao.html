@@ -45,7 +45,7 @@ class TaoTree(BaseEstimator):
                  min_leaf_samples_tao=2,
                  node_model=&#39;stump&#39;,
                  reg_param: float = 1e-3,
-                 weight_errors: bool = True,
+                 weight_errors: bool = False,
                  verbose: int = 0,
                  ):
         &#34;&#34;&#34;TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
@@ -54,12 +54,17 @@ class TaoTree(BaseEstimator):
 
         Currently supports
         - given a CART tree, posthoc improve it with TAO
+            - also works with HSTreeCV
 
-        Requirements
-        - given a FIGS model, posthoc improve it
-        - weight binary errors more carefully
-        - learn a new model (changing the classifier at any given node) - this requires a new data structure
-        - support pruning (e.g. if weights -&gt; 0, then remove a node)
+        Todo
+        - update bottom to top otherwise input points don&#39;t get updated
+        - update leaf nodes
+        - support regression
+        - support FIGS
+        - support error-weighting
+        - support oblique trees
+            - support generic models at decision node
+            - support pruning (e.g. if weights -&gt; 0, then remove a node)
         - support classifiers in leaves
 
         Parameters
@@ -136,9 +141,10 @@ class TaoTree(BaseEstimator):
             elif self.prediction_task == &#39;regression&#39;:
                 self.model = DecisionTreeRegressor(**self.model_args)
             self.model.fit(X, y)
-            print(export_text(self.model))
-            plot_tree(self.model)
-            plt.savefig(&#39;/Users/chandan/Desktop/tree.png&#39;, dpi=300)
+            if self.verbose:
+                print(export_text(self.model))
+            # plot_tree(self.model)
+            # plt.savefig(&#39;/Users/chandan/Desktop/tree.png&#39;, dpi=300)
             # plt.show()
 
         if self.randomize_tree:
@@ -147,8 +153,8 @@ class TaoTree(BaseEstimator):
             for i in range(self.model.tree_.node_count):  # split on feature medians
                 self.model.tree_.threshold[i] = np.median(
                     X[:, self.model.tree_.feature[i]])
-
-        print(&#39;starting score&#39;, self.model.score(X, y))
+        if self.verbose:
+            print(&#39;starting score&#39;, self.model.score(X, y))
         for i in range(self.n_iters):
             num_updates = self._tao_iter_cart(X, y, self.model.tree_)
             if num_updates == 0:
@@ -265,18 +271,20 @@ class TaoTree(BaseEstimator):
 
             # screen out indexes where going left/right has no effect
             idxs_relevant = y_node_absolute_errors[:, 0] != y_node_absolute_errors[:, 1]
-            if idxs_relevant.sum() == 0:  # nothing to change
-                print(&#39;no errors to change&#39;)
+            if idxs_relevant.sum() &lt;= 1:  # nothing to change
+                if self.verbose:
+                    print(&#39;no errors to change&#39;)
                 continue
             # assert np.all((self.model.predict(X) != y)[idxs_relevant]), &#39;relevant indexes should be errors&#39;
             y_node_target = np.argmin(y_node_absolute_errors, axis=1)
             y_node_target = y_node_target[idxs_relevant]
 
             # here, we optionally weight these errors by the size of the error
+            # if we want this to work for classification, must switch to predict_proba
             # if self.prediction_task == &#39;regression&#39;:
             # weight by the difference in error ###############################################################
             if self.weight_errors:
-                sample_weight = np.abs(y_node_absolute_errors[:, 1], y_node_absolute_errors[:, 0])
+                sample_weight = np.abs(y_node_absolute_errors[:, 1] - y_node_absolute_errors[:, 0])
             else:
                 sample_weight = np.ones(y_node.size)
             sample_weight = sample_weight[idxs_relevant]
@@ -286,7 +294,6 @@ class TaoTree(BaseEstimator):
             # Note: this could be customized (e.g. for sparse oblique trees)
             best_score = -np.inf
             best_feat_num = None
-            best_model = None
             for feat_num in range(X.shape[1]):
                 if self.prediction_task == &#39;classification&#39;:
                     if self.node_model == &#39;linear&#39;:
@@ -356,6 +363,9 @@ class TaoTree(BaseEstimator):
     def predict_proba(self, X):
         return self.model.predict_proba(X)
 
+    def score(self, X, y):
+        return self.model.score(X, y)
+
 
 class TaoTreeRegressor(TaoTree):
     def _init_prediction_task(self):
@@ -408,7 +418,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="imodels.tree.tao.TaoTree"><code class="flex name class">
 <span>class <span class="ident">TaoTree</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', reg_param: float = 0.001, weight_errors: bool = True, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -420,11 +430,16 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
 <a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a>
 Note: this implementation learns single-feature splits rather than oblique trees.</p>
 <p>Currently supports
-- given a CART tree, posthoc improve it with TAO</p>
-<p>Requirements
-- given a FIGS model, posthoc improve it
-- weight binary errors more carefully
-- learn a new model (changing the classifier at any given node) - this requires a new data structure
+- given a CART tree, posthoc improve it with TAO
+- also works with HSTreeCV</p>
+<p>Todo
+- update bottom to top otherwise input points don't get updated
+- update leaf nodes
+- support regression
+- support FIGS
+- support error-weighting
+- support oblique trees
+- support generic models at decision node
 - support pruning (e.g. if weights -&gt; 0, then remove a node)
 - support classifiers in leaves</p>
 <h2 id="parameters">Parameters</h2>
@@ -462,7 +477,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
                  min_leaf_samples_tao=2,
                  node_model=&#39;stump&#39;,
                  reg_param: float = 1e-3,
-                 weight_errors: bool = True,
+                 weight_errors: bool = False,
                  verbose: int = 0,
                  ):
         &#34;&#34;&#34;TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
@@ -471,12 +486,17 @@ Note: this implementation learns single-feature splits rather than oblique trees
 
         Currently supports
         - given a CART tree, posthoc improve it with TAO
+            - also works with HSTreeCV
 
-        Requirements
-        - given a FIGS model, posthoc improve it
-        - weight binary errors more carefully
-        - learn a new model (changing the classifier at any given node) - this requires a new data structure
-        - support pruning (e.g. if weights -&gt; 0, then remove a node)
+        Todo
+        - update bottom to top otherwise input points don&#39;t get updated
+        - update leaf nodes
+        - support regression
+        - support FIGS
+        - support error-weighting
+        - support oblique trees
+            - support generic models at decision node
+            - support pruning (e.g. if weights -&gt; 0, then remove a node)
         - support classifiers in leaves
 
         Parameters
@@ -553,9 +573,10 @@ Note: this implementation learns single-feature splits rather than oblique trees
             elif self.prediction_task == &#39;regression&#39;:
                 self.model = DecisionTreeRegressor(**self.model_args)
             self.model.fit(X, y)
-            print(export_text(self.model))
-            plot_tree(self.model)
-            plt.savefig(&#39;/Users/chandan/Desktop/tree.png&#39;, dpi=300)
+            if self.verbose:
+                print(export_text(self.model))
+            # plot_tree(self.model)
+            # plt.savefig(&#39;/Users/chandan/Desktop/tree.png&#39;, dpi=300)
             # plt.show()
 
         if self.randomize_tree:
@@ -564,8 +585,8 @@ Note: this implementation learns single-feature splits rather than oblique trees
             for i in range(self.model.tree_.node_count):  # split on feature medians
                 self.model.tree_.threshold[i] = np.median(
                     X[:, self.model.tree_.feature[i]])
-
-        print(&#39;starting score&#39;, self.model.score(X, y))
+        if self.verbose:
+            print(&#39;starting score&#39;, self.model.score(X, y))
         for i in range(self.n_iters):
             num_updates = self._tao_iter_cart(X, y, self.model.tree_)
             if num_updates == 0:
@@ -682,18 +703,20 @@ Note: this implementation learns single-feature splits rather than oblique trees
 
             # screen out indexes where going left/right has no effect
             idxs_relevant = y_node_absolute_errors[:, 0] != y_node_absolute_errors[:, 1]
-            if idxs_relevant.sum() == 0:  # nothing to change
-                print(&#39;no errors to change&#39;)
+            if idxs_relevant.sum() &lt;= 1:  # nothing to change
+                if self.verbose:
+                    print(&#39;no errors to change&#39;)
                 continue
             # assert np.all((self.model.predict(X) != y)[idxs_relevant]), &#39;relevant indexes should be errors&#39;
             y_node_target = np.argmin(y_node_absolute_errors, axis=1)
             y_node_target = y_node_target[idxs_relevant]
 
             # here, we optionally weight these errors by the size of the error
+            # if we want this to work for classification, must switch to predict_proba
             # if self.prediction_task == &#39;regression&#39;:
             # weight by the difference in error ###############################################################
             if self.weight_errors:
-                sample_weight = np.abs(y_node_absolute_errors[:, 1], y_node_absolute_errors[:, 0])
+                sample_weight = np.abs(y_node_absolute_errors[:, 1] - y_node_absolute_errors[:, 0])
             else:
                 sample_weight = np.ones(y_node.size)
             sample_weight = sample_weight[idxs_relevant]
@@ -703,7 +726,6 @@ Note: this implementation learns single-feature splits rather than oblique trees
             # Note: this could be customized (e.g. for sparse oblique trees)
             best_score = -np.inf
             best_feat_num = None
-            best_model = None
             for feat_num in range(X.shape[1]):
                 if self.prediction_task == &#39;classification&#39;:
                     if self.node_model == &#39;linear&#39;:
@@ -771,7 +793,10 @@ Note: this implementation learns single-feature splits rather than oblique trees
         return self.model.predict(X)
 
     def predict_proba(self, X):
-        return self.model.predict_proba(X)</code></pre>
+        return self.model.predict_proba(X)
+
+    def score(self, X, y):
+        return self.model.score(X, y)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -821,9 +846,10 @@ are ignored while searching for a split in each node.</p></div>
         elif self.prediction_task == &#39;regression&#39;:
             self.model = DecisionTreeRegressor(**self.model_args)
         self.model.fit(X, y)
-        print(export_text(self.model))
-        plot_tree(self.model)
-        plt.savefig(&#39;/Users/chandan/Desktop/tree.png&#39;, dpi=300)
+        if self.verbose:
+            print(export_text(self.model))
+        # plot_tree(self.model)
+        # plt.savefig(&#39;/Users/chandan/Desktop/tree.png&#39;, dpi=300)
         # plt.show()
 
     if self.randomize_tree:
@@ -832,8 +858,8 @@ are ignored while searching for a split in each node.</p></div>
         for i in range(self.model.tree_.node_count):  # split on feature medians
             self.model.tree_.threshold[i] = np.median(
                 X[:, self.model.tree_.feature[i]])
-
-    print(&#39;starting score&#39;, self.model.score(X, y))
+    if self.verbose:
+        print(&#39;starting score&#39;, self.model.score(X, y))
     for i in range(self.n_iters):
         num_updates = self._tao_iter_cart(X, y, self.model.tree_)
         if num_updates == 0:
@@ -868,11 +894,24 @@ are ignored while searching for a split in each node.</p></div>
     return self.model.predict_proba(X)</code></pre>
 </details>
 </dd>
+<dt id="imodels.tree.tao.TaoTree.score"><code class="name flex">
+<span>def <span class="ident">score</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def score(self, X, y):
+    return self.model.score(X, y)</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 <dt id="imodels.tree.tao.TaoTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">TaoTreeClassifier</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', reg_param: float = 0.001, weight_errors: bool = True, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -884,11 +923,16 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
 <a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a>
 Note: this implementation learns single-feature splits rather than oblique trees.</p>
 <p>Currently supports
-- given a CART tree, posthoc improve it with TAO</p>
-<p>Requirements
-- given a FIGS model, posthoc improve it
-- weight binary errors more carefully
-- learn a new model (changing the classifier at any given node) - this requires a new data structure
+- given a CART tree, posthoc improve it with TAO
+- also works with HSTreeCV</p>
+<p>Todo
+- update bottom to top otherwise input points don't get updated
+- update leaf nodes
+- support regression
+- support FIGS
+- support error-weighting
+- support oblique trees
+- support generic models at decision node
 - support pruning (e.g. if weights -&gt; 0, then remove a node)
 - support classifiers in leaves</p>
 <h2 id="parameters">Parameters</h2>
@@ -936,7 +980,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
 </dd>
 <dt id="imodels.tree.tao.TaoTreeRegressor"><code class="flex name class">
 <span>class <span class="ident">TaoTreeRegressor</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', reg_param: float = 0.001, weight_errors: bool = True, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -948,11 +992,16 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
 <a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a>
 Note: this implementation learns single-feature splits rather than oblique trees.</p>
 <p>Currently supports
-- given a CART tree, posthoc improve it with TAO</p>
-<p>Requirements
-- given a FIGS model, posthoc improve it
-- weight binary errors more carefully
-- learn a new model (changing the classifier at any given node) - this requires a new data structure
+- given a CART tree, posthoc improve it with TAO
+- also works with HSTreeCV</p>
+<p>Todo
+- update bottom to top otherwise input points don't get updated
+- update leaf nodes
+- support regression
+- support FIGS
+- support error-weighting
+- support oblique trees
+- support generic models at decision node
 - support pruning (e.g. if weights -&gt; 0, then remove a node)
 - support classifiers in leaves</p>
 <h2 id="parameters">Parameters</h2>
@@ -1020,6 +1069,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.predict" href="#imodels.tree.tao.TaoTree.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.predict_proba" href="#imodels.tree.tao.TaoTree.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.score" href="#imodels.tree.tao.TaoTree.score">score</a></code></li>
 </ul>
 </li>
 <li>
