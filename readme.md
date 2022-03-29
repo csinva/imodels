@@ -275,8 +275,8 @@ If it's useful for you, please star/cite the package, and make sure to give auth
 ```r
 @software{
     imodels2021,
-    title        = {{imodels: a python package for fitting interpretable models}},
-    journal      = {Journal of Open Source Software}
+    title        = {imodels: a python package for fitting interpretable models},
+    journal      = {Journal of Open Source Software},
     publisher    = {The Open Journal},
     year         = {2021},
     author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
