@@ -1,5 +1,6 @@
 import random
 from copy import deepcopy
+from queue import deque
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -164,20 +165,23 @@ class TaoTree(BaseEstimator):
         indexes_with_prefix_paths = []  # data structure with (index, path_to_node_index)
         # e.g. if if node 3 is the left child of node 1 which is the right child of node 0
         # then we get (3, [(0, R), (1, L)])
-        stack = [(0, [])]  # start with the root node id (0) and its depth (0)
-        while len(stack) > 0:
-            node_id, path_to_node_index = stack.pop()
+        
+        # start with the root node id (0) and its depth (0)
+        queue = deque()
+        queue.append((0, []))
+        while len(queue) > 0:
+            node_id, path_to_node_index = queue.popleft()
             indexes_with_prefix_paths.append((node_id, path_to_node_index))
 
             # If a split node, append left and right children and depth to `stack`
             if children_left[node_id] != children_right[node_id]:
-                stack.append((children_left[node_id], path_to_node_index + [(node_id, 'L')]))
-                stack.append((children_right[node_id], path_to_node_index + [(node_id, 'R')]))
+                queue.append((children_left[node_id], path_to_node_index + [(node_id, 'L')]))
+                queue.append((children_right[node_id], path_to_node_index + [(node_id, 'R')]))
         # print(indexes_with_prefix_paths)
 
         # For each each node, try a TAO update
         num_updates = 0
-        for (node_id, path_to_node_index) in indexes_with_prefix_paths:
+        for (node_id, path_to_node_index) in reversed(indexes_with_prefix_paths):
             # print('node_id', node_id, path_to_node_index)
 
             # Compute the points being input to the node ######################################
