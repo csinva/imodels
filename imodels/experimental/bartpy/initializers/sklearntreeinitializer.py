@@ -60,7 +60,7 @@ class SklearnTreeInitializer(Initializer):
 
     def _get_sklearn_tree(self, tree_number):
         if isinstance(self._tree, GradientBoostingRegressor):
-            return self._tree.estimators_[0][tree_number].tree_
+            return self._tree.estimators_[tree_number][0].tree_
         elif isinstance(self._tree, DecisionTreeRegressor):
             return self._tree.tree_
         elif isinstance(self._tree, FIGSRegressor):

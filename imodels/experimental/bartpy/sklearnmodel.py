@@ -422,14 +422,14 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
         return np.sqrt(np.sum(self.l2_error(X, y)))
 
-    def _chain_pred_arr(self, X, chain_number):
+    def _chain_pred_arr(self, X, chain_number, s=0):
         chain_len = int(self.n_samples)
         samples_chain = self._model_samples[chain_number * chain_len: (chain_number + 1) * chain_len]
-        predictions_transformed = [x.predict(X) for x in samples_chain]
+        predictions_transformed = [x.predict(X) for x in samples_chain[s:]]
         return predictions_transformed
 
-    def predict_chain(self, X, chain_number):
-        predictions_transformed = self._chain_pred_arr(X, chain_number)
+    def predict_chain(self, X, chain_number, s=0):
+        predictions_transformed = self._chain_pred_arr(X, chain_number, s)
         predictions = self.data.y.unnormalize_y(np.mean(predictions_transformed, axis=0))
         if self.classification:
             predictions = scipy.stats.norm.cdf(predictions)
