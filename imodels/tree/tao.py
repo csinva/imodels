@@ -1,5 +1,6 @@
 import random
 from copy import deepcopy
+from queue import deque
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -21,6 +22,7 @@ class TaoTree(BaseEstimator):
                  min_node_samples_tao=3,
                  min_leaf_samples_tao=2,
                  node_model='stump',
+                 node_model_args: dict = {},
                  reg_param: float = 1e-3,
                  weight_errors: bool = False,
                  verbose: int = 0,
@@ -81,6 +83,7 @@ class TaoTree(BaseEstimator):
         self.min_node_samples_tao = min_node_samples_tao
         self.min_leaf_samples_tao = min_leaf_samples_tao
         self.node_model = node_model
+        self.node_model_args = node_model_args
         self.reg_param = reg_param
         self.weight_errors = weight_errors
         self.verbose = verbose
@@ -94,7 +97,7 @@ class TaoTree(BaseEstimator):
         """
         self.prediction_task = 'classification'
 
-    def fit(self, X, y=None, feature_names=None):
+    def fit(self, X, y=None, feature_names=None, sample_weight=None):
         """
         Params
         ------
@@ -117,7 +120,7 @@ class TaoTree(BaseEstimator):
                 self.model = DecisionTreeClassifier(**self.model_args)
             elif self.prediction_task == 'regression':
                 self.model = DecisionTreeRegressor(**self.model_args)
-            self.model.fit(X, y)
+            self.model.fit(X, y, sample_weight=sample_weight)
             if self.verbose:
                 print(export_text(self.model))
             # plot_tree(self.model)
@@ -133,13 +136,13 @@ class TaoTree(BaseEstimator):
         if self.verbose:
             print('starting score', self.model.score(X, y))
         for i in range(self.n_iters):
-            num_updates = self._tao_iter_cart(X, y, self.model.tree_)
+            num_updates = self._tao_iter_cart(X, y, self.model.tree_, sample_weight)
             if num_updates == 0:
                 break
 
         return self
 
-    def _tao_iter_cart(self, X, y, tree):
+    def _tao_iter_cart(self, X, y, tree, sample_weight=None):
         """Updates tree by applying the tao algorithm to the tree
         Params
         ------
@@ -162,20 +165,23 @@ class TaoTree(BaseEstimator):
         indexes_with_prefix_paths = []  # data structure with (index, path_to_node_index)
         # e.g. if if node 3 is the left child of node 1 which is the right child of node 0
         # then we get (3, [(0, R), (1, L)])
-        stack = [(0, [])]  # start with the root node id (0) and its depth (0)
-        while len(stack) > 0:
-            node_id, path_to_node_index = stack.pop()
+        
+        # start with the root node id (0) and its depth (0)
+        queue = deque()
+        queue.append((0, []))
+        while len(queue) > 0:
+            node_id, path_to_node_index = queue.popleft()
             indexes_with_prefix_paths.append((node_id, path_to_node_index))
 
             # If a split node, append left and right children and depth to `stack`
             if children_left[node_id] != children_right[node_id]:
-                stack.append((children_left[node_id], path_to_node_index + [(node_id, 'L')]))
-                stack.append((children_right[node_id], path_to_node_index + [(node_id, 'R')]))
+                queue.append((children_left[node_id], path_to_node_index + [(node_id, 'L')]))
+                queue.append((children_right[node_id], path_to_node_index + [(node_id, 'R')]))
         # print(indexes_with_prefix_paths)
 
         # For each each node, try a TAO update
         num_updates = 0
-        for (node_id, path_to_node_index) in indexes_with_prefix_paths:
+        for (node_id, path_to_node_index) in reversed(indexes_with_prefix_paths):
             # print('node_id', node_id, path_to_node_index)
 
             # Compute the points being input to the node ######################################
@@ -191,6 +197,11 @@ class TaoTree(BaseEstimator):
                 return X, y
 
             X_node, y_node = filter_points_by_path(X, y, path_to_node_index)
+
+            if sample_weight is not None:
+                sample_weight_node = filter_points_by_path(X, sample_weight, path_to_node_index)[1]
+            else:
+                sample_weight_node = np.ones(y_node.size)
 
             # Skip over leaf nodes and nodes with too few samples ######################################
             if children_left[node_id] == children_right[node_id]:  # is leaf node
@@ -261,10 +272,8 @@ class TaoTree(BaseEstimator):
             # if self.prediction_task == 'regression':
             # weight by the difference in error ###############################################################
             if self.weight_errors:
-                sample_weight = np.abs(y_node_absolute_errors[:, 1] - y_node_absolute_errors[:, 0])
-            else:
-                sample_weight = np.ones(y_node.size)
-            sample_weight = sample_weight[idxs_relevant]
+                sample_weight_node *= np.abs(y_node_absolute_errors[:, 1] - y_node_absolute_errors[:, 0])
+            sample_weight_node_target = sample_weight_node[idxs_relevant]
             X_node = X_node[idxs_relevant]
 
             # Fit a 1-variable binary classification model on these outputs ######################################
@@ -274,17 +283,17 @@ class TaoTree(BaseEstimator):
             for feat_num in range(X.shape[1]):
                 if self.prediction_task == 'classification':
                     if self.node_model == 'linear':
-                        m = LogisticRegression()
+                        m = LogisticRegression(**self.node_model_args)
                     elif self.node_model == 'stump':
-                        m = DecisionTreeClassifier(max_depth=1)
+                        m = DecisionTreeClassifier(max_depth=1, **self.node_model_args)
                 elif self.prediction_task == 'regression':
                     if self.node_model == 'linear':
-                        m = LinearRegression()
+                        m = LinearRegression(**self.node_model_args)
                     elif self.node_model == 'stump':
-                        m = DecisionTreeRegressor(max_depth=1)
+                        m = DecisionTreeRegressor(max_depth=1, **self.node_model_args)
                 X_node_single_feat = X_node[:, feat_num: feat_num + 1]
-                m.fit(X_node_single_feat, y_node_target, sample_weight=sample_weight)
-                score = m.score(X_node_single_feat, y_node_target, sample_weight=sample_weight)
+                m.fit(X_node_single_feat, y_node_target, sample_weight=sample_weight_node_target)
+                score = m.score(X_node_single_feat, y_node_target, sample_weight=sample_weight_node_target)
                 if score > best_score:
                     best_score = score
                     best_feat_num = feat_num
@@ -382,3 +391,4 @@ if __name__ == '__main__':
     # m.fit(X_train, y_train)
     # print('mse', np.mean(np.square(m.predict(X_test) - y_test)),
     #       'baseline', np.mean(np.square(y_test)))
+    
