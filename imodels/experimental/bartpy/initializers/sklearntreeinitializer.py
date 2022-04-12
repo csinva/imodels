@@ -56,11 +56,11 @@ class SklearnTreeInitializer(Initializer):
         # sklearn_tree = self._tree.estimators_[0][0].tree_
         sklearn_tree = self._get_sklearn_tree(tree_number)
         map_sklearn_tree_into_bartpy(tree, sklearn_tree)
-        pass
+        return
 
     def _get_sklearn_tree(self, tree_number):
         if isinstance(self._tree, GradientBoostingRegressor):
-            return self._tree.estimators_[0][tree_number].tree_
+            return self._tree.estimators_[tree_number][0].tree_
         elif isinstance(self._tree, DecisionTreeRegressor):
             return self._tree.tree_
         elif isinstance(self._tree, FIGSRegressor):
@@ -68,7 +68,7 @@ class SklearnTreeInitializer(Initializer):
         elif isinstance(self._tree, FIGSRegressorCV):
             return SkTree(self._tree.figs.trees_[tree_number])
         elif isinstance(self._tree, RandomForestRegressor):
-            return self._tree.estimators_[tree_number]
+            return self._tree.estimators_[tree_number].tree_
 
 
 def get_child(node, direction):
@@ -185,8 +185,22 @@ def map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree):
 
         left_child: LeafNode = decision_node.left_child
         right_child: LeafNode = decision_node.right_child
-        left_child.set_value(sklearn_tree.value[left_child_index][0][0])
-        right_child.set_value(sklearn_tree.value[right_child_index][0][0])
+
+        decision_node.make_original()
+        left_child.make_original()
+        right_child.make_original()
+
+        # left_mean = left_child.data.y.summed_y() / left_child.data.X.n_obsv
+        left_value_skl = sklearn_tree.value[left_child_index][0][0]
+        left_child.set_value(left_value_skl)
+
+        # right_mean = right_child.data.y.summed_y() / right_child.data.X.n_obsv
+        right_value_skl = sklearn_tree.value[right_child_index][0][0]
+        right_child.set_value(right_value_skl)
+
+
+        # left_child.set_value(sklearn_tree.value[left_child_index][0][0])
+        # right_child.set_value(sklearn_tree.value[right_child_index][0][0])
 
         mutation = GrowMutation(searched_node, decision_node)
         mutate(bartpy_tree, mutation)

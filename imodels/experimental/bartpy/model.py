@@ -1,5 +1,8 @@
 from copy import deepcopy, copy
 from typing import List, Generator, Optional
+
+from sklearn.metrics import mean_squared_error
+
 from imodels.util.checks import check_is_fitted
 
 import numpy as np
@@ -35,6 +38,7 @@ class Model:
         self._initializer = initializer
         self._check_initilizer()
         self.classification = classification
+        self._importances = None
 
         if trees is None:
             self.n_trees = n_trees
@@ -62,6 +66,21 @@ class Model:
         if not check_is_fitted(self._initializer._tree):
             self._initializer._tree.fit(self.data.X.values, self.data.y.values)
 
+    def fit(self, X, y):
+        return
+
+    # def score(self, X, y):
+    #     y_hat = self.predict(X)
+    #     return np.sqrt(mean_squared_error(y, y_hat))
+
+    def set_importances(self, imp):
+        self._importances = imp
+
+    @property
+    def importances(self):
+        return self._importances
+
+
     def initialize_trees(self) -> List[Tree]:
         trees = [Tree([LeafNode(Split(deepcopy(self.data)))]) for _ in range(self.n_trees)]
         for tree in trees:
@@ -77,13 +96,22 @@ class Model:
     def predict(self, X: np.ndarray = None) -> np.ndarray:
         if X is not None:
             return self._out_of_sample_predict(X)
-        return np.sum([tree.predict() for tree in self.trees], axis=0)
+
+        pred = 0
+        for tree in self.trees:
+            pred += tree.predict(X)
+        # return np.sum([tree.predict() for tree in self.trees], axis=0)
+        return pred
 
     def _out_of_sample_predict(self, X: np.ndarray) -> np.ndarray:
         if type(X) == pd.DataFrame:
             X: pd.DataFrame = X
             X = X.values
-        return np.sum([tree.predict(X) for tree in self.trees], axis=0)
+        # return np.sum([tree.predict(X) for tree in self.trees], axis=0)
+        pred = 0
+        for tree in self.trees:
+            pred += tree.predict(X)
+        return pred
 
     @property
     def trees(self) -> List[Tree]:

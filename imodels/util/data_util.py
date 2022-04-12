@@ -9,7 +9,7 @@ import sklearn.datasets
 from scipy.sparse import issparse
 from sklearn.datasets import fetch_openml
 
-from ..util.tree_interaction_utils import make_rj, make_vp
+from ..util.tree_interaction_utils import make_rj, make_vp, make_bart
 
 
 def _define_openml_outcomes(y, data_id: str):
@@ -42,7 +42,7 @@ def _clean_features(X):
     return X.astype(float)
 
 
-def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path='data', convertna=True) -> Tuple[
+def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path='data', convertna=True, n_samples:int=200, p:int=10) -> Tuple[
     np.ndarray, np.ndarray, list]:
     """Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
     If data is not downloaded, will download and cache. Otherwise will load locally.
@@ -116,15 +116,17 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
         return _clean_features(X), y, _clean_feat_names(feature_names)
     elif data_source == 'synthetic':
         if dataset_name == 'friedman1':
-            X, y = sklearn.datasets.make_friedman1(n_samples=200, n_features=10)
+            X, y = sklearn.datasets.make_friedman1(n_samples=n_samples, n_features=p)
         elif dataset_name == 'friedman2':
-            X, y = sklearn.datasets.make_friedman2(n_samples=200)
+            X, y = sklearn.datasets.make_friedman2(n_samples=n_samples)
         elif dataset_name == 'friedman3':
-            X, y = sklearn.datasets.make_friedman3(n_samples=200)
+            X, y = sklearn.datasets.make_friedman3(n_samples=n_samples)
         elif dataset_name == "radchenko_james":
-            X, y = make_rj()
+            X, y = make_rj(n=n_samples, p=p)
         elif dataset_name == "vo_pati":
-            X, y = make_vp()
+            X, y = make_vp(n=n_samples, p=p)
+        elif dataset_name == "bart":
+            X, y = make_bart(n=n_samples)
         return X, y, ['X_' + str(i + 1) for i in range(X.shape[1])]
 
 

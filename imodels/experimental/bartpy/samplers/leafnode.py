@@ -33,7 +33,7 @@ class LeafNodeSampler(Sampler):
         posterior_mean = likihood_mean * 1#(prior_var / (likihood_var + prior_var))
         val = posterior_mean# + (self._scalar_sampler.sample() * np.power(posterior_variance / model.n_trees, 0.5))
         return val
-
+        # return likihood_mean
 # class VectorizedLeafNodeSampler(Sampler):
 
 #     def step(self, model: Model, nodes: List[LeafNode]) -> float:

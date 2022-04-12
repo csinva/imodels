@@ -4,6 +4,7 @@ import numpy as np
 
 from ...model import Model
 from ...mutation import TreeMutation
+from ...node import DecisionNode
 from ...samplers.sampler import Sampler
 from ...samplers.scalar import UniformScalarSampler
 from ...samplers.treemutation import TreeMutationLikihoodRatio
@@ -40,16 +41,26 @@ class UnconstrainedTreeMutationSampler(Sampler):
     def sample(self, model: Model, tree: Tree) -> (Optional[TreeMutation], float):
         proposal = self.proposer.propose(tree)
         ratio, (l_new, l_old), (prob_new, prob_old) = self.likihood_ratio.log_probability_ratio(model, tree, proposal)
-        if self._scalar_sampler.sample() < ratio:
-            return proposal, np.exp(l_new) - np.exp(l_old), np.exp(prob_new) - np.exp(prob_old)
-        else:
-            return None, 0, 0
+        n = proposal.existing_node.n_obs
+        move = proposal.kind
+        d = proposal.existing_node.depth
+        mutation = proposal.existing_node if move == "prune" else proposal.updated_node
+        variable = mutation.splitting_variable
+        sample_data = {"ratio":ratio, "d":d, "n":n, "move":move, "variable": variable}
 
-    def step(self, model: Model, tree: Tree) -> Tuple[Optional[TreeMutation], float]:
-        mutation, likelihood, prob = self.sample(model, tree)
+        if self._scalar_sampler.sample() < ratio:
+            sample_data['accepted'] = True
+            return proposal, sample_data
+        else:
+            sample_data['accepted'] = False
+            return None, sample_data
+
+    def step(self, model: Model, tree: Tree, tree_num: int) -> Tuple[Optional[TreeMutation], float]:
+        mutation, data = self.sample(model, tree)
+        data['tree_num'] = tree_num
         if mutation is not None:
             mutate(tree, mutation)
-        return mutation, likelihood, prob
+        return mutation, data
 
 
 def get_tree_sampler(p_grow: float,

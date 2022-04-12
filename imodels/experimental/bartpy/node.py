@@ -12,11 +12,13 @@ class TreeNode(object):
         - Links to children nodes
     """
 
-    def __init__(self, split: Split, depth: int, left_child: 'TreeNode' = None, right_child: 'TreeNode' = None):
+    def __init__(self, split: Split, depth: int, left_child: 'TreeNode' = None, right_child: 'TreeNode' = None,
+                 original: bool = False):
         self.depth = depth
         self._split = split
         self._left_child = left_child
         self._right_child = right_child
+        self.original = original
 
     @property
     def data(self) -> Data:
@@ -33,6 +35,9 @@ class TreeNode(object):
     @property
     def split(self):
         return self._split
+
+    def make_original(self):
+        self.original = True
 
     def update_y(self, y):
         self.data.update_y(y)
@@ -94,18 +99,23 @@ class DecisionNode(TreeNode):
         return self.left_child.split.most_recent_split_condition()
 
     @property
+    def splitting_variable(self):
+        return self.right_child.split._combined_condition.splitting_variable
+
+    @property
     def n_obs(self):
         n_l = self.left_child.n_obs
         n_r = self.right_child.n_obs
         return n_l + n_r
 
-
     @property
     def current_value(self):
         n_l = self.left_child.n_obs
         n_r = self.right_child.n_obs
-        l_val = self.left_child.current_value if type(self.left_child) == DecisionNode else self.left_child.mean_response
-        r_val = self.right_child.current_value if type(self.right_child) == DecisionNode else self.right_child.mean_response
+        l_val = self.left_child.current_value if type(
+            self.left_child) == DecisionNode else self.left_child.mean_response
+        r_val = self.right_child.current_value if type(
+            self.right_child) == DecisionNode else self.right_child.mean_response
         l_sum = l_val * n_l
         r_sum = r_val * n_r
         return (l_sum + r_sum) / self.n_obs
@@ -131,9 +141,14 @@ def split_node(node: LeafNode, split_conditions: Tuple[SplitCondition, SplitCond
 def deep_copy_node(node: TreeNode):
     if type(node) == LeafNode:
         node: LeafNode = node
-        return LeafNode(node.split.out_of_sample_conditioner(), value=node.current_value, depth=node.depth)
+        cpy_node = LeafNode(node.split.out_of_sample_conditioner(), value=node.current_value, depth=node.depth)
+        cpy_node.original = node.original
+        return cpy_node
     elif type(node) == DecisionNode:
         node: DecisionNode = node
-        return DecisionNode(node.split.out_of_sample_conditioner(), node.left_child, node.right_child, depth=node.depth)
+        cpy_node = DecisionNode(node.split.out_of_sample_conditioner(),
+                                node.left_child, node.right_child, depth=node.depth)
+        cpy_node.original = node.original
+        return cpy_node
     else:
         raise TypeError("Unsupported node type")

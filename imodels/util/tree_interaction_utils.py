@@ -64,6 +64,42 @@ def make_vp(n=100, p=100):
     return X, y
 
 
+def make_bart(n=100, p=5):
+    """Generates data according to the simulation in the original Bayeeisna CART search paper
+    Args:
+        n (int): number of sample
+        p (int): number of features
+
+    Returns:
+        Tuple[np.array, np.array]: design matrix and label vector
+
+    """
+    X = np.random.normal(loc=3, scale=3, size=(n, p))
+    X[:, 1] = np.random.choice([1, 2, 3, 4], size=n)
+    X[:, 0] = np.random.choice([1, 2, 3, 4, 5, 6, 7, 8, 9], size=n)
+
+    y = np.ones(n)
+    eight_cond = np.logical_or(np.logical_and(X[:, 0] <= 5, X[:, 1] <= 2),
+                               np.logical_and(X[:, 0] <= 7, X[:, 1] > 2))
+    two_cond = np.logical_and(X[:, 0] > 5, X[:, 1] <= 2)
+    # one_cond = np.logical_and(X[:, 0] <= 3, X[:, 1] > 2)
+    five_sub_cond = np.logical_and(3 <= X[:, 0], X[:, 0] <= 7)
+    five_cond = np.logical_and(five_sub_cond, X[:, 1] > 2)
+
+    y[eight_cond] = 8 * y[eight_cond]
+    y[two_cond] = 2 * y[two_cond]
+    y[five_cond] = 5 * y[five_cond]
+
+    # y[eight_cond] = 8 * y[eight_cond]
+
+    # effects = X[:, 0] + X[:, 1] ** 2 + X[:, 2] + X[:, 3] ** 2 + X[:, 4]
+    # interactions = X[:, 0] * X[:, 1] + X[:, 1] * X[:, 2] + X[:, 2] * X[:, 3]
+
+    y += 2 * np.random.normal(size=n)
+
+    return X, y
+
+
 def get_gt(dataset_name):
     important_features = []
     interactions = []
