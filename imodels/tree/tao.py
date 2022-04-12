@@ -8,6 +8,7 @@ from mlxtend.classifier import LogisticRegression
 from sklearn import datasets
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import get_scorer
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_text, plot_tree
 from sklearn.utils import check_X_y
@@ -19,6 +20,7 @@ class TaoTree(BaseEstimator):
                  n_iters: int = 20,
                  model_args: dict = {'max_leaf_nodes': 15},
                  randomize_tree=False,
+                 update_scoring='accuracy',
                  min_node_samples_tao=3,
                  min_leaf_samples_tao=2,
                  node_model='stump',
@@ -80,6 +82,7 @@ class TaoTree(BaseEstimator):
         self.n_iters = n_iters
         self.model_args = model_args
         self.randomize_tree = randomize_tree
+        self.update_scoring = update_scoring
         self.min_node_samples_tao = min_node_samples_tao
         self.min_leaf_samples_tao = min_leaf_samples_tao
         self.node_model = node_model
@@ -173,15 +176,17 @@ class TaoTree(BaseEstimator):
             node_id, path_to_node_index = queue.popleft()
             indexes_with_prefix_paths.append((node_id, path_to_node_index))
 
-            # If a split node, append left and right children and depth to `stack`
+            # If a split node, append left and right children and depth to queue
             if children_left[node_id] != children_right[node_id]:
                 queue.append((children_left[node_id], path_to_node_index + [(node_id, 'L')]))
                 queue.append((children_right[node_id], path_to_node_index + [(node_id, 'R')]))
         # print(indexes_with_prefix_paths)
 
-        # For each each node, try a TAO update
         num_updates = 0
+
+        # Reversing BFS queue presents nodes bottom -> top one level at a time
         for (node_id, path_to_node_index) in reversed(indexes_with_prefix_paths):
+            # For each each node, try a TAO update
             # print('node_id', node_id, path_to_node_index)
 
             # Compute the points being input to the node ######################################
@@ -309,11 +314,13 @@ class TaoTree(BaseEstimator):
             old_feat_num = feature[node_id]
             old_threshold = threshold[node_id]
             # print(X.sum(), y.sum())
-            old_score = self.model.score(X, y)
+            scorer = get_scorer(self.update_scoring)
+
+            old_score = scorer(self.model, X, y)
 
             feature[node_id] = best_feat_num
             threshold[node_id] = best_threshold
-            new_score = self.model.score(X, y)
+            new_score = scorer(self.model, X, y)
 
             # debugging
             if self.verbose > 1:
