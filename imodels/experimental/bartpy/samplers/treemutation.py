@@ -79,7 +79,8 @@ class TreeMutationLikihoodRatio(ABC):
         log_likelihood_ratio, (l_new, l_old) = self.log_likihood_ratio(model, tree, mutation)
         log_transition_ratio, (t_new, t_old) = self.log_transition_ratio(tree, mutation)
         log_prior_ratio, (p_new, p_old) = self.log_tree_ratio(model, tree, mutation)
-        prob_score = log_transition_ratio + log_likelihood_ratio + log_prior_ratio
+        bayes_term = log_transition_ratio + log_prior_ratio
+        prob_score = bayes_term + log_likelihood_ratio
         ratio = np.exp(prob_score)
         p_t_new = p_new + t_new
         p_t_old = p_old + t_old

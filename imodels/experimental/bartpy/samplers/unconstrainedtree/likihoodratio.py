@@ -85,13 +85,13 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
     @staticmethod
     def log_likihood_ratio_grow(model: Model, proposal: TreeMutation):
         new_model_l, old_model_l = log_grow_ratio(proposal.existing_node, proposal.updated_node.left_child,
-                                                    proposal.updated_node.right_child, model.sigma, model.sigma_m)
+                                                  proposal.updated_node.right_child, model.sigma, model.sigma_m)
         return (new_model_l - old_model_l), (new_model_l, old_model_l)
 
     @staticmethod
     def log_likihood_ratio_prune(model: Model, proposal: TreeMutation):
         old_model_l, new_model_l = log_grow_ratio(proposal.updated_node, proposal.existing_node.left_child,
-                                                    proposal.existing_node.right_child, model.sigma, model.sigma_m)
+                                                  proposal.existing_node.right_child, model.sigma, model.sigma_m)
         return (new_model_l - old_model_l), (new_model_l, old_model_l)
 
     def log_grow_transition_ratio(self, tree: Tree, mutation: GrowMutation):
@@ -107,10 +107,9 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
         # return prune_grow_ratio + prob_selection_ratio
         return numerator - denominator, (numerator, denominator)
 
-
     def log_prune_transition_ratio(self, tree: Tree, mutation: PruneMutation):
         if n_splittable_leaf_nodes(tree) == 1:
-            prob_grow_node_selected = - np.inf  # Infinitely unlikely to be able to grow a null tree
+            prob_grow_node_selected = - np.inf  # Infinitely unlikely to be able to prune a null tree
         else:
             prob_grow_node_selected = - np.log(n_splittable_leaf_nodes(tree) - 1)
         prob_split = log_probability_split_within_node(GrowMutation(mutation.updated_node, mutation.existing_node))

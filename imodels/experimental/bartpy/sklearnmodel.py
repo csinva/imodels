@@ -8,6 +8,7 @@ import pandas as pd
 import scipy.stats
 from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, BaseEstimator
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import datasets, model_selection
@@ -362,8 +363,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
 
     def predict_proba(self, X: np.ndarray = None) -> np.ndarray:
         preds = self._out_of_sample_predict(X)
-        return np.stack([preds, 1-preds], axis=1)
-
+        return np.stack([preds, 1 - preds], axis=1)
 
     def residuals(self, X=None, y=None) -> np.ndarray:
         """
@@ -421,6 +421,45 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             The total summed L2 error for the model
         """
         return np.sqrt(np.sum(self.l2_error(X, y)))
+
+    def _chain_pred_arr(self, X, chain_number):
+        chain_len = int(self.n_samples)
+        samples_chain = self._model_samples[chain_number * chain_len: (chain_number + 1) * chain_len]
+        predictions_transformed = [x.predict(X) for x in samples_chain]
+        return predictions_transformed
+
+    def predict_chain(self, X, chain_number):
+        predictions_transformed = self._chain_pred_arr(X, chain_number)
+        predictions = self.data.y.unnormalize_y(np.mean(predictions_transformed, axis=0))
+        if self.classification:
+            predictions = scipy.stats.norm.cdf(predictions)
+        return predictions
+
+    def chain_mse_std(self, X, y, chain_number):
+        predictions_transformed = self._chain_pred_arr(X, chain_number)
+        predictions_std = np.std(
+            [mean_squared_error(self.data.y.unnormalize_y(preds), y) for preds in predictions_transformed])
+        return predictions_std
+
+    def chain_precitions(self, X, chain_number):
+        predictions_transformed = self._chain_pred_arr(X, chain_number)
+        preds_arr = [self.data.y.unnormalize_y(preds) for preds in predictions_transformed]
+        return preds_arr
+
+    def between_chains_var(self, X):
+        all_predictions = np.stack([self.data.y.unnormalize_y(x.predict(X)) for x in self._model_samples], axis=1)
+
+        def _get_var(preds_arr):
+            mean_pred = preds_arr.mean(axis=1)
+            var = np.mean((preds_arr - np.expand_dims(mean_pred, 1)) ** 2)
+            return var
+
+        total_var = _get_var(all_predictions)
+        within_chain_var = 0
+        for c in range(self.n_chains):
+            chain_preds = self._chain_pred_arr(X, c)
+            within_chain_var += _get_var(np.stack(chain_preds, axis=1))
+        return total_var - within_chain_var
 
     def _out_of_sample_predict(self, X):
         samples = self._model_samples
@@ -733,6 +772,7 @@ def main():
     # #
     # # plt.close()
     #
+
 
 if __name__ == '__main__':
     main()

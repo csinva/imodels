@@ -43,6 +43,9 @@ class Model:
                 if hasattr(self._initializer._tree,"trees_"):
                     self.n_trees = len(self._initializer._tree.trees_)
                     self._trees = self.initialize_trees()
+                elif hasattr(self._initializer._tree, "figs"):
+                    self.n_trees = len(self._initializer._tree.figs.trees_)
+                    self._trees = self.initialize_trees()
 
                 # for tree in self.trees:
                 self._initializer.initialize_trees(self.refreshed_trees())
