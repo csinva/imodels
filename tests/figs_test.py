@@ -3,7 +3,7 @@ import random
 
 import numpy as np
 
-from imodels import FIGSClassifier, FIGSRegressor
+from imodels import FIGSClassifier, FIGSRegressor, FIGSClassifierCV, FIGSRegressorCV
 from imodels.experimental.figs_ensembles import FIGSExtRegressor, FIGSExtClassifier
 
 path_to_tests = os.path.dirname(os.path.realpath(__file__))
@@ -28,7 +28,9 @@ class TestFIGS:
         '''Test on a real (small) dataset
         '''
         for model_type in [
-            FIGSClassifier, FIGSRegressor, FIGSExtClassifier, FIGSExtRegressor
+            FIGSClassifier, FIGSRegressor,
+            FIGSExtClassifier, FIGSExtRegressor,
+            FIGSClassifierCV, FIGSRegressorCV,
         ]:
 
             init_kwargs = {}
@@ -55,13 +57,14 @@ class TestFIGS:
             assert acc_train > 0.8, 'acc greater than 0.9'
             # print(m)
 
-            trees = m.trees_
-            assert len(trees) == 1, 'only one tree'
-            assert trees[0].feature == 1, 'split on feat 1'
-            assert np.abs(trees[0].left.value) < 0.01, 'left value 0'
-            assert trees[0].left.left is None and trees[0].left.right is None, 'left is leaf'
-            assert np.abs(trees[0].right.left.value) < 0.01, 'right-left value 0'
-            assert np.abs(trees[0].right.right.value - 1) < 0.01, 'right-right value 1'
+            if not type(m) in [FIGSClassifierCV, FIGSRegressorCV]:
+                trees = m.trees_
+                assert len(trees) == 1, 'only one tree'
+                assert trees[0].feature == 1, 'split on feat 1'
+                assert np.abs(trees[0].left.value) < 0.01, 'left value 0'
+                assert trees[0].left.left is None and trees[0].left.right is None, 'left is leaf'
+                assert np.abs(trees[0].right.left.value) < 0.01, 'right-left value 0'
+                assert np.abs(trees[0].right.right.value - 1) < 0.01, 'right-right value 1'
 
 
 if __name__ == '__main__':
