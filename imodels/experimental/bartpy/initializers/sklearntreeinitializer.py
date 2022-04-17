@@ -68,7 +68,7 @@ class SklearnTreeInitializer(Initializer):
         elif isinstance(self._tree, FIGSRegressorCV):
             return SkTree(self._tree.figs.trees_[tree_number])
         elif isinstance(self._tree, RandomForestRegressor):
-            return self._tree.estimators_[tree_number]
+            return self._tree.estimators_[tree_number].tree_
 
 
 def get_child(node, direction):

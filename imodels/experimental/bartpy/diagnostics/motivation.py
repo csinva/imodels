@@ -9,10 +9,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from sklearn.inspection import permutation_importance
 from tqdm import tqdm
 from sklearn import model_selection, datasets
 from sklearn.metrics import mean_squared_error
-from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 
 from imodels import get_clean_dataset
 from imodels.experimental.bartpy.initializers.sklearntreeinitializer import SklearnTreeInitializer
@@ -41,13 +42,17 @@ def parse_args():
     parser = argparse.ArgumentParser(description='BART Research motivation')
     parser.add_argument('datasets', metavar='datasets', type=str,
                         help='dataset to run sim over')
+    parser.add_argument('n_trees', metavar='n_trees', type=int,
+                        help='number of trees')
+    parser.add_argument('--display', action='store_true',
+                        help='display figure')
 
     args = parser.parse_args()
     return args
 
 
 def log_rmse(x, y):
-    return np.log(np.sqrt(mean_squared_error(x, y)))
+    return np.log(1 + np.sqrt(mean_squared_error(x, y)))
 
 
 def mse_functional(model: SklearnModel, sample: Model, X, y):
@@ -63,35 +68,59 @@ def n_leaves_functional(model: SklearnModel, sample: Model, X, y):
     return n_leaves / len(sample.trees)
 
 
+def importance_functional(model: SklearnModel, sample: Model, X, y):
+    result = permutation_importance(
+        sample, X, y, n_repeats=10, random_state=42, n_jobs=2
+    )
+    feature_names = [f"feature {i}" for i in range(X.shape[1])]
+
+    importances = pd.Series(result.importances_mean, index=feature_names)
+    return importances
+
+
 def analyze_functional(models: Dict[str, SklearnModel], functional: callable, axs=None, name=None, X=None, y=None):
     if axs is None:
         _, axs = plt.subplots(2, 1)
-    colors = {0: cm.Blues, 1: cm.Greens}
+    colors = {0: cm.Blues, 1: cm.Greens, 2: cm.Reds}
+    min_hist = np.inf
+    max_hist = -1 * np.inf
+    plt_data = {"plot": {m: [] for m in models.keys()}, "hist": {m: [] for m in models.keys()}}
+
     for i, (mdl_name, model) in enumerate(models.items()):
         n_chains = model.n_chains
         chain_len = int(len(model.model_samples) / n_chains)
-        color = iter(colors[i](np.linspace(0.3, 0.7, n_chains)))
+        # color = iter(colors[i](np.linspace(0.3, 0.7, n_chains)))
 
         functional_specific = partial(functional, X=X, y=y, model=model)
         hist_len = int(chain_len / 3)
 
-        plt_data = {"plot": [], "hist": []}
-        min_hist = np.inf
-        max_hist = -1 * np.inf
         for c in range(n_chains):
             chain_sample = model.model_samples[c * chain_len:(c + 1) * chain_len]
             chain_functional = [functional_specific(sample=s) for s in chain_sample]
-            plt_data['plot'].append((np.arange(chain_len), chain_functional))
-            hist_data = chain_functional[(chain_len - hist_len):chain_len]
-            plt_data['hist'].append(hist_data)
-            max_hist = np.maximum(max_hist, np.max(hist_data))
-            min_hist = np.minimum(min_hist, np.min(hist_data))
+            if type(chain_functional[0]) != np.ndarray:
 
+                plt_data['plot'][mdl_name].append((np.arange(chain_len), chain_functional))
+                hist_data = chain_functional[(chain_len - hist_len):chain_len]
+                plt_data['hist'][mdl_name].append(hist_data)
+                max_hist = np.maximum(max_hist, np.max(hist_data))
+                min_hist = np.minimum(min_hist, np.min(hist_data))
+            else:
+                plt_data['plot'][mdl_name].append((np.arange(chain_len), chain_functional[0]))
+                hist_data = chain_functional[0][(chain_len - hist_len):chain_len]
+                plt_data['hist'][mdl_name].append(hist_data)
+                max_hist = np.maximum(max_hist, np.max(hist_data))
+                min_hist = np.minimum(min_hist, np.min(hist_data))
+
+    for i, (mdl_name, model) in enumerate(models.items()):
+        n_chains = model.n_chains
+
+        # chain_len = int(len(model.model_samples) / n_chains)
+        color = iter(colors[i](np.linspace(0.3, 0.7, n_chains)))
         for i, c in enumerate(range(n_chains)):
             clr = next(color)
-            plt_x, plt_y = plt_data['plot'][i]
+            plt_x, plt_y = plt_data['plot'][mdl_name][i]
             axs[0].plot(plt_x, plt_y, color=clr, label=f"Chain {c} ({mdl_name})")
-            hist_x = plt_data['hist'][i]
+            hist_x = plt_data['hist'][mdl_name][i]
             axs[1].hist(hist_x, color=clr, label=f"Chain {c} ({mdl_name})",
                         alpha=0.5, bins=50, range=[min_hist, max_hist])
 
@@ -220,22 +249,27 @@ def plot_across_chains(models: Dict[str, SklearnModel], ax=None, title="Across C
 
 
 def main():
-    n_trees = 50
-    n_samples = 7500
+    # n_trees = 100
+    n_samples = 75  # 00
     n_burn = 0  # 10000
-    n_chains = 3
+    n_chains = 2
     args = parse_args()
     ds = args.datasets
+    n_trees = args.n_trees
+    display = args.display
     d = [d for d in DATASETS_REGRESSION if d[0] == ds]
     with tqdm(d) as t:
         for d in t:
             t.set_description(f'{d[0]}')
             X, y, feat_names = get_clean_dataset(d[1], data_source=d[2])
+
             n = len(y)
             p = X.shape[1]
 
             X_train, X_test, y_train, y_test = model_selection.train_test_split(
-                X, y, test_size=0.5, random_state=4)
+                X, y, test_size=0.3, random_state=4)
+
+            X_rand, y_rand = np.random.random(size=X_train.shape), np.random.random(size=y_train.shape)
 
             bart_zero = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
                              n_burn=n_burn, n_chains=n_chains, thin=1)
@@ -248,26 +282,37 @@ def main():
                             n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=sgb))
             bart_sgb.fit(X_train, y_train)
 
-            fig, axs = plt.subplots(3, 2, figsize=(10, 22))
+            rf = RandomForestRegressor(n_estimators=n_trees, max_leaf_nodes=10)
+            rf = rf.fit(X_train, y_rand)
+
+            bart_rand = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
+                             n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=rf))
+            bart_rand.fit(X_train, y_train)
+
+            fig, axs = plt.subplots(4, 2, figsize=(10, 22))
             # fig.tight_layout()
             fig.subplots_adjust(hspace=.6)
 
-            barts = {"SGB": bart_sgb, "Single Leaf": bart_zero}
+            barts = {"SGB": bart_sgb, "Single Leaf": bart_zero, "Random": bart_rand}
 
             # plot_chains_leaves(bart_zero, axs[0], X=X_test, y=y_test)
-            analyze_functional(barts, functional=mse_functional, axs=axs[0, 0:2], X=X_test, y=y_test,
+            analyze_functional(barts, functional=importance_functional, axs=axs[0, 0:2], X=X_test, y=y_test,
+                               name="Permutation importance")
+            analyze_functional(barts, functional=mse_functional, axs=axs[1, 0:2], X=X_test, y=y_test,
                                name="Test log-RMSE")
-            analyze_functional(barts, functional=n_leaves_functional, axs=axs[1, 0:2], X=X_test, y=y_test,
+            analyze_functional(barts, functional=n_leaves_functional, axs=axs[2, 0:2], X=X_test, y=y_test,
                                name="# Leaves")
             # plot_within_chain(barts, axs[2], X=X_test, y=y_test)
-            plot_across_chains(barts, axs[2, 1], X=X_test, y=y_test, fig=fig)
+            plot_across_chains(barts, axs[3, 1], X=X_test, y=y_test, fig=fig)
             axs[2, 0].axis('off')
 
             #
             title = f"Dataset: {d[0].capitalize()}, (n, p) = ({n}, {p}), burn = {n_burn}"
             plt.suptitle(title)
-            #
-            plt.savefig(os.path.join(ART_PATH, "functional", f"{d[0]}_samples_{n_samples}_new.png"))
+            if display:
+                plt.show()
+            else:
+                plt.savefig(os.path.join(ART_PATH, "functional", f"{d[0]}_samples_{n_samples}_trees_{n_trees}_new.png"))
             plt.close()
 
 
