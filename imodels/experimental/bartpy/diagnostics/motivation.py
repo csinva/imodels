@@ -51,34 +51,54 @@ def parse_args():
     return args
 
 
+def get_important_features(dataset_name):
+    if dataset_name == "friedman1":
+        return [0, 1, 2, 3, 4]
+    elif dataset_name == "friedman2":
+        return [0, 1, 2, 3]
+    elif dataset_name == "friedman3":
+        return [0, 1, 2, 3]
+
+
 def log_rmse(x, y):
     return np.log(1 + np.sqrt(mean_squared_error(x, y)))
 
 
-def mse_functional(model: SklearnModel, sample: Model, X, y):
+def mse_functional(model: SklearnModel, sample: Model, X, y, ds_name):
     predictions_transformed = sample.predict(X)
     predictions = model.data.y.unnormalize_y(predictions_transformed)
     return log_rmse(predictions, y)
 
 
-def n_leaves_functional(model: SklearnModel, sample: Model, X, y):
+def n_leaves_functional(model: SklearnModel, sample: Model, X, y, ds_name):
     n_leaves = 0
     for tree in sample.trees:
         n_leaves += len(tree.leaf_nodes)
     return n_leaves / len(sample.trees)
 
 
-def importance_functional(model: SklearnModel, sample: Model, X, y):
+def importance_functional(model: SklearnModel, sample: Model, X, y, ds_name):
+    important_features = get_important_features(ds_name)
+    if important_features is None:
+        return
+    if sample.importances is not None:
+        rel_imp = np.sum(sample.importances[important_features]) / np.sum(sample.importances)
+        return rel_imp
     result = permutation_importance(
-        sample, X, y, n_repeats=10, random_state=42, n_jobs=2
+        sample, X, y, n_repeats=10, random_state=42, n_jobs=2, scoring="neg_mean_absolute_percentage_error"
     )
-    feature_names = [f"feature {i}" for i in range(X.shape[1])]
+    # feature_names = [f"feature {i}" for i in range(X.shape[1])]
 
-    importances = pd.Series(result.importances_mean, index=feature_names)
+    importances = pd.Series(result.importances_mean)
+    sample.set_importances(importances)
     return importances
+    # rel_imp = np.sum(sample.importances[important_features]) / np.sum(sample.importances)
+    #
+    # return rel_imp
 
 
-def analyze_functional(models: Dict[str, SklearnModel], functional: callable, axs=None, name=None, X=None, y=None):
+def analyze_functional(models: Dict[str, SklearnModel], functional: callable, axs=None, name=None, X=None, y=None,
+                       ds_name=None):
     if axs is None:
         _, axs = plt.subplots(2, 1)
     colors = {0: cm.Blues, 1: cm.Greens, 2: cm.Reds}
@@ -91,25 +111,18 @@ def analyze_functional(models: Dict[str, SklearnModel], functional: callable, ax
         chain_len = int(len(model.model_samples) / n_chains)
         # color = iter(colors[i](np.linspace(0.3, 0.7, n_chains)))
 
-        functional_specific = partial(functional, X=X, y=y, model=model)
+        functional_specific = partial(functional, X=X, y=y, model=model, ds_name=ds_name)
         hist_len = int(chain_len / 3)
 
         for c in range(n_chains):
             chain_sample = model.model_samples[c * chain_len:(c + 1) * chain_len]
             chain_functional = [functional_specific(sample=s) for s in chain_sample]
-            if type(chain_functional[0]) != np.ndarray:
 
-                plt_data['plot'][mdl_name].append((np.arange(chain_len), chain_functional))
-                hist_data = chain_functional[(chain_len - hist_len):chain_len]
-                plt_data['hist'][mdl_name].append(hist_data)
-                max_hist = np.maximum(max_hist, np.max(hist_data))
-                min_hist = np.minimum(min_hist, np.min(hist_data))
-            else:
-                plt_data['plot'][mdl_name].append((np.arange(chain_len), chain_functional[0]))
-                hist_data = chain_functional[0][(chain_len - hist_len):chain_len]
-                plt_data['hist'][mdl_name].append(hist_data)
-                max_hist = np.maximum(max_hist, np.max(hist_data))
-                min_hist = np.minimum(min_hist, np.min(hist_data))
+            plt_data['plot'][mdl_name].append((np.arange(chain_len), chain_functional))
+            hist_data = chain_functional[(chain_len - hist_len):chain_len]
+            plt_data['hist'][mdl_name].append(hist_data)
+            max_hist = np.maximum(max_hist, np.max(hist_data))
+            min_hist = np.minimum(min_hist, np.min(hist_data))
 
     for i, (mdl_name, model) in enumerate(models.items()):
         n_chains = model.n_chains
@@ -248,9 +261,96 @@ def plot_across_chains(models: Dict[str, SklearnModel], ax=None, title="Across C
     return ax
 
 
+def fig_1(barts: Dict[str, SklearnModel], X, y, dataset, display):
+    X_test = X
+    y_test = y
+    n, p = X.shape
+    n_samples = list(barts.values())[0].n_samples
+    n_burn = list(barts.values())[0].n_burn
+    n_trees = list(barts.values())[0].n_trees
+
+    ds_name = dataset[0]
+
+    fig, axs = plt.subplots(3, 2, figsize=(10, 22))
+    # fig.tight_layout()
+    fig.subplots_adjust(hspace=0.6)
+
+    analyze_functional(barts, functional=mse_functional, axs=axs[0, 0:2], X=X_test, y=y_test,
+                       name="Test log-RMSE", ds_name=ds_name)
+    analyze_functional(barts, functional=n_leaves_functional, axs=axs[1, 0:2], X=X_test, y=y_test,
+                       name="# Leaves", ds_name=ds_name)
+
+    # plot_within_chain(barts, axs[2], X=X_test, y=y_test)
+    plot_across_chains(barts, axs[2, 1], X=X_test, y=y_test, fig=fig)
+    axs[2, 0].axis('off')
+    # if is_synthetic:
+    #     analyze_functional(barts, functional=importance_functional, axs=axs[3, 0:2], X=X_test, y=y_test,
+    #                        name="Permutation importance", ds_name=dataset[0])
+
+    #
+    title = f"Dataset: {dataset[0].capitalize()}, (n, p) = ({n}, {p}), burn = {n_burn}"
+    plt.suptitle(title)
+    if display:
+        plt.show()
+    else:
+        plt.savefig(os.path.join(ART_PATH, "functional", f"{dataset[0]}_samples_{n_samples}_trees_{n_trees}_new.png"))
+
+
+# def fig_2(barts: Dict[str, SklearnModel], X, y, dataset, display):
+#     fig, axs = plt.subplots(3, 2, figsize=(10, 22))
+#     # fig.tight_layout()
+#     fig.subplots_adjust(hspace=.8)
+#     X_test = X
+#     y_test = y
+#     n, p = X.shape
+#     n_samples = list(barts.values())[0].n_samples
+#     n_burn = list(barts.values())[0].n_burn
+#     n_trees = list(barts.values())[0].n_trees
+#     analyze_functional(barts, functional=importance_functional, axs=axs[0, 0:2], X=X_test, y=y_test,
+#                        name="Permutation importance")
+def fig_2(barts: Dict[str, SklearnModel], X, y, dataset, display):
+    fig, axs = plt.subplots(len(barts), 1, figsize=(10, 22))
+    n, p = X.shape
+    n_samples = list(barts.values())[0].n_samples
+    n_burn = list(barts.values())[0].n_burn
+    n_trees = list(barts.values())[0].n_trees
+    # fig.tight_layout()
+    fig.subplots_adjust(hspace=0.6)
+
+    ds_name = dataset[0]
+    important_features = get_important_features(ds_name)
+    non_important_idx = [not (f in important_features) for f in range(p)]
+
+    for i, (mdl_name, model) in enumerate(barts.items()):
+        n_chains = model.n_chains
+        chain_len = int(len(model.model_samples) / n_chains)
+        #
+
+        importance_f = partial(importance_functional, X=X, y=y, model=model, ds_name=ds_name)
+
+        for c in range(1):
+            chain_sample = model.model_samples[c * chain_len:(c + 1) * chain_len]
+            chain_functional = np.stack([importance_f(sample=s) for s in chain_sample], axis=0)
+            colors_i = iter(cm.rainbow(np.linspace(0, 1, len(important_features) + 1)))
+            for f in important_features:
+                axs[i].plot(np.arange(chain_len), chain_functional[:, f], color=next(colors_i), label=f"Feature {f}")
+            non_imp = np.sum(chain_functional[:, non_important_idx], axis=1)
+            axs[i].plot(np.arange(chain_len), non_imp, color=next(colors_i), label=f"Non Important")
+        axs[i].set_title(mdl_name)
+        axs[i].legend()
+
+    title = f"Dataset: {dataset[0].capitalize()}, (n, p) = ({n}, {p}), burn = {n_burn}"
+    plt.suptitle(title)
+    if display:
+        plt.show()
+    else:
+        plt.savefig(
+            os.path.join(ART_PATH, "functional", f"{dataset[0]}_samples_{n_samples}_trees_{n_trees}_importance.png"))
+
+
 def main():
     # n_trees = 100
-    n_samples = 75  # 00
+    n_samples = 7500  # 00
     n_burn = 0  # 10000
     n_chains = 2
     args = parse_args()
@@ -263,8 +363,6 @@ def main():
             t.set_description(f'{d[0]}')
             X, y, feat_names = get_clean_dataset(d[1], data_source=d[2])
 
-            n = len(y)
-            p = X.shape[1]
 
             X_train, X_test, y_train, y_test = model_selection.train_test_split(
                 X, y, test_size=0.3, random_state=4)
@@ -289,31 +387,35 @@ def main():
                              n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=rf))
             bart_rand.fit(X_train, y_train)
 
-            fig, axs = plt.subplots(4, 2, figsize=(10, 22))
-            # fig.tight_layout()
-            fig.subplots_adjust(hspace=.6)
-
             barts = {"SGB": bart_sgb, "Single Leaf": bart_zero, "Random": bart_rand}
-
-            # plot_chains_leaves(bart_zero, axs[0], X=X_test, y=y_test)
-            analyze_functional(barts, functional=importance_functional, axs=axs[0, 0:2], X=X_test, y=y_test,
-                               name="Permutation importance")
-            analyze_functional(barts, functional=mse_functional, axs=axs[1, 0:2], X=X_test, y=y_test,
-                               name="Test log-RMSE")
-            analyze_functional(barts, functional=n_leaves_functional, axs=axs[2, 0:2], X=X_test, y=y_test,
-                               name="# Leaves")
-            # plot_within_chain(barts, axs[2], X=X_test, y=y_test)
-            plot_across_chains(barts, axs[3, 1], X=X_test, y=y_test, fig=fig)
-            axs[2, 0].axis('off')
-
+            fig_1(barts, X_test, y_test, d, display)
+            fig_2(barts, X_test, y_test, d, display)
             #
-            title = f"Dataset: {d[0].capitalize()}, (n, p) = ({n}, {p}), burn = {n_burn}"
-            plt.suptitle(title)
-            if display:
-                plt.show()
-            else:
-                plt.savefig(os.path.join(ART_PATH, "functional", f"{d[0]}_samples_{n_samples}_trees_{n_trees}_new.png"))
-            plt.close()
+            # fig, axs = plt.subplots(4, 2, figsize=(10, 22))
+            # # fig.tight_layout()
+            # fig.subplots_adjust(hspace=.8)
+            #
+            # barts = {"SGB": bart_sgb, "Single Leaf": bart_zero, "Random": bart_rand}
+            #
+            # # plot_chains_leaves(bart_zero, axs[0], X=X_test, y=y_test)
+            # analyze_functional(barts, functional=importance_functional, axs=axs[0, 0:2], X=X_test, y=y_test,
+            #                    name="Permutation importance")
+            # analyze_functional(barts, functional=mse_functional, axs=axs[1, 0:2], X=X_test, y=y_test,
+            #                    name="Test log-RMSE")
+            # analyze_functional(barts, functional=n_leaves_functional, axs=axs[2, 0:2], X=X_test, y=y_test,
+            #                    name="# Leaves")
+            # # plot_within_chain(barts, axs[2], X=X_test, y=y_test)
+            # plot_across_chains(barts, axs[3, 1], X=X_test, y=y_test, fig=fig)
+            # axs[3, 0].axis('off')
+            #
+            # #
+            # title = f"Dataset: {d[0].capitalize()}, (n, p) = ({n}, {p}), burn = {n_burn}"
+            # plt.suptitle(title)
+            # if display:
+            #     plt.show()
+            # else:
+            #     plt.savefig(os.path.join(ART_PATH, "functional", f"{d[0]}_samples_{n_samples}_trees_{n_trees}_new.png"))
+            # plt.close()
 
 
 if __name__ == '__main__':
