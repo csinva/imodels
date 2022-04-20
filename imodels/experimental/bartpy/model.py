@@ -38,6 +38,7 @@ class Model:
         self._initializer = initializer
         self._check_initilizer()
         self.classification = classification
+        self._importances = None
 
         if trees is None:
             self.n_trees = n_trees
@@ -68,9 +69,17 @@ class Model:
     def fit(self, X, y):
         return
 
-    def score(self, X, y):
-        y_hat = self.predict(X)
-        return np.sqrt(mean_squared_error(y, y_hat))
+    # def score(self, X, y):
+    #     y_hat = self.predict(X)
+    #     return np.sqrt(mean_squared_error(y, y_hat))
+
+    def set_importances(self, imp):
+        self._importances = imp
+
+    @property
+    def importances(self):
+        return self._importances
+
 
     def initialize_trees(self) -> List[Tree]:
         trees = [Tree([LeafNode(Split(deepcopy(self.data)))]) for _ in range(self.n_trees)]
