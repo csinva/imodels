@@ -94,6 +94,10 @@ class DecisionNode(TreeNode):
         return self.left_child.split.most_recent_split_condition()
 
     @property
+    def splitting_variable(self):
+        return self.right_child.split._combined_condition.splitting_variable
+
+    @property
     def n_obs(self):
         n_l = self.left_child.n_obs
         n_r = self.right_child.n_obs
