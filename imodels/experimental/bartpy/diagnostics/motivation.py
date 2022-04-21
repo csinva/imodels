@@ -293,7 +293,7 @@ def fig_1(barts: Dict[str, SklearnModel], X, y, dataset, display):
     if display:
         plt.show()
     else:
-        plt.savefig(os.path.join(ART_PATH, "functional", f"{dataset[0]}_samples_{n_samples}_trees_{n_trees}_new.png"))
+        plt.savefig(os.path.join(ART_PATH, f"{dataset[0]}_samples_{n_samples}_trees_{n_trees}.png"))
 
 
 # def fig_2(barts: Dict[str, SklearnModel], X, y, dataset, display):
@@ -345,7 +345,7 @@ def fig_2(barts: Dict[str, SklearnModel], X, y, dataset, display):
         plt.show()
     else:
         plt.savefig(
-            os.path.join(ART_PATH, "functional", f"{dataset[0]}_samples_{n_samples}_trees_{n_trees}_importance.png"))
+            os.path.join(ART_PATH, f"{dataset[0]}_samples_{n_samples}_trees_{n_trees}_importance.png"))
 
 
 def main():
@@ -363,7 +363,6 @@ def main():
             t.set_description(f'{d[0]}')
             X, y, feat_names = get_clean_dataset(d[1], data_source=d[2])
 
-
             X_train, X_test, y_train, y_test = model_selection.train_test_split(
                 X, y, test_size=0.3, random_state=4)
 
@@ -372,6 +371,7 @@ def main():
             bart_zero = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
                              n_burn=n_burn, n_chains=n_chains, thin=1)
             bart_zero.fit(X_train, y_train)
+            bart_zero.mcmc_data.to_csv(os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_zero.csv"))
 
             sgb = GradientBoostingRegressor(n_estimators=n_trees)
             sgb.fit(X_train, bart_zero.data.y.values)
@@ -379,6 +379,7 @@ def main():
             bart_sgb = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
                             n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=sgb))
             bart_sgb.fit(X_train, y_train)
+            bart_sgb.mcmc_data.to_csv(os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_sgb.csv"))
 
             rf = RandomForestRegressor(n_estimators=n_trees, max_leaf_nodes=10)
             rf = rf.fit(X_train, y_rand)
@@ -386,10 +387,11 @@ def main():
             bart_rand = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
                              n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=rf))
             bart_rand.fit(X_train, y_train)
+            bart_rand.mcmc_data.to_csv(os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_rand.csv"))
 
             barts = {"SGB": bart_sgb, "Single Leaf": bart_zero, "Random": bart_rand}
             fig_1(barts, X_test, y_test, d, display)
-            fig_2(barts, X_test, y_test, d, display)
+            # fig_2(barts, X_test, y_test, d, display)
             #
             # fig, axs = plt.subplots(4, 2, figsize=(10, 22))
             # # fig.tight_layout()
