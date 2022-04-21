@@ -251,7 +251,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             "in_sample_predictions"]
         self._acceptance_trace = self.combined_chains["acceptance"]
         self._likelihood = self.combined_chains["likelihood"]
-        self._probs = self.combined_chains["probs"]
+        self.mcmc_data = pd.DataFrame(list(self.combined_chains['acceptance'].flatten()))
+        # self._probs = self.combined_chains["probs"]
 
         self.fitted_ = True
         return self

@@ -46,8 +46,8 @@ class SampleSchedule:
         Generator[Callable[[Model], Sampler], None, None]
             A generator a function to be called
         """
-        for tree in model.refreshed_trees():
-            yield "Tree", lambda: self.tree_sampler.step(model, tree)
+        for tree_num, tree in enumerate(model.refreshed_trees()):
+            yield "Tree", lambda: self.tree_sampler.step(model, tree, tree_num)
 
             for leaf_node in tree.leaf_nodes:
                 yield "Node", lambda: self.leaf_sampler.step(model, leaf_node)

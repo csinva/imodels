@@ -25,18 +25,18 @@ class ModelSampler(Sampler):
 
     def step(self, model: Model, trace_logger: TraceLogger):
         step_result = defaultdict(list)
-        likelihoods = []
-        probs = []
+        data = []
         for step_kind, step in self.schedule.steps(model):
             result = step()
             if type(result) == tuple:
-                result, likelihood, prob = result
-                likelihoods.append(likelihood)
-                probs.append(prob)
+                result, d = result
+                data.append(d)
+                # likelihoods.append(likelihood)
+                # probs.append(prob)
             log_message = trace_logger[step_kind](result)
             if log_message is not None:
                 step_result[step_kind].append(log_message)
-        return {x: np.mean([1 if y else 0 for y in step_result[x]]) for x in step_result}, likelihoods, probs
+        return {x: np.mean([1 if y else 0 for y in step_result[x]]) for x in step_result}, data
 
     def samples(self, model: Model,
                 n_samples: int,
@@ -58,13 +58,14 @@ class ModelSampler(Sampler):
         acceptance_trace = []
         likelihood = []
         probs = []
+        data = []
         # print("Starting sampling")
 
         thin_inverse = 1. / thin
 
         for ss in range(n_samples):
             model.update_z_values(y)
-            step_trace_dict, l_score, prob = self.step(model, trace_logger)
+            step_trace_dict, d = self.step(model, trace_logger)
             # print(step_trace_dict)
 
             if ss % thin_inverse == 0:
@@ -73,9 +74,8 @@ class ModelSampler(Sampler):
                     if in_sample_log is not None:
                         trace.append(in_sample_log)
                 if store_acceptance:
-                    acceptance_trace.append(step_trace_dict)
-                    likelihood.append(l_score)
-                    probs.append(prob)
+                    # acceptance_trace.append(step_trace_dict)
+                    acceptance_trace.append(d)
 
                 model_log = trace_logger["Model"](model)
                 if model_log is not None:
