@@ -350,7 +350,7 @@ def fig_2(barts: Dict[str, SklearnModel], X, y, dataset, display):
 
 def main():
     # n_trees = 100
-    n_samples = 75  # 00
+    n_samples = 7500  # 00
     n_burn = 0  # 10000
     n_chains = 2
     args = parse_args()
