@@ -202,7 +202,7 @@ class FIGSExt(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None,):
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
         """
         Params
         ------
