@@ -29,7 +29,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
                  rule_list=False,
                  diagnostics=False,
                  verbose=True,
-                 regularization=0.005,
+                 regularization=0.05,
                  uncertainty_tolerance=0.0,
                  upperbound=0.0,
                  model_limit=1,

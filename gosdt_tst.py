@@ -29,5 +29,6 @@ if __name__ == '__main__':
         gosdt_cls = OptimalTreeClassifier()
         X, y, feat_names = get_clean_dataset(d[1], data_source=d[2])
         gosdt_cls.fit(X, y)
+        pass
 
 
