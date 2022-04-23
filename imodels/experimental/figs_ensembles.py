@@ -414,10 +414,6 @@ class FIGSExt(BaseEstimator):
         elif self.prediction_task == 'classification':
             return (preds > 0.5).astype(int)
 
-    def shrink(self, reg_param):
-        for tree in self.trees_:
-            tree.shrink(reg_param)
-
     def predict_proba(self, X):
         if self.prediction_task == 'regression':
             return NotImplemented
