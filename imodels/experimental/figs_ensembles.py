@@ -13,7 +13,7 @@ class Node:
     def __init__(self, feature: int = None, threshold: int = None,
                  value=None, idxs=None, is_root: bool = False, left=None,
                  impurity_reduction: float = None, tree_num: int = None,
-                 right=None, split_or_linear='split'):
+                 right=None, split_or_linear='split', n_samples=0):
         """Node class for splitting
         """
 
@@ -23,6 +23,7 @@ class Node:
         self.tree_num = tree_num
         self.split_or_linear = split_or_linear
         self.feature = feature
+        self.n_samples = n_samples
         self.impurity_reduction = impurity_reduction
 
         # different meanings
@@ -47,6 +48,17 @@ class Node:
                 self.left.update_values(X_left, y_left)
             if self.right is not None:
                 self.right.update_values(X_right, y_right)
+
+    def shrink(self, reg_param, cum_sum=0):
+        if self.is_root:
+            cum_sum = self.value
+        if self.left is None:  # if leaf node, change prediction
+            self.value = cum_sum
+        else:
+            shrunk_diff = (self.left.value - self.value) / (1 + reg_param / self.n_samples)
+            self.left.shrink(reg_param, cum_sum + shrunk_diff)
+            shrunk_diff = (self.right.value - self.value) / (1 + reg_param / self.n_samples)
+            self.right.shrink(reg_param, cum_sum + shrunk_diff)
 
     def setattrs(self, **kwargs):
         for k, v in kwargs.items():
@@ -82,7 +94,7 @@ class FIGSExt(BaseEstimator):
     def __init__(self, max_rules: int = None, posthoc_ridge: bool = False,
                  include_linear: bool = False,
                  max_features=None, min_impurity_decrease: float = 0.0,
-                 k1 : int = 0, k2 : int = 0):
+                 k1: int = 0, k2: int = 0):
         """
         max_features
             The number of features to consider when looking for the best split
@@ -179,7 +191,7 @@ class FIGSExt(BaseEstimator):
             # print('no split found!', idxs.sum(), impurity, feature)
             return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                         feature=feature[SPLIT], threshold=threshold[SPLIT],
-                        impurity_reduction=-1)
+                        impurity_reduction=-1, n_samples=n_node_samples)
 
         # split node
         impurity_reduction = (
@@ -190,7 +202,7 @@ class FIGSExt(BaseEstimator):
 
         node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                           feature=feature[SPLIT], threshold=threshold[SPLIT],
-                          impurity_reduction=impurity_reduction)
+                          impurity_reduction=impurity_reduction, n_samples=n_node_samples)
         # print('\t>>>', node_split, 'impurity', impurity, 'num_pts', idxs.sum(), 'imp_reduc', impurity_reduction)
 
         # manage children
