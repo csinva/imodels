@@ -24,8 +24,9 @@ class AFIGS(FIGS):
     https://arxiv.org/abs/2201.11931
     """
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0):
+    def __init__(self, max_int: int = None, max_rules: int = 12, min_impurity_decrease: float = 0.0):
         super().__init__()
+        self.max_int = max_int
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
         self.prediction_task = 'classification'
@@ -46,7 +47,11 @@ class AFIGS(FIGS):
 
         # flatten one-hot encoded y array for input into the decision trees
         y_cols = list(range(y.shape[1]))
-        y_dims = list(chain.from_iterable(combinations(y_cols, r) for r in range(1, len(y_cols)+1)))
+        if self.max_int is None:
+            self.max_int = len(y_cols)
+        elif self.max_int > len(y_cols):
+            self.max_int = len(y_cols)
+        y_dims = list(chain.from_iterable(combinations(y_cols, r) for r in range(1, self.max_int+1)))
         y_dict = {}
         for i, dims in enumerate(y_dims):
             y_dict[dims] = self._flatten_y(y_onehot, dims)
@@ -287,7 +292,8 @@ class AFIGS(FIGS):
         X = check_array(X)
         preds = np.zeros([self.n] + self.y_levels)
         for tree in self.trees_:
-            preds += self._predict_tree(tree, X)
+            if tree is not None:
+                preds += self._predict_tree(tree, X)
         if self.prediction_task == 'regression':
             return NotImplemented
         elif self.prediction_task == 'classification':
@@ -302,7 +308,9 @@ class AFIGS(FIGS):
             return NotImplemented
         preds = np.zeros([self.n] + self.y_levels)
         for tree in self.trees_:
-            preds += self._predict_tree(tree, X)
+            if tree \
+                    is not None:
+                preds += self._predict_tree(tree, X)
         preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
         return preds
 
@@ -337,7 +345,12 @@ class AFIGSClassifierCV(FIGSCV):
 
 if __name__ == '__main__':
     from sklearn import datasets
+    from os.path import join as oj
+    import random
 
+    random.seed(331)
+
+    # toy example
     X_cls, Y_cls = datasets.load_breast_cancer(return_X_y=True)
     Y_cls = np.column_stack((Y_cls, np.random.permutation(Y_cls)))
     # X_reg, Y_reg = datasets.make_friedman1(100)
@@ -348,11 +361,25 @@ if __name__ == '__main__':
     # print(est.max_rules)
 
     est = AFIGS()
-    est.fit(X_cls, Y_cls)
+    est.fit(X_cls, Y_cls, verbose=True)
     yhat = est.predict(X_cls)
     yhat_prob = est.predict_proba(X_cls)
     print(sklearn.metrics.confusion_matrix(Y_cls[:, 0], yhat[:, 0]))
     print(sklearn.metrics.confusion_matrix(Y_cls[:, 1], yhat[:, 1]))
+    print(est.max_rules)
+
+    # JGI example
+    jgi_dir = oj("..", "..", "..", "JGI", "JGI", "data")
+    X = pd.read_csv(oj(jgi_dir, "X.csv")).to_numpy()
+    X = X[:, np.random.choice(list(range(X.shape[1])), 1000, replace=False)]
+    Y = pd.read_csv(oj(jgi_dir, "Y_numeric.csv")).drop(columns=["ecofab"]).to_numpy()
+
+    est = AFIGS(max_int=2)
+    est.fit(X, Y)
+    yhat = est.predict(X)
+    yhat_prob = est.predict_proba(X)
+    for j in range(Y.shape[1]):
+        print(sklearn.metrics.confusion_matrix(Y[:, j], yhat[:, j]))
     print(est.max_rules)
 
 #%%
