@@ -1,3 +1,6 @@
+import os.path
+import pickle
+
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -9,6 +12,7 @@ from imodels.experimental import FIGSExtRegressor, FIGSExtClassifier
 from .. import FIGSRegressorCV, FIGSClassifierCV, get_clean_dataset
 from xgboost import XGBClassifier, XGBRegressor
 
+PTH = "/accounts/campus/omer_ronen/projects/tree_shrink/imodels/art/clalit"
 N_REPS = 10
 DATASETS_CLASSIFICATION = [
     # classification datasets from original random forests paper
@@ -91,21 +95,24 @@ def compare_dataset(d, n_reps, figs, xgb, met):
 def compare_performace(figs, xgb, datasets, met):
     performace = {d[0]: compare_dataset(d, N_REPS, figs, xgb, met) for d in datasets}
 
-    fig, ax = plt.subplots(1)
+    # fig, ax = plt.subplots(1)
+    #
+    # x_axis = [_get_n_samples(d) for d in datasets]
+    #
+    # y_axis_figs = [performace[d[0]]['FIGS']['mean'] for d in datasets]
+    # y_axis_err_figs = [performace[d[0]]['FIGS']['std'] for d in datasets]
+    #
+    # y_axis_xgb = [performace[d[0]]['XGB']['mean'] for d in datasets]
+    # y_axis_err_xgb = [performace[d[0]]['XGB']['std'] for d in datasets]
 
-    x_axis = [_get_n_samples(d) for d in datasets]
+    with open(os.path.join(PTH, "cls.pkl"), "wb") as stream:
+        pickle.dump(performace, stream)
 
-    y_axis_figs = [performace[d[0]]['FIGS']['mean'] for d in datasets]
-    y_axis_err_figs = [performace[d[0]]['FIGS']['std'] for d in datasets]
-
-    y_axis_xgb = [performace[d[0]]['XGB']['mean'] for d in datasets]
-    y_axis_err_xgb = [performace[d[0]]['XGB']['std'] for d in datasets]
-
-    ax.errorbar(x_axis, y_axis_figs, yerr=y_axis_err_figs, label="FIGS", color="blue")
-    ax.errorbar(x_axis, y_axis_xgb, yerr=y_axis_err_xgb, label="XGB", color="red")
-
-    ax.legend()
-    plt.show()
+    # ax.errorbar(x_axis, y_axis_figs, yerr=y_axis_err_figs, label="FIGS", color="blue")
+    # ax.errorbar(x_axis, y_axis_xgb, yerr=y_axis_err_xgb, label="XGB", color="red")
+    #
+    # ax.legend()
+    # plt.show()
 
 
 def main():
