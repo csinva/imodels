@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn import model_selection
 from sklearn.metrics import mean_squared_error, roc_auc_score
 
+from imodels.experimental import FIGSExtRegressor, FIGSExtClassifier
 from .. import FIGSRegressorCV, FIGSClassifierCV, get_clean_dataset
 from xgboost import XGBClassifier, XGBRegressor
 
@@ -108,13 +109,13 @@ def compare_performace(figs, xgb, datasets, met):
 
 
 def main():
-    figs_cls = FIGSClassifierCV()
+    figs_cls = FIGSExtClassifier()
     xgb_cls = XGBClassifier()
     compare_performace(figs_cls, xgb_cls, DATASETS_CLASSIFICATION, roc_auc_score)
 
-    figs_reg = FIGSRegressorCV()
-    xgb_reg = XGBRegressor()
-    compare_performace(figs_reg, xgb_reg, DATASETS_REGRESSION, mean_squared_error)
+    # figs_reg = FIGSExtRegressor()
+    # xgb_reg = XGBRegressor()
+    # compare_performace(figs_reg, xgb_reg, DATASETS_REGRESSION, mean_squared_error)
 
 
 if __name__ == '__main__':
