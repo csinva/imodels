@@ -128,14 +128,16 @@ def analyze_functional(models: Dict[str, SklearnModel], functional: callable, ax
         n_chains = model.n_chains
 
         # chain_len = int(len(model.model_samples) / n_chains)
-        color = iter(colors[i](np.linspace(0.3, 0.7, n_chains)))
+        pallete = colors[i] if len(models) > 1 else cm.rainbow
+        l,u = (0.3, 0.7) if len(models) > 1 else (0,1)
+        color = iter(pallete(np.linspace(l, u, n_chains)))
         for i, c in enumerate(range(n_chains)):
             clr = next(color)
             plt_x, plt_y = plt_data['plot'][mdl_name][i]
             axs[0].plot(plt_x, plt_y, color=clr, label=f"Chain {c} ({mdl_name})")
             hist_x = plt_data['hist'][mdl_name][i]
             axs[1].hist(hist_x, color=clr, label=f"Chain {c} ({mdl_name})",
-                        alpha=0.5, bins=50, range=[min_hist, max_hist])
+                        alpha=0.75, bins=50, range=[min_hist, max_hist])
 
     axs[0].set_ylabel(name)
     axs[0].set_xlabel("Iteration")
@@ -308,36 +310,64 @@ def fig_1(barts: Dict[str, SklearnModel], X, y, dataset, display):
 #     n_trees = list(barts.values())[0].n_trees
 #     analyze_functional(barts, functional=importance_functional, axs=axs[0, 0:2], X=X_test, y=y_test,
 #                        name="Permutation importance")
-def fig_2(barts: Dict[str, SklearnModel], X, y, dataset, display):
-    fig, axs = plt.subplots(len(barts), 1, figsize=(10, 22))
+
+def _get_feature_acceptance_sample_data(mcmc_data, f_num):
+    var_idx = np.array(mcmc_data.variable == f_num)
+    prob = np.minimum(mcmc_data.ratio, 1)
+    accpt = np.array(mcmc_data.accepted, dtype=np.int)
+    # positive = np.array(np.logical_and(data_var.move == "grow", data_var.accepted), dtype=np.int)
+
+    # negative = np.array(np.logical_and(data_var.move == "prune", data_var.accepted), dtype=np.int)
+    grow = np.array(np.logical_and(var_idx,mcmc_data.move == "grow"), dtype=np.int)
+    prune = np.array(np.logical_and(var_idx,mcmc_data.move == "prune"), dtype=np.int)
+
+    net = (accpt * grow - accpt * prune) * prob
+
+    return np.cumsum(net), np.arange(mcmc_data.shape[0])
+
+
+def fig_2(bart: SklearnModel, X, y, dataset, display):
+    fig, axs = plt.subplots(bart.n_chains, 1, figsize=(10, 22))
     n, p = X.shape
-    n_samples = list(barts.values())[0].n_samples
-    n_burn = list(barts.values())[0].n_burn
-    n_trees = list(barts.values())[0].n_trees
+    n_samples = bart.n_samples
+    n_burn = bart.n_burn
+    n_trees = bart.n_trees
     # fig.tight_layout()
     fig.subplots_adjust(hspace=0.6)
 
     ds_name = dataset[0]
     important_features = get_important_features(ds_name)
-    non_important_idx = [not (f in important_features) for f in range(p)]
+    mcmc_data = bart.mcmc_data
 
-    for i, (mdl_name, model) in enumerate(barts.items()):
-        n_chains = model.n_chains
-        chain_len = int(len(model.model_samples) / n_chains)
+    chain_draws = n_trees * n_samples
+
+    for c in range(bart.n_chains):
+        chain_data = mcmc_data.iloc[int(c*chain_draws): int((c+1)*chain_draws), :]
+        color_important = iter(cm.Blues(np.linspace(0.2, 0.8, len(important_features))))
+        color_not_important = iter(cm.Reds(np.linspace(0.3, 0.7, p-len(important_features))))
+
+
+        # chain_len = int(len(model.model_samples) / n_chains)
+        for f in range(p):
+            acpt, smpl = _get_feature_acceptance_sample_data(chain_data, f)
+            is_important = f in important_features
+            clr = next(color_important) if is_important else next(color_not_important)
+            axs[c].plot(smpl, acpt, color=clr)
+
         #
-
-        importance_f = partial(importance_functional, X=X, y=y, model=model, ds_name=ds_name)
-
-        for c in range(1):
-            chain_sample = model.model_samples[c * chain_len:(c + 1) * chain_len]
-            chain_functional = np.stack([importance_f(sample=s) for s in chain_sample], axis=0)
-            colors_i = iter(cm.rainbow(np.linspace(0, 1, len(important_features) + 1)))
-            for f in important_features:
-                axs[i].plot(np.arange(chain_len), chain_functional[:, f], color=next(colors_i), label=f"Feature {f}")
-            non_imp = np.sum(chain_functional[:, non_important_idx], axis=1)
-            axs[i].plot(np.arange(chain_len), non_imp, color=next(colors_i), label=f"Non Important")
-        axs[i].set_title(mdl_name)
-        axs[i].legend()
+        #
+        # importance_f = partial(importance_functional, X=X, y=y, model=model, ds_name=ds_name)
+        #
+        # for c in range(1):
+        #     chain_sample = model.model_samples[c * chain_len:(c + 1) * chain_len]
+        #     chain_functional = np.stack([importance_f(sample=s) for s in chain_sample], axis=0)
+        #     colors_i = iter(cm.rainbow(np.linspace(0, 1, len(important_features) + 1)))
+        #     for f in important_features:
+        #         axs[i].plot(np.arange(chain_len), chain_functional[:, f], color=next(colors_i), label=f"Feature {f}")
+        #     non_imp = np.sum(chain_functional[:, non_important_idx], axis=1)
+        #     axs[i].plot(np.arange(chain_len), non_imp, color=next(colors_i), label=f"Non Important")
+        axs[c].set_title(f"chain {c}")
+        axs[c].legend()
 
     title = f"Dataset: {dataset[0].capitalize()}, (n, p) = ({n}, {p}), burn = {n_burn}"
     plt.suptitle(title)
@@ -350,9 +380,9 @@ def fig_2(barts: Dict[str, SklearnModel], X, y, dataset, display):
 
 def main():
     # n_trees = 100
-    n_samples = 7500  # 00
+    n_samples = 15000  # 7500  # 00
     n_burn = 0  # 10000
-    n_chains = 2
+    n_chains = 4  # 2
     args = parse_args()
     ds = args.datasets
     n_trees = args.n_trees
@@ -361,7 +391,7 @@ def main():
     with tqdm(d) as t:
         for d in t:
             t.set_description(f'{d[0]}')
-            X, y, feat_names = get_clean_dataset(d[1], data_source=d[2])
+            X, y, feat_names = get_clean_dataset(d[1], data_source=d[2], n_samples=1400, p=10)
 
             X_train, X_test, y_train, y_test = model_selection.train_test_split(
                 X, y, test_size=0.3, random_state=4)
@@ -371,27 +401,28 @@ def main():
             bart_zero = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
                              n_burn=n_burn, n_chains=n_chains, thin=1)
             bart_zero.fit(X_train, y_train)
-            bart_zero.mcmc_data.to_csv(os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_zero.csv"))
+            # bart_zero.mcmc_data.to_csv(os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_zero.csv"))
+            #
+            # sgb = GradientBoostingRegressor(n_estimators=n_trees)
+            # sgb.fit(X_train, bart_zero.data.y.values)
+            #
+            # bart_sgb = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
+            #                 n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=sgb))
+            # bart_sgb.fit(X_train, y_train)
+            # bart_sgb.mcmc_data.to_csv(os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_sgb.csv"))
 
-            sgb = GradientBoostingRegressor(n_estimators=n_trees)
-            sgb.fit(X_train, bart_zero.data.y.values)
+            # rf = RandomForestRegressor(n_estimators=n_trees, max_leaf_nodes=10)
+            # rf = rf.fit(X_train, y_rand)
+            #
+            # bart_rand = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
+            #                  n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=rf))
+            # bart_rand.fit(X_train, y_train)
+            # bart_rand.mcmc_data.to_csv(os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_rand.csv"))
 
-            bart_sgb = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
-                            n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=sgb))
-            bart_sgb.fit(X_train, y_train)
-            bart_sgb.mcmc_data.to_csv(os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_sgb.csv"))
-
-            rf = RandomForestRegressor(n_estimators=n_trees, max_leaf_nodes=10)
-            rf = rf.fit(X_train, y_rand)
-
-            bart_rand = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
-                             n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=rf))
-            bart_rand.fit(X_train, y_train)
-            bart_rand.mcmc_data.to_csv(os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_rand.csv"))
-
-            barts = {"SGB": bart_sgb, "Single Leaf": bart_zero, "Random": bart_rand}
+            # barts = {"SGB": bart_sgb, "Single Leaf": bart_zero, "Random": bart_rand}
+            fig_2(bart_zero, X_test, y_test, d, display)
+            barts = {"Single Leaf": bart_zero}
             fig_1(barts, X_test, y_test, d, display)
-            # fig_2(barts, X_test, y_test, d, display)
             #
             # fig, axs = plt.subplots(4, 2, figsize=(10, 22))
             # # fig.tight_layout()
