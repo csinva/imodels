@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import cm
+from matplotlib.lines import Line2D
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from sklearn.inspection import permutation_importance
 from tqdm import tqdm
@@ -358,6 +359,8 @@ def fig_2(bart: SklearnModel, X, y, dataset, display):
         chain_data = mcmc_data.iloc[int(c*chain_draws): int((c+1)*chain_draws), :]
         color_important = iter(cm.Blues(np.linspace(0.2, 0.8, len(important_features))))
         color_not_important = iter(cm.Reds(np.linspace(0.3, 0.7, p-len(important_features))))
+        custom_lines = [Line2D([0], [0], color="blue", lw=4, label="True"),
+                        Line2D([0], [0], color="red", lw=4, label="Null")]
 
 
         # chain_len = int(len(model.model_samples) / n_chains)
@@ -366,6 +369,11 @@ def fig_2(bart: SklearnModel, X, y, dataset, display):
             is_important = f in important_features
             clr = next(color_important) if is_important else next(color_not_important)
             axs[c].plot(smpl, acpt, color=clr)
+        axs[c].set_xlabel("Iteration")
+        axs[c].set_ylabel("Cumulative net acceptance")
+        if c == 0:
+            axs[c].legend(custom_lines, ['True', 'Null'])
+
 
         #
         #
@@ -380,7 +388,7 @@ def fig_2(bart: SklearnModel, X, y, dataset, display):
         #     non_imp = np.sum(chain_functional[:, non_important_idx], axis=1)
         #     axs[i].plot(np.arange(chain_len), non_imp, color=next(colors_i), label=f"Non Important")
         axs[c].set_title(f"chain {c}")
-        axs[c].legend()
+        # axs[c].legend()
 
     title = f"Dataset: {dataset[0].capitalize()}, (n, p) = ({n}, {p}), burn = {n_burn}"
     plt.suptitle(title)
