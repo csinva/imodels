@@ -9,7 +9,7 @@ import sklearn.datasets
 from scipy.sparse import issparse
 from sklearn.datasets import fetch_openml
 
-from ..util.tree_interaction_utils import make_rj, make_vp
+from ..util.tree_interaction_utils import make_rj, make_vp, make_bart
 
 
 def _define_openml_outcomes(y, data_id: str):
@@ -122,9 +122,11 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
         elif dataset_name == 'friedman3':
             X, y = sklearn.datasets.make_friedman3(n_samples=n_samples)
         elif dataset_name == "radchenko_james":
-            X, y = make_rj(n=n_samples)
+            X, y = make_rj(n=n_samples, p=p)
         elif dataset_name == "vo_pati":
-            X, y = make_vp(n=n_samples)
+            X, y = make_vp(n=n_samples, p=p)
+        elif dataset_name == "bart":
+            X, y = make_bart(n=n_samples)
         return X, y, ['X_' + str(i + 1) for i in range(X.shape[1])]
 
 
