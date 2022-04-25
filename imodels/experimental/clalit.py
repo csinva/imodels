@@ -68,6 +68,8 @@ def _get_n_samples(dataset):
 
 def compare_dataset(d, n_reps, figs, xgb, met):
     X, y, feat_names = get_clean_dataset(d[1], data_source=d[2])
+    if len(y) > 9999:
+        return
 
     performace = {"FIGS": [], "XGB": []}
 
@@ -93,7 +95,9 @@ def compare_dataset(d, n_reps, figs, xgb, met):
 
 
 def compare_performace(figs, xgb, datasets, met):
-    performace = {d[0]: compare_dataset(d, N_REPS, figs, xgb, met) for d in datasets}
+    perf = {d[0]: compare_dataset(d, N_REPS, figs, xgb, met) for d in datasets}
+
+    performace = {k:v for k,v in perf.items() if v is not None}
 
     # fig, ax = plt.subplots(1)
     #
