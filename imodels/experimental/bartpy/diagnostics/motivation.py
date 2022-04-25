@@ -75,8 +75,10 @@ def get_important_features(dataset_name):
 def log_rmse(x, y):
     return np.log(1 + np.sqrt(mean_squared_error(x, y)))
 
+
 def rmse(x, y):
     return np.sqrt(mean_squared_error(x, y))
+
 
 def mse_functional(model: SklearnModel, sample: Model, X, y, ds_name):
     predictions_transformed = sample.predict(X)
@@ -137,7 +139,7 @@ def analyze_functional(models: Dict[str, SklearnModel], functional: callable, ax
     title = f"Gelman Rubin:"
 
     all_chains_data = {}
-    j=0
+    j = 0
 
     for i, (mdl_name, model) in enumerate(models.items()):
         n_chains = model.n_chains
@@ -475,8 +477,6 @@ def bart_initilization_analysis(ds, n_samples, n_burn, n_chains, n_trees, displa
                              n_samples=n_samples,
                              n_burn=n_burn, n_chains=n_chains, thin=1)
             bart_zero.fit(X_train, y_train)
-            bart_zero.mcmc_data.to_csv(
-                os.path.join(ART_PATH, dir, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_zero.csv"))
 
             sgb = GradientBoostingRegressor(n_estimators=n_trees)
             sgb.fit(X_train, bart_zero.data.y.values)
@@ -484,8 +484,6 @@ def bart_initilization_analysis(ds, n_samples, n_burn, n_chains, n_trees, displa
             bart_sgb = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
                             n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=sgb))
             bart_sgb.fit(X_train, y_train)
-            bart_sgb.mcmc_data.to_csv(
-                os.path.join(ART_PATH, dir, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_sgb.csv"))
 
             rf = RandomForestRegressor(n_estimators=n_trees, max_leaf_nodes=10)
             rf = rf.fit(X_train, y_rand)
@@ -493,7 +491,16 @@ def bart_initilization_analysis(ds, n_samples, n_burn, n_chains, n_trees, displa
             bart_rand = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=n_samples,
                              n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=rf))
             bart_rand.fit(X_train, y_train)
-            bart_rand.mcmc_data.to_csv(os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_rand.csv"))
+
+            try:
+                bart_zero.mcmc_data.to_csv(
+                    os.path.join(ART_PATH, dir, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_zero.csv"))
+                bart_sgb.mcmc_data.to_csv(
+                    os.path.join(ART_PATH, dir, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_sgb.csv"))
+                bart_rand.mcmc_data.to_csv(
+                    os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_rand.csv"))
+            except FileNotFoundError:
+                pass
 
             barts = {"SGB": bart_sgb, "Single Leaf": bart_zero, "Random": bart_rand}
             fig_1(barts, X_test, y_test, d, display, "initialization")
@@ -502,7 +509,6 @@ def bart_initilization_analysis(ds, n_samples, n_burn, n_chains, n_trees, displa
 def main():
     # n_trees = 100
     n_burn = 0  # 10000
-    n_chains = 2  # 2
     args = parse_args()
     n_samples = args.n_samples  # 0000  # 7500  # 00
 
@@ -510,6 +516,7 @@ def main():
     n_trees = args.n_trees
     display = args.display
     analysis_type = args.analysis
+    n_chains = 2 if analysis_type == "i" else 4
     ds = [d for d in DATASETS_SYNTHETIC if d[0] in ds]
     if analysis_type == "s":
         bart_synthetic_analysis(ds, n_samples, n_burn, n_chains, n_trees, display, "synthetic")
