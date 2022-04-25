@@ -5,7 +5,7 @@ import os
 from .motivation import DATASETS_REGRESSION, DATASETS_SYNTHETIC
 
 PTH = "/accounts/campus/omer_ronen/projects/tree_shrink/imodels"
-
+N_SAMPLES = 10000
 
 def parse_args():
     parser = argparse.ArgumentParser(description='BART Research motivation')
@@ -19,5 +19,8 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     for d in DATASETS_SYNTHETIC:
-        cmd = f"sbatch {os.path.join(PTH, 'scripts', 'motivation.sh')} {d[0]} {args.n_trees}"
+        cmd = f"sbatch {os.path.join(PTH, 'scripts', 'motivation.sh')} {d[0]} {args.n_trees} s {N_SAMPLES}"
+        subprocess.run(cmd, shell=True)
+    for d in DATASETS_REGRESSION:
+        cmd = f"sbatch {os.path.join(PTH, 'scripts', 'motivation.sh')} {d[0]} {args.n_trees} i {N_SAMPLES}"
         subprocess.run(cmd, shell=True)
