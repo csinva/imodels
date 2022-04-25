@@ -12,7 +12,49 @@ from sklearn.utils import check_X_y, check_array
 
 from itertools import chain, combinations
 
-from figs import FIGS, FIGSCV, Node
+from figs import FIGS, FIGSCV #, Node
+
+
+class Node:
+    def __init__(self, feature: int = None, threshold: int = None,
+                 value=None, idxs=None, is_root: bool = False, left=None,
+                 impurity_reduction: float = None, tree_num: int = None,
+                 right=None):
+        """Node class for splitting
+        """
+
+        # split or linear
+        self.is_root = is_root
+        self.idxs = idxs
+        self.tree_num = tree_num
+        self.feature = feature
+        self.impurity_reduction = impurity_reduction
+
+        # different meanings
+        self.value = value  # for split this is mean, for linear this is weight
+
+        # split-specific
+        self.threshold = threshold
+        self.left = left
+        self.right = right
+        self.left_temp = None
+        self.right_temp = None
+
+    def setattrs(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    def __str__(self):
+        if self.is_root:
+            return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
+        elif self.left is None and self.right is None:
+            best_class_idx = np.where(self.value == np.max(self.value))
+            return f'Val: {np.array([idx[0] for idx in best_class_idx])} (leaf)'
+        else:
+            return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class AFIGS(FIGS):
@@ -299,7 +341,8 @@ class AFIGS(FIGS):
         elif self.prediction_task == 'classification':
             class_preds = np.zeros((self.n, len(self.y_levels)))
             for i in range(self.n):
-                class_preds[i, :] = np.concatenate(np.where(preds[i, :] == np.max(preds[i, :])))
+                best_class_idx = np.where(preds[i, :] == np.max(preds[i, :]))
+                class_preds[i, :] = np.array([idx[0] for idx in best_class_idx])
             return class_preds.astype(int)
 
     def predict_proba(self, X):
@@ -308,10 +351,9 @@ class AFIGS(FIGS):
             return NotImplemented
         preds = np.zeros([self.n] + self.y_levels)
         for tree in self.trees_:
-            if tree \
-                    is not None:
+            if tree is not None:
                 preds += self._predict_tree(tree, X)
-        preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
+        # preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
         return preds
 
 
@@ -369,13 +411,14 @@ if __name__ == '__main__':
     print(est.max_rules)
 
     # JGI example
+    # jgi_dir = oj("..", "..", "JGI", "JGI", "data")
     jgi_dir = oj("..", "..", "..", "JGI", "JGI", "data")
-    X = pd.read_csv(oj(jgi_dir, "X.csv")).to_numpy()
-    X = X[:, np.random.choice(list(range(X.shape[1])), 1000, replace=False)]
-    Y = pd.read_csv(oj(jgi_dir, "Y_numeric.csv")).drop(columns=["ecofab"]).to_numpy()
+    X = pd.read_csv(oj(jgi_dir, "X_filtered_HILIC_only.csv")).to_numpy()
+    # X = X[:, np.random.choice(list(range(X.shape[1])), 1000, replace=False)]
+    Y = pd.read_csv(oj(jgi_dir, "Y_numeric_filtered_HILIC_only.csv")).drop(columns=["ecofab"]).to_numpy()
 
-    est = AFIGS(max_int=2)
-    est.fit(X, Y)
+    est = AFIGS(max_int=2, max_rules=24)
+    est.fit(X, Y, verbose=True)
     yhat = est.predict(X)
     yhat_prob = est.predict_proba(X)
     for j in range(Y.shape[1]):
