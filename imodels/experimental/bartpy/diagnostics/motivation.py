@@ -45,6 +45,8 @@ DATASETS_SYNTHETIC = [
 
 ]
 
+N_TEST = 10000
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='BART Research motivation')
@@ -443,11 +445,12 @@ def bart_synthetic_analysis(ds, n_samples, n_burn, n_chains, n_trees, display, d
         for d in t:
             t.set_description(f'{d[0]}')
 
-            for n_ds_samples in [5000, 20000]:
-                X, y, feat_names = get_clean_dataset(d[1], data_source=d[2], n_samples=n_ds_samples, p=10)
+            for n_ds_samples in [5000, 10000]:
+                X_train, y_train, feat_names = get_clean_dataset(d[1], data_source=d[2], n_samples=n_ds_samples, p=10)
+                X_test, y_test, feat_names = get_clean_dataset(d[1], data_source=d[2], n_samples=N_TEST, p=10)
 
-                X_train, X_test, y_train, y_test = model_selection.train_test_split(
-                    X, y, test_size=0.3, random_state=4)
+                # X_train, X_test, y_train, y_test = model_selection.train_test_split(
+                #     X, y, test_size=0.3, random_state=4)
 
                 # X_rand, y_rand = np.random.random(size=X_train.shape), np.random.random(size=y_train.shape)
 
