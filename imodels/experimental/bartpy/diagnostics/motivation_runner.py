@@ -19,8 +19,8 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     for d in DATASETS_SYNTHETIC:
-        cmd = f"sbatch {os.path.join(PTH, 'scripts', 'motivation.sh')} {d[0]} {args.n_trees} s {N_SAMPLES}"
+        cmd = f"sbatch {os.path.join(PTH, 'scripts', 'motivation.sh')} {d[0]} {args.n_trees} {N_SAMPLES} s"
         subprocess.run(cmd, shell=True)
     for d in DATASETS_REGRESSION:
-        cmd = f"sbatch {os.path.join(PTH, 'scripts', 'motivation.sh')} {d[0]} {args.n_trees} i {N_SAMPLES}"
+        cmd = f"sbatch {os.path.join(PTH, 'scripts', 'motivation.sh')} {d[0]} {args.n_trees} {N_SAMPLES} i"
         subprocess.run(cmd, shell=True)
