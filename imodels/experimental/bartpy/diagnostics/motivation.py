@@ -309,7 +309,7 @@ def fig_1(barts: Dict[str, SklearnModel], X, y, dataset, display):
         synthetic_name = f"{dataset[0]}_samples_{n_samples}_n_dp_{n}_trees_{n_trees}.png"
         real_name = f"{dataset[0]}_samples_{n_samples}_trees_{n_trees}.png"
         fig_name = synthetic_name if is_synthetic else real_name
-        plt.savefig(os.path.join(ART_PATH, fig_name))
+        plt.savefig(os.path.join(ART_PATH,"features",  fig_name))
 
 
 # def fig_2(barts: Dict[str, SklearnModel], X, y, dataset, display):
@@ -348,6 +348,7 @@ def fig_2(bart: SklearnModel, X, y, dataset, display):
     n_trees = bart.n_trees
     # fig.tight_layout()
     fig.subplots_adjust(hspace=0.6)
+    is_synthetic = dataset in DATASETS_SYNTHETIC
 
     ds_name = dataset[0]
     important_features = get_important_features(ds_name)
@@ -395,13 +396,17 @@ def fig_2(bart: SklearnModel, X, y, dataset, display):
     if display:
         plt.show()
     else:
-        plt.savefig(
-            os.path.join(ART_PATH, f"{dataset[0]}_samples_{n_samples}_trees_{n_trees}_importance.png"))
+        synthetic_name = f"{dataset[0]}_samples_{n_samples}_n_dp_{n}_trees_{n_trees}_importance.png"
+        real_name = f"{dataset[0]}_samples_{n_samples}_trees_{n_trees}_importance.png"
+        fig_name = synthetic_name if is_synthetic else real_name
+        plt.savefig(os.path.join(ART_PATH,"features", fig_name))
+        # plt.savefig(
+            # os.path.join(ART_PATH, f"{dataset[0]}_samples_{n_samples}_trees_{n_trees}_importance.png"))
 
 
 def main():
     # n_trees = 100
-    n_samples = 15000  # 7500  # 00
+    n_samples = 10000  # 7500  # 00
     n_burn = 0  # 10000
     n_chains = 4  # 2
     args = parse_args()
