@@ -520,11 +520,13 @@ def main():
     display = args.display
     analysis_type = args.analysis
     n_chains = 2 if analysis_type == "i" else 4
-    ds = [d for d in DATASETS_SYNTHETIC if d[0] in ds]
+
     if analysis_type == "s":
-        bart_synthetic_analysis(ds, n_samples, n_burn, n_chains, n_trees, display, "synthetic")
+        ds_syn = [d for d in DATASETS_SYNTHETIC if d[0] in ds]
+        bart_synthetic_analysis(ds_syn, n_samples, n_burn, n_chains, n_trees, display, "synthetic")
     elif analysis_type == "i":
-        bart_initilization_analysis(ds, n_samples, n_burn, n_chains, n_trees, display, "initialization")
+        ds_real = [d for d in DATASETS_REGRESSION if d[0] in ds]
+        bart_initilization_analysis(ds_real, n_samples, n_burn, n_chains, n_trees, display, "initialization")
 
     # with tqdm(ds) as t:
     #     for d in t:
