@@ -139,13 +139,13 @@ class TaoTree(BaseEstimator):
         if self.verbose:
             print('starting score', self.model.score(X, y))
         for i in range(self.n_iters):
-            num_updates = self._tao_iter_cart(X, y, self.model.tree_, sample_weight)
+            num_updates = self._tao_iter_cart(X, y, self.model.tree_, sample_weight=sample_weight)
             if num_updates == 0:
                 break
 
         return self
 
-    def _tao_iter_cart(self, X, y, tree, sample_weight=None):
+    def _tao_iter_cart(self, X, y, tree, X_score=None, y_score=None, sample_weight=None):
         """Updates tree by applying the tao algorithm to the tree
         Params
         ------
@@ -314,13 +314,19 @@ class TaoTree(BaseEstimator):
             old_feat_num = feature[node_id]
             old_threshold = threshold[node_id]
             # print(X.sum(), y.sum())
+
+            if X_score is None:
+                X_score = X
+            if y_score is None:
+                y_score = y
+
             scorer = get_scorer(self.update_scoring)
 
-            old_score = scorer(self.model, X, y)
+            old_score = scorer(self.model, X_score, y_score)
 
             feature[node_id] = best_feat_num
             threshold[node_id] = best_threshold
-            new_score = scorer(self.model, X, y)
+            new_score = scorer(self.model, X_score, y_score)
 
             # debugging
             if self.verbose > 1:
