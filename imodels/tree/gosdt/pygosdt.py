@@ -317,5 +317,8 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             "trace": self.trace,
             "tree": self.tree
         }
+    @property
+    def complexity_(self):
+        return (self.nodes() - 1) / 2
 
 
