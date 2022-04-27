@@ -3,6 +3,7 @@ import subprocess
 from .clalit import DATASETS_CLASSIFICATION
 
 PY = "/accounts/campus/omer_ronen/.conda/envs/imdls/bin/python"
+CLALIT_SH = "/accounts/campus/omer_ronen/projects/tree_shrink/imodels/imodels/experimental/clalit/clalit.sh"
 
 
 def _get_config(d):
@@ -16,7 +17,7 @@ def _get_config(d):
 
 def main():
     for d in DATASETS_CLASSIFICATION:
-        cmd = f"sbatch {_get_config(d[0])} {PY} -m imodels.experimental.clalit.clalit {d[0]}"
+        cmd = f"sbatch {_get_config(d[0])} {CLALIT_SH} {d[0]}"
         subprocess.run(cmd, shell=True)
 
 
