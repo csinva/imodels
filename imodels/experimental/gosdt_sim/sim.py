@@ -34,12 +34,12 @@ DATASETS_CLASSIFICATION = [
 
 if __name__ == '__main__':
     for d in DATASETS_CLASSIFICATION:
-        for reg in [0.001, 0.0001, 0.00001, 0]:
+        for reg in [0.01, 0.001, 0.0001, 0.00001, 0]:
             s = time.time()
             gosdt_cls = OptimalTreeClassifier(regularization=0.00001)
             X, y, feat_names = get_clean_dataset(d[1], data_source=d[2])
             LOGGER.info(f"Data dim (n, p) = {X.shape}")
-            gosdt_cls.fit(X, y)
+            gosdt_cls.fit(X[:, 0:5], y)
             LOGGER.info(f"Complexity: {gosdt_cls.complexity_}, Reg: {reg}, Time: {np.round(time.time() - s,2)}")
 
 

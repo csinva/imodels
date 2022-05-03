@@ -315,7 +315,8 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             "profile": self.profile,
             "timing": self.timing,
             "trace": self.trace,
-            "tree": self.tree
+            "tree": self.tree,
+            "max_depth": 2
         }
     @property
     def complexity_(self):
