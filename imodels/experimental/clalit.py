@@ -10,7 +10,7 @@ from sklearn.metrics import mean_squared_error, roc_auc_score
 
 from imodels.experimental import FIGSExtRegressor, FIGSExtClassifier
 from .. import FIGSRegressorCV, FIGSClassifierCV, get_clean_dataset
-from xgboost import XGBClassifier, XGBRegressor
+from xgboost import XGBClassifier, XGBRegressor, plot_tree
 
 PTH = "/accounts/campus/omer_ronen/projects/tree_shrink/imodels/art/clalit"
 N_REPS = 10
@@ -79,9 +79,9 @@ def compare_dataset(d, n_reps, figs, xgb, met):
             X, y, test_size=0.3, random_state=rep)
 
         datas = (X_train, X_test, y_train, y_test)
+        xgb_perf = _get_estimator_performance(xgb, datas, met)
 
         figs_perf = _get_estimator_performance(figs, datas, met)
-        xgb_perf = _get_estimator_performance(xgb, datas, met)
 
         figs_mets.append(figs_perf)
         xgb_mets.append(xgb_perf)
