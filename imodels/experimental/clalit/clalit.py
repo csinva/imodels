@@ -1,17 +1,21 @@
 import os.path
 import pickle
+import logging
+import argparse
 
 import numpy as np
-
+import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn import model_selection
 from sklearn.metrics import mean_squared_error, roc_auc_score
 
 from imodels.experimental import FIGSExtRegressor, FIGSExtClassifier
-from .. import FIGSRegressorCV, FIGSClassifierCV, get_clean_dataset
-from xgboost import XGBClassifier, XGBRegressor, plot_tree
+from imodels import FIGSRegressorCV, FIGSClassifierCV, get_clean_dataset
+from xgboost import XGBClassifier, XGBRegressor
 
+logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger("Clalit")
 PTH = "/accounts/campus/omer_ronen/projects/tree_shrink/imodels/art/clalit"
 N_REPS = 10
 DATASETS_CLASSIFICATION = [
@@ -25,7 +29,7 @@ DATASETS_CLASSIFICATION = [
     ("diabetes", "diabetes", "pmlb"),
     # # #("liver", "8", "openml"), # note: we omit this dataset bc it's label was found to be incorrect (see caveat here: https://archive.ics.uci.edu/ml/datasets/liver+disorders#:~:text=The%207th%20field%20(selector)%20has%20been%20widely%20misinterpreted%20in%20the%20past%20as%20a%20dependent%20variable%20representing%20presence%20or%20absence%20of%20a%20liver%20disorder.)
     # # #("credit-g", "credit_g", 'imodels'), # like german-credit, but more feats
-    # ("german-credit", "german", "pmlb"),
+    ("german-credit", "german", "pmlb"),
     #
     # #clinical-decision rules
     # #("iai-pecarn", "iai_pecarn.csv", "imodels"),
@@ -33,7 +37,7 @@ DATASETS_CLASSIFICATION = [
     # #popular classification datasets used in rule-based modeling / fairness
     # # page 7: http://proceedings.mlr.press/v97/wang19a/wang19a.pdf
     ("juvenile", "juvenile_clean", 'imodels'),
-    # ("recidivism", "compas_two_year_clean", 'imodels'),
+    ("recidivism", "compas_two_year_clean", 'imodels'),
     # # ("credit", "credit_card_clean", 'imodels'),
     # # ("readmission", 'readmission_clean', 'imodels'),  # v big
 ]
@@ -54,6 +58,12 @@ DATASETS_REGRESSION = [
 ]
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', type=str, required=True)
+    return parser.parse_args()
+
+
 def _get_estimator_performance(est, datas, met):
     X_train, X_test, y_train, y_test = datas
     est.fit(X_train, y_train)
@@ -68,6 +78,10 @@ def _get_n_samples(dataset):
 
 def compare_dataset(d, n_reps, figs, xgb, met):
     X, y, feat_names = get_clean_dataset(d[1], data_source=d[2])
+    n, p = X.shape
+    LOGGER.info(f"Working on {d[0]} (n,p) = ({n}, {p})")
+    if len(y) > 9999:
+        return
 
     performace = {"FIGS": [], "XGB": []}
 
@@ -79,46 +93,35 @@ def compare_dataset(d, n_reps, figs, xgb, met):
             X, y, test_size=0.3, random_state=rep)
 
         datas = (X_train, X_test, y_train, y_test)
-        xgb_perf = _get_estimator_performance(xgb, datas, met)
 
+        xgb_perf = _get_estimator_performance(xgb, datas, met)
         figs_perf = _get_estimator_performance(figs, datas, met)
 
         figs_mets.append(figs_perf)
         xgb_mets.append(xgb_perf)
 
-    performace['FIGS'] = {"mean": np.mean(figs_mets), "std": np.std(figs_mets)}
-    performace['XGB'] = {"mean": np.mean(xgb_mets), "std": np.std(xgb_mets)}
+    performace['FIGS'] = {"mean": np.mean(figs_mets), "std": np.std(figs_mets),
+                          "n": n, "p": p, "n_trees": len(figs.trees_)}
+    performace['XGB'] = {"mean": np.mean(xgb_mets), "std": np.std(xgb_mets),
+                         "n_trees": len(xgb.get_booster().get_dump()), "n": n, "p": p}
 
-    return performace
+    df = pd.DataFrame(performace)
+    df.to_csv(os.path.join(PTH, f"{d[0]}.csv"))
+
+    # return performace
 
 
 def compare_performace(figs, xgb, datasets, met):
-    performace = {d[0]: compare_dataset(d, N_REPS, figs, xgb, met) for d in datasets}
-
-    # fig, ax = plt.subplots(1)
-    #
-    # x_axis = [_get_n_samples(d) for d in datasets]
-    #
-    # y_axis_figs = [performace[d[0]]['FIGS']['mean'] for d in datasets]
-    # y_axis_err_figs = [performace[d[0]]['FIGS']['std'] for d in datasets]
-    #
-    # y_axis_xgb = [performace[d[0]]['XGB']['mean'] for d in datasets]
-    # y_axis_err_xgb = [performace[d[0]]['XGB']['std'] for d in datasets]
-
-    with open(os.path.join(PTH, "cls.pkl"), "wb") as stream:
-        pickle.dump(performace, stream)
-
-    # ax.errorbar(x_axis, y_axis_figs, yerr=y_axis_err_figs, label="FIGS", color="blue")
-    # ax.errorbar(x_axis, y_axis_xgb, yerr=y_axis_err_xgb, label="XGB", color="red")
-    #
-    # ax.legend()
-    # plt.show()
+    for d in datasets:
+        compare_dataset(d, N_REPS, figs, xgb, met)
 
 
 def main():
     figs_cls = FIGSExtClassifier()
     xgb_cls = XGBClassifier()
-    compare_performace(figs_cls, xgb_cls, DATASETS_CLASSIFICATION, roc_auc_score)
+    args = parse_args()
+    ds = [d for d in DATASETS_CLASSIFICATION if d[0] == args.dataset]
+    compare_performace(figs_cls, xgb_cls, ds, roc_auc_score)
 
     # figs_reg = FIGSExtRegressor()
     # xgb_reg = XGBRegressor()
