@@ -5,7 +5,7 @@ import os
 from .motivation import DATASETS_REGRESSION, DATASETS_SYNTHETIC
 
 PTH = "/accounts/campus/omer_ronen/projects/tree_shrink/imodels"
-N_SAMPLES = 6000
+N_SAMPLES = 2000
 
 
 def parse_args():

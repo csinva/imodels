@@ -309,11 +309,11 @@ def plot_across_chains(models: Dict[str, SklearnModel], ax=None, title="Across C
     return ax
 
 
-def fig_1(barts: Dict[str, SklearnModel], X, y, dataset, display, dir):
+def fig_1(barts: Dict[str, SklearnModel], X, y, dataset, display, dir, n):
     X_test = X
     y_test = y
-    n, p = X.shape
-    n = int(n / 3 * 10)
+    _, p = X.shape
+    # n = int(n / 3 * 10)
     n_samples = list(barts.values())[0].n_samples
     n_burn = list(barts.values())[0].n_burn
     n_trees = list(barts.values())[0].n_trees
@@ -357,17 +357,17 @@ def _get_feature_acceptance_sample_data(mcmc_data, f_num):
     # positive = np.array(np.logical_and(data_var.move == "grow", data_var.accepted), dtype=np.int)
 
     # negative = np.array(np.logical_and(data_var.move == "prune", data_var.accepted), dtype=np.int)
-    grow = np.array(np.logical_and(var_idx, mcmc_data.move == "grow"), dtype=np.int)
-    prune = np.array(np.logical_and(var_idx, mcmc_data.move == "prune"), dtype=np.int)
+    grow = np.array(np.logical_and(var_idx, mcmc_data.move == "grow"), dtype=int)
+    prune = np.array(np.logical_and(var_idx, mcmc_data.move == "prune"), dtype=int)
 
     net = (accpt * grow - accpt * prune) * prob
 
     return np.cumsum(net), np.arange(mcmc_data.shape[0])
 
 
-def fig_2(bart: SklearnModel, X, y, dataset, display, dir):
+def fig_2(bart: SklearnModel, X, y, dataset, display, dir, n):
     fig, axs = plt.subplots(bart.n_chains, 1, figsize=(10, 22))
-    n, p = X.shape
+    _, p = X.shape
     n_samples = bart.n_samples
     n_burn = bart.n_burn
     n_trees = bart.n_trees
@@ -381,6 +381,9 @@ def fig_2(bart: SklearnModel, X, y, dataset, display, dir):
 
     chain_draws = n_trees * n_samples
 
+    max_y = -1* np.inf
+    min_y = np.inf
+
     for c in range(bart.n_chains):
         chain_data = mcmc_data.iloc[int(c * chain_draws): int((c + 1) * chain_draws), :]
         color_important = iter(cm.Blues(np.linspace(0.2, 0.8, len(important_features))))
@@ -391,6 +394,11 @@ def fig_2(bart: SklearnModel, X, y, dataset, display, dir):
         # chain_len = int(len(model.model_samples) / n_chains)
         for f in range(p):
             acpt, smpl = _get_feature_acceptance_sample_data(chain_data, f)
+
+            min_y_c, max_y_c = np.min(acpt), np.max(acpt)
+            max_y = max_y if max_y > max_y_c else max_y_c
+            min_y = min_y if min_y < min_y_c else min_y_c
+
             is_important = f in important_features
             clr = next(color_important) if is_important else next(color_not_important)
             axs[c].plot(smpl, acpt, color=clr)
@@ -401,12 +409,15 @@ def fig_2(bart: SklearnModel, X, y, dataset, display, dir):
 
         axs[c].set_title(f"chain {c}")
 
+    for ax in axs:
+        ax.set_ylim(min_y, max_y)
+
     title = f"Dataset: {dataset[0].capitalize()}, (n, p) = ({n}, {p}), burn = {n_burn}"
     plt.suptitle(title)
     if display:
         plt.show()
     else:
-        synthetic_name = f"{dataset[0]}_samples_{n_samples}_n_dp_{int((n/3)*10)}_trees_{n_trees}_importance.png"
+        synthetic_name = f"{dataset[0]}_samples_{n_samples}_n_dp_{n}_trees_{n_trees}_importance.png"
         real_name = f"{dataset[0]}_samples_{n_samples}_trees_{n_trees}_importance.png"
         fig_name = synthetic_name if is_synthetic else real_name
         plt.savefig(os.path.join(ART_PATH, dir, fig_name))
@@ -427,8 +438,8 @@ def bart_synthetic_analysis(ds, n_samples, n_burn, n_chains, n_trees, display, d
                 bart_zero.fit(X_train, y_train)
 
                 barts = {"Single Leaf": bart_zero}
-                fig_1(barts, X_test, y_test, d, display, dir)
-                fig_2(bart_zero, X_test, y_test, d, display, dir)
+                fig_1(barts, X_test, y_test, d, display, dir, len(y_train))
+                fig_2(bart_zero, X_test, y_test, d, display, dir, len(y_train))
 
 
 def bart_initilization_analysis(ds, n_samples, n_burn, n_chains, n_trees, display, dir):
@@ -462,23 +473,23 @@ def bart_initilization_analysis(ds, n_samples, n_burn, n_chains, n_trees, displa
                              n_burn=n_burn, n_chains=n_chains, thin=1, initializer=SklearnTreeInitializer(tree_=rf))
             bart_rand.fit(X_train, y_train)
 
-            try:
-                bart_zero.mcmc_data.to_csv(
-                    os.path.join(ART_PATH, dir, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_zero.csv"))
-                bart_sgb.mcmc_data.to_csv(
-                    os.path.join(ART_PATH, dir, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_sgb.csv"))
-                bart_rand.mcmc_data.to_csv(
-                    os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_rand.csv"))
-            except FileNotFoundError:
-                pass
+            # try:
+            #     bart_zero.mcmc_data.to_csv(
+            #         os.path.join(ART_PATH, dir, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_zero.csv"))
+            #     bart_sgb.mcmc_data.to_csv(
+            #         os.path.join(ART_PATH, dir, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_sgb.csv"))
+            #     bart_rand.mcmc_data.to_csv(
+            #         os.path.join(ART_PATH, f"{d[0]}_samples_{n_samples}_trees_{n_trees}_rand.csv"))
+            # except FileNotFoundError:
+            #     pass
 
             barts = {"SGB": bart_sgb, "Single Leaf": bart_zero, "Random": bart_rand}
-            fig_1(barts, X_test, y_test, d, display, "initialization")
+            fig_1(barts, X_test, y_test, d, display, "initialization", len(y_train))
 
 
 def main():
     # n_trees = 100
-    n_burn = 0  # 10000
+    n_burn = 8000  # 10000
     args = parse_args()
     n_samples = args.n_samples  # 0000  # 7500  # 00
 
