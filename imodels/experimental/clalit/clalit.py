@@ -2,6 +2,7 @@ import os.path
 import pickle
 import logging
 import argparse
+import time
 
 import numpy as np
 import pandas as pd
@@ -9,6 +10,7 @@ import matplotlib.pyplot as plt
 
 from sklearn import model_selection
 from sklearn.metrics import mean_squared_error, roc_auc_score
+from tqdm import tqdm
 
 from imodels.experimental import FIGSExtRegressor, FIGSExtClassifier
 from imodels import FIGSRegressorCV, FIGSClassifierCV, get_clean_dataset
@@ -16,7 +18,7 @@ from xgboost import XGBClassifier, XGBRegressor
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger("Clalit")
-PTH = "/accounts/campus/omer_ronen/projects/tree_shrink/imodels/art/clalit"
+PTH = "/accounts/campus/omer_ronen/projects/tree_shrink/imodels/art/clalit/complexity_figs_cv"
 N_REPS = 10
 DATASETS_CLASSIFICATION = [
     # classification datasets from original random forests paper
@@ -37,7 +39,7 @@ DATASETS_CLASSIFICATION = [
     # #popular classification datasets used in rule-based modeling / fairness
     # # page 7: http://proceedings.mlr.press/v97/wang19a/wang19a.pdf
     ("juvenile", "juvenile_clean", 'imodels'),
-    ("recidivism", "compas_two_year_clean", 'imodels'),
+    # ("recidivism", "compas_two_year_clean", 'imodels'),
     # # ("credit", "credit_card_clean", 'imodels'),
     # # ("readmission", 'readmission_clean', 'imodels'),  # v big
 ]
@@ -71,9 +73,11 @@ def get_n_rules(est):
 
 def _get_estimator_performance(est, datas, met):
     X_train, X_test, y_train, y_test = datas
+    s = time.time()
     est.fit(X_train, y_train)
+    run_time = np.round(time.time() - s, 2)
     y_hat = est.predict(X_test)
-    return met(y_hat, y_test)
+    return met(y_hat, y_test), run_time
 
 
 def _get_n_samples(dataset):
@@ -88,29 +92,69 @@ def compare_dataset(d, n_reps, figs, xgb, met):
     if len(y) > 9999:
         return
 
-    performace = {"FIGS": [], "XGB": []}
+    performace = {}
 
-    figs_mets = []
-    xgb_mets = []
+    figs_mets = {"roc_auc": [], "n_trees": [], "n_rules": [], "time": []}
+    xgb_mets = {"roc_auc": [], "n_trees": [], "n_rules": [], "time": []}
+    xgb_restrcited_mets = {"roc_auc": [], "n_trees": [], "n_rules": [], "time": []}
 
-    for rep in range(n_reps):
+    for rep in tqdm(range(n_reps), colour="blue"):
         X_train, X_test, y_train, y_test = model_selection.train_test_split(
             X, y, test_size=0.3, random_state=rep)
 
         datas = (X_train, X_test, y_train, y_test)
+        xgb_perf, xgb_time = _get_estimator_performance(xgb, datas, met)
+        figs_perf, figs_time = _get_estimator_performance(figs, datas, met)
+        figs = figs.figs if hasattr(figs, "figs") else figs
+        n_tree_figs = len(figs.trees_)
+        xgb_restricted = XGBClassifier(n_estimators=n_tree_figs)
+        xgb_restricted_perf, xgb_restricted_time = _get_estimator_performance(xgb_restricted, datas, met)
 
-        xgb_perf = _get_estimator_performance(xgb, datas, met)
-        figs_perf = _get_estimator_performance(figs, datas, met)
+        figs_mets["roc_auc"].append(figs_perf)
+        xgb_mets["roc_auc"].append(xgb_perf)
+        xgb_restrcited_mets["roc_auc"].append(xgb_restricted_perf)
 
-        figs_mets.append(figs_perf)
-        xgb_mets.append(xgb_perf)
+        figs_mets["n_rules"].append(figs.complexity_)
+        xgb_mets["n_rules"].append(get_n_rules(xgb))
+        xgb_restrcited_mets["n_rules"].append(get_n_rules(xgb_restricted))
 
-    performace['FIGS'] = {"mean": np.mean(figs_mets), "std": np.std(figs_mets),
-                          "n": n, "p": p, "n_trees": len(figs.trees_), "n_rules": figs.complexity_}
-    performace['XGB'] = {"mean": np.mean(xgb_mets), "std": np.std(xgb_mets),
-                         "n_trees": len(xgb.get_booster().get_dump()), "n": n, "p": p, "n_rules": get_n_rules(xgb)}
+        figs_mets["n_trees"].append(n_tree_figs)
+        xgb_mets["n_trees"].append(len(xgb.get_booster().get_dump()))
+        xgb_restrcited_mets["n_trees"].append(len(xgb_restricted.get_booster().get_dump()))
 
-    df = pd.DataFrame(performace)
+        figs_mets["time"].append(figs_time)
+        xgb_mets["time"].append(xgb_time)
+        xgb_restrcited_mets["time"].append(xgb_restricted_time)
+
+    data_stats = {"n": n, "p": p}
+
+    performace['FIGS'] = {**data_stats,
+                          **{f"{k}_mean": np.mean(v) for k, v in figs_mets.items()},
+                          **{f"{k}_std": np.std(v) for k, v in figs_mets.items()}}
+
+    performace['XGB'] = {**data_stats,
+                         **{f"{k}_mean": np.mean(v) for k, v in xgb_mets.items()},
+                         **{f"{k}_std": np.std(v) for k, v in xgb_mets.items()}}
+
+    performace['XGB_Restrcited'] = {**data_stats,
+                                    **{f"{k}_mean": np.mean(v) for k, v in xgb_restrcited_mets.items()},
+                                    **{f"{k}_std": np.std(v) for k, v in xgb_restrcited_mets.items()}}
+    #
+    # performace['FIGS'] = {"mean": np.mean(figs_mets['roc_auc']), "std": np.std(figs_mets['roc_auc']),
+    #                       "n": n, "p": p, "n_trees": np.mean(figs_mets['n_trees']),
+    #                       "n_rules": np.mean(figs_mets['n_rules']), "time":np.mean(figs_mets['time'])}
+    #
+    # performace['XGB'] = {"mean": np.mean(xgb_mets['roc_auc']), "std": np.std(xgb_mets['roc_auc']),
+    #                      "n_trees": np.mean(xgb_mets['n_trees']), "n": n, "p": p,
+    #                      "n_rules": np.mean(xgb_mets['n_rules']), "time":np.mean(xgb_mets['time'])}
+    #
+    # performace['XGB_Restrcited'] = {"mean": np.mean(xgb_restrcited_mets['roc_auc']),
+    #                                 "std": np.std(xgb_restrcited_mets['roc_auc']),
+    #                                 "n_trees": np.mean(xgb_restrcited_mets['n_trees']),
+    #                                 "n": n, "p": p, "n_rules": np.mean(xgb_restrcited_mets['n_rules']),
+    #                                 "time":np.mean(xgb_restrcited_mets['time'])}
+
+    df = pd.DataFrame(performace).round(3)
     df.to_csv(os.path.join(PTH, f"{d[0]}.csv"))
 
     # return performace
@@ -122,7 +166,7 @@ def compare_performace(figs, xgb, datasets, met):
 
 
 def main():
-    figs_cls = FIGSExtClassifier()
+    figs_cls = FIGSClassifierCV()
     xgb_cls = XGBClassifier()
     args = parse_args()
     ds = [d for d in DATASETS_CLASSIFICATION if d[0] == args.dataset]
