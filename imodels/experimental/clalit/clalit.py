@@ -64,6 +64,11 @@ def parse_args():
     return parser.parse_args()
 
 
+def get_n_rules(est):
+    if type(est) == XGBClassifier:
+        return np.sum([t.count("<") for t in est.get_booster().get_dump()])
+
+
 def _get_estimator_performance(est, datas, met):
     X_train, X_test, y_train, y_test = datas
     est.fit(X_train, y_train)
@@ -101,9 +106,9 @@ def compare_dataset(d, n_reps, figs, xgb, met):
         xgb_mets.append(xgb_perf)
 
     performace['FIGS'] = {"mean": np.mean(figs_mets), "std": np.std(figs_mets),
-                          "n": n, "p": p, "n_trees": len(figs.trees_)}
+                          "n": n, "p": p, "n_trees": len(figs.trees_), "n_rules": figs.complexity_}
     performace['XGB'] = {"mean": np.mean(xgb_mets), "std": np.std(xgb_mets),
-                         "n_trees": len(xgb.get_booster().get_dump()), "n": n, "p": p}
+                         "n_trees": len(xgb.get_booster().get_dump()), "n": n, "p": p, "n_rules": get_n_rules(xgb)}
 
     df = pd.DataFrame(performace)
     df.to_csv(os.path.join(PTH, f"{d[0]}.csv"))
