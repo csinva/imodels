@@ -8,11 +8,13 @@ import pandas as pd
 import scipy.stats
 from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, BaseEstimator
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import datasets, model_selection
 
+from imodels.experimental.bartpy.initializers.sklearntreeinitializer import SklearnTreeInitializer
 from .data import Data
 from .initializers.initializer import Initializer
 from .model import Model
@@ -194,11 +196,11 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  sigma_b: float = 0.001,
                  n_samples: int = 200,
                  n_burn: int = 200,
-                 thin: float = 0.1,
+                 thin: float = 1,
                  alpha: float = 0.95,
                  beta: float = 2.,
                  store_in_sample_predictions: bool = False,
-                 store_acceptance_trace: bool = False,
+                 store_acceptance_trace: bool = True,
                  tree_sampler: TreeMutationSampler = get_tree_sampler(0.5, 0.5),
                  initializer: Optional[Initializer] = None,
                  n_jobs=-1,
@@ -611,6 +613,33 @@ class BART(SklearnModel):
         return self
 
 
+class BARTChainCV(BART):
+    def fit(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, sgb_init=False) -> 'SklearnModel':
+        # X_train, X_tun, y_train, y_tun = model_selection.train_test_split(
+        #     X, y, test_size=0.3, random_state=1)
+        self.data = self._convert_covariates_to_data(X, y)
+
+
+        if sgb_init:
+            lr_grid = {'learning_rate': [0.15, 0.1, 0.05, 0.01, 0.005, 0.001]}
+
+            tuning = GridSearchCV(
+                estimator=GradientBoostingRegressor(n_estimators=self.n_trees),
+                param_grid=lr_grid, scoring='neg_mean_squared_error', n_jobs=4, cv=5)
+            tuning.fit(X, self.data.y.values)
+            # sgb = GradientBoostingRegressor(**tuning.best_params_, n_estimators=self.n_trees).fit(X, self.data.y.values)
+            self.initializer = SklearnTreeInitializer(tree_=tuning.best_estimator_)
+        super(BARTChainCV, self).fit(X, y)
+        # chains_predictions = [self.predict_chain(X_tun, c) for c in range(self.n_chains)]
+        # scores = [mean_squared_error(y_tun, p) for p in chains_predictions]
+        # self._best_chain = np.argmin(scores)
+        return self
+
+    def predict(self, X: np.ndarray = None) -> np.ndarray:
+        return super().predict(X)
+        # return self.predict_chain(X, self._best_chain)
+
+
 class ImputedBART(BaseEstimator):
     def __init__(self, estimator_):
         # super(ShrunkBARTRegressor, self).__init__()
@@ -713,15 +742,30 @@ def main():
     # iris = datasets.load_iris()
     # idx = np.logical_or(iris.target == 0, iris.target == 1)
     # X, y = iris.data[idx, ...], iris.target[idx]
-    X, y = datasets.load_diabetes(return_X_y=True)
+    X, y = datasets.make_friedman1(n_samples=1000)
+
+    # tuning.grid_scores_, tuning.best_params_, tuning.best_score_
 
     X_train, X_test, y_train, y_test = model_selection.train_test_split(
-        X, y, test_size=0.3, random_state=1)
-    bart = BART(classification=False)
+        X, y, test_size=0.3, random_state=6)
+    bart = BARTChainCV(classification=False, n_samples=100, n_burn=0,n_chains=4, n_trees=50)
+    bart.fit(X_train, y_train, sgb_init=True)
+    preds_org = bart.predict(X_test)
+    mse = np.linalg.norm(preds_org - y_test)
+    print(mse)
+    sgb = bart.initializer._tree
+    samp = bart.model_samples[0]
+    mse_init = bart.data.y.unnormalize_y(sgb.predict(X_test))
+    mse = np.linalg.norm(mse_init - y_test)
+    print(mse)
+    bart = BART(classification=False, n_samples=100, n_burn=3000, n_chains=4, n_trees=50)
     bart.fit(X_train, y_train)
     preds_org = bart.predict(X_test)
     mse = np.linalg.norm(preds_org - y_test)
     print(mse)
+
+
+
     # tree = DecisionTreeClassifier()
     # tree.fit(X, y)
     # preds_tree = tree.predict_proba(X)

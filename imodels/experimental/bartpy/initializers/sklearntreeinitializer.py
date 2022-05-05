@@ -185,8 +185,15 @@ def map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree):
 
         left_child: LeafNode = decision_node.left_child
         right_child: LeafNode = decision_node.right_child
-        left_child.set_value(sklearn_tree.value[left_child_index][0][0])
-        right_child.set_value(sklearn_tree.value[right_child_index][0][0])
+
+        left_mean = left_child.data.y.summed_y() / left_child.data.X.n_obsv
+        left_child.set_value(left_mean)
+
+        right_mean = right_child.data.y.summed_y() / right_child.data.X.n_obsv
+        right_child.set_value(right_mean)
+
+        # left_child.set_value(sklearn_tree.value[left_child_index][0][0])
+        # right_child.set_value(sklearn_tree.value[right_child_index][0][0])
 
         mutation = GrowMutation(searched_node, decision_node)
         mutate(bartpy_tree, mutation)
