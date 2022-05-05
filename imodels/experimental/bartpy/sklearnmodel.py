@@ -11,7 +11,7 @@ from sklearn.base import RegressorMixin, BaseEstimator
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score, GridSearchCV
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn import datasets, model_selection
 
 from imodels.experimental.bartpy.initializers.sklearntreeinitializer import SklearnTreeInitializer
@@ -619,7 +619,6 @@ class BARTChainCV(BART):
         #     X, y, test_size=0.3, random_state=1)
         self.data = self._convert_covariates_to_data(X, y)
 
-
         if sgb_init:
             lr_grid = {'learning_rate': [0.15, 0.1, 0.05, 0.01, 0.005, 0.001]}
 
@@ -627,8 +626,10 @@ class BARTChainCV(BART):
                 estimator=GradientBoostingRegressor(n_estimators=self.n_trees),
                 param_grid=lr_grid, scoring='neg_mean_squared_error', n_jobs=4, cv=5)
             tuning.fit(X, self.data.y.values)
-            # sgb = GradientBoostingRegressor(**tuning.best_params_, n_estimators=self.n_trees).fit(X, self.data.y.values)
-            self.initializer = SklearnTreeInitializer(tree_=tuning.best_estimator_)
+            sgb = GradientBoostingRegressor(**tuning.best_params_, n_estimators=self.n_trees).fit(X, self.data.y.values)
+            # sgb = DecisionTreeRegressor(max_depth=2).fit(X, self.data.y.values)
+
+            self.initializer = SklearnTreeInitializer(tree_=sgb)
         super(BARTChainCV, self).fit(X, y)
         # chains_predictions = [self.predict_chain(X_tun, c) for c in range(self.n_chains)]
         # scores = [mean_squared_error(y_tun, p) for p in chains_predictions]
@@ -748,7 +749,7 @@ def main():
 
     X_train, X_test, y_train, y_test = model_selection.train_test_split(
         X, y, test_size=0.3, random_state=6)
-    bart = BARTChainCV(classification=False, n_samples=100, n_burn=0,n_chains=4, n_trees=50)
+    bart = BARTChainCV(classification=False, n_samples=100, n_burn=0, n_chains=4, n_trees=50)
     bart.fit(X_train, y_train, sgb_init=True)
     preds_org = bart.predict(X_test)
     mse = np.linalg.norm(preds_org - y_test)
@@ -763,8 +764,6 @@ def main():
     preds_org = bart.predict(X_test)
     mse = np.linalg.norm(preds_org - y_test)
     print(mse)
-
-
 
     # tree = DecisionTreeClassifier()
     # tree.fit(X, y)

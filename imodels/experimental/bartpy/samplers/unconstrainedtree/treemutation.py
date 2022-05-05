@@ -4,6 +4,7 @@ import numpy as np
 
 from ...model import Model
 from ...mutation import TreeMutation
+from ...node import DecisionNode
 from ...samplers.sampler import Sampler
 from ...samplers.scalar import UniformScalarSampler
 from ...samplers.treemutation import TreeMutationLikihoodRatio
