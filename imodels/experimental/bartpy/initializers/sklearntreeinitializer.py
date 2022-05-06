@@ -56,7 +56,7 @@ class SklearnTreeInitializer(Initializer):
         # sklearn_tree = self._tree.estimators_[0][0].tree_
         sklearn_tree = self._get_sklearn_tree(tree_number)
         map_sklearn_tree_into_bartpy(tree, sklearn_tree)
-        pass
+        return
 
     def _get_sklearn_tree(self, tree_number):
         if isinstance(self._tree, GradientBoostingRegressor):
@@ -186,9 +186,9 @@ def map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree):
         left_child: LeafNode = decision_node.left_child
         right_child: LeafNode = decision_node.right_child
 
-        decision_node.is_original()
-        left_child.is_original()
-        right_child.is_original()
+        decision_node.make_original()
+        left_child.make_original()
+        right_child.make_original()
 
         # left_mean = left_child.data.y.summed_y() / left_child.data.X.n_obsv
         left_value_skl = sklearn_tree.value[left_child_index][0][0]

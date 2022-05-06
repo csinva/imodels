@@ -36,7 +36,7 @@ class TreeNode(object):
     def split(self):
         return self._split
 
-    def is_original(self):
+    def make_original(self):
         self.original = True
 
     def update_y(self, y):

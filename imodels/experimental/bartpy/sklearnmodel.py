@@ -364,6 +364,20 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                 return np.round(predictions, 0)
             return predictions
 
+    def prediction_intervals(self, X, chain=None):
+
+        if chain is None:
+            predictions_transformed = [x.predict(X) for x in
+                                       self._model_samples]
+            upper_bound = self.data.y.unnormalize_y(np.max(predictions_transformed, axis=0))
+            lower_bound = self.data.y.unnormalize_y(np.min(predictions_transformed, axis=0))
+        else:
+            predictions_transformed = self.chain_precitions(X, chain)
+            upper_bound = np.max(predictions_transformed, axis=0)
+            lower_bound = np.min(predictions_transformed, axis=0)
+
+        return np.stack([upper_bound, lower_bound], axis=1)
+
     def predict_proba(self, X: np.ndarray = None) -> np.ndarray:
         preds = self._out_of_sample_predict(X)
         return np.stack([preds, 1 - preds], axis=1)
@@ -425,11 +439,15 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         """
         return np.sqrt(np.sum(self.l2_error(X, y)))
 
-    def _chain_pred_arr(self, X, chain_number, s=0):
+    def _chain_pred_arr(self, X, chain_numbers, s=0):
+        chain_numbers = chain_numbers if type(chain_numbers) == list else [chain_numbers]
         chain_len = int(self.n_samples)
-        samples_chain = self._model_samples[chain_number * chain_len: (chain_number + 1) * chain_len]
-        predictions_transformed = [x.predict(X) for x in samples_chain[s:]]
-        return predictions_transformed
+        predictions = []
+        for chain_number in chain_numbers:
+            samples_chain = self._model_samples[int(chain_number) * chain_len: int(chain_number + 1) * chain_len]
+            predictions_transformed_chain = [x.predict(X) for x in samples_chain[s:]]
+            predictions += predictions_transformed_chain
+        return predictions
 
     def predict_chain(self, X, chain_number, s=0):
         predictions_transformed = self._chain_pred_arr(X, chain_number, s)
@@ -620,14 +638,14 @@ class BARTChainCV(BART):
         self.data = self._convert_covariates_to_data(X, y)
 
         if sgb_init:
-            lr_grid = {'learning_rate': [0.15, 0.1, 0.05, 0.01, 0.005, 0.001]}
-
-            tuning = GridSearchCV(
-                estimator=GradientBoostingRegressor(n_estimators=self.n_trees),
-                param_grid=lr_grid, scoring='neg_mean_squared_error', n_jobs=4, cv=5)
-            tuning.fit(X, self.data.y.values)
-            sgb = GradientBoostingRegressor(**tuning.best_params_, n_estimators=self.n_trees).fit(X, self.data.y.values)
-            # sgb = DecisionTreeRegressor(max_depth=2).fit(X, self.data.y.values)
+            # lr_grid = {'learning_rate': [0.15, 0.1, 0.05, 0.01, 0.005, 0.001]}
+            #
+            # tuning = GridSearchCV(
+            #     estimator=GradientBoostingRegressor(n_estimators=self.n_trees),
+            #     param_grid=lr_grid, scoring='neg_mean_squared_error', n_jobs=4, cv=5)
+            # tuning.fit(X, self.data.y.values)
+            # sgb = GradientBoostingRegressor(**tuning.best_params_, n_estimators=self.n_trees).fit(X, self.data.y.values)
+            sgb = DecisionTreeRegressor(max_depth=5).fit(X, self.data.y.values)
 
             self.initializer = SklearnTreeInitializer(tree_=sgb)
         super(BARTChainCV, self).fit(X, y)
