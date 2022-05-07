@@ -38,7 +38,7 @@ def main():
 
     ax[0].scatter(n_samples, xgb_data[:, 3], c="red", label="XGB")
 
-    ax[0].set_xticks(n_samples, ticks,rotation=20)
+    ax[0].set_xticks(n_samples, ticks, rotation=20)
 
     # ax[0].set_xlabel("Number of Samples (log scale)")
     ax[0].set_ylabel("# of Rules")
