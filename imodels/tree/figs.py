@@ -323,18 +323,20 @@ class FIGS(BaseEstimator):
         is_single_tree =  len(self.trees_) < 2
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
-        if is_single_tree:
-            fig, ax = plt.subplots(1)
-        else:
-            fig, axs = plt.subplots(n_rows, n_cols)
+        # if is_single_tree:
+        #     fig, ax = plt.subplots(1)
+        # else:
+        #     fig, axs = plt.subplots(n_rows, n_cols)
+        fig, axs = plt.subplots(int(len(self.trees_)))
         criterion = "squared_error" if self.prediction_task == "regression" else "gini"
         n_classes = 1 if self.prediction_task == 'regression' else 2
-        ax_size = n_cols * n_rows
+        ax_size = int(len(self.trees_))#n_cols * n_rows
         for i in range(ax_size):
             r = i // n_cols
             c = i % n_cols
             if not is_single_tree:
-                ax = axs[r, c]
+                # ax = axs[r, c]
+                ax = axs[i]
             try:
                 tree = self.trees_[i]
                 plot_tree(DecisionTreeViz(tree, criterion, n_classes), ax=ax, feature_names=feature_names, label=label,
