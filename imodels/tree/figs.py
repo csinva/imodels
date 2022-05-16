@@ -1,13 +1,19 @@
 from copy import deepcopy
 from typing import List
 
+import matplotlib.pyplot as plt
 import numpy as np
 import sklearn.datasets
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.tree import plot_tree
 from sklearn.utils import check_X_y, check_array
+
+from imodels.tree.viz_utils import DecisionTreeViz
+
+plt.rcParams['figure.dpi'] = 300
 
 
 class Node:
@@ -313,6 +319,19 @@ class FIGS(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
+    def plot(self):
+        n_cols = int(2)
+        n_rows = int(np.ceil(len(self.trees_)/n_cols))
+        fig, axs = plt.subplots(n_rows, n_cols)
+        for i, tree in enumerate(self.trees_):
+            r = i // n_cols
+            c = i % n_cols
+            plot_tree(DecisionTreeViz(tree),ax=axs[r,c])
+            axs[r, c].set_title(f"Tree {i}")
+        plt.show()
+
+
+
 
 class FIGSRegressor(FIGS):
     def _init_prediction_task(self):
@@ -385,6 +404,7 @@ if __name__ == '__main__':
     est.fit(X_reg, Y_reg)
     est.predict(X_reg)
     print(est.max_rules)
+    est.figs.plot()
 
     est = FIGSClassifierCV()
     est.fit(X_cls, Y_cls)
