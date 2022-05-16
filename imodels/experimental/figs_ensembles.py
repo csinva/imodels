@@ -1,12 +1,16 @@
 from copy import deepcopy
 
 import numpy as np
+from matplotlib import pyplot as plt
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import RidgeCV, RidgeClassifierCV
 from sklearn.model_selection import train_test_split
+from sklearn.tree import plot_tree
 from sklearn.utils import check_X_y
+
+from imodels.tree.viz_utils import DecisionTreeViz
 
 
 class Node:
@@ -465,6 +469,32 @@ class FIGSExt(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
+    def plot(self, cols=2):
+        is_single_tree =  len(self.trees_) < 2
+        n_cols = int(cols)
+        n_rows = int(np.ceil(len(self.trees_) / n_cols))
+        if is_single_tree:
+            fig, ax = plt.subplots(1)
+        else:
+            fig, axs = plt.subplots(n_rows, n_cols)
+        criterion = "squared_error" if self.prediction_task == "regression" else "gini"
+        n_classes = 1 if self.prediction_task == 'regrssion' else 2
+        ax_size = n_cols * n_rows
+        for i in range(ax_size):
+            r = i // n_cols
+            c = i % n_cols
+            if not is_single_tree:
+                ax = axs[r, c]
+            try:
+                tree = self.trees_[i]
+                plot_tree(DecisionTreeViz(tree, criterion, n_classes), ax=ax)
+            except IndexError:
+                ax.axis('off')
+                continue
+
+            ax.set_title(f"Tree {i}")
+        plt.show()
+
 
 class FIGSExtRegressor(FIGSExt):
     def _init_prediction_task(self):
@@ -492,3 +522,4 @@ if __name__ == '__main__':
     m = FIGSExtClassifier(max_rules=5)
     m.fit(X_train, y_train)
     print(m.predict_proba(X_train))
+    m.plot(cols=3)
