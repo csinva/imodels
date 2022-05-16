@@ -471,7 +471,7 @@ class FIGSExt(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
-    def plot(self, cols=2, feature_names=None):
+    def plot(self, cols=2, feature_names=None, filename=None):
         is_single_tree =  len(self.trees_) < 2
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
@@ -495,6 +495,9 @@ class FIGSExt(BaseEstimator):
                 continue
 
             ax.set_title(f"Tree {i}")
+        if filename is not None:
+            plt.savefig(filename)
+            return
         plt.show()
 
 
