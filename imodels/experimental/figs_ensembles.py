@@ -489,6 +489,8 @@ class FIGSExt(BaseEstimator):
             if not is_single_tree:
                 # ax = axs[r, c]
                 ax = axs[i]
+            else:
+                ax = axs
             try:
                 tree = self.trees_[i]
                 plot_tree(DecisionTreeViz(tree, criterion, n_classes), ax=ax, feature_names=feature_names, label=label,
