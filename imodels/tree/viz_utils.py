@@ -8,7 +8,7 @@ TreeData = namedtuple('TreeData', "children_left children_right "
                                   "feature threshold n_node_samples impurity value n_classes n_outputs")
 
 
-def extract_figs_tree(node):
+def extract_figs_tree(node, n_classes):
     tree_data = TreeData(
         children_left=[],
         children_right=[],
@@ -17,7 +17,7 @@ def extract_figs_tree(node):
         n_node_samples=[],
         impurity=[],
         value=[],
-        n_classes=np.array([1]),
+        n_classes=np.array([n_classes]),
         n_outputs=np.array([1]))
 
     node_counter = iter(range(1, int(1e06)))
@@ -52,8 +52,8 @@ def extract_figs_tree(node):
 
 
 class LightTreeViz:
-    def __init__(self, figs_tree):
-        tree = extract_figs_tree(figs_tree)
+    def __init__(self, figs_tree, n_classes):
+        tree = extract_figs_tree(figs_tree, n_classes)
         self.children_left = tree.children_left
         self.children_right = tree.children_right
         self.feature = tree.feature
@@ -66,12 +66,8 @@ class LightTreeViz:
 
 
 class DecisionTreeViz(BaseDecisionTree):
-    def __init__(self, dt):
-        if hasattr(dt, 'tree_'):
-            tree = LightTreeViz(dt.tree_)
-            criterion = dt.criterion
-        else:
-            tree = LightTreeViz(dt)
-            criterion = "squared_error"
+    def __init__(self, dt, criterion, n_classes):
+
+        tree = LightTreeViz(dt, n_classes)
         self.tree_ = tree
         self.criterion = criterion
