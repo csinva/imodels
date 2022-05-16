@@ -471,7 +471,7 @@ class FIGSExt(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
-    def plot(self, cols=2, feature_names=None, filename=None):
+    def plot(self, cols=2, feature_names=None, filename=None, label="all"):
         is_single_tree =  len(self.trees_) < 2
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
@@ -480,7 +480,7 @@ class FIGSExt(BaseEstimator):
         else:
             fig, axs = plt.subplots(n_rows, n_cols)
         criterion = "squared_error" if self.prediction_task == "regression" else "gini"
-        n_classes = 1 if self.prediction_task == 'regrssion' else 2
+        n_classes = 1 if self.prediction_task == 'regression' else 2
         ax_size = n_cols * n_rows
         for i in range(ax_size):
             r = i // n_cols
@@ -489,7 +489,7 @@ class FIGSExt(BaseEstimator):
                 ax = axs[r, c]
             try:
                 tree = self.trees_[i]
-                plot_tree(DecisionTreeViz(tree, criterion, n_classes), ax=ax, feature_names=feature_names)
+                plot_tree(DecisionTreeViz(tree, criterion, n_classes), ax=ax, feature_names=feature_names, label=label)
             except IndexError:
                 ax.axis('off')
                 continue
