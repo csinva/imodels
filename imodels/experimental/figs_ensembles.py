@@ -252,7 +252,7 @@ class FIGSExt(BaseEstimator):
                         if not tree_num_2_ == tree_num_:
                             y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
                     tree_.update_values(X, y_residuals_per_tree[tree_num_])
-                    y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
+                    y_predictions_per_tree[tree_num_] = self._predict_tree(self.trees_[tree_num_], X)
 
         # set up initial potential_splits
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
