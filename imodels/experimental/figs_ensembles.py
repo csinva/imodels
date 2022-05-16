@@ -472,7 +472,7 @@ class FIGSExt(BaseEstimator):
         return preds
 
     def plot(self, cols=2, feature_names=None, filename=None, label="all", impurity=False, tree_number=None):
-        is_single_tree =  len(self.trees_) < 2
+        is_single_tree =  len(self.trees_) < 2 or tree_number is not None
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
         # if is_single_tree:
