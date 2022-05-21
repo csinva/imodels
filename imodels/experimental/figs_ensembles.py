@@ -1,12 +1,18 @@
 from copy import deepcopy
 
 import numpy as np
+from matplotlib import pyplot as plt
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import RidgeCV, RidgeClassifierCV
 from sklearn.model_selection import train_test_split
+from sklearn.tree import plot_tree
 from sklearn.utils import check_X_y
+
+from imodels.tree.viz_utils import DecisionTreeViz
+
+plt.rcParams['figure.dpi'] = 300
 
 
 class Node:
@@ -246,7 +252,7 @@ class FIGSExt(BaseEstimator):
                         if not tree_num_2_ == tree_num_:
                             y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_2_]
                     tree_.update_values(X, y_residuals_per_tree[tree_num_])
-                    y_predictions_per_tree[tree_num_] = self.predict_tree(self.trees_[tree_num_], X)
+                    y_predictions_per_tree[tree_num_] = self._predict_tree(self.trees_[tree_num_], X)
 
         # set up initial potential_splits
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
@@ -465,6 +471,41 @@ class FIGSExt(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
+    def plot(self, cols=2, feature_names=None, filename=None, label="all", impurity=False, tree_number=None):
+        is_single_tree =  len(self.trees_) < 2 or tree_number is not None
+        n_cols = int(cols)
+        n_rows = int(np.ceil(len(self.trees_) / n_cols))
+        # if is_single_tree:
+        #     fig, ax = plt.subplots(1)
+        # else:
+        #     fig, axs = plt.subplots(n_rows, n_cols)
+        n_plots = int(len(self.trees_)) if tree_number is None else 1
+        fig, axs = plt.subplots(n_plots)
+        criterion = "squared_error" if self.prediction_task == "regression" else "gini"
+        n_classes = 1 if self.prediction_task == 'regression' else 2
+        ax_size = int(len(self.trees_))#n_cols * n_rows
+        for i in range(n_plots):
+            r = i // n_cols
+            c = i % n_cols
+            if not is_single_tree:
+                # ax = axs[r, c]
+                ax = axs[i]
+            else:
+                ax = axs
+            try:
+                tree = self.trees_[i] if tree_number is None else self.trees_[tree_number]
+                plot_tree(DecisionTreeViz(tree, criterion, n_classes), ax=ax, feature_names=feature_names, label=label,
+                          impurity=impurity)
+            except IndexError:
+                ax.axis('off')
+                continue
+
+            ax.set_title(f"Tree {i}")
+        if filename is not None:
+            plt.savefig(filename)
+            return
+        plt.show()
+
 
 class FIGSExtRegressor(FIGSExt):
     def _init_prediction_task(self):
@@ -478,8 +519,8 @@ class FIGSExtClassifier(FIGSExt):
 
 if __name__ == '__main__':
     np.random.seed(13)
-    X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
-    # X, y = datasets.load_diabetes(return_X_y=True)  # regression
+    # X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
+    X, y = datasets.load_diabetes(return_X_y=True)  # regression
     # X = np.random.randn(500, 10)
     # y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
 
@@ -489,6 +530,7 @@ if __name__ == '__main__':
     print('X.shape', X.shape)
     print('ys', np.unique(y_train), '\n\n')
 
-    m = FIGSExtClassifier(max_rules=5)
+    m = FIGSExtClassifier(max_rules=50)
     m.fit(X_train, y_train)
     print(m.predict_proba(X_train))
+    m.plot(2, tree_number=0)

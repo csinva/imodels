@@ -7,6 +7,7 @@ with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 required_pypi = [
+    'matplotlib',
     'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
     'numpy',
     'pandas',
