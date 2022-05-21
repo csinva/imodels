@@ -13,6 +13,8 @@ Project is also on [pypi](https://pypi.org/project/imodels/). Packaged following
 ```bash
 pip install twine
 
+rm -r build dist
+
 python setup.py sdist bdist_wheel
 
 twine check dist/*
