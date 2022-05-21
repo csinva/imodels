@@ -2,6 +2,7 @@ from copy import deepcopy
 from typing import List
 
 import numpy as np
+import pandas as pd
 import sklearn.datasets
 from sklearn import datasets
 from sklearn import tree
@@ -46,6 +47,20 @@ class Node:
             return f'Val: {self.value[0][0]:0.3f} (leaf)'
         else:
             return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
+    
+    def print_root(self, y):
+        try:
+            one_count = pd.Series(y).value_counts()[1.0]
+        except KeyError:
+            one_count = 0
+        one_proportion = f' {one_count}/{y.shape[0]} ({round(100*one_count/y.shape[0], 2)}%)'
+
+        if self.is_root:
+            return f'X_{self.feature} <= {self.threshold:0.3f}' + one_proportion
+        elif self.left is None and self.right is None:
+            return f'ΔRisk = {self.value[0][0]:0.2f}' + one_proportion
+        else:
+            return f'X_{self.feature} <= {self.threshold:0.3f}' + one_proportion
 
     def __repr__(self):
         return self.__str__()
@@ -262,8 +277,27 @@ class FIGS(BaseEstimator):
         return prefix + str(root) + '\n' + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right,
                                                                                                      pprefix)
 
+    def _tree_to_str_with_data(self, X, y, root: Node, prefix=''):
+        if root is None:
+            return ''
+        elif root.threshold is None:
+            return ''
+        pprefix = prefix + '\t'
+        left = X[:, root.feature] <= root.threshold
+        return (
+            prefix + root.print_root(y) + '\n' + 
+            self._tree_to_str_with_data(X[left], y[left], root.left, pprefix) + 
+            self._tree_to_str_with_data(X[~left], y[~left], root.right, pprefix))
+
     def __str__(self):
         s = '------------\n' + '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
+        if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
+            for i in range(len(self.feature_names_))[::-1]:
+                s = s.replace(f'X_{i}', self.feature_names_[i])
+        return s
+    
+    def print_tree(self, X, y):
+        s = '------------\n' + '\n\t+\n'.join([self._tree_to_str_with_data(X, y, t) for t in self.trees_])
         if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f'X_{i}', self.feature_names_[i])
