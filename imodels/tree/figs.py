@@ -1,6 +1,7 @@
 from copy import deepcopy
 from typing import List
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import sklearn.datasets
@@ -8,7 +9,12 @@ from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
+
+from imodels.tree.viz_utils import DecisionTreeViz
+
+plt.rcParams['figure.dpi'] = 300
 
 
 class Node:
@@ -347,6 +353,41 @@ class FIGS(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
+    def plot(self, cols=2, feature_names=None, filename=None, label="all", impurity=False, tree_number=None):
+        is_single_tree =  len(self.trees_) < 2 or tree_number is not None
+        n_cols = int(cols)
+        n_rows = int(np.ceil(len(self.trees_) / n_cols))
+        # if is_single_tree:
+        #     fig, ax = plt.subplots(1)
+        # else:
+        #     fig, axs = plt.subplots(n_rows, n_cols)
+        n_plots = int(len(self.trees_)) if tree_number is None else 1
+        fig, axs = plt.subplots(n_plots)
+        criterion = "squared_error" if self.prediction_task == "regression" else "gini"
+        n_classes = 1 if self.prediction_task == 'regression' else 2
+        ax_size = int(len(self.trees_))#n_cols * n_rows
+        for i in range(n_plots):
+            r = i // n_cols
+            c = i % n_cols
+            if not is_single_tree:
+                # ax = axs[r, c]
+                ax = axs[i]
+            else:
+                ax = axs
+            try:
+                tree = self.trees_[i] if tree_number is None else self.trees_[tree_number]
+                plot_tree(DecisionTreeViz(tree, criterion, n_classes), ax=ax, feature_names=feature_names, label=label,
+                          impurity=impurity)
+            except IndexError:
+                ax.axis('off')
+                continue
+
+            ax.set_title(f"Tree {i}")
+        if filename is not None:
+            plt.savefig(filename)
+            return
+        plt.show()
+
 
 class FIGSRegressor(FIGS):
     def _init_prediction_task(self):
@@ -419,8 +460,10 @@ if __name__ == '__main__':
     est.fit(X_reg, Y_reg)
     est.predict(X_reg)
     print(est.max_rules)
+    est.figs.plot(tree_number=0)
 
     est = FIGSClassifierCV()
     est.fit(X_cls, Y_cls)
     est.predict(X_cls)
     print(est.max_rules)
+    est.figs.plot(tree_number=0)
