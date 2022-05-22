@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 from sklearn import datasets
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics import r2_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
@@ -164,12 +164,12 @@ class HSTree:
             return NotImplemented
 
 
-class HSTreeRegressor(HSTree):
+class HSTreeRegressor(HSTree, RegressorMixin):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
 
 
-class HSTreeClassifier(HSTree):
+class HSTreeClassifier(HSTree, ClassifierMixin):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'
 

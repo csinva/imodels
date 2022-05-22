@@ -31,6 +31,7 @@ import pandas as pd
 import scipy.stats
 from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, BaseEstimator
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import datasets, model_selection
@@ -385,8 +386,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
 
     def predict_proba(self, X: np.ndarray = None) -&gt; np.ndarray:
         preds = self._out_of_sample_predict(X)
-        return np.stack([preds, 1-preds], axis=1)
-
+        return np.stack([preds, 1 - preds], axis=1)
 
     def residuals(self, X=None, y=None) -&gt; np.ndarray:
         &#34;&#34;&#34;
@@ -444,6 +444,45 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             The total summed L2 error for the model
         &#34;&#34;&#34;
         return np.sqrt(np.sum(self.l2_error(X, y)))
+
+    def _chain_pred_arr(self, X, chain_number):
+        chain_len = int(self.n_samples)
+        samples_chain = self._model_samples[chain_number * chain_len: (chain_number + 1) * chain_len]
+        predictions_transformed = [x.predict(X) for x in samples_chain]
+        return predictions_transformed
+
+    def predict_chain(self, X, chain_number):
+        predictions_transformed = self._chain_pred_arr(X, chain_number)
+        predictions = self.data.y.unnormalize_y(np.mean(predictions_transformed, axis=0))
+        if self.classification:
+            predictions = scipy.stats.norm.cdf(predictions)
+        return predictions
+
+    def chain_mse_std(self, X, y, chain_number):
+        predictions_transformed = self._chain_pred_arr(X, chain_number)
+        predictions_std = np.std(
+            [mean_squared_error(self.data.y.unnormalize_y(preds), y) for preds in predictions_transformed])
+        return predictions_std
+
+    def chain_precitions(self, X, chain_number):
+        predictions_transformed = self._chain_pred_arr(X, chain_number)
+        preds_arr = [self.data.y.unnormalize_y(preds) for preds in predictions_transformed]
+        return preds_arr
+
+    def between_chains_var(self, X):
+        all_predictions = np.stack([self.data.y.unnormalize_y(x.predict(X)) for x in self._model_samples], axis=1)
+
+        def _get_var(preds_arr):
+            mean_pred = preds_arr.mean(axis=1)
+            var = np.mean((preds_arr - np.expand_dims(mean_pred, 1)) ** 2)
+            return var
+
+        total_var = _get_var(all_predictions)
+        within_chain_var = 0
+        for c in range(self.n_chains):
+            chain_preds = self._chain_pred_arr(X, c)
+            within_chain_var += _get_var(np.stack(chain_preds, axis=1))
+        return total_var - within_chain_var
 
     def _out_of_sample_predict(self, X):
         samples = self._model_samples
@@ -756,6 +795,7 @@ def main():
     # #
     # # plt.close()
     #
+
 
 if __name__ == &#39;__main__&#39;:
     main()</code></pre>
@@ -1756,8 +1796,7 @@ set to <code>-1</code> to use all cores</dd>
 
     def predict_proba(self, X: np.ndarray = None) -&gt; np.ndarray:
         preds = self._out_of_sample_predict(X)
-        return np.stack([preds, 1-preds], axis=1)
-
+        return np.stack([preds, 1 - preds], axis=1)
 
     def residuals(self, X=None, y=None) -&gt; np.ndarray:
         &#34;&#34;&#34;
@@ -1815,6 +1854,45 @@ set to <code>-1</code> to use all cores</dd>
             The total summed L2 error for the model
         &#34;&#34;&#34;
         return np.sqrt(np.sum(self.l2_error(X, y)))
+
+    def _chain_pred_arr(self, X, chain_number):
+        chain_len = int(self.n_samples)
+        samples_chain = self._model_samples[chain_number * chain_len: (chain_number + 1) * chain_len]
+        predictions_transformed = [x.predict(X) for x in samples_chain]
+        return predictions_transformed
+
+    def predict_chain(self, X, chain_number):
+        predictions_transformed = self._chain_pred_arr(X, chain_number)
+        predictions = self.data.y.unnormalize_y(np.mean(predictions_transformed, axis=0))
+        if self.classification:
+            predictions = scipy.stats.norm.cdf(predictions)
+        return predictions
+
+    def chain_mse_std(self, X, y, chain_number):
+        predictions_transformed = self._chain_pred_arr(X, chain_number)
+        predictions_std = np.std(
+            [mean_squared_error(self.data.y.unnormalize_y(preds), y) for preds in predictions_transformed])
+        return predictions_std
+
+    def chain_precitions(self, X, chain_number):
+        predictions_transformed = self._chain_pred_arr(X, chain_number)
+        preds_arr = [self.data.y.unnormalize_y(preds) for preds in predictions_transformed]
+        return preds_arr
+
+    def between_chains_var(self, X):
+        all_predictions = np.stack([self.data.y.unnormalize_y(x.predict(X)) for x in self._model_samples], axis=1)
+
+        def _get_var(preds_arr):
+            mean_pred = preds_arr.mean(axis=1)
+            var = np.mean((preds_arr - np.expand_dims(mean_pred, 1)) ** 2)
+            return var
+
+        total_var = _get_var(all_predictions)
+        within_chain_var = 0
+        for c in range(self.n_chains):
+            chain_preds = self._chain_pred_arr(X, c)
+            within_chain_var += _get_var(np.stack(chain_preds, axis=1))
+        return total_var - within_chain_var
 
     def _out_of_sample_predict(self, X):
         samples = self._model_samples
@@ -2114,6 +2192,62 @@ def probs(self) -&gt; List:
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.between_chains_var"><code class="name flex">
+<span>def <span class="ident">between_chains_var</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def between_chains_var(self, X):
+    all_predictions = np.stack([self.data.y.unnormalize_y(x.predict(X)) for x in self._model_samples], axis=1)
+
+    def _get_var(preds_arr):
+        mean_pred = preds_arr.mean(axis=1)
+        var = np.mean((preds_arr - np.expand_dims(mean_pred, 1)) ** 2)
+        return var
+
+    total_var = _get_var(all_predictions)
+    within_chain_var = 0
+    for c in range(self.n_chains):
+        chain_preds = self._chain_pred_arr(X, c)
+        within_chain_var += _get_var(np.stack(chain_preds, axis=1))
+    return total_var - within_chain_var</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_mse_std"><code class="name flex">
+<span>def <span class="ident">chain_mse_std</span></span>(<span>self, X, y, chain_number)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def chain_mse_std(self, X, y, chain_number):
+    predictions_transformed = self._chain_pred_arr(X, chain_number)
+    predictions_std = np.std(
+        [mean_squared_error(self.data.y.unnormalize_y(preds), y) for preds in predictions_transformed])
+    return predictions_std</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_precitions"><code class="name flex">
+<span>def <span class="ident">chain_precitions</span></span>(<span>self, X, chain_number)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def chain_precitions(self, X, chain_number):
+    predictions_transformed = self._chain_pred_arr(X, chain_number)
+    preds_arr = [self.data.y.unnormalize_y(preds) for preds in predictions_transformed]
+    return preds_arr</code></pre>
+</details>
+</dd>
 <dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_chains"><code class="name flex">
 <span>def <span class="ident">f_chains</span></span>(<span>self) ‑> List[Callable[[], Mapping[str, Union[List[Any], numpy.ndarray]]]]</span>
 </code></dt>
@@ -2394,6 +2528,23 @@ If X is None, will predict based on training covariates</p>
         return predictions</code></pre>
 </details>
 </dd>
+<dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict_chain"><code class="name flex">
+<span>def <span class="ident">predict_chain</span></span>(<span>self, X, chain_number)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_chain(self, X, chain_number):
+    predictions_transformed = self._chain_pred_arr(X, chain_number)
+    predictions = self.data.y.unnormalize_y(np.mean(predictions_transformed, axis=0))
+    if self.classification:
+        predictions = scipy.stats.norm.cdf(predictions)
+    return predictions</code></pre>
+</details>
+</dd>
 <dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X: numpy.ndarray = None) ‑> numpy.ndarray</span>
 </code></dt>
@@ -2405,7 +2556,7 @@ If X is None, will predict based on training covariates</p>
 </summary>
 <pre><code class="python">def predict_proba(self, X: np.ndarray = None) -&gt; np.ndarray:
     preds = self._out_of_sample_predict(X)
-    return np.stack([preds, 1-preds], axis=1)</code></pre>
+    return np.stack([preds, 1 - preds], axis=1)</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.residuals"><code class="name flex">
@@ -2564,6 +2715,9 @@ The sum of squared errors over all observations</p>
 <h4><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel">SklearnModel</a></code></h4>
 <ul class="two-column">
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.acceptance_trace" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.acceptance_trace">acceptance_trace</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.between_chains_var" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.between_chains_var">between_chains_var</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_mse_std" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_mse_std">chain_mse_std</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_precitions" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_precitions">chain_precitions</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.complexity_" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.complexity_">complexity_</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_chains" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_chains">f_chains</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_delayed_chains" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_delayed_chains">f_delayed_chains</a></code></li>
@@ -2575,6 +2729,7 @@ The sum of squared errors over all observations</p>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.likelihood" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.likelihood">likelihood</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.model_samples" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.model_samples">model_samples</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict">predict</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict_chain" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict_chain">predict_chain</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict_proba" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.prediction_samples" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.prediction_samples">prediction_samples</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.probs" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.probs">probs</a></code></li>

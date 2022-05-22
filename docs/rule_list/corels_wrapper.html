@@ -117,6 +117,7 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
         self.random_state = random_state
         self.discretizer = None
         self.str_print = None
+        self._estimator_type = &#39;classifier&#39;
 
     def fit(self, X, y, feature_names=None, prediction_name=&#34;prediction&#34;):
         &#34;&#34;&#34;
@@ -431,6 +432,7 @@ Examples</p>
         self.random_state = random_state
         self.discretizer = None
         self.str_print = None
+        self._estimator_type = &#39;classifier&#39;
 
     def fit(self, X, y, feature_names=None, prediction_name=&#34;prediction&#34;):
         &#34;&#34;&#34;

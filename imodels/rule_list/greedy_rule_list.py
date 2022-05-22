@@ -32,6 +32,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.criterion = criterion
         self.strategy = strategy
         self.depth = 0  # tracks the fitted depth
+        self._estimator_type = 'classifier'
 
     def fit(self, x, y, depth: int = 0, feature_names=None, verbose=False):
         """

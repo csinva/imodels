@@ -21,6 +21,7 @@ class OneRClassifier(GreedyRuleListClassifier):
         self.feature_names = None
         self.class_weight = class_weight
         self.criterion = criterion
+        self._estimator_type = 'classifier'
 
     def fit(self, X, y, depth=0, feature_names=None, verbose=False):
         """Fit oneR

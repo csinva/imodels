@@ -56,6 +56,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.criterion = criterion
         self.strategy = strategy
         self.depth = 0  # tracks the fitted depth
+        self._estimator_type = &#39;classifier&#39;
 
     def fit(self, x, y, depth: int = 0, feature_names=None, verbose=False):
         &#34;&#34;&#34;
@@ -405,6 +406,7 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</p
         self.criterion = criterion
         self.strategy = strategy
         self.depth = 0  # tracks the fitted depth
+        self._estimator_type = &#39;classifier&#39;
 
     def fit(self, x, y, depth: int = 0, feature_names=None, verbose=False):
         &#34;&#34;&#34;

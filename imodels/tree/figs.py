@@ -7,7 +7,7 @@ import pandas as pd
 import sklearn.datasets
 from sklearn import datasets
 from sklearn import tree
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
@@ -85,24 +85,24 @@ class FIGS(BaseEstimator):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
-        self._init_prediction_task()  # decides between regressor and classifier
+        self._init_estimator_type()  # decides between regressor and classifier
         self._init_decision_function()
 
-    def _init_prediction_task(self):
+    def _init_estimator_type(self):
         """
         FIGSRegressor and FIGSClassifier override this method
         to alter the prediction task. When using this class directly,
         it is equivalent to FIGSRegressor
         """
-        self.prediction_task = 'regression'
+        self._estimator_type = 'regressor'
 
     def _init_decision_function(self):
-        """Sets decision function based on prediction_task
+        """Sets decision function based on _estimator_type
         """
         # used by sklearn GrriidSearchCV, BaggingClassifier
-        if self.prediction_task == 'classification':
+        if self._estimator_type == 'classifier':
             decision_function = lambda x: self.predict_proba(x)[:, 1]
-        elif self.prediction_task == 'regression':
+        elif self._estimator_type == 'regressor':
             decision_function = self.predict
 
     def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
@@ -314,14 +314,14 @@ class FIGS(BaseEstimator):
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
             preds += self._predict_tree(tree, X)
-        if self.prediction_task == 'regression':
+        if self._estimator_type == 'regressor':
             return preds
-        elif self.prediction_task == 'classification':
+        elif self._estimator_type == 'classifier':
             return (preds > 0.5).astype(int)
 
     def predict_proba(self, X):
         X = check_array(X)
-        if self.prediction_task == 'regression':
+        if self._estimator_type == 'regressor':
             return NotImplemented
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
@@ -363,8 +363,8 @@ class FIGS(BaseEstimator):
         #     fig, axs = plt.subplots(n_rows, n_cols)
         n_plots = int(len(self.trees_)) if tree_number is None else 1
         fig, axs = plt.subplots(n_plots)
-        criterion = "squared_error" if self.prediction_task == "regression" else "gini"
-        n_classes = 1 if self.prediction_task == 'regression' else 2
+        criterion = "squared_error" if self._estimator_type == "regressor" else "gini"
+        n_classes = 1 if self._estimator_type == 'regressor' else 2
         ax_size = int(len(self.trees_))#n_cols * n_rows
         for i in range(n_plots):
             r = i // n_cols
@@ -389,14 +389,14 @@ class FIGS(BaseEstimator):
         plt.show()
 
 
-class FIGSRegressor(FIGS):
-    def _init_prediction_task(self):
-        self.prediction_task = 'regression'
+class FIGSRegressor(FIGS, RegressorMixin):
+    def _init_estimator_type(self):
+        self._estimator_type = 'regressor'
 
 
-class FIGSClassifier(FIGS):
-    def _init_prediction_task(self):
-        self.prediction_task = 'classification'
+class FIGSClassifier(FIGS, ClassifierMixin):
+    def _init_estimator_type(self):
+        self._estimator_type = 'classifier'
 
 
 class FIGSCV:

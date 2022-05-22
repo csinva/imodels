@@ -814,7 +814,8 @@ arguments (no <code>*args</code> or <code>**kwargs</code>).</p></div>
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>HSTree (Tree with hierarchical shrinkage applied).
+<div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
+<p>HSTree (Tree with hierarchical shrinkage applied).
 Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
 It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
 Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
@@ -856,6 +857,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
+<li>sklearn.base.ClassifierMixin</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -887,7 +889,8 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>HSTree (Tree with hierarchical shrinkage applied).
+<div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
+<p>HSTree (Tree with hierarchical shrinkage applied).
 Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
 It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
 Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
@@ -929,6 +932,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
+<li>sklearn.base.RegressorMixin</li>
 </ul>
 <h3>Methods</h3>
 <dl>

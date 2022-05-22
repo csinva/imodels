@@ -2,10 +2,11 @@ import os
 import random
 
 import numpy as np
+from sklearn.tree import DecisionTreeRegressor
 
 from imodels import FIGSClassifier, FIGSRegressor, FIGSClassifierCV, FIGSRegressorCV
 from imodels.experimental.figs_ensembles import FIGSExtRegressor, FIGSExtClassifier
-
+from sklearn.ensemble import StackingRegressor,VotingRegressor
 path_to_tests = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -23,6 +24,15 @@ class TestFIGS:
         # y = x0 > 0 * x1 > 0
         self.y_classification_binary = (self.X[:, 0] > 0).astype(int) * (
                 self.X[:, 1] > 0).astype(int)
+        self.y_reg = self.X[:, 0] + self.X[:, 1]
+
+    def test_recognized_by_sklearn(self):
+        base_models = [('figs', FIGSRegressor()),
+                       ('random_forest', DecisionTreeRegressor())]
+        comb_model = VotingRegressor(estimators=base_models,
+                                     n_jobs=10,
+                                     verbose=2)
+        comb_model.fit(self.X, self.y_reg)
 
     def test_fitting(self):
         '''Test on a real (small) dataset
