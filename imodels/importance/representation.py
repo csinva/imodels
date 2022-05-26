@@ -34,7 +34,6 @@ class LocalDecisionStump:
     """
 
     def __init__(self, feature, threshold, left_val, right_val, a_features, a_thresholds, a_signs):
-
         self.feature = feature
         self.threshold = threshold
         self.left_val = left_val
@@ -152,132 +151,181 @@ def make_stumps(tree_struct, normalize=False):
 
 
 def tree_feature_transform(stumps, X):
+    """
+    Transform the data matrix X using a mapping derived from a collection of local decision stump functions.
+
+    :param stumps: list of LocalDecisionStump objects
+        List of stump functions to use to transform data
+    :param X: array-like of shape (n_samples, n_features)
+        Original data matrix
+    :return: X_transformed: array-like of shape (n_samples, n_stumps)
+        Transformed data matrix
+    """
     transformed_feature_vectors = []
     for stump in stumps:
         transformed_feature_vec = stump(X)
         transformed_feature_vectors.append(transformed_feature_vec)
+    X_transformed = np.vstack(transformed_feature_vectors).T
 
-    return np.vstack(transformed_feature_vectors).T
+    return X_transformed
 
 
 class TreeTransformer(TransformerMixin, BaseEstimator):
     """
     A transformer that transforms data using a representation built from local decision stumps from a tree or tree
     ensemble. The transformer also comes with meta data on the local decision stumps and methods that allow
-    for transformations using subrepresentations corresponding to each of the original features.
+    for transformations using sub-representations corresponding to each of the original features.
 
     :param estimator: scikit-learn estimator
         The scikit-learn tree or tree ensemble estimator object
-    :param max_components_type: {"median", "max", "}
-        Method for choosing the number of components for PCA. Can be either "median", "max",
-        or a fraction in [0, 1]. If "median" (respectively "max") then this is set as the median (respectively max
-        number of splits on that feature in the RF. If a fraction, then this is set to be the fraction * n
-    :param normalize:
+    :param pca: bool
+        Flag, if False, the sub-representation for each original feature is just the concatenation of the local
+        decision stumps splitting on that feature. If true, the sub-representation are the principal components of the
+        set of local decision stump vectors
+    :param max_components_type: {"median_splits", "max_splits", "nsamples", "nstumps", "min_nsamples_nstumps",
+        "min_fracnsamples_nstumps"} or int
+        Method for choosing the max number of components for PCA transformer for each sub-representation corresponding
+        to an original feature:
+            - If "median_splits", then max_components is alpha * median number of splits on the original feature
+              among trees in the estimator
+            - If "max_splits", then max_components is alpha * maximum number of splits on the original feature among
+              trees in the estimator
+            - If "nsamples", then max_components is alpha * n_samples
+            - If "nstumps", then max_components is alpha * n_stumps
+            - If "min_nsamples_nstumps", then max_components is alpha * min(n_samples, n_stumps), where n_stumps is
+              total number of local decision stumps splitting on that feature in the ensemble
+            - If "min_fracnsamples_nstumps", then max_components is min(alpha * n_samples, n_stumps), where n_stumps is
+              total number of local decision stumps splitting on that feature in the ensemble
+            - If int, then max_components is the given integer
+    :param alpha: float
+        Parameter for adjusting the max number of components for PCA.
+    :param normalize: bool
+        Flag. If set to True, then divide the nonzero function values for each local decision stump by
+        sqrt(n_samples in node) so that the vector of function values on the training set has unit norm. If False,
+        then do not divide, so that the vector of function values on the training set has norm equal to n_samples
+        in node.
     """
 
-    def __init__(self, estimator, max_components_type="median", fraction_chosen=1.0, normalize=False):
+    def __init__(self, estimator, pca=True, max_components_type="median", alpha=0.5, normalize=False):
         self.estimator = estimator
+        self.pca = pca
         self.max_components_type = max_components_type
-        self.fraction_chosen = fraction_chosen
+        self.alpha = alpha
         self.normalize = normalize
+        # Check if single tree or tree ensemble
+        tree_models = estimator.estimators_ if isinstance(estimator, BaseEnsemble) else [estimator]
+        # Make stumps for each tree
         num_splits_per_feature_all = []
-        if isinstance(estimator, BaseEnsemble):
-            self.all_stumps = []
-            for tree_model in estimator.estimators_:
-                tree_stumps, num_splits_per_feature = make_stumps(tree_model.tree_, normalize)
-                self.all_stumps += tree_stumps
-                num_splits_per_feature_all.append(num_splits_per_feature)
-        else:
-            tree_stumps, num_splits_per_feature = make_stumps(estimator.tree_, normalize)
-            self.all_stumps = tree_stumps
+        self.all_stumps = []
+        for tree_model in tree_models:
+            tree_stumps, num_splits_per_feature = make_stumps(tree_model.tree_, normalize)
+            self.all_stumps += tree_stumps
             num_splits_per_feature_all.append(num_splits_per_feature)
-        self.original_feat_to_stump_mapping = defaultdict(list)
+        # Identify the stumps that split on feature k, for each k
+        self._original_feat_to_stump_mapping = defaultdict(list)
         for idx, stump in enumerate(self.all_stumps):
-            self.original_feat_to_stump_mapping[stump.feature].append(idx)
-        self.pca_transformers = defaultdict(lambda: None)
-        self.original_feat_to_transformed_mapping = defaultdict(list)
+            self._original_feat_to_stump_mapping[stump.feature].append(idx)
+        # Obtain the median and max number of splits on each feature across trees
         self.median_splits = np.median(num_splits_per_feature_all, axis=0)
         self.max_splits = np.max(num_splits_per_feature_all, axis=0)
+        # Initialize list of PCA transformers, one for each set of stumps corresponding to each original feature
+        self.pca_transformers = defaultdict(lambda: None)
 
-    def fit(self, X, y=None, always_pca=True):
+    def fit(self, X, y=None):
 
         def pca_on_stumps(k):
-            restricted_stumps = [self.all_stumps[idx] for idx in self.original_feat_to_stump_mapping[k]]
+            """
+            Helper function to fit PCA transformer on stumps corresponding to original feature k
+            """
+            restricted_stumps = self.get_stumps_for_feature(k)
             n_stumps = len(restricted_stumps)
             n_samples = X.shape[0]
-            if self.max_components_type == 'median':
-                max_components = int(self.median_splits[k] * self.fraction_chosen)
-            elif self.max_components_type == "max":
-                max_components = int(self.max_splits[k] * self.fraction_chosen)
-            elif self.max_components_type == "n":
-                max_components = int(n_samples * self.fraction_chosen)
-            elif self.max_components_type == "minnp":
-                max_components = int(min(n_samples, n_stumps) * self.fraction_chosen)
-            elif self.max_components_type == "minfracnp":
-                max_components = int(min(n_samples * self.fraction_chosen, n_stumps))
-            elif self.max_components_type == "none":
-                max_components = np.inf
+            # Get the number of components to use for PCA
+            if self.max_components_type == 'median_splits':
+                max_components = int(self.median_splits[k] * self.alpha)
+            elif self.max_components_type == "max_splits":
+                max_components = int(self.max_splits[k] * self.alpha)
+            elif self.max_components_type == "nsamples":
+                max_components = int(n_samples * self.alpha)
+            elif self.max_components_type == "nstumps":
+                max_components = int(n_stumps * self.alpha)
+            elif self.max_components_type == "min_nsamples_nstumps":
+                max_components = int(min(n_samples, n_stumps) * self.alpha)
+            elif self.max_components_type == "min_fracnsamples_nstumps":
+                max_components = int(min(n_samples * self.alpha, n_stumps))
             elif isinstance(self.max_components_type, int):
                 max_components = self.max_components_type
             else:
                 raise ValueError("Invalid max components type")
-
-            if n_stumps == 0:
-                pca = None
-            elif max_components == 0 or (max_components == np.inf):
-                pca = None
-            elif always_pca or (n_stumps >= max_components): #self.max_components:
-                transformed_feature_vectors = tree_feature_transform(restricted_stumps, X)
-                pca = PCA(n_components=min(max_components, n_stumps, n_samples))
-                pca.fit(transformed_feature_vectors)
+            n_components = min(max_components, n_stumps, n_samples)
+            if n_components == 0:
+                pca_transformer = None
             else:
-                pca = None
-            n_new_feats = min(max_components, n_stumps)
-            #            if max_components <= 1.0: #self.max_components
-            #                n_new_feats = min(pca.explained_variance_.shape[0], n_stumps)
-            #            else:
-            #                n_new_feats = min(max_components, n_stumps) #self.max_components
-            return pca, n_new_feats
+                X_transformed = tree_feature_transform(restricted_stumps, X)
+                pca_transformer = PCA(n_components=n_components)
+                pca_transformer.fit(X_transformed)
 
-        n_orig_feats = X.shape[1]
-        counter = 0
-        for k in np.arange(n_orig_feats):
-            self.pca_transformers[k], n_new_feats_for_k = pca_on_stumps(k)
-            self.original_feat_to_transformed_mapping[k] = np.arange(counter, counter + n_new_feats_for_k)
-            counter += n_new_feats_for_k
+            return pca_transformer
+
+        if self.pca:
+            n_features = X.shape[1]
+            for k in np.arange(n_features):
+                self.pca_transformers[k] = pca_on_stumps(k)
+        else:
+            pass
 
     def transform(self, X):
-        transformed_feature_vectors_sets = []
-        for k in range(X.shape[1]):
-            v = self.original_feat_to_stump_mapping[k]
-            restricted_stumps = [self.all_stumps[idx] for idx in v]
-            if len(restricted_stumps) == 0:
-                continue
-            else:
-                transformed_feature_vectors = tree_feature_transform(restricted_stumps, X)
-                if self.pca_transformers[k] is not None:
-                    transformed_feature_vectors = self.pca_transformers[k].transform(transformed_feature_vectors)
-                transformed_feature_vectors_sets.append(transformed_feature_vectors)
+        """
+        Obtain all engineered features.
 
-        return np.hstack(transformed_feature_vectors_sets)
+        :param X: array-like of shape (n_samples, n_features)
+            Original data matrix
+        :return: X_transformed: array-like of shape (n_samples, n_new_features)
+            Transformed data matrix
+        """
+        X_transformed = []
+        n_features = X.shape[1]
+        for k in range(n_features):
+            X_transformed_k = self.transform_one_feature(X, k)
+            if X_transformed_k is not None:
+                X_transformed.append(X_transformed_k)
+        X_transformed = np.hstack(X_transformed)
+
+        return X_transformed
 
     def transform_one_feature(self, X, k):
         """
         Obtain the engineered features corresponding to a given original feature X_k
 
-        :param X: Original data matrix
-        :param k: Original feature
-        :return:
+        :param X: array-like of shape (n_samples, n_features)
+            Original data matrix
+        :param k: int
+            Index of original feature
+        :return: X_transformed: array-like of shape (n_samples, n_new_features)
+            Transformed data matrix
         """
-        v = self.original_feat_to_stump_mapping[k]
-        restricted_stumps = [self.all_stumps[idx] for idx in v]
+        restricted_stumps = self.get_stumps_for_feature(k)
         if len(restricted_stumps) == 0:
             return None
         else:
-            transformed_feature_vectors = tree_feature_transform(restricted_stumps, X)
+            X_transformed = tree_feature_transform(restricted_stumps, X)
             if self.pca_transformers[k] is not None:
-                transformed_feature_vectors = self.pca_transformers[k].transform(transformed_feature_vectors)
-        return transformed_feature_vectors
+                X_transformed = self.pca_transformers[k].transform(X_transformed)
+        return X_transformed
+
+    def get_stumps_for_feature(self, k):
+        """
+        Get the list of local decision stumps that split on feature k
+
+        :param k: int
+            Index of original feature
+        :return: restricted_stumps: list of LocalDecisionStump objects
+        """
+        restricted_stump_indices = self._original_feat_to_stump_mapping[k]
+        restricted_stumps = [self.all_stumps[idx] for idx in restricted_stump_indices]
+
+        return restricted_stumps
+
 
 
 def _compare(data, k, threshold, sign=True):
