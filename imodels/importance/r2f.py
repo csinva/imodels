@@ -21,10 +21,10 @@ from representation import TreeTransformer
 
 class R2F:
     """
-    Class to compute
+    Class to compute R2F feature importance values
     """
 
-    def __init__(self, estimator, max_components_type="min_fracnsamples_nstumps", alpha=0.5, normalize=False,
+    def __init__(self, estimator, max_components_type="auto", alpha=0.5, normalize=False,
                  random_state=None):
         self.estimator = estimator
         self.max_components_type = max_components_type
@@ -60,11 +60,15 @@ class R2F:
             return r_squared_mean
 
     def _feature_learning_one_split(self, X_train, y_train, sample_weight=None, random_state=None):
+        if self.max_components_type == "auto":
+            max_components_type = "min_fracnsamples_nstumps"
+        else:
+            max_components_type = self.max_components_type
         estimator = copy.deepcopy(self.estimator)
         if sample_weight is None:
             sample_weight = np.ones_like(y_train)
         estimator.fit(X_train, y_train, sample_weight=sample_weight, random_state=random_state)
-        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=self.max_components_type,
+        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,
                                            alpha=self.alpha, normalize=self.normalize)
         tree_transformer.fit(X_train)
         return tree_transformer
