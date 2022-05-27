@@ -20,6 +20,9 @@ from representation import TreeTransformer
 
 
 class R2F:
+    """
+    Class to compute
+    """
 
     def __init__(self, estimator, max_components_type="min_fracnsamples_nstumps", alpha=0.5, normalize=False,
                  random_state=None):
@@ -50,11 +53,11 @@ class R2F:
             r_squared[2*i+1, :], n_stumps[2*i+1, :], n_components_chosen[2*i+1, :] = \
                 self._model_selection_r2_one_split(tree_transformer_b, X_a, y_a, criterion, refit, add_raw,
                                                    sample_weight_a)
+        r_squared_mean = np.mean(r_squared, axis=0)
         if diagnostics:
-            return r_squared, n_stumps, n_components_chosen
+            return r_squared_mean, r_squared, n_stumps, n_components_chosen
         else:
-            r_squared = np.mean(r_squared, axis=0)
-            return r_squared
+            return r_squared_mean
 
     def _feature_learning_one_split(self, X_train, y_train, sample_weight=None, random_state=None):
         estimator = copy.deepcopy(self.estimator)
