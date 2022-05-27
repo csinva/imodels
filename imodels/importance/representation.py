@@ -206,7 +206,7 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
         in node.
     """
 
-    def __init__(self, estimator, pca=True, max_components_type="median", alpha=0.5, normalize=False):
+    def __init__(self, estimator, pca=True, max_components_type="min_fracnsamples_nstumps", alpha=0.5, normalize=False):
         self.estimator = estimator
         self.pca = pca
         self.max_components_type = max_components_type
