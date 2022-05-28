@@ -509,6 +509,7 @@ from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
 from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
+from .importance.representation import TreeTransformer
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier,
@@ -534,6 +535,10 @@ DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer
 <dt><code class="name"><a title="imodels.experimental" href="experimental/index.html">imodels.experimental</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="imodels.importance" href="importance/index.html">imodels.importance</a></code></dt>
+<dd>
+<div class="desc"><p>Feature importance methods for black box models</p></div>
 </dd>
 <dt><code class="name"><a title="imodels.rule_list" href="rule_list/index.html">imodels.rule_list</a></code></dt>
 <dd>
@@ -586,6 +591,7 @@ DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer
 <li><code><a title="imodels.algebraic" href="algebraic/index.html">imodels.algebraic</a></code></li>
 <li><code><a title="imodels.discretization" href="discretization/index.html">imodels.discretization</a></code></li>
 <li><code><a title="imodels.experimental" href="experimental/index.html">imodels.experimental</a></code></li>
+<li><code><a title="imodels.importance" href="importance/index.html">imodels.importance</a></code></li>
 <li><code><a title="imodels.rule_list" href="rule_list/index.html">imodels.rule_list</a></code></li>
 <li><code><a title="imodels.rule_set" href="rule_set/index.html">imodels.rule_set</a></code></li>
 <li><code><a title="imodels.tree" href="tree/index.html">imodels.tree</a></code></li>

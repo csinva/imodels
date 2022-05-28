@@ -13,9 +13,11 @@ class R2F:
     """
     Class to compute R2F feature importance values.
 
+
     :param estimator: scikit-learn estimator,
         default=RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
         The scikit-learn tree or tree ensemble estimator object
+
     :param max_components_type: {"auto", "median_splits", "max_splits", "nsamples", "nstumps", "min_nsamples_nstumps",
         "min_fracnsamples_nstumps"} or int, default="auto"
         Method for choosing the max number of components for PCA transformer for each sub-representation corresponding
@@ -32,22 +34,29 @@ class R2F:
             - If "min_fracnsamples_nstumps", then max_components is min(alpha * n_samples, n_stumps), where n_stumps is
               total number of local decision stumps splitting on that feature in the ensemble
             - If int, then max_components is the given integer
+
     :param alpha: float, default=0.5
         Parameter for adjusting the max number of components for PCA.
+
     :param normalize: bool, default=False
         Flag. If set to True, then divide the nonzero function values for each local decision stump by
         sqrt(n_samples in node) so that the vector of function values on the training set has unit norm. If False,
         then do not divide, so that the vector of function values on the training set has norm equal to n_samples
         in node.
+
     :param random_state: int, default=None
         Random seed for sample splitting
+
     :param criterion: {"aic", "bic", "cv"}, default="bic"
         Criterion used for lasso model selection
+
     :param refit: bool, default=True
         If True, refit OLS after doing lasso model selection to compute r2 values, if not, compute r2 values from the
         lasso model
+
     :param add_raw: bool, default=True
         If true, concatenate X_k with the learnt representation from PCA
+
     :param n_splits: int, default=10
         The number of splits to use to compute r2f values
     """

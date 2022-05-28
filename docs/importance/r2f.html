@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import copy
+import warnings
+
+import numpy as np
+from sklearn.linear_model import RidgeCV, LassoCV, LinearRegression, LassoLarsIC
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+
+from imodels.importance.representation import TreeTransformer
+
+
+class R2F:
+    &#34;&#34;&#34;
+    Class to compute R2F feature importance values.
+
+
+    :param estimator: scikit-learn estimator,
+        default=RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
+        The scikit-learn tree or tree ensemble estimator object
+
+    :param max_components_type: {&#34;auto&#34;, &#34;median_splits&#34;, &#34;max_splits&#34;, &#34;nsamples&#34;, &#34;nstumps&#34;, &#34;min_nsamples_nstumps&#34;,
+        &#34;min_fracnsamples_nstumps&#34;} or int, default=&#34;auto&#34;
+        Method for choosing the max number of components for PCA transformer for each sub-representation corresponding
+        to an original feature:
+            - If &#34;auto&#34;, then same settings are used as &#34;min_fracnsamples_nstumps&#34;
+            - If &#34;median_splits&#34;, then max_components is alpha * median number of splits on the original feature
+              among trees in the estimator
+            - If &#34;max_splits&#34;, then max_components is alpha * maximum number of splits on the original feature among
+              trees in the estimator
+            - If &#34;nsamples&#34;, then max_components is alpha * n_samples
+            - If &#34;nstumps&#34;, then max_components is alpha * n_stumps
+            - If &#34;min_nsamples_nstumps&#34;, then max_components is alpha * min(n_samples, n_stumps), where n_stumps is
+              total number of local decision stumps splitting on that feature in the ensemble
+            - If &#34;min_fracnsamples_nstumps&#34;, then max_components is min(alpha * n_samples, n_stumps), where n_stumps is
+              total number of local decision stumps splitting on that feature in the ensemble
+            - If int, then max_components is the given integer
+
+    :param alpha: float, default=0.5
+        Parameter for adjusting the max number of components for PCA.
+
+    :param normalize: bool, default=False
+        Flag. If set to True, then divide the nonzero function values for each local decision stump by
+        sqrt(n_samples in node) so that the vector of function values on the training set has unit norm. If False,
+        then do not divide, so that the vector of function values on the training set has norm equal to n_samples
+        in node.
+
+    :param random_state: int, default=None
+        Random seed for sample splitting
+
+    :param criterion: {&#34;aic&#34;, &#34;bic&#34;, &#34;cv&#34;}, default=&#34;bic&#34;
+        Criterion used for lasso model selection
+
+    :param refit: bool, default=True
+        If True, refit OLS after doing lasso model selection to compute r2 values, if not, compute r2 values from the
+        lasso model
+
+    :param add_raw: bool, default=True
+        If true, concatenate X_k with the learnt representation from PCA
+
+    :param n_splits: int, default=10
+        The number of splits to use to compute r2f values
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator=None, max_components_type=&#34;auto&#34;, alpha=0.5, normalize=False, random_state=None,
+                 criterion=&#34;bic&#34;, refit=True, add_raw=True, n_splits=10):
+
+        if estimator is None:
+            self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
+        else:
+            self.estimator = estimator
+        self.max_components_type = max_components_type
+        self.alpha = alpha
+        self.normalize = normalize
+        self.random_state = random_state
+        self.criterion = criterion
+        self.refit = refit
+        self.add_raw = add_raw
+        self.n_splits = n_splits
+
+    def get_importance_scores(self, X, y, sample_weight=None, diagnostics=False):
+        &#34;&#34;&#34;
+        Compute R2F feature importance values.
+
+        :param X: array-like of shape (n_samples, n_features)
+            Covariate data matrix
+        :param y: array-like of shape (n_samples,)
+            Vector of responses
+        :param sample_weight: array-like of shape (n_samples,) or None, default=None
+            Sample weights to use in fitting the tree ensemble for feature learning
+        :param diagnostics: bool
+            If False, return only the r2f values. If True, also return the r2 values, number of stumps, and
+            number of PCs chosen in lasso model selection for each feature and over each split
+        :return:
+            r2f_values: array-like of shape (n_features,)
+                The computed r2f values
+            r_squared: array-like of shape (n_splits, n_features)
+                The r2 values (for each feature) over each run
+            n_stumps: array-like of shape (n_splits, n_features)
+                The number of stumps in the ensemble (splitting on each feature) over each run
+            n_components_chosen: array-like of shape (n_splits, n_features)
+                The number of PCs chosen (for each feature) over each run
+        &#34;&#34;&#34;
+        n_features = X.shape[1]
+        r_squared = np.zeros((self.n_splits, n_features))
+        n_components_chosen = np.zeros((self.n_splits, n_features))
+        n_stumps = np.zeros((self.n_splits, n_features))
+        if self.n_splits % 2 != 0:
+            raise ValueError(&#34;n_splits has to be an even integer&#34;)
+        if sample_weight is None:
+            sample_weight = np.ones_like(y)
+        for i in range(self.n_splits // 2):
+            if self.random_state is not None:
+                random_state = self.random_state + i
+            else:
+                random_state = None
+            X_a, X_b, y_a, y_b, sample_weight_a, sample_weight_b = \
+                train_test_split(X, y, sample_weight, test_size=0.5, random_state=random_state)
+            tree_transformer_a = self._feature_learning_one_split(X_a, y_a, sample_weight_a)
+            r_squared[2*i, :], n_stumps[2*i, :], n_components_chosen[2*i, :] = \
+                self._model_selection_r2_one_split(tree_transformer_a, X_b, y_b)
+            tree_transformer_b = self._feature_learning_one_split(X_b, y_b, sample_weight_b)
+            r_squared[2*i+1, :], n_stumps[2*i+1, :], n_components_chosen[2*i+1, :] = \
+                self._model_selection_r2_one_split(tree_transformer_b, X_a, y_a)
+        r2f_values = np.mean(r_squared, axis=0)
+        if diagnostics:
+            return r2f_values, r_squared, n_stumps, n_components_chosen
+        else:
+            return r2f_values
+
+    def _feature_learning_one_split(self, X_train, y_train, sample_weight=None):
+        &#34;&#34;&#34;
+        Step 1 and 2 of r2f: Fit the RF (or other tree ensemble) and learn feature representations from it,
+        storing the information in the TreeTransformer class
+        &#34;&#34;&#34;
+        if self.max_components_type == &#34;auto&#34;:
+            max_components_type = &#34;min_fracnsamples_nstumps&#34;
+        else:
+            max_components_type = self.max_components_type
+        estimator = copy.deepcopy(self.estimator)
+        estimator.fit(X_train, y_train, sample_weight=sample_weight)
+        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,
+                                           alpha=self.alpha, normalize=self.normalize)
+        tree_transformer.fit(X_train)
+        return tree_transformer
+
+    def _model_selection_r2_one_split(self, tree_transformer, X_val, y_val):
+        &#34;&#34;&#34;
+        Step 3 of r2f: Do lasso model selection and compute r2 values
+        &#34;&#34;&#34;
+        n_features = X_val.shape[1]
+        r_squared = np.zeros(n_features)
+        n_components_chosen = np.zeros(n_features)
+        n_stumps = np.zeros(n_features)
+        for k in range(n_features):
+            X_transformed = tree_transformer.transform_one_feature(X_val, k)
+            n_stumps[k] = len(tree_transformer.get_stumps_for_feature(k))
+            if X_transformed is None:
+                r_squared[k] = 0
+                n_components_chosen[k] = 0
+            else:
+                y_val_centered = y_val - np.mean(y_val)
+                if self.add_raw:
+                    X_transformed = np.hstack([X_val[:, [k]] - np.mean(X_val[:, k]), X_transformed])
+                with warnings.catch_warnings():
+                    warnings.filterwarnings(&#34;ignore&#34;)
+                    if self.criterion == &#34;cv&#34;:
+                        lasso = LassoCV(fit_intercept=False, normalize=False)
+                    else:
+                        lasso = LassoLarsIC(criterion=self.criterion, normalize=False, fit_intercept=False)
+                    lasso.fit(X_transformed, y_val_centered)
+                    n_components_chosen[k] = np.count_nonzero(lasso.coef_)
+                    if self.refit:
+                        support = np.nonzero(lasso.coef_)[0]
+                        if len(support) == 0:
+                            r_squared[k] = 0.0
+                        else:
+                            lr = LinearRegression().fit(X_transformed[:, support], y_val_centered)
+                            r_squared[k] = lr.score(X_transformed[:, support], y_val_centered)
+                    else:
+                        r_squared[k] = lasso.score(X_transformed, y_val_centered)
+        return r_squared, n_stumps, n_components_chosen</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.importance.r2f.R2F"><code class="flex name class">
+<span>class <span class="ident">R2F</span></span>
+<span>(</span><span>estimator=None, max_components_type='auto', alpha=0.5, normalize=False, random_state=None, criterion='bic', refit=True, add_raw=True, n_splits=10)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class to compute R2F feature importance values.</p>
+<p>:param estimator: scikit-learn estimator,
+default=RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
+The scikit-learn tree or tree ensemble estimator object</p>
+<p>:param max_components_type: {"auto", "median_splits", "max_splits", "nsamples", "nstumps", "min_nsamples_nstumps",
+"min_fracnsamples_nstumps"} or int, default="auto"
+Method for choosing the max number of components for PCA transformer for each sub-representation corresponding
+to an original feature:
+- If "auto", then same settings are used as "min_fracnsamples_nstumps"
+- If "median_splits", then max_components is alpha * median number of splits on the original feature
+among trees in the estimator
+- If "max_splits", then max_components is alpha * maximum number of splits on the original feature among
+trees in the estimator
+- If "nsamples", then max_components is alpha * n_samples
+- If "nstumps", then max_components is alpha * n_stumps
+- If "min_nsamples_nstumps", then max_components is alpha * min(n_samples, n_stumps), where n_stumps is
+total number of local decision stumps splitting on that feature in the ensemble
+- If "min_fracnsamples_nstumps", then max_components is min(alpha * n_samples, n_stumps), where n_stumps is
+total number of local decision stumps splitting on that feature in the ensemble
+- If int, then max_components is the given integer</p>
+<p>:param alpha: float, default=0.5
+Parameter for adjusting the max number of components for PCA.</p>
+<p>:param normalize: bool, default=False
+Flag. If set to True, then divide the nonzero function values for each local decision stump by
+sqrt(n_samples in node) so that the vector of function values on the training set has unit norm. If False,
+then do not divide, so that the vector of function values on the training set has norm equal to n_samples
+in node.</p>
+<p>:param random_state: int, default=None
+Random seed for sample splitting</p>
+<p>:param criterion: {"aic", "bic", "cv"}, default="bic"
+Criterion used for lasso model selection</p>
+<p>:param refit: bool, default=True
+If True, refit OLS after doing lasso model selection to compute r2 values, if not, compute r2 values from the
+lasso model</p>
+<p>:param add_raw: bool, default=True
+If true, concatenate X_k with the learnt representation from PCA</p>
+<p>:param n_splits: int, default=10
+The number of splits to use to compute r2f values</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class R2F:
+    &#34;&#34;&#34;
+    Class to compute R2F feature importance values.
+
+
+    :param estimator: scikit-learn estimator,
+        default=RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
+        The scikit-learn tree or tree ensemble estimator object
+
+    :param max_components_type: {&#34;auto&#34;, &#34;median_splits&#34;, &#34;max_splits&#34;, &#34;nsamples&#34;, &#34;nstumps&#34;, &#34;min_nsamples_nstumps&#34;,
+        &#34;min_fracnsamples_nstumps&#34;} or int, default=&#34;auto&#34;
+        Method for choosing the max number of components for PCA transformer for each sub-representation corresponding
+        to an original feature:
+            - If &#34;auto&#34;, then same settings are used as &#34;min_fracnsamples_nstumps&#34;
+            - If &#34;median_splits&#34;, then max_components is alpha * median number of splits on the original feature
+              among trees in the estimator
+            - If &#34;max_splits&#34;, then max_components is alpha * maximum number of splits on the original feature among
+              trees in the estimator
+            - If &#34;nsamples&#34;, then max_components is alpha * n_samples
+            - If &#34;nstumps&#34;, then max_components is alpha * n_stumps
+            - If &#34;min_nsamples_nstumps&#34;, then max_components is alpha * min(n_samples, n_stumps), where n_stumps is
+              total number of local decision stumps splitting on that feature in the ensemble
+            - If &#34;min_fracnsamples_nstumps&#34;, then max_components is min(alpha * n_samples, n_stumps), where n_stumps is
+              total number of local decision stumps splitting on that feature in the ensemble
+            - If int, then max_components is the given integer
+
+    :param alpha: float, default=0.5
+        Parameter for adjusting the max number of components for PCA.
+
+    :param normalize: bool, default=False
+        Flag. If set to True, then divide the nonzero function values for each local decision stump by
+        sqrt(n_samples in node) so that the vector of function values on the training set has unit norm. If False,
+        then do not divide, so that the vector of function values on the training set has norm equal to n_samples
+        in node.
+
+    :param random_state: int, default=None
+        Random seed for sample splitting
+
+    :param criterion: {&#34;aic&#34;, &#34;bic&#34;, &#34;cv&#34;}, default=&#34;bic&#34;
+        Criterion used for lasso model selection
+
+    :param refit: bool, default=True
+        If True, refit OLS after doing lasso model selection to compute r2 values, if not, compute r2 values from the
+        lasso model
+
+    :param add_raw: bool, default=True
+        If true, concatenate X_k with the learnt representation from PCA
+
+    :param n_splits: int, default=10
+        The number of splits to use to compute r2f values
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator=None, max_components_type=&#34;auto&#34;, alpha=0.5, normalize=False, random_state=None,
+                 criterion=&#34;bic&#34;, refit=True, add_raw=True, n_splits=10):
+
+        if estimator is None:
+            self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
+        else:
+            self.estimator = estimator
+        self.max_components_type = max_components_type
+        self.alpha = alpha
+        self.normalize = normalize
+        self.random_state = random_state
+        self.criterion = criterion
+        self.refit = refit
+        self.add_raw = add_raw
+        self.n_splits = n_splits
+
+    def get_importance_scores(self, X, y, sample_weight=None, diagnostics=False):
+        &#34;&#34;&#34;
+        Compute R2F feature importance values.
+
+        :param X: array-like of shape (n_samples, n_features)
+            Covariate data matrix
+        :param y: array-like of shape (n_samples,)
+            Vector of responses
+        :param sample_weight: array-like of shape (n_samples,) or None, default=None
+            Sample weights to use in fitting the tree ensemble for feature learning
+        :param diagnostics: bool
+            If False, return only the r2f values. If True, also return the r2 values, number of stumps, and
+            number of PCs chosen in lasso model selection for each feature and over each split
+        :return:
+            r2f_values: array-like of shape (n_features,)
+                The computed r2f values
+            r_squared: array-like of shape (n_splits, n_features)
+                The r2 values (for each feature) over each run
+            n_stumps: array-like of shape (n_splits, n_features)
+                The number of stumps in the ensemble (splitting on each feature) over each run
+            n_components_chosen: array-like of shape (n_splits, n_features)
+                The number of PCs chosen (for each feature) over each run
+        &#34;&#34;&#34;
+        n_features = X.shape[1]
+        r_squared = np.zeros((self.n_splits, n_features))
+        n_components_chosen = np.zeros((self.n_splits, n_features))
+        n_stumps = np.zeros((self.n_splits, n_features))
+        if self.n_splits % 2 != 0:
+            raise ValueError(&#34;n_splits has to be an even integer&#34;)
+        if sample_weight is None:
+            sample_weight = np.ones_like(y)
+        for i in range(self.n_splits // 2):
+            if self.random_state is not None:
+                random_state = self.random_state + i
+            else:
+                random_state = None
+            X_a, X_b, y_a, y_b, sample_weight_a, sample_weight_b = \
+                train_test_split(X, y, sample_weight, test_size=0.5, random_state=random_state)
+            tree_transformer_a = self._feature_learning_one_split(X_a, y_a, sample_weight_a)
+            r_squared[2*i, :], n_stumps[2*i, :], n_components_chosen[2*i, :] = \
+                self._model_selection_r2_one_split(tree_transformer_a, X_b, y_b)
+            tree_transformer_b = self._feature_learning_one_split(X_b, y_b, sample_weight_b)
+            r_squared[2*i+1, :], n_stumps[2*i+1, :], n_components_chosen[2*i+1, :] = \
+                self._model_selection_r2_one_split(tree_transformer_b, X_a, y_a)
+        r2f_values = np.mean(r_squared, axis=0)
+        if diagnostics:
+            return r2f_values, r_squared, n_stumps, n_components_chosen
+        else:
+            return r2f_values
+
+    def _feature_learning_one_split(self, X_train, y_train, sample_weight=None):
+        &#34;&#34;&#34;
+        Step 1 and 2 of r2f: Fit the RF (or other tree ensemble) and learn feature representations from it,
+        storing the information in the TreeTransformer class
+        &#34;&#34;&#34;
+        if self.max_components_type == &#34;auto&#34;:
+            max_components_type = &#34;min_fracnsamples_nstumps&#34;
+        else:
+            max_components_type = self.max_components_type
+        estimator = copy.deepcopy(self.estimator)
+        estimator.fit(X_train, y_train, sample_weight=sample_weight)
+        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,
+                                           alpha=self.alpha, normalize=self.normalize)
+        tree_transformer.fit(X_train)
+        return tree_transformer
+
+    def _model_selection_r2_one_split(self, tree_transformer, X_val, y_val):
+        &#34;&#34;&#34;
+        Step 3 of r2f: Do lasso model selection and compute r2 values
+        &#34;&#34;&#34;
+        n_features = X_val.shape[1]
+        r_squared = np.zeros(n_features)
+        n_components_chosen = np.zeros(n_features)
+        n_stumps = np.zeros(n_features)
+        for k in range(n_features):
+            X_transformed = tree_transformer.transform_one_feature(X_val, k)
+            n_stumps[k] = len(tree_transformer.get_stumps_for_feature(k))
+            if X_transformed is None:
+                r_squared[k] = 0
+                n_components_chosen[k] = 0
+            else:
+                y_val_centered = y_val - np.mean(y_val)
+                if self.add_raw:
+                    X_transformed = np.hstack([X_val[:, [k]] - np.mean(X_val[:, k]), X_transformed])
+                with warnings.catch_warnings():
+                    warnings.filterwarnings(&#34;ignore&#34;)
+                    if self.criterion == &#34;cv&#34;:
+                        lasso = LassoCV(fit_intercept=False, normalize=False)
+                    else:
+                        lasso = LassoLarsIC(criterion=self.criterion, normalize=False, fit_intercept=False)
+                    lasso.fit(X_transformed, y_val_centered)
+                    n_components_chosen[k] = np.count_nonzero(lasso.coef_)
+                    if self.refit:
+                        support = np.nonzero(lasso.coef_)[0]
+                        if len(support) == 0:
+                            r_squared[k] = 0.0
+                        else:
+                            lr = LinearRegression().fit(X_transformed[:, support], y_val_centered)
+                            r_squared[k] = lr.score(X_transformed[:, support], y_val_centered)
+                    else:
+                        r_squared[k] = lasso.score(X_transformed, y_val_centered)
+        return r_squared, n_stumps, n_components_chosen</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.importance.r2f.R2F.get_importance_scores"><code class="name flex">
+<span>def <span class="ident">get_importance_scores</span></span>(<span>self, X, y, sample_weight=None, diagnostics=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute R2F feature importance values.</p>
+<p>:param X: array-like of shape (n_samples, n_features)
+Covariate data matrix
+:param y: array-like of shape (n_samples,)
+Vector of responses
+:param sample_weight: array-like of shape (n_samples,) or None, default=None
+Sample weights to use in fitting the tree ensemble for feature learning
+:param diagnostics: bool
+If False, return only the r2f values. If True, also return the r2 values, number of stumps, and
+number of PCs chosen in lasso model selection for each feature and over each split
+:return:
+r2f_values: array-like of shape (n_features,)
+The computed r2f values
+r_squared: array-like of shape (n_splits, n_features)
+The r2 values (for each feature) over each run
+n_stumps: array-like of shape (n_splits, n_features)
+The number of stumps in the ensemble (splitting on each feature) over each run
+n_components_chosen: array-like of shape (n_splits, n_features)
+The number of PCs chosen (for each feature) over each run</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_importance_scores(self, X, y, sample_weight=None, diagnostics=False):
+    &#34;&#34;&#34;
+    Compute R2F feature importance values.
+
+    :param X: array-like of shape (n_samples, n_features)
+        Covariate data matrix
+    :param y: array-like of shape (n_samples,)
+        Vector of responses
+    :param sample_weight: array-like of shape (n_samples,) or None, default=None
+        Sample weights to use in fitting the tree ensemble for feature learning
+    :param diagnostics: bool
+        If False, return only the r2f values. If True, also return the r2 values, number of stumps, and
+        number of PCs chosen in lasso model selection for each feature and over each split
+    :return:
+        r2f_values: array-like of shape (n_features,)
+            The computed r2f values
+        r_squared: array-like of shape (n_splits, n_features)
+            The r2 values (for each feature) over each run
+        n_stumps: array-like of shape (n_splits, n_features)
+            The number of stumps in the ensemble (splitting on each feature) over each run
+        n_components_chosen: array-like of shape (n_splits, n_features)
+            The number of PCs chosen (for each feature) over each run
+    &#34;&#34;&#34;
+    n_features = X.shape[1]
+    r_squared = np.zeros((self.n_splits, n_features))
+    n_components_chosen = np.zeros((self.n_splits, n_features))
+    n_stumps = np.zeros((self.n_splits, n_features))
+    if self.n_splits % 2 != 0:
+        raise ValueError(&#34;n_splits has to be an even integer&#34;)
+    if sample_weight is None:
+        sample_weight = np.ones_like(y)
+    for i in range(self.n_splits // 2):
+        if self.random_state is not None:
+            random_state = self.random_state + i
+        else:
+            random_state = None
+        X_a, X_b, y_a, y_b, sample_weight_a, sample_weight_b = \
+            train_test_split(X, y, sample_weight, test_size=0.5, random_state=random_state)
+        tree_transformer_a = self._feature_learning_one_split(X_a, y_a, sample_weight_a)
+        r_squared[2*i, :], n_stumps[2*i, :], n_components_chosen[2*i, :] = \
+            self._model_selection_r2_one_split(tree_transformer_a, X_b, y_b)
+        tree_transformer_b = self._feature_learning_one_split(X_b, y_b, sample_weight_b)
+        r_squared[2*i+1, :], n_stumps[2*i+1, :], n_components_chosen[2*i+1, :] = \
+            self._model_selection_r2_one_split(tree_transformer_b, X_a, y_a)
+    r2f_values = np.mean(r_squared, axis=0)
+    if diagnostics:
+        return r2f_values, r_squared, n_stumps, n_components_chosen
+    else:
+        return r2f_values</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index 🔍</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.importance" href="index.html">imodels.importance</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.importance.r2f.R2F" href="#imodels.importance.r2f.R2F">R2F</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.importance.r2f.R2F.get_importance_scores" href="#imodels.importance.r2f.R2F.get_importance_scores">get_importance_scores</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 c122.0,82.7 120.5,78.6 120.5,78.6 c119.2,72.0 123.4,76.3 123.4,76.3 c127.3,80.9 125.5,87.3 125.5,87.3 c122.9,97.6 130.6,101.9 134.4,103.2" fill="currentcolor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">
