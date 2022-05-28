@@ -6,7 +6,7 @@ from sklearn.linear_model import RidgeCV, LassoCV, LinearRegression, LassoLarsIC
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
-from representation import TreeTransformer
+from imodels.importance.representation import TreeTransformer
 
 
 class R2F:
