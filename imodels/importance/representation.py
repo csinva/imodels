@@ -1,6 +1,5 @@
 import numpy as np
 from collections import defaultdict
-from joblib import delayed, Parallel
 
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.decomposition import PCA
@@ -325,7 +324,6 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
         restricted_stumps = [self.all_stumps[idx] for idx in restricted_stump_indices]
 
         return restricted_stumps
-
 
 
 def _compare(data, k, threshold, sign=True):
