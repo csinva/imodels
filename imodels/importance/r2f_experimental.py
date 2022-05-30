@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
 from imodels.importance.representation import TreeTransformer
+from imodels.importance.LassoICc import LassoLarsICc
 
 
 class R2FExp:
@@ -169,7 +170,7 @@ class R2FExp:
                     if self.criterion == "cv":
                         lasso = LassoCV(fit_intercept=False, normalize=False)
                     else:
-                        lasso = LassoLarsIC(criterion=self.criterion, normalize=False, fit_intercept=False)
+                        lasso = LassoLarsICc(criterion=self.criterion, normalize=False, fit_intercept=False) #LassoLarsIC
                     lasso.fit(X_transformed, y_val_centered)
                     n_components_chosen[k] = np.count_nonzero(lasso.coef_)
                     if self.refit:
