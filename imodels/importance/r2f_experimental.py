@@ -118,11 +118,11 @@ class R2FExp:
             if self.split_data:
                 X_train, X_val, y_train, y_val, sample_weight_train, sample_weight_val = \
                     train_test_split(X, y, sample_weight, test_size=self.val_size, random_state=random_state)
-                tree_transformer = self._feature_learning_one_split(X_train, y_train, sample_weight_train)
+                tree_transformer = self._feature_learning_one_split(X_train, y_train)
                 r_squared[i, :], n_stumps[i, :], n_components_chosen[i, :] = \
                     self._model_selection_r2_one_split(tree_transformer, X_val, y_val)
             else:
-                tree_transformer = self._feature_learning_one_split(X, y, sample_weight)
+                tree_transformer = self._feature_learning_one_split(X, y)
                 r_squared[i, :], n_stumps[i, :], n_components_chosen[i, :] = \
                     self._model_selection_r2_one_split(tree_transformer, X, y)
         r2f_values = np.mean(r_squared, axis=0)
