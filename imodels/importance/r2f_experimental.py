@@ -62,7 +62,7 @@ class R2FExp:
         The number of splits to use to compute r2f values
     """
 
-    def __init__(self, estimator=None, max_components_type="auto", alpha=0.5, normalize=False, random_state=None,
+    def __init__(self, estimator=None, max_components_type="auto", alpha=0.5, normalize=False, random_state=None,use_noise_variance = True,
                  criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10):
 
         if estimator is None:
@@ -79,6 +79,7 @@ class R2FExp:
         self.split_data = split_data
         self.val_size = val_size
         self.n_splits = n_splits
+        self.use_noise_variance = use_noise_variance
 
     def get_importance_scores(self, X, y, sample_weight=None, diagnostics=False):
         """
@@ -170,7 +171,7 @@ class R2FExp:
                     if self.criterion == "cv":
                         lasso = LassoCV(fit_intercept=False, normalize=False)
                     else:
-                        lasso = LassoLarsICc(criterion=self.criterion, normalize=False, fit_intercept=False) #LassoLarsIC
+                        lasso = LassoLarsICc(criterion=self.criterion, normalize=False, fit_intercept=False,use_noise_variance = self.use_noise_variance) #LassoLarsIC
                     lasso.fit(X_transformed, y_val_centered)
                     n_components_chosen[k] = np.count_nonzero(lasso.coef_)
                     if self.refit:

@@ -155,6 +155,7 @@ class LassoLarsICc(LassoLars):
         copy_X=True,
         positive=False,
         noise_variance=None,
+        use_noise_variance = True
     ):
         self.criterion = criterion
         self.fit_intercept = fit_intercept
@@ -167,6 +168,7 @@ class LassoLarsICc(LassoLars):
         self.eps = eps
         self.fit_path = True
         self.noise_variance = noise_variance
+        self.use_noise_variance = use_noise_variance
 
     def _more_tags(self):
         return {"multioutput": False}
@@ -230,6 +232,11 @@ class LassoLarsICc(LassoLars):
 
         residuals = y[:, np.newaxis] - np.dot(X, coef_path_)
         residuals_sum_squares = np.sum(residuals**2, axis=0)
+        
+        TSS = np.sum((y - np.average(y))**2)
+        FSS = TSS - residuals_sum_squares
+        R_squared = 1 - residuals_sum_squares/TSS
+        
         degrees_of_freedom = np.zeros(coef_path_.shape[1], dtype=int)
         for k, coef in enumerate(coef_path_.T):
             mask = np.abs(coef) > np.finfo(coef.dtype).eps
@@ -250,19 +257,47 @@ class LassoLarsICc(LassoLars):
             self.noise_variance_ = self.noise_variance
         
         if self.criterion == "aic_c":
-            self.criterion_ = (
-                n_samples * np.log(2 * np.pi * self.noise_variance_)
-                + residuals_sum_squares / self.noise_variance_
-                + (2 * degrees_of_freedom + 2 * degrees_of_freedom**2)/(n_samples - degrees_of_freedom - 1)
-            )
-            
+            if self.use_noise_variance == True:
+                self.criterion_ = (
+                    n_samples * np.log(2 * np.pi * self.noise_variance_)
+                    + residuals_sum_squares / self.noise_variance_
+                    + (2 * degrees_of_freedom + 2 * degrees_of_freedom**2)/(n_samples - degrees_of_freedom - 1)
+                )
+            else:
+                self.criterion_ = (
+                    n_samples*np.log(residuals_sum_squares) +2*degrees_of_freedom +  
+                    (2 * degrees_of_freedom + 2 * degrees_of_freedom**2)/(n_samples - degrees_of_freedom - 1)
+                )
+        elif self.criterion == "gMDL":
+            if self.use_noise_variance == True:
+                criterion_ = np.zeros(len(degrees_of_freedom))
+                for i in range(len(degrees_of_freedom)):
+                    if FSS[i] > degrees_of_freedom[i]*self.noise_variance_:
+                        criterion_[i] = residuals_sum_squares[i]/(2*self.noise_variance_) + 0.5*degrees_of_freedom[i]*(1.0 + np.log(FSS[i]/(degrees_of_freedom[i]*self.noise_variance_))) + 0.5*np.log(n_samples)
+                    else:
+                        criterion_[i] = TSS/(2*self.noise_variance_)
+                self.criterion_ = criterion_
+            else:
+                criterion_ = np.zeros(len(degrees_of_freedom))   #self.criterion_ = np.zeros(len(degrees_of_freedom))
+                for i in range(len(degrees_of_freedom)):
+                    if R_squared[i] >= degrees_of_freedom[i]/n_samples:
+                        S = residuals_sum_squares[i]/(n_samples-degrees_of_freedom[i])
+                        F = FSS[i]/(degrees_of_freedom[i]*S)
+                        criterion_[i] = 0.5*n_samples*np.log(S) + degrees_of_freedom[i]*0.5*np.log(F) + np.log(n)
+                    else:
+                         criterion_[i] = 0.5*n_samples*np.log(TSS/n_samples) + 0.5*np.log(n)
+                self.criterion_ = criterion_
         else:
-            
-            self.criterion_ = (
-                n_samples * np.log(2 * np.pi * self.noise_variance_)
-                + residuals_sum_squares / self.noise_variance_
-                + criterion_factor * degrees_of_freedom
-            )
+            if self.use_noise_variance == True:
+                self.criterion_ = (
+                    n_samples * np.log(2 * np.pi * self.noise_variance_)
+                    + residuals_sum_squares / self.noise_variance_
+                    + criterion_factor * degrees_of_freedom
+                )
+            else:
+                self.criterion_ = ( 
+                    n_samples*np.log(residuals_sum_squares) + criterion_factor*degrees_of_freedom
+                )
         n_best = np.argmin(self.criterion_)
 
         self.alpha_ = alphas_[n_best]
