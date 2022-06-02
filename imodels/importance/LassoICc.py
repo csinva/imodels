@@ -283,9 +283,9 @@ class LassoLarsICc(LassoLars):
                     if R_squared[i] >= degrees_of_freedom[i]/n_samples:
                         S = residuals_sum_squares[i]/(n_samples-degrees_of_freedom[i])
                         F = FSS[i]/(degrees_of_freedom[i]*S)
-                        criterion_[i] = 0.5*n_samples*np.log(S) + degrees_of_freedom[i]*0.5*np.log(F) + np.log(n)
+                        criterion_[i] = 0.5*n_samples*np.log(S) + degrees_of_freedom[i]*0.5*np.log(F) + np.log(n_samples)
                     else:
-                         criterion_[i] = 0.5*n_samples*np.log(TSS/n_samples) + 0.5*np.log(n)
+                         criterion_[i] = 0.5*n_samples*np.log(TSS/n_samples) + 0.5*np.log(n_samples)
                 self.criterion_ = criterion_
         else:
             if self.use_noise_variance == True:
