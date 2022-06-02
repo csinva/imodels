@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.linear_model import RidgeCV, LassoCV, LinearRegression, LassoLarsIC
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import f_regression
 
 from imodels.importance.representation import TreeTransformer
 from imodels.importance.LassoICc import LassoLarsICc
@@ -170,12 +171,24 @@ class R2FExp:
                     warnings.filterwarnings("ignore")
                     if self.criterion == "cv":
                         lasso = LassoCV(fit_intercept=False, normalize=False)
+                        lasso.fit(X_transformed,y_val_centered)
+                        n_components_chosen[k] = np.count_nonzero(lasso.coef_)
+                    elif self.criterion == "f_regression":
+                        f_stat,p_vals = f_regression(X_transformed,y_val_centered)
+                        chosen_components = []
+                        for i in range(len(p_vals)):
+                            if p_vals[i] <= 0.05:
+                                chosen_components.append(i)
+                        n_components_chosen[k] = len(chosen_components)
                     else:
                         lasso = LassoLarsICc(criterion=self.criterion, normalize=False, fit_intercept=False,use_noise_variance = self.use_noise_variance) #LassoLarsIC
-                    lasso.fit(X_transformed, y_val_centered)
-                    n_components_chosen[k] = np.count_nonzero(lasso.coef_)
+                        lasso.fit(X_transformed, y_val_centered)
+                        n_components_chosen[k] = np.count_nonzero(lasso.coef_)
                     if self.refit:
-                        support = np.nonzero(lasso.coef_)[0]
+                        if self.criterion == "f_regression":
+                            support = chosen_components
+                        else:
+                            support = np.nonzero(lasso.coef_)[0]
                         if len(support) == 0:
                             r_squared[k] = 0.0
                         else:
