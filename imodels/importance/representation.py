@@ -64,6 +64,9 @@ class LocalDecisionStump:
                f"right_val={self.right_val}, a_features={self.a_features}, a_thresholds={self.a_thresholds}, " \
                f"a_signs={self.a_signs})"
 
+    def get_depth(self):
+        return len(self.a_features)
+
 
 def make_stump(node_no, tree_struct, parent_stump, is_right_child, normalize=False):
     """
