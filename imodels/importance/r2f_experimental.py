@@ -6,6 +6,7 @@ from sklearn.linear_model import RidgeCV, LassoCV, LinearRegression, LassoLarsIC
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import f_regression
+import statsmodels.api as sm
 
 from imodels.importance.representation import TreeTransformer
 from imodels.importance.LassoICc import LassoLarsICc
@@ -64,7 +65,7 @@ class R2FExp:
     """
 
     def __init__(self, estimator=None, max_components_type="auto", alpha=0.5, normalize=False, random_state=None,use_noise_variance = True,
-                 criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10):
+                 criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10,rank_by_p_val = False):
 
         if estimator is None:
             self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
@@ -78,6 +79,7 @@ class R2FExp:
         self.refit = refit
         self.add_raw = add_raw
         self.split_data = split_data
+        self.rank_by_p_val = rank_by_p_val
         self.val_size = val_size
         self.n_splits = n_splits
         self.use_noise_variance = use_noise_variance
@@ -121,8 +123,12 @@ class R2FExp:
                 X_train, X_val, y_train, y_val, sample_weight_train, sample_weight_val = \
                     train_test_split(X, y, sample_weight, test_size=self.val_size, random_state=random_state)
                 tree_transformer = self._feature_learning_one_split(X_train, y_train)
-                r_squared[i, :], n_stumps[i, :], n_components_chosen[i, :] = \
-                    self._model_selection_r2_one_split(tree_transformer, X_val, y_val)
+                if self.rank_by_p_val == False:
+                    r_squared[i, :], n_stumps[i, :], n_components_chosen[i, :] = \
+                        self._model_selection_r2_one_split(tree_transformer, X_val, y_val)
+                else:
+                     r_squared[i, :], n_stumps[i, :], n_components_chosen[i, :] = \
+                        self._model_selection_pval_one_split(tree_transformer, X_val, y_val)
             else:
                 tree_transformer = self._feature_learning_one_split(X, y)
                 r_squared[i, :], n_stumps[i, :], n_components_chosen[i, :] = \
@@ -197,3 +203,34 @@ class R2FExp:
                     else:
                         r_squared[k] = lasso.score(X_transformed, y_val_centered)
         return r_squared, n_stumps, n_components_chosen
+    
+    def _model_selection_pval_one_split(self, tree_transformer, X_val, y_val):
+        """
+        Step 3 of r2f: Do lasso model selection and rank by p-values
+        """
+        n_features = X_val.shape[1]
+        r_squared = np.zeros(n_features)
+        n_components_chosen = np.zeros(n_features)
+        n_stumps = np.zeros(n_features)
+        for k in range(n_features):
+            X_transformed = tree_transformer.transform_one_feature(X_val, k)
+            n_stumps[k] = len(tree_transformer.get_stumps_for_feature(k))
+            if X_transformed is None:
+                r_squared[k] = 0
+                n_components_chosen[k] = 0
+            else:
+                y_val_centered = y_val - np.mean(y_val)
+                if self.add_raw:
+                    X_transformed = np.hstack([X_val[:, [k]] - np.mean(X_val[:, k]), X_transformed])
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore")
+                    OLS_for_k = sm.OLS(y_val_centered, X_transformed).fit(cov_type="HC0")
+                    if np.isnan(OLS_for_k.f_pvalue) == False:
+                        r_squared[k] = 1.0 - OLS_for_k.f_pvalue
+                        n_components_chosen[k] = X_transformed.shape[1]
+                    else:
+                        r_squared[k] = 0.0
+                        n_components_chosen[k] = X_transformed.shape[1]
+        return r_squared, n_stumps, n_components_chosen         
+                    
+                    
