@@ -413,7 +413,7 @@ class LassoScorer(ScorerBase, ABC):
 
     def fit(self, X, y):
         self.selector_model.fit(X, y)
-        self.selected_features = np.nonzero(self.model.coef_)[0]
+        self.selected_features = np.nonzero(self.selector_model.coef_)[0]
         if self.refit:
             scorer_model = LinearRegression().fit(X[:, self.selected_features], y)
         else:
