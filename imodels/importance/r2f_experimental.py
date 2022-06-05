@@ -393,14 +393,13 @@ class ScorerBase(ABC):
         """
         pass
 
-    @abstractmethod
     def get_selected_features(self, X):
-        pass
+        return self.selected_features
 
     def get_model_size(self):
         return len(self.selected_features)
 
-    def score(self):
+    def get_score(self):
         return self.score
 
 
@@ -414,7 +413,7 @@ class LassoScorer(ScorerBase, ABC):
     def fit(self, X, y):
         self.selector_model.fit(X, y)
         self.selected_features = np.nonzero(self.selector_model.coef_)[0]
-        if self.refit:
+        if self.refit and self.get_model_size() > 0:
             scorer_model = LinearRegression().fit(X[:, self.selected_features], y)
         else:
             scorer_model = self.selector_model
