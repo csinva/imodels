@@ -301,10 +301,11 @@ class GeneralizedMDI:
         The number of splits to use to compute r2f values
     """
 
-    def __init__(self, estimator=None, scorer=None, normalize=False, random_state=None, add_raw=True):
+    def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, random_state=None):
 
         if estimator is None:
-            self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
+            self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33,
+                                                   random_state=random_state)
         else:
             self.estimator = copy.deepcopy(estimator)
         if scorer is None:
@@ -312,7 +313,6 @@ class GeneralizedMDI:
         else:
             self.scorer = copy.deepcopy(scorer)
         self.normalize = normalize
-        self.random_state = random_state
         self.add_raw = add_raw
 
     def get_importance_scores(self, X, y, diagnostics=False):
@@ -339,33 +339,28 @@ class GeneralizedMDI:
                 The number of PCs chosen (for each feature) over each run
         """
         n_samples, n_features = X.shape
-        n_trees = len(self.estimator.estimators_)
+        n_trees = self.estimator.n_estimators
         scores = np.zeros((n_trees, n_features))
         n_stumps = np.zeros((n_trees, n_features))
         n_stumps_chosen = np.zeros((n_trees, n_features))
-        if self.n_splits % 2 != 0:
-            raise ValueError("n_splits has to be an even integer")
         self.estimator.fit(X, y)
 
         for idx, estimator in enumerate(self.estimator.estimators_):
-            tree_transformer = TreeTransformer(estimator=estimator, pca=False)
+            tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
             X_oob = X[oob_indices, :]
-            y_oob = y[oob_indices, :]
-            y_oob_centered = y_oob - np.mean(y_oob)
-            for k in range(self.n_features):
+            y_oob = y[oob_indices]
+            for k in range(n_features):
                 X_transformed_oob = tree_transformer.transform_one_feature(X_oob, k)
                 if X_transformed_oob is None:
-                    scores[idx, k] = 0
                     n_stumps[idx, k] = 0
                     n_stumps_chosen[idx, k] = 0
+                    scores[idx, k] = 0
                 else:
                     n_stumps[idx, k] = X_transformed_oob.shape[1]
-                    if self.add_raw:
-                        X_transformed_oob = np.hstack([X_oob[:, [k]] - np.mean(X_oob[:, k]), X_transformed_oob])
-                    self.scorer.fit(X_transformed_oob, y_oob_centered)
+                    self.scorer.fit(X_transformed_oob, y_oob)
                     n_stumps_chosen[idx, k] = self.scorer.get_model_size()
-                    scores[idx, k] = self.scorer.score()
+                    scores[idx, k] = self.scorer.get_score()
         imp_values = scores.mean(axis=0)
 
         if diagnostics:
@@ -407,17 +402,19 @@ class LassoScorer(ScorerBase, ABC):
 
     def __init__(self, metric=None, criterion="bic", refit=True):
         super().__init__(metric)
-        self.selector_model = LassoLarsIC(criterion=criterion, normalize=False, fit_intercept=False)
+        self.lasso_model = LassoLarsIC(criterion=criterion, normalize=False, fit_intercept=True)
         self.refit = refit
 
     def fit(self, X, y):
-        self.selector_model.fit(X, y)
-        self.selected_features = np.nonzero(self.selector_model.coef_)[0]
+        self.lasso_model.fit(X, y)
+        self.selected_features = np.nonzero(self.lasso_model.coef_)[0]
         if self.refit and self.get_model_size() > 0:
-            scorer_model = LinearRegression().fit(X[:, self.selected_features], y)
+            X_sel = X[:, self.selected_features]
+            lr = LinearRegression().fit(X_sel, y)
+            y_pred = lr.predict(X_sel)
         else:
-            scorer_model = self.selector_model
-        y_pred = scorer_model.predict(X)
+            y_pred = self.lasso_model.predict(X)
+
         self.score = self.metric(y, y_pred)
 
 
@@ -427,7 +424,7 @@ class RidgeScorer(ScorerBase, ABC):
         super().__init__(metric)
 
     def fit(self, X, y):
-        scorer_model = RidgeCV().fit(X, y)
-        self.selected_features = np.array(range(X.shape[1]))
-        y_pred = scorer_model.predict(X)
+        ridge_model = RidgeCV().fit(X, y)
+        self.selected_features = np.nonzero(ridge_model.coef_)[0]
+        y_pred = ridge_model.predict(X)
         self.score = self.metric(y, y_pred)

@@ -208,12 +208,14 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
         in node.
     """
 
-    def __init__(self, estimator, pca=True, max_components_type="min_fracnsamples_nstumps", alpha=0.5, normalize=False):
+    def __init__(self, estimator, pca=True, max_components_type="min_fracnsamples_nstumps", alpha=0.5, normalize=False,
+                 add_raw=False):
         self.estimator = estimator
         self.pca = pca
         self.max_components_type = max_components_type
         self.alpha = alpha
         self.normalize = normalize
+        self.add_raw = add_raw
         # Check if single tree or tree ensemble
         tree_models = estimator.estimators_ if isinstance(estimator, BaseEnsemble) else [estimator]
         # Make stumps for each tree
@@ -313,6 +315,8 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
             X_transformed = tree_feature_transform(restricted_stumps, X)
             if self.pca_transformers[k] is not None:
                 X_transformed = self.pca_transformers[k].transform(X_transformed)
+            if self.add_raw:
+                X_transformed = np.hstack([X[:, [k]] - np.mean(X[:, k]), X_transformed])
         return X_transformed
 
     def get_stumps_for_feature(self, k):
