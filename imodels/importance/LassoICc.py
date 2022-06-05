@@ -8,6 +8,8 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import FLOAT_DTYPES
 from sklearn.linear_model import LassoLars,lars_path
 from sklearn.linear_model import LinearRegression
+import scipy.sparse as sp
+
 
 
 class LassoLarsICc(LassoLars):

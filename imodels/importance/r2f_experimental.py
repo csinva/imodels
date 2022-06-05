@@ -301,19 +301,21 @@ class GeneralizedMDI:
         The number of splits to use to compute r2f values
     """
 
-    def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, random_state=None):
+    def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, refit = True,criterion = "aic_c",random_state=None):
 
         if estimator is None:
             self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33,
                                                    random_state=random_state)
         else:
             self.estimator = copy.deepcopy(estimator)
-        if scorer is None:
-            self.scorer = LassoScorer()
-        else:
-            self.scorer = copy.deepcopy(scorer)
         self.normalize = normalize
         self.add_raw = add_raw
+        self.refit = refit
+        self.criterion = criterion
+        if scorer is None:
+            self.scorer = LassoScorer(criterion = self.criterion,refit = self.refit)
+        else:
+            self.scorer = copy.deepcopy(scorer)
 
     def get_importance_scores(self, X, y, diagnostics=False):
         """
@@ -358,7 +360,9 @@ class GeneralizedMDI:
                     scores[idx, k] = 0
                 else:
                     n_stumps[idx, k] = X_transformed_oob.shape[1]
-                    self.scorer.fit(X_transformed_oob, y_oob)
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings("ignore")
+                        self.scorer.fit(X_transformed_oob, y_oob)
                     n_stumps_chosen[idx, k] = self.scorer.get_model_size()
                     scores[idx, k] = self.scorer.get_score()
         imp_values = scores.mean(axis=0)
@@ -402,7 +406,10 @@ class LassoScorer(ScorerBase, ABC):
 
     def __init__(self, metric=None, criterion="bic", refit=True):
         super().__init__(metric)
-        self.lasso_model = LassoLarsIC(criterion=criterion, normalize=False, fit_intercept=True)
+        if criterion == "cv":
+            self.lasso_model = LassoCV(normalize=False, fit_intercept=True)
+        else:
+            self.lasso_model = LassoLarsICc(criterion=criterion, normalize=False, fit_intercept=True)
         self.refit = refit
 
     def fit(self, X, y):
@@ -424,7 +431,26 @@ class RidgeScorer(ScorerBase, ABC):
         super().__init__(metric)
 
     def fit(self, X, y):
-        ridge_model = RidgeCV().fit(X, y)
+        ridge_model = RidgeCV(normalize = False,fit_intercept = True).fit(X, y)
         self.selected_features = np.nonzero(ridge_model.coef_)[0]
         y_pred = ridge_model.predict(X)
+        self.score = self.metric(y, y_pred)
+        
+class ElasticNetScorer(ScorerBase, ABC):
+    
+    def __init__(self, metric=None,refit = True):
+        super().__init__(metric)
+        self.elasticnet_model = ElasticNetCV(normalize = False, fit_intercept = True)
+        self.refit = refit
+
+    def fit(self, X, y):
+        self.elasticnet_model.fit(X,y)
+        self.selected_features = np.nonzero(self.elasticnet_model.coef_)[0]
+        if self.refit and self.get_model_size() > 0:
+            X_sel = X[:, self.selected_features]
+            lr = LinearRegression().fit(X_sel, y)
+            y_pred = lr.predict(X_sel)
+        else:
+            y_pred = self.elasticnet_model.predict(X)
+
         self.score = self.metric(y, y_pred)
