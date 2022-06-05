@@ -379,19 +379,20 @@ class ScorerBase(ABC):
 
     @abstractmethod
     def fit(self, X, y):
+        """
+        Method that sets self.score and self.selected_features
+        """
         pass
 
     @abstractmethod
     def get_selected_features(self, X):
         pass
 
-    @abstractmethod
     def get_model_size(self):
-        pass
+        return len(self.selected_features)
 
-    @abstractmethod
     def score(self):
-        pass
+        return self.score
 
 
 class LassoScorer(ScorerBase, ABC):
@@ -411,9 +412,3 @@ class LassoScorer(ScorerBase, ABC):
         else:
             self.scorer_model = self.selector_model
         self.score = self.scorer_model.score(X, y)
-
-    def get_model_size(self):
-        return len(self.selected_features)
-
-    def score(self):
-        return self.score
