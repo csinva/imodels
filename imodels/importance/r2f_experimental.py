@@ -68,7 +68,7 @@ class R2FExp:
 
 
     def __init__(self, estimator=None, max_components_type="auto", alpha=0.5, normalize=False, random_state=None,use_noise_variance = True,
-                 criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10,rank_by_p_val = False,linear_method = 'lasso'):
+                 criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10,rank_by_p_val = False,linear_method = 'lasso', pca=True):
 
         if estimator is None:
             self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
@@ -87,6 +87,7 @@ class R2FExp:
         self.n_splits = n_splits
         self.use_noise_variance = use_noise_variance
         self.linear_method = linear_method
+        self.pca = pca
 
     def get_importance_scores(self, X, y, sample_weight=None, diagnostics=False):
         """
@@ -155,7 +156,7 @@ class R2FExp:
         estimator = copy.deepcopy(self.estimator)
         estimator.fit(X_train, y_train, sample_weight=sample_weight)
         tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,
-                                           alpha=self.alpha, normalize=self.normalize)
+                                           alpha=self.alpha, normalize=self.normalize, pca=self.pca)
         tree_transformer.fit(X_train)
         return tree_transformer
 
