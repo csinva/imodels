@@ -412,3 +412,16 @@ class LassoScorer(ScorerBase, ABC):
         else:
             self.scorer_model = self.selector_model
         self.score = self.scorer_model.score(X, y)
+
+
+class RidgeScorer(ScorerBase, ABC):
+
+    def __init__(self):
+        self.selected_features = None
+        self.score = 0
+        self.scorer_model = RidgeCV()
+
+    def fit(self, X, y):
+        self.scorer_model.fit(X, y)
+        self.selected_features = np.array(range(X.shape[1]))
+        self.score = self.scorer_model.score(X, y)
