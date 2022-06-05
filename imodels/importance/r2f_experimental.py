@@ -8,6 +8,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble._forest import _generate_unsampled_indices
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import f_regression
+import sklearn.metrics as metrics
 import statsmodels.api as sm
 
 from imodels.importance.representation import TreeTransformer
@@ -377,6 +378,13 @@ class ScorerBase(ABC):
     """
     ABC for scoring an original feature based on a transformed representation
     """
+    def __init__(self, metric):
+        self.selected_features = None
+        self.score = 0
+        if metric is None:
+            self.metric = metrics.r2_score
+        else:
+            self.metric = metric
 
     @abstractmethod
     def fit(self, X, y):
@@ -398,31 +406,29 @@ class ScorerBase(ABC):
 
 class LassoScorer(ScorerBase, ABC):
 
-    def __init__(self, criterion="bic", refit=True):
-        self.selected_features = None
+    def __init__(self, metric=None, criterion="bic", refit=True):
+        super().__init__(metric)
         self.selector_model = LassoLarsIC(criterion=criterion, normalize=False, fit_intercept=False)
         self.refit = refit
-        self.score = 0
 
     def fit(self, X, y):
         self.selector_model.fit(X, y)
         self.selected_features = np.nonzero(self.model.coef_)[0]
         if self.refit:
-            self.scorer_model = LinearRegression()
-            self.scorer_model.fit(X[:, self.selected_features], y)
+            scorer_model = LinearRegression().fit(X[:, self.selected_features], y)
         else:
-            self.scorer_model = self.selector_model
-        self.score = self.scorer_model.score(X, y)
+            scorer_model = self.selector_model
+        y_pred = scorer_model.predict(X)
+        self.score = self.metric(y, y_pred)
 
 
 class RidgeScorer(ScorerBase, ABC):
 
-    def __init__(self):
-        self.selected_features = None
-        self.score = 0
-        self.scorer_model = RidgeCV()
+    def __init__(self, metric=None):
+        super().__init__(metric)
 
     def fit(self, X, y):
-        self.scorer_model.fit(X, y)
+        scorer_model = RidgeCV().fit(X, y)
         self.selected_features = np.array(range(X.shape[1]))
-        self.score = self.scorer_model.score(X, y)
+        y_pred = scorer_model.predict(X)
+        self.score = self.metric(y, y_pred)
