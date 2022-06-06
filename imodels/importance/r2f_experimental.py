@@ -68,13 +68,19 @@ class R2FExp:
     """
 
 
-    def __init__(self, estimator=None, max_components_type="auto", alpha=0.5, normalize=False, random_state=None,use_noise_variance = True,
-                 criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10,rank_by_p_val = False,linear_method = 'lasso', pca=True):
+    def __init__(self, estimator=None, max_components_type="auto", alpha=0.5, normalize=False, random_state=None,use_noise_variance = True,scorer = None,
+                 criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10,rank_by_p_val = False,pca=True):
 
         if estimator is None:
             self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
         else:
             self.estimator = estimator
+        if scorer is None:
+            self.scorer = LassoScorer(criterion = self.criterion,refit = self.refit)
+        else:
+            self.scorer = copy.deepcopy(scorer)
+
+            
         self.max_components_type = max_components_type
         self.alpha = alpha
         self.normalize = normalize
@@ -87,7 +93,6 @@ class R2FExp:
         self.val_size = val_size
         self.n_splits = n_splits
         self.use_noise_variance = use_noise_variance
-        self.linear_method = linear_method
         self.pca = pca
 
     def get_importance_scores(self, X, y, sample_weight=None, diagnostics=False):
@@ -156,7 +161,7 @@ class R2FExp:
             max_components_type = self.max_components_type
         estimator = copy.deepcopy(self.estimator)
         estimator.fit(X_train, y_train, sample_weight=sample_weight)
-        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,
+        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,add_raw = self.add_raw,
                                            alpha=self.alpha, normalize=self.normalize, pca=self.pca)
         tree_transformer.fit(X_train)
         return tree_transformer
@@ -176,47 +181,12 @@ class R2FExp:
                 r_squared[k] = 0
                 n_components_chosen[k] = 0
             else:
-                y_val_centered = y_val - np.mean(y_val)
-                if self.add_raw:
-                    X_transformed = np.hstack([X_val[:, [k]] - np.mean(X_val[:, k]), X_transformed])
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore")
-                    if self.criterion == "cv":
-                        if self.linear_method == "lasso":
-                            lm = LassoCV(fit_intercept=False, normalize=False)
-                            lm.fit(X_transformed,y_val_centered)
-                            n_components_chosen[k] = np.count_nonzero(lm.coef_)
-                        elif self.linear_method == "ridge":
-                            lm = RidgeCV(fit_intercept=False, normalize=False, cv = None)
-                            lm.fit(X_transformed,y_val_centered)
-                            n_components_chosen[k] = np.count_nonzero(lm.coef_)
-                        else:
-                            lm = ElasticNetCV(fit_intercept=False,normalize=False)
-                            lm.fit(X_transformed,y_val_centered)
-                            n_components_chosen[k] = np.count_nonzero(lm.coef_)
-                    elif self.criterion == "f_regression":
-                        f_stat, p_vals = f_regression(X_transformed, y_val_centered)
-                        chosen_components = []
-                        for i in range(len(p_vals)):
-                            if p_vals[i] <= 0.05:
-                                chosen_components.append(i)
-                        n_components_chosen[k] = len(chosen_components)
-                    else:
-                        lm = LassoLarsICc(criterion=self.criterion, normalize=False, fit_intercept=False,use_noise_variance = self.use_noise_variance) #LassoLarsIC
-                        lm.fit(X_transformed, y_val_centered)
-                        n_components_chosen[k] = np.count_nonzero(lm.coef_)
-                    if self.refit:
-                        if self.criterion == "f_regression":
-                            support = chosen_components
-                        else:
-                            support = np.nonzero(lm.coef_)[0]
-                        if len(support) == 0:
-                            r_squared[k] = 0.0
-                        else:
-                            lr = LinearRegression().fit(X_transformed[:, support], y_val_centered)
-                            r_squared[k] = lr.score(X_transformed[:, support], y_val_centered)
-                    else:
-                        r_squared[k] = lm.score(X_transformed, y_val_centered)
+                    self.scorer.fit(X_transformed,y_val)
+                    n_components_chosen[k] = self.scorer.get_model_size()
+                    r_squared[k] = self.scorer.get_score()
+              
         return r_squared, n_stumps, n_components_chosen
 
     def _model_selection_pval_one_split(self, tree_transformer, X_val, y_val):
@@ -454,3 +424,47 @@ class ElasticNetScorer(ScorerBase, ABC):
             y_pred = self.elasticnet_model.predict(X)
 
         self.score = self.metric(y, y_pred)
+
+        
+        
+  
+                    
+                    
+                    
+                    #y_val_centered = y_val - np.mean(y_val)
+                    #if self.criterion == "cv":
+                    #    if self.linear_method == "lasso":
+                    #        lm = LassoCV(fit_intercept=False, normalize=False)
+                    #        lm.fit(X_transformed,y_val_centered)
+                    #        n_components_chosen[k] = np.count_nonzero(lm.coef_)
+                    #    elif self.linear_method == "ridge":
+                    #        lm = RidgeCV(fit_intercept=False, normalize=False, cv = None)
+                    #        lm.fit(X_transformed,y_val_centered)
+                    #        n_components_chosen[k] = np.count_nonzero(lm.coef_)
+                    #    else:
+                    #        lm = ElasticNetCV(fit_intercept=False,normalize=False)
+                    #        lm.fit(X_transformed,y_val_centered)
+                    #        n_components_chosen[k] = np.count_nonzero(lm.coef_)
+                    #elif self.criterion == "f_regression":
+                    #    f_stat, p_vals = f_regression(X_transformed, y_val_centered)
+                    #    chosen_components = []
+                    #    for i in range(len(p_vals)):
+                    #        if p_vals[i] <= 0.05:
+                    #            chosen_components.append(i)
+                    #    n_components_chosen[k] = len(chosen_components)
+                    #else:
+                    #    lm = LassoLarsICc(criterion=self.criterion, normalize=False, fit_intercept=False,use_noise_variance = self.use_noise_variance) #LassoLarsIC
+                    #    lm.fit(X_transformed, y_val_centered)
+                    #    n_components_chosen[k] = np.count_nonzero(lm.coef_)
+                    #if self.refit:
+                    #    if self.criterion == "f_regression":
+                    #        support = chosen_components
+                    #    else:
+                    #        support = np.nonzero(lm.coef_)[0]
+                    #    if len(support) == 0:
+                    #        r_squared[k] = 0.0
+                    #    else:
+                    #        lr = LinearRegression().fit(X_transformed[:, support], y_val_centered)
+                    #        r_squared[k] = lr.score(X_transformed[:, support], y_val_centered)
+                    #else:
+                    #    r_squared[k] = lm.score(X_transformed, y_val_centered)
