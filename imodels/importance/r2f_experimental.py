@@ -287,7 +287,7 @@ class GeneralizedMDI:
         else:
             self.scorer = copy.deepcopy(scorer)
 
-    def get_importance_scores(self, X, y, diagnostics=False):
+    def get_importance_scores(self, X, y, sample_weight = None,diagnostics=False):
         """
         Compute R2F feature importance values.
 
