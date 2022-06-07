@@ -69,7 +69,7 @@ class R2FExp:
 
 
     def __init__(self, estimator=None, max_components_type="auto", alpha=0.5, normalize=False, random_state=None,use_noise_variance = True,scorer = None,
-                 criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10,rank_by_p_val = False,pca=True):
+                 criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10,rank_by_p_val = False,pca=True,normalize_raw = False):
 
         if estimator is None:
             self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
@@ -94,6 +94,7 @@ class R2FExp:
         self.n_splits = n_splits
         self.use_noise_variance = use_noise_variance
         self.pca = pca
+        self.normalize_raw = normalize_raw
 
     def get_importance_scores(self, X, y, sample_weight=None, diagnostics=False):
         """
@@ -150,7 +151,7 @@ class R2FExp:
         else:
             return r2f_values
 
-    def _feature_learning_one_split(self, X_train, y_train, sample_weight=None):
+    def _feature_learning_one_split(self, X_train, y_train,sample_weight=None):
         """
         Step 1 and 2 of r2f: Fit the RF (or other tree ensemble) and learn feature representations from it,
         storing the information in the TreeTransformer class
@@ -161,8 +162,8 @@ class R2FExp:
             max_components_type = self.max_components_type
         estimator = copy.deepcopy(self.estimator)
         estimator.fit(X_train, y_train, sample_weight=sample_weight)
-        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,add_raw = self.add_raw,
-                                           alpha=self.alpha, normalize=self.normalize, pca=self.pca)
+        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,add_raw = self.add_raw, 
+                                           alpha=self.alpha, normalize=self.normalize, pca=self.pca,normalize_raw = self.normalize_raw)
         tree_transformer.fit(X_train)
         return tree_transformer
 
@@ -271,7 +272,8 @@ class GeneralizedMDI:
         The number of splits to use to compute r2f values
     """
 
-    def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, refit = True,criterion = "aic_c",random_state=None):
+    def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, refit = True,
+                 criterion = "aic_c",random_state=None,normalize_raw = False):
 
         if estimator is None:
             self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33,
@@ -282,6 +284,7 @@ class GeneralizedMDI:
         self.add_raw = add_raw
         self.refit = refit
         self.criterion = criterion
+        self.normalize_raw = normalize_raw
         if scorer is None:
             self.scorer = LassoScorer(criterion = self.criterion,refit = self.refit)
         else:
@@ -318,7 +321,7 @@ class GeneralizedMDI:
         self.estimator.fit(X, y)
 
         for idx, estimator in enumerate(self.estimator.estimators_):
-            tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw)
+            tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw,normalize_raw = self.normalize_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
             X_oob = X[oob_indices, :]
             y_oob = y[oob_indices]
