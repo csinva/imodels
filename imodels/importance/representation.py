@@ -316,7 +316,10 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
             if self.pca_transformers[k] is not None:
                 X_transformed = self.pca_transformers[k].transform(X_transformed)
             if self.add_raw:
-                X_transformed = np.hstack([X[:, [k]] - np.mean(X[:, k]), X_transformed])
+                stds = np.std(X_transformed, axis=0)
+                X_raw = X[:, [k]]
+                X_raw_norm = (X_raw - np.mean(X_raw)) * np.max(stds) / np.std(X_raw)
+                X_transformed = np.hstack([X_raw_norm, X_transformed])
         return X_transformed
 
     def get_stumps_for_feature(self, k):
