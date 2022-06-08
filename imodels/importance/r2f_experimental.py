@@ -5,7 +5,8 @@ from collections import defaultdict
 
 import numpy as np
 from scipy.special import expit
-from sklearn.linear_model import RidgeCV, LassoCV, ElasticNetCV, LinearRegression, LassoLarsIC, LogisticRegressionCV
+from sklearn.linear_model import RidgeCV, LassoCV, ElasticNetCV, LinearRegression, LassoLarsIC, LogisticRegressionCV, \
+    TheilSenRegressor, QuantileRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble._forest import _generate_unsampled_indices
 from sklearn.model_selection import train_test_split
@@ -416,6 +417,24 @@ class RidgeScorer(ScorerBase, ABC):
         y_pred = ridge_model.predict(X)
         self.score = self.metric(y, y_pred)
 
+
+class RobustScorer(ScorerBase, ABC):
+
+    def __init__(self, metric=None, strategy="theilsen"):
+        super().__init__(metric)
+        if strategy == "theilsen":
+            self.robust_model = TheilSenRegressor()
+        elif strategy == "median":
+            self.robust_model = QuantileRegressor()
+        else:
+            raise ValueError("Not a valid robust regression strategy")
+
+    def fit(self, X, y):
+        self.robust_model.fit(X, y)
+        self.selected_features = np.nonzero(self.robust_model.coef_)[0]
+        y_pred = self.robust_model.predict(X)
+        self.score = self.metric(y, y_pred)
+
         
 class ElasticNetScorer(ScorerBase, ABC):
     
@@ -513,6 +532,31 @@ class JointLogisticScorer(JointScorerBase, ABC):
             if len(restricted_coefs) > 0:
                 restricted_preds = expit(restricted_feats @ restricted_coefs + clf.intercept_)
                 self.scores[k] = self.metric(y, restricted_preds, sample_weight=sample_weight)
+            else:
+                self.scores[k] = 0
+
+
+class JointRobustScorer(JointScorerBase, ABC):
+
+    def __init__(self, metric=None, strategy="theilsen"):
+        super().__init__(metric)
+        if strategy == "theilsen":
+            self.robust_model = TheilSenRegressor()
+        elif strategy == "median":
+            self.robust_model = QuantileRegressor()
+        else:
+        raise ValueError("Not a valid robust regression strategy")
+
+    def fit(self, X, y, start_indices):
+        self.robust_model.fit(X, y)
+        for k in range(len(start_indices) - 1):
+            restricted_feats = X[:, start_indices[k]:start_indices[k+1]]
+            restricted_coefs = self.robust_model.coef_[start_indices[k]:start_indices[k+1]]
+            self.n_stumps[k] = start_indices[k+1] - start_indices[k]
+            self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
+            if len(restricted_coefs) > 0:
+                restricted_preds = restricted_feats @ restricted_coefs + self.robust_model.intercept_
+                self.scores[k] = self.metric(y, restricted_preds)
             else:
                 self.scores[k] = 0
 
