@@ -5,6 +5,14 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.decomposition import PCA
 from sklearn.ensemble import BaseEnsemble
 
+import rpy2.robjects as ro
+from rpy2.robjects.packages import importr
+import rpy2.robjects.numpy2ri
+from rpy2.robjects import pandas2ri
+from rpy2.robjects.conversion import localconverter
+rpy2.robjects.numpy2ri.activate()
+treelet = importr('treelet')
+
 
 class LocalDecisionStump:
     """
@@ -171,6 +179,56 @@ def tree_feature_transform(stumps, X):
 
     return X_transformed
 
+def treelet_basis(X,max_height=None,level_save=None,nbasis=None,Cov_X=None,X_val = None):
+    """
+    Obtain treelet basis at a given tree height and number of bases
+    :param X: data matrix
+    :param max_height: the max height of the tree
+                    if none provided, default to ncol(Cov_X)-1)
+    :param level_save: which levels of the tree to save the corresponding basis and covariance
+                    if none provided, take level_save = max_height
+    :param nbasis: the number of basis functions to use when transforming X
+                    if none is provided, all are used
+                    if nbasis = K, then the top K based on variance explained (or normalized energy score as in Lee A. ,et al (2008))
+    :param Cov_X: sample covariance estimate of learned features
+              if None, just using the MLE
+    :param X_val: validation data matrix to be used for selecting the top nbasis
+                if None, just use training X
+    :return: Basis_red: the (possibly) reduced treelet basis depending on nbasis
+    """
+    if Cov_X is None:
+        Cov_X = np.cov(np.transpose(X))
+    if max_height is None:
+        max_height = Cov_X.shape[1] - 1
+    if level_save is None:
+        level_save = max_height
+
+    result = treelet.Run_JTree(Cov_X,maxlev = max_height, whichsave = level_save)
+    max_height_basis = result[0][max_height - 1]
+    if nbasis is None:
+        Basis_red = max_height_basis
+    else:
+        if X_val is None:
+            Basis_red = treelet_varexplain(X,max_height_basis,nbasis)
+        else:
+            Basis_red = treelet_varexplain(X_val,max_height_basis,nbasis)
+    
+    return Basis_red
+
+def treelet_varexplain(X_val,Basis,nbasis):
+    """
+    Get the proportion of variance explained for a given basis and take the top nbasis
+    :param X_val: data matrix to compute variance explained
+    :param Basis: resulting treelet basis
+    :param nbasis: number of basis functions to select
+    """
+    basis_tot = Basis.shape[1]
+    var_explain = np.zeros(basis_tot)
+    for b in range(basis_tot):
+        var_explain[b] = sum(np.square(np.dot(X_val,Basis[:,b])))/sum(np.square(np.linalg.norm(X_val,axis=1)))
+    Basis_red = Basis[:,np.argpartition(-var_explain, nbasis-1)[:nbasis]]
+    return Basis_red
+
 
 class TreeTransformer(TransformerMixin, BaseEstimator):
     """
@@ -208,7 +266,7 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
         in node.
     """
 
-    def __init__(self, estimator, pca=True, max_components_type="min_fracnsamples_nstumps", alpha=0.5, normalize=False,
+    def __init__(self, estimator, pca=True, treelet = False,max_components_type="min_fracnsamples_nstumps", alpha=0.5, normalize=False,
                  add_raw=False,normalize_raw = False):
         self.estimator = estimator
         self.pca = pca
@@ -217,6 +275,7 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
         self.normalize = normalize
         self.add_raw = add_raw
         self.normalize_raw = normalize_raw
+        self.treelet = treelet 
         # Check if single tree or tree ensemble
         tree_models = estimator.estimators_ if isinstance(estimator, BaseEnsemble) else [estimator]
         # Make stumps for each tree
@@ -267,12 +326,19 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
                 pca_transformer = None
             else:
                 X_transformed = tree_feature_transform(restricted_stumps, X)
-                pca_transformer = PCA(n_components=n_components)
-                pca_transformer.fit(X_transformed)
+                if self.pca:
+                    pca_transformer = PCA(n_components=n_components)
+                    pca_transformer.fit(X_transformed)
+                elif self.treelet:
+                    pca_transformer = treelet_basis(X_transformed,nbasis=n_components)
 
             return pca_transformer
 
         if self.pca:
+            n_features = X.shape[1]
+            for k in np.arange(n_features):
+                self.pca_transformers[k] = pca_on_stumps(k)
+        elif self.treelet:
             n_features = X.shape[1]
             for k in np.arange(n_features):
                 self.pca_transformers[k] = pca_on_stumps(k)
@@ -321,7 +387,10 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
         else:
             X_transformed = tree_feature_transform(restricted_stumps, X)
             if self.pca_transformers[k] is not None:
-                X_transformed = self.pca_transformers[k].transform(X_transformed)
+                if self.treelet:
+                    X_transformed = np.dot(X_transformed,self.pca_transformers[k])
+                else:
+                    X_transformed = self.pca_transformers[k].transform(X_transformed)
             if self.add_raw:
                 X_raw = X[:, [k]]
                 if self.normalize_raw:

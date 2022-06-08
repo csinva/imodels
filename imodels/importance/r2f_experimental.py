@@ -69,7 +69,7 @@ class R2FExp:
     """
 
 
-    def __init__(self, estimator=None, max_components_type="auto", alpha=0.5, normalize=False, random_state=None,use_noise_variance = True,scorer = None,
+    def __init__(self, estimator=None, max_components_type="auto", alpha=0.5, normalize=False, random_state=None,use_noise_variance = True,scorer = None,treelet = False,
                  criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10,rank_by_p_val = False,pca=True,normalize_raw = False):
 
         if estimator is None:
@@ -95,6 +95,7 @@ class R2FExp:
         self.n_splits = n_splits
         self.use_noise_variance = use_noise_variance
         self.pca = pca
+        self.treelet = treelet
         self.normalize_raw = normalize_raw
 
     def get_importance_scores(self, X, y, sample_weight=None, diagnostics=False):
@@ -163,7 +164,7 @@ class R2FExp:
             max_components_type = self.max_components_type
         estimator = copy.deepcopy(self.estimator)
         estimator.fit(X_train, y_train, sample_weight=sample_weight)
-        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,add_raw = self.add_raw, 
+        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,add_raw = self.add_raw,treelet = self.treelet,
                                            alpha=self.alpha, normalize=self.normalize, pca=self.pca,normalize_raw = self.normalize_raw)
         tree_transformer.fit(X_train)
         return tree_transformer
