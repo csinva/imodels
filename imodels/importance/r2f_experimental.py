@@ -545,7 +545,7 @@ class JointRobustScorer(JointScorerBase, ABC):
         elif strategy == "median":
             self.robust_model = QuantileRegressor()
         else:
-        raise ValueError("Not a valid robust regression strategy")
+            raise ValueError("Not a valid robust regression strategy")
 
     def fit(self, X, y, start_indices):
         self.robust_model.fit(X, y)
