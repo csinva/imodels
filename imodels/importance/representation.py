@@ -279,7 +279,7 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
         else:
             pass
 
-    def transform(self, X):
+    def transform(self, X, return_indices=False):
         """
         Obtain all engineered features.
 
@@ -290,13 +290,19 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
         """
         X_transformed = []
         n_features = X.shape[1]
+        start_indices = [0]
+        counter = 0
         for k in range(n_features):
             X_transformed_k = self.transform_one_feature(X, k)
             if X_transformed_k is not None:
                 X_transformed.append(X_transformed_k)
+                counter += X_transformed_k.shape[1]
+            start_indices.append(counter)
         X_transformed = np.hstack(X_transformed)
-
-        return X_transformed
+        if return_indices:
+            return X_transformed, start_indices
+        else:
+            return X_transformed
 
     def transform_one_feature(self, X, k):
         """

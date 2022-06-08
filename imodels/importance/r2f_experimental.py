@@ -1,6 +1,7 @@
 import copy
 import warnings
 from abc import ABC, abstractmethod
+from collections import defaultdict
 
 import numpy as np
 from sklearn.linear_model import RidgeCV, LassoCV, ElasticNetCV,LinearRegression, LassoLarsIC
@@ -365,7 +366,7 @@ class ScorerBase(ABC):
         """
         pass
 
-    def get_selected_features(self, X):
+    def get_selected_features(self):
         return self.selected_features
 
     def get_model_size(self):
@@ -429,10 +430,98 @@ class ElasticNetScorer(ScorerBase, ABC):
         self.score = self.metric(y, y_pred)
 
         
-        
-  
-                    
-                    
+class JointScorerBase(ABC):
+
+    def __init__(self, metric):
+        self.scores = defaultdict(lambda x: None)
+        self.n_stumps = defaultdict(lambda x: None)
+        self.model_sizes = defaultdict(lambda x: None)
+        if metric is None:
+            self.metric = metrics.r2_score
+        else:
+            self.metric = metric
+
+    @abstractmethod
+    def fit(self, X, y):
+        """
+        Method that sets self.score and self.selected_features
+        """
+        pass
+
+    def get_score(self, k):
+        return self.scores[k]
+
+    def get_model_size(self, k):
+        return self.model_sizes[k]
+
+    def get_n_stumps(self, k):
+        return self.n_stumps[k]
+
+
+class JointRidgeScorer(JointScorerBase, ABC):
+
+    def __init__(self, metric=None):
+        super().__init__(metric)
+
+    def fit(self, X, y, start_indices):
+        ridge_model = RidgeCV(fit_intercept=True).fit(X, y)
+        for k in range(len(start_indices) - 1):
+            restricted_feats = X[:, start_indices[k]:start_indices[k+1]]
+            restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k+1]]
+            self.n_stumps[k] = start_indices[k+1] - start_indices[k]
+            self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
+            if len(restricted_coefs) > 0:
+                restricted_preds = restricted_feats @ restricted_coefs + ridge_model.intercept_
+                self.scores[k] = self.metric(y, restricted_preds)
+            else:
+                self.scores[k] = 0
+
+
+class GeneralizedMDIJoint:
+
+    def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, random_state=None, normalize_raw=False):
+
+        if estimator is None:
+            self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33,
+                                                   random_state=random_state)
+        else:
+            self.estimator = copy.deepcopy(estimator)
+        self.normalize = normalize
+        self.add_raw = add_raw
+        self.normalize_raw = normalize_raw
+        if scorer is None:
+            self.scorer = JointRidgeScorer()
+        else:
+            self.scorer = copy.deepcopy(scorer)
+
+    def get_importance_scores(self, X, y, diagnostics=False):
+
+        n_samples, n_features = X.shape
+        n_trees = self.estimator.n_estimators
+        scores = np.zeros((n_trees, n_features))
+        n_stumps = np.zeros((n_trees, n_features))
+        n_stumps_chosen = np.zeros((n_trees, n_features))
+        self.estimator.fit(X, y)
+
+        for idx, estimator in enumerate(self.estimator.estimators_):
+            tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw, normalize_raw=self.normalize_raw)
+            oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
+            X_oob = X[oob_indices, :]
+            y_oob = y[oob_indices]
+            X_transformed_oob, start_indices = tree_transformer.transform(X, return_indices=True)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore")
+                self.scorer.fit(X_oob, y_oob, start_indices)
+            for k in range(n_features):
+                n_stumps[idx, k] = self.scorer.get_n_stumps(k)
+                n_stumps_chosen[idx, k] = self.scorer.get_model_size(k)
+                scores[idx, k] = self.scorer.get_score(k)
+        imp_values = scores.mean(axis=0)
+
+        if diagnostics:
+            return imp_values, scores, n_stumps, n_stumps_chosen
+        else:
+            return imp_values
                     
                     #y_val_centered = y_val - np.mean(y_val)
                     #if self.criterion == "cv":
