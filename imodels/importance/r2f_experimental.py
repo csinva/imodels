@@ -4,7 +4,8 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 
 import numpy as np
-from sklearn.linear_model import RidgeCV, LassoCV, ElasticNetCV,LinearRegression, LassoLarsIC
+from scipy.special import expit
+from sklearn.linear_model import RidgeCV, LassoCV, ElasticNetCV, LinearRegression, LassoLarsIC, LogisticRegressionCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble._forest import _generate_unsampled_indices
 from sklearn.model_selection import train_test_split
@@ -292,7 +293,7 @@ class GeneralizedMDI:
         else:
             self.scorer = copy.deepcopy(scorer)
 
-    def get_importance_scores(self, X, y, sample_weight = None,diagnostics=False):
+    def get_importance_scores(self, X, y, sample_weight=None, diagnostics=False):
         """
         Compute R2F feature importance values.
 
@@ -320,13 +321,17 @@ class GeneralizedMDI:
         scores = np.zeros((n_trees, n_features))
         n_stumps = np.zeros((n_trees, n_features))
         n_stumps_chosen = np.zeros((n_trees, n_features))
-        self.estimator.fit(X, y)
+        self.estimator.fit(X, y, sample_weight)
 
         for idx, estimator in enumerate(self.estimator.estimators_):
             tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw,normalize_raw = self.normalize_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
             X_oob = X[oob_indices, :]
             y_oob = y[oob_indices]
+            if sample_weight is not None:
+                sample_weight_oob = sample_weight[oob_indices]
+            else:
+                sample_weight_oob = None
             for k in range(n_features):
                 X_transformed_oob = tree_transformer.transform_one_feature(X_oob, k)
                 if X_transformed_oob is None:
@@ -337,7 +342,7 @@ class GeneralizedMDI:
                     n_stumps[idx, k] = X_transformed_oob.shape[1]
                     with warnings.catch_warnings():
                         warnings.filterwarnings("ignore")
-                        self.scorer.fit(X_transformed_oob, y_oob)
+                        self.scorer.fit(X_transformed_oob, y_oob, sample_weight_oob)
                     n_stumps_chosen[idx, k] = self.scorer.get_model_size()
                     scores[idx, k] = self.scorer.get_score()
         imp_values = scores.mean(axis=0)
@@ -410,6 +415,7 @@ class RidgeScorer(ScorerBase, ABC):
         self.selected_features = np.nonzero(ridge_model.coef_)[0]
         y_pred = ridge_model.predict(X)
         self.score = self.metric(y, y_pred)
+
         
 class ElasticNetScorer(ScorerBase, ABC):
     
@@ -429,6 +435,19 @@ class ElasticNetScorer(ScorerBase, ABC):
             y_pred = self.elasticnet_model.predict(X)
 
         self.score = self.metric(y, y_pred)
+
+
+class LogisticScorer(ScorerBase, ABC):
+
+    def __init__(self, metric=None, penalty="l2"):
+        self.penalty = penalty
+        super().__init__(metric)
+
+    def fit(self, X, y, sample_weight=None):
+        clf = LogisticRegressionCV(fit_intercept=True).fit(X, y, sample_weight)
+        self.selected_features = np.nonzero(clf.coef_)[0]
+        y_pred = clf.predict.proba(X)[:, 1]
+        self.score = self.metric(y, y_pred, sample_weight=sample_weight)
 
         
 class JointScorerBase(ABC):
@@ -478,6 +497,26 @@ class JointRidgeScorer(JointScorerBase, ABC):
                 self.scores[k] = 0
 
 
+class JointLogisticScorer(JointScorerBase, ABC):
+
+    def __init__(self, metric=None, penalty="l2"):
+        self.penalty = penalty
+        super().__init__(metric)
+
+    def fit(self, X, y, start_indices, sample_weight=None):
+        clf = LogisticRegressionCV(fit_intercept=True).fit(X, y, sample_weight)
+        for k in range(len(start_indices) - 1):
+            restricted_feats = X[:, start_indices[k]:start_indices[k+1]]
+            restricted_coefs = clf.coef_[start_indices[k]:start_indices[k+1]]
+            self.n_stumps[k] = start_indices[k+1] - start_indices[k]
+            self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
+            if len(restricted_coefs) > 0:
+                restricted_preds = expit(restricted_feats @ restricted_coefs + clf.intercept_)
+                self.scores[k] = self.metric(y, restricted_preds, sample_weight=sample_weight)
+            else:
+                self.scores[k] = 0
+
+
 class GeneralizedMDIJoint:
 
     def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, random_state=None, normalize_raw=False):
@@ -495,24 +534,28 @@ class GeneralizedMDIJoint:
         else:
             self.scorer = copy.deepcopy(scorer)
 
-    def get_importance_scores(self, X, y, diagnostics=False):
+    def get_importance_scores(self, X, y, sample_weight=None, diagnostics=False):
 
         n_samples, n_features = X.shape
         n_trees = self.estimator.n_estimators
         scores = np.zeros((n_trees, n_features))
         n_stumps = np.zeros((n_trees, n_features))
         n_stumps_chosen = np.zeros((n_trees, n_features))
-        self.estimator.fit(X, y)
+        self.estimator.fit(X, y, sample_weight)
 
         for idx, estimator in enumerate(self.estimator.estimators_):
             tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw, normalize_raw=self.normalize_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
             X_oob = X[oob_indices, :]
             y_oob = y[oob_indices]
+            if sample_weight is not None:
+                sample_weight_oob = sample_weight[oob_indices]
+            else:
+                sample_weight_oob = None
             X_transformed_oob, start_indices = tree_transformer.transform(X_oob, return_indices=True)
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore")
-                self.scorer.fit(X_transformed_oob, y_oob, start_indices)
+                self.scorer.fit(X_transformed_oob, y_oob, start_indices, sample_weight_oob)
             for k in range(n_features):
                 n_stumps[idx, k] = self.scorer.get_n_stumps(k)
                 n_stumps_chosen[idx, k] = self.scorer.get_model_size(k)
