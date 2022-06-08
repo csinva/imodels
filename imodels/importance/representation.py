@@ -330,7 +330,7 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
                     pca_transformer = PCA(n_components=n_components)
                     pca_transformer.fit(X_transformed)
                 elif self.treelet:
-                    pca_transformer = treelet_basis(X_transformed,nbasis=None)
+                    pca_transformer = treelet_basis(X_transformed,nbasis=n_components)
 
             return pca_transformer
 
