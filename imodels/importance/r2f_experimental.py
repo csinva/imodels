@@ -509,10 +509,10 @@ class GeneralizedMDIJoint:
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
             X_oob = X[oob_indices, :]
             y_oob = y[oob_indices]
-            X_transformed_oob, start_indices = tree_transformer.transform(X, return_indices=True)
+            X_transformed_oob, start_indices = tree_transformer.transform(X_oob, return_indices=True)
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore")
-                self.scorer.fit(X_oob, y_oob, start_indices)
+                self.scorer.fit(X_transformed_oob, y_oob, start_indices)
             for k in range(n_features):
                 n_stumps[idx, k] = self.scorer.get_n_stumps(k)
                 n_stumps_chosen[idx, k] = self.scorer.get_model_size(k)
