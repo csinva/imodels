@@ -4,12 +4,13 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 
 import numpy as np
+import pandas as pd
 from scipy.special import expit
 from sklearn.linear_model import RidgeCV, LassoCV, ElasticNetCV, LinearRegression, LassoLarsIC, LogisticRegressionCV, \
-    TheilSenRegressor, QuantileRegressor
+    TheilSenRegressor, QuantileRegressor, Lasso, Ridge
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble._forest import _generate_unsampled_indices
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.feature_selection import f_regression
 import sklearn.metrics as metrics
 import statsmodels.api as sm
@@ -387,15 +388,27 @@ class LassoScorer(ScorerBase, ABC):
 
     def __init__(self, metric=None, criterion="bic", refit=True):
         super().__init__(metric)
-        if criterion == "cv":
+        if criterion == "cv" or criterion == "cv_1se":
             self.lasso_model = LassoCV(normalize=False, fit_intercept=True)
         else:
             self.lasso_model = LassoLarsICc(criterion=criterion, normalize=False, fit_intercept=True)
+        self.criterion = criterion
         self.refit = refit
 
     def fit(self, X, y):
-        self.lasso_model.fit(X, y)
-        self.selected_features = np.nonzero(self.lasso_model.coef_)[0]
+        if self.criterion == "cv_1se":
+            # get grid of alphas
+            lasso_tmp = LassoCV(normalize=False, fit_intercept=True)
+            lasso_tmp.fit(X, y)
+            alphas = lasso_tmp.alphas_
+            # fit lasso with cv 1se rule
+            lasso = Lasso(fit_intercept=True)
+            self.lasso_model = GridSearchCV(lasso, [{"alpha": alphas}], refit=one_se_rule)
+            self.lasso_model.fit(X, y)
+            self.selected_features = np.nonzero(self.lasso_model.best_estimator_.coef_)[0]
+        else:
+            self.lasso_model.fit(X, y)
+            self.selected_features = np.nonzero(self.lasso_model.coef_)[0]
         if self.refit and self.get_model_size() > 0:
             X_sel = X[:, self.selected_features]
             lr = LinearRegression().fit(X_sel, y)
@@ -408,12 +421,20 @@ class LassoScorer(ScorerBase, ABC):
 
 class RidgeScorer(ScorerBase, ABC):
 
-    def __init__(self, metric=None):
+    def __init__(self, metric=None, criterion="cv"):
         super().__init__(metric)
+        self.criterion = criterion
 
     def fit(self, X, y,sample_weight = None):
-        ridge_model = RidgeCV(normalize = False,fit_intercept = True).fit(X, y,sample_weight = sample_weight)
-        self.selected_features = np.nonzero(ridge_model.coef_)[0]
+        if self.criterion == "cv_1se":
+            alphas = np.logspace(-4, 3, 100)
+            ridge = Ridge(fit_intercept=True)
+            ridge_model = GridSearchCV(ridge, [{"alpha": alphas}], refit=one_se_rule)
+            ridge_model.fit(X, y, sample_weight=sample_weight)
+            self.selected_features = np.nonzero(ridge_model.best_estimator_.coef_)[0]
+        else:
+            ridge_model = RidgeCV(normalize = False,fit_intercept = True).fit(X, y,sample_weight = sample_weight)
+            self.selected_features = np.nonzero(ridge_model.coef_)[0]
         y_pred = ridge_model.predict(X)
         self.score = self.metric(y, y_pred)
 
@@ -648,3 +669,27 @@ class GeneralizedMDIJoint:
                     #        r_squared[k] = lr.score(X_transformed[:, support], y_val_centered)
                     #else:
                     #    r_squared[k] = lm.score(X_transformed, y_val_centered)
+
+
+def one_se_rule(results):
+    """
+    Select penalty parameter according to 1 SE rule. Callable to be used in refit.
+    :param results: results from GridSearchCV()
+    :return: Penalty parameter selected according to 1 SE rule.
+    """
+
+    K = len([x for x in list(results.keys()) if x.startswith('split') and x.endswith('test_score')])
+    alpha_range = results['param_alpha'].data
+
+    mean_per_alpha = pd.Series(results['mean_test_score'], index=alpha_range)
+    std_per_alpha = pd.Series(results['std_test_score'], index=alpha_range)
+    sem_per_alpha = std_per_alpha / np.sqrt(K)
+
+    max_score = mean_per_alpha.max()
+    max_score_idx = mean_per_alpha.idxmax()
+    sem = sem_per_alpha[max_score_idx]
+
+    best_alpha = mean_per_alpha[mean_per_alpha >= max_score - sem].index.max()
+    best_alpha_index = int(np.argwhere(alpha_range == best_alpha)[0])
+
+    return best_alpha_index
