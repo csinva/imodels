@@ -345,7 +345,7 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
         else:
             pass
 
-    def transform(self, X, return_indices=False):
+    def transform(self, X, center=False, return_indices=False):
         """
         Obtain all engineered features.
 
@@ -359,7 +359,7 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
         start_indices = [0]
         counter = 0
         for k in range(n_features):
-            X_transformed_k = self.transform_one_feature(X, k)
+            X_transformed_k = self.transform_one_feature(X, k, center)
             if X_transformed_k is not None:
                 X_transformed.append(X_transformed_k)
                 counter += X_transformed_k.shape[1]
@@ -370,7 +370,7 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
         else:
             return X_transformed
 
-    def transform_one_feature(self, X, k):
+    def transform_one_feature(self, X, k, center=False):
         """
         Obtain the engineered features corresponding to a given original feature X_k
 
@@ -402,6 +402,8 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
                         X_transformed = X_transformed
                 else:
                     X_transformed = np.hstack([X_raw, X_transformed])
+            if center:
+                X_transformed = X_transformed - np.mean(X_transformed, axis=0)
         return X_transformed
 
     def get_stumps_for_feature(self, k):

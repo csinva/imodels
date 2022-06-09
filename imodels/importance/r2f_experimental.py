@@ -617,7 +617,7 @@ class GeneralizedMDIJoint:
                 sample_weight_oob = sample_weight[oob_indices]
             else:
                 sample_weight_oob = None
-            X_transformed_oob, start_indices = tree_transformer.transform(X_oob, return_indices=True)
+            X_transformed_oob, start_indices = tree_transformer.transform(X_oob, center=True, return_indices=True)
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore")
                 self.scorer.fit(X_transformed_oob, y_oob, start_indices, sample_weight_oob)
