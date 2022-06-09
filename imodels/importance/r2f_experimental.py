@@ -502,8 +502,8 @@ class JointRidgeScorer(JointScorerBase, ABC):
     def __init__(self, metric=None):
         super().__init__(metric)
 
-    def fit(self, X, y, start_indices):
-        ridge_model = RidgeCV(fit_intercept=True).fit(X, y)
+    def fit(self, X, y, start_indices,sample_weight):
+        ridge_model = RidgeCV(fit_intercept=True).fit(X, y,sample_weight = sample_weight)
         for k in range(len(start_indices) - 1):
             restricted_feats = X[:, start_indices[k]:start_indices[k+1]]
             restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k+1]]
