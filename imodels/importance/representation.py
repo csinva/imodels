@@ -395,8 +395,11 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
                 X_raw = X[:, [k]]
                 if self.normalize_raw:
                     stds = np.std(X_transformed, axis=0)
-                    X_raw_norm = (X_raw - np.mean(X_raw)) * np.max(stds) / np.std(X_raw)
-                    X_transformed = np.hstack([X_raw_norm, X_transformed])
+                    if np.max(stds) = 0.0:
+                        X_raw_norm = (X_raw - np.mean(X_raw)) * np.max(stds) / np.std(X_raw)
+                        X_transformed = np.hstack([X_raw_norm, X_transformed])
+                    else:
+                        X_transformed = X_transformed
                 else:
                     X_transformed = np.hstack([X_raw, X_transformed])
         return X_transformed
