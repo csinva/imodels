@@ -411,8 +411,8 @@ class RidgeScorer(ScorerBase, ABC):
     def __init__(self, metric=None):
         super().__init__(metric)
 
-    def fit(self, X, y):
-        ridge_model = RidgeCV(normalize = False,fit_intercept = True).fit(X, y)
+    def fit(self, X, y,sample_weight):
+        ridge_model = RidgeCV(normalize = False,fit_intercept = True).fit(X, y,sample_weight = sample_weight)
         self.selected_features = np.nonzero(ridge_model.coef_)[0]
         y_pred = ridge_model.predict(X)
         self.score = self.metric(y, y_pred)
