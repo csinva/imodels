@@ -421,14 +421,15 @@ class LassoScorer(ScorerBase, ABC):
 
 class RidgeScorer(ScorerBase, ABC):
 
-    def __init__(self, metric=None, criterion="cv"):
+    def __init__(self, metric=None, criterion="cv",alphas = np.logspace(-4,3,100)):
         super().__init__(metric)
         self.criterion = criterion
+        self.alphas = alphas
 
     def fit(self, X, y,sample_weight = None):
         if self.criterion == "cv_1se":
-            alphas = np.logspace(-4, 3, 100)
-            ridge = Ridge(fit_intercept=True)
+            alphas = self.alphas
+            ridge = Ridge(normalize = False, fit_intercept=True)
             ridge_model = GridSearchCV(ridge, [{"alpha": alphas}], refit=one_se_rule)
             ridge_model.fit(X, y, sample_weight=sample_weight)
             self.selected_features = np.nonzero(ridge_model.best_estimator_.coef_)[0]
