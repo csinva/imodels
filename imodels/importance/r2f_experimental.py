@@ -435,7 +435,7 @@ class RidgeScorer(ScorerBase, ABC):
             ridge_model.fit(X, y, sample_weight=sample_weight)
             self.selected_features = np.nonzero(ridge_model.best_estimator_.coef_)[0]
         elif self.criterion == "gcv_1se":
-            alphas = np.logspace(-4, 3, 100)
+            alphas = self.alphas
             ridge_model = RidgeCV(alphas=alphas, normalize=False, fit_intercept=True, store_cv_values=True)
             ridge_model.fit(X, y, sample_weight=sample_weight)
             cv_mean = np.mean(ridge_model.cv_values_, axis=0)
@@ -446,7 +446,8 @@ class RidgeScorer(ScorerBase, ABC):
             ridge_model.fit(X, y, sample_weight=sample_weight)
             self.selected_features = np.nonzero(ridge_model.coef_)[0]
         elif self.criterion == "gcv":
-            ridge_model = RidgeCV(normalize = False,fit_intercept = True).fit(X, y,sample_weight = sample_weight)
+            alphas = self.alphas
+            ridge_model = RidgeCV(alphas=alphas, normalize=False, fit_intercept=True).fit(X, y, sample_weight=sample_weight)
             self.selected_features = np.nonzero(ridge_model.coef_)[0]
         y_pred = ridge_model.predict(X)
         self.score = self.metric(y, y_pred)
