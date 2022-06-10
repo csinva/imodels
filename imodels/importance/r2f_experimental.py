@@ -534,11 +534,31 @@ class JointScorerBase(ABC):
 
 class JointRidgeScorer(JointScorerBase, ABC):
 
-    def __init__(self, metric=None):
+    def __init__(self, metric=None,criterion="gcv", alphas = np.logspace(-4,3,100)):
         super().__init__(metric)
+        assert criterion in ["gcv", "gcv_1se", "cv_1se"]
+        self.criterion = criterion
+        self.alphas = alphas
 
     def fit(self, X, y, start_indices,sample_weight):
-        ridge_model = RidgeCV(fit_intercept=True).fit(X, y,sample_weight = sample_weight)
+        if self.criterion == "cv_1se":
+            alphas = self.alphas
+            ridge = Ridge(normalize = False, fit_intercept=True)
+            ridge_model = GridSearchCV(ridge, [{"alpha": alphas}], refit=cv_one_se_rule)
+            ridge_model.fit(X, y, sample_weight=sample_weight)
+        elif self.criterion == "gcv_1se":
+            alphas = self.alphas
+            ridge_model = RidgeCV(alphas=alphas, normalize=False, fit_intercept=True, store_cv_values=True)
+            ridge_model.fit(X, y, sample_weight=sample_weight)
+            cv_mean = np.mean(ridge_model.cv_values_, axis=0)
+            cv_std = np.std(ridge_model.cv_values_, axis=0)
+            best_alpha_index = one_se_rule(alphas, cv_mean, cv_std, X.shape[0], "min")
+            best_alpha = alphas[best_alpha_index]
+            ridge_model = Ridge(alpha=best_alpha, fit_intercept=True)
+            ridge_model.fit(X, y, sample_weight=sample_weight)
+        elif self.criterion == "gcv":
+            alphas = self.alphas
+            ridge_model = RidgeCV(alphas=alphas, normalize=False, fit_intercept=True).fit(X, y, sample_weight=sample_weight)
         for k in range(len(start_indices) - 1):
             restricted_feats = X[:, start_indices[k]:start_indices[k+1]]
             restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k+1]]
