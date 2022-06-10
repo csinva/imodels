@@ -403,7 +403,7 @@ class LassoScorer(ScorerBase, ABC):
             alphas = lasso_tmp.alphas_
             # fit lasso with cv 1se rule
             lasso = Lasso(fit_intercept=True)
-            self.lasso_model = GridSearchCV(lasso, [{"alpha": alphas}], refit=one_se_rule)
+            self.lasso_model = GridSearchCV(lasso, [{"alpha": alphas}], refit=cv_one_se_rule)
             self.lasso_model.fit(X, y)
             self.selected_features = np.nonzero(self.lasso_model.best_estimator_.coef_)[0]
         else:
@@ -421,8 +421,9 @@ class LassoScorer(ScorerBase, ABC):
 
 class RidgeScorer(ScorerBase, ABC):
 
-    def __init__(self, metric=None, criterion="cv",alphas = np.logspace(-4,3,100)):
+    def __init__(self, metric=None, criterion="gcv", alphas = np.logspace(-4,3,100)):
         super().__init__(metric)
+        assert criterion in ["gcv", "gcv_1se", "cv_1se"]
         self.criterion = criterion
         self.alphas = alphas
 
@@ -430,10 +431,21 @@ class RidgeScorer(ScorerBase, ABC):
         if self.criterion == "cv_1se":
             alphas = self.alphas
             ridge = Ridge(normalize = False, fit_intercept=True)
-            ridge_model = GridSearchCV(ridge, [{"alpha": alphas}], refit=one_se_rule)
+            ridge_model = GridSearchCV(ridge, [{"alpha": alphas}], refit=cv_one_se_rule)
             ridge_model.fit(X, y, sample_weight=sample_weight)
             self.selected_features = np.nonzero(ridge_model.best_estimator_.coef_)[0]
-        else:
+        elif self.criterion == "gcv_1se":
+            alphas = np.logspace(-4, 3, 100)
+            ridge_model = RidgeCV(alphas=alphas, normalize=False, fit_intercept=True, store_cv_values=True)
+            ridge_model.fit(X, y, sample_weight=sample_weight)
+            cv_mean = np.mean(ridge_model.cv_values_, axis=0)
+            cv_std = np.std(ridge_model.cv_values_, axis=0)
+            best_alpha_index = one_se_rule(alphas, cv_mean, cv_std, X.shape[0], "min")
+            best_alpha = alphas[best_alpha_index]
+            ridge_model = Ridge(alpha=best_alpha, fit_intercept=True)
+            ridge_model.fit(X, y, sample_weight=sample_weight)
+            self.selected_features = np.nonzero(ridge_model.coef_)[0]
+        elif self.criterion == "gcv":
             ridge_model = RidgeCV(normalize = False,fit_intercept = True).fit(X, y,sample_weight = sample_weight)
             self.selected_features = np.nonzero(ridge_model.coef_)[0]
         y_pred = ridge_model.predict(X)
@@ -672,18 +684,21 @@ class GeneralizedMDIJoint:
                     #    r_squared[k] = lm.score(X_transformed, y_val_centered)
 
 
-def one_se_rule(results):
+def one_se_rule(alphas, mean_cve, std_cve, K, optimum="max"):
     """
-    Select penalty parameter according to 1 SE rule. Callable to be used in refit.
-    :param results: results from GridSearchCV()
-    :return: Penalty parameter selected according to 1 SE rule.
+    Select penalty parameter according to 1 SE rule.
+    :param alphas: List of penalty parameters.
+    :param mean_cve: Mean CV error for each alpha.
+    :param std_cve: Standard deviation of CV error for each alpha.
+    :param K: Number of folds in CV.
+    :param optimum: Either "min" or "max", indicating the type of optimum.
+    :return: Index of penalty parameter selected according to 1 SE rule.
     """
-
-    K = len([x for x in list(results.keys()) if x.startswith('split') and x.endswith('test_score')])
-    alpha_range = results['param_alpha'].data
-
-    mean_per_alpha = pd.Series(results['mean_test_score'], index=alpha_range)
-    std_per_alpha = pd.Series(results['std_test_score'], index=alpha_range)
+    assert optimum in ["min", "max"]
+    if optimum == "min":
+        mean_cve = -mean_cve
+    mean_per_alpha = pd.Series(mean_cve, index=alphas)
+    std_per_alpha = pd.Series(std_cve, index=alphas)
     sem_per_alpha = std_per_alpha / np.sqrt(K)
 
     max_score = mean_per_alpha.max()
@@ -691,6 +706,18 @@ def one_se_rule(results):
     sem = sem_per_alpha[max_score_idx]
 
     best_alpha = mean_per_alpha[mean_per_alpha >= max_score - sem].index.max()
-    best_alpha_index = int(np.argwhere(alpha_range == best_alpha)[0])
+    best_alpha_index = int(np.argwhere(alphas == best_alpha)[0])
 
     return best_alpha_index
+
+
+def cv_one_se_rule(results):
+    """
+    CV wrapper to select penalty parameter according to 1 SE rule. Callable to be used in refit.
+    :param results: results from GridSearchCV()
+    :return: Index of penalty parameter selected according to 1 SE rule.
+    """
+
+    K = len([x for x in list(results.keys()) if x.startswith('split') and x.endswith('test_score')])
+    alpha_range = results['param_alpha'].data
+    return one_se_rule(alpha_range, results["mean_test_score"], results["std_test_score"], K)
