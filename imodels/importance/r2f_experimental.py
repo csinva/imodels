@@ -6,6 +6,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 from scipy.special import expit
+from scipy.stats import rankdata, kendalltau
 from sklearn.linear_model import RidgeCV, LassoCV, ElasticNetCV, LinearRegression, LassoLarsIC, LogisticRegressionCV, \
     TheilSenRegressor, QuantileRegressor, Lasso, Ridge
 from sklearn.ensemble import RandomForestRegressor
@@ -500,7 +501,7 @@ class LogisticScorer(ScorerBase, ABC):
     def fit(self, X, y, sample_weight=None):
         clf = LogisticRegressionCV(fit_intercept=True).fit(X, y, sample_weight)
         self.selected_features = np.nonzero(clf.coef_)[0]
-        y_pred = clf.predict.proba(X)[:, 1]
+        y_pred = clf.predict_proba(X)[:, 1]
         self.score = self.metric(y, y_pred, sample_weight=sample_weight)
 
         
@@ -742,3 +743,13 @@ def cv_one_se_rule(results):
     K = len([x for x in list(results.keys()) if x.startswith('split') and x.endswith('test_score')])
     alpha_range = results['param_alpha'].data
     return one_se_rule(alpha_range, results["mean_test_score"], results["std_test_score"], K)
+
+
+def kendall_tau_metric(y_true, y_pred):
+    y_true_ranks = rankdata(y_true)
+    y_pred_ranks = rankdata(y_pred)
+    kendall_tau_corr = kendalltau(y_true_ranks, y_pred_ranks)[0]
+    if np.isnan(kendall_tau_corr):
+        return 0
+    else:
+        return kendall_tau_corr
