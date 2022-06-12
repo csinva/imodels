@@ -72,20 +72,20 @@ class R2FExp:
         The number of splits to use to compute r2f values
     """
 
-
-    def __init__(self, estimator=None, max_components_type="auto", alpha=0.5, normalize=False, random_state=None,use_noise_variance = True,scorer = None,treelet = False,
-                 criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10,rank_by_p_val = False,pca=True,normalize_raw = False):
+    def __init__(self, estimator=None, max_components_type="auto", alpha=0.5, normalize=False, random_state=None,
+                 use_noise_variance=True, scorer=None, treelet=False,
+                 criterion="bic", refit=True, add_raw=True, split_data=True, val_size=0.5, n_splits=10,
+                 rank_by_p_val=False, pca=True, normalize_raw=False):
 
         if estimator is None:
             self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33)
         else:
             self.estimator = estimator
         if scorer is None:
-            self.scorer = LassoScorer(criterion = self.criterion,refit = self.refit)
+            self.scorer = LassoScorer(criterion=self.criterion, refit=self.refit)
         else:
             self.scorer = copy.deepcopy(scorer)
 
-            
         self.max_components_type = max_components_type
         self.alpha = alpha
         self.normalize = normalize
@@ -157,7 +157,7 @@ class R2FExp:
         else:
             return r2f_values
 
-    def _feature_learning_one_split(self, X_train, y_train,sample_weight=None):
+    def _feature_learning_one_split(self, X_train, y_train, sample_weight=None):
         """
         Step 1 and 2 of r2f: Fit the RF (or other tree ensemble) and learn feature representations from it,
         storing the information in the TreeTransformer class
@@ -168,8 +168,10 @@ class R2FExp:
             max_components_type = self.max_components_type
         estimator = copy.deepcopy(self.estimator)
         estimator.fit(X_train, y_train, sample_weight=sample_weight)
-        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,add_raw = self.add_raw,treelet = self.treelet,
-                                           alpha=self.alpha, normalize=self.normalize, pca=self.pca,normalize_raw = self.normalize_raw)
+        tree_transformer = TreeTransformer(estimator=estimator, max_components_type=max_components_type,
+                                           add_raw=self.add_raw, treelet=self.treelet,
+                                           alpha=self.alpha, normalize=self.normalize, pca=self.pca,
+                                           normalize_raw=self.normalize_raw)
         tree_transformer.fit(X_train)
         return tree_transformer
 
@@ -190,10 +192,10 @@ class R2FExp:
             else:
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore")
-                    self.scorer.fit(X_transformed,y_val)
+                    self.scorer.fit(X_transformed, y_val)
                     n_components_chosen[k] = self.scorer.get_model_size()
                     r_squared[k] = self.scorer.get_score()
-              
+
         return r_squared, n_stumps, n_components_chosen
 
     def _model_selection_pval_one_split(self, tree_transformer, X_val, y_val):
@@ -278,8 +280,8 @@ class GeneralizedMDI:
         The number of splits to use to compute r2f values
     """
 
-    def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, refit = True,
-                 criterion = "aic_c",random_state=None,normalize_raw = False):
+    def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, refit=True,
+                 criterion="aic_c", random_state=None, normalize_raw=False):
 
         if estimator is None:
             self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33,
@@ -292,7 +294,7 @@ class GeneralizedMDI:
         self.criterion = criterion
         self.normalize_raw = normalize_raw
         if scorer is None:
-            self.scorer = LassoScorer(criterion = self.criterion,refit = self.refit)
+            self.scorer = LassoScorer(criterion=self.criterion, refit=self.refit)
         else:
             self.scorer = copy.deepcopy(scorer)
 
@@ -327,7 +329,8 @@ class GeneralizedMDI:
         self.estimator.fit(X, y, sample_weight)
 
         for idx, estimator in enumerate(self.estimator.estimators_):
-            tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw,normalize_raw = self.normalize_raw)
+            tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw,
+                                               normalize_raw=self.normalize_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
             X_oob = X[oob_indices, :]
             y_oob = y[oob_indices]
@@ -360,6 +363,7 @@ class ScorerBase(ABC):
     """
     ABC for scoring an original feature based on a transformed representation
     """
+
     def __init__(self, metric):
         self.selected_features = None
         self.score = 0
@@ -422,16 +426,16 @@ class LassoScorer(ScorerBase, ABC):
 
 class RidgeScorer(ScorerBase, ABC):
 
-    def __init__(self, metric=None, criterion="gcv", alphas = np.logspace(-4,3,100)):
+    def __init__(self, metric=None, criterion="gcv", alphas=np.logspace(-4, 3, 100)):
         super().__init__(metric)
         assert criterion in ["gcv", "gcv_1se", "cv_1se"]
         self.criterion = criterion
         self.alphas = alphas
 
-    def fit(self, X, y,sample_weight = None):
+    def fit(self, X, y, sample_weight=None):
         if self.criterion == "cv_1se":
             alphas = self.alphas
-            ridge = Ridge(normalize = False, fit_intercept=True)
+            ridge = Ridge(normalize=False, fit_intercept=True)
             ridge_model = GridSearchCV(ridge, [{"alpha": alphas}], refit=cv_one_se_rule)
             ridge_model.fit(X, y, sample_weight=sample_weight)
             self.selected_features = np.nonzero(ridge_model.best_estimator_.coef_)[0]
@@ -448,7 +452,8 @@ class RidgeScorer(ScorerBase, ABC):
             self.selected_features = np.nonzero(ridge_model.coef_)[0]
         elif self.criterion == "gcv":
             alphas = self.alphas
-            ridge_model = RidgeCV(alphas=alphas, normalize=False, fit_intercept=True).fit(X, y, sample_weight=sample_weight)
+            ridge_model = RidgeCV(alphas=alphas, normalize=False, fit_intercept=True).fit(X, y,
+                                                                                          sample_weight=sample_weight)
             self.selected_features = np.nonzero(ridge_model.coef_)[0]
         y_pred = ridge_model.predict(X)
         self.score = self.metric(y, y_pred)
@@ -471,16 +476,16 @@ class RobustScorer(ScorerBase, ABC):
         y_pred = self.robust_model.predict(X)
         self.score = self.metric(y, y_pred)
 
-        
+
 class ElasticNetScorer(ScorerBase, ABC):
-    
-    def __init__(self, metric=None,refit = True):
+
+    def __init__(self, metric=None, refit=True):
         super().__init__(metric)
-        self.elasticnet_model = ElasticNetCV(normalize = False, fit_intercept = True)
+        self.elasticnet_model = ElasticNetCV(normalize=False, fit_intercept=True)
         self.refit = refit
 
     def fit(self, X, y):
-        self.elasticnet_model.fit(X,y)
+        self.elasticnet_model.fit(X, y)
         self.selected_features = np.nonzero(self.elasticnet_model.coef_)[0]
         if self.refit and self.get_model_size() > 0:
             X_sel = X[:, self.selected_features]
@@ -504,7 +509,7 @@ class LogisticScorer(ScorerBase, ABC):
         y_pred = clf.predict_proba(X)[:, 1]
         self.score = self.metric(y, y_pred, sample_weight=sample_weight)
 
-        
+
 class JointScorerBase(ABC):
 
     def __init__(self, metric):
@@ -535,39 +540,45 @@ class JointScorerBase(ABC):
 
 class JointRidgeScorer(JointScorerBase, ABC):
 
-    def __init__(self, metric=None,criterion="gcv", alphas = np.logspace(-4,3,100)):
+    def __init__(self, metric=None, criterion="gcv", alphas=np.logspace(-4, 3, 100), split_sample=False):
         super().__init__(metric)
         assert criterion in ["gcv", "gcv_1se", "cv_1se"]
         self.criterion = criterion
         self.alphas = alphas
+        self.split_sample = split_sample
 
-    def fit(self, X, y, start_indices,sample_weight):
+    def fit(self, X, y, start_indices, sample_weight):
         if self.criterion == "cv_1se":
-            alphas = self.alphas
-            ridge = Ridge(normalize = False, fit_intercept=True)
-            ridge_model = GridSearchCV(ridge, [{"alpha": alphas}], refit=cv_one_se_rule)
-            ridge_model.fit(X, y, sample_weight=sample_weight)
+            ridge = Ridge(normalize=False, fit_intercept=True)
+            ridge_model = GridSearchCV(ridge, [{"alpha": self.alphas}], refit=cv_one_se_rule)
         elif self.criterion == "gcv_1se":
-            alphas = self.alphas
-            ridge_model = RidgeCV(alphas=alphas, normalize=False, fit_intercept=True, store_cv_values=True)
+            ridge_model = RidgeCV(alphas=self.alphas, normalize=False, fit_intercept=True, store_cv_values=True)
             ridge_model.fit(X, y, sample_weight=sample_weight)
             cv_mean = np.mean(ridge_model.cv_values_, axis=0)
             cv_std = np.std(ridge_model.cv_values_, axis=0)
-            best_alpha_index = one_se_rule(alphas, cv_mean, cv_std, X.shape[0], "min")
-            best_alpha = alphas[best_alpha_index]
+            best_alpha_index = one_se_rule(self.alphas, cv_mean, cv_std, X.shape[0], "min")
+            best_alpha = self.alphas[best_alpha_index]
             ridge_model = Ridge(alpha=best_alpha, fit_intercept=True)
-            ridge_model.fit(X, y, sample_weight=sample_weight)
         elif self.criterion == "gcv":
-            alphas = self.alphas
-            ridge_model = RidgeCV(alphas=alphas, normalize=False, fit_intercept=True).fit(X, y, sample_weight=sample_weight)
+            ridge_model = RidgeCV(alphas=self.alphas, normalize=False, fit_intercept=True)
+        else:
+            raise ValueError("Invalid criterion type")
+        if self.split_sample:
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+        else:
+            X_train = X
+            X_test = X
+            y_train = y
+            y_test = y
+        ridge_model.fit(X_train, y_train, sample_weight=sample_weight)
         for k in range(len(start_indices) - 1):
-            restricted_feats = X[:, start_indices[k]:start_indices[k+1]]
-            restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k+1]]
-            self.n_stumps[k] = start_indices[k+1] - start_indices[k]
+            restricted_feats = X_test[:, start_indices[k]:start_indices[k + 1]]
+            restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k + 1]]
+            self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
             self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
             if len(restricted_coefs) > 0:
                 restricted_preds = restricted_feats @ restricted_coefs + ridge_model.intercept_
-                self.scores[k] = self.metric(y, restricted_preds)
+                self.scores[k] = self.metric(y_test, restricted_preds)
             else:
                 self.scores[k] = 0
 
@@ -581,9 +592,9 @@ class JointLogisticScorer(JointScorerBase, ABC):
     def fit(self, X, y, start_indices, sample_weight=None):
         clf = LogisticRegressionCV(fit_intercept=True).fit(X, y, sample_weight)
         for k in range(len(start_indices) - 1):
-            restricted_feats = X[:, start_indices[k]:start_indices[k+1]]
-            restricted_coefs = clf.coef_[start_indices[k]:start_indices[k+1]]
-            self.n_stumps[k] = start_indices[k+1] - start_indices[k]
+            restricted_feats = X[:, start_indices[k]:start_indices[k + 1]]
+            restricted_coefs = clf.coef_[start_indices[k]:start_indices[k + 1]]
+            self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
             self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
             if len(restricted_coefs) > 0:
                 restricted_preds = expit(restricted_feats @ restricted_coefs + clf.intercept_)
@@ -606,9 +617,9 @@ class JointRobustScorer(JointScorerBase, ABC):
     def fit(self, X, y, start_indices):
         self.robust_model.fit(X, y)
         for k in range(len(start_indices) - 1):
-            restricted_feats = X[:, start_indices[k]:start_indices[k+1]]
-            restricted_coefs = self.robust_model.coef_[start_indices[k]:start_indices[k+1]]
-            self.n_stumps[k] = start_indices[k+1] - start_indices[k]
+            restricted_feats = X[:, start_indices[k]:start_indices[k + 1]]
+            restricted_coefs = self.robust_model.coef_[start_indices[k]:start_indices[k + 1]]
+            self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
             self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
             if len(restricted_coefs) > 0:
                 restricted_preds = restricted_feats @ restricted_coefs + self.robust_model.intercept_
@@ -619,7 +630,8 @@ class JointRobustScorer(JointScorerBase, ABC):
 
 class GeneralizedMDIJoint:
 
-    def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, random_state=None, normalize_raw=False):
+    def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, random_state=None,
+                 normalize_raw=False):
 
         if estimator is None:
             self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33,
@@ -644,7 +656,8 @@ class GeneralizedMDIJoint:
         self.estimator.fit(X, y, sample_weight)
 
         for idx, estimator in enumerate(self.estimator.estimators_):
-            tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw, normalize_raw=self.normalize_raw)
+            tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw,
+                                               normalize_raw=self.normalize_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
             X_oob = X[oob_indices, :]
             y_oob = y[oob_indices]
@@ -666,44 +679,44 @@ class GeneralizedMDIJoint:
             return imp_values, scores, n_stumps, n_stumps_chosen
         else:
             return imp_values
-                    
-                    #y_val_centered = y_val - np.mean(y_val)
-                    #if self.criterion == "cv":
-                    #    if self.linear_method == "lasso":
-                    #        lm = LassoCV(fit_intercept=False, normalize=False)
-                    #        lm.fit(X_transformed,y_val_centered)
-                    #        n_components_chosen[k] = np.count_nonzero(lm.coef_)
-                    #    elif self.linear_method == "ridge":
-                    #        lm = RidgeCV(fit_intercept=False, normalize=False, cv = None)
-                    #        lm.fit(X_transformed,y_val_centered)
-                    #        n_components_chosen[k] = np.count_nonzero(lm.coef_)
-                    #    else:
-                    #        lm = ElasticNetCV(fit_intercept=False,normalize=False)
-                    #        lm.fit(X_transformed,y_val_centered)
-                    #        n_components_chosen[k] = np.count_nonzero(lm.coef_)
-                    #elif self.criterion == "f_regression":
-                    #    f_stat, p_vals = f_regression(X_transformed, y_val_centered)
-                    #    chosen_components = []
-                    #    for i in range(len(p_vals)):
-                    #        if p_vals[i] <= 0.05:
-                    #            chosen_components.append(i)
-                    #    n_components_chosen[k] = len(chosen_components)
-                    #else:
-                    #    lm = LassoLarsICc(criterion=self.criterion, normalize=False, fit_intercept=False,use_noise_variance = self.use_noise_variance) #LassoLarsIC
-                    #    lm.fit(X_transformed, y_val_centered)
-                    #    n_components_chosen[k] = np.count_nonzero(lm.coef_)
-                    #if self.refit:
-                    #    if self.criterion == "f_regression":
-                    #        support = chosen_components
-                    #    else:
-                    #        support = np.nonzero(lm.coef_)[0]
-                    #    if len(support) == 0:
-                    #        r_squared[k] = 0.0
-                    #    else:
-                    #        lr = LinearRegression().fit(X_transformed[:, support], y_val_centered)
-                    #        r_squared[k] = lr.score(X_transformed[:, support], y_val_centered)
-                    #else:
-                    #    r_squared[k] = lm.score(X_transformed, y_val_centered)
+
+            # y_val_centered = y_val - np.mean(y_val)
+            # if self.criterion == "cv":
+            #    if self.linear_method == "lasso":
+            #        lm = LassoCV(fit_intercept=False, normalize=False)
+            #        lm.fit(X_transformed,y_val_centered)
+            #        n_components_chosen[k] = np.count_nonzero(lm.coef_)
+            #    elif self.linear_method == "ridge":
+            #        lm = RidgeCV(fit_intercept=False, normalize=False, cv = None)
+            #        lm.fit(X_transformed,y_val_centered)
+            #        n_components_chosen[k] = np.count_nonzero(lm.coef_)
+            #    else:
+            #        lm = ElasticNetCV(fit_intercept=False,normalize=False)
+            #        lm.fit(X_transformed,y_val_centered)
+            #        n_components_chosen[k] = np.count_nonzero(lm.coef_)
+            # elif self.criterion == "f_regression":
+            #    f_stat, p_vals = f_regression(X_transformed, y_val_centered)
+            #    chosen_components = []
+            #    for i in range(len(p_vals)):
+            #        if p_vals[i] <= 0.05:
+            #            chosen_components.append(i)
+            #    n_components_chosen[k] = len(chosen_components)
+            # else:
+            #    lm = LassoLarsICc(criterion=self.criterion, normalize=False, fit_intercept=False,use_noise_variance = self.use_noise_variance) #LassoLarsIC
+            #    lm.fit(X_transformed, y_val_centered)
+            #    n_components_chosen[k] = np.count_nonzero(lm.coef_)
+            # if self.refit:
+            #    if self.criterion == "f_regression":
+            #        support = chosen_components
+            #    else:
+            #        support = np.nonzero(lm.coef_)[0]
+            #    if len(support) == 0:
+            #        r_squared[k] = 0.0
+            #    else:
+            #        lr = LinearRegression().fit(X_transformed[:, support], y_val_centered)
+            #        r_squared[k] = lr.score(X_transformed[:, support], y_val_centered)
+            # else:
+            #    r_squared[k] = lm.score(X_transformed, y_val_centered)
 
 
 def one_se_rule(alphas, mean_cve, std_cve, K, optimum="max"):
