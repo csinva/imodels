@@ -41,17 +41,17 @@ setuptools.setup(
         'dev': [
             'dvu',
             'gdown',
-            'irf',
+            # 'irf',
             'jupyter',
             'jupytext',
             'matplotlib',
-            'pdoc3',  # for building docs
+            # 'pdoc3',  # for building docs
             'pytest',
             'pytest-cov',
-            'seaborn',  # in bartpy.diagnostics.features
+            # 'seaborn',  # in bartpy.diagnostics.features
             'slurmpy',
-            'statsmodels', # in bartpy.diagnostics.diagnostics
-            'torch',  # for neural-net-integrated models
+            # 'statsmodels', # in bartpy.diagnostics.diagnostics
+            # 'torch',  # for neural-net-integrated models
             'tqdm',
             'pmlb',
         ]
