@@ -238,10 +238,9 @@ if __name__ == &#39;__main__&#39;:
 <p>Read more in the :ref:<code>User Guide &lt;tree&gt;</code>.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>criterion</code></strong> :&ensp;<code>{"gini", "entropy", "log_loss"}</code>, default=<code>"gini"</code></dt>
+<dt><strong><code>criterion</code></strong> :&ensp;<code>{"gini", "entropy"}</code>, default=<code>"gini"</code></dt>
 <dd>The function to measure the quality of a split. Supported criteria are
-"gini" for the Gini impurity and "log_loss" and "entropy" both for the
-Shannon information gain, see :ref:<code>tree_mathematical_formulation</code>.</dd>
+"gini" for the Gini impurity and "entropy" for the information gain.</dd>
 <dt><strong><code>splitter</code></strong> :&ensp;<code>{"best", "random"}</code>, default=<code>"best"</code></dt>
 <dd>The strategy used to choose the split at each node. Supported
 strategies are "best" to choose the best split and "random" to choose
@@ -298,10 +297,6 @@ equal weight when sample_weight is not provided.</dd>
 - If "sqrt", then `max_features=sqrt(n_features)`.
 - If "log2", then `max_features=log2(n_features)`.
 - If None, then `max_features=n_features`.
-
-!!! deprecated "Deprecated since version:&amp;ensp;1.1"
-    The `"auto"` option was deprecated in 1.1 and will be removed
-    in 1.3.
 </code></pre>
 <p>Note: the search for a split does not stop until at least one
 valid partition of the node samples is found, even if it requires to
@@ -557,6 +552,14 @@ negative weight in either child node.</dd>
 <dt><strong><code>check_input</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
 <dd>Allow to bypass several input checking.
 Don't use this parameter unless you know what you do.</dd>
+<dt><strong><code>X_idx_sorted</code></strong> :&ensp;<code>deprecated</code>, default=<code>"deprecated"</code></dt>
+<dd>
+<p>This parameter is deprecated and has no effect.
+It will be removed in 1.1 (renaming of 0.26).</p>
+<div class="admonition deprecated">
+<p class="admonition-title">Deprecated since version:&ensp;0.24</p>
+</div>
+</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>

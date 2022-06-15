@@ -49,6 +49,7 @@ class TestShrinkage:
             partial(HSTreeClassifier, estimator_=DecisionTreeClassifier()),
             partial(HSTreeClassifierCV, estimator_=DecisionTreeClassifier()),
             partial(HSC45TreeClassifierCV, estimator_=C45TreeClassifier()),
+            HSTreeClassifierCV,  # default estimator is Decision tree with 25 max_leaf_nodes
             # partial(HSOptimalTreeClassifierCV, estimator_=OptimalTreeClassifier()),
         ]:
             init_kwargs = {}

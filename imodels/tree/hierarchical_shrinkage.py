@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics import r2_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 
 from imodels.util import checks
 
@@ -175,12 +175,27 @@ class HSTreeClassifier(HSTree, ClassifierMixin):
 
 
 class HSTreeClassifierCV(HSTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based',
+    def __init__(self, estimator_: BaseEstimator = None,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 shrinkage_scheme_: str = 'node_based',
+                 max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
-        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+        """Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+
+         Params
+        ------
+        estimator_
+            Sklearn estimator (already initialized).
+            If no estimator_ is passsed, sklearn decision tree is used
+
+        max_rules
+            If estimator is None, then max_leaf_nodes is passed to the default decision tree
+
+        args, kwargs
+            Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
         """
+        if estimator_ is None:
+            estimator_ = DecisionTreeClassifier(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -203,13 +218,27 @@ class HSTreeClassifierCV(HSTreeClassifier):
 
 
 class HSTreeRegressorCV(HSTreeRegressor):
-    def __init__(self, estimator_: BaseEstimator,
+    def __init__(self, estimator_: BaseEstimator = None,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  shrinkage_scheme_: str = 'node_based',
+                 max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
-        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+        """Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+
+         Params
+        ------
+        estimator_
+            Sklearn estimator (already initialized).
+            If no estimator_ is passsed, sklearn decision tree is used
+
+        max_rules
+            If estimator is None, then max_leaf_nodes is passed to the default decision tree
+
+        args, kwargs
+            Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
         """
+        if estimator_ is None:
+            estimator_ = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
