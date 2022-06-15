@@ -156,8 +156,10 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
 
     def __str__(self):
         try:
-            s = 'BoostedRules:\n'
-            s += 'Rule \u2192 predicted probability (final prediction is weighted sum of all predictions)\n'
+            s = '> ------------------------------\n'
+            s += '> BoostedRules:\n'
+            s += '> \tRule \u2192 predicted probability (final prediction is weighted sum of all predictions)\n'
+            s += '> ------------------------------\n'
             for i in range(len(self.estimators_)):
                 s += f'  If\033[96m {str(self.rules_[i])}\033[00m \u2192 {self.estimator_mean_prediction_[i]:.2f} (weight: {self.estimator_weights_[i]:.2f})\n'
             # for est in self.estimators_:

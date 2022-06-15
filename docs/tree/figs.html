@@ -104,7 +104,7 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0):
+    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
@@ -319,7 +319,11 @@ class FIGS(BaseEstimator):
             self._tree_to_str_with_data(X[~left], y[~left], root.right, pprefix))
 
     def __str__(self):
-        s = &#39;------------\n&#39; + &#39;\n\t+\n&#39;.join([self._tree_to_str(t) for t in self.trees_])
+        s = &#39;&gt; ------------------------------\n&#39;
+        s += &#39;&gt; FIGS-Fast Interpretable Greedy-Tree Sums:\n&#39;
+        s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree\n&#39;
+        s += &#39;&gt; ------------------------------\n&#39;
+        s += &#39;\n\t+\n&#39;.join([self._tree_to_str(t) for t in self.trees_])
         if hasattr(self, &#39;feature_names_&#39;) and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f&#39;X_{i}&#39;, self.feature_names_[i])
@@ -503,7 +507,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="imodels.tree.figs.FIGS"><code class="flex name class">
 <span>class <span class="ident">FIGS</span></span>
-<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0)</span>
+<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
@@ -525,7 +529,7 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0):
+    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
@@ -740,7 +744,11 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
             self._tree_to_str_with_data(X[~left], y[~left], root.right, pprefix))
 
     def __str__(self):
-        s = &#39;------------\n&#39; + &#39;\n\t+\n&#39;.join([self._tree_to_str(t) for t in self.trees_])
+        s = &#39;&gt; ------------------------------\n&#39;
+        s += &#39;&gt; FIGS-Fast Interpretable Greedy-Tree Sums:\n&#39;
+        s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree\n&#39;
+        s += &#39;&gt; ------------------------------\n&#39;
+        s += &#39;\n\t+\n&#39;.join([self._tree_to_str(t) for t in self.trees_])
         if hasattr(self, &#39;feature_names_&#39;) and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f&#39;X_{i}&#39;, self.feature_names_[i])
@@ -1201,7 +1209,7 @@ def max_rules(self):
 </dd>
 <dt id="imodels.tree.figs.FIGSClassifier"><code class="flex name class">
 <span>class <span class="ident">FIGSClassifier</span></span>
-<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0)</span>
+<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
@@ -1257,7 +1265,7 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 </dd>
 <dt id="imodels.tree.figs.FIGSRegressor"><code class="flex name class">
 <span>class <span class="ident">FIGSRegressor</span></span>
-<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0)</span>
+<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.

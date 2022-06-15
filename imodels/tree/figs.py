@@ -81,7 +81,7 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     """
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0):
+    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
@@ -296,7 +296,11 @@ class FIGS(BaseEstimator):
             self._tree_to_str_with_data(X[~left], y[~left], root.right, pprefix))
 
     def __str__(self):
-        s = '------------\n' + '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
+        s = '> ------------------------------\n'
+        s += '> FIGS-Fast Interpretable Greedy-Tree Sums:\n'
+        s += '> \tPredictions are made by summing the "Val" reached by traversing each tree\n'
+        s += '> ------------------------------\n'
+        s += '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
         if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f'X_{i}', self.feature_names_[i])
