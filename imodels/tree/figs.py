@@ -11,6 +11,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
+from sklearn.utils.validation import _check_sample_weight
 
 from imodels.tree.viz_utils import DecisionTreeViz
 
@@ -53,13 +54,13 @@ class Node:
             return f'Val: {self.value[0][0]:0.3f} (leaf)'
         else:
             return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
-    
+
     def print_root(self, y):
         try:
             one_count = pd.Series(y).value_counts()[1.0]
         except KeyError:
             one_count = 0
-        one_proportion = f' {one_count}/{y.shape[0]} ({round(100*one_count/y.shape[0], 2)}%)'
+        one_proportion = f' {one_count}/{y.shape[0]} ({round(100 * one_count / y.shape[0], 2)}%)'
 
         if self.is_root:
             return f'X_{self.feature} <= {self.threshold:0.3f}' + one_proportion
@@ -106,7 +107,16 @@ class FIGS(BaseEstimator):
         elif self._estimator_type == 'regressor':
             decision_function = self.predict
 
-    def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
+    def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None,
+                                   compare_nodes_with_sample_weight=True):
+        """
+        Params
+        ------
+        compare_nodes_with_sample_weight: Deprecated
+            If this is set to true and sample_weight is passed, use sample_weight to compare nodes
+            Otherwise, use sample_weight only for picking a split given a particular node
+        """
+
         # array indices
         SPLIT = 0
         LEFT = 1
@@ -114,9 +124,10 @@ class FIGS(BaseEstimator):
 
         # fit stump
         stump = tree.DecisionTreeRegressor(max_depth=1)
+        sweight = None
         if sample_weight is not None:
-            sample_weight = sample_weight[idxs]
-        stump.fit(X[idxs], y[idxs], sample_weight=sample_weight)
+            sweight = sample_weight[idxs]
+        stump.fit(X[idxs], y[idxs], sample_weight=sweight)
 
         # these are all arrays, arr[0] is split node
         # note: -2 is dummy
@@ -134,12 +145,24 @@ class FIGS(BaseEstimator):
                         feature=feature[SPLIT], threshold=threshold[SPLIT],
                         impurity_reduction=None)
 
-        # split node
+        # manage sample weights
+        idxs_split = X[:, feature[SPLIT]] <= threshold[SPLIT]
+        idxs_left = idxs_split & idxs
+        idxs_right = ~idxs_split & idxs
+        if sample_weight is None:
+            n_node_samples_left = n_node_samples[LEFT]
+            n_node_samples_right = n_node_samples[RIGHT]
+        else:
+            n_node_samples_left = sample_weight[idxs_left].sum()
+            n_node_samples_right = sample_weight[idxs_right].sum()
+        n_node_samples_split = n_node_samples_left + n_node_samples_right
+
+        # calculate impurity
         impurity_reduction = (
                                      impurity[SPLIT] -
-                                     impurity[LEFT] * n_node_samples[LEFT] / n_node_samples[SPLIT] -
-                                     impurity[RIGHT] * n_node_samples[RIGHT] / n_node_samples[SPLIT]
-                             ) * idxs.sum()
+                                     impurity[LEFT] * n_node_samples_left / n_node_samples_split -
+                                     impurity[RIGHT] * n_node_samples_right / n_node_samples_split
+                             ) * n_node_samples_split
 
         node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                           feature=feature[SPLIT], threshold=threshold[SPLIT],
@@ -147,9 +170,6 @@ class FIGS(BaseEstimator):
         # print('\t>>>', node_split, 'impurity', impurity, 'num_pts', idxs.sum(), 'imp_reduc', impurity_reduction)
 
         # manage children
-        idxs_split = X[:, feature[SPLIT]] <= threshold[SPLIT]
-        idxs_left = idxs_split & idxs
-        idxs_right = ~idxs_split & idxs
         node_left = Node(idxs=idxs_left, value=value[LEFT], tree_num=tree_num)
         node_right = Node(idxs=idxs_right, value=value[RIGHT], tree_num=tree_num)
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
@@ -168,6 +188,8 @@ class FIGS(BaseEstimator):
         y = y.astype(float)
         if feature_names is not None:
             self.feature_names_ = feature_names
+        if sample_weight is not None:
+            sample_weight = _check_sample_weight(sample_weight, X)
 
         self.trees_ = []  # list of the root nodes of added trees
         self.complexity_ = 0  # tracks the number of rules in the model
@@ -292,9 +314,9 @@ class FIGS(BaseEstimator):
         pprefix = prefix + '\t'
         left = X[:, root.feature] <= root.threshold
         return (
-            prefix + root.print_root(y) + '\n' + 
-            self._tree_to_str_with_data(X[left], y[left], root.left, pprefix) + 
-            self._tree_to_str_with_data(X[~left], y[~left], root.right, pprefix))
+                prefix + root.print_root(y) + '\n' +
+                self._tree_to_str_with_data(X[left], y[left], root.left, pprefix) +
+                self._tree_to_str_with_data(X[~left], y[~left], root.right, pprefix))
 
     def __str__(self):
         s = '> ------------------------------\n'
@@ -306,7 +328,7 @@ class FIGS(BaseEstimator):
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f'X_{i}', self.feature_names_[i])
         return s
-    
+
     def print_tree(self, X, y):
         s = '------------\n' + '\n\t+\n'.join([self._tree_to_str_with_data(X, y, t) for t in self.trees_])
         if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
@@ -359,7 +381,7 @@ class FIGS(BaseEstimator):
         return preds
 
     def plot(self, cols=2, feature_names=None, filename=None, label="all", impurity=False, tree_number=None):
-        is_single_tree =  len(self.trees_) < 2 or tree_number is not None
+        is_single_tree = len(self.trees_) < 2 or tree_number is not None
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
         # if is_single_tree:
@@ -370,7 +392,7 @@ class FIGS(BaseEstimator):
         fig, axs = plt.subplots(n_plots)
         criterion = "squared_error" if self._estimator_type == "regressor" else "gini"
         n_classes = 1 if self._estimator_type == 'regressor' else 2
-        ax_size = int(len(self.trees_))#n_cols * n_rows
+        ax_size = int(len(self.trees_))  # n_cols * n_rows
         for i in range(n_plots):
             r = i // n_cols
             c = i % n_cols
@@ -461,6 +483,11 @@ if __name__ == '__main__':
     X_cls, Y_cls = datasets.load_breast_cancer(return_X_y=True)
     X_reg, Y_reg = datasets.make_friedman1(100)
 
+    est = FIGSClassifier(max_rules=10)
+    # est.fit(X_cls, Y_cls, sample_weight=np.arange(0, X_cls.shape[0]))
+    est.fit(X_cls, Y_cls, sample_weight=[1] * X_cls.shape[0])
+    est.predict(X_cls)
+
     est = FIGSRegressorCV()
     est.fit(X_reg, Y_reg)
     est.predict(X_reg)
@@ -472,3 +499,5 @@ if __name__ == '__main__':
     est.predict(X_cls)
     print(est.max_rules)
     est.figs.plot(tree_number=0)
+
+# %%

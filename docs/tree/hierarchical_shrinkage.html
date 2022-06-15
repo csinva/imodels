@@ -79,9 +79,7 @@ class HSTree:
                 # &#39;prediction_task&#39;: self.prediction_task,
                 &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
 
-    def fit(self, feature_names=None, *args, **kwargs):
-        if feature_names is not None:
-            self.feature_names_ = feature_names
+    def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
         self._shrink()
         self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
@@ -413,9 +411,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
                 # &#39;prediction_task&#39;: self.prediction_task,
                 &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
 
-    def fit(self, feature_names=None, *args, **kwargs):
-        if feature_names is not None:
-            self.feature_names_ = feature_names
+    def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
         self._shrink()
         self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
@@ -542,7 +538,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, feature_names=None, *args, **kwargs)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -550,9 +546,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, feature_names=None, *args, **kwargs):
-    if feature_names is not None:
-        self.feature_names_ = feature_names
+<pre><code class="python">def fit(self, *args, **kwargs):
     self.estimator_.fit(*args, **kwargs)
     self._shrink()
     self.complexity_ = compute_tree_complexity(self.estimator_.tree_)</code></pre>
