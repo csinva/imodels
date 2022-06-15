@@ -56,9 +56,7 @@ class HSTree:
                 # 'prediction_task': self.prediction_task,
                 'shrinkage_scheme_': self.shrinkage_scheme_}
 
-    def fit(self, feature_names=None, *args, **kwargs):
-        if feature_names is not None:
-            self.feature_names_ = feature_names
+    def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
         self._shrink()
         self.complexity_ = compute_tree_complexity(self.estimator_.tree_)

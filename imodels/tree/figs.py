@@ -85,6 +85,7 @@ class FIGS(BaseEstimator):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
+        self.random_state = random_state
         self._init_estimator_type()  # decides between regressor and classifier
         self._init_decision_function()
 
