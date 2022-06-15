@@ -15,7 +15,6 @@ from ..initializers.sklearntreeinitializer import SklearnTreeInitializer
 from ..sklearnmodel import SklearnModel, BART
 
 
-
 def plot_diagnostics(model: SklearnModel):
     fig, ((ax1, ax2, ax3, ax4), (ax5, ax6, ax7, _)) = plt.subplots(2, 4, figsize=(10, 10))
     fig.suptitle("Diagnostics")
@@ -44,20 +43,19 @@ if __name__ == '__main__':
         x_1 = x[0]
         x_2 = x[1]
 
-        if np.logical_and(x_1 <= 5 , x_2 in [1,3]):
+        if np.logical_and(x_1 <= 5, x_2 in [1, 3]):
             return 8
-        elif np.logical_and(x_1 > 5 , x_2 in [1,3]):
+        elif np.logical_and(x_1 > 5, x_2 in [1, 3]):
             return 2
-        elif np.logical_and(x_1 <= 3 , x_2 in [2,4]):
+        elif np.logical_and(x_1 <= 3, x_2 in [2, 4]):
             return 1
-        elif np.logical_and(3 < x_1 <= 7 , x_2 in [2,4]):
+        elif np.logical_and(3 < x_1 <= 7, x_2 in [2, 4]):
             return 5
-        elif np.logical_and(x_1 > 7 , x_2 in [2,4]):
+        elif np.logical_and(x_1 > 7, x_2 in [2, 4]):
             return 8
 
 
     y = np.array([_f(X.iloc[i, :]) for i in range(n)]) + np.random.normal(size=n, scale=0.1)
-
 
     X_train, X_test, y_train, y_test = model_selection.train_test_split(
         X, y, test_size=0.3, random_state=4)

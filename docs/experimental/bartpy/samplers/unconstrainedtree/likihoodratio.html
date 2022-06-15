@@ -275,7 +275,9 @@ def log_probability_node_not_split(model: Model, node: TreeNode):
 
     small_model_l = denumerator_first + denumerator_second
 
-    return big_model_l, small_model_l</code></pre>
+    return big_model_l, small_model_l
+
+    # return first_term + ((var_mu / (2 * var)) * resp_contribution)</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likihoodratio.log_probability_node_not_split"><code class="name flex">

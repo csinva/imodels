@@ -198,7 +198,7 @@ Fit an interpretable model to explain a previous model's errors (ex. in <a href=
 
 <details>
 <summary><a href="https://csinva.io/imodels/util/index.html">Rule-based utils</a> for customizing models</summary>
-The code here contains many useful and customizable functions for rule-based learning in the [util folder](https://csinva.io/imodels/util/index.html). This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.
+The code here contains many useful and customizable functions for rule-based learning in the <a href="https://csinva.io/imodels/util/index.html">util folder</a>. This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.
 </details>
 
 ## Our favorite models

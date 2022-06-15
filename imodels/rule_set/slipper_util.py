@@ -88,7 +88,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
 
     def _grow_rule(self, X, y):
         """ Starts with empty conjunction of conditions and
-        greddily adds rules to mazimize Z_tilda
+        greedily adds rules to mazimize Z_tilda
         """
 
         stop_condition = False
@@ -101,7 +101,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
             candidate_rule = curr_rule.copy()
             for feat in features:
                 pivots = np.percentile(X[:, feat], range(0, 100, 4),
-                                       interpolation='midpoint')
+                                       method='linear')
 
                 # get a list of possible rules
                 feature_candidates = [

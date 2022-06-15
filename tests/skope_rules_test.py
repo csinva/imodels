@@ -4,7 +4,7 @@ Testing for SkopeRules algorithm
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal, assert_no_warnings, assert_raises, suppress_warnings, assert_warns
-from sklearn.datasets import load_iris, load_boston, make_blobs
+from sklearn.datasets import load_iris, make_blobs
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import ParameterGrid
 from sklearn.utils import check_random_state
@@ -19,13 +19,6 @@ iris = load_iris()
 perm = rng.permutation(iris.target.size)
 iris.data = iris.data[perm]
 iris.target = iris.target[perm]
-
-# also load the boston dataset
-# and randomly permute it
-boston = load_boston()
-perm = rng.permutation(boston.target.size)
-boston.data = boston.data[perm]
-boston.target = boston.target[perm]
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")

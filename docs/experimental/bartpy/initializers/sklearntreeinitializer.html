@@ -264,7 +264,9 @@ def map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree):
         return
     node_dict[tree.number] = tree
     fill_nodes_dict(get_child(tree, &#39;left&#39;), node_dict)
-    fill_nodes_dict(get_child(tree, &#39;right&#39;), node_dict)</code></pre>
+    fill_nodes_dict(get_child(tree, &#39;right&#39;), node_dict)
+
+    # return node_dict</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_bartpy_tree_from_sklearn"><code class="name flex">
@@ -448,7 +450,11 @@ def map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree):
             self.threshold.append(t_node)
             self.n_node_samples.append(np.sum(node.idxs))
             self.impurity.append(node.impurity_reduction)
-            self.value.append(node.value)</code></pre>
+            self.value.append(node.value)
+    #
+    # def predict(self, *args, **kwargs):
+    #     &#34;&#34;&#34; Predict target for X. &#34;&#34;&#34;
+    #     self._figs.predict(*args, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.SklearnTreeInitializer"><code class="flex name class">

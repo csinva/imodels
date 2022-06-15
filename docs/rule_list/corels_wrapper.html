@@ -350,7 +350,16 @@ Can be any value between 0.0 and 0.5.</dd>
 Learning Certifiably Optimal Rule Lists for Categorical Data. KDD 2017.
 Journal of Machine Learning Research, 2018; 19: 1-77. arXiv:1704.01701, 2017
 Examples</p>
-<hr></div>
+<hr>
+<h2 id="params">Params</h2>
+<p>max_depth
+Maximum depth the list can achieve
+criterion: str
+Criterion used to split
+'gini', 'entropy', or 'neg_corr'
+strategy: str
+How to select which side of split becomes leaf node
+Currently only supports 'max' - (higher risk side of split becomes leaf node)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -584,7 +593,10 @@ Examples</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>corels.corels.CorelsClassifier</li>
+<li><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li><a title="imodels.rule_list.rule_list.RuleList" href="rule_list.html#imodels.rule_list.rule_list.RuleList">RuleList</a></li>
+<li>sklearn.base.ClassifierMixin</li>
 </ul>
 <h3>Methods</h3>
 <dl>
