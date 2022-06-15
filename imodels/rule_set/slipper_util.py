@@ -100,9 +100,12 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         while not stop_condition:
             candidate_rule = curr_rule.copy()
             for feat in features:
-                pivots = np.percentile(X[:, feat], range(0, 100, 4),
+                try:
+                    pivots = np.percentile(X[:, feat], range(0, 100, 4),
                                        method='linear')
-
+                except:
+                    pivots = np.percentile(X[:, feat], range(0, 100, 4), # deprecated
+                                           interpolation='midpoint')
                 # get a list of possible rules
                 feature_candidates = [
                     self._make_candidate(X, y, curr_rule, feat, A_c)
