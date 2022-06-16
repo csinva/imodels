@@ -452,11 +452,17 @@ class RidgeScorer(ScorerBase, ABC):
             self.selected_features = np.nonzero(ridge_model.coef_)[0]
         elif self.criterion == "gcv":
             alphas = self.alphas
-            ridge_model = RidgeCV(alphas=alphas, normalize=False, fit_intercept=True).fit(X, y,
+            ridge_model = RidgeCV(alphas=alphas, normalize=False, fit_intercept=True,store_cv_values = True).fit(X, y,
                                                                                           sample_weight=sample_weight)
             self.selected_features = np.nonzero(ridge_model.coef_)[0]
         y_pred = ridge_model.predict(X)
-        self.score = self.metric(y, y_pred)
+        if self.metric == "gcv":
+            best_alpha_index = np.where(ridge_model.alphas == ridge_model.alpha_)[0][0]
+            LOO_error = np.sum(ridge_model.cv_values_[:,best_alpha_index])/len(y)
+            R2 = 1.0 - (LOO_error/np.var(y))
+            self.score = R2
+        else:
+            self.score = self.metric(y, y_pred)
 
 
 class RobustScorer(ScorerBase, ABC):
