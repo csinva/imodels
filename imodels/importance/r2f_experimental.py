@@ -560,7 +560,7 @@ class JointRidgeScorer(JointScorerBase, ABC):
             best_alpha = self.alphas[best_alpha_index]
             ridge_model = Ridge(alpha=best_alpha, fit_intercept=True)
         elif self.criterion == "gcv":
-            ridge_model = RidgeCV(alphas=self.alphas, normalize=False, fit_intercept=True)
+            ridge_model = RidgeCV(alphas=self.alphas, normalize=False, fit_intercept=True,store_cv_values = True)
         else:
             raise ValueError("Invalid criterion type")
         if self.split_sample:
@@ -582,6 +582,7 @@ class JointRidgeScorer(JointScorerBase, ABC):
                     best_alpha_index = np.where(ridge_model.alphas == ridge_model.alpha_)[0][0]
                     LOO_error = np.sum(ridge_model.cv_values_[:,best_alpha_index])
                     R2 = 1 - (LOO_error/np.var(y))
+                    self.scores[k] = R2
                 else:
                     self.scores[k] = self.metric(y_test, restricted_preds)
             else:
