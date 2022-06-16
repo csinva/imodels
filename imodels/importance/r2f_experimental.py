@@ -605,7 +605,7 @@ class JointLogisticScorer(JointScorerBase, ABC):
         clf = LogisticRegressionCV(fit_intercept=True).fit(X, y, sample_weight)
         for k in range(len(start_indices) - 1):
             restricted_feats = X[:, start_indices[k]:start_indices[k + 1]]
-            restricted_coefs = clf.coef_[start_indices[k]:start_indices[k + 1]]
+            restricted_coefs = clf.coef_[0,start_indices[k]:start_indices[k + 1]]
             self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
             self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
             if len(restricted_coefs) > 0:
