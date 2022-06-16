@@ -578,7 +578,12 @@ class JointRidgeScorer(JointScorerBase, ABC):
             self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
             if len(restricted_coefs) > 0:
                 restricted_preds = restricted_feats @ restricted_coefs + ridge_model.intercept_
-                self.scores[k] = self.metric(y_test, restricted_preds)
+                if self.metric == "gcv":
+                    best_alpha_index = np.where(ridge_model.alphas == ridge_model.alpha_)[0][0]
+                    LOO_error = np.sum(ridge_model.cv_values_[:,best_alpha_index])
+                    R2 = 1 - (LOO_error/np.var(y))
+                else:
+                    self.scores[k] = self.metric(y_test, restricted_preds)
             else:
                 self.scores[k] = 0
 
