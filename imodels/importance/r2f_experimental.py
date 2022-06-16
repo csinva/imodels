@@ -476,7 +476,7 @@ class RobustScorer(ScorerBase, ABC):
         else:
             raise ValueError("Not a valid robust regression strategy")
 
-    def fit(self, X, y):
+    def fit(self, X, y,sample_weight = None):
         self.robust_model.fit(X, y)
         self.selected_features = np.nonzero(self.robust_model.coef_)[0]
         y_pred = self.robust_model.predict(X)
@@ -626,7 +626,7 @@ class JointRobustScorer(JointScorerBase, ABC):
         else:
             raise ValueError("Not a valid robust regression strategy")
 
-    def fit(self, X, y, start_indices):
+    def fit(self, X, y, start_indices,sample_weight = None):
         self.robust_model.fit(X, y)
         for k in range(len(start_indices) - 1):
             restricted_feats = X[:, start_indices[k]:start_indices[k + 1]]
