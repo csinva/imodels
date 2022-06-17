@@ -8,7 +8,7 @@ import pandas as pd
 from scipy.special import expit
 from scipy.stats import rankdata, kendalltau
 from sklearn.linear_model import RidgeCV, LassoCV, ElasticNetCV, LinearRegression, LassoLarsIC, LogisticRegressionCV, \
-    TheilSenRegressor, QuantileRegressor, Lasso, Ridge
+    TheilSenRegressor, QuantileRegressor, Lasso, Ridge,HuberRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble._forest import _generate_unsampled_indices
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -467,9 +467,11 @@ class RidgeScorer(ScorerBase, ABC):
 
 class RobustScorer(ScorerBase, ABC):
 
-    def __init__(self, metric=None, strategy="theilsen"):
+    def __init__(self, metric=None, strategy="huber"):
         super().__init__(metric)
-        if strategy == "theilsen":
+        if strategy == "huber":
+            self.robust_model = HuberRegressor(epsilon = 1.0)
+        elif strategy == "theilsen":
             self.robust_model = TheilSenRegressor()
         elif strategy == "median":
             self.robust_model = QuantileRegressor()
@@ -617,9 +619,11 @@ class JointLogisticScorer(JointScorerBase, ABC):
 
 class JointRobustScorer(JointScorerBase, ABC):
 
-    def __init__(self, metric=None, strategy="theilsen"):
+    def __init__(self, metric=None, strategy="huber"):
         super().__init__(metric)
-        if strategy == "theilsen":
+        if strategy == "huber":
+            self.robust_model = HuberRegressor(epsilon=1.0)
+        elif strategy == "theilsen":
             self.robust_model = TheilSenRegressor()
         elif strategy == "median":
             self.robust_model = QuantileRegressor()
