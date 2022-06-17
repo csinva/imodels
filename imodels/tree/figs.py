@@ -380,7 +380,8 @@ class FIGS(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
-    def plot(self, cols=2, feature_names=None, filename=None, label="all", impurity=False, tree_number=None):
+    def plot(self, cols=2, feature_names=None, filename=None, label="all",
+             impurity=False, tree_number=None, dpi=150):
         is_single_tree = len(self.trees_) < 2 or tree_number is not None
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
@@ -389,7 +390,7 @@ class FIGS(BaseEstimator):
         # else:
         #     fig, axs = plt.subplots(n_rows, n_cols)
         n_plots = int(len(self.trees_)) if tree_number is None else 1
-        fig, axs = plt.subplots(n_plots)
+        fig, axs = plt.subplots(n_plots, dpi=dpi)
         criterion = "squared_error" if self._estimator_type == "regressor" else "gini"
         n_classes = 1 if self._estimator_type == 'regressor' else 2
         ax_size = int(len(self.trees_))  # n_cols * n_rows
@@ -403,7 +404,8 @@ class FIGS(BaseEstimator):
                 ax = axs
             try:
                 tree = self.trees_[i] if tree_number is None else self.trees_[tree_number]
-                plot_tree(DecisionTreeViz(tree, criterion, n_classes), ax=ax, feature_names=feature_names, label=label,
+                plot_tree(DecisionTreeViz(tree, criterion, n_classes),
+                          ax=ax, feature_names=feature_names, label=label,
                           impurity=impurity)
             except IndexError:
                 ax.axis('off')
