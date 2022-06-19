@@ -556,6 +556,7 @@ class JointRidgeScorer(JointScorerBase, ABC):
         self.split_sample = split_sample
 
     def fit(self, X, y, start_indices, sample_weight):
+
         if self.criterion == "cv_1se":
             ridge = Ridge(normalize=False, fit_intercept=True)
             ridge_model = GridSearchCV(ridge, [{"alpha": self.alphas}], refit=cv_one_se_rule)
@@ -579,22 +580,43 @@ class JointRidgeScorer(JointScorerBase, ABC):
             y_train = y
             y_test = y
         ridge_model.fit(X_train, y_train, sample_weight=sample_weight)
-        for k in range(len(start_indices) - 1):
-            restricted_feats = X_test[:, start_indices[k]:start_indices[k + 1]]
-            restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k + 1]]
-            self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
-            self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
-            if len(restricted_coefs) > 0:
-                restricted_preds = restricted_feats @ restricted_coefs + ridge_model.intercept_
-                if self.metric == "gcv":
-                    best_alpha_index = np.where(ridge_model.alphas == ridge_model.alpha_)[0][0]
-                    LOO_error = np.sum(ridge_model.cv_values_[:,best_alpha_index])/len(y)
-                    R2 = 1.0 - (LOO_error/np.var(y))
-                    self.scores[k] = R2
-                else:
-                    self.scores[k] = self.metric(y_test, restricted_preds)
+        if self.metric == "loocv":
+
+            def _get_partial_model_looe(X, y, start_indices, alpha, beta):
+                B = np.linalg.inv(X.T @ X + alpha * np.eye(X.shape[1])) @ X.T
+                h_vals = np.diag(X @ B)
+                y_preds = X @ beta
+                n_feats = len(start_indices) - 1
+                n_samples = X.shape[0]
+                looe_vals = np.zeros((n_samples, n_feats))
+                for k in range(len(start_indices) - 1):
+                    X_partial = X[:, start_indices[k]:start_indices[k + 1]]
+                    if X_partial.shape[1] > 0:
+                        y_preds_partial = X_partial @ beta
+                        h_vals_partial = np.diag(X_partial @ B)
+                        looe_vals[:, k] = ((1 - h_vals + h_vals_partial) * (y_preds_partial - y) + h_vals_partial *
+                                           (y_preds - y_preds_partial)) / (1 - h_vals)
+                    else:
+                        looe_vals[:, k]
+                    return looe_vals
+
+            looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.beta_)
+            y_norm_sq = np.linalg.norm(y) ** 2
+            for k in range(len(start_indices) - 1):
+                self.scores[k] = 1 - np.looe[:, k] ** 2 / y_norm_sq
             else:
                 self.scores[k] = 0
+        else:
+            for k in range(len(start_indices) - 1):
+                restricted_feats = X_test[:, start_indices[k]:start_indices[k + 1]]
+                restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k + 1]]
+                self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
+                self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
+                if len(restricted_coefs) > 0:
+                    restricted_preds = restricted_feats @ restricted_coefs + ridge_model.intercept_
+                    self.scores[k] = self.metric(y_test, restricted_preds)
+                else:
+                    self.scores[k] = 0
 
 
 class JointLogisticScorer(JointScorerBase, ABC):
@@ -676,7 +698,7 @@ class GeneralizedMDIJoint:
                                                normalize_raw=self.normalize_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
             X_oob = X[oob_indices, :]
-            y_oob = y[oob_indices]
+            y_oob = y[oob_indices] - np.mean(y[oob_indices])
             if sample_weight is not None:
                 sample_weight_oob = sample_weight[oob_indices]
             else:
@@ -782,3 +804,5 @@ def kendall_tau_metric(y_true, y_pred):
         return 0
     else:
         return kendall_tau_corr
+
+
