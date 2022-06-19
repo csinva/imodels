@@ -521,9 +521,9 @@ class LogisticScorer(ScorerBase, ABC):
 class JointScorerBase(ABC):
 
     def __init__(self, metric):
-        self.scores = defaultdict(lambda x: None)
-        self.n_stumps = defaultdict(lambda x: None)
-        self.model_sizes = defaultdict(lambda x: None)
+        self.scores = defaultdict(lambda: None)
+        self.n_stumps = defaultdict(lambda: None)
+        self.model_sizes = defaultdict(lambda: None)
         if metric is None:
             self.metric = metrics.r2_score
         else:
@@ -591,19 +591,21 @@ class JointRidgeScorer(JointScorerBase, ABC):
                 looe_vals = np.zeros((n_samples, n_feats))
                 for k in range(len(start_indices) - 1):
                     X_partial = X[:, start_indices[k]:start_indices[k + 1]]
+                    beta_partial = beta[start_indices[k]:start_indices[k + 1]]
+                    B_partial = B[start_indices[k]:start_indices[k + 1], :]
                     if X_partial.shape[1] > 0:
-                        y_preds_partial = X_partial @ beta
-                        h_vals_partial = np.diag(X_partial @ B)
+                        y_preds_partial = X_partial @ beta_partial
+                        h_vals_partial = np.diag(X_partial @ B_partial)
                         looe_vals[:, k] = ((1 - h_vals + h_vals_partial) * (y_preds_partial - y) + h_vals_partial *
                                            (y_preds - y_preds_partial)) / (1 - h_vals)
                     else:
-                        looe_vals[:, k]
-                    return looe_vals
+                        looe_vals[:, k] = y
+                return looe_vals
 
-            looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.beta_)
+            looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.coef_)
             y_norm_sq = np.linalg.norm(y) ** 2
             for k in range(len(start_indices) - 1):
-                self.scores[k] = 1 - np.looe[:, k] ** 2 / y_norm_sq
+                self.scores[k] = 1 - np.sum(looe[:, k] ** 2) / y_norm_sq
             else:
                 self.scores[k] = 0
         else:
