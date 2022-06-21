@@ -113,7 +113,7 @@ Shows how to fit, predict, and visualize with different interpretable models
 </details>
 
 <details>
-<summary><a href="http://autogluon-staging.s3-website-us-west-2.amazonaws.com/PR-1355/30/tutorials/tabular_prediction/tabular-interpretability.html">Autogluon demo</a></summary>
+<summary><a href="https://auto.gluon.ai/dev/tutorials/tabular_prediction/tabular-interpretability.html">Autogluon demo</a></summary>
 Fit/select an interpretable model automatically using Autogluon AutoML
 </details>
 
