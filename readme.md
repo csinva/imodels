@@ -74,35 +74,6 @@ Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementa
 </br>
 </p>
 
-## What's the difference between the models?
-
-The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
-
-|                           Rule set                           |                        Rule list                        |                        Rule tree                        |                       Algebraic models                       |
-| :----------------------------------------------------------: | :-----------------------------------------------------: | :-----------------------------------------------------: | :----------------------------------------------------------: |
-| <img src="https://csinva.io/imodels/img/rule_set.jpg" width="100%"> | <img src="https://csinva.io/imodels/img/rule_list.jpg"> | <img src="https://csinva.io/imodels/img/rule_tree.jpg"> | <img src="https://csinva.io/imodels/img/algebraic_models.jpg"> |
-
-Different models and algorithms vary not only in their final form but also in different choices made during modeling, such as how they generate, select, and postprocess rules:
-
-|                  Rule candidate generation                   |                       Rule selection                       |                Rule postprocessing|
-| :----------------------------------------------------------: | :--------------------------------------------------------: | :-------------------------------------------------------: |
-| <img src="https://csinva.io/imodels/img/rule_candidates.jpg"> | <img src="https://csinva.io/imodels/img/rule_overfit.jpg"> | <img src="https://csinva.io/imodels/img/rule_pruned.jpg"> |
-
-<details>
-<summary>Ex. RuleFit vs. SkopeRules</summary>
-RuleFit and SkopeRules differ only in the way they prune rules: RuleFit uses a linear model whereas SkopeRules heuristically deduplicates rules sharing overlap.
-</details>
-
-<details>
-<summary>Ex. Bayesian rule lists vs. greedy rule lists</summary>
-Bayesian rule lists and greedy rule lists differ in how they select rules; bayesian rule lists perform a global optimization over possible rule lists while Greedy rule lists pick splits sequentially to maximize a given criterion.
-</details>
-
-<details>
-<summary>Ex. FPSkope vs. SkopeRules</summary>
-FPSkope and SkopeRules differ only in the way they generate candidate rules: FPSkope uses FPgrowth whereas SkopeRules extracts rules from decision trees.
-</details>
-
 ## Demo notebooks
 
 Demos are contained in the [notebooks](notebooks) folder.
@@ -132,6 +103,35 @@ Shows an example of using <code>imodels</code> for deriving a clinical decision 
 We also include some demos of posthoc analysis, which occurs after fitting models:
 <a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and 
 <a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
+</details>
+
+## What's the difference between the models?
+
+The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
+
+|                           Rule set                           |                        Rule list                        |                        Rule tree                        |                       Algebraic models                       |
+| :----------------------------------------------------------: | :-----------------------------------------------------: | :-----------------------------------------------------: | :----------------------------------------------------------: |
+| <img src="https://csinva.io/imodels/img/rule_set.jpg" width="100%"> | <img src="https://csinva.io/imodels/img/rule_list.jpg"> | <img src="https://csinva.io/imodels/img/rule_tree.jpg"> | <img src="https://csinva.io/imodels/img/algebraic_models.jpg"> |
+
+Different models and algorithms vary not only in their final form but also in different choices made during modeling, such as how they generate, select, and postprocess rules:
+
+|                  Rule candidate generation                   |                       Rule selection                       |                Rule postprocessing|
+| :----------------------------------------------------------: | :--------------------------------------------------------: | :-------------------------------------------------------: |
+| <img src="https://csinva.io/imodels/img/rule_candidates.jpg"> | <img src="https://csinva.io/imodels/img/rule_overfit.jpg"> | <img src="https://csinva.io/imodels/img/rule_pruned.jpg"> |
+
+<details>
+<summary>Ex. RuleFit vs. SkopeRules</summary>
+RuleFit and SkopeRules differ only in the way they prune rules: RuleFit uses a linear model whereas SkopeRules heuristically deduplicates rules sharing overlap.
+</details>
+
+<details>
+<summary>Ex. Bayesian rule lists vs. greedy rule lists</summary>
+Bayesian rule lists and greedy rule lists differ in how they select rules; bayesian rule lists perform a global optimization over possible rule lists while Greedy rule lists pick splits sequentially to maximize a given criterion.
+</details>
+
+<details>
+<summary>Ex. FPSkope vs. SkopeRules</summary>
+FPSkope and SkopeRules differ only in the way they generate candidate rules: FPSkope uses FPgrowth whereas SkopeRules extracts rules from decision trees.
 </details>
 
 ## Support for different tasks
