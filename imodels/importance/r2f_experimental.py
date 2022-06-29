@@ -643,7 +643,6 @@ class JointLogisticScorer(JointScorerBase, ABC):
 class JointLassoScorer(JointScorerBase,ABC):
     
     def __init__(self, metric=None):
-        self.penalty = penalty
         super().__init__(metric)
     
     def fit(self, X, y, start_indices, sample_weight):
