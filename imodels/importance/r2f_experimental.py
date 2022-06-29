@@ -642,19 +642,28 @@ class JointLogisticScorer(JointScorerBase, ABC):
 
 class JointLassoScorer(JointScorerBase,ABC):
     
-    def __init__(self, metric=None):
+    def __init__(self, metric=None,sample_split = False):
         super().__init__(metric)
+        self.sample_split = sample_split
     
     def fit(self, X, y, start_indices, sample_weight):
-        lasso_model = LassoCV(fit_intercept = True).fit(X,y,sample_weight)
+        if self.sample_split:
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+        else:
+            X_train = X
+            X_test = X
+            y_train = y
+            y_test = y
+            
+        lasso_model = LassoCV(fit_intercept = True).fit(X_train,y_train,sample_weight)
         for k in range (len(start_indices) - 1):
-            restricted_feats = X[:, start_indices[k]:start_indices[k + 1]]
+            restricted_feats = X_test[:, start_indices[k]:start_indices[k + 1]]
             restricted_coefs = lasso_model.coef_[start_indices[k]:start_indices[k + 1]]
             self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
             self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
             if len(restricted_coefs) > 0:
                 restricted_preds = restricted_feats @ restricted_coefs + lasso_model.intercept_
-                self.scores[k] = self.metric(y, restricted_preds, sample_weight=sample_weight)
+                self.scores[k] = self.metric(y_test, restricted_preds, sample_weight=sample_weight)
             else:
                 self.scores[k] = 0
 
