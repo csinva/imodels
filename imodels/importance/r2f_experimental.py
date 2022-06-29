@@ -640,6 +640,25 @@ class JointLogisticScorer(JointScorerBase, ABC):
             else:
                 self.scores[k] = 0
 
+class JointLassoScorer(JointScorerBase,ABC):
+    
+    def __init__(self, metric=None):
+        self.penalty = penalty
+        super().__init__(metric)
+    
+    def fit(self, X, y, start_indices, sample_weight):
+        lasso_model = LassoCV(fit_intercept = True).fit(X,y,sample_weight)
+        for k in range (len(start_indices) - 1):
+            restricted_feats = X[:, start_indices[k]:start_indices[k + 1]]
+            restricted_coefs = lasso_model.coef_[0,start_indices[k]:start_indices[k + 1]]
+            self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
+            self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
+            if len(restricted_coefs) > 0:
+                restricted_preds = restricted_feats @ restricted_coefs + lasso_model.intercept_
+                self.scores[k] = self.metric(y, restricted_preds, sample_weight=sample_weight)
+            else:
+                self.scores[k] = 0
+
 
 class JointRobustScorer(JointScorerBase, ABC):
 
