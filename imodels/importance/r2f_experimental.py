@@ -648,10 +648,10 @@ class JointRidgeScorer(JointScorerBase, ABC):
                 for k in range(len(start_indices) - 1):
                     R2 = 1 - np.sum(looe[:, k, :] ** 2, axis=0) / y_norm_sq
                     self.scores[k] = np.sum(R2 * (y_onehot == 1).mean(axis=0))
-                    self.class_scores[k] = R2
+                    self.class_scores[k] = dict(zip(self.classes, R2))
                 else:
                     self.scores[k] = 0
-                    self.class_scores[k] = np.zeros(len(self.classes))
+                    self.class_scores[k] = dict(zip(self.classes, np.zeros(len(self.classes))))
             else:
                 looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.coef_)
                 y_norm_sq = np.linalg.norm(y) ** 2
@@ -670,10 +670,10 @@ class JointRidgeScorer(JointScorerBase, ABC):
                         restricted_preds = restricted_feats @ np.transpose(restricted_coefs) + ridge_model.intercept_
                         metric_output = self.metric(y_test_onehot, restricted_preds)
                         self.scores[k] = np.sum(metric_output * (y_onehot == 1).mean(axis=0))
-                        self.class_scores[k] = metric_output
+                        self.class_scores[k] = dict(zip(self.classes, metric_output))
                     else:
                         self.scores[k] = 0
-                        self.class_scores[k] = np.zeros(len(self.classes))
+                        self.class_scores[k] = dict(zip(self.classes, np.zeros(len(self.classes))))
                 else:
                     restricted_feats = X_test[:, start_indices[k]:start_indices[k + 1]]
                     restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k + 1]]
@@ -710,7 +710,7 @@ class JointLogisticScorer(JointScorerBase, ABC):
                         y_onehot[y != class_label, class_idx] = -1
                     metric_output = self.metric(y_onehot, restricted_preds, sample_weight=sample_weight)
                     self.scores[k] = np.sum(metric_output * (y_onehot == 1).mean(axis=0))
-                    self.class_scores[k] = metric_output
+                    self.class_scores[k] = dict(zip(self.classes, metric_output))
                 else:
                     self.scores[k] = self.metric(y, restricted_preds, sample_weight=sample_weight)
             else:
@@ -799,14 +799,22 @@ class GeneralizedMDIJoint:
         scores = np.zeros((n_trees, n_features))
         n_stumps = np.zeros((n_trees, n_features))
         n_stumps_chosen = np.zeros((n_trees, n_features))
+        multi_class = isinstance(y[0], str)
         self.estimator.fit(X, y, sample_weight)
+
+        if multi_class:
+            class_scores_dict = defaultdict(lambda x: None)
+            for tree_id in range(n_trees):
+                class_scores_dict[tree_id] = defaultdict(lambda x: None)
+                for feat_id in range(n_features):
+                    class_scores_dict[tree_id][feat_id] = defaultdict(lambda x: None)
 
         for idx, estimator in enumerate(self.estimator.estimators_):
             tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw,
                                                normalize_raw=self.normalize_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
             X_oob = X[oob_indices, :]
-            y_oob = y[oob_indices] - np.mean(y[oob_indices])
+            y_oob = y[oob_indices] #- np.mean(y[oob_indices])
             if sample_weight is not None:
                 sample_weight_oob = sample_weight[oob_indices]
             else:
@@ -819,12 +827,25 @@ class GeneralizedMDIJoint:
                 n_stumps[idx, k] = self.scorer.get_n_stumps(k)
                 n_stumps_chosen[idx, k] = self.scorer.get_model_size(k)
                 scores[idx, k] = self.scorer.get_score(k)
+                if multi_class:
+                    class_scores_dict[idx][k] = self.scorer.class_scores[k]
         imp_values = scores.mean(axis=0)
 
-        if diagnostics:
-            return imp_values, scores, n_stumps, n_stumps_chosen
+        if multi_class:
+            if diagnostics:
+                class_scores = pd.DataFrame.from_dict({(i,j): class_scores_dict[i][j]
+                                                       for i in class_scores_dict.keys()
+                                                       for j in class_scores_dict[i].keys()},
+                                                      orient='index').reset_index().\
+                    rename(columns={"level_0": "tree", "level_1": "feature"})
+                return imp_values, scores, class_scores, n_stumps, n_stumps_chosen
+            else:
+                return imp_values
         else:
-            return imp_values
+            if diagnostics:
+                return imp_values, scores, n_stumps, n_stumps_chosen
+            else:
+                return imp_values
 
             # y_val_centered = y_val - np.mean(y_val)
             # if self.criterion == "cv":
