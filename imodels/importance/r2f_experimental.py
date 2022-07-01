@@ -8,7 +8,7 @@ import pandas as pd
 from scipy.special import expit
 from scipy.stats import rankdata, kendalltau
 from sklearn.linear_model import RidgeCV, LassoCV, ElasticNetCV, LinearRegression, LassoLarsIC, LogisticRegressionCV, \
-    TheilSenRegressor, QuantileRegressor, Lasso, Ridge,HuberRegressor
+    TheilSenRegressor, QuantileRegressor, Lasso, Ridge,HuberRegressor, RidgeClassifier, RidgeClassifierCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble._forest import _generate_unsampled_indices
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -554,22 +554,32 @@ class JointRidgeScorer(JointScorerBase, ABC):
         self.criterion = criterion
         self.alphas = alphas
         self.split_sample = split_sample
+        self.classes = None
+        self.class_scores = defaultdict(lambda x: None)
 
     def fit(self, X, y, start_indices, sample_weight):
+        if isinstance(y[0], str):
+            mod = RidgeClassifier
+            modCV = RidgeClassifierCV
+            multi_class = len(np.unique(y)) > 2
+        else:
+            mod = Ridge
+            modCV = RidgeCV
+            multi_class = False
 
         if self.criterion == "cv_1se":
-            ridge = Ridge(normalize=False, fit_intercept=True)
+            ridge = mod(normalize=False, fit_intercept=True)
             ridge_model = GridSearchCV(ridge, [{"alpha": self.alphas}], refit=cv_one_se_rule)
         elif self.criterion == "gcv_1se":
-            ridge_model = RidgeCV(alphas=self.alphas, normalize=False, fit_intercept=True, store_cv_values=True)
+            ridge_model = modCV(alphas=self.alphas, normalize=False, fit_intercept=True, store_cv_values=True)
             ridge_model.fit(X, y, sample_weight=sample_weight)
             cv_mean = np.mean(ridge_model.cv_values_, axis=0)
             cv_std = np.std(ridge_model.cv_values_, axis=0)
             best_alpha_index = one_se_rule(self.alphas, cv_mean, cv_std, X.shape[0], "min")
             best_alpha = self.alphas[best_alpha_index]
-            ridge_model = Ridge(alpha=best_alpha, fit_intercept=True)
+            ridge_model = mod(alpha=best_alpha, fit_intercept=True)
         elif self.criterion == "gcv":
-            ridge_model = RidgeCV(alphas=self.alphas, normalize=False, fit_intercept=True,store_cv_values = True)
+            ridge_model = modCV(alphas=self.alphas, normalize=False, fit_intercept=True,store_cv_values = True)
         else:
             raise ValueError("Invalid criterion type")
         if self.split_sample:
@@ -580,6 +590,14 @@ class JointRidgeScorer(JointScorerBase, ABC):
             y_train = y
             y_test = y
         ridge_model.fit(X_train, y_train, sample_weight=sample_weight)
+        if multi_class:
+            self.classes = ridge_model.classes_
+            y_test_onehot = np.ones((len(y_test), len(self.classes)))
+            y_onehot = np.ones((len(y), len(self.classes)))
+            for class_idx, class_label in enumerate(self.classes):
+                y_test_onehot[y_test != class_label, class_idx] = -1
+                y_onehot[y != class_label, class_idx] = -1
+
         if self.metric == "loocv":
 
             def _get_partial_model_looe(X, y, start_indices, alpha, beta):
@@ -602,43 +620,104 @@ class JointRidgeScorer(JointScorerBase, ABC):
                         looe_vals[:, k] = y
                 return looe_vals
 
-            looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.coef_)
-            y_norm_sq = np.linalg.norm(y) ** 2
-            for k in range(len(start_indices) - 1):
-                self.scores[k] = 1 - np.sum(looe[:, k] ** 2) / y_norm_sq
-            else:
-                self.scores[k] = 0
-        else:
-            for k in range(len(start_indices) - 1):
-                restricted_feats = X_test[:, start_indices[k]:start_indices[k + 1]]
-                restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k + 1]]
-                self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
-                self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
-                if len(restricted_coefs) > 0:
-                    restricted_preds = restricted_feats @ restricted_coefs + ridge_model.intercept_
-                    self.scores[k] = self.metric(y_test, restricted_preds)
+            def _get_partial_model_looe_multiclass(X, y_onehot, start_indices, alpha, beta):
+                B = np.linalg.inv(X.T @ X + alpha * np.eye(X.shape[1])) @ X.T
+                h_vals = np.diag(X @ B)
+                y_preds = X @ np.transpose(beta)
+                n_feats = len(start_indices) - 1
+                n_samples = X.shape[0]
+                looe_vals = np.zeros((n_samples, n_feats, y_onehot.shape[1]))
+                for k in range(len(start_indices) - 1):
+                    X_partial = X[:, start_indices[k]:start_indices[k + 1]]
+                    beta_partial = beta[:, start_indices[k]:start_indices[k + 1]]
+                    B_partial = B[start_indices[k]:start_indices[k + 1], :]
+                    if X_partial.shape[1] > 0:
+                        y_preds_partial = X_partial @ np.transpose(beta_partial)
+                        h_vals_partial = np.diag(X_partial @ B_partial)
+                        for class_idx in range(y_onehot.shape[1]):
+                            looe_vals[:, k, class_idx] = ((1 - h_vals + h_vals_partial) * (y_preds_partial[:, class_idx] - y_onehot[:, class_idx]) + h_vals_partial *
+                                                          (y_preds[:, class_idx] - y_preds_partial[:, class_idx])) / (1 - h_vals)
+                    else:
+                        looe_vals[:, k, :] = y_onehot
+                return looe_vals
+
+            if multi_class:
+                looe = _get_partial_model_looe_multiclass(X_test, y_test_onehot, start_indices, ridge_model.alpha_, ridge_model.coef_)
+                y_norm_sq = X.shape[0]  # i think this is where y-mean comes in. should be variance
+                # y_norm_sq = np.linalg.norm(y_onehot, axis=0)**2
+                for k in range(len(start_indices) - 1):
+                    R2 = 1 - np.sum(looe[:, k, :] ** 2, axis=0) / y_norm_sq
+                    self.scores[k] = np.sum(R2 * (y_onehot == 1).mean(axis=0))
+                    self.class_scores[k] = R2
                 else:
                     self.scores[k] = 0
+                    self.class_scores[k] = np.zeros(len(self.classes))
+            else:
+                looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.coef_)
+                y_norm_sq = np.linalg.norm(y) ** 2
+                for k in range(len(start_indices) - 1):
+                    self.scores[k] = 1 - np.sum(looe[:, k] ** 2) / y_norm_sq
+                else:
+                    self.scores[k] = 0
+        else:
+            for k in range(len(start_indices) - 1):
+                if multi_class:
+                    restricted_feats = X_test[:, start_indices[k]:start_indices[k + 1]]
+                    restricted_coefs = ridge_model.coef_[:, start_indices[k]:start_indices[k + 1]]
+                    self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
+                    self.model_sizes[k] = int(np.sum(np.sum(restricted_coefs != 0, axis=0) > 0))
+                    if restricted_coefs.shape[1] > 0:
+                        restricted_preds = restricted_feats @ np.transpose(restricted_coefs) + ridge_model.intercept_
+                        metric_output = self.metric(y_test_onehot, restricted_preds)
+                        self.scores[k] = np.sum(metric_output * (y_onehot == 1).mean(axis=0))
+                        self.class_scores[k] = metric_output
+                    else:
+                        self.scores[k] = 0
+                        self.class_scores[k] = np.zeros(len(self.classes))
+                else:
+                    restricted_feats = X_test[:, start_indices[k]:start_indices[k + 1]]
+                    restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k + 1]]
+                    self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
+                    self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
+                    if len(restricted_coefs) > 0:
+                        restricted_preds = restricted_feats @ restricted_coefs + ridge_model.intercept_
+                        self.scores[k] = self.metric(y_test, restricted_preds)
+                    else:
+                        self.scores[k] = 0
 
 
 class JointLogisticScorer(JointScorerBase, ABC):
 
     def __init__(self, metric=None, penalty="l2"):
         self.penalty = penalty
+        self.classes = None
+        self.class_scores = defaultdict(lambda x: None)
         super().__init__(metric)
 
     def fit(self, X, y, start_indices, sample_weight=None):
         clf = LogisticRegressionCV(fit_intercept=True).fit(X, y, sample_weight)
+        self.classes = clf.classes_
         for k in range(len(start_indices) - 1):
             restricted_feats = X[:, start_indices[k]:start_indices[k + 1]]
-            restricted_coefs = clf.coef_[0,start_indices[k]:start_indices[k + 1]]
+            restricted_coefs = clf.coef_[:, start_indices[k]:start_indices[k + 1]]
             self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
-            self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
-            if len(restricted_coefs) > 0:
-                restricted_preds = expit(restricted_feats @ restricted_coefs + clf.intercept_)
-                self.scores[k] = self.metric(y, restricted_preds, sample_weight=sample_weight)
+            self.model_sizes[k] = int(np.sum(np.sum(restricted_coefs != 0, axis=0) > 0))
+            if restricted_coefs.shape[1] > 0:
+                restricted_preds = expit(restricted_feats @ np.transpose(restricted_coefs) + clf.intercept_)
+                if isinstance(y[0], str):
+                    y_onehot = np.ones((len(y), len(self.classes)))
+                    for class_idx, class_label in enumerate(self.classes):
+                        y_onehot[y != class_label, class_idx] = -1
+                    metric_output = self.metric(y_onehot, restricted_preds, sample_weight=sample_weight)
+                    self.scores[k] = np.sum(metric_output * (y_onehot == 1).mean(axis=0))
+                    self.class_scores[k] = metric_output
+                else:
+                    self.scores[k] = self.metric(y, restricted_preds, sample_weight=sample_weight)
             else:
                 self.scores[k] = 0
+                if isinstance(y[0], str):
+                    self.class_scores[k] = np.zeros(len(self.classes))
+
 
 class JointLassoScorer(JointScorerBase,ABC):
     
