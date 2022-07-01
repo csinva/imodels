@@ -522,9 +522,9 @@ class LogisticScorer(ScorerBase, ABC):
 class JointScorerBase(ABC):
 
     def __init__(self, metric):
-        self.scores = defaultdict(lambda x: None)
-        self.n_stumps = defaultdict(lambda x: None)
-        self.model_sizes = defaultdict(lambda x: None)
+        self.scores = defaultdict(lambda: None)
+        self.n_stumps = defaultdict(lambda: None)
+        self.model_sizes = defaultdict(lambda: None)
         if metric is None:
             self.metric = metrics.r2_score
         else:
@@ -590,53 +590,34 @@ class JointRidgeScorer(JointScorerBase, ABC):
             y_train = y
             y_test = y
         ridge_model.fit(X_train, y_train, sample_weight=sample_weight)
-        if multi_class:
-            self.classes = ridge_model.classes_
+        if self.metric == "loocv":
 
-        for k in range(len(start_indices) - 1):
-            restricted_feats = X_test[:, start_indices[k]:start_indices[k + 1]]
-            if multi_class:
-                restricted_coefs = ridge_model.coef_[:, start_indices[k]:start_indices[k + 1]]
-                self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
-                self.model_sizes[k] = int(np.sum(np.sum(restricted_coefs != 0, axis=0) > 0))
-                if restricted_coefs.shape[1] > 0:
-                    if self.metric == "gcv":
-                        best_alpha_index = np.where(ridge_model.alphas == ridge_model.alpha_)[0][0]
-                        LOO_error = np.sum(ridge_model.cv_values_[:, :, best_alpha_index], axis=0)/len(y)
-                        y_onehot = np.ones((len(y), len(self.classes)))
-                        for class_idx, class_label in enumerate(self.classes):
-                            y_onehot[y != class_label, class_idx] = -1
-                        R2 = 1.0 - (LOO_error/np.var(y_onehot, axis=0))
-                        self.scores[k] = np.sum(R2 * (y_onehot == 1).mean(axis=0))
-                        self.class_scores[k] = R2
+            def _get_partial_model_looe(X, y, start_indices, alpha, beta):
+                B = np.linalg.inv(X.T @ X + alpha * np.eye(X.shape[1])) @ X.T
+                h_vals = np.diag(X @ B)
+                y_preds = X @ beta
+                n_feats = len(start_indices) - 1
+                n_samples = X.shape[0]
+                looe_vals = np.zeros((n_samples, n_feats))
+                for k in range(len(start_indices) - 1):
+                    X_partial = X[:, start_indices[k]:start_indices[k + 1]]
+                    beta_partial = beta[start_indices[k]:start_indices[k + 1]]
+                    B_partial = B[start_indices[k]:start_indices[k + 1], :]
+                    if X_partial.shape[1] > 0:
+                        y_preds_partial = X_partial @ beta_partial
+                        h_vals_partial = np.diag(X_partial @ B_partial)
+                        looe_vals[:, k] = ((1 - h_vals + h_vals_partial) * (y_preds_partial - y) + h_vals_partial *
+                                           (y_preds - y_preds_partial)) / (1 - h_vals)
                     else:
-                        restricted_preds = restricted_feats @ np.transpose(restricted_coefs) + ridge_model.intercept_
-                        y_test_onehot = np.ones((len(y_test), len(self.classes)))
-                        for class_idx, class_label in enumerate(self.classes):
-                            y_test_onehot[y_test != class_label, class_idx] = -1
-                        fi_scores = np.zeros(len(self.classes))
-                        for class_idx in range(len(self.classes)):
-                            fi_scores[class_idx] = self.metric(y_test_onehot[:, class_idx], restricted_preds[:, class_idx])
-                        self.scores[k] = np.sum(fi_scores * (y_test_onehot == 1).mean(axis=0))
-                        self.class_scores[k] = fi_scores
-                else:
-                    self.scores[k] = 0
-                    self.class_scores[k] = np.zeros(len(self.classes))
+                        looe_vals[:, k] = y
+                return looe_vals
+
+            looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.coef_)
+            y_norm_sq = np.linalg.norm(y) ** 2
+            for k in range(len(start_indices) - 1):
+                self.scores[k] = 1 - np.sum(looe[:, k] ** 2) / y_norm_sq
             else:
-                restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k + 1]]
-                self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
-                self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
-                if len(restricted_coefs) > 0:
-                    restricted_preds = restricted_feats @ restricted_coefs + ridge_model.intercept_
-                    if self.metric == "gcv":
-                        best_alpha_index = np.where(ridge_model.alphas == ridge_model.alpha_)[0][0]
-                        LOO_error = np.sum(ridge_model.cv_values_[:,best_alpha_index])/len(y)
-                        R2 = 1.0 - (LOO_error/np.var(y))
-                        self.scores[k] = R2
-                    else:
-                        self.scores[k] = self.metric(y_test, restricted_preds)
-                else:
-                    self.scores[k] = 0
+                self.scores[k] = 0
 
 
 class JointLogisticScorer(JointScorerBase, ABC):
@@ -671,6 +652,33 @@ class JointLogisticScorer(JointScorerBase, ABC):
             else:
                 self.scores[k] = 0
                 self.class_scores[k] = np.zeros(len(self.classes))
+
+class JointLassoScorer(JointScorerBase,ABC):
+    
+    def __init__(self, metric=None,sample_split = False):
+        super().__init__(metric)
+        self.sample_split = sample_split
+    
+    def fit(self, X, y, start_indices, sample_weight):
+        if self.sample_split:
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+        else:
+            X_train = X
+            X_test = X
+            y_train = y
+            y_test = y
+            
+        lasso_model = LassoCV(fit_intercept = True).fit(X_train,y_train,sample_weight)
+        for k in range (len(start_indices) - 1):
+            restricted_feats = X_test[:, start_indices[k]:start_indices[k + 1]]
+            restricted_coefs = lasso_model.coef_[start_indices[k]:start_indices[k + 1]]
+            self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
+            self.model_sizes[k] = int(np.sum(restricted_coefs != 0))
+            if len(restricted_coefs) > 0:
+                restricted_preds = restricted_feats @ restricted_coefs + lasso_model.intercept_
+                self.scores[k] = self.metric(y_test, restricted_preds, sample_weight=sample_weight)
+            else:
+                self.scores[k] = 0
 
 
 class JointRobustScorer(JointScorerBase, ABC):
@@ -732,7 +740,7 @@ class GeneralizedMDIJoint:
                                                normalize_raw=self.normalize_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
             X_oob = X[oob_indices, :]
-            y_oob = y[oob_indices]
+            y_oob = y[oob_indices] - np.mean(y[oob_indices])
             if sample_weight is not None:
                 sample_weight_oob = sample_weight[oob_indices]
             else:
@@ -838,3 +846,5 @@ def kendall_tau_metric(y_true, y_pred):
         return 0
     else:
         return kendall_tau_corr
+
+
