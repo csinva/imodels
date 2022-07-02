@@ -364,7 +364,10 @@ class TreeTransformer(TransformerMixin, BaseEstimator):
                 X_transformed.append(X_transformed_k)
                 counter += X_transformed_k.shape[1]
             start_indices.append(counter)
-        X_transformed = np.hstack(X_transformed)
+        if len(X_transformed) == 0:
+            X_transformed = []
+        else:
+            X_transformed = np.hstack(X_transformed)
         if return_indices:
             return X_transformed, start_indices
         else:
