@@ -38,9 +38,7 @@ Python package for concise, transparent, and accurate predictive modeling. All s
 <p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
 <p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
 <pre><code class="language-python">from sklearn.model_selection import train_test_split
-from imodels import get_clean_dataset,
-    BoostedRulesClassifier, FIGSClassifier, SkopeRulesClassifier,
-    RuleFitRegressor, HSTreeRegressorCV, SLIMRegressor
+from imodels import get_clean_dataset, HSTreeClassifierCV # import any model here
 
 # prepare data (a sample clinical dataset)
 X, y, feature_names = get_clean_dataset('csi_pecarn_pred')
@@ -53,11 +51,11 @@ model.fit(X_train, y_train, feature_names=feature_names)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 print(model) # print the model
-
-&gt; ------------------------------
-&gt; Decision Tree with Hierarchical Shrinkage
-&gt; Prediction is made by looking at the value in the appropriate leaf of the tree
-&gt; ------------------------------
+</code></pre>
+<pre><code>------------------------------
+Decision Tree with Hierarchical Shrinkage
+Prediction is made by looking at the value in the appropriate leaf of the tree
+------------------------------
 |--- FocalNeuroFindings2 &lt;= 0.50
 |   |--- HighriskDiving &lt;= 0.50
 |   |   |--- Torticollis2 &lt;= 0.50
@@ -70,7 +68,7 @@ print(model) # print the model
 |   |--- value: [0.42]
 </code></pre>
 <h3 id="installation">Installation</h3>
-<p>Install with <code>pip install <a title="imodels" href="#imodels">imodels</a></code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help). </p>
+<p>Install with <code>pip install <a title="imodels" href="#imodels">imodels</a></code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help).</p>
 <h3 id="supported-models">Supported models</h3>
 <table>
 <thead>
@@ -428,7 +426,7 @@ The code here contains many useful and customizable functions for rule-based lea
 <img src="https://demos.csinva.io/figs/diabetes_figs.svg?sanitize=True" width="50%">
 </p>
 <p align="center">
-<i>Example FIGS model. FIGS learns a sum of trees with a flexible number of trees; to make its prediction, it sums the result from each tree.</i>
+<i><b>Example FIGS model.</b> FIGS learns a sum of trees with a flexible number of trees; to make its prediction, it sums the result from each tree.</i>
 </p>
 <h3 id="hierarchical-shrinkage-post-hoc-regularization-for-tree-based-methods">Hierarchical shrinkage: post-hoc regularization for tree-based methods</h3>
 <p><a href="https://arxiv.org/abs/2202.00858">📄 Paper</a> (ICML 2022), <a href="https://csinva.io/imodels/shrinkage.html">🔗 Post</a>, <a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C5&amp;q=hierarchical+shrinkage+singh&amp;btnG=&amp;oq=hierar#d=gs_cit&amp;u=%2Fscholar%3Fq%3Dinfo%3Azc6gtLx-aL4J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌 Citation</a></p>
@@ -437,7 +435,7 @@ The code here contains many useful and customizable functions for rule-based lea
 <img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" width="75%">
 </p>
 <p align="center">
-<i>HS Example. HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent.</i>
+<i><b>HS Example.</b> HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent.</i>
 </p>
 <h2 id="references">References</h2>
 <details>
@@ -481,17 +479,17 @@ The code here heavily derives from the wonderful work of previous projects. We s
 </details>
 <p>If it's useful for you, please star/cite the package, and make sure to give authors of original methods / base implementations credit:</p>
 <pre><code class="language-r">@software{
-    imodels2021,
-    title        = {imodels: a python package for fitting interpretable models},
-    journal      = {Journal of Open Source Software},
-    publisher    = {The Open Journal},
-    year         = {2021},
-    author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
-    volume       = {6},
-    number       = {61},
-    pages        = {3192},
-    doi          = {10.21105/joss.03192},
-    url          = {https://doi.org/10.21105/joss.03192},
+imodels2021,
+title        = {imodels: a python package for fitting interpretable models},
+journal      = {Journal of Open Source Software},
+publisher    = {The Open Journal},
+year         = {2021},
+author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
+volume       = {6},
+number       = {61},
+pages        = {3192},
+doi          = {10.21105/joss.03192},
+url          = {https://doi.org/10.21105/joss.03192},
 }
 
 </code></pre>
@@ -545,6 +543,7 @@ CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesC
                FIGSClassifier, HSTreeClassifier, HSTreeClassifierCV]  # , IRFClassifier
 REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, FIGSRegressor,
               TaoTreeRegressor, HSTreeRegressor, HSTreeRegressorCV, BART]
+ESTIMATORS = CLASSIFIERS + REGRESSORS
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]</code></pre>
 </details>
 </section>

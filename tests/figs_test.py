@@ -1,12 +1,14 @@
 import os
 import random
+from functools import partial
 
 import numpy as np
 from sklearn.tree import DecisionTreeRegressor
 
 from imodels import FIGSClassifier, FIGSRegressor, FIGSClassifierCV, FIGSRegressorCV
 from imodels.experimental.figs_ensembles import FIGSExtRegressor, FIGSExtClassifier
-from sklearn.ensemble import StackingRegressor,VotingRegressor
+from sklearn.ensemble import StackingRegressor, VotingRegressor, BaggingClassifier
+
 path_to_tests = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -41,6 +43,10 @@ class TestFIGS:
             FIGSClassifier, FIGSRegressor,
             FIGSExtClassifier, FIGSExtRegressor,
             FIGSClassifierCV, FIGSRegressorCV,
+            partial(BaggingClassifier,
+                    base_estimator=FIGSExtClassifier(max_features='auto',
+                                                     max_rules=3),
+                    n_estimators=2),
         ]:
 
             init_kwargs = {}
@@ -54,7 +60,7 @@ class TestFIGS:
             assert preds.size == self.n, 'predict() yields right size'
 
             # test preds_proba()
-            if model_type in [FIGSClassifier]:
+            if model_type in [FIGSClassifier, FIGSClassifierCV, BaggingClassifier]:
                 preds_proba = m.predict_proba(X)
                 assert len(preds_proba.shape) == 2, 'preds_proba has 2 columns'
                 assert preds_proba.shape[1] == 2, 'preds_proba has 2 columns'
@@ -67,7 +73,7 @@ class TestFIGS:
             assert acc_train > 0.8, 'acc greater than 0.9'
             # print(m)
 
-            if not type(m) in [FIGSClassifierCV, FIGSRegressorCV]:
+            if not type(m) in [FIGSClassifierCV, FIGSRegressorCV, BaggingClassifier]:
                 trees = m.trees_
                 assert len(trees) == 1, 'only one tree'
                 assert trees[0].feature == 1, 'split on feat 1'

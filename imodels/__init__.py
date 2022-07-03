@@ -44,4 +44,5 @@ CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesC
                FIGSClassifier, HSTreeClassifier, HSTreeClassifierCV]  # , IRFClassifier
 REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, FIGSRegressor,
               TaoTreeRegressor, HSTreeRegressor, HSTreeRegressorCV, BART]
+ESTIMATORS = CLASSIFIERS + REGRESSORS
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]

@@ -34,11 +34,11 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         self.depth = 0  # tracks the fitted depth
         self._estimator_type = 'classifier'
 
-    def fit(self, x, y, depth: int = 0, feature_names=None, verbose=False):
+    def fit(self, X, y, depth: int = 0, feature_names=None, verbose=False):
         """
         Params
         ------
-        x: array_like
+        X: array_like
             Feature set
         y: array_like
             target variable
@@ -46,12 +46,12 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             the depth of the current layer (used to recurse)
         """
 
-        # set self.feature_names and make sure x, y are not pandas type
-        if 'pandas' in str(type(x)):
-            x = x.values
+        # set self.feature_names and make sure X, y are not pandas type
+        if 'pandas' in str(type(X)):
+            X = X.values
         else:
             if feature_names is None:
-                self.feature_names_ = ['feat ' + str(i) for i in range(x.shape[1])]
+                self.feature_names_ = ['feat ' + str(i) for i in range(X.shape[1])]
         if feature_names is not None:
             self.feature_names_ = feature_names
 
@@ -71,21 +71,21 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         else:
 
             # find a split with the best value for the criterion
-            col, cutoff, criterion_val = self._find_best_split(x, y)
+            col, cutoff, criterion_val = self._find_best_split(X, y)
 
             # put higher probability of class 1 on the right-hand side
             if self.strategy == 'max':
-                y_left = y[x[:, col] < cutoff]  # left-hand side data
-                y_right = y[x[:, col] >= cutoff]  # right-hand side data
+                y_left = y[X[:, col] < cutoff]  # left-hand side data
+                y_right = y[X[:, col] >= cutoff]  # right-hand side data
                 if len(y_left) > 0 and np.mean(y_left) > np.mean(y_right):
                     flip = True
                     tmp = deepcopy(y_left)
                     y_left = deepcopy(y_right)
                     y_right = tmp
-                    x_left = x[x[:, col] >= cutoff]
+                    x_left = X[X[:, col] >= cutoff]
                 else:
                     flip = False
-                    x_left = x[x[:, col] < cutoff]
+                    x_left = X[X[:, col] < cutoff]
             else:
                 print('strategy must be max!')
 

@@ -26,9 +26,7 @@ Modern machine-learning models are increasingly complex, often making them diffi
 
 ```python
 from sklearn.model_selection import train_test_split
-from imodels import get_clean_dataset,
-    BoostedRulesClassifier, FIGSClassifier, SkopeRulesClassifier,
-    RuleFitRegressor, HSTreeRegressorCV, SLIMRegressor
+from imodels import get_clean_dataset, HSTreeClassifierCV # import any model here
 
 # prepare data (a sample clinical dataset)
 X, y, feature_names = get_clean_dataset('csi_pecarn_pred')
@@ -41,11 +39,13 @@ model.fit(X_train, y_train, feature_names=feature_names)   # fit model
 preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
 print(model) # print the model
+```
 
-> ------------------------------
-> Decision Tree with Hierarchical Shrinkage
-> Prediction is made by looking at the value in the appropriate leaf of the tree
-> ------------------------------
+```
+------------------------------
+Decision Tree with Hierarchical Shrinkage
+Prediction is made by looking at the value in the appropriate leaf of the tree
+------------------------------
 |--- FocalNeuroFindings2 <= 0.50
 |   |--- HighriskDiving <= 0.50
 |   |   |--- Torticollis2 <= 0.50
@@ -303,17 +303,17 @@ If it's useful for you, please star/cite the package, and make sure to give auth
 
 ```r
 @software{
-    imodels2021,
-    title        = {imodels: a python package for fitting interpretable models},
-    journal      = {Journal of Open Source Software},
-    publisher    = {The Open Journal},
-    year         = {2021},
-    author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
-    volume       = {6},
-    number       = {61},
-    pages        = {3192},
-    doi          = {10.21105/joss.03192},
-    url          = {https://doi.org/10.21105/joss.03192},
+imodels2021,
+title        = {imodels: a python package for fitting interpretable models},
+journal      = {Journal of Open Source Software},
+publisher    = {The Open Journal},
+year         = {2021},
+author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
+volume       = {6},
+number       = {61},
+pages        = {3192},
+doi          = {10.21105/joss.03192},
+url          = {https://doi.org/10.21105/joss.03192},
 }
 
 ```

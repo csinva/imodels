@@ -87,24 +87,15 @@ class FIGS(BaseEstimator):
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
         self.random_state = random_state
-        self._init_estimator_type()  # decides between regressor and classifier
         self._init_decision_function()
-
-    def _init_estimator_type(self):
-        """
-        FIGSRegressor and FIGSClassifier override this method
-        to alter the prediction task. When using this class directly,
-        it is equivalent to FIGSRegressor
-        """
-        self._estimator_type = 'regressor'
 
     def _init_decision_function(self):
         """Sets decision function based on _estimator_type
         """
-        # used by sklearn GrriidSearchCV, BaggingClassifier
-        if self._estimator_type == 'classifier':
+        # used by sklearn GridSearchCV, BaggingClassifier
+        if isinstance(self, ClassifierMixin):
             decision_function = lambda x: self.predict_proba(x)[:, 1]
-        elif self._estimator_type == 'regressor':
+        elif isinstance(self, RegressorMixin):
             decision_function = self.predict
 
     def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None,
@@ -341,14 +332,14 @@ class FIGS(BaseEstimator):
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
             preds += self._predict_tree(tree, X)
-        if self._estimator_type == 'regressor':
+        if isinstance(self, RegressorMixin):
             return preds
-        elif self._estimator_type == 'classifier':
+        elif isinstance(self, ClassifierMixin):
             return (preds > 0.5).astype(int)
 
     def predict_proba(self, X):
         X = check_array(X)
-        if self._estimator_type == 'regressor':
+        if isinstance(self, RegressorMixin):
             return NotImplemented
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
@@ -395,8 +386,8 @@ class FIGS(BaseEstimator):
 
         n_plots = int(len(self.trees_)) if tree_number is None else 1
         fig, axs = plt.subplots(n_plots, dpi=dpi)
-        criterion = "squared_error" if self._estimator_type == "regressor" else "gini"
-        n_classes = 1 if self._estimator_type == 'regressor' else 2
+        criterion = "squared_error" if isinstance(self, RegressorMixin) else "gini"
+        n_classes = 1 if isinstance(self, RegressorMixin) else 2
         ax_size = int(len(self.trees_))  # n_cols * n_rows
         for i in range(n_plots):
             r = i // n_cols
@@ -423,13 +414,11 @@ class FIGS(BaseEstimator):
 
 
 class FIGSRegressor(FIGS, RegressorMixin):
-    def _init_estimator_type(self):
-        self._estimator_type = 'regressor'
+    ...
 
 
 class FIGSClassifier(FIGS, ClassifierMixin):
-    def _init_estimator_type(self):
-        self._estimator_type = 'classifier'
+    ...
 
 
 class FIGSCV:

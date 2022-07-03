@@ -14,7 +14,8 @@ from imodels.util.tree import compute_tree_complexity
 
 
 class HSTree:
-    def __init__(self, estimator_: BaseEstimator, reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
+    def __init__(self, estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+                 reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
         """HSTree (Tree with hierarchical shrinkage applied).
         Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
         It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
@@ -24,6 +25,7 @@ class HSTree:
         Params
         ------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
+            Defaults to CART Classification Tree with 20 max leaf ndoes
 
         reg_param: float
             Higher is more regularization (can be arbitrarily large, should not be < 0)
@@ -36,32 +38,25 @@ class HSTree:
         """
         super().__init__()
         self.reg_param = reg_param
-        # print('est', estimator_)
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
-        self._init_prediction_task()
-
         if checks.check_is_fitted(self.estimator_):
             self._shrink()
-
-    def __init__prediction_task(self):
-        self.prediction_task = 'regression'
 
     def get_params(self, deep=True):
         if deep:
             return deepcopy({'reg_param': self.reg_param, 'estimator_': self.estimator_,
-                             # 'prediction_task': self.prediction_task,
                              'shrinkage_scheme_': self.shrinkage_scheme_})
         return {'reg_param': self.reg_param, 'estimator_': self.estimator_,
-                # 'prediction_task': self.prediction_task,
                 'shrinkage_scheme_': self.shrinkage_scheme_}
 
-    def fit(self, *args, **kwargs):
+    def fit(self, X, y, *args, **kwargs):
         # remove feature_names if it exists (note: only works as keyword-arg)
         self.feature_names = kwargs.pop('feature_names', None)  # None returned if not passed
-        self.estimator_.fit(*args, **kwargs)
+        self.estimator_ = self.estimator_.fit(X, y, *args, **kwargs)
         self._shrink()
         self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
+        return self
 
     def _shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         """Shrink the tree
@@ -72,7 +67,7 @@ class HSTree:
         right = tree.children_right[i]
         is_leaf = left == right
         n_samples = tree.n_node_samples[i]
-        if self.prediction_task == 'regression':
+        if isinstance(self, RegressorMixin):
             val = tree.value[i][0, 0]
         else:
             if len(tree.value[i][0]) == 1:
@@ -98,7 +93,7 @@ class HSTree:
                 val_new = val
             cum_sum += val_new
             if is_leaf:
-                if self.prediction_task == 'regression':
+                if isinstance(self, RegressorMixin):
                     if self.shrinkage_scheme_ == 'node_based' or self.shrinkage_scheme_ == 'constant':
                         tree.value[i, 0, 0] = cum_sum
                     else:
@@ -122,7 +117,7 @@ class HSTree:
                                     1 + reg_param / n_samples)
                             tree.value[i, 0, 0] = 1.0 - tree.value[i, 0, 1]
             else:
-                if self.prediction_task == 'regression':
+                if isinstance(self, RegressorMixin):
                     tree.value[i][0, 0] = parent_val + val_new
                 else:
                     if len(tree.value[i][0]) == 1:
@@ -152,18 +147,18 @@ class HSTree:
                     t = t[0]
                 self._shrink_tree(t.tree_, self.reg_param)
 
-    def predict(self, *args, **kwargs):
-        return self.estimator_.predict(*args, **kwargs)
+    def predict(self, X, *args, **kwargs):
+        return self.estimator_.predict(X, *args, **kwargs)
 
-    def predict_proba(self, *args, **kwargs):
+    def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, 'predict_proba'):
-            return self.estimator_.predict_proba(*args, **kwargs)
+            return self.estimator_.predict_proba(X, *args, **kwargs)
         else:
             return NotImplemented
 
-    def score(self, *args, **kwargs):
+    def score(self, X, y, *args, **kwargs):
         if hasattr(self.estimator_, 'score'):
-            return self.estimator_.score(*args, **kwargs)
+            return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented
 
@@ -179,13 +174,11 @@ class HSTree:
 
 
 class HSTreeRegressor(HSTree, RegressorMixin):
-    def _init_prediction_task(self):
-        self.prediction_task = 'regression'
+    ...
 
 
 class HSTreeClassifier(HSTree, ClassifierMixin):
-    def _init_prediction_task(self):
-        self.prediction_task = 'classification'
+    ...
 
 
 class HSTreeClassifierCV(HSTreeClassifier):
