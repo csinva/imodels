@@ -220,7 +220,7 @@ Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise r
 	<img src="https://demos.csinva.io/figs/diabetes_figs.svg?sanitize=True" width="50%">
 </p>  
 <p align="center">	
-	<i>Example FIGS model. FIGS learns a sum of trees with a flexible number of trees; to make its prediction, it sums the result from each tree.</i>
+	<i><b>Example FIGS model.</b> FIGS learns a sum of trees with a flexible number of trees; to make its prediction, it sums the result from each tree.</i>
 </p>
 
 ### Hierarchical shrinkage: post-hoc regularization for tree-based methods
@@ -233,7 +233,7 @@ Hierarchical shrinkage is an extremely fast post-hoc regularization method which
 	<img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" width="75%">
 </p>  
 <p align="center">	
-	<i>HS Example. HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent.</i>
+	<i><b>HS Example.</b> HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent.</i>
 </p>
 
 ## References
