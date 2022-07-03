@@ -389,6 +389,10 @@ class FIGS(BaseEstimator):
         #     fig, ax = plt.subplots(1)
         # else:
         #     fig, axs = plt.subplots(n_rows, n_cols)
+        if feature_names is None:
+            if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
+                feature_names = self.feature_names_
+
         n_plots = int(len(self.trees_)) if tree_number is None else 1
         fig, axs = plt.subplots(n_plots, dpi=dpi)
         criterion = "squared_error" if self._estimator_type == "regressor" else "gini"
