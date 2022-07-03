@@ -80,6 +80,8 @@ class HSTree:
                 &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
 
     def fit(self, *args, **kwargs):
+        # remove feature_names if it exists (note: only works as keyword-arg)
+        self.feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
         self.estimator_.fit(*args, **kwargs)
         self._shrink()
         self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
@@ -249,7 +251,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        super().fit(X=X, y=y, *args, **kwargs)
 
 
 class HSTreeRegressorCV(HSTreeRegressor):
@@ -285,14 +287,14 @@ class HSTreeRegressorCV(HSTreeRegressor):
         #     raise Warning(&#39;Passed an already fitted estimator,&#39;
         #                   &#39;but shrinking not applied until fit method is called.&#39;)
 
-    def fit(self, X, y):
+    def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
             est = HSTreeRegressor(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        super().fit(X=X, y=y, *args, **kwargs)
 
 
 if __name__ == &#39;__main__&#39;:
@@ -412,6 +414,8 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
                 &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
 
     def fit(self, *args, **kwargs):
+        # remove feature_names if it exists (note: only works as keyword-arg)
+        self.feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
         self.estimator_.fit(*args, **kwargs)
         self._shrink()
         self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
@@ -547,6 +551,8 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fit(self, *args, **kwargs):
+    # remove feature_names if it exists (note: only works as keyword-arg)
+    self.feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
     self.estimator_.fit(*args, **kwargs)
     self._shrink()
     self.complexity_ = compute_tree_complexity(self.estimator_.tree_)</code></pre>
@@ -716,7 +722,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)</code></pre>
+        super().fit(X=X, y=y, *args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -742,7 +748,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
     self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-    super().fit(X=X, y=y)</code></pre>
+    super().fit(X=X, y=y, *args, **kwargs)</code></pre>
 </details>
 </dd>
 </dl>
@@ -838,14 +844,14 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         #     raise Warning(&#39;Passed an already fitted estimator,&#39;
         #                   &#39;but shrinking not applied until fit method is called.&#39;)
 
-    def fit(self, X, y):
+    def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
             est = HSTreeRegressor(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)</code></pre>
+        super().fit(X=X, y=y, *args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -856,7 +862,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -864,14 +870,14 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y):
+<pre><code class="python">def fit(self, X, y, *args, **kwargs):
     self.scores_ = []
     for reg_param in self.reg_param_list:
         est = HSTreeRegressor(deepcopy(self.estimator_), reg_param)
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
     self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-    super().fit(X=X, y=y)</code></pre>
+    super().fit(X=X, y=y, *args, **kwargs)</code></pre>
 </details>
 </dd>
 </dl>

@@ -25,25 +25,42 @@
 Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the `fit` and `predict` methods, same as standard scikit-learn models.
 
 ```python
-from imodels import BoostedRulesClassifier, FIGSClassifier, SkopeRulesClassifier
-from imodels import RuleFitRegressor, HSTreeRegressorCV, SLIMRegressor
+from sklearn.model_selection import train_test_split
+from imodels import get_clean_dataset,
+    BoostedRulesClassifier, FIGSClassifier, SkopeRulesClassifier,
+    RuleFitRegressor, HSTreeRegressorCV, SLIMRegressor
 
-model = BoostedRulesClassifier()  # initialize a model
-model.fit(X_train, y_train)   # fit model
-preds = model.predict(X_test) # predictions: shape is (n_test, 1)
+# prepare data (a sample clinical dataset)
+X, y, feature_names = get_clean_dataset('csi_pecarn_pred')
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, random_state=42)
+
+# fit the model
+model = HSTreeRegressorCV(max_leaf_nodes=4)  # initialize a tree model and specify only 4 leaf nodes
+model.fit(X_train, y_train, feature_names=feature_names)   # fit model
+preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
-print(model) # print the rule-based model
+print(model) # print the model
 
------------------------------
-# the model consists of the following 3 rules
-# if X1 > 5: then 80.5% risk
-# else if X2 > 5: then 40% risk
-# else: 10% risk
+> ------------------------------
+> Decision Tree with Hierarchical Shrinkage
+> Prediction is made by looking at the value in the appropriate leaf of the tree
+> ------------------------------
+|--- FocalNeuroFindings2 <= 0.50
+|   |--- HighriskDiving <= 0.50
+|   |   |--- Torticollis2 <= 0.50
+|   |   |   |--- value: [0.10]
+|   |   |--- Torticollis2 >  0.50
+|   |   |   |--- value: [0.30]
+|   |--- HighriskDiving >  0.50
+|   |   |--- value: [0.68]
+|--- FocalNeuroFindings2 >  0.50
+|   |--- value: [0.42]
 ```
 
 ### Installation
 
-Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help). 
+Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help).
 
 ### Supported models
 

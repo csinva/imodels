@@ -57,6 +57,8 @@ class HSTree:
                 'shrinkage_scheme_': self.shrinkage_scheme_}
 
     def fit(self, *args, **kwargs):
+        # remove feature_names if it exists (note: only works as keyword-arg)
+        self.feature_names = kwargs.pop('feature_names', None)  # None returned if not passed
         self.estimator_.fit(*args, **kwargs)
         self._shrink()
         self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
@@ -226,7 +228,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        super().fit(X=X, y=y, *args, **kwargs)
 
 
 class HSTreeRegressorCV(HSTreeRegressor):
@@ -262,14 +264,14 @@ class HSTreeRegressorCV(HSTreeRegressor):
         #     raise Warning('Passed an already fitted estimator,'
         #                   'but shrinking not applied until fit method is called.')
 
-    def fit(self, X, y):
+    def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
             est = HSTreeRegressor(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        super().fit(X=X, y=y, *args, **kwargs)
 
 
 if __name__ == '__main__':

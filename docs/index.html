@@ -37,20 +37,37 @@ Python package for concise, transparent, and accurate predictive modeling. All s
 </p>
 <p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
 <p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
-<pre><code class="language-python">from imodels import BoostedRulesClassifier, FIGSClassifier, SkopeRulesClassifier
-from imodels import RuleFitRegressor, HSTreeRegressorCV, SLIMRegressor
+<pre><code class="language-python">from sklearn.model_selection import train_test_split
+from imodels import get_clean_dataset,
+    BoostedRulesClassifier, FIGSClassifier, SkopeRulesClassifier,
+    RuleFitRegressor, HSTreeRegressorCV, SLIMRegressor
 
-model = BoostedRulesClassifier()  # initialize a model
-model.fit(X_train, y_train)   # fit model
-preds = model.predict(X_test) # predictions: shape is (n_test, 1)
+# prepare data (a sample clinical dataset)
+X, y, feature_names = get_clean_dataset('csi_pecarn_pred')
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, random_state=42)
+
+# fit the model
+model = HSTreeRegressorCV(max_leaf_nodes=4)  # initialize a tree model and specify only 4 leaf nodes
+model.fit(X_train, y_train, feature_names=feature_names)   # fit model
+preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
-print(model) # print the rule-based model
+print(model) # print the model
 
------------------------------
-# the model consists of the following 3 rules
-# if X1 &gt; 5: then 80.5% risk
-# else if X2 &gt; 5: then 40% risk
-# else: 10% risk
+&gt; ------------------------------
+&gt; Decision Tree with Hierarchical Shrinkage
+&gt; Prediction is made by looking at the value in the appropriate leaf of the tree
+&gt; ------------------------------
+|--- FocalNeuroFindings2 &lt;= 0.50
+|   |--- HighriskDiving &lt;= 0.50
+|   |   |--- Torticollis2 &lt;= 0.50
+|   |   |   |--- value: [0.10]
+|   |   |--- Torticollis2 &gt;  0.50
+|   |   |   |--- value: [0.30]
+|   |--- HighriskDiving &gt;  0.50
+|   |   |--- value: [0.68]
+|--- FocalNeuroFindings2 &gt;  0.50
+|   |--- value: [0.42]
 </code></pre>
 <h3 id="installation">Installation</h3>
 <p>Install with <code>pip install <a title="imodels" href="#imodels">imodels</a></code> (see <a href="https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md">here</a> for help). </p>
