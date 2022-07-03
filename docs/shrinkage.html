@@ -26,35 +26,81 @@
 
     <div class="article" style="padding-right: 2%; padding-left: 2%;">
     <p align="center">
-        <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> Hierarchical shrinkage (HTS): improving the accuracy and interpretability
+        <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> Hierarchical shrinkage: improving the accuracy and interpretability
 of tree-based methods </h1>
         <h3 style="color:gray;padding-top:0px;">Abhineet Agarwal*, Yan Shuo Tan*, Omer Ronen, Chandan Singh, Bin
-            Yu (ICML 2022)</h3>
+            Yu </h3>
         <hr>
     </p>
 
-    <p><a href="https://arxiv.org/abs/2202.00858">📄 Paper</a>, <a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html">🗂 Doc</a>, <a href="https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=hierarchical+shrinkage+singh&btnG=&oq=hierar#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3Azc6gtLx-aL4J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌 Citation</a></p>
+    <p><a href="https://arxiv.org/abs/2202.00858">📄 Paper (ICML 2022)</a>, <a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html">🗂 Doc</a>, <a href="https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=hierarchical+shrinkage+singh&btnG=&oq=hierar#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3Azc6gtLx-aL4J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌 Citation</a></p>
 
 Hierarchical shrinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter). Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
 
-    <p>See some examples of how hierarchical shrinkage works on one-dimensional functions:</p>
+<h2>How does Hierarchical shrinkage work? </h2>
+
+<p align="center">
+    <img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" width="90%">
+</p>
+<p align="center">
+    <i><b>Fig 1.</b> HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent. This is done after a tree has been trained. The amount of shrinkage can be varied using a regularization param
+    (this works best if the parameter is chosen via cross-validation). </i>
+</p>
+
+<h2>An example using HS</h2>
+
+HS can be used in the same way as standard scikit-learn models: simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods. Here's a full example of using it on a sample clinical dataset.
+
+<pre>
+    <code>
+from imodels import HSTreeClassifierCV, get_clean_dataset
+from sklearn.model_selection import train_test_split
+from sklearn.tree import plot_tree
+
+# prepare data (in this a sample clinical dataset)
+X, y, feat_names = get_clean_dataset('csi_pecarn_pred')
+X_train, X_test, y_train, y_test = train_test_split(
+X, y, test_size=0.33, random_state=42)
+
+# fit the model
+model = HSTreeClassifierCV(max_leaf_nodes=7)  # initialize a model
+model.fit(X_train, y_train)   # fit model
+preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
+preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
+
+# visualize the model
+plot_tree(model.estimator_, feature_names=feat_names)
+        </code>
+</pre>
+
+    <p style="text-align:center;">
+        <a href="https://github.com/csinva/imodels"><img src="https://demos.csinva.io/shrinkage/shrinkage_csi_model.svg?sanitize=True" width="100%"></a>
+        <br>
+        <i><b>Fig 2.</b> Simple model learned by HS for predicting risk of cervical spinal injury. </i>
+    </p>
+
+<h2>Examples with HS on synthetic data</h2>
+    <p>See some examples of how hierarchical shrinkage works on one-dimensional functions which are fitted with a CART decision tree.</p>
         <!--    <div class="justify-content-center" align="center">-->
         <!--        <div class="col-lg-8">-->
 <!--        <h1> Tree shrinkage visualizations </h1>-->
-        <h3> Step function </h3>
 
         <div id="4db2fbb0-073d-492f-8f30-3e9fe37bf9f2" class="plotly-graph-div"
              style="height:60%; width:100%;"></div>
         <script type="text/javascript" src="https://demos.csinva.io/shrinkage/shrinkage_steps.js"></script>
-
+    <p style="text-align:center;">
+        <i><b>Fig 3.</b> Step function. </i>
+    </p>
 <!--        <link rel="stylesheet"-->
 <!--              href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-clean-blog/5.0.10/css/clean-blog.min.css">-->
-        <h3> Linear data </h3>
 
         <div id="ae4f9428-3c0a-4f94-a17d-6dbbc72c7d38" class="plotly-graph-div"
              style="height:60%; width:100%;"></div>
         <script type="text/javascript" src="https://demos.csinva.io/shrinkage/shrinkage_linear.js"></script>
         <!--        </div>-->
+    <p style="text-align:center;">
+        <i><b>Fig 4.</b> Linear function. </i>
+    </p>
     </div>
 
 

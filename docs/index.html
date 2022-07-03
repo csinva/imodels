@@ -416,6 +416,12 @@ The code here contains many useful and customizable functions for rule-based lea
 <h3 id="hierarchical-shrinkage-post-hoc-regularization-for-tree-based-methods">Hierarchical shrinkage: post-hoc regularization for tree-based methods</h3>
 <p><a href="https://arxiv.org/abs/2202.00858">📄 Paper</a> (ICML 2022), <a href="https://csinva.io/imodels/shrinkage.html">🔗 Post</a>, <a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C5&amp;q=hierarchical+shrinkage+singh&amp;btnG=&amp;oq=hierar#d=gs_cit&amp;u=%2Fscholar%3Fq%3Dinfo%3Azc6gtLx-aL4J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌 Citation</a></p>
 <p>Hierarchical shrinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter). Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.</p>
+<p align="center">
+<img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" width="75%">
+</p>
+<p align="center">
+<i>HS Example. HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent.</i>
+</p>
 <h2 id="references">References</h2>
 <details>
 <summary>Readings</summary>

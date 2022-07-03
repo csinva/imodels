@@ -26,7 +26,7 @@ extra_deps = [
 
 setuptools.setup(
     name="imodels",
-    version="1.3.0",
+    version="1.3.1",
     author="Chandan Singh, Keyan Nasseri, Bin Yu, and others",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",
