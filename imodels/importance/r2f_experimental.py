@@ -644,7 +644,7 @@ class JointRidgeScorer(JointScorerBase, ABC):
             if multi_class:
                 looe = _get_partial_model_looe_multiclass(X_test, y_test_onehot, start_indices, ridge_model.alpha_, ridge_model.coef_)
                 for k in range(len(start_indices) - 1):
-                    R2 = 1 - np.sum(looe[:, k, :] ** 2, axis=0) / np.var(y_onehot, axis=0)
+                    R2 = 1 - np.sum(looe[:, k, :] ** 2, axis=0) / (np.var(y_onehot, axis=0) * y_onehot.shape[0])
                     self.scores[k] = np.sum(R2 * (y_onehot == 1).mean(axis=0))
                     self.class_scores[k] = dict(zip(self.classes, R2))
                 else:
@@ -653,7 +653,7 @@ class JointRidgeScorer(JointScorerBase, ABC):
             else:
                 looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.coef_)
                 for k in range(len(start_indices) - 1):
-                    self.scores[k] = 1 - np.sum(looe[:, k] ** 2) / np.var(y)
+                    self.scores[k] = 1 - np.sum(looe[:, k] ** 2) / (np.var(y) * len(y))
                 else:
                     self.scores[k] = 0
         else:
@@ -666,7 +666,7 @@ class JointRidgeScorer(JointScorerBase, ABC):
                     if restricted_coefs.shape[1] > 0:
                         restricted_preds = restricted_feats @ np.transpose(restricted_coefs) + ridge_model.intercept_
                         metric_output = self.metric(y_test_onehot, restricted_preds)
-                        self.scores[k] = np.sum(metric_output * (y_onehot == 1).mean(axis=0))
+                        self.scores[k] = np.sum(metric_output * (y_test_onehot == 1).mean(axis=0))
                         self.class_scores[k] = dict(zip(self.classes, metric_output))
                     else:
                         self.scores[k] = 0
