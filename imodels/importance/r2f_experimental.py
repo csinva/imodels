@@ -648,14 +648,16 @@ class JointRidgeScorer(JointScorerBase, ABC):
                     self.scores[k] = np.sum(R2 * (y_onehot == 1).mean(axis=0))
                     self.class_scores[k] = dict(zip(self.classes, R2))
                 else:
-                    self.scores[k] = 0
-                    self.class_scores[k] = dict(zip(self.classes, np.zeros(len(self.classes))))
+                    self.scores[k] = np.NaN
+                    class_scores = np.zeros(len(self.classes))
+                    class_scores[:] = np.NaN
+                    self.class_scores[k] = dict(zip(self.classes, copy.deepcopy(class_scores)))
             else:
                 looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.coef_)
                 for k in range(len(start_indices) - 1):
                     self.scores[k] = 1 - np.sum(looe[:, k] ** 2) / (np.var(y) * len(y))
                 else:
-                    self.scores[k] = 0
+                    self.scores[k] = np.NaN
         else:
             for k in range(len(start_indices) - 1):
                 if multi_class:
@@ -669,8 +671,10 @@ class JointRidgeScorer(JointScorerBase, ABC):
                         self.scores[k] = np.sum(metric_output * (y_test_onehot == 1).mean(axis=0))
                         self.class_scores[k] = dict(zip(self.classes, metric_output))
                     else:
-                        self.scores[k] = 0
-                        self.class_scores[k] = dict(zip(self.classes, np.zeros(len(self.classes))))
+                        self.scores[k] = np.NaN
+                        class_scores = np.zeros(len(self.classes))
+                        class_scores[:] = np.NaN
+                        self.class_scores[k] = dict(zip(self.classes, copy.deepcopy(class_scores)))
                 else:
                     restricted_feats = X_test[:, start_indices[k]:start_indices[k + 1]]
                     restricted_coefs = ridge_model.coef_[start_indices[k]:start_indices[k + 1]]
@@ -680,7 +684,7 @@ class JointRidgeScorer(JointScorerBase, ABC):
                         restricted_preds = restricted_feats @ restricted_coefs + ridge_model.intercept_
                         self.scores[k] = self.metric(y_test, restricted_preds)
                     else:
-                        self.scores[k] = 0
+                        self.scores[k] = np.NaN
 
 
 class JointLogisticScorer(JointScorerBase, ABC):
@@ -711,9 +715,11 @@ class JointLogisticScorer(JointScorerBase, ABC):
                 else:
                     self.scores[k] = self.metric(y, restricted_preds, sample_weight=sample_weight)
             else:
-                self.scores[k] = 0
+                self.scores[k] = np.NaN
                 if isinstance(y[0], str):
-                    self.class_scores[k] = np.zeros(len(self.classes))
+                    class_scores = np.zeros(len(self.classes))
+                    class_scores[:] = np.NaN
+                    self.class_scores[k] = copy.deepcopy(class_scores)
 
 
 class JointLassoScorer(JointScorerBase,ABC):
@@ -741,7 +747,7 @@ class JointLassoScorer(JointScorerBase,ABC):
                 restricted_preds = restricted_feats @ restricted_coefs + lasso_model.intercept_
                 self.scores[k] = self.metric(y_test, restricted_preds, sample_weight=sample_weight)
             else:
-                self.scores[k] = 0
+                self.scores[k] = np.NaN
 
 
 class JointRobustScorer(JointScorerBase, ABC):
@@ -768,7 +774,7 @@ class JointRobustScorer(JointScorerBase, ABC):
                 restricted_preds = restricted_feats @ restricted_coefs + self.robust_model.intercept_
                 self.scores[k] = self.metric(y, restricted_preds)
             else:
-                self.scores[k] = 0
+                self.scores[k] = np.NaN
 
 
 class GeneralizedMDIJoint:
@@ -819,9 +825,9 @@ class GeneralizedMDIJoint:
             X_transformed_oob, start_indices = tree_transformer.transform(X_oob, center=True, return_indices=True)
             if len(X_transformed_oob) == 0: 
                 for k in range(n_features):
-                    n_stumps[idx, k] = 0.0
-                    n_stumps_chosen[idx, k] = 0.0
-                    scores[idx, k] = 0.0
+                    n_stumps[idx, k] = np.NaN
+                    n_stumps_chosen[idx, k] = np.NaN
+                    scores[idx, k] = np.NaN
             else:
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore")
@@ -832,7 +838,10 @@ class GeneralizedMDIJoint:
                     scores[idx, k] = self.scorer.get_score(k)
                     if multi_class:
                         class_scores_dict[idx][k] = self.scorer.class_scores[k]
-        imp_values = scores.mean(axis=0)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            imp_values = np.nanmean(scores, axis=0)
+        imp_values[np.isnan(imp_values)] = -np.inf
 
         if multi_class:
             if diagnostics:
