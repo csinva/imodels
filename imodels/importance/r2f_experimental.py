@@ -780,7 +780,7 @@ class JointRobustScorer(JointScorerBase, ABC):
 class GeneralizedMDIJoint:
 
     def __init__(self, estimator=None, scorer=None, normalize=False, add_raw=True, random_state=None,
-                 normalize_raw=False):
+                 normalize_raw=False,oob = True):
 
         if estimator is None:
             self.estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=5, max_features=0.33,
@@ -790,6 +790,7 @@ class GeneralizedMDIJoint:
         self.normalize = normalize
         self.add_raw = add_raw
         self.normalize_raw = normalize_raw
+        self.oob = oob
         if scorer is None:
             self.scorer = JointRidgeScorer()
         else:
@@ -816,8 +817,12 @@ class GeneralizedMDIJoint:
             tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw,
                                                normalize_raw=self.normalize_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
-            X_oob = X[oob_indices, :]
-            y_oob = y[oob_indices] #- np.mean(y[oob_indices])
+            if self.oob: 
+                X_oob = X[oob_indices, :]
+                y_oob = y[oob_indices] #- np.mean(y[oob_indices])
+            else:
+                X_oob = X
+                y_oob = y
             if sample_weight is not None:
                 sample_weight_oob = sample_weight[oob_indices]
             else:
