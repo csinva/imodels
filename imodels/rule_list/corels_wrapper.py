@@ -94,6 +94,7 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
         self.random_state = random_state
         self.discretizer = None
         self.str_print = None
+        self._estimator_type = 'classifier'
 
     def fit(self, X, y, feature_names=None, prediction_name="prediction"):
         """

@@ -66,6 +66,9 @@ class Model:
                 if hasattr(self._initializer._tree,&#34;trees_&#34;):
                     self.n_trees = len(self._initializer._tree.trees_)
                     self._trees = self.initialize_trees()
+                elif hasattr(self._initializer._tree, &#34;figs&#34;):
+                    self.n_trees = len(self._initializer._tree.figs.trees_)
+                    self._trees = self.initialize_trees()
 
                 # for tree in self.trees:
                 self._initializer.initialize_trees(self.refreshed_trees())
@@ -209,6 +212,9 @@ def deep_copy_model(model: Model) -&gt; Model:
             if self._initializer is not None:
                 if hasattr(self._initializer._tree,&#34;trees_&#34;):
                     self.n_trees = len(self._initializer._tree.trees_)
+                    self._trees = self.initialize_trees()
+                elif hasattr(self._initializer._tree, &#34;figs&#34;):
+                    self.n_trees = len(self._initializer._tree.figs.trees_)
                     self._trees = self.initialize_trees()
 
                 # for tree in self.trees:

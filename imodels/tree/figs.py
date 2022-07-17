@@ -1,13 +1,21 @@
 from copy import deepcopy
 from typing import List
 
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import sklearn.datasets
 from sklearn import datasets
 from sklearn import tree
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
+from sklearn.utils.validation import _check_sample_weight
+
+from imodels.tree.viz_utils import DecisionTreeViz
+
+plt.rcParams['figure.dpi'] = 300
 
 
 class Node:
@@ -47,6 +55,20 @@ class Node:
         else:
             return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
 
+    def print_root(self, y):
+        try:
+            one_count = pd.Series(y).value_counts()[1.0]
+        except KeyError:
+            one_count = 0
+        one_proportion = f' {one_count}/{y.shape[0]} ({round(100 * one_count / y.shape[0], 2)}%)'
+
+        if self.is_root:
+            return f'X_{self.feature} <= {self.threshold:0.3f}' + one_proportion
+        elif self.left is None and self.right is None:
+            return f'ΔRisk = {self.value[0][0]:0.2f}' + one_proportion
+        else:
+            return f'X_{self.feature} <= {self.threshold:0.3f}' + one_proportion
+
     def __repr__(self):
         return self.__str__()
 
@@ -60,31 +82,32 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     """
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0):
+    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None):
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
-        self._init_prediction_task()  # decides between regressor and classifier
+        self.random_state = random_state
         self._init_decision_function()
 
-    def _init_prediction_task(self):
-        """
-        FIGSRegressor and FIGSClassifier override this method
-        to alter the prediction task. When using this class directly,
-        it is equivalent to FIGSRegressor
-        """
-        self.prediction_task = 'regression'
-
     def _init_decision_function(self):
-        """Sets decision function based on prediction_task
+        """Sets decision function based on _estimator_type
         """
-        # used by sklearn GrriidSearchCV, BaggingClassifier
-        if self.prediction_task == 'classification':
+        # used by sklearn GridSearchCV, BaggingClassifier
+        if isinstance(self, ClassifierMixin):
             decision_function = lambda x: self.predict_proba(x)[:, 1]
-        elif self.prediction_task == 'regression':
+        elif isinstance(self, RegressorMixin):
             decision_function = self.predict
 
-    def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None):
+    def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None,
+                                   compare_nodes_with_sample_weight=True):
+        """
+        Params
+        ------
+        compare_nodes_with_sample_weight: Deprecated
+            If this is set to true and sample_weight is passed, use sample_weight to compare nodes
+            Otherwise, use sample_weight only for picking a split given a particular node
+        """
+
         # array indices
         SPLIT = 0
         LEFT = 1
@@ -92,9 +115,10 @@ class FIGS(BaseEstimator):
 
         # fit stump
         stump = tree.DecisionTreeRegressor(max_depth=1)
+        sweight = None
         if sample_weight is not None:
-            sample_weight = sample_weight[idxs]
-        stump.fit(X[idxs], y[idxs], sample_weight=sample_weight)
+            sweight = sample_weight[idxs]
+        stump.fit(X[idxs], y[idxs], sample_weight=sweight)
 
         # these are all arrays, arr[0] is split node
         # note: -2 is dummy
@@ -112,12 +136,24 @@ class FIGS(BaseEstimator):
                         feature=feature[SPLIT], threshold=threshold[SPLIT],
                         impurity_reduction=None)
 
-        # split node
+        # manage sample weights
+        idxs_split = X[:, feature[SPLIT]] <= threshold[SPLIT]
+        idxs_left = idxs_split & idxs
+        idxs_right = ~idxs_split & idxs
+        if sample_weight is None:
+            n_node_samples_left = n_node_samples[LEFT]
+            n_node_samples_right = n_node_samples[RIGHT]
+        else:
+            n_node_samples_left = sample_weight[idxs_left].sum()
+            n_node_samples_right = sample_weight[idxs_right].sum()
+        n_node_samples_split = n_node_samples_left + n_node_samples_right
+
+        # calculate impurity
         impurity_reduction = (
                                      impurity[SPLIT] -
-                                     impurity[LEFT] * n_node_samples[LEFT] / n_node_samples[SPLIT] -
-                                     impurity[RIGHT] * n_node_samples[RIGHT] / n_node_samples[SPLIT]
-                             ) * idxs.sum()
+                                     impurity[LEFT] * n_node_samples_left / n_node_samples_split -
+                                     impurity[RIGHT] * n_node_samples_right / n_node_samples_split
+                             ) * n_node_samples_split
 
         node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                           feature=feature[SPLIT], threshold=threshold[SPLIT],
@@ -125,9 +161,6 @@ class FIGS(BaseEstimator):
         # print('\t>>>', node_split, 'impurity', impurity, 'num_pts', idxs.sum(), 'imp_reduc', impurity_reduction)
 
         # manage children
-        idxs_split = X[:, feature[SPLIT]] <= threshold[SPLIT]
-        idxs_left = idxs_split & idxs
-        idxs_right = ~idxs_split & idxs
         node_left = Node(idxs=idxs_left, value=value[LEFT], tree_num=tree_num)
         node_right = Node(idxs=idxs_right, value=value[RIGHT], tree_num=tree_num)
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
@@ -146,6 +179,8 @@ class FIGS(BaseEstimator):
         y = y.astype(float)
         if feature_names is not None:
             self.feature_names_ = feature_names
+        if sample_weight is not None:
+            sample_weight = _check_sample_weight(sample_weight, X)
 
         self.trees_ = []  # list of the root nodes of added trees
         self.complexity_ = 0  # tracks the number of rules in the model
@@ -262,8 +297,31 @@ class FIGS(BaseEstimator):
         return prefix + str(root) + '\n' + self._tree_to_str(root.left, pprefix) + self._tree_to_str(root.right,
                                                                                                      pprefix)
 
+    def _tree_to_str_with_data(self, X, y, root: Node, prefix=''):
+        if root is None:
+            return ''
+        elif root.threshold is None:
+            return ''
+        pprefix = prefix + '\t'
+        left = X[:, root.feature] <= root.threshold
+        return (
+                prefix + root.print_root(y) + '\n' +
+                self._tree_to_str_with_data(X[left], y[left], root.left, pprefix) +
+                self._tree_to_str_with_data(X[~left], y[~left], root.right, pprefix))
+
     def __str__(self):
-        s = '------------\n' + '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
+        s = '> ------------------------------\n'
+        s += '> FIGS-Fast Interpretable Greedy-Tree Sums:\n'
+        s += '> \tPredictions are made by summing the "Val" reached by traversing each tree\n'
+        s += '> ------------------------------\n'
+        s += '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
+        if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
+            for i in range(len(self.feature_names_))[::-1]:
+                s = s.replace(f'X_{i}', self.feature_names_[i])
+        return s
+
+    def print_tree(self, X, y):
+        s = '------------\n' + '\n\t+\n'.join([self._tree_to_str_with_data(X, y, t) for t in self.trees_])
         if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
             for i in range(len(self.feature_names_))[::-1]:
                 s = s.replace(f'X_{i}', self.feature_names_[i])
@@ -274,14 +332,14 @@ class FIGS(BaseEstimator):
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
             preds += self._predict_tree(tree, X)
-        if self.prediction_task == 'regression':
+        if isinstance(self, RegressorMixin):
             return preds
-        elif self.prediction_task == 'classification':
+        elif isinstance(self, ClassifierMixin):
             return (preds > 0.5).astype(int)
 
     def predict_proba(self, X):
         X = check_array(X)
-        if self.prediction_task == 'regression':
+        if isinstance(self, RegressorMixin):
             return NotImplemented
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
@@ -313,15 +371,54 @@ class FIGS(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
+    def plot(self, cols=2, feature_names=None, filename=None, label="all",
+             impurity=False, tree_number=None, dpi=150):
+        is_single_tree = len(self.trees_) < 2 or tree_number is not None
+        n_cols = int(cols)
+        n_rows = int(np.ceil(len(self.trees_) / n_cols))
+        # if is_single_tree:
+        #     fig, ax = plt.subplots(1)
+        # else:
+        #     fig, axs = plt.subplots(n_rows, n_cols)
+        if feature_names is None:
+            if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
+                feature_names = self.feature_names_
 
-class FIGSRegressor(FIGS):
-    def _init_prediction_task(self):
-        self.prediction_task = 'regression'
+        n_plots = int(len(self.trees_)) if tree_number is None else 1
+        fig, axs = plt.subplots(n_plots, dpi=dpi)
+        criterion = "squared_error" if isinstance(self, RegressorMixin) else "gini"
+        n_classes = 1 if isinstance(self, RegressorMixin) else 2
+        ax_size = int(len(self.trees_))  # n_cols * n_rows
+        for i in range(n_plots):
+            r = i // n_cols
+            c = i % n_cols
+            if not is_single_tree:
+                # ax = axs[r, c]
+                ax = axs[i]
+            else:
+                ax = axs
+            try:
+                tree = self.trees_[i] if tree_number is None else self.trees_[tree_number]
+                plot_tree(DecisionTreeViz(tree, criterion, n_classes),
+                          ax=ax, feature_names=feature_names, label=label,
+                          impurity=impurity)
+            except IndexError:
+                ax.axis('off')
+                continue
+
+            ax.set_title(f"Tree {i}")
+        if filename is not None:
+            plt.savefig(filename)
+            return
+        plt.show()
 
 
-class FIGSClassifier(FIGS):
-    def _init_prediction_task(self):
-        self.prediction_task = 'classification'
+class FIGSRegressor(FIGS, RegressorMixin):
+    ...
+
+
+class FIGSClassifier(FIGS, ClassifierMixin):
+    ...
 
 
 class FIGSCV:
@@ -381,12 +478,21 @@ if __name__ == '__main__':
     X_cls, Y_cls = datasets.load_breast_cancer(return_X_y=True)
     X_reg, Y_reg = datasets.make_friedman1(100)
 
+    est = FIGSClassifier(max_rules=10)
+    # est.fit(X_cls, Y_cls, sample_weight=np.arange(0, X_cls.shape[0]))
+    est.fit(X_cls, Y_cls, sample_weight=[1] * X_cls.shape[0])
+    est.predict(X_cls)
+
     est = FIGSRegressorCV()
     est.fit(X_reg, Y_reg)
     est.predict(X_reg)
     print(est.max_rules)
+    est.figs.plot(tree_number=0)
 
     est = FIGSClassifierCV()
     est.fit(X_cls, Y_cls)
     est.predict(X_cls)
     print(est.max_rules)
+    est.figs.plot(tree_number=0)
+
+# %%

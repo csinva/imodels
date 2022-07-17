@@ -1,12 +1,23 @@
-import copy
 import random
 from functools import partial
 
 import numpy as np
+from sklearn.ensemble import VotingRegressor
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels import HSTreeClassifier, HSTreeClassifierCV, \
-    HSTreeRegressor, HSTreeRegressorCV, C45TreeClassifier, BART
+    HSTreeRegressor, HSTreeRegressorCV, C45TreeClassifier
+# OptimalTreeClassifier, HSOptimalTreeClassifierCV
+from imodels.tree.c45_tree.c45_tree import HSC45TreeClassifierCV
+import random
+from functools import partial
+
+import numpy as np
+from sklearn.ensemble import VotingRegressor
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+
+from imodels import HSTreeClassifier, HSTreeClassifierCV, \
+    HSTreeRegressor, HSTreeRegressorCV, C45TreeClassifier
 # OptimalTreeClassifier, HSOptimalTreeClassifierCV
 from imodels.tree.c45_tree.c45_tree import HSC45TreeClassifierCV
 
@@ -38,6 +49,7 @@ class TestShrinkage:
             partial(HSTreeClassifier, estimator_=DecisionTreeClassifier()),
             partial(HSTreeClassifierCV, estimator_=DecisionTreeClassifier()),
             partial(HSC45TreeClassifierCV, estimator_=C45TreeClassifier()),
+            HSTreeClassifierCV,  # default estimator is Decision tree with 25 max_leaf_nodes
             # partial(HSOptimalTreeClassifierCV, estimator_=OptimalTreeClassifier()),
         ]:
             init_kwargs = {}
@@ -61,6 +73,14 @@ class TestShrinkage:
             acc_train = np.mean(preds == self.y_classification_binary)
             # print(type(m), m, 'final acc', acc_train)
             assert acc_train > 0.8, 'acc greater than 0.8'
+
+    def test_recognized_by_sklearn(self):
+        base_models = [('hs', HSTreeRegressor(DecisionTreeRegressor())),
+                       ('dt', DecisionTreeRegressor())]
+        comb_model = VotingRegressor(estimators=base_models,
+                                     n_jobs=10,
+                                     verbose=2)
+        comb_model.fit(self.X_classification_binary, self.y_regression)
 
     def test_regression_shrinkage(self):
         '''Test imodels on basic binary classification task

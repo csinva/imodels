@@ -19,6 +19,8 @@ DATASETS_REGRESSION = [
 ]
 DATASETS_SYNTHETIC = [
     ('friedman1', 'friedman1', 'synthetic'),
+    ('friedman2', 'friedman2', 'synthetic'),
+    ('friedman3', 'friedman3', 'synthetic'),
     ('radchenko_james', 'radchenko_james', 'synthetic'),
     ('vo_pati', 'vo_pati', 'synthetic'),
     ('bart', 'bart', 'synthetic'),

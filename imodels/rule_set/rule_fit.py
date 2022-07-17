@@ -99,16 +99,6 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.stddev = None
         self.mean = None
 
-        self._init_prediction_task()  # decides between regressor and classifier
-
-    def _init_prediction_task(self):
-        """
-        RuleFitRegressor and RuleFitClassifier override this method
-        to alter the prediction task. When using this class directly,
-        it is equivalent to RuleFitRegressor
-        """
-        self.prediction_task = 'regression'
-
     def fit(self, X, y=None, feature_names=None):
         """Fit and estimate linear combination of rule ensemble
 
@@ -117,7 +107,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             feature_names = X.columns
 
         X, y = check_X_y(X, y)
-        if self.prediction_task == 'classification':
+        if isinstance(self, ClassifierMixin):
             self.classes_ = unique_labels(y)
         self.n_features_in_ = X.shape[1]
 
@@ -161,7 +151,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         '''
         check_is_fitted(self)
         X = check_array(X)
-        if self.prediction_task == 'regression':
+        if isinstance(self, RegressorMixin):
             return self._predict_continuous_output(X)
         else:
             return np.argmax(self.predict_proba(X), axis=1)
@@ -252,7 +242,11 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         return rules[['rule', 'coef']].round(decimals)
 
     def __str__(self):
-        return 'RuleFit:\n' + self.visualize().to_string(index=False) + '\n'
+        s = '> ------------------------------\n'
+        s += '> RuleFit:\n'
+        s += '> \tPredictions are made by summing the coefficients of each rule\n'
+        s += '> ------------------------------\n'
+        return s + self.visualize().to_string(index=False) + '\n'
 
     def _extract_rules(self, X, y) -> List[Rule]:
         return extract_rulefit(X, y,
@@ -290,9 +284,9 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         # no rules fit and self.include_linear == False
         if X_concat.shape[1] == 0:
             return [], [], 0
-
+        prediction_task = 'regression' if isinstance(self, RegressorMixin) else 'classification'
         return score_linear(X_concat, y, rules,
-                            prediction_task=self.prediction_task,
+                            prediction_task=prediction_task,
                             max_rules=self.max_rules,
                             alpha=self.alpha,
                             cv=self.cv,
@@ -300,10 +294,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
 
 class RuleFitRegressor(RuleFit, RegressorMixin):
-    def _init_prediction_task(self):
-        self.prediction_task = 'regression'
+    ...
 
 
 class RuleFitClassifier(RuleFit, ClassifierMixin):
-    def _init_prediction_task(self):
-        self.prediction_task = 'classification'
+    ...

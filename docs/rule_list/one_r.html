@@ -47,6 +47,7 @@ class OneRClassifier(GreedyRuleListClassifier):
         self.feature_names = None
         self.class_weight = class_weight
         self.criterion = criterion
+        self._estimator_type = &#39;classifier&#39;
 
     def fit(self, X, y, depth=0, feature_names=None, verbose=False):
         &#34;&#34;&#34;Fit oneR
@@ -127,6 +128,7 @@ Currently only supports 'max' - (higher risk side of split becomes leaf node)</p
         self.feature_names = None
         self.class_weight = class_weight
         self.criterion = criterion
+        self._estimator_type = &#39;classifier&#39;
 
     def fit(self, X, y, depth=0, feature_names=None, verbose=False):
         &#34;&#34;&#34;Fit oneR

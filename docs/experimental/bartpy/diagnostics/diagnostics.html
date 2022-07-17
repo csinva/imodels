@@ -38,7 +38,6 @@ from ..initializers.sklearntreeinitializer import SklearnTreeInitializer
 from ..sklearnmodel import SklearnModel, BART
 
 
-
 def plot_diagnostics(model: SklearnModel):
     fig, ((ax1, ax2, ax3, ax4), (ax5, ax6, ax7, _)) = plt.subplots(2, 4, figsize=(10, 10))
     fig.suptitle(&#34;Diagnostics&#34;)
@@ -54,86 +53,61 @@ def plot_diagnostics(model: SklearnModel):
 
 
 if __name__ == &#39;__main__&#39;:
-    # X, y = datasets.make_friedman1(n_samples=500)
-    from sklearn.tree import DecisionTreeRegressor
 
-    # from sklearn.datasets import make_friedman1
-    #
-    n = 60
-    X, y = datasets.make_friedman1(n)
-    # dt = DecisionTreeRegressor(max_depth=3).fit(X=X, y=y)
-    # y = dt.predict(X)
-    # bart_tree = Tree([LeafNode(Split(self.data))])
-    # p = 5
-    # x_1 = np.random.choice([2, 3, 5, 7, 8], size=n)
-    # x_2 = np.random.choice([1, 2, 3, 4], size=n)
-    # X = pd.DataFrame([x_1, x_2]).T
-    #
-    #
-    # def _f(x):
-    #     x_1 = x[0]
-    #     x_2 = x[1]
-    #
-    #     if np.logical_and(x_1 &lt;= 5 , x_2 in [1,3]):
-    #         return 8
-    #     elif np.logical_and(x_1 &gt; 5 , x_2 in [1,3]):
-    #         return 2
-    #     elif np.logical_and(x_1 &lt;= 3 , x_2 in [2,4]):
-    #         return 1
-    #     elif np.logical_and(3 &lt; x_1 &lt;= 7 , x_2 in [2,4]):
-    #         return 5
-    #     elif np.logical_and(x_1 &gt; 7 , x_2 in [2,4]):
-    #         return 8
-    #
-    #
-    # y = np.array([_f(X.iloc[i, :]) for i in range(n)]) + np.random.normal(size=n, scale=0.1)
-    # # X = np.random.normal(size=(n, p))
-    # # y = np.sum(X, axis=1) + np.random.normal(size=n, scale=0.1)
-    # #
-    # for i in range(1):
+    n = 100
+    n_trees = 1
+    # X, y = datasets.make_friedman1(n)
+    x_1 = np.random.choice([2, 3, 5, 7, 8], size=n)
+    x_2 = np.random.choice([1, 2, 3, 4], size=n)
+    X = pd.DataFrame([x_1, x_2]).T
+
+
+    def _f(x):
+        x_1 = x[0]
+        x_2 = x[1]
+
+        if np.logical_and(x_1 &lt;= 5, x_2 in [1, 3]):
+            return 8
+        elif np.logical_and(x_1 &gt; 5, x_2 in [1, 3]):
+            return 2
+        elif np.logical_and(x_1 &lt;= 3, x_2 in [2, 4]):
+            return 1
+        elif np.logical_and(3 &lt; x_1 &lt;= 7, x_2 in [2, 4]):
+            return 5
+        elif np.logical_and(x_1 &gt; 7, x_2 in [2, 4]):
+            return 8
+
+
+    y = np.array([_f(X.iloc[i, :]) for i in range(n)]) + np.random.normal(size=n, scale=0.1)
 
     X_train, X_test, y_train, y_test = model_selection.train_test_split(
         X, y, test_size=0.3, random_state=4)
-    figs = FIGSRegressor(max_rules=5).fit(X=X_train, y=y_train)
 
-    interactions = get_interaction_score(figs, X_train, y_train)
-    n_trees = len(figs.trees_)
-# clf = GradientBoostingRegressor(n_estimators=1)
-# clf.fit(X_train, y_train)
-# print(mean_squared_error(clf.predict(X_test), y_test))
-# print(dt.tree_.n_leaves)
-    bart_zero = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=1000, n_burn=100,
+    bart_zero = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=10000, n_burn=100,
                      n_chains=5,
                      thin=1)
     bart_zero.fit(X_train, y_train)
-# y_hat = bart.predict(X)
-# plot_diagnostics(bart)
 
-# bart_sgb = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=1000, n_burn=100,
-#                 n_chains=5,
-#                 thin=1, initializer=SklearnTreeInitializer(
-#         tree_=DecisionTreeRegressor(max_depth=5).fit(X=X_train, y=y_train)))
-# bart_sgb.fit(X_train, y_train)
-    bart_figs = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=1000, n_burn=100,
-                     n_chains=5,
-                     thin=1, initializer=SklearnTreeInitializer(tree_=figs))
-
-    bart_figs.fit(X_train, y_train)
+    # bart_figs = BART(classification=False, store_acceptance_trace=True, n_trees=n_trees, n_samples=1000, n_burn=100,
+    #                  n_chains=5,
+    #                  thin=1, initializer=SklearnTreeInitializer(tree_=figs))
+    #
+    # bart_figs.fit(X_train, y_train)
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 10))
-# bart_sgb_preds = bart_sgb.predict(X_test)
+    fig, ax = plt.subplots(1)
     bart_preds = bart_zero.predict(X_test)
-    bart_figs_preds = bart_figs.predict(X_test)
-    figs_preds = figs.predict(X_test)
-    # print(f&#34;figs: {mean_squared_error(figs_preds, y_test)}&#34;)
-    bfigs_preds = bart_figs.predict(X_test)
+    # bart_figs_preds = bart_figs.predict(X_test)
+    # figs_preds = figs.predict(X_test)
+    # # print(f&#34;figs: {mean_squared_error(figs_preds, y_test)}&#34;)
+    # bfigs_preds = bart_figs.predict(X_test)
     # print(f&#34;bfigs: {mean_squared_error(bfigs_preds, y_test)}&#34;)
 
     # plot_tree_depth(bart_sgb, ax1, f&#34;CART initialization {np.round(mean_squared_error(bart_sgb_preds, y_test), 4)}&#34;)
-    plot_tree_depth(bart_zero, ax1, f&#34;BART initialization (MSE: {np.round(mean_squared_error(bart_preds, y_test), 4)})&#34;)
-    plot_tree_depth(bart_figs, ax2,
-                    f&#34;FIGS initialization (MSE: {np.round(mean_squared_error(bart_figs_preds, y_test), 4)}&#34;
-                    f&#34;, FIGS MSE: {np.round(mean_squared_error(figs_preds, y_test), 2)})&#34;, x_label=True)
+    plot_tree_depth(bart_zero, ax, f&#34;BART initialization (MSE: {np.round(mean_squared_error(bart_preds, y_test), 4)})&#34;)
+    # plot_tree_depth(bart_figs, ax2,
+    #                 f&#34;FIGS initialization (MSE: {np.round(mean_squared_error(bart_figs_preds, y_test), 4)}&#34;
+    #                 f&#34;, FIGS MSE: {np.round(mean_squared_error(figs_preds, y_test), 2)})&#34;, x_label=True)
     # plt.title(f&#34;Bayesian tree with different initilization of Friedman 1 dataset n={n}&#34;)
 
     plt.show()

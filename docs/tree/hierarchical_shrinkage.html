@@ -26,17 +26,19 @@ from typing import List
 
 import numpy as np
 from sklearn import datasets
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics import r2_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
 
 from imodels.util import checks
+from imodels.util.tree import compute_tree_complexity
 
 
 class HSTree:
-    def __init__(self, estimator_: BaseEstimator, reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
+    def __init__(self, estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+                 reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
         &#34;&#34;&#34;HSTree (Tree with hierarchical shrinkage applied).
         Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
         It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
@@ -46,6 +48,7 @@ class HSTree:
         Params
         ------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
+            Defaults to CART Classification Tree with 20 max leaf ndoes
 
         reg_param: float
             Higher is more regularization (can be arbitrarily large, should not be &lt; 0)
@@ -58,29 +61,25 @@ class HSTree:
         &#34;&#34;&#34;
         super().__init__()
         self.reg_param = reg_param
-        # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
-        self._init_prediction_task()
-
         if checks.check_is_fitted(self.estimator_):
             self._shrink()
-
-    def __init__prediction_task(self):
-        self.prediction_task = &#39;regression&#39;
 
     def get_params(self, deep=True):
         if deep:
             return deepcopy({&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-                             # &#39;prediction_task&#39;: self.prediction_task,
                              &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_})
         return {&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-                # &#39;prediction_task&#39;: self.prediction_task,
                 &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
 
-    def fit(self, *args, **kwargs):
-        self.estimator_.fit(*args, **kwargs)
+    def fit(self, X, y, *args, **kwargs):
+        # remove feature_names if it exists (note: only works as keyword-arg)
+        self.feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
+        self.estimator_ = self.estimator_.fit(X, y, *args, **kwargs)
         self._shrink()
+        self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
+        return self
 
     def _shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         &#34;&#34;&#34;Shrink the tree
@@ -91,7 +90,7 @@ class HSTree:
         right = tree.children_right[i]
         is_leaf = left == right
         n_samples = tree.n_node_samples[i]
-        if self.prediction_task == &#39;regression&#39;:
+        if isinstance(self, RegressorMixin):
             val = tree.value[i][0, 0]
         else:
             if len(tree.value[i][0]) == 1:
@@ -117,7 +116,7 @@ class HSTree:
                 val_new = val
             cum_sum += val_new
             if is_leaf:
-                if self.prediction_task == &#39;regression&#39;:
+                if isinstance(self, RegressorMixin):
                     if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
                         tree.value[i, 0, 0] = cum_sum
                     else:
@@ -141,7 +140,7 @@ class HSTree:
                                     1 + reg_param / n_samples)
                             tree.value[i, 0, 0] = 1.0 - tree.value[i, 0, 1]
             else:
-                if self.prediction_task == &#39;regression&#39;:
+                if isinstance(self, RegressorMixin):
                     tree.value[i][0, 0] = parent_val + val_new
                 else:
                     if len(tree.value[i][0]) == 1:
@@ -171,39 +170,62 @@ class HSTree:
                     t = t[0]
                 self._shrink_tree(t.tree_, self.reg_param)
 
-    def predict(self, *args, **kwargs):
-        return self.estimator_.predict(*args, **kwargs)
+    def predict(self, X, *args, **kwargs):
+        return self.estimator_.predict(X, *args, **kwargs)
 
-    def predict_proba(self, *args, **kwargs):
+    def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, &#39;predict_proba&#39;):
-            return self.estimator_.predict_proba(*args, **kwargs)
+            return self.estimator_.predict_proba(X, *args, **kwargs)
         else:
             return NotImplemented
 
-    def score(self, *args, **kwargs):
+    def score(self, X, y, *args, **kwargs):
         if hasattr(self.estimator_, &#39;score&#39;):
-            return self.estimator_.score(*args, **kwargs)
+            return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented
 
+    def __str__(self):
+        s = &#39;&gt; ------------------------------\n&#39;
+        s += &#39;&gt; Decision Tree with Hierarchical Shrinkage\n&#39;
+        s += &#39;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#39;
+        s += &#39;&gt; ------------------------------&#39; + &#39;\n&#39;
+        if hasattr(self, &#39;feature_names&#39;) and self.feature_names is not None:
+            return s + export_text(self.estimator_, feature_names=self.feature_names, show_weights=True)
+        else:
+            return s + export_text(self.estimator_, show_weights=True)
 
-class HSTreeRegressor(HSTree):
-    def _init_prediction_task(self):
-        self.prediction_task = &#39;regression&#39;
+
+class HSTreeRegressor(HSTree, RegressorMixin):
+    ...
 
 
-class HSTreeClassifier(HSTree):
-    def _init_prediction_task(self):
-        self.prediction_task = &#39;classification&#39;
+class HSTreeClassifier(HSTree, ClassifierMixin):
+    ...
 
 
 class HSTreeClassifierCV(HSTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = &#39;node_based&#39;,
+    def __init__(self, estimator_: BaseEstimator = None,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 shrinkage_scheme_: str = &#39;node_based&#39;,
+                 max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
-        &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+        &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+
+         Params
+        ------
+        estimator_
+            Sklearn estimator (already initialized).
+            If no estimator_ is passsed, sklearn decision tree is used
+
+        max_rules
+            If estimator is None, then max_leaf_nodes is passed to the default decision tree
+
+        args, kwargs
+            Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
         &#34;&#34;&#34;
+        if estimator_ is None:
+            estimator_ = DecisionTreeClassifier(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -222,17 +244,31 @@ class HSTreeClassifierCV(HSTreeClassifier):
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        super().fit(X=X, y=y, *args, **kwargs)
 
 
 class HSTreeRegressorCV(HSTreeRegressor):
-    def __init__(self, estimator_: BaseEstimator,
+    def __init__(self, estimator_: BaseEstimator = None,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  shrinkage_scheme_: str = &#39;node_based&#39;,
+                 max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
-        &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+        &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+
+         Params
+        ------
+        estimator_
+            Sklearn estimator (already initialized).
+            If no estimator_ is passsed, sklearn decision tree is used
+
+        max_rules
+            If estimator is None, then max_leaf_nodes is passed to the default decision tree
+
+        args, kwargs
+            Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
         &#34;&#34;&#34;
+        if estimator_ is None:
+            estimator_ = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -244,14 +280,14 @@ class HSTreeRegressorCV(HSTreeRegressor):
         #     raise Warning(&#39;Passed an already fitted estimator,&#39;
         #                   &#39;but shrinking not applied until fit method is called.&#39;)
 
-    def fit(self, X, y):
+    def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
             est = HSTreeRegressor(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        super().fit(X=X, y=y, *args, **kwargs)
 
 
 if __name__ == &#39;__main__&#39;:
@@ -306,7 +342,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree"><code class="flex name class">
 <span>class <span class="ident">HSTree</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param: float = 1, shrinkage_scheme_: str = 'node_based')</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>HSTree (Tree with hierarchical shrinkage applied).
@@ -315,7 +351,8 @@ It does not modify the tree structure, and instead regularizes the tree by shrin
 Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
 <a href="https://arxiv.org/abs/2202.00858">https://arxiv.org/abs/2202.00858</a></p>
 <h2 id="params">Params</h2>
-<p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)</p>
+<p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
+Defaults to CART Classification Tree with 20 max leaf ndoes</p>
 <p>reg_param: float
 Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
 <p>shrinkage_scheme: str
@@ -328,7 +365,8 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HSTree:
-    def __init__(self, estimator_: BaseEstimator, reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
+    def __init__(self, estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+                 reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
         &#34;&#34;&#34;HSTree (Tree with hierarchical shrinkage applied).
         Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
         It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
@@ -338,6 +376,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         Params
         ------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
+            Defaults to CART Classification Tree with 20 max leaf ndoes
 
         reg_param: float
             Higher is more regularization (can be arbitrarily large, should not be &lt; 0)
@@ -350,29 +389,25 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         &#34;&#34;&#34;
         super().__init__()
         self.reg_param = reg_param
-        # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
-        self._init_prediction_task()
-
         if checks.check_is_fitted(self.estimator_):
             self._shrink()
-
-    def __init__prediction_task(self):
-        self.prediction_task = &#39;regression&#39;
 
     def get_params(self, deep=True):
         if deep:
             return deepcopy({&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-                             # &#39;prediction_task&#39;: self.prediction_task,
                              &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_})
         return {&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-                # &#39;prediction_task&#39;: self.prediction_task,
                 &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
 
-    def fit(self, *args, **kwargs):
-        self.estimator_.fit(*args, **kwargs)
+    def fit(self, X, y, *args, **kwargs):
+        # remove feature_names if it exists (note: only works as keyword-arg)
+        self.feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
+        self.estimator_ = self.estimator_.fit(X, y, *args, **kwargs)
         self._shrink()
+        self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
+        return self
 
     def _shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         &#34;&#34;&#34;Shrink the tree
@@ -383,7 +418,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         right = tree.children_right[i]
         is_leaf = left == right
         n_samples = tree.n_node_samples[i]
-        if self.prediction_task == &#39;regression&#39;:
+        if isinstance(self, RegressorMixin):
             val = tree.value[i][0, 0]
         else:
             if len(tree.value[i][0]) == 1:
@@ -409,7 +444,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
                 val_new = val
             cum_sum += val_new
             if is_leaf:
-                if self.prediction_task == &#39;regression&#39;:
+                if isinstance(self, RegressorMixin):
                     if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
                         tree.value[i, 0, 0] = cum_sum
                     else:
@@ -433,7 +468,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
                                     1 + reg_param / n_samples)
                             tree.value[i, 0, 0] = 1.0 - tree.value[i, 0, 1]
             else:
-                if self.prediction_task == &#39;regression&#39;:
+                if isinstance(self, RegressorMixin):
                     tree.value[i][0, 0] = parent_val + val_new
                 else:
                     if len(tree.value[i][0]) == 1:
@@ -463,20 +498,30 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
                     t = t[0]
                 self._shrink_tree(t.tree_, self.reg_param)
 
-    def predict(self, *args, **kwargs):
-        return self.estimator_.predict(*args, **kwargs)
+    def predict(self, X, *args, **kwargs):
+        return self.estimator_.predict(X, *args, **kwargs)
 
-    def predict_proba(self, *args, **kwargs):
+    def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, &#39;predict_proba&#39;):
-            return self.estimator_.predict_proba(*args, **kwargs)
+            return self.estimator_.predict_proba(X, *args, **kwargs)
         else:
             return NotImplemented
 
-    def score(self, *args, **kwargs):
+    def score(self, X, y, *args, **kwargs):
         if hasattr(self.estimator_, &#39;score&#39;):
-            return self.estimator_.score(*args, **kwargs)
+            return self.estimator_.score(X, y, *args, **kwargs)
         else:
-            return NotImplemented</code></pre>
+            return NotImplemented
+
+    def __str__(self):
+        s = &#39;&gt; ------------------------------\n&#39;
+        s += &#39;&gt; Decision Tree with Hierarchical Shrinkage\n&#39;
+        s += &#39;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#39;
+        s += &#39;&gt; ------------------------------&#39; + &#39;\n&#39;
+        if hasattr(self, &#39;feature_names&#39;) and self.feature_names is not None:
+            return s + export_text(self.estimator_, feature_names=self.feature_names, show_weights=True)
+        else:
+            return s + export_text(self.estimator_, show_weights=True)</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -486,7 +531,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, *args, **kwargs)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -494,9 +539,13 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, *args, **kwargs):
-    self.estimator_.fit(*args, **kwargs)
-    self._shrink()</code></pre>
+<pre><code class="python">def fit(self, X, y, *args, **kwargs):
+    # remove feature_names if it exists (note: only works as keyword-arg)
+    self.feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
+    self.estimator_ = self.estimator_.fit(X, y, *args, **kwargs)
+    self._shrink()
+    self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
+    return self</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.get_params"><code class="name flex">
@@ -511,15 +560,13 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <pre><code class="python">def get_params(self, deep=True):
     if deep:
         return deepcopy({&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-                         # &#39;prediction_task&#39;: self.prediction_task,
                          &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_})
     return {&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-            # &#39;prediction_task&#39;: self.prediction_task,
             &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>self, *args, **kwargs)</span>
+<span>def <span class="ident">predict</span></span>(<span>self, X, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -527,12 +574,12 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self, *args, **kwargs):
-    return self.estimator_.predict(*args, **kwargs)</code></pre>
+<pre><code class="python">def predict(self, X, *args, **kwargs):
+    return self.estimator_.predict(X, *args, **kwargs)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.predict_proba"><code class="name flex">
-<span>def <span class="ident">predict_proba</span></span>(<span>self, *args, **kwargs)</span>
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -540,15 +587,15 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict_proba(self, *args, **kwargs):
+<pre><code class="python">def predict_proba(self, X, *args, **kwargs):
     if hasattr(self.estimator_, &#39;predict_proba&#39;):
-        return self.estimator_.predict_proba(*args, **kwargs)
+        return self.estimator_.predict_proba(X, *args, **kwargs)
     else:
         return NotImplemented</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.score"><code class="name flex">
-<span>def <span class="ident">score</span></span>(<span>self, *args, **kwargs)</span>
+<span>def <span class="ident">score</span></span>(<span>self, X, y, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -556,9 +603,9 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def score(self, *args, **kwargs):
+<pre><code class="python">def score(self, X, y, *args, **kwargs):
     if hasattr(self.estimator_, &#39;score&#39;):
-        return self.estimator_.score(*args, **kwargs)
+        return self.estimator_.score(X, y, *args, **kwargs)
     else:
         return NotImplemented</code></pre>
 </details>
@@ -567,16 +614,18 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">HSTreeClassifier</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param: float = 1, shrinkage_scheme_: str = 'node_based')</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>HSTree (Tree with hierarchical shrinkage applied).
+<div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
+<p>HSTree (Tree with hierarchical shrinkage applied).
 Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
 It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
 Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
 <a href="https://arxiv.org/abs/2202.00858">https://arxiv.org/abs/2202.00858</a></p>
 <h2 id="params">Params</h2>
-<p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)</p>
+<p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
+Defaults to CART Classification Tree with 20 max leaf ndoes</p>
 <p>reg_param: float
 Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
 <p>shrinkage_scheme: str
@@ -588,13 +637,13 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class HSTreeClassifier(HSTree):
-    def _init_prediction_task(self):
-        self.prediction_task = &#39;classification&#39;</code></pre>
+<pre><code class="python">class HSTreeClassifier(HSTree, ClassifierMixin):
+    ...</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
+<li>sklearn.base.ClassifierMixin</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -604,22 +653,45 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV"><code class="flex name class">
 <span>class <span class="ident">HSTreeClassifierCV</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based', cv: int = 3, scoring=None, *args, **kwargs)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = 20, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.</p></div>
+<div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
+<p>Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.</p>
+<h2 id="params">Params</h2>
+<p>estimator_
+Sklearn estimator (already initialized).
+If no estimator_ is passsed, sklearn decision tree is used</p>
+<p>max_rules
+If estimator is None, then max_leaf_nodes is passed to the default decision tree</p>
+<p>args, kwargs
+Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HSTreeClassifierCV(HSTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = &#39;node_based&#39;,
+    def __init__(self, estimator_: BaseEstimator = None,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 shrinkage_scheme_: str = &#39;node_based&#39;,
+                 max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
-        &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+        &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+
+         Params
+        ------
+        estimator_
+            Sklearn estimator (already initialized).
+            If no estimator_ is passsed, sklearn decision tree is used
+
+        max_rules
+            If estimator is None, then max_leaf_nodes is passed to the default decision tree
+
+        args, kwargs
+            Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
         &#34;&#34;&#34;
+        if estimator_ is None:
+            estimator_ = DecisionTreeClassifier(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -638,12 +710,13 @@ Cross-validation is used to select the best regularization parameter for hierarc
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)</code></pre>
+        super().fit(X=X, y=y, *args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
+<li>sklearn.base.ClassifierMixin</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -663,23 +736,25 @@ Cross-validation is used to select the best regularization parameter for hierarc
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
     self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-    super().fit(X=X, y=y)</code></pre>
+    super().fit(X=X, y=y, *args, **kwargs)</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressor"><code class="flex name class">
 <span>class <span class="ident">HSTreeRegressor</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param: float = 1, shrinkage_scheme_: str = 'node_based')</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>HSTree (Tree with hierarchical shrinkage applied).
+<div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
+<p>HSTree (Tree with hierarchical shrinkage applied).
 Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
 It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
 Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
 <a href="https://arxiv.org/abs/2202.00858">https://arxiv.org/abs/2202.00858</a></p>
 <h2 id="params">Params</h2>
-<p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)</p>
+<p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
+Defaults to CART Classification Tree with 20 max leaf ndoes</p>
 <p>reg_param: float
 Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
 <p>shrinkage_scheme: str
@@ -691,13 +766,13 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class HSTreeRegressor(HSTree):
-    def _init_prediction_task(self):
-        self.prediction_task = &#39;regression&#39;</code></pre>
+<pre><code class="python">class HSTreeRegressor(HSTree, RegressorMixin):
+    ...</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
+<li>sklearn.base.RegressorMixin</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -707,23 +782,45 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV"><code class="flex name class">
 <span>class <span class="ident">HSTreeRegressorCV</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based', cv: int = 3, scoring=None, *args, **kwargs)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = 20, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.</p></div>
+<div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
+<p>Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.</p>
+<h2 id="params">Params</h2>
+<p>estimator_
+Sklearn estimator (already initialized).
+If no estimator_ is passsed, sklearn decision tree is used</p>
+<p>max_rules
+If estimator is None, then max_leaf_nodes is passed to the default decision tree</p>
+<p>args, kwargs
+Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HSTreeRegressorCV(HSTreeRegressor):
-    def __init__(self, estimator_: BaseEstimator,
+    def __init__(self, estimator_: BaseEstimator = None,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  shrinkage_scheme_: str = &#39;node_based&#39;,
+                 max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
-        &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+        &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+
+         Params
+        ------
+        estimator_
+            Sklearn estimator (already initialized).
+            If no estimator_ is passsed, sklearn decision tree is used
+
+        max_rules
+            If estimator is None, then max_leaf_nodes is passed to the default decision tree
+
+        args, kwargs
+            Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
         &#34;&#34;&#34;
+        if estimator_ is None:
+            estimator_ = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -735,24 +832,25 @@ Cross-validation is used to select the best regularization parameter for hierarc
         #     raise Warning(&#39;Passed an already fitted estimator,&#39;
         #                   &#39;but shrinking not applied until fit method is called.&#39;)
 
-    def fit(self, X, y):
+    def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
             est = HSTreeRegressor(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)</code></pre>
+        super().fit(X=X, y=y, *args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
+<li>sklearn.base.RegressorMixin</li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -760,14 +858,14 @@ Cross-validation is used to select the best regularization parameter for hierarc
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y):
+<pre><code class="python">def fit(self, X, y, *args, **kwargs):
     self.scores_ = []
     for reg_param in self.reg_param_list:
         est = HSTreeRegressor(deepcopy(self.estimator_), reg_param)
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
     self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-    super().fit(X=X, y=y)</code></pre>
+    super().fit(X=X, y=y, *args, **kwargs)</code></pre>
 </details>
 </dd>
 </dl>

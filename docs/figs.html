@@ -55,7 +55,7 @@
 
     <p><a href="https://arxiv.org/abs/2202.00858">📄 Paper</a>, <a href="https://csinva.io/imodels/tree/figs.html#imodels.tree.figs">🗂 Doc</a>, <a href="https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=fast+interpretable+greedy-tree+sums&oq=fast#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3ADnPVL74Rop0J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌 Citation</a></p>
 
-  <h3 style="color:gray;padding-top:0px;">Yan Shuo Tan*, Chandan Singh*, Keyan Nasseri, Abhineet Agarwal, Bin Yu</h3>
+  <h3 style="color:gray;padding-top:0px;">Yan Shuo Tan*, Chandan Singh*, Keyan Nasseri*, Abhineet Agarwal, James Duncan, Omer Ronen, Aaron Kornblith, Bin Yu</h3>
 
     <p>
         Modern machine learning has achieved impressive prediction performance, but often sacrifices interpretability, a
@@ -70,12 +70,71 @@
         datasets when restricted to very few splits (e.g. less than 20).
         Theoretical and simulation results suggest that FIGS overcomes a key weakness of single-tree models by
         disentangling additive components of generative additive models, thereby significantly improving convergence
-        rates for $\ell_2$ generalization error.
+        rates for l2 generalization error.
         We further characterize the success of FIGS by quantifying how it reduces repeated splits, which can lead to
         redundancy in single-tree models such as CART.
         All code and models are released in a full-fledged package available on Github.
     </p>
-    <h2>An example of interpretable modeling</h2>
+
+    <h2>How does FIGS work? </h2>
+
+    Intuitively, FIGS works by extending CART, a typical greedy algorithm for growing a decision tree, to consider growing a <i>sum</i> of trees <i>simultaneously</i> (see Fig 1). At each iteration, FIGS may grow any existing tree it has already started or start a new tree; it greedily selects whichever rule reduces the total unexplained variance (or an alternative splitting criterion) the most. To keep the trees in sync with one another, each tree is made to predict the <i>residuals</i> remaining after summing the predictions of all other trees.
+    <br>
+    <br>
+    FIGS is intuitively similar to ensemble approaches such as gradient boosting / random forest, but importantly since all trees are grown to compete with each other the model can adapt more to the underlying structure in the data. The number of trees and size/shape of each tree emerge automatically from the data rather than being manually specified.
+
+    <p style="text-align:center;">
+        <a href="https://github.com/csinva/imodels"><img src="https://demos.csinva.io/figs/figs_fitting.gif?sanitize=True" width="90%"></a>
+        <br>
+        <b>Fig 1. </b><i>High-level intuition for how FIGS fits a model.</i>
+    </p>
+
+
+    <h2>An example using FIGS</h2>
+
+    FIGS can be used in the same way as standard scikit-learn models: simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods. Here's a full example of using it on a sample clinical dataset.
+
+    <pre>
+        <code>
+    from imodels import FIGSClassifier, get_clean_dataset
+    from sklearn.model_selection import train_test_split
+
+    # prepare data (in this a sample clinical dataset)
+    X, y, feat_names = get_clean_dataset('csi_pecarn_pred')
+    X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.33, random_state=42)
+
+    # fit the model
+    model = FIGSClassifier(max_rules=4)  # initialize a model
+    model.fit(X_train, y_train)   # fit model
+    preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
+    preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
+
+    # visualize the model
+    model.plot(feature_names=feat_names, filename='out.svg', dpi=300)
+            </code>
+    </pre>
+
+
+    This results in a simple model -- it contains only 4 splits (since we specified that the model should have no more than 4 splits (<code>max_rules=4</code>). Predictions are made by summing the value obtained from the appropriate leaf of each tree. This model is extremely interpretable, as a physician can now (i) easily make predictions using the 4 relevant features and (ii) vet the model to ensure it matches their domain expertise. Note that this model is just for illustration purposes, and achieves ~84% accuracy.
+
+
+    <p style="text-align:center;">
+        <a href="https://github.com/csinva/imodels"><img src="https://demos.csinva.io/figs/figs_csi_model_small.svg?sanitize=True" width="85%"></a>
+        <br>
+        <i><b>Fig 2.</b> Simple model learned by FIGS for predicting risk of cervical spinal injury. </i>
+    </p>
+
+    If we want a more flexible model, we can also remove the constraint on the number of rules (changing the code to <code>model = FIGSClassifier()</code>), resulting in a larger model (see Fig 3). Note that the number of trees and how balanced they are emerges from the structure of the data -- only the total number of rules may be specified.
+
+    <p style="text-align:center;">
+        <a href="https://github.com/csinva/imodels"><img src="https://demos.csinva.io/figs/figs_csi_model_large.svg?sanitize=True" width="100%"></a>
+        <br>
+        <i><b>Fig 3.</b> Slightly larger model learned by FIGS for predicting risk of cervical spinal injury. </i>
+    </p>
+
+
+    <h2>Another example of using FIGS</h2>
     <p>
         Here, we examine the <a href="https://www.sciencedirect.com/science/article/pii/S0140673671923038">Diabetes
         classification dataset</a>, in which eight risk factors were collected and used to predict the onset of diabetes

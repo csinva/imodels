@@ -331,7 +331,7 @@ def fig_1(barts: Dict[str, SklearnModel], X, y, dataset, display, dir, n):
 def _get_feature_acceptance_sample_data(mcmc_data, f_num):
     var_idx = np.array(mcmc_data.variable == f_num)
     prob = np.minimum(mcmc_data.ratio, 1)
-    accpt = np.array(mcmc_data.accepted, dtype=np.int)
+    accpt = np.array(mcmc_data.accepted, dtype=int)
     # positive = np.array(np.logical_and(data_var.move == "grow", data_var.accepted), dtype=np.int)
 
     # negative = np.array(np.logical_and(data_var.move == "prune", data_var.accepted), dtype=np.int)
@@ -406,7 +406,7 @@ def bart_synthetic_analysis(ds, n_samples, n_burn, n_chains, n_trees, display, d
         for d in t:
             t.set_description(f'{d[0]}')
 
-            for n_ds_samples in [5000, 10000]:
+            for n_ds_samples in [100, 1000, 10000, 100000]:
                 X_train, y_train, feat_names = get_clean_dataset(d[1], data_source=d[2], n_samples=n_ds_samples, p=10)
                 X_test, y_test, feat_names = get_clean_dataset(d[1], data_source=d[2], n_samples=N_TEST, p=10)
 
@@ -467,7 +467,7 @@ def bart_initilization_analysis(ds, n_samples, n_burn, n_chains, n_trees, displa
 
 def main():
     # n_trees = 100
-    n_burn = 8000  # 10000
+    n_burn = 100000  # 10000
     args = parse_args()
     n_samples = args.n_samples  # 0000  # 7500  # 00
 

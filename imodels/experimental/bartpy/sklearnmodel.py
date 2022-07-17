@@ -364,19 +364,33 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                 return np.round(predictions, 0)
             return predictions
 
-    def prediction_intervals(self, X, chain=None):
-
+    def _get_prediction_bounds(self, X, chain):
         if chain is None:
-            predictions_transformed = [x.predict(X) for x in
+            predictions_transformed = [self.data.y.unnormalize_y(x.predict(X)) for x in
                                        self._model_samples]
-            upper_bound = self.data.y.unnormalize_y(np.max(predictions_transformed, axis=0))
-            lower_bound = self.data.y.unnormalize_y(np.min(predictions_transformed, axis=0))
         else:
             predictions_transformed = self.chain_precitions(X, chain)
-            upper_bound = np.max(predictions_transformed, axis=0)
-            lower_bound = np.min(predictions_transformed, axis=0)
+        return np.max(predictions_transformed, axis=0), np.min(predictions_transformed, axis=0)
 
+
+    def prediction_intervals(self, X, chain=None):
+
+        # if chain is None:
+        #     predictions_transformed = [x.predict(X) for x in
+        #                                self._model_samples]
+        #     upper_bound = self.data.y.unnormalize_y(np.max(predictions_transformed, axis=0))
+        #     lower_bound = self.data.y.unnormalize_y(np.min(predictions_transformed, axis=0))
+        # else:
+        #     predictions_transformed = self.chain_precitions(X, chain)
+        #     upper_bound = np.max(predictions_transformed, axis=0)
+        #     lower_bound = np.min(predictions_transformed, axis=0)
+        upper_bound, lower_bound = self._get_prediction_bounds(X, chain)
         return np.stack([upper_bound, lower_bound], axis=1)
+
+    def coverage(self, X, y, chain=None):
+        intervals = self.prediction_intervals(X, chain)
+        coverage = np.mean(np.logical_and(y < intervals[:, 0], y > intervals[:, 1]))
+        return coverage
 
     def predict_proba(self, X: np.ndarray = None) -> np.ndarray:
         preds = self._out_of_sample_predict(X)
@@ -632,12 +646,12 @@ class BART(SklearnModel):
 
 
 class BARTChainCV(BART):
-    def fit(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, sgb_init=False) -> 'SklearnModel':
+    def fit(self, X: Union[np.ndarray, pd.DataFrame], y: np.ndarray, sgb_init=False, model=None) -> 'SklearnModel':
         # X_train, X_tun, y_train, y_tun = model_selection.train_test_split(
         #     X, y, test_size=0.3, random_state=1)
         self.data = self._convert_covariates_to_data(X, y)
 
-        if sgb_init:
+        if sgb_init and model is None:
             # lr_grid = {'learning_rate': [0.15, 0.1, 0.05, 0.01, 0.005, 0.001]}
             #
             # tuning = GridSearchCV(
@@ -645,9 +659,9 @@ class BARTChainCV(BART):
             #     param_grid=lr_grid, scoring='neg_mean_squared_error', n_jobs=4, cv=5)
             # tuning.fit(X, self.data.y.values)
             # sgb = GradientBoostingRegressor(**tuning.best_params_, n_estimators=self.n_trees).fit(X, self.data.y.values)
-            sgb = DecisionTreeRegressor(max_depth=5).fit(X, self.data.y.values)
+            model = DecisionTreeRegressor(max_depth=3).fit(X, self.data.y.values)
 
-            self.initializer = SklearnTreeInitializer(tree_=sgb)
+        self.initializer = SklearnTreeInitializer(tree_=model)
         super(BARTChainCV, self).fit(X, y)
         # chains_predictions = [self.predict_chain(X_tun, c) for c in range(self.n_chains)]
         # scores = [mean_squared_error(y_tun, p) for p in chains_predictions]

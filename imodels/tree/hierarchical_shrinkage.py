@@ -3,17 +3,19 @@ from typing import List
 
 import numpy as np
 from sklearn import datasets
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics import r2_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
 
 from imodels.util import checks
+from imodels.util.tree import compute_tree_complexity
 
 
 class HSTree:
-    def __init__(self, estimator_: BaseEstimator, reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
+    def __init__(self, estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+                 reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
         """HSTree (Tree with hierarchical shrinkage applied).
         Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
         It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
@@ -23,6 +25,7 @@ class HSTree:
         Params
         ------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
+            Defaults to CART Classification Tree with 20 max leaf ndoes
 
         reg_param: float
             Higher is more regularization (can be arbitrarily large, should not be < 0)
@@ -35,29 +38,25 @@ class HSTree:
         """
         super().__init__()
         self.reg_param = reg_param
-        # print('est', estimator_)
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
-        self._init_prediction_task()
-
         if checks.check_is_fitted(self.estimator_):
             self._shrink()
-
-    def __init__prediction_task(self):
-        self.prediction_task = 'regression'
 
     def get_params(self, deep=True):
         if deep:
             return deepcopy({'reg_param': self.reg_param, 'estimator_': self.estimator_,
-                             # 'prediction_task': self.prediction_task,
                              'shrinkage_scheme_': self.shrinkage_scheme_})
         return {'reg_param': self.reg_param, 'estimator_': self.estimator_,
-                # 'prediction_task': self.prediction_task,
                 'shrinkage_scheme_': self.shrinkage_scheme_}
 
-    def fit(self, *args, **kwargs):
-        self.estimator_.fit(*args, **kwargs)
+    def fit(self, X, y, *args, **kwargs):
+        # remove feature_names if it exists (note: only works as keyword-arg)
+        self.feature_names = kwargs.pop('feature_names', None)  # None returned if not passed
+        self.estimator_ = self.estimator_.fit(X, y, *args, **kwargs)
         self._shrink()
+        self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
+        return self
 
     def _shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         """Shrink the tree
@@ -68,7 +67,7 @@ class HSTree:
         right = tree.children_right[i]
         is_leaf = left == right
         n_samples = tree.n_node_samples[i]
-        if self.prediction_task == 'regression':
+        if isinstance(self, RegressorMixin):
             val = tree.value[i][0, 0]
         else:
             if len(tree.value[i][0]) == 1:
@@ -94,7 +93,7 @@ class HSTree:
                 val_new = val
             cum_sum += val_new
             if is_leaf:
-                if self.prediction_task == 'regression':
+                if isinstance(self, RegressorMixin):
                     if self.shrinkage_scheme_ == 'node_based' or self.shrinkage_scheme_ == 'constant':
                         tree.value[i, 0, 0] = cum_sum
                     else:
@@ -118,7 +117,7 @@ class HSTree:
                                     1 + reg_param / n_samples)
                             tree.value[i, 0, 0] = 1.0 - tree.value[i, 0, 1]
             else:
-                if self.prediction_task == 'regression':
+                if isinstance(self, RegressorMixin):
                     tree.value[i][0, 0] = parent_val + val_new
                 else:
                     if len(tree.value[i][0]) == 1:
@@ -148,39 +147,62 @@ class HSTree:
                     t = t[0]
                 self._shrink_tree(t.tree_, self.reg_param)
 
-    def predict(self, *args, **kwargs):
-        return self.estimator_.predict(*args, **kwargs)
+    def predict(self, X, *args, **kwargs):
+        return self.estimator_.predict(X, *args, **kwargs)
 
-    def predict_proba(self, *args, **kwargs):
+    def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, 'predict_proba'):
-            return self.estimator_.predict_proba(*args, **kwargs)
+            return self.estimator_.predict_proba(X, *args, **kwargs)
         else:
             return NotImplemented
 
-    def score(self, *args, **kwargs):
+    def score(self, X, y, *args, **kwargs):
         if hasattr(self.estimator_, 'score'):
-            return self.estimator_.score(*args, **kwargs)
+            return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented
 
+    def __str__(self):
+        s = '> ------------------------------\n'
+        s += '> Decision Tree with Hierarchical Shrinkage\n'
+        s += '> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n'
+        s += '> ------------------------------' + '\n'
+        if hasattr(self, 'feature_names') and self.feature_names is not None:
+            return s + export_text(self.estimator_, feature_names=self.feature_names, show_weights=True)
+        else:
+            return s + export_text(self.estimator_, show_weights=True)
 
-class HSTreeRegressor(HSTree):
-    def _init_prediction_task(self):
-        self.prediction_task = 'regression'
+
+class HSTreeRegressor(HSTree, RegressorMixin):
+    ...
 
 
-class HSTreeClassifier(HSTree):
-    def _init_prediction_task(self):
-        self.prediction_task = 'classification'
+class HSTreeClassifier(HSTree, ClassifierMixin):
+    ...
 
 
 class HSTreeClassifierCV(HSTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based',
+    def __init__(self, estimator_: BaseEstimator = None,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 shrinkage_scheme_: str = 'node_based',
+                 max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
-        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+        """Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+
+         Params
+        ------
+        estimator_
+            Sklearn estimator (already initialized).
+            If no estimator_ is passsed, sklearn decision tree is used
+
+        max_rules
+            If estimator is None, then max_leaf_nodes is passed to the default decision tree
+
+        args, kwargs
+            Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
         """
+        if estimator_ is None:
+            estimator_ = DecisionTreeClassifier(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -199,17 +221,31 @@ class HSTreeClassifierCV(HSTreeClassifier):
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        super().fit(X=X, y=y, *args, **kwargs)
 
 
 class HSTreeRegressorCV(HSTreeRegressor):
-    def __init__(self, estimator_: BaseEstimator,
+    def __init__(self, estimator_: BaseEstimator = None,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  shrinkage_scheme_: str = 'node_based',
+                 max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
-        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+        """Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+
+         Params
+        ------
+        estimator_
+            Sklearn estimator (already initialized).
+            If no estimator_ is passsed, sklearn decision tree is used
+
+        max_rules
+            If estimator is None, then max_leaf_nodes is passed to the default decision tree
+
+        args, kwargs
+            Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
         """
+        if estimator_ is None:
+            estimator_ = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -221,14 +257,14 @@ class HSTreeRegressorCV(HSTreeRegressor):
         #     raise Warning('Passed an already fitted estimator,'
         #                   'but shrinking not applied until fit method is called.')
 
-    def fit(self, X, y):
+    def fit(self, X, y, *args, **kwargs):
         self.scores_ = []
         for reg_param in self.reg_param_list:
             est = HSTreeRegressor(deepcopy(self.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        super().fit(X=X, y=y, *args, **kwargs)
 
 
 if __name__ == '__main__':

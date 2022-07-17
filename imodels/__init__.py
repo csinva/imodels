@@ -27,7 +27,7 @@ from .tree.cart_ccp import DecisionTreeCCPClassifier, DecisionTreeCCPRegressor, 
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
 from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
-from .tree.figs import FIGSRegressor, FIGSClassifier
+from .tree.figs import FIGSRegressor, FIGSClassifier, FIGSRegressorCV, FIGSClassifierCV
 from .tree.gosdt.pygosdt import OptimalTreeClassifier
 from .tree.gosdt.pygosdt_shrinkage import HSOptimalTreeClassifier, HSOptimalTreeClassifierCV
 from .tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier, HSTreeRegressorCV, HSTreeClassifierCV
@@ -35,6 +35,7 @@ from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
 from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
+from .importance.representation import TreeTransformer
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier,
@@ -43,4 +44,5 @@ CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesC
                FIGSClassifier, HSTreeClassifier, HSTreeClassifierCV]  # , IRFClassifier
 REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, FIGSRegressor,
               TaoTreeRegressor, HSTreeRegressor, HSTreeRegressorCV, BART]
+ESTIMATORS = CLASSIFIERS + REGRESSORS
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]
