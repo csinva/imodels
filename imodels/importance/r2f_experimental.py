@@ -602,7 +602,7 @@ class JointRidgeScorer(JointScorerBase, ABC):
 
             def _get_partial_model_looe(X, y, start_indices, alpha, beta, intercept):
                 X1 = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
-                B = np.linalg.inv(X1.T @ X1 + alpha * np.eye(X1.shape[1])) @ X1.T
+                B = np.linalg.inv(X1.T @ X1 + alpha * np.diag([0] + [1] * X.shape[1])) @ X1.T
                 h_vals = np.diag(X1 @ B)
                 y_preds = X @ beta + intercept
                 n_feats = len(start_indices) - 1
@@ -626,7 +626,7 @@ class JointRidgeScorer(JointScorerBase, ABC):
 
             def _get_partial_model_looe_multiclass(X, y_onehot, start_indices, alpha, beta, intercept):
                 X1 = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
-                B = np.linalg.inv(X1.T @ X1 + alpha * np.eye(X1.shape[1])) @ X1.T
+                B = np.linalg.inv(X1.T @ X1 + alpha * np.diag([0] + [1] * X.shape[1])) @ X1.T
                 h_vals = np.diag(X1 @ B)
                 y_preds = X @ np.transpose(beta) + intercept
                 n_feats = len(start_indices) - 1
