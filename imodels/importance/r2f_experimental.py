@@ -600,49 +600,57 @@ class JointRidgeScorer(JointScorerBase, ABC):
 
         if self.metric == "loocv":
 
-            def _get_partial_model_looe(X, y, start_indices, alpha, beta):
-                B = np.linalg.inv(X.T @ X + alpha * np.eye(X.shape[1])) @ X.T
-                h_vals = np.diag(X @ B)
-                y_preds = X @ beta
+            def _get_partial_model_looe(X, y, start_indices, alpha, beta, intercept):
+                X1 = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
+                B = np.linalg.inv(X1.T @ X1 + alpha * np.eye(X1.shape[1])) @ X1.T
+                h_vals = np.diag(X1 @ B)
+                y_preds = X @ beta + intercept
                 n_feats = len(start_indices) - 1
                 n_samples = X.shape[0]
                 looe_vals = np.zeros((n_samples, n_feats))
                 for k in range(len(start_indices) - 1):
                     X_partial = X[:, start_indices[k]:start_indices[k + 1]]
+                    X_partial1 = np.concatenate((np.ones((X_partial.shape[0], 1)), X_partial), axis=1)
                     beta_partial = beta[start_indices[k]:start_indices[k + 1]]
-                    B_partial = B[start_indices[k]:start_indices[k + 1], :]
+                    keep_idxs = [0] + [idx + 1 for idx in range(start_indices[k], start_indices[k + 1])]
+                    B_partial = B[keep_idxs, :]
+                    # B_partial = B[start_indices[k]:start_indices[k + 1], :]
                     if X_partial.shape[1] > 0:
-                        y_preds_partial = X_partial @ beta_partial
-                        h_vals_partial = np.diag(X_partial @ B_partial)
+                        y_preds_partial = X_partial @ beta_partial + intercept
+                        h_vals_partial = np.diag(X_partial1 @ B_partial)
                         looe_vals[:, k] = ((1 - h_vals + h_vals_partial) * (y_preds_partial - y) + h_vals_partial *
                                            (y_preds - y_preds_partial)) / (1 - h_vals)
                     else:
-                        looe_vals[:, k] = y
+                        looe_vals[:, k] = y - intercept
                 return looe_vals
 
-            def _get_partial_model_looe_multiclass(X, y_onehot, start_indices, alpha, beta):
-                B = np.linalg.inv(X.T @ X + alpha * np.eye(X.shape[1])) @ X.T
-                h_vals = np.diag(X @ B)
-                y_preds = X @ np.transpose(beta)
+            def _get_partial_model_looe_multiclass(X, y_onehot, start_indices, alpha, beta, intercept):
+                X1 = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
+                B = np.linalg.inv(X1.T @ X1 + alpha * np.eye(X1.shape[1])) @ X1.T
+                h_vals = np.diag(X1 @ B)
+                y_preds = X @ np.transpose(beta) + intercept
                 n_feats = len(start_indices) - 1
                 n_samples = X.shape[0]
                 looe_vals = np.zeros((n_samples, n_feats, y_onehot.shape[1]))
                 for k in range(len(start_indices) - 1):
                     X_partial = X[:, start_indices[k]:start_indices[k + 1]]
+                    X_partial1 = np.concatenate((np.ones((X_partial.shape[0], 1)), X_partial), axis=1)
                     beta_partial = beta[:, start_indices[k]:start_indices[k + 1]]
-                    B_partial = B[start_indices[k]:start_indices[k + 1], :]
+                    keep_idxs = [0] + [idx + 1 for idx in range(start_indices[k], start_indices[k + 1])]
+                    B_partial = B[keep_idxs, :]
+                    # B_partial = B[start_indices[k]:start_indices[k + 1], :]
                     if X_partial.shape[1] > 0:
-                        y_preds_partial = X_partial @ np.transpose(beta_partial)
-                        h_vals_partial = np.diag(X_partial @ B_partial)
+                        y_preds_partial = X_partial @ np.transpose(beta_partial) + intercept
+                        h_vals_partial = np.diag(X_partial1 @ B_partial)
                         for class_idx in range(y_onehot.shape[1]):
                             looe_vals[:, k, class_idx] = ((1 - h_vals + h_vals_partial) * (y_preds_partial[:, class_idx] - y_onehot[:, class_idx]) + h_vals_partial *
                                                           (y_preds[:, class_idx] - y_preds_partial[:, class_idx])) / (1 - h_vals)
                     else:
-                        looe_vals[:, k, :] = y_onehot
+                        looe_vals[:, k, :] = y_onehot - intercept
                 return looe_vals
 
             if multi_class:
-                looe = _get_partial_model_looe_multiclass(X_test, y_test_onehot, start_indices, ridge_model.alpha_, ridge_model.coef_)
+                looe = _get_partial_model_looe_multiclass(X_test, y_test_onehot, start_indices, ridge_model.alpha_, ridge_model.coef_, ridge_model.intercept_)
                 for k in range(len(start_indices) - 1):
                     R2 = 1 - np.sum(looe[:, k, :] ** 2, axis=0) / (np.var(y_onehot, axis=0) * y_onehot.shape[0])
                     self.scores[k] = np.sum(R2 * (y_onehot == 1).mean(axis=0))
@@ -653,7 +661,7 @@ class JointRidgeScorer(JointScorerBase, ABC):
                     class_scores[:] = np.NaN
                     self.class_scores[k] = dict(zip(self.classes, copy.deepcopy(class_scores)))
             else:
-                looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.coef_)
+                looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.coef_, ridge_model.intercept_)
                 for k in range(len(start_indices) - 1):
                     self.scores[k] = 1 - np.sum(looe[:, k] ** 2) / (np.var(y) * len(y))
                 else:
