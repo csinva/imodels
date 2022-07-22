@@ -1,5 +1,6 @@
 import copy
 import warnings
+import scipy
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
@@ -8,7 +9,7 @@ import pandas as pd
 from scipy.special import expit
 from scipy.stats import rankdata, kendalltau
 from sklearn.linear_model import RidgeCV, LassoCV, ElasticNetCV, LinearRegression, LassoLarsIC, LogisticRegressionCV, \
-    TheilSenRegressor, QuantileRegressor, Lasso, Ridge,HuberRegressor, RidgeClassifier, RidgeClassifierCV
+    TheilSenRegressor, QuantileRegressor, Lasso, Ridge,HuberRegressor, RidgeClassifier, RidgeClassifierCV,LogisticRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble._forest import _generate_unsampled_indices
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -728,6 +729,80 @@ class JointLogisticScorer(JointScorerBase, ABC):
                     class_scores = np.zeros(len(self.classes))
                     class_scores[:] = np.NaN
                     self.class_scores[k] = copy.deepcopy(class_scores)
+
+                    
+class JointALOOCVLogisticScorer(JointScorerBase, ABC):
+     def __init__(self, metric=None, penalty="l2",Cs =  np.logspace(-4,4,10)):
+        self.penalty = penalty
+        self.classes = None
+        self.Cs = Cs
+        super().__init__(metric)
+    
+     def fit(self, X, y, start_indices, sample_weight=None):
+        def fit_logistic_regression(X, y, C):
+            model = LogisticRegression(C=C)
+            model.fit(X, y)
+            return np.array(list(model.coef_[0]) + list(model.intercept_))
+
+        def compute_hessian(p_vector, X, alpha):
+            n, k = X.shape
+            a_vector = np.sqrt((1 - p_vector)*p_vector)
+            R = scipy.linalg.qr(a_vector.reshape((n, 1))*X, mode='r')[0]
+            H = np.dot(R.T, R)
+            for i in range(k-1):
+                H[i, i] += alpha
+            return H
+
+        def compute_alo(X, y, C):
+            alpha = 1.0 / C
+            w = fit_logistic_regression(X, y, C)
+            X = np.hstack((X, np.ones((X.shape[0], 1))))
+            n = X.shape[0]
+            y = 2*y - 1
+            u_vector = np.dot(X, w)
+            p_vector = scipy.special.expit(u_vector*y)
+            H = compute_hessian(p_vector, X, alpha)
+            L = np.linalg.cholesky(H)
+            T = scipy.linalg.solve_triangular(L, X.T, lower=True)
+            h_vector = np.array([np.dot(ti, ti) for pi, ti in zip(p_vector, T.T)])
+            loo_u_vector = u_vector - y * (1 - p_vector)*h_vector / (1 - p_vector*(1 - p_vector)*h_vector)
+            loo_likelihoods = scipy.special.expit(y*loo_u_vector)
+            return sum(np.log(loo_likelihoods))
+        
+        def get_partial_model_alo(X,y,C_opt,w_opt):
+            alpha_opt = 1.0/C_opt
+            n = X.shape[0]
+            X = np.hstack((X, np.ones((X.shape[0], 1))))
+            y = 2*y - 1
+            u_vector = np.dot(X, w_opt)
+            p_vector = scipy.special.expit(u_vector*y)
+            H = compute_hessian(p_vector, X, alpha_opt)
+            L = np.linalg.cholesky(H)
+            T = scipy.linalg.solve_triangular(L, X.T, lower=True)
+            h_vector = np.array([np.dot(ti, ti) for pi, ti in zip(p_vector, T.T)])
+            loo_u_vector = u_vector - y * (1 - p_vector)*h_vector / (1 - p_vector*(1 - p_vector)*h_vector)
+            loo_likelihoods = scipy.special.expit(y*loo_u_vector)
+            return sum(np.log(loo_likelihoods))
+            
+        
+        alos = [compute_alo(X, y, C) for C in self.Cs]
+        C_opt = self.Cs[alos.index(max(alos))]
+        clf = LogisticRegression(C = C_opt).fit(X,y)
+        for k in range(len(start_indices) - 1):
+            restricted_feats = X[:, start_indices[k]:start_indices[k + 1]]
+            restricted_coefs = clf.coef_[:, start_indices[k]:start_indices[k + 1]]
+            X_partial = X[:, start_indices[k]:start_indices[k + 1]]
+            self.n_stumps[k] = start_indices[k + 1] - start_indices[k]
+            self.model_sizes[k] = int(np.sum(np.sum(restricted_coefs != 0, axis=0) > 0))
+            if restricted_coefs.shape[1] > 0:
+                w_opt = []
+                for i in range(len(restricted_coefs[0])):
+                    w_opt.append(restricted_coefs[0][i])
+                w_opt.append(clf.intercept_[0])
+                self.scores[k] = get_partial_model_alo(X_partial,y,C_opt,w_opt)
+            else:
+                self.scores[k] = np.NaN
+        
 
 
 class JointLassoScorer(JointScorerBase,ABC):
