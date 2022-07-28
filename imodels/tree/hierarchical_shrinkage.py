@@ -55,7 +55,18 @@ class HSTree:
         self.feature_names = kwargs.pop('feature_names', None)  # None returned if not passed
         self.estimator_ = self.estimator_.fit(X, y, *args, **kwargs)
         self._shrink()
-        self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
+
+        # compute complexity
+        if hasattr(self.estimator_, 'tree_'):
+            self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
+        elif hasattr(self.estimator_, 'estimators_'):
+            self.complexity_ = 0
+            for i in range(len(self.estimator_.estimators_)):
+                t = deepcopy(self.estimator_.estimators_[i])
+                if isinstance(t, np.ndarray):
+                    assert t.size == 1, 'multiple trees stored under tree_?'
+                    t = t[0]
+                self.complexity_ += compute_tree_complexity(t.tree_)
         return self
 
     def _shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):

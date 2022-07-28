@@ -2,7 +2,7 @@ import random
 from functools import partial
 
 import numpy as np
-from sklearn.ensemble import VotingRegressor
+from sklearn.ensemble import VotingRegressor, RandomForestClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels import HSTreeClassifier, HSTreeClassifierCV, \
@@ -47,7 +47,10 @@ class TestShrinkage:
 
         for model_type in [
             partial(HSTreeClassifier, estimator_=DecisionTreeClassifier()),
+            partial(HSTreeClassifier, estimator_=GradientBoostingClassifier()),
+            partial(HSTreeClassifier, estimator_=DecisionTreeClassifier()),
             partial(HSTreeClassifierCV, estimator_=DecisionTreeClassifier()),
+            partial(HSTreeClassifierCV, estimator_=RandomForestClassifier()),
             partial(HSC45TreeClassifierCV, estimator_=C45TreeClassifier()),
             HSTreeClassifierCV,  # default estimator is Decision tree with 25 max_leaf_nodes
             # partial(HSOptimalTreeClassifierCV, estimator_=OptimalTreeClassifier()),
@@ -74,6 +77,9 @@ class TestShrinkage:
             # print(type(m), m, 'final acc', acc_train)
             assert acc_train > 0.8, 'acc greater than 0.8'
 
+            # complexity
+            assert m.complexity_ > 0, 'complexity is greater than 0'
+
     def test_recognized_by_sklearn(self):
         base_models = [('hs', HSTreeRegressor(DecisionTreeRegressor())),
                        ('dt', DecisionTreeRegressor())]
@@ -96,6 +102,9 @@ class TestShrinkage:
 
             mse = np.mean(np.square(preds - self.y_regression))
             assert mse < 1, 'mse less than 1'
+
+            # complexity
+            assert m.complexity_ > 0, 'complexity is greater than 0'
 
 
 if __name__ == '__main__':
