@@ -749,6 +749,7 @@ class JointALOLogisticScorer(JointScorerBase,ABC):
             J_inverse = np.linalg.inv(J)
             H = X1@J_inverse@X1.T@np.diag(log_loss_second_derivative)
             return np.diag(H)
+        
         def compute_alo(y,ip,h_val,log_loss_derivative,log_loss_second_derivative):
             leverage_score_ratio = h_val/(1.0-h_val)
             derivative_ratio = log_loss_derivative/log_loss_second_derivative
@@ -775,7 +776,7 @@ class JointALOLogisticScorer(JointScorerBase,ABC):
                 looe_vals[:, k] = -y*(partial_ips + derivative_ratio*leverage_score_ratio) + np.log(1 + np.exp(partial_ips + leverage_score_ratio*derivative_ratio)) 
             return looe_vals
 
-        lr_models = [LogisticRegression(fit_intercept=True,C = C).fit(X,y) for C in self.Cs]
+        lr_models = [LogisticRegression(fit_intercept=True,C = C,max_iter = 1000).fit(X,y) for C in self.Cs]
         betas = [np.append(lr.intercept_,lr.coef_[0]) for lr in lr_models]
         X1 = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
         inner_products = [np.dot(X1,beta) for beta in betas]
@@ -792,7 +793,10 @@ class JointALOLogisticScorer(JointScorerBase,ABC):
         log_loss_second_derivative_opt = log_loss_second_derivative[np.argmin(alos)]
         looe = compute_partial_alo(X, y,start_indices,alpha_opt,lr_opt,log_loss_derivative_opt,log_loss_second_derivative_opt)
         for k in range(len(start_indices)-1):
-            self.scores[k] = np.sum(looe[:,k])*-1 #log-likelihood
+            if len(beta_opt[start_indices[k]:start_indices[k + 1]]) == 0:
+                self.scores[k] = np.NaN
+            else:
+                self.scores[k] = np.sum(looe[:,k])*-1 #log-likelihood
         
         
 
