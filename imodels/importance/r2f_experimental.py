@@ -653,20 +653,13 @@ class JointRidgeScorer(JointScorerBase, ABC):
             if multi_class:
                 looe = _get_partial_model_looe_multiclass(X_test, y_test_onehot, start_indices, ridge_model.alpha_, ridge_model.coef_, ridge_model.intercept_)
                 for k in range(len(start_indices) - 1):
-                    R2 = 1 - np.sum(looe[:, k, :] ** 2, axis=0) / (np.var(y_onehot, axis=0) * y_onehot.shape[0])
-                    self.scores[k] = np.sum(R2 * (y_onehot == 1).mean(axis=0))
+                    R2 = 1 - np.sum(looe[:, k, :] ** 2, axis=0) / (np.var(y_test_onehot, axis=0) * y_test_onehot.shape[0])
+                    self.scores[k] = np.sum(R2 * (y_test_onehot == 1).mean(axis=0))
                     self.class_scores[k] = dict(zip(self.classes, R2))
-                else:
-                    self.scores[k] = np.NaN
-                    class_scores = np.zeros(len(self.classes))
-                    class_scores[:] = np.NaN
-                    self.class_scores[k] = dict(zip(self.classes, copy.deepcopy(class_scores)))
             else:
                 looe = _get_partial_model_looe(X_test, y_test, start_indices, ridge_model.alpha_, ridge_model.coef_, ridge_model.intercept_)
                 for k in range(len(start_indices) - 1):
-                    self.scores[k] = 1 - np.sum(looe[:, k] ** 2) / (np.var(y) * len(y))
-                else:
-                    self.scores[k] = np.NaN
+                    self.scores[k] = 1 - np.sum(looe[:, k] ** 2) / (np.var(y_test) * len(y_test))
         else:
             for k in range(len(start_indices) - 1):
                 if multi_class:
