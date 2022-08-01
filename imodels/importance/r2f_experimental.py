@@ -723,7 +723,7 @@ class JointLogisticScorer(JointScorerBase, ABC):
                     class_scores[:] = np.NaN
                     self.class_scores[k] = copy.deepcopy(class_scores)
 
-                    
+'''               
 class JointALOLogisticScorer(JointScorerBase,ABC):
     def __init__(self, metric=None, penalty="l2",Cs =  np.logspace(-4,4,10)):
         self.penalty = penalty
@@ -742,7 +742,6 @@ class JointALOLogisticScorer(JointScorerBase,ABC):
             J_inverse = np.linalg.inv(J)
             H = X1@J_inverse@X1.T@np.diag(log_loss_second_derivative)
             return np.diag(H)
-        
         def compute_alo(y,ip,h_val,log_loss_derivative,log_loss_second_derivative):
             leverage_score_ratio = h_val/(1.0-h_val)
             derivative_ratio = log_loss_derivative/log_loss_second_derivative
@@ -791,8 +790,64 @@ class JointALOLogisticScorer(JointScorerBase,ABC):
             else:
                 self.scores[k] = np.sum(looe[:,k])*-1 #log-likelihood
         
+'''     
         
+class JointALOLogisticScorer(JointScorerBase,ABC):
+    def __init__(self, metric=None, penalty="l2",Cs =  np.logspace(-4,4,10)):
+        self.penalty = penalty
+        self.classes = None
+        self.Cs = Cs
+        super().__init__(metric)
+    def fit(self, X, y, start_indices, sample_weight=None): 
+        def compute_loss_derivative(ip,y):
+            return -y + (np.exp(ip)/(1 + np.exp(ip)))
+        def compute_loss_second_derivative(ip):
+            return (np.exp(ip))/(1 + np.exp(ip))**2
+        def compute_leverage_scores(log_loss_second_derivative,X1,C):
+            alpha = 1.0/C 
+            J = X1.T@np.diag(log_loss_second_derivative)@X1 + alpha*np.diag([0] + [1] * X.shape[1])
+            J_inverse = np.linalg.inv(J)
+            H = X1@J_inverse@X1.T@np.diag(log_loss_second_derivative)
+            return np.diag(H)
+        def compute_alo(y,ip,h_val,log_loss_derivative,log_loss_second_derivative):
+            leverage_score_ratio = h_val/(1.0-h_val)
+            derivative_ratio = log_loss_derivative/log_loss_second_derivative
+            log_loss = (-y*ip) + (-y*derivative_ratio*leverage_score_ratio) + np.log(1.0 + np.exp(ip + leverage_score_ratio*derivative_ratio))
+            return np.sum(log_loss)
+        def compute_partial_preds(opt_h_val,opt_derivative,opt_second_derivative,opt_alpha,opt_lr):
+            J_opt =  X1.T@np.diag(opt_second_derivative)@X1 + opt_alpha*np.diag([0] + [1] * X.shape[1])
+            J_opt_inverse = np.linalg.inv(J_opt)
+            n_samples = X.shape[0]
+            n_feats = len(start_indices) - 1
+            looe_preds = np.zeros((n_samples, n_feats))
+            for k in range(len(start_indices) - 1):
+                X_partial = X[:, start_indices[k]:start_indices[k + 1]]
+                X_partial1 = np.concatenate((np.ones((X_partial.shape[0], 1)), X_partial), axis=1)
+                beta_partial = np.append(opt_lr.intercept_,opt_lr.coef_[0][start_indices[k]:start_indices[k + 1]])
+                partial_ips = np.dot(X_partial1,beta_partial)
+                keep_idxs = [0] + [idx + 1 for idx in range(start_indices[k], start_indices[k + 1])]
+                J_opt_inverse_partial = J_opt_inverse[keep_idxs, :]
+                h_vals_partial = (X_partial1.dot(J_opt_inverse_partial) * X1).sum(-1)
+                linear_partial_preds = partial_ips + ((h_vals_partial)/(1.0-opt_h_val))*opt_derivative
+                looe_preds[:,k] = 1.0 / (1.0 + np.exp(-linear_partial_preds))
+            return looe_preds            
 
+        lr_models = [LogisticRegression(fit_intercept=True,C = C,max_iter = 1000).fit(X,y) for C in self.Cs]
+        betas = [np.append(lr.intercept_,lr.coef_[0]) for lr in lr_models]
+        X1 = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
+        inner_products = [np.dot(X1,beta) for beta in betas]
+        log_loss_derivative = [compute_loss_derivative(ip,y) for ip in inner_products]
+        log_loss_second_derivative = [compute_loss_second_derivative(ip) for ip in inner_products]
+        h_vals = [compute_leverage_scores(log_loss_second_derivative[i],X1,self.Cs[i]) for i in range(len(log_loss_second_derivative))]
+        alos = [compute_alo(y,inner_products[i],h_vals[i],log_loss_derivative[i],log_loss_second_derivative[i]) for i in range(len(log_loss_second_derivative))]
+        looe_preds = compute_partial_preds(opt_h_val = h_vals[np.argmin(alos)],opt_derivative = log_loss_derivative[np.argmin(alos)],
+                                           opt_second_derivative = log_loss_second_derivative[np.argmin(alos)],
+                                           opt_alpha = 1.0/self.Cs[np.argmin(alos)],opt_lr = lr_models[np.argmin(alos)])
+        for k in range(len(start_indices)-1):
+            if len(lr_models[np.argmin(alos)].coef_[0][start_indices[k]:start_indices[k + 1]]) == 0:
+                self.scores[k] = np.NaN
+            else:
+                self.scores[k] = self.metric(y, looe_preds[:,k])#np.sum(looe[:,k])*-1 #log-likelihood
 '''                    
 class JointALOOCVLogisticScorer(JointScorerBase, ABC):
      def __init__(self, metric=None, penalty="l2",Cs =  np.logspace(-4,4,10)):
@@ -960,6 +1015,7 @@ class GeneralizedMDIJoint:
                     class_scores_dict[tree_id][feat_id] = defaultdict(lambda x: None)
 
         for idx, estimator in enumerate(self.estimator.estimators_):
+            print(idx)
             tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw,
                                                normalize_raw=self.normalize_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
