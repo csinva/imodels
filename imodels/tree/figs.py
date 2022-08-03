@@ -82,11 +82,23 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     """
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None):
+    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None,
+                 max_features: str=None):
+        """
+        Params
+        ------
+        max_rules: int
+            Max total number of rules across all trees
+        min_impurity_decrease: float
+            A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
+        max_features
+            The number of features to consider when looking for the best split (see https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
+        """
         super().__init__()
         self.max_rules = max_rules
         self.min_impurity_decrease = min_impurity_decrease
         self.random_state = random_state
+        self.max_features = max_features
         self._init_decision_function()
 
     def _init_decision_function(self):
@@ -99,7 +111,8 @@ class FIGS(BaseEstimator):
             decision_function = self.predict
 
     def _construct_node_with_stump(self, X, y, idxs, tree_num, sample_weight=None,
-                                   compare_nodes_with_sample_weight=True):
+                                   compare_nodes_with_sample_weight=True,
+                                   max_features=None):
         """
         Params
         ------
@@ -114,7 +127,7 @@ class FIGS(BaseEstimator):
         RIGHT = 2
 
         # fit stump
-        stump = tree.DecisionTreeRegressor(max_depth=1)
+        stump = tree.DecisionTreeRegressor(max_depth=1, max_features=max_features)
         sweight = None
         if sample_weight is not None:
             sweight = sample_weight[idxs]
@@ -175,6 +188,10 @@ class FIGS(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         """
+        
+        if isinstance(self, ClassifierMixin):
+            self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
+        
         X, y = check_X_y(X, y)
         y = y.astype(float)
         if feature_names is not None:
@@ -191,7 +208,7 @@ class FIGS(BaseEstimator):
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
         # or it is a child of a root node that has already been added
         idxs = np.ones(X.shape[0], dtype=bool)
-        node_init = self._construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight)
+        node_init = self._construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight, max_features=self.max_features)
         potential_splits = [node_init]
         for node in potential_splits:
             node.setattrs(is_root=True)
@@ -263,7 +280,8 @@ class FIGS(BaseEstimator):
                                                                           y=y_target,
                                                                           idxs=potential_split.idxs,
                                                                           tree_num=potential_split.tree_num,
-                                                                          sample_weight=sample_weight, )
+                                                                          sample_weight=sample_weight,
+                                                                          max_features=self.max_features)
 
                 # need to preserve certain attributes from before (value at this split + is_root)
                 # value may change because residuals may have changed, but we want it to store the value from before
