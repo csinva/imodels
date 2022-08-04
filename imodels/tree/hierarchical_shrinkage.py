@@ -1,15 +1,16 @@
+import time
 from copy import deepcopy
 from typing import List
 
 import numpy as np
 from sklearn import datasets
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
-from sklearn.metrics import r2_score
-from sklearn.model_selection import cross_val_score
+from sklearn.metrics import r2_score, mean_squared_error, log_loss
+from sklearn.model_selection import cross_val_score, KFold
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, \
     export_text
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestRegressor
 
 from imodels.util import checks
 from imodels.util.arguments import check_fit_arguments
@@ -85,7 +86,7 @@ class HSTree:
         n_samples = tree.weighted_n_node_samples[i]
         if isinstance(self, RegressorMixin) or isinstance(self.estimator_, GradientBoostingClassifier):
             val = deepcopy(tree.value[i, :, :])
-        else: # If classification, normalize to probability vector
+        else:  # If classification, normalize to probability vector
             val = tree.value[i, :, :] / n_samples
 
         # Step 1: Update cum_sum
@@ -99,15 +100,15 @@ class HSTree:
                 val_new = (val - parent_val) / (1 + reg_param / parent_num)
             elif self.shrinkage_scheme_ == 'constant':
                 val_new = (val - parent_val) / (1 + reg_param)
-            else: # leaf_based
+            else:  # leaf_based
                 val_new = 0
             cum_sum += val_new
 
         # Step 2: Update node values
         if self.shrinkage_scheme_ == 'node_based' or self.shrinkage_scheme_ == 'constant':
             tree.value[i, :, :] = cum_sum
-        else: # leaf_based
-            if is_leaf: # update node values if leaf_based
+        else:  # leaf_based
+            if is_leaf:  # update node values if leaf_based
                 root_val = tree.value[0, :, :]
                 tree.value[i, :, :] = root_val + (val - root_val) / (1 + reg_param / n_samples)
             else:
@@ -120,7 +121,7 @@ class HSTree:
             self._shrink_tree(tree, reg_param, right,
                               parent_val=val, parent_num=n_samples, cum_sum=deepcopy(cum_sum))
 
-                # edit the non-leaf nodes for later visualization (doesn't effect predictions)
+            # edit the non-leaf nodes for later visualization (doesn't effect predictions)
 
         return tree
 
@@ -189,9 +190,24 @@ class HSTreeClassifier(HSTree, ClassifierMixin):
     ...
 
 
+def _get_cv_criterion(scorer):
+    y_true = np.random.binomial(n=1, p=.5, size=100)
+
+    y_pred_good = y_true
+    y_pred_bad = np.random.uniform(0, 1, 100)
+
+    score_good = scorer(y_true, y_pred_good)
+    score_bad = scorer(y_true, y_pred_bad)
+
+    if score_good > score_bad:
+        return np.argmax
+    elif score_good < score_bad:
+        return np.argmin
+
+
 class HSTreeClassifierCV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator = None,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500],
                  shrinkage_scheme_: str = 'node_based',
                  max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
@@ -223,12 +239,21 @@ class HSTreeClassifierCV(HSTreeClassifier):
         #                   'but shrinking not applied until fit method is called.')
 
     def fit(self, X, y, *args, **kwargs):
-        self.scores_ = []
-        for reg_param in self.reg_param_list:
-            est = HSTreeClassifier(deepcopy(self.estimator_), reg_param)
-            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
-            self.scores_.append(np.mean(cv_scores))
-        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        self.scores_ = [[] for _ in self.reg_param_list]
+        scorer = kwargs.get('scoring', log_loss)
+        kf = KFold(n_splits=self.cv)
+        for train_index, test_index in kf.split(X):
+            X_out, y_out = X[test_index, :], y[test_index]
+            X_in, y_in = X[train_index, :], y[train_index]
+            base_est = deepcopy(self.estimator_)
+            base_est.fit(X_in, y_in)
+            for i, reg_param in enumerate(self.reg_param_list):
+                est_hs = HSTreeClassifier(base_est, reg_param)
+                est_hs.fit(X_in, y_in)
+                self.scores_[i].append(scorer(y_out, est_hs.predict_proba(X_out)))
+        self.scores_ = [np.mean(s) for s in self.scores_]
+        cv_criterion = _get_cv_criterion(scorer)
+        self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
         super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
@@ -244,7 +269,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
 
 class HSTreeRegressorCV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator = None,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500],
                  shrinkage_scheme_: str = 'node_based',
                  max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
@@ -276,12 +301,21 @@ class HSTreeRegressorCV(HSTreeRegressor):
         #                   'but shrinking not applied until fit method is called.')
 
     def fit(self, X, y, *args, **kwargs):
-        self.scores_ = []
-        for reg_param in self.reg_param_list:
-            est = HSTreeRegressor(deepcopy(self.estimator_), reg_param)
-            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
-            self.scores_.append(np.mean(cv_scores))
-        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        self.scores_ = [[] for _ in self.reg_param_list]
+        kf = KFold(n_splits=self.cv)
+        scorer = kwargs.get('scoring', mean_squared_error)
+        for train_index, test_index in kf.split(X):
+            X_out, y_out = X[test_index, :], y[test_index]
+            X_in, y_in = X[train_index, :], y[train_index]
+            base_est = deepcopy(self.estimator_)
+            base_est.fit(X_in, y_in)
+            for i, reg_param in enumerate(self.reg_param_list):
+                est_hs = HSTreeRegressor(base_est, reg_param)
+                est_hs.fit(X_in, y_in)
+                self.scores_[i].append(scorer(est_hs.predict(X_out), y_out))
+        self.scores_ = [np.mean(s) for s in self.scores_]
+        cv_criterion = _get_cv_criterion(scorer)
+        self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
         super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
@@ -311,7 +345,7 @@ if __name__ == '__main__':
 
     # m = HSTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
     # m = DecisionTreeClassifier(max_leaf_nodes = 20,random_state=1, max_features=None)
-    m = DecisionTreeRegressor(random_state=42, max_leaf_nodes=20)
+    m = DecisionTreeClassifier(random_state=42)
     # print('best alpha', m.reg_param)
     m.fit(X_train, y_train)
     # m.predict_proba(X_train)  # just run this
@@ -323,9 +357,9 @@ if __name__ == '__main__':
 
     # m = HSTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
     # m = HSTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
-    m = HSTreeClassifierCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=10, random_state=1),
-                           shrinkage_scheme_='node_based',
-                           reg_param_list=[0.1, 1, 2, 5, 10, 25, 50, 100, 500])
+    m = HSTreeRegressorCV(estimator_=DecisionTreeClassifier(random_state=42),
+                          shrinkage_scheme_='node_based',
+                          reg_param_list=[0.1, 1, 2, 5, 10, 25, 50, 100, 500])
     # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
 
     # m = HSTreeClassifier(estimator_ = GradientBoostingClassifier(random_state = 10),reg_param = 5)
