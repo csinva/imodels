@@ -1,11 +1,12 @@
+import time
 from copy import deepcopy
 from typing import List
 
 import numpy as np
 from sklearn import datasets
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
-from sklearn.metrics import r2_score
-from sklearn.model_selection import cross_val_score
+from sklearn.metrics import r2_score, mean_squared_error, log_loss, accuracy_score
+from sklearn.model_selection import cross_val_score, KFold
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
 
@@ -225,7 +226,8 @@ class HSTreeClassifierCV(HSTreeClassifier):
         #     raise Warning('Passed an already fitted estimator,'
         #                   'but shrinking not applied until fit method is called.')
 
-    def fit(self, X, y, *args, **kwargs):
+    def fit_slow(self, X, y, *args, **kwargs):
+        s = time.time()
         self.scores_ = []
         for reg_param in self.reg_param_list:
             est = HSTreeClassifier(deepcopy(self.estimator_), reg_param)
@@ -233,6 +235,27 @@ class HSTreeClassifierCV(HSTreeClassifier):
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y, *args, **kwargs)
+        e = time.time() - s
+        print(f"slow time: {np.round(e, 2)}")
+
+    def fit(self, X, y, *args, **kwargs):
+        s = time.time()
+        self.scores_ = [[] for _ in self.reg_param_list]
+        kf = KFold(n_splits=self.cv)
+        for train_index, test_index in kf.split(X):
+            X_out, y_out = X[test_index, :], y[test_index]
+            X_in, y_in = X[train_index, :], y[train_index]
+            base_est = deepcopy(self.estimator_)
+            base_est.fit(X_in, y_in)
+            for i, reg_param in enumerate(self.reg_param_list):
+                est_hs = HSTreeClassifier(base_est, reg_param)
+                est_hs.fit(X_in, y_in)
+                self.scores_[i].append(log_loss(y_out, est_hs.predict_proba(X_out)))
+        self.scores_ = [np.mean(s) for s in self.scores_]
+        self.reg_param = self.reg_param_list[np.argmin(self.scores_)]
+        super().fit(X=X, y=y, *args, **kwargs)
+        e = time.time() - s
+        print(f"time: {np.round(e, 2)}")
 
 
 class HSTreeRegressorCV(HSTreeRegressor):
@@ -268,7 +291,8 @@ class HSTreeRegressorCV(HSTreeRegressor):
         #     raise Warning('Passed an already fitted estimator,'
         #                   'but shrinking not applied until fit method is called.')
 
-    def fit(self, X, y, *args, **kwargs):
+    def fit_slow(self, X, y, *args, **kwargs):
+        s = time.time()
         self.scores_ = []
         for reg_param in self.reg_param_list:
             est = HSTreeRegressor(deepcopy(self.estimator_), reg_param)
@@ -276,6 +300,27 @@ class HSTreeRegressorCV(HSTreeRegressor):
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y, *args, **kwargs)
+        e = time.time() - s
+        print(f"slow time: {np.round(e, 3)}")
+
+    def fit(self, X, y, *args, **kwargs):
+        s = time.time()
+        self.scores_ = [[] for _ in self.reg_param_list]
+        kf = KFold(n_splits=self.cv)
+        for train_index, test_index in kf.split(X):
+            X_out, y_out = X[test_index, :], y[test_index]
+            X_in, y_in = X[train_index, :], y[train_index]
+            base_est = deepcopy(self.estimator_)
+            base_est.fit(X_in, y_in)
+            for i, reg_param in enumerate(self.reg_param_list):
+                est_hs = HSTreeRegressor(base_est, reg_param)
+                est_hs.fit(X_in, y_in)
+                self.scores_[i].append(mean_squared_error(est_hs.predict(X_out), y_out))
+        self.scores_ = [np.mean(s) for s in self.scores_]
+        self.reg_param = self.reg_param_list[np.argmin(self.scores_)]
+        super().fit(X=X, y=y, *args, **kwargs)
+        e = time.time() - s
+        print(f"time: {np.round(e, 3)}")
 
 
 if __name__ == '__main__':
@@ -306,13 +351,25 @@ if __name__ == '__main__':
 
     # m = HSTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
     # m = HSTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
-    m = HSTreeClassifierCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=10, random_state=1),
+    m = HSTreeRegressorCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=10, random_state=1),
                            shrinkage_scheme_='node_based',
                            reg_param_list=[0.1, 1, 2, 5, 10, 25, 50, 100, 500])
     # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
 
     # m = HSTreeClassifier(estimator_ = GradientBoostingClassifier(random_state = 10),reg_param = 5)
     m.fit(X_train, y_train)
+    print('best alpha', m.reg_param)
+    # m.predict_proba(X_train)  # just run this
+    # print('score', m.score(X_test, y_test))
+    print('score', r2_score(y_test, m.predict(X_test)))
+
+    m = HSTreeRegressorCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=10, random_state=1),
+                           shrinkage_scheme_='node_based',
+                           reg_param_list=[0.1, 1, 2, 5, 10, 25, 50, 100, 500])
+    # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
+
+    # m = HSTreeClassifier(estimator_ = GradientBoostingClassifier(random_state = 10),reg_param = 5)
+    m.fit_slow(X_train, y_train)
     print('best alpha', m.reg_param)
     # m.predict_proba(X_train)  # just run this
     # print('score', m.score(X_test, y_test))
