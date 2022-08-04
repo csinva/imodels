@@ -406,7 +406,7 @@ class TreeClassifier:
             return (
                 "[ ${}$ {} {} ]"
                     .format(name, self.latex(node["true"]), self.latex(node["false"]))
-                    .replace("==", " \eq ").replace(">=", " \ge ").replace("<=", " \le ")
+                    .replace("==", r" \eq ").replace(">=", r" \ge ").replace("<=", r" \le ")
             )
 
     def json(self):
