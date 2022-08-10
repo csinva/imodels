@@ -16,6 +16,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.feature_selection import f_regression
 import sklearn.metrics as metrics
 import statsmodels.api as sm
+from tqdm import tqdm
 
 from imodels.importance.representation import TreeTransformer
 from imodels.importance.LassoICc import LassoLarsICc
@@ -591,7 +592,6 @@ class JointRidgeScorer(JointScorerBase, ABC):
             y_train = y
             y_test = y
         ridge_model.fit(X_train, y_train, sample_weight=sample_weight)
-        print(ridge_model.alpha_)
         if multi_class:
             self.classes = ridge_model.classes_
             y_test_onehot = np.ones((len(y_test), len(self.classes)))
@@ -743,7 +743,7 @@ class JointLogisticScorer(JointScorerBase, ABC):
                     
                     
 class JointALOElasticNetScorer(JointScorerBase,ABC):
-    def __init__(self,metric = None,alphas = np.logspace(-4,3,100),l1_ratios = [0.0,0.5,1.0]):
+    def __init__(self,metric = None,alphas = np.logspace(-4,3,100),l1_ratios = [10**-10,0.5,1.0]):
         self.alphas = alphas
         self.l1_ratios = l1_ratios 
         super().__init__(metric)
@@ -791,7 +791,7 @@ class JointALOElasticNetScorer(JointScorerBase,ABC):
                     partial_model_support_idxs = [0] + [opt_support.tolist().index(idx) + 1 for idx in partial_model_support]
                     J_opt_inverse_partial = J_opt_inverse[partial_model_support_idxs,:]
                 #X1S_partial =  np.concatenate((np.ones((XS_partial.shape[0], 1)), XS_partial), axis=1)
-                    h_vals_partial = np.diag(X_partial1@J_opt_inverse_partial@X1_S.T)#(X_partial1.dot(J_opt_inverse_partial) * X1_S).sum(-1)
+                    h_vals_partial = (X_partial1.dot(J_opt_inverse_partial) * X1_S).sum(-1)#np.diag(X_partial1@J_opt_inverse_partial@X1_S.T)#(
                 #looe_vals[:, k] = ((1 - opt_h_val + h_vals_partial) * (y_preds_partial - y) + h_vals_partial *
                 #                           (y_preds - y_preds_partial)) / (1 - h_vals)
                     looe_preds[:,k] = partial_ips + ((h_vals_partial)/(1.0-opt_h_val))*opt_loss_derivative
@@ -835,7 +835,10 @@ class JointALOElasticNetScorer(JointScorerBase,ABC):
             if len(partial_model_support) == 0:
                 self.scores[k] = np.NaN
             else:
-                self.scores[k] = self.metric(y, looe_preds[:,k])#np.sum(looe[:,k])*-1 #log-likelihood                                                                                                      
+                try:
+                    self.scores[k] = self.metric(y, looe_preds[:,k])#np.sum(looe[:,k])*-1 #log-likelihood     
+                except:
+                    print(looe_preds[:,k])
 
 
 
@@ -992,8 +995,7 @@ class GeneralizedMDIJoint:
                 for feat_id in range(n_features):
                     class_scores_dict[tree_id][feat_id] = defaultdict(lambda x: None)
 
-        for idx, estimator in enumerate(self.estimator.estimators_):
-            print(idx)
+        for idx, estimator in tqdm(enumerate(self.estimator.estimators_)):
             tree_transformer = TreeTransformer(estimator=estimator, pca=False, add_raw=self.add_raw,
                                                normalize_raw=self.normalize_raw)
             oob_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
