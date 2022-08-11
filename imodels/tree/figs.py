@@ -338,11 +338,14 @@ class FIGS(BaseEstimator):
                 s = s.replace(f'X_{i}', self.feature_names_[i])
         return s
 
-    def print_tree(self, X, y):
+    def print_tree(self, X, y, feature_names=None):
         s = '------------\n' + '\n\t+\n'.join([self._tree_to_str_with_data(X, y, t) for t in self.trees_])
-        if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
-            for i in range(len(self.feature_names_))[::-1]:
-                s = s.replace(f'X_{i}', self.feature_names_[i])
+        if feature_names is None:
+            if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
+                feature_names = self.feature_names_
+        if feature_names is not None:
+            for i in range(len(feature_names))[::-1]:
+                s = s.replace(f'X_{i}', feature_names[i])
         return s
 
     def predict(self, X):
