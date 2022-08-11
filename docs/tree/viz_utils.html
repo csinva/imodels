@@ -31,7 +31,9 @@ TreeData = namedtuple(&#39;TreeData&#39;, &#34;children_left children_right &#34
                                   &#34;feature threshold n_node_samples impurity value n_classes n_outputs&#34;)
 
 
-def extract_figs_tree(node, n_classes):
+def extract_sklearn_tree_from_figs_tree(node, n_classes):
+    &#34;&#34;&#34;Takes in a FIGS tree and reformats it as an sklearn decision tree
+    &#34;&#34;&#34;
     tree_data = TreeData(
         children_left=[],
         children_right=[],
@@ -76,7 +78,7 @@ def extract_figs_tree(node, n_classes):
 
 class LightTreeViz:
     def __init__(self, figs_tree, n_classes):
-        tree = extract_figs_tree(figs_tree, n_classes)
+        tree = extract_sklearn_tree_from_figs_tree(figs_tree, n_classes)
         self.children_left = tree.children_left
         self.children_right = tree.children_right
         self.feature = tree.feature
@@ -103,16 +105,18 @@ class DecisionTreeViz(BaseDecisionTree):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="imodels.tree.viz_utils.extract_figs_tree"><code class="name flex">
-<span>def <span class="ident">extract_figs_tree</span></span>(<span>node, n_classes)</span>
+<dt id="imodels.tree.viz_utils.extract_sklearn_tree_from_figs_tree"><code class="name flex">
+<span>def <span class="ident">extract_sklearn_tree_from_figs_tree</span></span>(<span>node, n_classes)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Takes in a FIGS tree and reformats it as an sklearn decision tree</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def extract_figs_tree(node, n_classes):
+<pre><code class="python">def extract_sklearn_tree_from_figs_tree(node, n_classes):
+    &#34;&#34;&#34;Takes in a FIGS tree and reformats it as an sklearn decision tree
+    &#34;&#34;&#34;
     tree_data = TreeData(
         children_left=[],
         children_right=[],
@@ -198,7 +202,7 @@ Use derived classes instead.</p></div>
 </summary>
 <pre><code class="python">class LightTreeViz:
     def __init__(self, figs_tree, n_classes):
-        tree = extract_figs_tree(figs_tree, n_classes)
+        tree = extract_sklearn_tree_from_figs_tree(figs_tree, n_classes)
         self.children_left = tree.children_left
         self.children_right = tree.children_right
         self.feature = tree.feature
@@ -276,7 +280,7 @@ Use derived classes instead.</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="imodels.tree.viz_utils.extract_figs_tree" href="#imodels.tree.viz_utils.extract_figs_tree">extract_figs_tree</a></code></li>
+<li><code><a title="imodels.tree.viz_utils.extract_sklearn_tree_from_figs_tree" href="#imodels.tree.viz_utils.extract_sklearn_tree_from_figs_tree">extract_sklearn_tree_from_figs_tree</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

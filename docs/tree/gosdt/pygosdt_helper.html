@@ -429,7 +429,7 @@ class TreeClassifier:
             return (
                 &#34;[ ${}$ {} {} ]&#34;
                     .format(name, self.latex(node[&#34;true&#34;]), self.latex(node[&#34;false&#34;]))
-                    .replace(&#34;==&#34;, &#34; \eq &#34;).replace(&#34;&gt;=&#34;, &#34; \ge &#34;).replace(&#34;&lt;=&#34;, &#34; \le &#34;)
+                    .replace(&#34;==&#34;, r&#34; \eq &#34;).replace(&#34;&gt;=&#34;, r&#34; \ge &#34;).replace(&#34;&lt;=&#34;, r&#34; \le &#34;)
             )
 
     def json(self):
@@ -1052,7 +1052,7 @@ differs from the feature space of the original data.</p></div>
             return (
                 &#34;[ ${}$ {} {} ]&#34;
                     .format(name, self.latex(node[&#34;true&#34;]), self.latex(node[&#34;false&#34;]))
-                    .replace(&#34;==&#34;, &#34; \eq &#34;).replace(&#34;&gt;=&#34;, &#34; \ge &#34;).replace(&#34;&lt;=&#34;, &#34; \le &#34;)
+                    .replace(&#34;==&#34;, r&#34; \eq &#34;).replace(&#34;&gt;=&#34;, r&#34; \ge &#34;).replace(&#34;&lt;=&#34;, r&#34; \le &#34;)
             )
 
     def json(self):
@@ -1378,7 +1378,7 @@ being a reserved character in LaTeX</p>
         return (
             &#34;[ ${}$ {} {} ]&#34;
                 .format(name, self.latex(node[&#34;true&#34;]), self.latex(node[&#34;false&#34;]))
-                .replace(&#34;==&#34;, &#34; \eq &#34;).replace(&#34;&gt;=&#34;, &#34; \ge &#34;).replace(&#34;&lt;=&#34;, &#34; \le &#34;)
+                .replace(&#34;==&#34;, r&#34; \eq &#34;).replace(&#34;&gt;=&#34;, r&#34; \ge &#34;).replace(&#34;&lt;=&#34;, r&#34; \le &#34;)
         )</code></pre>
 </details>
 </dd>

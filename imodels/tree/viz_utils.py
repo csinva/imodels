@@ -8,7 +8,9 @@ TreeData = namedtuple('TreeData', "children_left children_right "
                                   "feature threshold n_node_samples impurity value n_classes n_outputs")
 
 
-def extract_figs_tree(node, n_classes):
+def extract_sklearn_tree_from_figs_tree(node, n_classes):
+    """Takes in a FIGS tree and reformats it as an sklearn decision tree
+    """
     tree_data = TreeData(
         children_left=[],
         children_right=[],
@@ -53,7 +55,7 @@ def extract_figs_tree(node, n_classes):
 
 class LightTreeViz:
     def __init__(self, figs_tree, n_classes):
-        tree = extract_figs_tree(figs_tree, n_classes)
+        tree = extract_sklearn_tree_from_figs_tree(figs_tree, n_classes)
         self.children_left = tree.children_left
         self.children_right = tree.children_right
         self.feature = tree.feature

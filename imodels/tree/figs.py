@@ -83,7 +83,7 @@ class FIGS(BaseEstimator):
     """
 
     def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None,
-                 max_features: str=None):
+                 max_features: str = None):
         """
         Params
         ------
@@ -188,10 +188,10 @@ class FIGS(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         """
-        
+
         if isinstance(self, ClassifierMixin):
             self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
-        
+
         X, y = check_X_y(X, y)
         y = y.astype(float)
         if feature_names is not None:
@@ -208,7 +208,8 @@ class FIGS(BaseEstimator):
         # everything in potential_splits either is_root (so it can be added directly to self.trees_)
         # or it is a child of a root node that has already been added
         idxs = np.ones(X.shape[0], dtype=bool)
-        node_init = self._construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight, max_features=self.max_features)
+        node_init = self._construct_node_with_stump(X=X, y=y, idxs=idxs, tree_num=-1, sample_weight=sample_weight,
+                                                    max_features=self.max_features)
         potential_splits = [node_init]
         for node in potential_splits:
             node.setattrs(is_root=True)
