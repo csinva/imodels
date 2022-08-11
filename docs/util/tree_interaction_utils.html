@@ -29,17 +29,19 @@ import pandas as pd
 
 
 def make_rj(n=300, p=50):
-    &#34;&#34;&#34;Generates data according to the model in https://www.jstor.org/stable/27920185
+    &#34;&#34;&#34;Generates data according to the model in Radchenko &amp; James, 2010
     X_i ~ Unif([0,1]^p)
-    y = sqrt(0.5)[\sum_{i=1}^5 f_i(x) + f_1(x)f_2(x) + f_1(x)f_3(x)] + N(0,1)
+    y = sqrt(0.5)[sum_{i=1}^5 f_i(x) + f_1(x)f_2(x) + f_1(x)f_3(x)] + N(0,1)
     f_1(x) = x1, f_2(x) = (1+x2)^{-1}, f_3(x) = sin(x3), f_4(x) = e^x4, f_5(x) = x5^2
     function withing the sum are normalized
 
-    Args:
+    Params
+    ------
         n (int): number of sample
         p (int): number of features
 
-    Returns:
+    Returns
+    -------
         Tuple[np.array, np.array]: design matrix and label vector
 
     &#34;&#34;&#34;
@@ -264,39 +266,36 @@ def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
 <span>def <span class="ident">make_rj</span></span>(<span>n=300, p=50)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Generates data according to the model in <a href="https://www.jstor.org/stable/27920185">https://www.jstor.org/stable/27920185</a>
+<div class="desc"><p>Generates data according to the model in Radchenko &amp; James, 2010
 X_i ~ Unif([0,1]^p)
-y = sqrt(0.5)[\sum_{i=1}^5 f_i(x) + f_1(x)f_2(x) + f_1(x)f_3(x)] + N(0,1)
+y = sqrt(0.5)[sum_{i=1}^5 f_i(x) + f_1(x)f_2(x) + f_1(x)f_3(x)] + N(0,1)
 f_1(x) = x1, f_2(x) = (1+x2)^{-1}, f_3(x) = sin(x3), f_4(x) = e^x4, f_5(x) = x5^2
 function withing the sum are normalized</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>n</code></strong> :&ensp;<code>int</code></dt>
-<dd>number of sample</dd>
-<dt><strong><code>p</code></strong> :&ensp;<code>int</code></dt>
-<dd>number of features</dd>
-</dl>
+<h2 id="params">Params</h2>
+<pre><code>n (int): number of sample
+p (int): number of features
+</code></pre>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>Tuple[np.array, np.array]</code></dt>
-<dd>design matrix and label vector</dd>
-</dl></div>
+<pre><code>Tuple[np.array, np.array]: design matrix and label vector
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def make_rj(n=300, p=50):
-    &#34;&#34;&#34;Generates data according to the model in https://www.jstor.org/stable/27920185
+    &#34;&#34;&#34;Generates data according to the model in Radchenko &amp; James, 2010
     X_i ~ Unif([0,1]^p)
-    y = sqrt(0.5)[\sum_{i=1}^5 f_i(x) + f_1(x)f_2(x) + f_1(x)f_3(x)] + N(0,1)
+    y = sqrt(0.5)[sum_{i=1}^5 f_i(x) + f_1(x)f_2(x) + f_1(x)f_3(x)] + N(0,1)
     f_1(x) = x1, f_2(x) = (1+x2)^{-1}, f_3(x) = sin(x3), f_4(x) = e^x4, f_5(x) = x5^2
     function withing the sum are normalized
 
-    Args:
+    Params
+    ------
         n (int): number of sample
         p (int): number of features
 
-    Returns:
+    Returns
+    -------
         Tuple[np.array, np.array]: design matrix and label vector
 
     &#34;&#34;&#34;

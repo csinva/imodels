@@ -23,15 +23,16 @@
 </summary>
 <pre><code class="python">import random
 from copy import deepcopy
+from queue import deque
 
 import numpy as np
-from matplotlib import pyplot as plt
 from mlxtend.classifier import LogisticRegression
 from sklearn import datasets
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import get_scorer
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_text, plot_tree
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_text
 from sklearn.utils import check_X_y
 
 
@@ -41,9 +42,11 @@ class TaoTree(BaseEstimator):
                  n_iters: int = 20,
                  model_args: dict = {&#39;max_leaf_nodes&#39;: 15},
                  randomize_tree=False,
+                 update_scoring=&#39;accuracy&#39;,
                  min_node_samples_tao=3,
                  min_leaf_samples_tao=2,
                  node_model=&#39;stump&#39;,
+                 node_model_args: dict = {},
                  reg_param: float = 1e-3,
                  weight_errors: bool = False,
                  verbose: int = 0,
@@ -101,9 +104,11 @@ class TaoTree(BaseEstimator):
         self.n_iters = n_iters
         self.model_args = model_args
         self.randomize_tree = randomize_tree
+        self.update_scoring = update_scoring
         self.min_node_samples_tao = min_node_samples_tao
         self.min_leaf_samples_tao = min_leaf_samples_tao
         self.node_model = node_model
+        self.node_model_args = node_model_args
         self.reg_param = reg_param
         self.weight_errors = weight_errors
         self.verbose = verbose
@@ -117,7 +122,7 @@ class TaoTree(BaseEstimator):
         &#34;&#34;&#34;
         self.prediction_task = &#39;classification&#39;
 
-    def fit(self, X, y=None, feature_names=None):
+    def fit(self, X, y=None, feature_names=None, sample_weight=None):
         &#34;&#34;&#34;
         Params
         ------
@@ -140,7 +145,7 @@ class TaoTree(BaseEstimator):
                 self.model = DecisionTreeClassifier(**self.model_args)
             elif self.prediction_task == &#39;regression&#39;:
                 self.model = DecisionTreeRegressor(**self.model_args)
-            self.model.fit(X, y)
+            self.model.fit(X, y, sample_weight=sample_weight)
             if self.verbose:
                 print(export_text(self.model))
             # plot_tree(self.model)
@@ -156,13 +161,13 @@ class TaoTree(BaseEstimator):
         if self.verbose:
             print(&#39;starting score&#39;, self.model.score(X, y))
         for i in range(self.n_iters):
-            num_updates = self._tao_iter_cart(X, y, self.model.tree_)
+            num_updates = self._tao_iter_cart(X, y, self.model.tree_, sample_weight=sample_weight)
             if num_updates == 0:
                 break
 
         return self
 
-    def _tao_iter_cart(self, X, y, tree):
+    def _tao_iter_cart(self, X, y, tree, X_score=None, y_score=None, sample_weight=None):
         &#34;&#34;&#34;Updates tree by applying the tao algorithm to the tree
         Params
         ------
@@ -185,20 +190,25 @@ class TaoTree(BaseEstimator):
         indexes_with_prefix_paths = []  # data structure with (index, path_to_node_index)
         # e.g. if if node 3 is the left child of node 1 which is the right child of node 0
         # then we get (3, [(0, R), (1, L)])
-        stack = [(0, [])]  # start with the root node id (0) and its depth (0)
-        while len(stack) &gt; 0:
-            node_id, path_to_node_index = stack.pop()
+
+        # start with the root node id (0) and its depth (0)
+        queue = deque()
+        queue.append((0, []))
+        while len(queue) &gt; 0:
+            node_id, path_to_node_index = queue.popleft()
             indexes_with_prefix_paths.append((node_id, path_to_node_index))
 
-            # If a split node, append left and right children and depth to `stack`
+            # If a split node, append left and right children and depth to queue
             if children_left[node_id] != children_right[node_id]:
-                stack.append((children_left[node_id], path_to_node_index + [(node_id, &#39;L&#39;)]))
-                stack.append((children_right[node_id], path_to_node_index + [(node_id, &#39;R&#39;)]))
+                queue.append((children_left[node_id], path_to_node_index + [(node_id, &#39;L&#39;)]))
+                queue.append((children_right[node_id], path_to_node_index + [(node_id, &#39;R&#39;)]))
         # print(indexes_with_prefix_paths)
 
-        # For each each node, try a TAO update
         num_updates = 0
-        for (node_id, path_to_node_index) in indexes_with_prefix_paths:
+
+        # Reversing BFS queue presents nodes bottom -&gt; top one level at a time
+        for (node_id, path_to_node_index) in reversed(indexes_with_prefix_paths):
+            # For each each node, try a TAO update
             # print(&#39;node_id&#39;, node_id, path_to_node_index)
 
             # Compute the points being input to the node ######################################
@@ -214,6 +224,11 @@ class TaoTree(BaseEstimator):
                 return X, y
 
             X_node, y_node = filter_points_by_path(X, y, path_to_node_index)
+
+            if sample_weight is not None:
+                sample_weight_node = filter_points_by_path(X, sample_weight, path_to_node_index)[1]
+            else:
+                sample_weight_node = np.ones(y_node.size)
 
             # Skip over leaf nodes and nodes with too few samples ######################################
             if children_left[node_id] == children_right[node_id]:  # is leaf node
@@ -284,10 +299,8 @@ class TaoTree(BaseEstimator):
             # if self.prediction_task == &#39;regression&#39;:
             # weight by the difference in error ###############################################################
             if self.weight_errors:
-                sample_weight = np.abs(y_node_absolute_errors[:, 1] - y_node_absolute_errors[:, 0])
-            else:
-                sample_weight = np.ones(y_node.size)
-            sample_weight = sample_weight[idxs_relevant]
+                sample_weight_node *= np.abs(y_node_absolute_errors[:, 1] - y_node_absolute_errors[:, 0])
+            sample_weight_node_target = sample_weight_node[idxs_relevant]
             X_node = X_node[idxs_relevant]
 
             # Fit a 1-variable binary classification model on these outputs ######################################
@@ -297,17 +310,17 @@ class TaoTree(BaseEstimator):
             for feat_num in range(X.shape[1]):
                 if self.prediction_task == &#39;classification&#39;:
                     if self.node_model == &#39;linear&#39;:
-                        m = LogisticRegression()
+                        m = LogisticRegression(**self.node_model_args)
                     elif self.node_model == &#39;stump&#39;:
-                        m = DecisionTreeClassifier(max_depth=1)
+                        m = DecisionTreeClassifier(max_depth=1, **self.node_model_args)
                 elif self.prediction_task == &#39;regression&#39;:
                     if self.node_model == &#39;linear&#39;:
-                        m = LinearRegression()
+                        m = LinearRegression(**self.node_model_args)
                     elif self.node_model == &#39;stump&#39;:
-                        m = DecisionTreeRegressor(max_depth=1)
+                        m = DecisionTreeRegressor(max_depth=1, **self.node_model_args)
                 X_node_single_feat = X_node[:, feat_num: feat_num + 1]
-                m.fit(X_node_single_feat, y_node_target, sample_weight=sample_weight)
-                score = m.score(X_node_single_feat, y_node_target, sample_weight=sample_weight)
+                m.fit(X_node_single_feat, y_node_target, sample_weight=sample_weight_node_target)
+                score = m.score(X_node_single_feat, y_node_target, sample_weight=sample_weight_node_target)
                 if score &gt; best_score:
                     best_score = score
                     best_feat_num = feat_num
@@ -323,11 +336,19 @@ class TaoTree(BaseEstimator):
             old_feat_num = feature[node_id]
             old_threshold = threshold[node_id]
             # print(X.sum(), y.sum())
-            old_score = self.model.score(X, y)
+
+            if X_score is None:
+                X_score = X
+            if y_score is None:
+                y_score = y
+
+            scorer = get_scorer(self.update_scoring)
+
+            old_score = scorer(self.model, X_score, y_score)
 
             feature[node_id] = best_feat_num
             threshold[node_id] = best_threshold
-            new_score = self.model.score(X, y)
+            new_score = scorer(self.model, X_score, y_score)
 
             # debugging
             if self.verbose &gt; 1:
@@ -367,12 +388,12 @@ class TaoTree(BaseEstimator):
         return self.model.score(X, y)
 
 
-class TaoTreeRegressor(TaoTree):
+class TaoTreeRegressor(TaoTree, RegressorMixin):
     def _init_prediction_task(self):
         self.prediction_task = &#39;regression&#39;
 
 
-class TaoTreeClassifier(TaoTree):
+class TaoTreeClassifier(TaoTree, ClassifierMixin):
     def _init_prediction_task(self):
         self.prediction_task = &#39;classification&#39;
 
@@ -418,7 +439,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="imodels.tree.tao.TaoTree"><code class="flex name class">
 <span>class <span class="ident">TaoTree</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = {}, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -473,9 +494,11 @@ Note: this implementation learns single-feature splits rather than oblique trees
                  n_iters: int = 20,
                  model_args: dict = {&#39;max_leaf_nodes&#39;: 15},
                  randomize_tree=False,
+                 update_scoring=&#39;accuracy&#39;,
                  min_node_samples_tao=3,
                  min_leaf_samples_tao=2,
                  node_model=&#39;stump&#39;,
+                 node_model_args: dict = {},
                  reg_param: float = 1e-3,
                  weight_errors: bool = False,
                  verbose: int = 0,
@@ -533,9 +556,11 @@ Note: this implementation learns single-feature splits rather than oblique trees
         self.n_iters = n_iters
         self.model_args = model_args
         self.randomize_tree = randomize_tree
+        self.update_scoring = update_scoring
         self.min_node_samples_tao = min_node_samples_tao
         self.min_leaf_samples_tao = min_leaf_samples_tao
         self.node_model = node_model
+        self.node_model_args = node_model_args
         self.reg_param = reg_param
         self.weight_errors = weight_errors
         self.verbose = verbose
@@ -549,7 +574,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
         &#34;&#34;&#34;
         self.prediction_task = &#39;classification&#39;
 
-    def fit(self, X, y=None, feature_names=None):
+    def fit(self, X, y=None, feature_names=None, sample_weight=None):
         &#34;&#34;&#34;
         Params
         ------
@@ -572,7 +597,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
                 self.model = DecisionTreeClassifier(**self.model_args)
             elif self.prediction_task == &#39;regression&#39;:
                 self.model = DecisionTreeRegressor(**self.model_args)
-            self.model.fit(X, y)
+            self.model.fit(X, y, sample_weight=sample_weight)
             if self.verbose:
                 print(export_text(self.model))
             # plot_tree(self.model)
@@ -588,13 +613,13 @@ Note: this implementation learns single-feature splits rather than oblique trees
         if self.verbose:
             print(&#39;starting score&#39;, self.model.score(X, y))
         for i in range(self.n_iters):
-            num_updates = self._tao_iter_cart(X, y, self.model.tree_)
+            num_updates = self._tao_iter_cart(X, y, self.model.tree_, sample_weight=sample_weight)
             if num_updates == 0:
                 break
 
         return self
 
-    def _tao_iter_cart(self, X, y, tree):
+    def _tao_iter_cart(self, X, y, tree, X_score=None, y_score=None, sample_weight=None):
         &#34;&#34;&#34;Updates tree by applying the tao algorithm to the tree
         Params
         ------
@@ -617,20 +642,25 @@ Note: this implementation learns single-feature splits rather than oblique trees
         indexes_with_prefix_paths = []  # data structure with (index, path_to_node_index)
         # e.g. if if node 3 is the left child of node 1 which is the right child of node 0
         # then we get (3, [(0, R), (1, L)])
-        stack = [(0, [])]  # start with the root node id (0) and its depth (0)
-        while len(stack) &gt; 0:
-            node_id, path_to_node_index = stack.pop()
+
+        # start with the root node id (0) and its depth (0)
+        queue = deque()
+        queue.append((0, []))
+        while len(queue) &gt; 0:
+            node_id, path_to_node_index = queue.popleft()
             indexes_with_prefix_paths.append((node_id, path_to_node_index))
 
-            # If a split node, append left and right children and depth to `stack`
+            # If a split node, append left and right children and depth to queue
             if children_left[node_id] != children_right[node_id]:
-                stack.append((children_left[node_id], path_to_node_index + [(node_id, &#39;L&#39;)]))
-                stack.append((children_right[node_id], path_to_node_index + [(node_id, &#39;R&#39;)]))
+                queue.append((children_left[node_id], path_to_node_index + [(node_id, &#39;L&#39;)]))
+                queue.append((children_right[node_id], path_to_node_index + [(node_id, &#39;R&#39;)]))
         # print(indexes_with_prefix_paths)
 
-        # For each each node, try a TAO update
         num_updates = 0
-        for (node_id, path_to_node_index) in indexes_with_prefix_paths:
+
+        # Reversing BFS queue presents nodes bottom -&gt; top one level at a time
+        for (node_id, path_to_node_index) in reversed(indexes_with_prefix_paths):
+            # For each each node, try a TAO update
             # print(&#39;node_id&#39;, node_id, path_to_node_index)
 
             # Compute the points being input to the node ######################################
@@ -646,6 +676,11 @@ Note: this implementation learns single-feature splits rather than oblique trees
                 return X, y
 
             X_node, y_node = filter_points_by_path(X, y, path_to_node_index)
+
+            if sample_weight is not None:
+                sample_weight_node = filter_points_by_path(X, sample_weight, path_to_node_index)[1]
+            else:
+                sample_weight_node = np.ones(y_node.size)
 
             # Skip over leaf nodes and nodes with too few samples ######################################
             if children_left[node_id] == children_right[node_id]:  # is leaf node
@@ -716,10 +751,8 @@ Note: this implementation learns single-feature splits rather than oblique trees
             # if self.prediction_task == &#39;regression&#39;:
             # weight by the difference in error ###############################################################
             if self.weight_errors:
-                sample_weight = np.abs(y_node_absolute_errors[:, 1] - y_node_absolute_errors[:, 0])
-            else:
-                sample_weight = np.ones(y_node.size)
-            sample_weight = sample_weight[idxs_relevant]
+                sample_weight_node *= np.abs(y_node_absolute_errors[:, 1] - y_node_absolute_errors[:, 0])
+            sample_weight_node_target = sample_weight_node[idxs_relevant]
             X_node = X_node[idxs_relevant]
 
             # Fit a 1-variable binary classification model on these outputs ######################################
@@ -729,17 +762,17 @@ Note: this implementation learns single-feature splits rather than oblique trees
             for feat_num in range(X.shape[1]):
                 if self.prediction_task == &#39;classification&#39;:
                     if self.node_model == &#39;linear&#39;:
-                        m = LogisticRegression()
+                        m = LogisticRegression(**self.node_model_args)
                     elif self.node_model == &#39;stump&#39;:
-                        m = DecisionTreeClassifier(max_depth=1)
+                        m = DecisionTreeClassifier(max_depth=1, **self.node_model_args)
                 elif self.prediction_task == &#39;regression&#39;:
                     if self.node_model == &#39;linear&#39;:
-                        m = LinearRegression()
+                        m = LinearRegression(**self.node_model_args)
                     elif self.node_model == &#39;stump&#39;:
-                        m = DecisionTreeRegressor(max_depth=1)
+                        m = DecisionTreeRegressor(max_depth=1, **self.node_model_args)
                 X_node_single_feat = X_node[:, feat_num: feat_num + 1]
-                m.fit(X_node_single_feat, y_node_target, sample_weight=sample_weight)
-                score = m.score(X_node_single_feat, y_node_target, sample_weight=sample_weight)
+                m.fit(X_node_single_feat, y_node_target, sample_weight=sample_weight_node_target)
+                score = m.score(X_node_single_feat, y_node_target, sample_weight=sample_weight_node_target)
                 if score &gt; best_score:
                     best_score = score
                     best_feat_num = feat_num
@@ -755,11 +788,19 @@ Note: this implementation learns single-feature splits rather than oblique trees
             old_feat_num = feature[node_id]
             old_threshold = threshold[node_id]
             # print(X.sum(), y.sum())
-            old_score = self.model.score(X, y)
+
+            if X_score is None:
+                X_score = X
+            if y_score is None:
+                y_score = y
+
+            scorer = get_scorer(self.update_scoring)
+
+            old_score = scorer(self.model, X_score, y_score)
 
             feature[node_id] = best_feat_num
             threshold[node_id] = best_threshold
-            new_score = self.model.score(X, y)
+            new_score = scorer(self.model, X_score, y_score)
 
             # debugging
             if self.verbose &gt; 1:
@@ -810,7 +851,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.tao.TaoTree.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, sample_weight=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="params">Params</h2>
@@ -822,7 +863,7 @@ are ignored while searching for a split in each node.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y=None, feature_names=None):
+<pre><code class="python">def fit(self, X, y=None, feature_names=None, sample_weight=None):
     &#34;&#34;&#34;
     Params
     ------
@@ -845,7 +886,7 @@ are ignored while searching for a split in each node.</p></div>
             self.model = DecisionTreeClassifier(**self.model_args)
         elif self.prediction_task == &#39;regression&#39;:
             self.model = DecisionTreeRegressor(**self.model_args)
-        self.model.fit(X, y)
+        self.model.fit(X, y, sample_weight=sample_weight)
         if self.verbose:
             print(export_text(self.model))
         # plot_tree(self.model)
@@ -861,7 +902,7 @@ are ignored while searching for a split in each node.</p></div>
     if self.verbose:
         print(&#39;starting score&#39;, self.model.score(X, y))
     for i in range(self.n_iters):
-        num_updates = self._tao_iter_cart(X, y, self.model.tree_)
+        num_updates = self._tao_iter_cart(X, y, self.model.tree_, sample_weight=sample_weight)
         if num_updates == 0:
             break
 
@@ -911,7 +952,7 @@ are ignored while searching for a split in each node.</p></div>
 </dd>
 <dt id="imodels.tree.tao.TaoTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">TaoTreeClassifier</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = {}, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -960,7 +1001,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TaoTreeClassifier(TaoTree):
+<pre><code class="python">class TaoTreeClassifier(TaoTree, ClassifierMixin):
     def _init_prediction_task(self):
         self.prediction_task = &#39;classification&#39;</code></pre>
 </details>
@@ -968,6 +1009,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <ul class="hlist">
 <li><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.base.ClassifierMixin</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -980,7 +1022,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
 </dd>
 <dt id="imodels.tree.tao.TaoTreeRegressor"><code class="flex name class">
 <span>class <span class="ident">TaoTreeRegressor</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = {}, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -1029,7 +1071,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TaoTreeRegressor(TaoTree):
+<pre><code class="python">class TaoTreeRegressor(TaoTree, RegressorMixin):
     def _init_prediction_task(self):
         self.prediction_task = &#39;regression&#39;</code></pre>
 </details>
@@ -1037,6 +1079,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <ul class="hlist">
 <li><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.base.RegressorMixin</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">

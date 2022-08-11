@@ -13,9 +13,20 @@ Project is also on [pypi](https://pypi.org/project/imodels/). Packaged following
 ```bash
 pip install twine
 
+rm -r build dist
+
 python setup.py sdist bdist_wheel
 
 twine check dist/*
 
 twine upload dist/*
 ```
+
+
+## Tutorials
+
+Some models, e.g. [FIGS](https://csinva.io/imodels/figs.html) and [hierarchical shrinkage](https://csinva.io/imodels/shrinkage.html) have their own dedicated doc pages.
+
+To add a doc page like this, copy `docs/figs.html` into a new file and then add in the relevant content. You will also need to manually edit the TOC under "Our favorite models" of each of the `html.mako` file in this repo (and other existing tutorials).
+
+You may also need to clean up a string in `style_docs.py`...

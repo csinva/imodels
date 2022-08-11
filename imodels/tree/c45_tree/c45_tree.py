@@ -215,7 +215,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
             answerlist = sorted(answerlist.items(), key=lambda x: x[1], reverse=True)
             answer = answerlist[0][0]
             # prediction.append(self.resultType(answer))
-            prediction.append(np.float(answer))
+            prediction.append(float(answer))
 
         return np.array(prediction)
 

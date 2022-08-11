@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 from mlxtend import frequent_patterns as mlx
 from sklearn.ensemble import BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor, \
-    GradientBoostingClassifier
+    GradientBoostingClassifier, RandomForestClassifier
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_array
 
@@ -66,9 +66,11 @@ def extract_rulefit(X, y, feature_names,
                                                    random_state=random_state,
                                                    max_depth=100)
 
-    if type(tree_generator) not in [GradientBoostingClassifier, GradientBoostingRegressor, RandomForestRegressor]:
+    if type(tree_generator) not in [GradientBoostingClassifier, GradientBoostingRegressor,
+                                    RandomForestRegressor, RandomForestClassifier]:
         raise ValueError(
-            &#34;RuleFit only works with GradientBoostingClassifier, GradientBoostingRegressor, and RandomForestRegressor&#34;)
+            &#34;RuleFit only works with GradientBoostingClassifier(), GradientBoostingRegressor(), &#34;
+            &#34;RandomForestRegressor() or RandomForestClassifier()&#34;)
 
     ## fit tree generator
     if not exp_rand_tree_size:  # simply fit with constant tree size
@@ -90,7 +92,7 @@ def extract_rulefit(X, y, feature_names,
             curr_est_ = curr_est_ + 1
         tree_generator.set_params(warm_start=False)
 
-    if isinstance(tree_generator, RandomForestRegressor):
+    if isinstance(tree_generator, RandomForestRegressor) or isinstance(tree_generator, RandomForestClassifier):
         estimators_ = [[x] for x in tree_generator.estimators_]
     else:
         estimators_ = tree_generator.estimators_
@@ -236,9 +238,11 @@ def extract_skope(X, y, feature_names,
                                                    random_state=random_state,
                                                    max_depth=100)
 
-    if type(tree_generator) not in [GradientBoostingClassifier, GradientBoostingRegressor, RandomForestRegressor]:
+    if type(tree_generator) not in [GradientBoostingClassifier, GradientBoostingRegressor,
+                                    RandomForestRegressor, RandomForestClassifier]:
         raise ValueError(
-            &#34;RuleFit only works with GradientBoostingClassifier, GradientBoostingRegressor, and RandomForestRegressor&#34;)
+            &#34;RuleFit only works with GradientBoostingClassifier(), GradientBoostingRegressor(), &#34;
+            &#34;RandomForestRegressor() or RandomForestClassifier()&#34;)
 
     ## fit tree generator
     if not exp_rand_tree_size:  # simply fit with constant tree size
@@ -260,7 +264,7 @@ def extract_skope(X, y, feature_names,
             curr_est_ = curr_est_ + 1
         tree_generator.set_params(warm_start=False)
 
-    if isinstance(tree_generator, RandomForestRegressor):
+    if isinstance(tree_generator, RandomForestRegressor) or isinstance(tree_generator, RandomForestClassifier):
         estimators_ = [[x] for x in tree_generator.estimators_]
     else:
         estimators_ = tree_generator.estimators_

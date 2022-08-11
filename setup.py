@@ -7,11 +7,14 @@ with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 required_pypi = [
+    'matplotlib',
     'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
     'numpy',
     'pandas',
+    'requests',  # used in c4.5
     'scipy',
     'scikit-learn',  # 0.23+ only works on py3.6+
+    'tqdm',  # used in BART
 ]
 
 extra_deps = [
@@ -23,7 +26,7 @@ extra_deps = [
 
 setuptools.setup(
     name="imodels",
-    version="1.2.6",
+    version="1.3.3",
     author="Chandan Singh, Keyan Nasseri, Bin Yu, and others",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",
@@ -38,16 +41,19 @@ setuptools.setup(
         'dev': [
             'dvu',
             'gdown',
+            # 'irf',
             'jupyter',
             'jupytext',
             'matplotlib',
+            # 'pdoc3',  # for building docs
             'pytest',
             'pytest-cov',
+            # 'seaborn',  # in bartpy.diagnostics.features
             'slurmpy',
+            # 'statsmodels', # in bartpy.diagnostics.diagnostics
+            # 'torch',  # for neural-net-integrated models
             'tqdm',
             'pmlb',
-
-            # docs also require pdoc3, irf, torch
         ]
     },
     python_requires='>=3.6',

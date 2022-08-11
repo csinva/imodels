@@ -73,10 +73,14 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
         self.complexity_ = compute_tree_complexity(self.tree_)
 
     def __str__(self):
+        s = &#39;&gt; ------------------------------\n&#39;
+        s += &#39;&gt; Greedy CART Tree:\n&#39;
+        s += &#39;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#39;
+        s += &#39;&gt; ------------------------------&#39; + &#39;\n&#39;
         if self.feature_names is not None:
-            return &#39;GreedyTree:\n&#39; + export_text(self, feature_names=self.feature_names, show_weights=True)
+            return s + export_text(self, feature_names=self.feature_names, show_weights=True)
         else:
-            return &#39;GreedyTree:\n&#39; + export_text(self, show_weights=True)
+            return s + export_text(self, show_weights=True)
 
 
 class GreedyTreeRegressor(DecisionTreeRegressor):
@@ -188,10 +192,14 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
         self.complexity_ = compute_tree_complexity(self.tree_)
 
     def __str__(self):
+        s = &#39;&gt; ------------------------------\n&#39;
+        s += &#39;&gt; Greedy CART Tree:\n&#39;
+        s += &#39;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#39;
+        s += &#39;&gt; ------------------------------&#39; + &#39;\n&#39;
         if self.feature_names is not None:
-            return &#39;GreedyTree:\n&#39; + export_text(self, feature_names=self.feature_names, show_weights=True)
+            return s + export_text(self, feature_names=self.feature_names, show_weights=True)
         else:
-            return &#39;GreedyTree:\n&#39; + export_text(self, show_weights=True)</code></pre>
+            return s + export_text(self, show_weights=True)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

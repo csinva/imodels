@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.utils._testing import ignore_warnings
 
@@ -44,3 +45,10 @@ def test_integration():
     rfr.fit(X, y)
     expected = np.array([0.89630491, 0.15375469, 0.89624531, 1.05000033, 0.00369476])
     assert np.allclose(rfr.predict(X), expected)
+
+
+    rfr = RuleFitRegressor(exp_rand_tree_size=False, n_estimators=5, random_state=0,
+                           max_rules=None, alpha=0.01, tree_generator=RandomForestClassifier())
+    rfr.fit(X, y)
+    # expected = np.array([0.89630491, 0.15375469, 0.89624531, 1.05000033, 0.00369476])
+    # assert np.allclose(rfr.predict(X), expected)

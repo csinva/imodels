@@ -469,31 +469,41 @@ class FIGSExt(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
-    def plot(self, cols=2):
-        is_single_tree =  len(self.trees_) < 2
+    def plot(self, cols=2, feature_names=None, filename=None, label="all", impurity=False, tree_number=None):
+        is_single_tree =  len(self.trees_) < 2 or tree_number is not None
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
-        if is_single_tree:
-            fig, ax = plt.subplots(1)
-        else:
-            fig, axs = plt.subplots(n_rows, n_cols)
+        # if is_single_tree:
+        #     fig, ax = plt.subplots(1)
+        # else:
+        #     fig, axs = plt.subplots(n_rows, n_cols)
+        n_plots = int(len(self.trees_)) if tree_number is None else 1
+        fig, axs = plt.subplots(n_plots)
         criterion = "squared_error" if self.prediction_task == "regression" else "gini"
-        n_classes = 1 if self.prediction_task == 'regrssion' else 2
-        ax_size = n_cols * n_rows
-        for i in range(ax_size):
+        n_classes = 1 if self.prediction_task == 'regression' else 2
+        ax_size = int(len(self.trees_))#n_cols * n_rows
+        for i in range(n_plots):
             r = i // n_cols
             c = i % n_cols
             if not is_single_tree:
-                ax = axs[r, c]
+                # ax = axs[r, c]
+                ax = axs[i]
+            else:
+                ax = axs
             try:
-                tree = self.trees_[i]
-                plot_tree(DecisionTreeViz(tree, criterion, n_classes), ax=ax)
+                tree = self.trees_[i] if tree_number is None else self.trees_[tree_number]
+                plot_tree(DecisionTreeViz(tree, criterion, n_classes), ax=ax, feature_names=feature_names, label=label,
+                          impurity=impurity)
             except IndexError:
                 ax.axis('off')
                 continue
 
             ax.set_title(f"Tree {i}")
-        plt.show()
+        if filename is not None:
+            plt.savefig(filename)
+            return
+        else:
+            plt.show()
 
 
 class FIGSExtRegressor(FIGSExt):
@@ -508,8 +518,8 @@ class FIGSExtClassifier(FIGSExt):
 
 if __name__ == '__main__':
     np.random.seed(13)
-    X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
-    # X, y = datasets.load_diabetes(return_X_y=True)  # regression
+    # X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
+    X, y = datasets.load_diabetes(return_X_y=True)  # regression
     # X = np.random.randn(500, 10)
     # y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
 
@@ -519,7 +529,7 @@ if __name__ == '__main__':
     print('X.shape', X.shape)
     print('ys', np.unique(y_train), '\n\n')
 
-    m = FIGSExtClassifier(max_rules=5)
+    m = FIGSExtClassifier(max_rules=50)
     m.fit(X_train, y_train)
     print(m.predict_proba(X_train))
-    m.plot(cols=3)
+    m.plot(2, tree_number=0)

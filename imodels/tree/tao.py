@@ -3,14 +3,13 @@ from copy import deepcopy
 from queue import deque
 
 import numpy as np
-from matplotlib import pyplot as plt
 from mlxtend.classifier import LogisticRegression
 from sklearn import datasets
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import get_scorer
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_text, plot_tree
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_text
 from sklearn.utils import check_X_y
 
 
@@ -168,7 +167,7 @@ class TaoTree(BaseEstimator):
         indexes_with_prefix_paths = []  # data structure with (index, path_to_node_index)
         # e.g. if if node 3 is the left child of node 1 which is the right child of node 0
         # then we get (3, [(0, R), (1, L)])
-        
+
         # start with the root node id (0) and its depth (0)
         queue = deque()
         queue.append((0, []))
@@ -366,12 +365,12 @@ class TaoTree(BaseEstimator):
         return self.model.score(X, y)
 
 
-class TaoTreeRegressor(TaoTree):
+class TaoTreeRegressor(TaoTree, RegressorMixin):
     def _init_prediction_task(self):
         self.prediction_task = 'regression'
 
 
-class TaoTreeClassifier(TaoTree):
+class TaoTreeClassifier(TaoTree, ClassifierMixin):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'
 
@@ -404,4 +403,3 @@ if __name__ == '__main__':
     # m.fit(X_train, y_train)
     # print('mse', np.mean(np.square(m.predict(X_test) - y_test)),
     #       'baseline', np.mean(np.square(y_test)))
-    

@@ -25,25 +25,42 @@
 Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the `fit` and `predict` methods, same as standard scikit-learn models.
 
 ```python
-from imodels import BoostedRulesClassifier, FIGSClassifier, SkopeRulesClassifier
-from imodels import RuleFitRegressor, HSTreeRegressorCV, SLIMRegressor
+from sklearn.model_selection import train_test_split
+from imodels import get_clean_dataset, HSTreeClassifierCV # import any model here
 
-model = BoostedRulesClassifier()  # initialize a model
-model.fit(X_train, y_train)   # fit model
-preds = model.predict(X_test) # predictions: shape is (n_test, 1)
+# prepare data (a sample clinical dataset)
+X, y, feature_names = get_clean_dataset('csi_pecarn_pred')
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, random_state=42)
+
+# fit the model
+model = HSTreeRegressorCV(max_leaf_nodes=4)  # initialize a tree model and specify only 4 leaf nodes
+model.fit(X_train, y_train, feature_names=feature_names)   # fit model
+preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
 preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
-print(model) # print the rule-based model
+print(model) # print the model
+```
 
------------------------------
-# the model consists of the following 3 rules
-# if X1 > 5: then 80.5% risk
-# else if X2 > 5: then 40% risk
-# else: 10% risk
+```
+------------------------------
+Decision Tree with Hierarchical Shrinkage
+Prediction is made by looking at the value in the appropriate leaf of the tree
+------------------------------
+|--- FocalNeuroFindings2 <= 0.50
+|   |--- HighriskDiving <= 0.50
+|   |   |--- Torticollis2 <= 0.50
+|   |   |   |--- value: [0.10]
+|   |   |--- Torticollis2 >  0.50
+|   |   |   |--- value: [0.30]
+|   |--- HighriskDiving >  0.50
+|   |   |--- value: [0.68]
+|--- FocalNeuroFindings2 >  0.50
+|   |--- value: [0.42]
 ```
 
 ### Installation
 
-Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help). 
+Install with `pip install imodels` (see [here](https://github.com/csinva/imodels/blob/master/docs/troubleshooting.md) for help).
 
 ### Supported models
 
@@ -74,6 +91,37 @@ Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementa
 </br>
 </p>
 
+## Demo notebooks
+
+Demos are contained in the [notebooks](notebooks) folder.
+
+<details>
+<summary><a href="notebooks/imodels_demo.ipynb">Quickstart demo</a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+
+<details>
+<summary><a href="https://auto.gluon.ai/dev/tutorials/tabular_prediction/tabular-interpretability.html">Autogluon demo</a></summary>
+Fit/select an interpretable model automatically using Autogluon AutoML
+</details>
+
+<details>
+<summary><a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ">Quickstart colab demo</a> <a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ"> <img src="https://colab.research.google.com/assets/colab-badge.svg"></a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+
+<details>
+<summary><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">Clinical decision rule notebook</a></summary>
+Shows an example of using <code>imodels</code> for deriving a clinical decision rule
+</details>
+
+<details>
+<summary>Posthoc analysis</summary>
+We also include some demos of posthoc analysis, which occurs after fitting models:
+<a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and 
+<a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
+</details>
+
 ## What's the difference between the models?
 
 The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
@@ -101,32 +149,6 @@ Bayesian rule lists and greedy rule lists differ in how they select rules; bayes
 <details>
 <summary>Ex. FPSkope vs. SkopeRules</summary>
 FPSkope and SkopeRules differ only in the way they generate candidate rules: FPSkope uses FPgrowth whereas SkopeRules extracts rules from decision trees.
-</details>
-
-## Demo notebooks
-
-Demos are contained in the [notebooks](notebooks) folder.
-
-<details>
-<summary><a href="notebooks/imodels_demo.ipynb">Quickstart demo</a></summary>
-Shows how to fit, predict, and visualize with different interpretable models
-</details>
-
-<details>
-<summary><a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ">Quickstart colab demo</a> <a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ"> <img src="https://colab.research.google.com/assets/colab-badge.svg"></a></summary>
-Shows how to fit, predict, and visualize with different interpretable models
-</details>
-
-<details>
-<summary><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">Clinical decision rule notebook</a></summary>
-Shows an example of using <code>imodels</code> for deriving a clinical decision rule
-</details>
-
-<details>
-<summary>Posthoc analysis</summary>
-We also include some demos of posthoc analysis, which occurs after fitting models:
-<a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and 
-<a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
 </details>
 
 ## Support for different tasks
@@ -198,7 +220,7 @@ Fit an interpretable model to explain a previous model's errors (ex. in <a href=
 
 <details>
 <summary><a href="https://csinva.io/imodels/util/index.html">Rule-based utils</a> for customizing models</summary>
-The code here contains many useful and customizable functions for rule-based learning in the [util folder](https://csinva.io/imodels/util/index.html). This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.
+The code here contains many useful and customizable functions for rule-based learning in the <a href="https://csinva.io/imodels/util/index.html">util folder</a>. This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.
 </details>
 
 ## Our favorite models
@@ -207,7 +229,7 @@ After developing and playing with `imodels`, we developed a few new models to ov
 
 ### FIGS: Fast interpretable greedy-tree sums
 
-[📄 Paper](https://arxiv.org/abs/2201.11931), [🔗 Post](https://demos.csinva.io/figs/), [📌 Citation](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=fast+interpretable+greedy-tree+sums&oq=fast#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3ADnPVL74Rop0J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den)
+[📄 Paper](https://arxiv.org/abs/2201.11931), [🔗 Post](https://csinva.io/imodels/figs.html), [📌 Citation](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=fast+interpretable+greedy-tree+sums&oq=fast#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3ADnPVL74Rop0J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den)
 
 Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models. Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation. The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable. Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
 
@@ -215,14 +237,21 @@ Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise r
 	<img src="https://demos.csinva.io/figs/diabetes_figs.svg?sanitize=True" width="50%">
 </p>  
 <p align="center">	
-	<i>Example FIGS model. FIGS learns a sum of trees with a flexible number of trees; to make its prediction, it sums the result from each tree.</i>
+	<i><b>Example FIGS model.</b> FIGS learns a sum of trees with a flexible number of trees; to make its prediction, it sums the result from each tree.</i>
 </p>
 
 ### Hierarchical shrinkage: post-hoc regularization for tree-based methods
 
-[📄 Paper](https://arxiv.org/abs/2202.00858), [🔗 Post](https://demos.csinva.io/shrinkage/), [📌 Citation](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=hierarchical+shrinkage+singh&btnG=&oq=hierar#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3Azc6gtLx-aL4J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den)
+[📄 Paper](https://arxiv.org/abs/2202.00858) (ICML 2022), [🔗 Post](https://csinva.io/imodels/shrinkage.html), [📌 Citation](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=hierarchical+shrinkage+singh&btnG=&oq=hierar#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3Azc6gtLx-aL4J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den)
 
 Hierarchical shrinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter). Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
+
+<p align="center">
+	<img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" width="75%">
+</p>  
+<p align="center">	
+	<i><b>HS Example.</b> HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent.</i>
+</p>
 
 ## References
 
@@ -274,17 +303,17 @@ If it's useful for you, please star/cite the package, and make sure to give auth
 
 ```r
 @software{
-    imodels2021,
-    title        = {imodels: a python package for fitting interpretable models},
-    journal      = {Journal of Open Source Software},
-    publisher    = {The Open Journal},
-    year         = {2021},
-    author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
-    volume       = {6},
-    number       = {61},
-    pages        = {3192},
-    doi          = {10.21105/joss.03192},
-    url          = {https://doi.org/10.21105/joss.03192},
+imodels2021,
+title        = {imodels: a python package for fitting interpretable models},
+journal      = {Journal of Open Source Software},
+publisher    = {The Open Journal},
+year         = {2021},
+author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
+volume       = {6},
+number       = {61},
+pages        = {3192},
+doi          = {10.21105/joss.03192},
+url          = {https://doi.org/10.21105/joss.03192},
 }
 
 ```
