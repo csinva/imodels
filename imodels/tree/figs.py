@@ -192,10 +192,14 @@ class FIGS(BaseEstimator):
         if isinstance(self, ClassifierMixin):
             self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
 
+        if feature_names is None:
+            if isinstance(X, pd.DataFrame):
+                self.feature_names_ = X.columns
+        else:
+            self.feature_names_ = feature_names
+
         X, y = check_X_y(X, y)
         y = y.astype(float)
-        if feature_names is not None:
-            self.feature_names_ = feature_names
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
 
