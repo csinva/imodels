@@ -692,10 +692,11 @@ class JointRidgeScorer(JointScorerBase, ABC):
 
 class JointLogisticScorer(JointScorerBase, ABC):
 
-    def __init__(self, metric=None, penalty="l2"):
+    def __init__(self, metric=None, penalty="l2", trim=0.01):
         self.penalty = penalty
         self.classes = None
         self.class_scores = defaultdict(lambda x: None)
+        self.trim = trim
         super().__init__(metric)
 
     def fit(self, X, y, start_indices, sample_weight=None):
@@ -708,6 +709,11 @@ class JointLogisticScorer(JointScorerBase, ABC):
             self.model_sizes[k] = int(np.sum(np.sum(restricted_coefs != 0, axis=0) > 0))
             if restricted_coefs.shape[1] > 0:
                 restricted_preds = expit(restricted_feats @ np.transpose(restricted_coefs) + clf.intercept_)
+                if self.metric == metrics.log_loss:
+                    if any(restricted_preds < self.trim):
+                        restricted_preds[restricted_preds < self.trim] = self.trim
+                    if any(restricted_preds > (1 - self.trim)):
+                        restricted_preds[restricted_preds > (1 - self.trim)] = 1 - self.trim
                 if isinstance(y[0], str):
                     y_onehot = np.ones((len(y), len(self.classes)))
                     for class_idx, class_label in enumerate(self.classes):
@@ -843,10 +849,11 @@ class JointALOElasticNetScorer(JointScorerBase,ABC):
 
 
 class JointALOLogisticScorer(JointScorerBase,ABC):
-    def __init__(self, metric=None, penalty="l2",Cs =  np.logspace(-4,4,10)):
+    def __init__(self, metric=None, penalty="l2",Cs =  np.logspace(-4,4,10), trim=0.01):
         self.penalty = penalty
         self.classes = None
         self.Cs = Cs
+        self.trim = trim
         super().__init__(metric)
     def fit(self, X, y, start_indices, sample_weight=None):
         def compute_loss_derivative(ip,y):
@@ -879,7 +886,13 @@ class JointALOLogisticScorer(JointScorerBase,ABC):
                 J_opt_inverse_partial = J_opt_inverse[keep_idxs, :]
                 h_vals_partial = (X_partial1.dot(J_opt_inverse_partial) * X1).sum(-1)
                 linear_partial_preds = partial_ips + ((h_vals_partial)/(1.0-opt_h_val))*opt_derivative
-                looe_preds[:,k] = 1.0 / (1.0 + np.exp(-linear_partial_preds))
+                partial_preds = 1.0 / (1.0 + np.exp(-linear_partial_preds))
+                if any(partial_preds < self.trim):
+                    partial_preds[partial_preds < self.trim] = self.trim
+                if any(partial_preds > (1 - self.trim)):
+                    partial_preds[partial_preds > (1 - self.trim)] = 1 - self.trim
+                looe_preds[:,k] = partial_preds
+
             return looe_preds
 
         lr_models = [LogisticRegression(fit_intercept=True,C = C,max_iter = 1000).fit(X,y) for C in self.Cs]
@@ -900,7 +913,6 @@ class JointALOLogisticScorer(JointScorerBase,ABC):
                 if self.metric == "log_loss":
                     self.scores[k] = metrics.log_loss(y,looe_preds[:,k])*-1.0
                 else:
-                    print(looe_preds[:,k])
                     self.scores[k] = self.metric(y, looe_preds[:,k])#np.sum(looe[:,k])*-1 #log-likelihood                                                                                                      
 
 
