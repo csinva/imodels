@@ -818,6 +818,8 @@ class JointALOElasticNetScorer(JointScorerBase,ABC):
                 h_val = compute_leverage_scores(X1,support,b)
                 if h_val is np.NaN:
                     lr_dict[(l1_ratio,alpha)] = np.inf
+                elif b == 0.0:
+                    lr_dict[(l1_ratio,alpha)] = np.inf
                 else:
                     lr_dict[(l1_ratio,alpha)] = compute_alo(y,np.dot(X1,coefs_enet[:,j]),h_val)
         #opt_lr_model = min(lr_dict, key=lr_dict.get)
