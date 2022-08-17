@@ -912,10 +912,7 @@ class JointALOLogisticScorer(JointScorerBase,ABC):
             if len(lr_models[np.argmin(alos)].coef_[0][start_indices[k]:start_indices[k + 1]]) == 0:
                 self.scores[k] = np.NaN
             else:
-                if self.metric == "log_loss":
-                    self.scores[k] = metrics.log_loss(y,looe_preds[:,k])*-1.0
-                else:
-                    self.scores[k] = self.metric(y, looe_preds[:,k])#np.sum(looe[:,k])*-1 #log-likelihood                                                                                                      
+                self.scores[k] = self.metric(y, looe_preds[:,k])#np.sum(looe[:,k])*-1 #log-likelihood                                                                                                      
 
 
 class JointLassoScorer(JointScorerBase,ABC):
@@ -1042,7 +1039,7 @@ class GeneralizedMDIJoint:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             imp_values = np.nanmean(scores, axis=0)
-        imp_values[np.isnan(imp_values)] = -np.inf
+        # imp_values[np.isnan(imp_values)] = -np.inf
 
         if multi_class:
             if diagnostics:
