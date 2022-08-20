@@ -79,12 +79,9 @@ class HSTree:
         is_leaf = left == right
         n_samples = tree.n_node_samples[i]
         if isinstance(self, RegressorMixin):
-            val = tree.value[i][0, 0]
-        else:
-            if len(tree.value[i][0]) == 1:
-                val = tree.value[i][0, 0]
-            else:
-                val = tree.value[i][0, 1] / (tree.value[i][0, 0] + tree.value[i][0, 1])  # binary classification
+            val = tree.value[i, :, :]
+        else: # Classification
+            val = 1 / tree.value[i, :, :].sum(axis=1, keepdims=True) * tree.value[i, :, :]
 
         # if root
         if parent_val is None and parent_num is None:
@@ -96,47 +93,29 @@ class HSTree:
 
         # if has parent
         else:
+            # update cum_sum
             if self.shrinkage_scheme_ == 'node_based':
                 val_new = (val - parent_val) / (1 + reg_param / parent_num)
             elif self.shrinkage_scheme_ == 'constant':
                 val_new = (val - parent_val) / (1 + reg_param)
-            else:
-                val_new = val
+            else: # leaf_based
+                val_new = 0
             cum_sum += val_new
-            if is_leaf:
-                if isinstance(self, RegressorMixin):
-                    if self.shrinkage_scheme_ == 'node_based' or self.shrinkage_scheme_ == 'constant':
-                        tree.value[i, 0, 0] = cum_sum
-                    else:
-                        # tree.value[i, 0, 0] = cum_sum/(1 + reg_param/n_samples)
-                        tree.value[i, 0, 0] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                                1 + reg_param / n_samples)
-                else:
-                    if len(tree.value[i][0]) == 1:
-                        if self.shrinkage_scheme_ == 'node_based' or self.shrinkage_scheme_ == 'constant':
-                            tree.value[i, 0, 0,] = cum_sum
-                        else:
-                            tree.value[i, 0, 0,] = tree.value[0][0, 0] + (val - tree.value[0][0, 0]) / (
-                                    1 + reg_param / n_samples)
-                    else:
-                        if self.shrinkage_scheme_ == 'node_based' or self.shrinkage_scheme_ == 'constant':
-                            tree.value[i, 0, 1] = cum_sum
-                            tree.value[i, 0, 0] = 1.0 - cum_sum
-                        else:
-                            root_prediction = tree.value[0][0, 1] / (tree.value[0][0, 0] + tree.value[0][0, 1])
-                            tree.value[i, 0, 1] = root_prediction + (val - root_prediction) / (
-                                    1 + reg_param / n_samples)
-                            tree.value[i, 0, 0] = 1.0 - tree.value[i, 0, 1]
-            else:
-                if isinstance(self, RegressorMixin):
-                    tree.value[i][0, 0] = parent_val + val_new
-                else:
-                    if len(tree.value[i][0]) == 1:
-                        tree.value[i][0, 0] = parent_val + val_new
-                    else:
-                        tree.value[i][0, 1] = parent_val + val_new
-                        tree.value[i][0, 0] = 1.0 - parent_val + val_new
 
+            # update node values
+            if self.shrinkage_scheme_ == 'node_based' or self.shrinkage_scheme_ == 'constant':
+                tree.value[i, :, :] = cum_sum
+            else: # leaf_based
+                if is_leaf: # update node values if leaf_based
+                    if isinstance(self, RegressorMixin):
+                        root_val = tree.value[0, :, :]
+                    else: # Classification
+                        root_val = 1 / tree.value[0, :, :].sum(axis=1, keepdims=True) * tree.value[0, :, :]
+                    tree.value[i, :, :] = root_val + (val - root_val) / (
+                            1 + reg_param / n_samples)
+
+            # Recurse if not leaf
+            if not is_leaf:
                 self._shrink_tree(tree, reg_param, left,
                                   parent_val=val, parent_num=n_samples, cum_sum=cum_sum)
                 self._shrink_tree(tree, reg_param, right,
