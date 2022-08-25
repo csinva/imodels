@@ -27,6 +27,7 @@ class HSTree:
         ------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
             Defaults to CART Classification Tree with 20 max leaf ndoes
+            Note: this estimator will be directly modified
 
         reg_param: float
             Higher is more regularization (can be arbitrarily large, should not be < 0)
