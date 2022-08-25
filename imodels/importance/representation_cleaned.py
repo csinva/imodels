@@ -1,3 +1,4 @@
+import copy
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -25,15 +26,17 @@ class BlockPartitionedData:
 
     def _create_block_indices(self):
         self._block_indices_dict = dict({})
+
+        start_index = 0
+        for k in range(self.n_blocks):
+            stop_index = start_index + self._data_blocks[k].shape[1]
+            self._block_indices_dict[k] = list(range(start_index, stop_index))
+            start_index = stop_index
         if self._common_block is None:
             self._common_block_indices = []
         else:
-            self._common_block_indices = list(range(len(self._common_block.shape[1])))
-        start_index = len(self._common_block_indices)
-        for k in range(self.n_blocks):
-            stop_index = start_index + len(self._data_blocks[k].shape[1])
-            self._block_indices_dict[k] = list(range(start_index, stop_index))
-            start_index = stop_index
+            stop_index = start_index + self._common_block.shape[1]
+            self._common_block_indices = list(range(start_index, stop_index))
 
     def get_block_indices(self, k):
         block_indices = self._common_block_indices + self._block_indices_dict[k]
@@ -47,10 +50,13 @@ class BlockPartitionedData:
         return block
 
     def get_all_except_block_indices(self, k):
-        all_except_block_indices = self._common_block_indices
+        if k not in self._block_indices_dict.keys():
+            raise ValueError(f"{k} not a block index.")
+        all_except_block_indices = []
         for block_no, block_indices in self._block_indices_dict.items():
             if block_no != k:
                 all_except_block_indices += block_indices
+        all_except_block_indices += self._common_block_indices
         return all_except_block_indices
 
     def get_all_except_block(self, k):
@@ -59,22 +65,25 @@ class BlockPartitionedData:
         all_except_block = all_data[:, all_except_block_indices]
         return all_except_block
 
-    def get_modified_data(self, k, mode="modify_rest"):
-        modified_blocks = [np.outer(np.ones((self.n_samples), self._means[i])) for i in range(self.n_blocks)]
-        if mode == "modify_rest":
+    def get_modified_data(self, k, mode="keep_k"):
+        modified_blocks = [np.outer(np.ones(self.n_samples), self._means[i]) for i in range(self.n_blocks)]
+        if mode == "keep_k":
             data_blocks = [self._data_blocks[i] if i == k else modified_blocks[i] for i in range(self.n_blocks)]
-        elif mode == "modify_k":
+        elif mode == "keep_rest":
             data_blocks = [modified_blocks[i] if i == k else self._data_blocks[i] for i in range(self.n_blocks)]
         else:
-            raise ValueError("Unsupported mode")
+            raise ValueError("Unsupported mode.")
         if self._common_block is None:
             all_data = np.hstack(data_blocks)
         else:
             all_data = np.hstack(data_blocks + [self._common_block])
         return all_data
 
+    def __repr__(self):
+        return self.get_all_data().__repr__()
 
-class BlockTransformer(ABC):
+
+class BlockTransformerBase(ABC):
 
     def __init__(self, n_features):
         self.n_features = n_features
@@ -84,7 +93,7 @@ class BlockTransformer(ABC):
         pass
 
     def transform(self, X, center=False, rescale=False):
-        data_blocks = [self.transform_one_feature(X, k, center, rescale) for k in self.n_features]
+        data_blocks = [self.transform_one_feature(X, k, center, rescale) for k in range(self.n_features)]
         # common_block = np.ones((X.shape[0], 1))
         blocked_data = BlockPartitionedData(data_blocks)
         return blocked_data
@@ -103,18 +112,19 @@ class BlockTransformer(ABC):
         return data_block
 
 
-class IdentityTransformer(BlockTransformer, ABC):
+class IdentityTransformer(BlockTransformerBase, ABC):
 
     def __init__(self, n_features):
         super().__init__(n_features)
 
     def transform_one_feature(self, X, k, center=True, rescale=False):
+        assert X.shape[1] == self.n_features, "n_features does not match that of X."
         data_block = X[:, [k]]
-        data_block = BlockTransformer.post_process(data_block, center, rescale)
+        data_block = BlockTransformerBase.post_process(data_block, center, rescale)
         return data_block
 
 
-class CompositeTransformer(BlockTransformer, ABC):
+class CompositeTransformer(BlockTransformerBase, ABC):
 
     def __init__(self, block_transformer_list, adj_std=None):
         n_features = block_transformer_list[0].n_features
@@ -137,7 +147,7 @@ class CompositeTransformer(BlockTransformer, ABC):
         return composite_block
 
 
-class TreeTransformer(BlockTransformer, ABC):
+class TreeTransformer(BlockTransformerBase, ABC):
     """
     A transformer that transforms data using a representation built from local decision stumps from a tree or tree
     ensemble. The transformer also comes with meta data on the local decision stumps and methods that allow
@@ -152,11 +162,17 @@ class TreeTransformer(BlockTransformer, ABC):
         in node.
     """
 
-    def __init__(self, n_features, estimator, normalize=False):
+    def __init__(self, n_features, estimator, normalize=False, data=None):
         super().__init__(n_features)
         self.estimator = estimator
         # Check if single tree or tree ensemble
-        tree_models = estimator.estimators_ if isinstance(estimator, BaseEnsemble) else [estimator]
+        if isinstance(estimator, BaseEnsemble):
+            tree_models = estimator.estimators_
+            if data is not None:
+                for tree_model in tree_models:
+                    _update_n_node_samples(tree_model, data)
+        else:
+            tree_models = [estimator]
         # Make stumps for each tree
         all_stumps = []
         for tree_model in tree_models:
@@ -166,7 +182,7 @@ class TreeTransformer(BlockTransformer, ABC):
         self.stumps = defaultdict(list)
         for stump in all_stumps:
             self.stumps[stump.feature].append(stump)
-        self.num_splits_per_feature = np.array([len(self.stumps[k]) for k in range(self.n_features)])
+        self._num_splits_per_feature = np.array([len(self.stumps[k]) for k in range(self.n_features)])
 
     def transform_one_feature(self, X, k, center=True, rescale=False):
         """
@@ -180,8 +196,11 @@ class TreeTransformer(BlockTransformer, ABC):
             Transformed data matrix
         """
         data_block = tree_feature_transform(self.stumps[k], X)
-        data_block = BlockTransformer.post_process(data_block, center, rescale)
+        data_block = BlockTransformerBase.post_process(data_block, center, rescale)
         return data_block
+    
+    def get_num_splits(self, k):
+        return self._num_splits_per_feature[k]
 
 
 class LocalDecisionStump:
@@ -339,7 +358,7 @@ def tree_feature_transform(stumps, X):
     :return: X_transformed: array-like of shape (n_samples, n_stumps)
         Transformed data matrix
     """
-    transformed_feature_vectors = [np.empty(X.shape[0], 0)]
+    transformed_feature_vectors = [np.empty((X.shape[0], 0))]
     for stump in stumps:
         transformed_feature_vec = stump(X)[:, np.newaxis]
         transformed_feature_vectors.append(transformed_feature_vec)
@@ -383,3 +402,10 @@ def _compare_all(data, ks, thresholds, signs):
     :return:
     """
     return ~np.logical_xor(data[:, ks] > thresholds, signs)
+
+
+def _update_n_node_samples(tree, X):
+    node_indicators = tree.decision_path(X)
+    new_n_node_samples = node_indicators.getnnz(axis=0)
+    for i in range(len(new_n_node_samples)):
+        tree.tree_.n_node_samples[i] = new_n_node_samples[i]
