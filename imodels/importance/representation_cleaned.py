@@ -135,14 +135,20 @@ class CompositeTransformer(BlockTransformerBase, ABC):
         self.adj_std = adj_std
 
     def transform_one_feature(self, X, k, center=True, rescale=False):
-        data_blocks = [block_transformer.transform_one_feature(X, k, center, rescale) for block_transformer
-                       in self.block_transformer_list]
+        data_blocks = []
+        for block_transformer in self.block_transformer_list:
+            data_block = block_transformer.transform_one_feature(X, k, center, rescale)
+            if data_block.shape[1] > 0:
+                data_blocks.append(data_block)
         if self.adj_std == "max":
             adj_factor = [max(data_block.std(axis=0)) for data_block in data_blocks]
         elif self.adj_std == "mean":
             adj_factor = [np.mean(data_block.std(axis=0)) for data_block in data_blocks]
         else:
             adj_factor = np.ones(len(data_blocks))
+        for i in range(len(adj_factor)):
+            if adj_factor[i] == 0: # Only constant features
+                adj_factor[i] = 1
         composite_block = np.hstack([data_blocks[i] / adj_factor[i] for i in range(len(data_blocks))])
         return composite_block
 

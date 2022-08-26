@@ -35,7 +35,7 @@ from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
 from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
-from .importance.representation import TreeTransformer
+# from .importance.representation import TreeTransformer
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier,

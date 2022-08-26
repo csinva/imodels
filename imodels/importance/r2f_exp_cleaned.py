@@ -1,9 +1,33 @@
+import copy
 from abc import ABC, abstractmethod
 
 import numpy as np
+import scipy as sp
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.ensemble._forest import _generate_unsampled_indices, _generate_sample_indices
 from sklearn.linear_model import RidgeCV, LogisticRegressionCV
-from sklearn.base import RegressorMixin, ClassifierMixin
+from sklearn.metrics import roc_auc_score, r2_score
+from sklearn.preprocessing import OneHotEncoder
+
+from imodels.importance.representation_cleaned import TreeTransformer, IdentityTransformer, CompositeTransformer
+
+
+def default_gmdi_pipeline(X, y, regression=True, mode="keep_k"):
+    p = X.shape[1]
+    rf_model = RandomForestRegressor(min_samples_leaf=5, max_features=1/3) if regression else \
+        RandomForestClassifier(min_samples_leaf=5, max_features="sqrt")
+    rf_model.fit(X, y)
+    tree_transformers = [CompositeTransformer([TreeTransformer(p, tree_model, data=X),
+                                               IdentityTransformer(p)], adj_std="max")
+                         for tree_model in rf_model.estimators_]
+    if regression:
+        gmdi = GMDIEnsemble(tree_transformers, RidgeLOOPPM(alphas=np.logspace(-5, 5, 50)), r2_score, mode)
+    else: # classification
+        gmdi = GMDIEnsemble(tree_transformers, LogisticLOOPPM(Cs=50), roc_auc_score, mode)
+        if len(np.unique(y)) > 2:
+            y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
+    scores = gmdi.get_scores(X, y)
+    return scores
 
 
 class GMDI:
@@ -74,7 +98,7 @@ class GMDIEnsemble:
                 else:
                     raise ValueError("Unsupported subsetting scheme")
             scores.append(gmdi_object.get_scores(X[sample_indices, :], y[sample_indices]))
-        self._scores = np.mean(axis=0)
+        self._scores = np.mean(scores, axis=0)
         self.is_fitted = True
         self.n_features = self.gmdi_objects[0].n_features
 
@@ -144,16 +168,18 @@ class RidgePPM(GenericPPM, ABC):
 
 class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
-    def __init__(self, estimator, l_dot=lambda a, b: b-a, l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1):
+    def __init__(self, estimator, link_fn = lambda a: a, l_dot=lambda a, b: b-a,
+                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1):
         super().__init__()
         self.estimator = estimator
+        self.link_fn = link_fn
         self.l_dot = l_dot
         self.l_doubledot = l_doubledot
         self.r_doubledot = r_doubledot
 
-    def get_loo_fitted_parameters(self, X, y, coef_, alpha=0, constant_term=True):
-        linear_predictor_vals = X @ coef_
-        l_doubledot_vals = self.l_doubledot(y, linear_predictor_vals)
+    def _get_loo_fitted_parameters(self, X, y, coef_, alpha=0, constant_term=True):
+        orig_preds = self.link_fn(X @ coef_)
+        l_doubledot_vals = self.l_doubledot(y, orig_preds)
         J = X.T * l_doubledot_vals @ X
         if self.r_doubledot is not None:
             r_doubledot_vals = self.r_doubledot(coef_) * np.ones_like(coef_)
@@ -163,27 +189,48 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
             J += alpha * reg_curvature
         normal_eqn_mat = np.linalg.inv(J) @ X.T
         h_vals = np.sum(X.T * normal_eqn_mat, axis=0) * l_doubledot_vals
-        loo_fitted_parameters = coef_[:, np.newaxis] - normal_eqn_mat * h_vals * self.l_dot(y, linear_predictor_vals)
+        loo_fitted_parameters = coef_[:, np.newaxis] - normal_eqn_mat * h_vals * \
+                                self.l_dot(y, orig_preds)
         return loo_fitted_parameters
 
-    def fit(self, blocked_data, y, mode="keep_k"):
-        self.n_blocks = blocked_data.n_blocks
+    def _fit_single_target(self, blocked_data, y, mode="keep_k"):
         full_data = blocked_data.get_all_data()
-        self.estimator.fit(full_data, y)
-        if hasattr(self.estimator, "alpha_"):
-            alpha = self.estimator.alpha_
-        elif hasattr(self.estimator, "C_"):
-            alpha = 1 / np.mean(self.estimator.C_)
+        augmented_data = np.hstack([full_data, np.ones((full_data.shape[0], 1))]) # Tag on constant feature vector
+        estimator = copy.deepcopy(self.estimator)
+        estimator.fit(full_data, y)
+        if hasattr(estimator, "alpha_"):
+            alpha = estimator.alpha_
+        elif hasattr(estimator, "C_"):
+            alpha = 1 / np.mean(estimator.C_)
         else:
             alpha = 0
-        augmented_data = np.hstack([full_data, np.ones((full_data.shape[0], 1))]) # Tag on constant feature vector
-        augmented_coef_ = np.array(list(self.estimator.coef_) + [self.estimator.intercept_])
-        loo_fitted_parameters = self.get_loo_fitted_parameters(augmented_data, y, augmented_coef_, alpha)
-        self._full_preds = np.sum(loo_fitted_parameters.T * augmented_data, axis=1)
+        coef_ = estimator.coef_
+        if coef_.ndim > 1:
+            augmented_coef_ = np.concatenate([coef_.ravel(), estimator.intercept_])
+        else:
+            augmented_coef_ = np.array(list(coef_) + [estimator.intercept_])
+        loo_fitted_parameters = self._get_loo_fitted_parameters(augmented_data, y, augmented_coef_, alpha)
+        full_preds = self.link_fn(np.sum(loo_fitted_parameters.T * augmented_data, axis=1))
+        partial_preds = dict({})
         for k in range(self.n_blocks):
             modified_data = blocked_data.get_modified_data(k, mode)
             modified_data = np.hstack([modified_data, np.ones((modified_data.shape[0], 1))])
-            self._partial_preds[k] = np.sum(loo_fitted_parameters.T * modified_data, axis=1)
+            partial_preds[k] = self.link_fn(np.sum(loo_fitted_parameters.T * modified_data, axis=1))
+        return full_preds, partial_preds
+
+    def fit(self, blocked_data, y, mode="keep_k"):
+        self.n_blocks = blocked_data.n_blocks
+        if y.ndim > 1:
+            self._full_preds = np.empty_like(y)
+            for k in range(self.n_blocks):
+                self._partial_preds[k] = np.empty_like(y)
+            for j in range(y.shape[1]):
+                full_preds, partial_preds = self._fit_single_target(blocked_data, y[:, j], mode)
+                self._full_preds[:, j] = full_preds
+                for k in range(self.n_blocks):
+                    self._partial_preds[k][:, j] = partial_preds[k]
+        else:
+            self._full_preds, self._partial_preds = self._fit_single_target(blocked_data, y, mode)
 
 
 class RidgeLOOPPM(GenericLOOPPM, ABC):
@@ -203,38 +250,7 @@ class RidgeLOOPPM(GenericLOOPPM, ABC):
 class LogisticLOOPPM(GenericLOOPPM, ABC):
 
     def __init__(self, **kwargs):
-        l_doubledot = lambda a: a * (1-a)
-        super().__init__(LogisticRegressionCV(**kwargs), l_doubledot=l_doubledot)
-
-
-
-
-# class RidgeLOOPPM(PartialPredictionModelBase, ABC):
-#
-#     def __init__(self, alphas="default"):
-#         super().__init__()
-#         self.alphas = alphas
-#
-#     def fit(self, blocked_data, y, mode="keep_k"):
-#         full_data = blocked_data.get_all_data()
-#         if self.alphas == "default":
-#             alphas = get_alpha_grid(full_data, y)
-#         else:
-#             alphas = self.alphas
-#         ridge_model = RidgeCV(alphas=alphas)
-#         ridge_model.fit(full_data, y)
-#         augmented_data = np.hstack([full_data, np.ones((full_data.shape[0], 1))])
-#         G = augmented_data.T @ augmented_data + ridge_model.alpha_ * np.diag([1] * full_data.shape[1] + [0])
-#         normal_eqn_mat = np.linalg.inv(G) @ augmented_data.T
-#         h_vals = np.sum(augmented_data * normal_eqn_mat.T, axis=1)
-#         full_model_residuals = y - ridge_model.predict(full_data)
-#         coef_hat_loo_diff = - normal_eqn_mat * full_model_residuals / (1 - h_vals)
-#         full_pred_loo_diff = np.sum(coef_hat_loo_diff.T * full_data, axis=1)
-#         self._full_preds = ridge_model.predict(full_data) - full_pred_loo_diff
-#         for k in range(self.n_blocks):
-#             modified_data = blocked_data.get_modified_data(k, mode)
-#             partial_pred_loo_diff = np.sum(coef_hat_loo_diff.T * modified_data, axis=1)
-#             self._partial_preds[k] = ridge_model.predict(modified_data) + partial_pred_loo_diff
+        super().__init__(LogisticRegressionCV(**kwargs), link_fn=sp.special.expit, l_doubledot=lambda a, b: b * (1-b))
 
 
 def get_alpha_grid(X, y, start=-10, stop=10, num=50):
