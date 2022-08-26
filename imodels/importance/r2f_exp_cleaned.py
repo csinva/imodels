@@ -169,13 +169,14 @@ class RidgePPM(GenericPPM, ABC):
 class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
     def __init__(self, estimator, link_fn = lambda a: a, l_dot=lambda a, b: b-a,
-                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1):
+                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1, trim=None):
         super().__init__()
         self.estimator = estimator
         self.link_fn = link_fn
         self.l_dot = l_dot
         self.l_doubledot = l_doubledot
         self.r_doubledot = r_doubledot
+        self.trim = trim
 
     def _get_loo_fitted_parameters(self, X, y, coef_, alpha=0, constant_term=True):
         orig_preds = self.link_fn(X @ coef_)
@@ -215,7 +216,13 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
         for k in range(self.n_blocks):
             modified_data = blocked_data.get_modified_data(k, mode)
             modified_data = np.hstack([modified_data, np.ones((modified_data.shape[0], 1))])
-            partial_preds[k] = self.link_fn(np.sum(loo_fitted_parameters.T * modified_data, axis=1))
+            partial_preds_k = self.link_fn(np.sum(loo_fitted_parameters.T * modified_data, axis=1))
+            if self.trim is not None:
+                if any(partial_preds_k < self.trim):
+                    partial_preds_k[partial_preds_k < self.trim] = self.trim
+                if any(partial_preds_k > (1 - self.trim)):
+                    partial_preds_k[partial_preds_k > (1 - self.trim)] = 1 - self.trim
+            partial_preds[k] = partial_preds_k
         return full_preds, partial_preds
 
     def fit(self, blocked_data, y, mode="keep_k"):
@@ -250,7 +257,7 @@ class RidgeLOOPPM(GenericLOOPPM, ABC):
 class LogisticLOOPPM(GenericLOOPPM, ABC):
 
     def __init__(self, **kwargs):
-        super().__init__(LogisticRegressionCV(**kwargs), link_fn=sp.special.expit, l_doubledot=lambda a, b: b * (1-b))
+        super().__init__(LogisticRegressionCV(**kwargs), link_fn=sp.special.expit, l_doubledot=lambda a, b: b * (1-b), trim=0.01)
 
 
 def get_alpha_grid(X, y, start=-10, stop=10, num=50):
