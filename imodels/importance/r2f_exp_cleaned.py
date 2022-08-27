@@ -5,8 +5,8 @@ import numpy as np
 import scipy as sp
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.ensemble._forest import _generate_unsampled_indices, _generate_sample_indices
-from sklearn.linear_model import RidgeCV, LogisticRegressionCV
-from sklearn.metrics import roc_auc_score, r2_score
+from sklearn.linear_model import RidgeCV, LogisticRegressionCV, Ridge, LogisticRegression
+from sklearn.metrics import roc_auc_score, r2_score, mean_squared_error, log_loss
 from sklearn.preprocessing import OneHotEncoder
 
 from imodels.importance.representation_cleaned import TreeTransformer, IdentityTransformer, CompositeTransformer
@@ -21,9 +21,9 @@ def default_gmdi_pipeline(X, y, regression=True, mode="keep_k"):
                                                IdentityTransformer(p)], adj_std="max")
                          for tree_model in rf_model.estimators_]
     if regression:
-        gmdi = GMDIEnsemble(tree_transformers, RidgeLOOPPM(alphas=np.logspace(-5, 5, 50)), r2_score, mode)
+        gmdi = GMDIEnsemble(tree_transformers, RidgeLOOPPM(), r2_score, mode)
     else: # classification
-        gmdi = GMDIEnsemble(tree_transformers, LogisticLOOPPM(Cs=50), roc_auc_score, mode)
+        gmdi = GMDIEnsemble(tree_transformers, LogisticLOOPPM(), roc_auc_score, mode)
         if len(np.unique(y)) > 2:
             y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
     scores = gmdi.get_scores(X, y)
@@ -168,15 +168,19 @@ class RidgePPM(GenericPPM, ABC):
 
 class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
-    def __init__(self, estimator, link_fn = lambda a: a, l_dot=lambda a, b: b-a,
-                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1, trim=None):
+    def __init__(self, estimator, alpha_grid=np.logspace(-5, 5, 20), link_fn = lambda a: a, l_dot=lambda a, b: b-a,
+                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1, hyperparameter_scorer=mean_squared_error,
+                 trim=None):
         super().__init__()
         self.estimator = estimator
+        self.alpha_grid = alpha_grid
         self.link_fn = link_fn
         self.l_dot = l_dot
         self.l_doubledot = l_doubledot
         self.r_doubledot = r_doubledot
         self.trim = trim
+        self.hyperparameter_scorer = hyperparameter_scorer
+        self.alpha_ = None
 
     def _get_loo_fitted_parameters(self, X, y, coef_, alpha=0, constant_term=True):
         orig_preds = self.link_fn(X @ coef_)
@@ -190,60 +194,77 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
             J += alpha * reg_curvature
         normal_eqn_mat = np.linalg.inv(J) @ X.T
         h_vals = np.sum(X.T * normal_eqn_mat, axis=0) * l_doubledot_vals
-        loo_fitted_parameters = coef_[:, np.newaxis] - normal_eqn_mat * h_vals * \
-                                self.l_dot(y, orig_preds)
+        loo_fitted_parameters = coef_[:, np.newaxis] + normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
         return loo_fitted_parameters
 
-    def _fit_single_target(self, blocked_data, y, mode="keep_k"):
+    def _fit_single_target(self, blocked_data, y, alpha=None, partial_preds=True, mode="keep_k"):
         full_data = blocked_data.get_all_data()
         augmented_data = np.hstack([full_data, np.ones((full_data.shape[0], 1))]) # Tag on constant feature vector
         estimator = copy.deepcopy(self.estimator)
-        estimator.fit(full_data, y)
-        if hasattr(estimator, "alpha_"):
-            alpha = estimator.alpha_
-        elif hasattr(estimator, "C_"):
-            alpha = 1 / np.mean(estimator.C_)
+        if hasattr(estimator, "alpha"):
+            estimator.set_params(alpha=alpha)
+        elif hasattr(estimator, "C"):
+            estimator.set_params(C=1/alpha)
         else:
             alpha = 0
+        estimator.fit(full_data, y)
         coef_ = estimator.coef_
         if coef_.ndim > 1:
             augmented_coef_ = np.concatenate([coef_.ravel(), estimator.intercept_])
         else:
             augmented_coef_ = np.array(list(coef_) + [estimator.intercept_])
         loo_fitted_parameters = self._get_loo_fitted_parameters(augmented_data, y, augmented_coef_, alpha)
-        full_preds = self.link_fn(np.sum(loo_fitted_parameters.T * augmented_data, axis=1))
-        partial_preds = dict({})
-        for k in range(self.n_blocks):
-            modified_data = blocked_data.get_modified_data(k, mode)
-            modified_data = np.hstack([modified_data, np.ones((modified_data.shape[0], 1))])
-            partial_preds_k = self.link_fn(np.sum(loo_fitted_parameters.T * modified_data, axis=1))
-            if self.trim is not None:
-                if any(partial_preds_k < self.trim):
-                    partial_preds_k[partial_preds_k < self.trim] = self.trim
-                if any(partial_preds_k > (1 - self.trim)):
-                    partial_preds_k[partial_preds_k > (1 - self.trim)] = 1 - self.trim
-            partial_preds[k] = partial_preds_k
-        return full_preds, partial_preds
+        full_preds = self._trim_values(self.link_fn(np.sum(loo_fitted_parameters.T * augmented_data, axis=1)))
+        if partial_preds:
+            partial_preds = dict({})
+            for k in range(self.n_blocks):
+                modified_data = blocked_data.get_modified_data(k, mode)
+                modified_data = np.hstack([modified_data, np.ones((modified_data.shape[0], 1))])
+                partial_preds[k] = self._trim_values(self.link_fn(np.sum(loo_fitted_parameters.T * modified_data,
+                                                                         axis=1)))
+            return full_preds, partial_preds
+        else:
+            return full_preds
 
     def fit(self, blocked_data, y, mode="keep_k"):
         self.n_blocks = blocked_data.n_blocks
         if y.ndim > 1:
+            self.alpha_ = np.empty(y.shape[1])
             self._full_preds = np.empty_like(y)
             for k in range(self.n_blocks):
                 self._partial_preds[k] = np.empty_like(y)
             for j in range(y.shape[1]):
-                full_preds, partial_preds = self._fit_single_target(blocked_data, y[:, j], mode)
+                alpha_ = self._fit_hyperparameter(blocked_data, y[:, j])
+                full_preds, partial_preds = self._fit_single_target(blocked_data, y[:, j], alpha_, mode)
+                self.alpha_[j] = alpha_
                 self._full_preds[:, j] = full_preds
                 for k in range(self.n_blocks):
                     self._partial_preds[k][:, j] = partial_preds[k]
         else:
-            self._full_preds, self._partial_preds = self._fit_single_target(blocked_data, y, mode)
+            alpha_ = self._fit_hyperparameter(blocked_data, y)
+            self._full_preds, self._partial_preds = self._fit_single_target(blocked_data, y, alpha_, mode=mode)
+            self.alpha_ = alpha_
+
+    def _fit_hyperparameter(self, blocked_data, y):
+        cv_scores = np.zeros_like(self.alpha_grid)
+        for i, alpha in enumerate(self.alpha_grid):
+            full_preds = self._fit_single_target(blocked_data, y, alpha, partial_preds=False)
+            cv_scores[i] = self.hyperparameter_scorer(y, full_preds)
+        alpha_ = self.alpha_grid[np.argmin(cv_scores)]
+        return alpha_
+
+    def _trim_values(self, values):
+        if self.trim is not None:
+            assert 0 < self.trim < 0.5, "Limit must be between 0 and 0.5"
+            return np.clip(values, self.trim, 1 - self.trim)
+        else:
+            return values
 
 
 class RidgeLOOPPM(GenericLOOPPM, ABC):
 
     def __init__(self, **kwargs):
-        super().__init__(RidgeCV(**kwargs))
+        super().__init__(Ridge(**kwargs))
 
     def set_alphas(self, alphas="default", blocked_data=None, y=None):
         full_data = blocked_data.get_all_data()
@@ -251,13 +272,14 @@ class RidgeLOOPPM(GenericLOOPPM, ABC):
             alphas = get_alpha_grid(full_data, y)
         else:
             alphas = alphas
-        self.estimator = RidgeCV(alphas=alphas)
+        self.alpha_grid = alphas
 
 
 class LogisticLOOPPM(GenericLOOPPM, ABC):
 
     def __init__(self, **kwargs):
-        super().__init__(LogisticRegressionCV(**kwargs), link_fn=sp.special.expit, l_doubledot=lambda a, b: b * (1-b), trim=0.01)
+        super().__init__(LogisticRegression(**kwargs), link_fn=sp.special.expit,
+                         l_doubledot=lambda a, b: b * (1-b), hyperparameter_scorer=log_loss, trim=0.01)
 
 
 def get_alpha_grid(X, y, start=-10, stop=10, num=50):
