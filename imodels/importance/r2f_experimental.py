@@ -889,11 +889,13 @@ class JointALOLogisticScorer(JointScorerBase,ABC):
                 h_vals_partial = (X_partial1.dot(J_opt_inverse_partial) * X1).sum(-1)
                 linear_partial_preds = partial_ips + ((h_vals_partial)/(1.0-opt_h_val))*opt_derivative
                 partial_preds = 1.0 / (1.0 + np.exp(-linear_partial_preds))
-                if any(partial_preds < self.trim):
-                    partial_preds[partial_preds < self.trim] = self.trim
-                if any(partial_preds > (1 - self.trim)):
-                    partial_preds[partial_preds > (1 - self.trim)] = 1 - self.trim
-                looe_preds[:,k] = partial_preds
+                for p in range(len(partial_preds)):
+                    if partial_preds[p] < self.trim:
+                        partial_preds[p] = self.trim
+                    elif partial_preds[p] > 1 - self.trim:
+                        partial_preds[p] = 1 - self.trim
+                    else:
+                        partial_preds[p] = partial_preds[p]
 
             return looe_preds
 
