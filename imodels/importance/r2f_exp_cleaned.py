@@ -12,22 +12,43 @@ from sklearn.preprocessing import OneHotEncoder
 from imodels.importance.representation_cleaned import TreeTransformer, IdentityTransformer, CompositeTransformer
 
 
-def default_gmdi_pipeline(X, y, regression=True, mode="keep_k"):
+def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k", 
+                  partial_prediction_model="auto", scoring_fn="auto", 
+                  include_raw=True, subsetting_scheme=None):
+
     p = X.shape[1]
-    rf_model = RandomForestRegressor(min_samples_leaf=5, max_features=1/3) if regression else \
-        RandomForestClassifier(min_samples_leaf=5, max_features="sqrt")
-    rf_model.fit(X, y)
-    tree_transformers = [CompositeTransformer([TreeTransformer(p, tree_model, data=X),
-                                               IdentityTransformer(p)], adj_std="max")
-                         for tree_model in rf_model.estimators_]
-    if regression:
-        gmdi = GMDIEnsemble(tree_transformers, RidgeLOOPPM(), r2_score, mode)
-    else: # classification
-        gmdi = GMDIEnsemble(tree_transformers, LogisticLOOPPM(), roc_auc_score, mode)
+    if include_raw:
+        tree_transformers = [CompositeTransformer([TreeTransformer(p, tree_model, data=X),
+                                                    IdentityTransformer(p)], adj_std="max")
+                            for tree_model in fit.estimators_]
+    else:
+        tree_transformers = [TreeTransformer(p, tree_model, data=X) for tree_model in fit.estimators_]
+
+    if partial_prediction_model == "auto":
+        if regression:
+            partial_prediction_model = RidgeLOOPPM()
+        else:
+            partial_prediction_model = LogisticLOOPPM()
+    if scoring_fn == "auto":
+        if regression:
+            scoring_fn = r2_score
+        else:
+            scoring_fn = roc_auc_score
+    if not regression:
         if len(np.unique(y)) > 2:
             y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
+    
+    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, subsetting_scheme)
     scores = gmdi.get_scores(X, y)
-    return scores
+    
+    results = pd.DataFrame(data={'importance': scores})
+
+    if isinstance(X, pd.DataFrame):
+        results.index = X.columns
+    results.index.name = 'var'
+    results.reset_index(inplace=True)
+
+    return results
 
 
 class GMDI:
