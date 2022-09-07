@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import scipy as sp
+import pandas as pd
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.ensemble._forest import _generate_unsampled_indices, _generate_sample_indices
 from sklearn.linear_model import RidgeCV, LogisticRegressionCV, Ridge, LogisticRegression
