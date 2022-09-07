@@ -268,11 +268,16 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
             self.alpha_ = alpha_
 
     def _fit_hyperparameter(self, blocked_data, y):
-        cv_scores = np.zeros_like(self.alpha_grid)
-        for i, alpha in enumerate(self.alpha_grid):
-            full_preds = self._fit_single_target(blocked_data, y, alpha, partial_preds=False)
-            cv_scores[i] = self.hyperparameter_scorer(y, full_preds)
-        alpha_ = self.alpha_grid[np.argmin(cv_scores)]
+        if isinstance(self.estimator, Ridge):
+            ridge_cv = RidgeCV(alphas=self.alpha_grid)
+            ridge_cv.fit(blocked_data.get_all_data(), y)
+            alpha_ = ridge_cv.alpha_
+        else:
+            cv_scores = np.zeros_like(self.alpha_grid)
+            for i, alpha in enumerate(self.alpha_grid):
+                full_preds = self._fit_single_target(blocked_data, y, alpha, partial_preds=False)
+                cv_scores[i] = self.hyperparameter_scorer(y, full_preds)
+            alpha_ = self.alpha_grid[np.argmin(cv_scores)]
         return alpha_
 
     def _trim_values(self, values):
