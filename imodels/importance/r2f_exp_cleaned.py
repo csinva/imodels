@@ -65,7 +65,7 @@ class GMDI:
 
     def _fit_importance_scores(self, X, y):
         blocked_data = self.transformer.transform(X)
-        self.partial_prediction_model.fit(blocked_data, y)
+        self.partial_prediction_model.fit(blocked_data, y, self.mode)
         self.n_features = self.partial_prediction_model.n_blocks
         self._scores = np.zeros(self.n_features)
         if self.mode == "keep_k":
@@ -76,7 +76,7 @@ class GMDI:
             full_preds = self.partial_prediction_model.get_full_predictions()
             full_score = self.scoring_fn(y, full_preds)
             for k in range(self.n_features):
-                partial_preds = self.partial_prediction_model.get_partial_predictions(k, mode="keep_rest")
+                partial_preds = self.partial_prediction_model.get_partial_predictions(k)
                 self._scores[k] = full_score - self.scoring_fn(y, partial_preds)
         self.is_fitted = True
 

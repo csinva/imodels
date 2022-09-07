@@ -116,6 +116,7 @@ class IdentityTransformer(BlockTransformerBase, ABC):
 
     def __init__(self, n_features):
         super().__init__(n_features)
+        self.priority = 1
 
     def transform_one_feature(self, X, k, center=True, rescale=False):
         assert X.shape[1] == self.n_features, "n_features does not match that of X."
@@ -132,6 +133,8 @@ class CompositeTransformer(BlockTransformerBase, ABC):
         self.block_transformer_list = block_transformer_list
         for block_transformer in block_transformer_list:
             assert block_transformer.n_features == self.n_features
+        self.priority = 3
+        self.priorities = [block_transformer.priority for block_transformer in block_transformer_list]
         self.adj_std = adj_std
 
     def transform_one_feature(self, X, k, center=True, rescale=False):
@@ -141,14 +144,16 @@ class CompositeTransformer(BlockTransformerBase, ABC):
             if data_block.shape[1] > 0:
                 data_blocks.append(data_block)
         if self.adj_std == "max":
-            adj_factor = [max(data_block.std(axis=0)) for data_block in data_blocks]
+            adj_factor = np.array([max(data_block.std(axis=0)) for data_block in data_blocks])
         elif self.adj_std == "mean":
-            adj_factor = [np.mean(data_block.std(axis=0)) for data_block in data_blocks]
+            adj_factor = np.array([np.mean(data_block.std(axis=0)) for data_block in data_blocks])
         else:
             adj_factor = np.ones(len(data_blocks))
         for i in range(len(adj_factor)):
             if adj_factor[i] == 0: # Only constant features
                 adj_factor[i] = 1
+        reference_block_index = np.argmax(self.priorities)
+        adj_factor /= adj_factor[reference_block_index] # Normalize so that reference block is unadjusted
         composite_block = np.hstack([data_blocks[i] / adj_factor[i] for i in range(len(data_blocks))])
         return composite_block
 
@@ -171,6 +176,7 @@ class TreeTransformer(BlockTransformerBase, ABC):
     def __init__(self, n_features, estimator, normalize=False, data=None):
         super().__init__(n_features)
         self.estimator = estimator
+        self.priority = 2
         # Check if single tree or tree ensemble
         if isinstance(estimator, BaseEnsemble):
             tree_models = estimator.estimators_
