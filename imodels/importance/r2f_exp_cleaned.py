@@ -190,7 +190,7 @@ class RidgePPM(GenericPPM, ABC):
 
 class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
-    def __init__(self, estimator, alpha_grid=np.logspace(-5, 5, 20), link_fn = lambda a: a, l_dot=lambda a, b: b-a,
+    def __init__(self, estimator, alpha_grid=np.logspace(-5, 5, 100), link_fn = lambda a: a, l_dot=lambda a, b: b-a,
                  l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1, hyperparameter_scorer=mean_squared_error,
                  trim=None):
         super().__init__()
@@ -309,7 +309,7 @@ class LogisticLOOPPM(GenericLOOPPM, ABC):
                          l_doubledot=lambda a, b: b * (1-b), hyperparameter_scorer=log_loss, trim=0.01)
 
 
-def get_alpha_grid(X, y, start=-10, stop=10, num=50):
+def get_alpha_grid(X, y, start=-5, stop=5, num=100):
     X = X - X.mean(axis=0)
     y = y - y.mean(axis=0)
     sigma_sq_ = np.linalg.norm(y, axis=0) ** 2 / X.shape[0]
