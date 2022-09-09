@@ -136,6 +136,7 @@ class CompositeTransformer(BlockTransformerBase, ABC):
         self.priority = 3
         self.priorities = [block_transformer.priority for block_transformer in block_transformer_list]
         self.adj_std = adj_std
+        self.estimator = self.block_transformer_list[np.argmax(self.priorities)].estimator
 
     def transform_one_feature(self, X, k, center=True, rescale=False):
         data_blocks = []

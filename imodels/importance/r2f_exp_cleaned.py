@@ -240,10 +240,21 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
         if partial_preds:
             partial_preds = dict({})
             for k in range(self.n_blocks):
-                modified_data = blocked_data.get_modified_data(k, mode)
-                modified_data = np.hstack([modified_data, np.ones((modified_data.shape[0], 1))])
-                partial_preds[k] = self._trim_values(self.link_fn(np.sum(loo_fitted_parameters.T * modified_data,
-                                                                         axis=1)))
+                # modified_data = blocked_data.get_modified_data(k, mode)
+                # modified_data = np.hstack([modified_data, np.ones((modified_data.shape[0], 1))])
+                if mode == "keep_k":
+                    col_indices = blocked_data.get_block_indices(k)
+                    reduced_data = blocked_data.get_block(k)
+                elif mode == "keep_rest":
+                    col_indices = blocked_data.get_all_except_block_indices(k)
+                    reduced_data = blocked_data.get_all_except_block(k)
+                else:
+                    raise ValueError("Invalid mode")
+                # reduced_data = np.hstack([reduced_data, np.ones((reduced_data.shape[0], 1))])
+                intercept = augmented_coef_[-1]
+                reduced_parameters = loo_fitted_parameters.T[:, col_indices]
+                partial_preds[k] = self._trim_values(self.link_fn(np.sum(reduced_parameters * reduced_data, axis=1)
+                                                                  + intercept))
             return full_preds, partial_preds
         else:
             return full_preds
