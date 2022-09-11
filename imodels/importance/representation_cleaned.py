@@ -92,7 +92,7 @@ class BlockTransformerBase(ABC):
     def transform_one_feature(self, X, k, center=True, rescale=False):
         pass
 
-    def transform(self, X, center=False, rescale=False):
+    def transform(self, X, center=True, rescale=False):
         data_blocks = [self.transform_one_feature(X, k, center, rescale) for k in range(self.n_features)]
         # common_block = np.ones((X.shape[0], 1))
         blocked_data = BlockPartitionedData(data_blocks)
@@ -127,36 +127,40 @@ class IdentityTransformer(BlockTransformerBase, ABC):
 
 class CompositeTransformer(BlockTransformerBase, ABC):
 
-    def __init__(self, block_transformer_list, adj_std=None):
+    def __init__(self, block_transformer_list, adj_std=None, drop_features=True):
         n_features = block_transformer_list[0].n_features
         super().__init__(n_features)
         self.block_transformer_list = block_transformer_list
         for block_transformer in block_transformer_list:
             assert block_transformer.n_features == self.n_features
         self.priority = 3
-        self.priorities = [block_transformer.priority for block_transformer in block_transformer_list]
+        self.reference_index = np.argmax([block_transformer.priority
+                                          for block_transformer in block_transformer_list])
         self.adj_std = adj_std
-        self.estimator = self.block_transformer_list[np.argmax(self.priorities)].estimator
+        self.drop_features = drop_features
+        self.estimator = self.block_transformer_list[self.reference_index].estimator
 
     def transform_one_feature(self, X, k, center=True, rescale=False):
         data_blocks = []
         for block_transformer in self.block_transformer_list:
             data_block = block_transformer.transform_one_feature(X, k, center, rescale)
-            if data_block.shape[1] > 0:
-                data_blocks.append(data_block)
-        if self.adj_std == "max":
-            adj_factor = np.array([max(data_block.std(axis=0)) for data_block in data_blocks])
-        elif self.adj_std == "mean":
-            adj_factor = np.array([np.mean(data_block.std(axis=0)) for data_block in data_blocks])
+            data_blocks.append(data_block)
+        # Return empty block if highest priority block is empty and drop_features is True
+        if self.drop_features and data_blocks[self.reference_index].shape[1] == 0:
+            return data_blocks[self.reference_index]
         else:
-            adj_factor = np.ones(len(data_blocks))
-        for i in range(len(adj_factor)):
-            if adj_factor[i] == 0: # Only constant features
-                adj_factor[i] = 1
-        reference_block_index = np.argmax(self.priorities)
-        adj_factor /= adj_factor[reference_block_index] # Normalize so that reference block is unadjusted
-        composite_block = np.hstack([data_blocks[i] / adj_factor[i] for i in range(len(data_blocks))])
-        return composite_block
+            if self.adj_std == "max":
+                adj_factor = np.array([max(data_block.std(axis=0)) for data_block in data_blocks])
+            elif self.adj_std == "mean":
+                adj_factor = np.array([np.mean(data_block.std(axis=0)) for data_block in data_blocks])
+            else:
+                adj_factor = np.ones(len(data_blocks))
+            for i in range(len(adj_factor)):
+                if adj_factor[i] == 0: # Only constant features
+                    adj_factor[i] = 1
+            adj_factor /= adj_factor[self.reference_index] # Normalize so that reference block is unadjusted
+            composite_block = np.hstack([data_blocks[i] / adj_factor[i] for i in range(len(data_blocks))])
+            return composite_block
 
 
 class TreeTransformer(BlockTransformerBase, ABC):
