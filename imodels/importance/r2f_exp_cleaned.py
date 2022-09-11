@@ -190,7 +190,7 @@ class RidgePPM(GenericPPM, ABC):
 
 class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
-    def __init__(self, estimator, alpha_grid=np.logspace(-5, 5, 100), link_fn = lambda a: a, l_dot=lambda a, b: b-a,
+    def __init__(self, estimator, alpha_grid=np.logspace(-4, 4, 10), link_fn = lambda a: a, l_dot=lambda a, b: b-a,
                  l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1, hyperparameter_scorer=mean_squared_error,
                  trim=None):
         super().__init__()
@@ -203,6 +203,7 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
         self.trim = trim
         self.hyperparameter_scorer = hyperparameter_scorer
         self.alpha_ = None
+        self._cache = None
 
     def _get_loo_fitted_parameters(self, X, y, coef_, alpha=0, constant_term=True):
         orig_preds = self.link_fn(X @ coef_)
@@ -301,8 +302,8 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
 class RidgeLOOPPM(GenericLOOPPM, ABC):
 
-    def __init__(self, **kwargs):
-        super().__init__(Ridge(**kwargs))
+    def __init__(self, alpha_grid=np.logspace(-5, 5, 100), **kwargs):
+        super().__init__(Ridge(**kwargs), alpha_grid)
 
     def set_alphas(self, alphas="default", blocked_data=None, y=None):
         full_data = blocked_data.get_all_data()
@@ -315,8 +316,8 @@ class RidgeLOOPPM(GenericLOOPPM, ABC):
 
 class LogisticLOOPPM(GenericLOOPPM, ABC):
 
-    def __init__(self, **kwargs):
-        super().__init__(LogisticRegression(**kwargs), link_fn=sp.special.expit,
+    def __init__(self, alpha_grid=np.logspace(-4, 4, 10), **kwargs):
+        super().__init__(LogisticRegression(**kwargs), alpha_grid, link_fn=sp.special.expit,
                          l_doubledot=lambda a, b: b * (1-b), hyperparameter_scorer=log_loss, trim=0.01)
 
 
