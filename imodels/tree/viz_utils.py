@@ -59,6 +59,7 @@ class LightTreeViz:
         self.children_left = tree.children_left
         self.children_right = tree.children_right
         self.feature = tree.feature
+        # self.n_features = len(tree.feature)
         self.threshold = tree.threshold
         self.n_node_samples = tree.n_node_samples
         self.impurity = tree.impurity
@@ -73,3 +74,9 @@ class DecisionTreeViz(BaseDecisionTree):
         tree = LightTreeViz(dt, n_classes)
         self.tree_ = tree
         self.criterion = criterion
+#        self.classes_ = np.arange(n_classes)
+#        self.decision_path = None
+#        self.class_weight = None
+#        self.max_depth = None
+#        self.score = None
+#        self.min_samples_leaf = None
