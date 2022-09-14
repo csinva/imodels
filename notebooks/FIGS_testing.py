@@ -75,6 +75,27 @@ print(model_figs)
 print(model_figs.print_tree(X_train, y_train))
 
 # %%
-model_figs.plot()
+model_figs.plot(X_train, y_train)
+
+# %% [markdown] tags=[]
+# # DEV
 
 # %%
+# figs_tree = model_figs.trees_[0]
+
+# %%
+from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
+dt = extract_sklearn_tree_from_figs(model_figs, 0, X_train, y_train)
+
+# %%
+plot_tree(dt, feature_names=feat_names);
+
+# %% [markdown]
+# ## `sklearn` Comparison
+
+# %%
+model_sklearn = DecisionTreeClassifier(max_depth=10, random_state=42)
+model_sklearn.fit(X_train, y_train);
+
+# %%
+plot_tree(model_sklearn, feature_names=feat_names, max_depth=2);

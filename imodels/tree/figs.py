@@ -13,15 +13,14 @@ from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import _check_sample_weight
 
-from imodels.tree.viz_utils import DecisionTreeViz
+from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 
 plt.rcParams['figure.dpi'] = 300
-
 
 class Node:
     def __init__(self, feature: int = None, threshold: int = None,
                  value=None, idxs=None, is_root: bool = False, left=None,
-                 impurity_reduction: float = None, tree_num: int = None,
+                 impurity: float = None, impurity_reduction: float = None, tree_num: int = None, node_num: int = None,
                  right=None):
         """Node class for splitting
         """
@@ -30,7 +29,9 @@ class Node:
         self.is_root = is_root
         self.idxs = idxs
         self.tree_num = tree_num
+        self.node_num = None
         self.feature = feature
+        self.impurity = impurity
         self.impurity_reduction = impurity_reduction
 
         # different meanings
@@ -147,7 +148,7 @@ class FIGS(BaseEstimator):
             # print('no split found!', idxs.sum(), impurity, feature)
             return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                         feature=feature[SPLIT], threshold=threshold[SPLIT],
-                        impurity_reduction=None)
+                        impurity=impurity[SPLIT], impurity_reduction=None)
 
         # manage sample weights
         idxs_split = X[:, feature[SPLIT]] <= threshold[SPLIT]
@@ -170,12 +171,12 @@ class FIGS(BaseEstimator):
 
         node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                           feature=feature[SPLIT], threshold=threshold[SPLIT],
-                          impurity_reduction=impurity_reduction)
+                          impurity=impurity[SPLIT], impurity_reduction=impurity_reduction)
         # print('\t>>>', node_split, 'impurity', impurity, 'num_pts', idxs.sum(), 'imp_reduc', impurity_reduction)
 
         # manage children
-        node_left = Node(idxs=idxs_left, value=value[LEFT], tree_num=tree_num)
-        node_right = Node(idxs=idxs_right, value=value[RIGHT], tree_num=tree_num)
+        node_left = Node(idxs=idxs_left, value=value[LEFT], impurity=impurity[LEFT], tree_num=tree_num)
+        node_right = Node(idxs=idxs_right, value=value[RIGHT], impurity=impurity[RIGHT], tree_num=tree_num)
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
@@ -309,6 +310,19 @@ class FIGS(BaseEstimator):
             if self.max_rules is not None and self.complexity_ >= self.max_rules:
                 finished = True
                 break
+
+        # add node_num to final tree
+        for tree_ in self.trees_:
+            node_counter = iter(range(0, int(1e06)))
+            def _add_node_num(node: Node):
+                if node is None:
+                    return
+                node.setattrs(node_num=next(node_counter))
+                _add_node_num(node.left)
+                _add_node_num(node.right)
+
+            _add_node_num(tree_)
+
         return self
 
     def _tree_to_str(self, root: Node, prefix=''):
@@ -397,15 +411,12 @@ class FIGS(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
-    def plot(self, cols=2, feature_names=None, filename=None, label="all",
+    def plot(self, X_train, y_train, cols=2, feature_names=None, filename=None, label="all",
              impurity=False, tree_number=None, dpi=150):
         is_single_tree = len(self.trees_) < 2 or tree_number is not None
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
-        # if is_single_tree:
-        #     fig, ax = plt.subplots(1)
-        # else:
-        #     fig, axs = plt.subplots(n_rows, n_cols)
+
         if feature_names is None:
             if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
                 feature_names = self.feature_names_
@@ -414,20 +425,17 @@ class FIGS(BaseEstimator):
         fig, axs = plt.subplots(n_plots, dpi=dpi)
         criterion = "squared_error" if isinstance(self, RegressorMixin) else "gini"
         n_classes = 1 if isinstance(self, RegressorMixin) else 2
-        ax_size = int(len(self.trees_))  # n_cols * n_rows
+        ax_size = int(len(self.trees_))
         for i in range(n_plots):
             r = i // n_cols
             c = i % n_cols
             if not is_single_tree:
-                # ax = axs[r, c]
                 ax = axs[i]
             else:
                 ax = axs
             try:
-                tree = self.trees_[i] if tree_number is None else self.trees_[tree_number]
-                plot_tree(DecisionTreeViz(tree, criterion, n_classes),
-                          ax=ax, feature_names=feature_names, label=label,
-                          impurity=impurity)
+                dt = extract_sklearn_tree_from_figs(self, i if tree_number is None else tree_number, X_train, y_train)
+                plot_tree(dt, ax=ax, feature_names=feature_names, label=label, impurity=impurity)
             except IndexError:
                 ax.axis('off')
                 continue
