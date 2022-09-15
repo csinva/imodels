@@ -36,15 +36,14 @@ from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import _check_sample_weight
 
-from imodels.tree.viz_utils import DecisionTreeViz
+from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 
 plt.rcParams[&#39;figure.dpi&#39;] = 300
 
-
 class Node:
     def __init__(self, feature: int = None, threshold: int = None,
-                 value=None, idxs=None, is_root: bool = False, left=None,
-                 impurity_reduction: float = None, tree_num: int = None,
+                 value=None, value_sklearn=None, idxs=None, is_root: bool = False, left=None,
+                 impurity: float = None, impurity_reduction: float = None, tree_num: int = None, node_id: int = None,
                  right=None):
         &#34;&#34;&#34;Node class for splitting
         &#34;&#34;&#34;
@@ -53,8 +52,11 @@ class Node:
         self.is_root = is_root
         self.idxs = idxs
         self.tree_num = tree_num
+        self.node_id = None
         self.feature = feature
+        self.impurity = impurity
         self.impurity_reduction = impurity_reduction
+        self.value_sklearn = value_sklearn
 
         # different meanings
         self.value = value  # for split this is mean, for linear this is weight
@@ -170,7 +172,7 @@ class FIGS(BaseEstimator):
             # print(&#39;no split found!&#39;, idxs.sum(), impurity, feature)
             return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                         feature=feature[SPLIT], threshold=threshold[SPLIT],
-                        impurity_reduction=None)
+                        impurity=impurity[SPLIT], impurity_reduction=None)
 
         # manage sample weights
         idxs_split = X[:, feature[SPLIT]] &lt;= threshold[SPLIT]
@@ -193,12 +195,12 @@ class FIGS(BaseEstimator):
 
         node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                           feature=feature[SPLIT], threshold=threshold[SPLIT],
-                          impurity_reduction=impurity_reduction)
+                          impurity=impurity[SPLIT], impurity_reduction=impurity_reduction)
         # print(&#39;\t&gt;&gt;&gt;&#39;, node_split, &#39;impurity&#39;, impurity, &#39;num_pts&#39;, idxs.sum(), &#39;imp_reduc&#39;, impurity_reduction)
 
         # manage children
-        node_left = Node(idxs=idxs_left, value=value[LEFT], tree_num=tree_num)
-        node_right = Node(idxs=idxs_right, value=value[RIGHT], tree_num=tree_num)
+        node_left = Node(idxs=idxs_left, value=value[LEFT], impurity=impurity[LEFT], tree_num=tree_num)
+        node_right = Node(idxs=idxs_right, value=value[RIGHT], impurity=impurity[RIGHT], tree_num=tree_num)
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
@@ -332,6 +334,36 @@ class FIGS(BaseEstimator):
             if self.max_rules is not None and self.complexity_ &gt;= self.max_rules:
                 finished = True
                 break
+
+        # annotate final tree with node_id and value_sklearn
+        for tree_ in self.trees_:
+            node_counter = iter(range(0, int(1e06)))
+            def _annotate_node(node: Node, X, y):
+                if node is None:
+                    return
+
+                # TODO does not incorporate sample weights
+                value_counts = pd.Series(y).value_counts()
+                try:
+                    neg_count = value_counts[0.0]
+                except KeyError:
+                    neg_count = 0
+
+                try:
+                    pos_count = value_counts[1.0]
+                except KeyError:
+                    pos_count = 0
+
+                value_sklearn = np.array([neg_count, pos_count], dtype=float)
+
+                node.setattrs(node_id=next(node_counter), value_sklearn=value_sklearn)
+
+                idxs_left = X[:, node.feature] &lt;= node.threshold
+                _annotate_node(node.left, X[idxs_left], y[idxs_left])
+                _annotate_node(node.right, X[~idxs_left], y[~idxs_left])
+
+            _annotate_node(tree_, X, y)
+
         return self
 
     def _tree_to_str(self, root: Node, prefix=&#39;&#39;):
@@ -421,36 +453,32 @@ class FIGS(BaseEstimator):
         return preds
 
     def plot(self, cols=2, feature_names=None, filename=None, label=&#34;all&#34;,
-             impurity=False, tree_number=None, dpi=150):
+             impurity=False, tree_number=None, dpi=150, fig_size=None):
         is_single_tree = len(self.trees_) &lt; 2 or tree_number is not None
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
-        # if is_single_tree:
-        #     fig, ax = plt.subplots(1)
-        # else:
-        #     fig, axs = plt.subplots(n_rows, n_cols)
+
         if feature_names is None:
             if hasattr(self, &#39;feature_names_&#39;) and self.feature_names_ is not None:
                 feature_names = self.feature_names_
 
         n_plots = int(len(self.trees_)) if tree_number is None else 1
         fig, axs = plt.subplots(n_plots, dpi=dpi)
+        if fig_size is not None:
+            fig.set_size_inches(fig_size, fig_size)
         criterion = &#34;squared_error&#34; if isinstance(self, RegressorMixin) else &#34;gini&#34;
         n_classes = 1 if isinstance(self, RegressorMixin) else 2
-        ax_size = int(len(self.trees_))  # n_cols * n_rows
+        ax_size = int(len(self.trees_))
         for i in range(n_plots):
             r = i // n_cols
             c = i % n_cols
             if not is_single_tree:
-                # ax = axs[r, c]
                 ax = axs[i]
             else:
                 ax = axs
             try:
-                tree = self.trees_[i] if tree_number is None else self.trees_[tree_number]
-                plot_tree(DecisionTreeViz(tree, criterion, n_classes),
-                          ax=ax, feature_names=feature_names, label=label,
-                          impurity=impurity)
+                dt = extract_sklearn_tree_from_figs(self, i if tree_number is None else tree_number, n_classes)
+                plot_tree(dt, ax=ax, feature_names=feature_names, label=label, impurity=impurity)
             except IndexError:
                 ax.axis(&#39;off&#39;)
                 continue
@@ -652,7 +680,7 @@ The number of features to consider when looking for the best split (see <a href=
             # print(&#39;no split found!&#39;, idxs.sum(), impurity, feature)
             return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                         feature=feature[SPLIT], threshold=threshold[SPLIT],
-                        impurity_reduction=None)
+                        impurity=impurity[SPLIT], impurity_reduction=None)
 
         # manage sample weights
         idxs_split = X[:, feature[SPLIT]] &lt;= threshold[SPLIT]
@@ -675,12 +703,12 @@ The number of features to consider when looking for the best split (see <a href=
 
         node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                           feature=feature[SPLIT], threshold=threshold[SPLIT],
-                          impurity_reduction=impurity_reduction)
+                          impurity=impurity[SPLIT], impurity_reduction=impurity_reduction)
         # print(&#39;\t&gt;&gt;&gt;&#39;, node_split, &#39;impurity&#39;, impurity, &#39;num_pts&#39;, idxs.sum(), &#39;imp_reduc&#39;, impurity_reduction)
 
         # manage children
-        node_left = Node(idxs=idxs_left, value=value[LEFT], tree_num=tree_num)
-        node_right = Node(idxs=idxs_right, value=value[RIGHT], tree_num=tree_num)
+        node_left = Node(idxs=idxs_left, value=value[LEFT], impurity=impurity[LEFT], tree_num=tree_num)
+        node_right = Node(idxs=idxs_right, value=value[RIGHT], impurity=impurity[RIGHT], tree_num=tree_num)
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
@@ -814,6 +842,36 @@ The number of features to consider when looking for the best split (see <a href=
             if self.max_rules is not None and self.complexity_ &gt;= self.max_rules:
                 finished = True
                 break
+
+        # annotate final tree with node_id and value_sklearn
+        for tree_ in self.trees_:
+            node_counter = iter(range(0, int(1e06)))
+            def _annotate_node(node: Node, X, y):
+                if node is None:
+                    return
+
+                # TODO does not incorporate sample weights
+                value_counts = pd.Series(y).value_counts()
+                try:
+                    neg_count = value_counts[0.0]
+                except KeyError:
+                    neg_count = 0
+
+                try:
+                    pos_count = value_counts[1.0]
+                except KeyError:
+                    pos_count = 0
+
+                value_sklearn = np.array([neg_count, pos_count], dtype=float)
+
+                node.setattrs(node_id=next(node_counter), value_sklearn=value_sklearn)
+
+                idxs_left = X[:, node.feature] &lt;= node.threshold
+                _annotate_node(node.left, X[idxs_left], y[idxs_left])
+                _annotate_node(node.right, X[~idxs_left], y[~idxs_left])
+
+            _annotate_node(tree_, X, y)
+
         return self
 
     def _tree_to_str(self, root: Node, prefix=&#39;&#39;):
@@ -903,36 +961,32 @@ The number of features to consider when looking for the best split (see <a href=
         return preds
 
     def plot(self, cols=2, feature_names=None, filename=None, label=&#34;all&#34;,
-             impurity=False, tree_number=None, dpi=150):
+             impurity=False, tree_number=None, dpi=150, fig_size=None):
         is_single_tree = len(self.trees_) &lt; 2 or tree_number is not None
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
-        # if is_single_tree:
-        #     fig, ax = plt.subplots(1)
-        # else:
-        #     fig, axs = plt.subplots(n_rows, n_cols)
+
         if feature_names is None:
             if hasattr(self, &#39;feature_names_&#39;) and self.feature_names_ is not None:
                 feature_names = self.feature_names_
 
         n_plots = int(len(self.trees_)) if tree_number is None else 1
         fig, axs = plt.subplots(n_plots, dpi=dpi)
+        if fig_size is not None:
+            fig.set_size_inches(fig_size, fig_size)
         criterion = &#34;squared_error&#34; if isinstance(self, RegressorMixin) else &#34;gini&#34;
         n_classes = 1 if isinstance(self, RegressorMixin) else 2
-        ax_size = int(len(self.trees_))  # n_cols * n_rows
+        ax_size = int(len(self.trees_))
         for i in range(n_plots):
             r = i // n_cols
             c = i % n_cols
             if not is_single_tree:
-                # ax = axs[r, c]
                 ax = axs[i]
             else:
                 ax = axs
             try:
-                tree = self.trees_[i] if tree_number is None else self.trees_[tree_number]
-                plot_tree(DecisionTreeViz(tree, criterion, n_classes),
-                          ax=ax, feature_names=feature_names, label=label,
-                          impurity=impurity)
+                dt = extract_sklearn_tree_from_figs(self, i if tree_number is None else tree_number, n_classes)
+                plot_tree(dt, ax=ax, feature_names=feature_names, label=label, impurity=impurity)
             except IndexError:
                 ax.axis(&#39;off&#39;)
                 continue
@@ -1097,11 +1151,41 @@ are ignored while searching for a split in each node.</p></div>
         if self.max_rules is not None and self.complexity_ &gt;= self.max_rules:
             finished = True
             break
+
+    # annotate final tree with node_id and value_sklearn
+    for tree_ in self.trees_:
+        node_counter = iter(range(0, int(1e06)))
+        def _annotate_node(node: Node, X, y):
+            if node is None:
+                return
+
+            # TODO does not incorporate sample weights
+            value_counts = pd.Series(y).value_counts()
+            try:
+                neg_count = value_counts[0.0]
+            except KeyError:
+                neg_count = 0
+
+            try:
+                pos_count = value_counts[1.0]
+            except KeyError:
+                pos_count = 0
+
+            value_sklearn = np.array([neg_count, pos_count], dtype=float)
+
+            node.setattrs(node_id=next(node_counter), value_sklearn=value_sklearn)
+
+            idxs_left = X[:, node.feature] &lt;= node.threshold
+            _annotate_node(node.left, X[idxs_left], y[idxs_left])
+            _annotate_node(node.right, X[~idxs_left], y[~idxs_left])
+
+        _annotate_node(tree_, X, y)
+
     return self</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.figs.FIGS.plot"><code class="name flex">
-<span>def <span class="ident">plot</span></span>(<span>self, cols=2, feature_names=None, filename=None, label='all', impurity=False, tree_number=None, dpi=150)</span>
+<span>def <span class="ident">plot</span></span>(<span>self, cols=2, feature_names=None, filename=None, label='all', impurity=False, tree_number=None, dpi=150, fig_size=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1110,36 +1194,32 @@ are ignored while searching for a split in each node.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def plot(self, cols=2, feature_names=None, filename=None, label=&#34;all&#34;,
-         impurity=False, tree_number=None, dpi=150):
+         impurity=False, tree_number=None, dpi=150, fig_size=None):
     is_single_tree = len(self.trees_) &lt; 2 or tree_number is not None
     n_cols = int(cols)
     n_rows = int(np.ceil(len(self.trees_) / n_cols))
-    # if is_single_tree:
-    #     fig, ax = plt.subplots(1)
-    # else:
-    #     fig, axs = plt.subplots(n_rows, n_cols)
+
     if feature_names is None:
         if hasattr(self, &#39;feature_names_&#39;) and self.feature_names_ is not None:
             feature_names = self.feature_names_
 
     n_plots = int(len(self.trees_)) if tree_number is None else 1
     fig, axs = plt.subplots(n_plots, dpi=dpi)
+    if fig_size is not None:
+        fig.set_size_inches(fig_size, fig_size)
     criterion = &#34;squared_error&#34; if isinstance(self, RegressorMixin) else &#34;gini&#34;
     n_classes = 1 if isinstance(self, RegressorMixin) else 2
-    ax_size = int(len(self.trees_))  # n_cols * n_rows
+    ax_size = int(len(self.trees_))
     for i in range(n_plots):
         r = i // n_cols
         c = i % n_cols
         if not is_single_tree:
-            # ax = axs[r, c]
             ax = axs[i]
         else:
             ax = axs
         try:
-            tree = self.trees_[i] if tree_number is None else self.trees_[tree_number]
-            plot_tree(DecisionTreeViz(tree, criterion, n_classes),
-                      ax=ax, feature_names=feature_names, label=label,
-                      impurity=impurity)
+            dt = extract_sklearn_tree_from_figs(self, i if tree_number is None else tree_number, n_classes)
+            plot_tree(dt, ax=ax, feature_names=feature_names, label=label, impurity=impurity)
         except IndexError:
             ax.axis(&#39;off&#39;)
             continue
@@ -1457,7 +1537,7 @@ The number of features to consider when looking for the best split (see <a href=
 </dd>
 <dt id="imodels.tree.figs.Node"><code class="flex name class">
 <span>class <span class="ident">Node</span></span>
-<span>(</span><span>feature: int = None, threshold: int = None, value=None, idxs=None, is_root: bool = False, left=None, impurity_reduction: float = None, tree_num: int = None, right=None)</span>
+<span>(</span><span>feature: int = None, threshold: int = None, value=None, value_sklearn=None, idxs=None, is_root: bool = False, left=None, impurity: float = None, impurity_reduction: float = None, tree_num: int = None, node_id: int = None, right=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Node class for splitting</p></div>
@@ -1467,8 +1547,8 @@ The number of features to consider when looking for the best split (see <a href=
 </summary>
 <pre><code class="python">class Node:
     def __init__(self, feature: int = None, threshold: int = None,
-                 value=None, idxs=None, is_root: bool = False, left=None,
-                 impurity_reduction: float = None, tree_num: int = None,
+                 value=None, value_sklearn=None, idxs=None, is_root: bool = False, left=None,
+                 impurity: float = None, impurity_reduction: float = None, tree_num: int = None, node_id: int = None,
                  right=None):
         &#34;&#34;&#34;Node class for splitting
         &#34;&#34;&#34;
@@ -1477,8 +1557,11 @@ The number of features to consider when looking for the best split (see <a href=
         self.is_root = is_root
         self.idxs = idxs
         self.tree_num = tree_num
+        self.node_id = None
         self.feature = feature
+        self.impurity = impurity
         self.impurity_reduction = impurity_reduction
+        self.value_sklearn = value_sklearn
 
         # different meanings
         self.value = value  # for split this is mean, for linear this is weight

@@ -40,3 +40,5 @@ experiments/data/
 experiments/results
 experiments/*.txt
 **_site*
+.imodels
+data

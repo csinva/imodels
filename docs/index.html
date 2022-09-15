@@ -73,104 +73,104 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 <table>
 <thead>
 <tr>
-<th align="left">Model</th>
+<th style="text-align: left;">Model</th>
 <th>Reference</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="left">Rulefit rule set</td>
+<td style="text-align: left;">Rulefit rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/rule_fit.html">🗂️</a>, <a href="https://github.com/christophM/rulefit">🔗</a>, <a href="http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf">📄</a></td>
 <td>Fits a sparse linear model on rules extracted from decision trees</td>
 </tr>
 <tr>
-<td align="left">Skope rule set</td>
+<td style="text-align: left;">Skope rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier">🗂️</a>, <a href="https://github.com/scikit-learn-contrib/skope-rules">🔗</a></td>
 <td>Extracts rules from gradient-boosted trees, deduplicates them,<br/>then linearly combines them based on their OOB precision</td>
 </tr>
 <tr>
-<td align="left">Boosted rule set</td>
+<td style="text-align: left;">Boosted rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/boosted_rules.html">🗂️</a>, <a href="https://github.com/jaimeps/adaboost-implementation">🔗</a>, <a href="https://www.sciencedirect.com/science/article/pii/S002200009791504X">📄</a></td>
 <td>Sequentially fits a set of rules with Adaboost</td>
 </tr>
 <tr>
-<td align="left">Slipper rule set</td>
+<td style="text-align: left;">Slipper rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/slipper.html">🗂️</a>, ㅤㅤ<a href="https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf">📄</a></td>
 <td>Sequentially learns a set of rules with SLIPPER</td>
 </tr>
 <tr>
-<td align="left">Bayesian rule set</td>
+<td style="text-align: left;">Bayesian rule set</td>
 <td><a href="https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">🗂️</a>, <a href="https://github.com/wangtongada/BOA">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/16-003/16-003.pdf">📄</a></td>
 <td>Finds concise rule set with Bayesian sampling (slow)</td>
 </tr>
 <tr>
-<td align="left">Optimal rule list</td>
+<td style="text-align: left;">Optimal rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier">🗂️</a>, <a href="https://github.com/corels/pycorels">🔗</a>, <a href="https://www.jmlr.org/papers/volume18/17-716/17-716.pdf">📄</a></td>
 <td>Fits rule list using global optimization for sparsity (CORELS)</td>
 </tr>
 <tr>
-<td align="left">Bayesian rule list</td>
+<td style="text-align: left;">Bayesian rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">🗂️</a>, <a href="https://github.com/tmadl/sklearn-expertsys">🔗</a>, <a href="https://arxiv.org/abs/1602.08610">📄</a></td>
 <td>Fits compact rule list distribution with Bayesian sampling (slow)</td>
 </tr>
 <tr>
-<td align="left">Greedy rule list</td>
+<td style="text-align: left;">Greedy rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/greedy_rule_list.html">🗂️</a>, <a href="https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea">🔗</a></td>
 <td>Uses CART to fit a list (only a single path), rather than a tree</td>
 </tr>
 <tr>
-<td align="left">OneR rule list</td>
+<td style="text-align: left;">OneR rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/one_r.html">🗂️</a>, ㅤㅤ<a href="https://link.springer.com/article/10.1023/A:1022631118932">📄</a></td>
 <td>Fits rule list restricted to only one feature</td>
 </tr>
 <tr>
-<td align="left">Optimal rule tree</td>
+<td style="text-align: left;">Optimal rule tree</td>
 <td><a href="https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">🗂️</a>, <a href="https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees">🔗</a>, <a href="https://arxiv.org/abs/2006.08690">📄</a></td>
 <td>Fits succinct tree using global optimization for sparsity (GOSDT)</td>
 </tr>
 <tr>
-<td align="left">Greedy rule tree</td>
+<td style="text-align: left;">Greedy rule tree</td>
 <td><a href="https://csinva.io/imodels/tree/cart_wrapper.html">🗂️</a>, <a href="https://scikit-learn.org/stable/modules/tree.html">🔗</a>, <a href="https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone">📄</a></td>
 <td>Greedily fits tree using CART</td>
 </tr>
 <tr>
-<td align="left">C4.5 rule tree</td>
+<td style="text-align: left;">C4.5 rule tree</td>
 <td><a href="https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">🗂️</a>, <a href="https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier">🔗</a>, <a href="https://link.springer.com/article/10.1007/BF00993309">📄</a></td>
 <td>Greedily fits tree using C4.5</td>
 </tr>
 <tr>
-<td align="left">TAO rule tree</td>
+<td style="text-align: left;">TAO rule tree</td>
 <td><a href="https://csinva.io/imodels/tree/tao.html">🗂️</a>, ㅤㅤ<a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">📄</a></td>
 <td>Fits tree using alternating optimization</td>
 </tr>
 <tr>
-<td align="left">Iterative random<br/>forest</td>
+<td style="text-align: left;">Iterative random<br/>forest</td>
 <td><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html">🗂️</a>, <a href="https://github.com/Yu-Group/iterative-Random-Forest">🔗</a>, <a href="https://www.pnas.org/content/115/8/1943">📄</a></td>
 <td>Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected</td>
 </tr>
 <tr>
-<td align="left">Sparse integer<br/>linear model</td>
+<td style="text-align: left;">Sparse integer<br/>linear model</td>
 <td><a href="https://csinva.io/imodels/algebraic/slim.html">🗂️</a>, ㅤㅤ<a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">📄</a></td>
 <td>Sparse linear model with integer coefficients</td>
 </tr>
 <tr>
-<td align="left"><b>Greedy tree sums</b></td>
+<td style="text-align: left;"><b>Greedy tree sums</b></td>
 <td><a href="https://csinva.io/imodels/tree/figs.html#imodels.tree.figs">🗂️</a>, ㅤㅤ<a href="https://arxiv.org/abs/2201.11931">📄</a></td>
 <td>Sum of small trees with very few total rules (FIGS)</td>
 </tr>
 <tr>
-<td align="left"><b>Hierarchical<br/> shrinkage wrapper</b></td>
+<td style="text-align: left;"><b>Hierarchical<br/> shrinkage wrapper</b></td>
 <td><a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html">🗂️</a>, ㅤㅤ<a href="https://arxiv.org/abs/2202.00858">📄</a></td>
 <td>Improve any tree-based model with ultra-fast, post-hoc regularization</td>
 </tr>
 <tr>
-<td align="left">Distillation<br/>wrapper</td>
+<td style="text-align: left;">Distillation<br/>wrapper</td>
 <td><a href="https://csinva.io/imodels/util/distillation.html">🗂️</a></td>
 <td>Train a black-box model,<br/>then distill it into an interpretable model</td>
 </tr>
 <tr>
-<td align="left">More models</td>
+<td style="text-align: left;">More models</td>
 <td>⌛</td>
 <td>(Coming soon!) Lightweight Rule Induction, MLRules, &hellip;</td>
 </tr>
@@ -209,18 +209,18 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <table>
 <thead>
 <tr>
-<th align="center">Rule set</th>
-<th align="center">Rule list</th>
-<th align="center">Rule tree</th>
-<th align="center">Algebraic models</th>
+<th style="text-align: center;">Rule set</th>
+<th style="text-align: center;">Rule list</th>
+<th style="text-align: center;">Rule tree</th>
+<th style="text-align: center;">Algebraic models</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><img src="https://csinva.io/imodels/img/rule_set.jpg" width="100%"></td>
-<td align="center"><img src="https://csinva.io/imodels/img/rule_list.jpg"></td>
-<td align="center"><img src="https://csinva.io/imodels/img/rule_tree.jpg"></td>
-<td align="center"><img src="https://csinva.io/imodels/img/algebraic_models.jpg"></td>
+<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_set.jpg" width="100%"></td>
+<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_list.jpg"></td>
+<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_tree.jpg"></td>
+<td style="text-align: center;"><img src="https://csinva.io/imodels/img/algebraic_models.jpg"></td>
 </tr>
 </tbody>
 </table>
@@ -228,16 +228,16 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <table>
 <thead>
 <tr>
-<th align="center">Rule candidate generation</th>
-<th align="center">Rule selection</th>
-<th align="center">Rule postprocessing</th>
+<th style="text-align: center;">Rule candidate generation</th>
+<th style="text-align: center;">Rule selection</th>
+<th style="text-align: center;">Rule postprocessing</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="center"><img src="https://csinva.io/imodels/img/rule_candidates.jpg"></td>
-<td align="center"><img src="https://csinva.io/imodels/img/rule_overfit.jpg"></td>
-<td align="center"><img src="https://csinva.io/imodels/img/rule_pruned.jpg"></td>
+<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_candidates.jpg"></td>
+<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_overfit.jpg"></td>
+<td style="text-align: center;"><img src="https://csinva.io/imodels/img/rule_pruned.jpg"></td>
 </tr>
 </tbody>
 </table>
@@ -258,119 +258,119 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <table>
 <thead>
 <tr>
-<th align="left">Model</th>
-<th align="center">Binary classification</th>
-<th align="center">Regression</th>
+<th style="text-align: left;">Model</th>
+<th style="text-align: center;">Binary classification</th>
+<th style="text-align: center;">Regression</th>
 <th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="left">Rulefit rule set</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></td>
-<td align="center"><a href="https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></td>
+<td style="text-align: left;">Rulefit rule set</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">Skope rule set</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SkopeRulesClassifier</a></td>
-<td align="center"></td>
+<td style="text-align: left;">Skope rule set</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SkopeRulesClassifier</a></td>
+<td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">Boosted rule set</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></td>
-<td align="center"></td>
+<td style="text-align: left;">Boosted rule set</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></td>
+<td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">SLIPPER rule set</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SlipperClassifier</a></td>
-<td align="center"></td>
+<td style="text-align: left;">SLIPPER rule set</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SlipperClassifier</a></td>
+<td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">Bayesian rule set</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></td>
-<td align="center"></td>
+<td style="text-align: left;">Bayesian rule set</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></td>
+<td style="text-align: center;"></td>
 <td>Fails for large problems</td>
 </tr>
 <tr>
-<td align="left">Optimal rule list (CORELS)</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier">OptimalRuleListClassifier</a></td>
-<td align="center"></td>
+<td style="text-align: left;">Optimal rule list (CORELS)</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier">OptimalRuleListClassifier</a></td>
+<td style="text-align: center;"></td>
 <td>Requires <a href="https://pypi.org/project/corels/">corels</a>, fails for large problems</td>
 </tr>
 <tr>
-<td align="left">Bayesian rule list</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">BayesianRuleListClassifier</a></td>
-<td align="center"></td>
+<td style="text-align: left;">Bayesian rule list</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">BayesianRuleListClassifier</a></td>
+<td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">Greedy rule list</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></td>
-<td align="center"></td>
+<td style="text-align: left;">Greedy rule list</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></td>
+<td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">OneR rule list</td>
-<td align="center"><a href="https://csinva.io/imodels/rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier">OneRClassifier</a></td>
-<td align="center"></td>
+<td style="text-align: left;">OneR rule list</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier">OneRClassifier</a></td>
+<td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">Optimal rule tree (GOSDT)</td>
-<td align="center"><a href="https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">OptimalTreeClassifier</a></td>
-<td align="center"></td>
+<td style="text-align: left;">Optimal rule tree (GOSDT)</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">OptimalTreeClassifier</a></td>
+<td style="text-align: center;"></td>
 <td>Requires <a href="https://pypi.org/project/gosdt/">gosdt</a>, fails for large problems</td>
 </tr>
 <tr>
-<td align="left">Greedy rule tree (CART)</td>
-<td align="center"><a href="https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></td>
-<td align="center"><a href="https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor">GreedyTreeRegressor</a></td>
+<td style="text-align: left;">Greedy rule tree (CART)</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor">GreedyTreeRegressor</a></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">C4.5 rule tree</td>
-<td align="center"><a href="https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></td>
-<td align="center"></td>
+<td style="text-align: left;">C4.5 rule tree</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></td>
+<td style="text-align: center;"></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">TAO rule tree</td>
-<td align="center"><a href="https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></td>
-<td align="center"><a href="https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></td>
+<td style="text-align: left;">TAO rule tree</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">Iterative random forest</td>
-<td align="center"><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a></td>
-<td align="center"></td>
+<td style="text-align: left;">Iterative random forest</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a></td>
+<td style="text-align: center;"></td>
 <td>Requires <a href="https://pypi.org/project/irf/">irf</a></td>
 </tr>
 <tr>
-<td align="left">Sparse integer linear model</td>
-<td align="center"><a href="https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></td>
-<td align="center"><a href="https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></td>
+<td style="text-align: left;">Sparse integer linear model</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></td>
 <td>Requires extra dependencies for speed</td>
 </tr>
 <tr>
-<td align="left">Greedy tree sums (FIGS)</td>
-<td align="center"><a href="https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></td>
-<td align="center"><a href="https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></td>
+<td style="text-align: left;">Greedy tree sums (FIGS)</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></td>
 <td></td>
 </tr>
 <tr>
-<td align="left">Hierarchical shrinkage</td>
-<td align="center"><a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></td>
-<td align="center"><a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></td>
+<td style="text-align: left;">Hierarchical shrinkage</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></td>
 <td>Wraps any sklearn tree-based model</td>
 </tr>
 <tr>
-<td align="left">Distillation</td>
-<td align="center"></td>
-<td align="center"><a href="https://csinva.io/imodels/docs/util/distillation.html#imodels.util.distillation.DistilledRegressor">DistilledRegressor</a></td>
+<td style="text-align: left;">Distillation</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/docs/util/distillation.html#imodels.util.distillation.DistilledRegressor">DistilledRegressor</a></td>
 <td>Wraps any sklearn-compatible models</td>
 </tr>
 </tbody>
