@@ -269,7 +269,7 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
                 self._partial_preds[k] = np.empty_like(y)
             for j in range(y.shape[1]):
                 alpha_ = self._fit_hyperparameter(blocked_data, y[:, j])
-                full_preds, partial_preds = self._fit_single_target(blocked_data, y[:, j], alpha_, mode)
+                full_preds, partial_preds = self._fit_single_target(blocked_data, y[:, j], alpha_, mode=mode)
                 self.alpha_[j] = alpha_
                 self._full_preds[:, j] = full_preds
                 for k in range(self.n_blocks):
