@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.ensemble._forest import _generate_unsampled_indices, _generate_sample_indices
 from sklearn.linear_model import RidgeCV, LogisticRegressionCV, Ridge, LogisticRegression
-from sklearn.metrics import roc_auc_score, r2_score, mean_squared_error, log_loss
+from sklearn.metrics import roc_auc_score, mean_squared_error, log_loss
 from sklearn.preprocessing import OneHotEncoder
 
 from imodels.importance.representation_cleaned import TreeTransformer, IdentityTransformer, CompositeTransformer
@@ -29,9 +29,13 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
         if regression:
             partial_prediction_model = RidgeLOOPPM()
         else:
-            partial_prediction_model = LogisticLOOPPM()
+            partial_prediction_model = LogisticLOOPPM(max_iter=1000)
     if scoring_fn == "auto":
         if regression:
+            def r2_score(y_true, y_pred):
+                numerator = ((y_true - y_pred) ** 2).sum(axis=0, dtype=np.float64)
+                denominator = ((y_true - np.mean(y_true, axis=0)) ** 2).sum(axis=0, dtype=np.float64)
+                return 1 - numerator / denominator
             scoring_fn = r2_score
         else:
             scoring_fn = roc_auc_score
