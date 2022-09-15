@@ -13,15 +13,14 @@ from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import _check_sample_weight
 
-from imodels.tree.viz_utils import DecisionTreeViz
+from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 
 plt.rcParams['figure.dpi'] = 300
 
-
 class Node:
     def __init__(self, feature: int = None, threshold: int = None,
-                 value=None, idxs=None, is_root: bool = False, left=None,
-                 impurity_reduction: float = None, tree_num: int = None,
+                 value=None, value_sklearn=None, idxs=None, is_root: bool = False, left=None,
+                 impurity: float = None, impurity_reduction: float = None, tree_num: int = None, node_id: int = None,
                  right=None):
         """Node class for splitting
         """
@@ -30,8 +29,11 @@ class Node:
         self.is_root = is_root
         self.idxs = idxs
         self.tree_num = tree_num
+        self.node_id = None
         self.feature = feature
+        self.impurity = impurity
         self.impurity_reduction = impurity_reduction
+        self.value_sklearn = value_sklearn
 
         # different meanings
         self.value = value  # for split this is mean, for linear this is weight
@@ -147,7 +149,7 @@ class FIGS(BaseEstimator):
             # print('no split found!', idxs.sum(), impurity, feature)
             return Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                         feature=feature[SPLIT], threshold=threshold[SPLIT],
-                        impurity_reduction=None)
+                        impurity=impurity[SPLIT], impurity_reduction=None)
 
         # manage sample weights
         idxs_split = X[:, feature[SPLIT]] <= threshold[SPLIT]
@@ -170,12 +172,12 @@ class FIGS(BaseEstimator):
 
         node_split = Node(idxs=idxs, value=value[SPLIT], tree_num=tree_num,
                           feature=feature[SPLIT], threshold=threshold[SPLIT],
-                          impurity_reduction=impurity_reduction)
+                          impurity=impurity[SPLIT], impurity_reduction=impurity_reduction)
         # print('\t>>>', node_split, 'impurity', impurity, 'num_pts', idxs.sum(), 'imp_reduc', impurity_reduction)
 
         # manage children
-        node_left = Node(idxs=idxs_left, value=value[LEFT], tree_num=tree_num)
-        node_right = Node(idxs=idxs_right, value=value[RIGHT], tree_num=tree_num)
+        node_left = Node(idxs=idxs_left, value=value[LEFT], impurity=impurity[LEFT], tree_num=tree_num)
+        node_right = Node(idxs=idxs_right, value=value[RIGHT], impurity=impurity[RIGHT], tree_num=tree_num)
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
@@ -309,6 +311,36 @@ class FIGS(BaseEstimator):
             if self.max_rules is not None and self.complexity_ >= self.max_rules:
                 finished = True
                 break
+
+        # annotate final tree with node_id and value_sklearn
+        for tree_ in self.trees_:
+            node_counter = iter(range(0, int(1e06)))
+            def _annotate_node(node: Node, X, y):
+                if node is None:
+                    return
+
+                # TODO does not incorporate sample weights
+                value_counts = pd.Series(y).value_counts()
+                try:
+                    neg_count = value_counts[0.0]
+                except KeyError:
+                    neg_count = 0
+
+                try:
+                    pos_count = value_counts[1.0]
+                except KeyError:
+                    pos_count = 0
+
+                value_sklearn = np.array([neg_count, pos_count], dtype=float)
+
+                node.setattrs(node_id=next(node_counter), value_sklearn=value_sklearn)
+
+                idxs_left = X[:, node.feature] <= node.threshold
+                _annotate_node(node.left, X[idxs_left], y[idxs_left])
+                _annotate_node(node.right, X[~idxs_left], y[~idxs_left])
+
+            _annotate_node(tree_, X, y)
+
         return self
 
     def _tree_to_str(self, root: Node, prefix=''):
@@ -398,36 +430,32 @@ class FIGS(BaseEstimator):
         return preds
 
     def plot(self, cols=2, feature_names=None, filename=None, label="all",
-             impurity=False, tree_number=None, dpi=150):
+             impurity=False, tree_number=None, dpi=150, fig_size=None):
         is_single_tree = len(self.trees_) < 2 or tree_number is not None
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
-        # if is_single_tree:
-        #     fig, ax = plt.subplots(1)
-        # else:
-        #     fig, axs = plt.subplots(n_rows, n_cols)
+
         if feature_names is None:
             if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
                 feature_names = self.feature_names_
 
         n_plots = int(len(self.trees_)) if tree_number is None else 1
         fig, axs = plt.subplots(n_plots, dpi=dpi)
+        if fig_size is not None:
+            fig.set_size_inches(fig_size, fig_size)
         criterion = "squared_error" if isinstance(self, RegressorMixin) else "gini"
         n_classes = 1 if isinstance(self, RegressorMixin) else 2
-        ax_size = int(len(self.trees_))  # n_cols * n_rows
+        ax_size = int(len(self.trees_))
         for i in range(n_plots):
             r = i // n_cols
             c = i % n_cols
             if not is_single_tree:
-                # ax = axs[r, c]
                 ax = axs[i]
             else:
                 ax = axs
             try:
-                tree = self.trees_[i] if tree_number is None else self.trees_[tree_number]
-                plot_tree(DecisionTreeViz(tree, criterion, n_classes),
-                          ax=ax, feature_names=feature_names, label=label,
-                          impurity=impurity)
+                dt = extract_sklearn_tree_from_figs(self, i if tree_number is None else tree_number, n_classes)
+                plot_tree(dt, ax=ax, feature_names=feature_names, label=label, impurity=impurity)
             except IndexError:
                 ax.axis('off')
                 continue
