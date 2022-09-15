@@ -471,7 +471,8 @@ class FIGSExt(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
-    def plot(self, X_train, y_train, cols=2, feature_names=None, filename=None, label="all", impurity=False, tree_number=None):
+    def plot(self, cols=2, feature_names=None, filename=None, label="all",
+             impurity=False, tree_number=None, dpi=150, fig_size=None):
         is_single_tree =  len(self.trees_) < 2 or tree_number is not None
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
@@ -480,7 +481,9 @@ class FIGSExt(BaseEstimator):
         # else:
         #     fig, axs = plt.subplots(n_rows, n_cols)
         n_plots = int(len(self.trees_)) if tree_number is None else 1
-        fig, axs = plt.subplots(n_plots)
+        fig, axs = plt.subplots(n_plots, dpi=dpi)
+        if fig_size is not None:
+            fig.set_size_inches(fig_size, fig_size)
         criterion = "squared_error" if self.prediction_task == "regression" else "gini"
         n_classes = 1 if self.prediction_task == 'regression' else 2
         ax_size = int(len(self.trees_))#n_cols * n_rows
@@ -493,7 +496,7 @@ class FIGSExt(BaseEstimator):
             else:
                 ax = axs
             try:
-                dt = extract_sklearn_tree_from_figs(self, i if tree_number is None else tree_number, X_train, y_train)
+                dt = extract_sklearn_tree_from_figs(self, i if tree_number is None else tree_number, n_classes)
                 plot_tree(dt, ax=ax, feature_names=feature_names, label=label, impurity=impurity)
             except IndexError:
                 ax.axis('off')

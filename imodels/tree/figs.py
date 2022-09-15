@@ -19,8 +19,8 @@ plt.rcParams['figure.dpi'] = 300
 
 class Node:
     def __init__(self, feature: int = None, threshold: int = None,
-                 value=None, idxs=None, is_root: bool = False, left=None,
-                 impurity: float = None, impurity_reduction: float = None, tree_num: int = None, node_num: int = None,
+                 value=None, value_sklearn=None, idxs=None, is_root: bool = False, left=None,
+                 impurity: float = None, impurity_reduction: float = None, tree_num: int = None, node_id: int = None,
                  right=None):
         """Node class for splitting
         """
@@ -29,10 +29,11 @@ class Node:
         self.is_root = is_root
         self.idxs = idxs
         self.tree_num = tree_num
-        self.node_num = None
+        self.node_id = None
         self.feature = feature
         self.impurity = impurity
         self.impurity_reduction = impurity_reduction
+        self.value_sklearn = value_sklearn
 
         # different meanings
         self.value = value  # for split this is mean, for linear this is weight
@@ -311,17 +312,34 @@ class FIGS(BaseEstimator):
                 finished = True
                 break
 
-        # add node_num to final tree
+        # annotate final tree with node_id and value_sklearn
         for tree_ in self.trees_:
             node_counter = iter(range(0, int(1e06)))
-            def _add_node_num(node: Node):
+            def _annotate_node(node: Node, X, y):
                 if node is None:
                     return
-                node.setattrs(node_num=next(node_counter))
-                _add_node_num(node.left)
-                _add_node_num(node.right)
 
-            _add_node_num(tree_)
+                # TODO does not incorporate sample weights
+                value_counts = pd.Series(y).value_counts()
+                try:
+                    neg_count = value_counts[0.0]
+                except KeyError:
+                    neg_count = 0
+
+                try:
+                    pos_count = value_counts[1.0]
+                except KeyError:
+                    pos_count = 0
+
+                value_sklearn = np.array([neg_count, pos_count], dtype=float)
+
+                node.setattrs(node_id=next(node_counter), value_sklearn=value_sklearn)
+
+                idxs_left = X[:, node.feature] <= node.threshold
+                _annotate_node(node.left, X[idxs_left], y[idxs_left])
+                _annotate_node(node.right, X[~idxs_left], y[~idxs_left])
+
+            _annotate_node(tree_, X, y)
 
         return self
 
@@ -411,8 +429,8 @@ class FIGS(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
-    def plot(self, X_train, y_train, cols=2, feature_names=None, filename=None, label="all",
-             impurity=False, tree_number=None, dpi=150):
+    def plot(self, cols=2, feature_names=None, filename=None, label="all",
+             impurity=False, tree_number=None, dpi=150, fig_size=None):
         is_single_tree = len(self.trees_) < 2 or tree_number is not None
         n_cols = int(cols)
         n_rows = int(np.ceil(len(self.trees_) / n_cols))
@@ -423,6 +441,8 @@ class FIGS(BaseEstimator):
 
         n_plots = int(len(self.trees_)) if tree_number is None else 1
         fig, axs = plt.subplots(n_plots, dpi=dpi)
+        if fig_size is not None:
+            fig.set_size_inches(fig_size, fig_size)
         criterion = "squared_error" if isinstance(self, RegressorMixin) else "gini"
         n_classes = 1 if isinstance(self, RegressorMixin) else 2
         ax_size = int(len(self.trees_))
@@ -434,7 +454,7 @@ class FIGS(BaseEstimator):
             else:
                 ax = axs
             try:
-                dt = extract_sklearn_tree_from_figs(self, i if tree_number is None else tree_number, X_train, y_train)
+                dt = extract_sklearn_tree_from_figs(self, i if tree_number is None else tree_number, n_classes)
                 plot_tree(dt, ax=ax, feature_names=feature_names, label=label, impurity=impurity)
             except IndexError:
                 ax.axis('off')

@@ -75,7 +75,7 @@ print(model_figs)
 print(model_figs.print_tree(X_train, y_train))
 
 # %%
-model_figs.plot(X_train, y_train)
+model_figs.plot(fig_size=7)
 
 # %% [markdown] tags=[]
 # # DEV
@@ -85,7 +85,7 @@ model_figs.plot(X_train, y_train)
 
 # %%
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
-dt = extract_sklearn_tree_from_figs(model_figs, 0, X_train, y_train)
+dt = extract_sklearn_tree_from_figs(model_figs, tree_num=0, n_classes=2)
 
 # %%
 plot_tree(dt, feature_names=feat_names);

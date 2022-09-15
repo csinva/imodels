@@ -10,7 +10,7 @@ from sklearn.tree._tree import Tree
 
 TreeData = namedtuple('TreeData', 'left_child right_child feature threshold impurity n_node_samples weighted_n_node_samples')
 
-def _extract_arrays_from_figs_tree(figs_tree, X, y):
+def _extract_arrays_from_figs_tree(figs_tree):
     """Takes in a FIGS tree and recursively converts it to arrays that we can later use to build a sklearn decision tree object
     """
     tree_data = TreeData(
@@ -23,62 +23,50 @@ def _extract_arrays_from_figs_tree(figs_tree, X, y):
         weighted_n_node_samples=[],
     )
 
-    value_array = []
+    value_sklearn_array = []
 
-    def _update_node(node, X, y):
+    def _update_node(node):
         if node is None:
             return
 
-        idx_left = idx_right = -1
+        node_id_left = node_id_right = -1
         feature = threshold = -2
-
-        try:
-            neg_count = pd.Series(y).value_counts()[0.0]
-        except KeyError:
-            neg_count = 0
-
-        try:
-            pos_count = pd.Series(y).value_counts()[1.0]
-        except KeyError:
-            pos_count = 0
-
-        value = np.array([neg_count, pos_count], dtype=float)
+        value_sklearn = node.value_sklearn
 
         has_children = node.left is not None
         if has_children:
-            idx_left = node.left.node_num
-            idx_right = node.right.node_num
+            node_id_left = node.left.node_id
+            node_id_right = node.right.node_id
             feature = node.feature
             threshold = node.threshold
-            left_X_idx = X[:, feature] <= threshold
 
-        tree_data.left_child.append(idx_left)
-        tree_data.right_child.append(idx_right)
+        tree_data.left_child.append(node_id_left)
+        tree_data.right_child.append(node_id_right)
         tree_data.feature.append(feature)
         tree_data.threshold.append(threshold)
         tree_data.impurity.append(node.impurity)
-        tree_data.n_node_samples.append(np.sum(value))
-        tree_data.weighted_n_node_samples.append(np.sum(value)) # TODO add weights
-        value_array.append(value)
+        tree_data.n_node_samples.append(np.sum(value_sklearn))
+        tree_data.weighted_n_node_samples.append(np.sum(value_sklearn)) # TODO add sample weights
+        value_sklearn_array.append(value_sklearn)
 
         if has_children:
-            _update_node(node.left, X[left_X_idx], y[left_X_idx])
-            _update_node(node.right, X[~left_X_idx], y[~left_X_idx])
+            _update_node(node.left)
+            _update_node(node.right)
 
-    _update_node(figs_tree, X, y)
+    _update_node(figs_tree)
 
-    return tree_data, np.array(value_array)
+    return tree_data, np.array(value_sklearn_array)
 
-def extract_sklearn_tree_from_figs(figs, tree_number, X_train, y_train):
-    """Takes in a FIGS model and convert tree tree_number to a sklearn decision tree
+def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
+    """Takes in a FIGS model and convert tree tree_num to a sklearn decision tree
     """
 
     try:
-        figs_tree = figs.trees_[tree_number]
+        figs_tree = figs.trees_[tree_num]
     except:
-        raise AttributeError(f'Can not load tree_number = {tree_number}!')
+        raise AttributeError(f'Can not load tree_num = {tree_num}!')
 
-    tree_data_namedtuple, value_array = _extract_arrays_from_figs_tree(figs_tree, X_train, y_train)
+    tree_data_namedtuple, value_sklearn_array = _extract_arrays_from_figs_tree(figs_tree)
 
     # manipulate tree_data_namedtuple into the numpy array of tuples that sklearn expects for use with __setstate__()
     df_tree_data = pd.DataFrame(tree_data_namedtuple._asdict())
@@ -87,8 +75,8 @@ def extract_sklearn_tree_from_figs(figs, tree_number, X_train, y_train):
 
     tree_data_array = np.array(tree_data_list_of_tuples, dtype=_dtypes)
 
-    # reshape value_array to match the expected shape of (n_nodes,1,2) for values
-    values = value_array.reshape(value_array.shape[0],1,value_array.shape[1])
+    # reshape value_sklearn_array to match the expected shape of (n_nodes,1,2) for values
+    value_sklearns = value_sklearn_array.reshape(value_sklearn_array.shape[0], 1, value_sklearn_array.shape[1])
 
     # get the max_depth
     def get_max_depth(node):
@@ -100,22 +88,18 @@ def extract_sklearn_tree_from_figs(figs, tree_number, X_train, y_train):
     max_depth = get_max_depth(figs_tree)
 
     # get other variables needed for the sklearn.tree._tree.Tree constructor and __setstate__() calls
-    # n_samples = X_train.shape[0]
+    # n_samples = np.sum(figs_tree.value_sklearn)
     node_count = len(tree_data_array)
-    # Note, if we saved the pos_count and neg_count during training we wouldn't need X_train, y_train to get the values, and these counts could be rewritten
-    n_features = X_train.shape[1]
-    n_classes = np.unique(y_train).size
+    features = np.array(tree_data_namedtuple.feature)
+    n_features = np.unique(features[np.where( 0 < features )]).size
     n_classes_array = np.array([n_classes], dtype=int)
-    try:
-        n_outputs = y_train.shape[1]
-    except:
-        n_outputs = 1
+    n_outputs = 1
 
     # make dict to pass to __setstate__()
     _state = {'max_depth': max_depth,
         'node_count': node_count,
         'nodes': tree_data_array,
-        'values': values,
+        'values': value_sklearns,
         # WARNING this circumvents
         # UserWarning: Trying to unpickle estimator DecisionTreeClassifier from version pre-0.18 when using version
         # https://github.com/scikit-learn/scikit-learn/blob/53acd0fe52cb5d8c6f5a86a1fc1352809240b68d/sklearn/base.py#L279
