@@ -256,8 +256,8 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
                 else:
                     raise ValueError("Invalid mode")
                 # reduced_data = np.hstack([reduced_data, np.ones((reduced_data.shape[0], 1))])
-                intercept = augmented_coef_[-1]
                 reduced_parameters = loo_fitted_parameters.T[:, col_indices]
+                intercept = loo_fitted_parameters.T[:, -1]
                 partial_preds[k] = self._trim_values(self.link_fn(np.sum(reduced_parameters * reduced_data, axis=1)
                                                                   + intercept))
             return full_preds, partial_preds
