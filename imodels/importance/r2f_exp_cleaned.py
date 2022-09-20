@@ -69,20 +69,25 @@ class GMDI:
 
     def _fit_importance_scores(self, X, y):
         blocked_data = self.transformer.transform(X)
-        self.partial_prediction_model.fit(blocked_data, y, self.mode)
-        self.n_features = self.partial_prediction_model.n_blocks
-        self._scores = np.zeros(self.n_features)
-        if self.mode == "keep_k":
-            for k in range(self.n_features):
-                partial_preds = self.partial_prediction_model.get_partial_predictions(k)
-                self._scores[k] = self.scoring_fn(y, partial_preds)
-        elif self.mode == "keep_rest":
-            full_preds = self.partial_prediction_model.get_full_predictions()
-            full_score = self.scoring_fn(y, full_preds)
-            for k in range(self.n_features):
-                partial_preds = self.partial_prediction_model.get_partial_predictions(k)
-                self._scores[k] = full_score - self.scoring_fn(y, partial_preds)
-        self.is_fitted = True
+        if blocked_data.get_all_data().shape[1] == 0: #checking if learnt representation is empty
+            self._scores = np.zeros(X.shape[1])
+            for k in range(X.shape[1]):
+                self._scores[k] = np.NaN
+        else:
+            self.partial_prediction_model.fit(blocked_data, y, self.mode)
+            self.n_features = self.partial_prediction_model.n_blocks
+            self._scores = np.zeros(self.n_features)
+            if self.mode == "keep_k":
+                for k in range(self.n_features):
+                    partial_preds = self.partial_prediction_model.get_partial_predictions(k)
+                    self._scores[k] = self.scoring_fn(y, partial_preds)
+            elif self.mode == "keep_rest":
+                full_preds = self.partial_prediction_model.get_full_predictions()
+                full_score = self.scoring_fn(y, full_preds)
+                for k in range(self.n_features):
+                    partial_preds = self.partial_prediction_model.get_partial_predictions(k)
+                    self._scores[k] = full_score - self.scoring_fn(y, partial_preds)
+            self.is_fitted = True
 
     def get_scores(self, X=None, y=None):
         if self.is_fitted:
@@ -124,7 +129,7 @@ class GMDIEnsemble:
                 else:
                     raise ValueError("Unsupported subsetting scheme")
             scores.append(gmdi_object.get_scores(X[sample_indices, :], y[sample_indices]))
-        self._scores = np.mean(scores, axis=0)
+        self._scores = np.nanmean(scores, axis=0)
         self.is_fitted = True
         self.n_features = self.gmdi_objects[0].n_features
 
