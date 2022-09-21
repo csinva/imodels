@@ -201,7 +201,7 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
     def __init__(self, estimator, alpha_grid=np.logspace(-4, 4, 10), link_fn = lambda a: a, l_dot=lambda a, b: b-a,
                  l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1, hyperparameter_scorer=mean_squared_error,
-                 trim=None):
+                 trim=None, fixed_intercept=False):
         super().__init__()
         self.estimator = estimator
         self.alpha_grid = alpha_grid
@@ -213,6 +213,7 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
         self.hyperparameter_scorer = hyperparameter_scorer
         self.alpha_ = None
         self._cache = None
+        self.fixed_intercept = fixed_intercept
 
     def _get_loo_fitted_parameters(self, X, y, coef_, alpha=0, constant_term=True):
         orig_preds = self.link_fn(X @ coef_)
@@ -262,14 +263,17 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
                     raise ValueError("Invalid mode")
                 # reduced_data = np.hstack([reduced_data, np.ones((reduced_data.shape[0], 1))])
                 reduced_parameters = loo_fitted_parameters.T[:, col_indices]
-                intercept = loo_fitted_parameters.T[:, -1]
+                if self.fixed_intercept and len(col_indices) == 0: # Ugly code, remove this if possible
+                    intercept = estimator.intercept_
+                else:
+                    intercept = loo_fitted_parameters.T[:, -1]
                 partial_preds[k] = self._trim_values(self.link_fn(np.sum(reduced_parameters * reduced_data, axis=1)
                                                                   + intercept))
             return full_preds, partial_preds
         else:
             return full_preds
 
-    def fit(self, blocked_data, y, mode="keep_k"):
+    def fit(self, blocked_data, y, mode="keep_k", fixed_intercept=False):
         self.n_blocks = blocked_data.n_blocks
         if y.ndim > 1:
             self.alpha_ = np.empty(y.shape[1])
@@ -311,8 +315,8 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
 class RidgeLOOPPM(GenericLOOPPM, ABC):
 
-    def __init__(self, alpha_grid=np.logspace(-5, 5, 100), **kwargs):
-        super().__init__(Ridge(**kwargs), alpha_grid)
+    def __init__(self, alpha_grid=np.logspace(-5, 5, 100), fixed_intercept=False, **kwargs):
+        super().__init__(Ridge(**kwargs), alpha_grid, fixed_intercept=fixed_intercept)
 
     def set_alphas(self, alphas="default", blocked_data=None, y=None):
         full_data = blocked_data.get_all_data()
