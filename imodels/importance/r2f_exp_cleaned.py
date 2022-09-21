@@ -14,16 +14,20 @@ from imodels.importance.representation_cleaned import TreeTransformer, IdentityT
 
 
 def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k", 
-                  partial_prediction_model="auto", scoring_fn="auto", 
+                  partial_prediction_model="auto", scoring_fn="auto", recalculate = "True",
                   include_raw=True, subsetting_scheme=None):
 
     p = X.shape[1]
+    if recalculate:
+        data = X
+    else:
+        data = None
     if include_raw:
-        tree_transformers = [CompositeTransformer([TreeTransformer(p, tree_model, data=X),
+        tree_transformers = [CompositeTransformer([TreeTransformer(p, tree_model, data=data),
                                                     IdentityTransformer(p)], adj_std="max")
                             for tree_model in fit.estimators_]
     else:
-        tree_transformers = [TreeTransformer(p, tree_model, data=X) for tree_model in fit.estimators_]
+        tree_transformers = [TreeTransformer(p, tree_model, data=data) for tree_model in fit.estimators_]
 
     if partial_prediction_model == "auto":
         if regression:
@@ -78,7 +82,7 @@ class GMDI:
             self.n_features = self.partial_prediction_model.n_blocks
             self._scores = np.zeros(self.n_features)
             if self.mode == "keep_k":
-                for k in range(self.n_features):
+                for k in range(self.n_features): #checking if there are any stumps associated to the feature in the tree
                     partial_preds = self.partial_prediction_model.get_partial_predictions(k)
                     self._scores[k] = self.scoring_fn(y, partial_preds)
             elif self.mode == "keep_rest":
@@ -314,10 +318,9 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
 
 class RidgeLOOPPM(GenericLOOPPM, ABC):
-
     def __init__(self, alpha_grid=np.logspace(-5, 5, 100), fixed_intercept=False, **kwargs):
         super().__init__(Ridge(**kwargs), alpha_grid, fixed_intercept=fixed_intercept)
-
+        
     def set_alphas(self, alphas="default", blocked_data=None, y=None):
         full_data = blocked_data.get_all_data()
         if alphas == "default":
