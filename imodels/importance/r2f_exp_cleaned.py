@@ -185,8 +185,20 @@ class GenericPPM(PartialPredictionModelBase, ABC):
             pred_func = self.estimator.predict
         self._full_preds = pred_func(full_data)
         for k in range(self.n_blocks):
-            modified_data = blocked_data.get_modified_data(k, mode)
-            self._partial_preds[k] = pred_func(modified_data)
+            if isinstance(self.estimator, RidgeCV):
+                if mode == "keep_k":
+                    col_indices = blocked_data.get_block_indices(k)
+                    reduced_data = blocked_data.get_block(k)
+                elif mode == "keep_rest":
+                    col_indices = blocked_data.get_all_except_block_indices(k)
+                    reduced_data = blocked_data.get_all_except_block(k)
+                else:
+                    raise ValueError("Invalid mode")
+                self._partial_preds[k] = reduced_data @ self.estimator.coef_[col_indices] + \
+                                         self.estimator.intercept_
+            else:
+                modified_data = blocked_data.get_modified_data(k, mode)
+                self._partial_preds[k] = pred_func(modified_data)
 
 
 class RidgePPM(GenericPPM, ABC):
