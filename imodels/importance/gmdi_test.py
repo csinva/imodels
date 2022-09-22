@@ -444,7 +444,19 @@ class TestGMDI:
         assert np.all(np.isclose(old_scores, new_scores))
 
     def test_gmdi_pipeline(self):
-        pass
+        """
+        Need to change the initialization of RidgeLOOPPM in GMDI_pipeline to:
+        partial_prediction_model = RidgeLOOPPM(alpha_grid=np.logspace(-4, 3, 100), fixed_intercept=True)
+        """
+        new_scores = gmdi_new.GMDI_pipeline(self.X, self.y, self.rf_model)["importance"]
+        old_scorer = gmdi_old.JointRidgeScorer(metric="loocv")
+        old_settings = {"normalize_raw": True,
+                        "oob": False}
+        gmdi_obj_old = gmdi_old.GeneralizedMDIJoint(self.rf_model, scorer=old_scorer, **old_settings)
+        old_scores = gmdi_obj_old.get_importance_scores(self.X, self.y)
+
+        assert np.all(np.isclose(old_scores, new_scores))
+
 
     def _get_partial_model_looe_OLD(self, X, y, start_indices, alpha, beta, intercept):
         X1 = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
