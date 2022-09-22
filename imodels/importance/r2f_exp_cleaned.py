@@ -14,10 +14,11 @@ from imodels.importance.representation_cleaned import TreeTransformer, IdentityT
 
 
 def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k", 
-                  partial_prediction_model="auto", scoring_fn="auto", recalculate = "True",
+                  partial_prediction_model="auto", scoring_fn="auto", recalculate=True,
                   include_raw=True, subsetting_scheme=None):
 
     p = X.shape[1]
+    fit = copy.deepcopy(fit)
     if recalculate:
         data = X
     else:
@@ -31,7 +32,8 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
 
     if partial_prediction_model == "auto":
         if regression:
-            partial_prediction_model = RidgeLOOPPM()
+            # partial_prediction_model = RidgeLOOPPM()
+            partial_prediction_model = RidgeLOOPPM(alpha_grid=np.logspace(-4, 3, 100), fixed_intercept=True)
         else:
             partial_prediction_model = LogisticLOOPPM(max_iter=1000)
     if scoring_fn == "auto":

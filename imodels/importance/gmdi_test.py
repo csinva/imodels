@@ -448,12 +448,14 @@ class TestGMDI:
         Need to change the initialization of RidgeLOOPPM in GMDI_pipeline to:
         partial_prediction_model = RidgeLOOPPM(alpha_grid=np.logspace(-4, 3, 100), fixed_intercept=True)
         """
-        new_scores = gmdi_new.GMDI_pipeline(self.X, self.y, self.rf_model)["importance"]
+        new_scores = gmdi_new.GMDI_pipeline(self.X, self.y, self.rf_model, recalculate=False)["importance"]
         old_scorer = gmdi_old.JointRidgeScorer(metric="loocv")
         old_settings = {"normalize_raw": True,
                         "oob": False}
         gmdi_obj_old = gmdi_old.GeneralizedMDIJoint(self.rf_model, scorer=old_scorer, **old_settings)
         old_scores = gmdi_obj_old.get_importance_scores(self.X, self.y)
+        # [ 4.09734644e-01 -1.00398643e-02 -1.26126245e-02 -1.42087148e-02, -2.35163131e-03 -1.02161585e-03
+        # -2.52998766e-03 -8.33837613e-03, -5.28337568e-03  4.36833381e-05]
 
         assert np.all(np.isclose(old_scores, new_scores))
 
