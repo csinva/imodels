@@ -14,17 +14,13 @@ from imodels.importance.representation_cleaned import TreeTransformer, IdentityT
 
 
 def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k", 
-                  partial_prediction_model="auto", scoring_fn="auto", recalculate=True,
+                  partial_prediction_model="auto", scoring_fn="auto", 
                   include_raw=True, subsetting_scheme=None):
 
     p = X.shape[1]
     fit = copy.deepcopy(fit)
-    if recalculate:
-        data = X
-    else:
-        data = None
     if include_raw:
-        tree_transformers = [CompositeTransformer([TreeTransformer(p, tree_model, data=data),
+        tree_transformers = [CompositeTransformer([TreeTransformer(p, tree_model),
                                                     IdentityTransformer(p)], adj_std="max")
                             for tree_model in fit.estimators_]
     else:
@@ -32,8 +28,7 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
 
     if partial_prediction_model == "auto":
         if regression:
-            # partial_prediction_model = RidgeLOOPPM()
-            partial_prediction_model = RidgeLOOPPM(alpha_grid=np.logspace(-4, 3, 100), fixed_intercept=True)
+            partial_prediction_model = RidgeLOOPPM()
         else:
             partial_prediction_model = LogisticLOOPPM(max_iter=1000)
     if scoring_fn == "auto":
@@ -219,7 +214,7 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
     def __init__(self, estimator, alpha_grid=np.logspace(-4, 4, 10), link_fn = lambda a: a, l_dot=lambda a, b: b-a,
                  l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1, hyperparameter_scorer=mean_squared_error,
-                 trim=None, fixed_intercept=False):
+                 trim=None, fixed_intercept=True):
         super().__init__()
         self.estimator = estimator
         self.alpha_grid = alpha_grid
@@ -281,7 +276,7 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
                     raise ValueError("Invalid mode")
                 # reduced_data = np.hstack([reduced_data, np.ones((reduced_data.shape[0], 1))])
                 reduced_parameters = loo_fitted_parameters.T[:, col_indices]
-                if self.fixed_intercept and len(col_indices) == 0: # Ugly code, remove this if possible
+                if self.fixed_intercept and len(col_indices) == 0:
                     intercept = estimator.intercept_
                 else:
                     intercept = loo_fitted_parameters.T[:, -1]
@@ -291,7 +286,7 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
         else:
             return full_preds
 
-    def fit(self, blocked_data, y, mode="keep_k", fixed_intercept=False):
+    def fit(self, blocked_data, y, mode="keep_k"):
         self.n_blocks = blocked_data.n_blocks
         if y.ndim > 1:
             self.alpha_ = np.empty(y.shape[1])
@@ -332,7 +327,7 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
 
 class RidgeLOOPPM(GenericLOOPPM, ABC):
-    def __init__(self, alpha_grid=np.logspace(-5, 5, 100), fixed_intercept=False, **kwargs):
+    def __init__(self, alpha_grid=np.logspace(-5, 5, 100), fixed_intercept=True, **kwargs):
         super().__init__(Ridge(**kwargs), alpha_grid, fixed_intercept=fixed_intercept)
         
     def set_alphas(self, alphas="default", blocked_data=None, y=None):
@@ -346,9 +341,10 @@ class RidgeLOOPPM(GenericLOOPPM, ABC):
 
 class LogisticLOOPPM(GenericLOOPPM, ABC):
 
-    def __init__(self, alpha_grid=np.logspace(-4, 4, 10), **kwargs):
+    def __init__(self, alpha_grid=np.logspace(-4, 4, 10), fixed_intercept=True, **kwargs):
         super().__init__(LogisticRegression(**kwargs), alpha_grid, link_fn=sp.special.expit,
-                         l_doubledot=lambda a, b: b * (1-b), hyperparameter_scorer=log_loss, trim=0.01)
+                         l_doubledot=lambda a, b: b * (1-b), hyperparameter_scorer=log_loss, 
+                         trim=0.01, fixed_intercept=fixed_intercept)
 
 
 def get_alpha_grid(X, y, start=-5, stop=5, num=100):
