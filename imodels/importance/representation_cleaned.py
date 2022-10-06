@@ -146,8 +146,13 @@ class CompositeTransformer(BlockTransformerBase, ABC):
             data_block = block_transformer.transform_one_feature(X, k, center, rescale)
             data_blocks.append(data_block)
         # Return empty block if highest priority block is empty and drop_features is True
-        if self.drop_features and data_blocks[self.reference_index].shape[1] == 0:
-            return data_blocks[self.reference_index]
+        if data_blocks[self.reference_index].shape[1] == 0:
+            if self.drop_features:
+                return data_blocks[self.reference_index]
+            else: #return data_block with next highest priority
+                return data_blocks[1]
+        #if self.drop_features and data_blocks[self.reference_index].shape[1] == 0:
+        #    return data_blocks[self.reference_index]
         else:
             if self.adj_std == "max":
                 adj_factor = np.array([max(data_block.std(axis=0)) for data_block in data_blocks])

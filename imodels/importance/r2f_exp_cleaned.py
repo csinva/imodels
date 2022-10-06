@@ -14,14 +14,14 @@ from imodels.importance.representation_cleaned import TreeTransformer, IdentityT
 
 
 def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k", 
-                  partial_prediction_model="auto", scoring_fn="auto", 
-                  include_raw=True, subsetting_scheme=None):
+                  partial_prediction_model="auto", scoring_fn="auto",
+                  include_raw=True,drop_features= True, subsetting_scheme=None):
 
     p = X.shape[1]
     fit = copy.deepcopy(fit)
     if include_raw:
         tree_transformers = [CompositeTransformer([TreeTransformer(p, tree_model),
-                                                    IdentityTransformer(p)], adj_std="max")
+                                                    IdentityTransformer(p)], adj_std="max",drop_features = drop_features)
                             for tree_model in fit.estimators_]
     else:
         tree_transformers = [TreeTransformer(p, tree_model, data=data) for tree_model in fit.estimators_]
