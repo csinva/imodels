@@ -91,7 +91,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
     # n_samples = np.sum(figs_tree.value_sklearn)
     node_count = len(tree_data_array)
     features = np.array(tree_data_namedtuple.feature)
-    n_features = np.unique(features[np.where( 0 < features )]).size
+    n_features = np.unique(features[np.where( 0 <= features )]).size
     n_classes_array = np.array([n_classes], dtype=int)
     n_outputs = 1
 
@@ -100,6 +100,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
         'node_count': node_count,
         'nodes': tree_data_array,
         'values': value_sklearns,
+        'n_features_in_': figs.n_features_in_,
         # WARNING this circumvents
         # UserWarning: Trying to unpickle estimator DecisionTreeClassifier from version pre-0.18 when using version
         # https://github.com/scikit-learn/scikit-learn/blob/53acd0fe52cb5d8c6f5a86a1fc1352809240b68d/sklearn/base.py#L279
