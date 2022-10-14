@@ -15,13 +15,13 @@ from imodels.importance.representation_cleaned import TreeTransformer, IdentityT
 
 def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k", 
                   partial_prediction_model="auto", scoring_fn="auto",
-                  include_raw=True,drop_features= True, subsetting_scheme=None):
+                  include_raw=True, drop_features=True, oob=False):
 
     p = X.shape[1]
     fit = copy.deepcopy(fit)
     if include_raw:
         tree_transformers = [CompositeTransformer([TreeTransformer(p, tree_model),
-                                                    IdentityTransformer(p)], adj_std="max",drop_features = drop_features)
+                                                    IdentityTransformer(p)], adj_std="max", drop_features = drop_features)
                             for tree_model in fit.estimators_]
     else:
         tree_transformers = [TreeTransformer(p, tree_model) for tree_model in fit.estimators_]
@@ -44,7 +44,7 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
         if len(np.unique(y)) > 2:
             y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
     
-    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, subsetting_scheme)
+    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, oob)
     scores = gmdi.get_scores(X, y)
     
     results = pd.DataFrame(data={'importance': scores})
@@ -84,7 +84,7 @@ class GMDI:
             test_blocked_data = blocked_data
             y_train = y
             y_test = y
-        if blocked_data.get_all_data().shape[1] == 0: #checking if learnt representation is empty
+        if train_blocked_data.get_all_data().shape[1] == 0: #checking if learnt representation is empty
             self._scores = np.zeros(X.shape[1])
             for k in range(X.shape[1]):
                 self._scores[k] = np.NaN
@@ -168,7 +168,7 @@ class PartialPredictionModelBase(ABC):
         self.is_fitted = False
 
     @abstractmethod
-    def fit(self, blocked_data, y, mode="keep_k"):
+    def fit(self, train_blocked_data, y_train, test_blocked_data, mode="keep_k"):
         pass
 
     def get_partial_predictions(self, k):
@@ -185,6 +185,7 @@ class GenericPPM(PartialPredictionModelBase, ABC):
         self.estimator = estimator
 
     def fit(self, train_blocked_data, y_train, test_blocked_data, mode="keep_k"):
+        self.n_blocks = train_blocked_data.n_blocks
         self.estimator.fit(train_blocked_data.get_all_data(), y_train)
         if hasattr(self.estimator, "predict_proba"):
             pred_func = self.estimator.predict_proba
