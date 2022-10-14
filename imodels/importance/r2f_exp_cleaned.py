@@ -15,7 +15,7 @@ from imodels.importance.representation_cleaned import TreeTransformer, IdentityT
 
 def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k", 
                   partial_prediction_model="auto", scoring_fn="auto",
-                  include_raw=True,drop_features= True, subsetting_scheme=None):
+                  include_raw=True, drop_features= True, oob=False):
 
     p = X.shape[1]
     fit = copy.deepcopy(fit)
@@ -44,7 +44,7 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
         if len(np.unique(y)) > 2:
             y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
     
-    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, subsetting_scheme)
+    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, oob)
     scores = gmdi.get_scores(X, y)
     
     results = pd.DataFrame(data={'importance': scores})
