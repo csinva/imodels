@@ -89,7 +89,7 @@ class GMDI:
             for k in range(X.shape[1]):
                 self._scores[k] = np.NaN
         else:
-            self.partial_prediction_model.fit(train_blocked_data, y_train, test_blocked_data, self.mode)
+            self.partial_prediction_model.fit(train_blocked_data, y_train, test_blocked_data, y_test, self.mode)
             self.n_features = self.partial_prediction_model.n_blocks
             self._scores = np.zeros(self.n_features)
             if self.mode == "keep_k":
@@ -322,6 +322,7 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
                                                  hyperparameter_scorer=hyperparameter_scorer, trim=trim)
         self.trim = trim
         self.fixed_intercept = fixed_intercept
+        self.multi_target = False
 
     def _fit_model(self, train_blocked_data, y_train):
         if y_train.ndim == 1:
@@ -382,17 +383,25 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
         reduced_data1 = np.hstack([reduced_data, np.ones((test_blocked_data.n_samples, 1))])
         col_indices = np.append(col_indices, -1)
         if not self.multi_target:
-            fitted_parameters = self.aloo_calculator.get_aloo_fitted_parameters()
-            reduced_parameters = fitted_parameters.T[:, col_indices]
-            return self.aloo_calculator.score_to_pred(np.sum(reduced_parameters.T * reduced_data1, axis=1))
+            if self.fixed_intercept and len(col_indices) == 1:
+                _, intercept = extract_coef_and_intercept(self.aloo_calculator.estimator)
+                return np.repeat(self.aloo_calculator.score_to_pred(intercept), len(y_test))
+            else:
+                fitted_parameters = self.aloo_calculator.get_aloo_fitted_parameters()
+                reduced_parameters = fitted_parameters.T[:, col_indices]
+                return self.aloo_calculator.score_to_pred(np.sum(reduced_parameters * reduced_data1, axis=1))
         else:
             partial_preds = np.empty_like(y_test)
             for j in range(self.n_targets):
                 aloo_calculator = self.aloo_calculators[j]
-                fitted_parameters = aloo_calculator.get_aloo_fitted_parameters()
-                reduced_parameters = fitted_parameters.T[:, col_indices]
-                partial_preds[:, j] = aloo_calculator.score_to_pred(np.sum(reduced_parameters.T * reduced_data1,
-                                                                           axis=1))
+                if self.fixed_intercept and len(col_indices) == 1:
+                    _, intercept = extract_coef_and_intercept(self.aloo_calculator.estimator)
+                    partial_preds[:, j] = np.repeat(aloo_calculator.score_to_pred(intercept), len(y_test))
+                else:
+                    fitted_parameters = aloo_calculator.get_aloo_fitted_parameters()
+                    reduced_parameters = fitted_parameters.T[:, col_indices]
+                    partial_preds[:, j] = aloo_calculator.score_to_pred(np.sum(reduced_parameters * reduced_data1,
+                                                                               axis=1))
                 return partial_preds
 
     def _trim_values(self, values):
