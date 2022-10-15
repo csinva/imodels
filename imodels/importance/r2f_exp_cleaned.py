@@ -161,14 +161,31 @@ class GMDIEnsemble:
 
 class PartialPredictionModelBase(ABC):
 
-    def __init__(self):
+    def __init__(self, estimator):
+        self.estimator = estimator
         self.n_blocks = None
         self._partial_preds = dict({})
         self._full_preds = None
         self.is_fitted = False
 
+    def fit(self, train_blocked_data, y_train, test_blocked_data, y_test=None, mode="keep_k"):
+        self.n_blocks = train_blocked_data.n_blocks
+        self._fit_model(train_blocked_data, y_train)
+        self._full_preds = self._fit_full_predictions(test_blocked_data, y_test)
+        for k in range(self.n_blocks):
+            self._partial_preds[k] = self._fit_partial_predictions(k, mode, test_blocked_data, y_test)
+        self.is_fitted = True
+
     @abstractmethod
-    def fit(self, train_blocked_data, y_train, test_blocked_data, mode="keep_k"):
+    def _fit_model(self, train_blocked_data, y_train):
+        pass
+
+    @abstractmethod
+    def _fit_full_predictions(self, test_blocked_data, y_test=None):
+        pass
+
+    @abstractmethod
+    def _fit_partial_predictions(self, k, mode, test_blocked_data, y_test=None):
         pass
 
     def get_partial_predictions(self, k):
@@ -179,40 +196,64 @@ class PartialPredictionModelBase(ABC):
 
 
 class GenericPPM(PartialPredictionModelBase, ABC):
+    """
+    Partial prediction model logic for arbitrary estimators. May be slow.
+    """
 
     def __init__(self, estimator):
-        super().__init__()
-        self.estimator = estimator
+        super().__init__(estimator)
 
-    def fit(self, train_blocked_data, y_train, test_blocked_data, mode="keep_k"):
-        self.n_blocks = train_blocked_data.n_blocks
+    def _fit_model(self, train_blocked_data, y_train):
         self.estimator.fit(train_blocked_data.get_all_data(), y_train)
+
+    def _fit_full_predictions(self, test_blocked_data, y_test=None):
+        pred_func = self._get_pred_func()
+        return pred_func(test_blocked_data.get_all_data())
+
+    def _fit_partial_predictions(self, k, mode, test_blocked_data, y_test=None):
+        pred_func = self._get_pred_func()
+        modified_data = test_blocked_data.get_modified_data(k, mode)
+        return pred_func(modified_data)
+
+    def _get_pred_func(self):
         if hasattr(self.estimator, "predict_proba"):
             pred_func = self.estimator.predict_proba
         else:
             pred_func = self.estimator.predict
-        self._full_preds = pred_func(test_blocked_data.get_all_data())
-        for k in range(self.n_blocks):
-            if isinstance(self.estimator, RidgeCV):
-                if mode == "keep_k":
-                    col_indices = test_blocked_data.get_block_indices(k)
-                    reduced_data = test_blocked_data.get_block(k)
-                elif mode == "keep_rest":
-                    col_indices = test_blocked_data.get_all_except_block_indices(k)
-                    reduced_data = test_blocked_data.get_all_except_block(k)
-                else:
-                    raise ValueError("Invalid mode")
-                self._partial_preds[k] = reduced_data @ self.estimator.coef_[col_indices] + \
-                                         self.estimator.intercept_
-            else:
-                modified_data = test_blocked_data.get_modified_data(k, mode)
-                self._partial_preds[k] = pred_func(modified_data)
+        return pred_func
 
 
-class RidgePPM(GenericPPM, ABC):
+class GlmPPM(PartialPredictionModelBase, ABC):
+    """
+    PPM class for GLM predictors. Not implemented yet.
+    """
+    pass
+
+
+class RidgePPM(PartialPredictionModelBase, ABC):
+    """
+    PPM class for ridge (default).
+    """
 
     def __init__(self, **kwargs):
         super().__init__(estimator=RidgeCV(**kwargs))
+
+    def _fit_model(self, train_blocked_data, y_train):
+        self.estimator.fit(train_blocked_data.get_all_data(), y_train)
+
+    def _fit_full_predictions(self, test_blocked_data, y_test=None):
+        return self.estimator.predict(test_blocked_data.get_all_data())
+
+    def _fit_partial_predictions(self, k, mode, test_blocked_data, y_test=None):
+        if mode == "keep_k":
+            col_indices = test_blocked_data.get_block_indices(k)
+            reduced_data = test_blocked_data.get_block(k)
+        elif mode == "keep_rest":
+            col_indices = test_blocked_data.get_all_except_block_indices(k)
+            reduced_data = test_blocked_data.get_all_except_block(k)
+        else:
+            raise ValueError("Invalid mode")
+        return reduced_data @ self.estimator.coef_[col_indices] + self.estimator.intercept_
 
     def set_alphas(self, alphas="default", blocked_data=None, y=None):
         full_data = blocked_data.get_all_data()
@@ -223,119 +264,136 @@ class RidgePPM(GenericPPM, ABC):
         self.estimator = RidgeCV(alphas=alphas)
 
 
+class LogisticPPM(PartialPredictionModelBase, ABC):
+
+    def __init__(self, loo_model_selection=True, alphas=np.logspace(-4, 4, 10), trim=0.01,
+                 **kwargs):
+        if loo_model_selection:
+            self.alphas = alphas
+            super().__init__(estimator=LogisticRegression(**kwargs))
+        else:
+            super().__init__(estimator=LogisticRegressionCV(alphas, **kwargs))
+        self.loo_model_selection = loo_model_selection
+        self.trim = trim
+
+    def _fit_model(self, train_blocked_data, y_train):
+        if self.loo_model_selection:
+            aloo_calculator = GlmAlooCalculator(copy.deepcopy(self.estimator), self.alphas, link_fn=sp.special.expit,
+                                                l_doubledot=lambda a, b: b * (1-b), hyperparameter_scorer=log_loss,
+                                                trim=self.trim)
+            alpha_ = aloo_calculator.get_aloocv_alpha(train_blocked_data.get_all_data(), y_train)
+            self.estimator.set_params(C=1/alpha_)
+            self.estimator.fit(train_blocked_data.get_all_data(), y_train)
+        else:
+            self.estimator.fit(train_blocked_data.get_all_data(), y_train)
+
+    def _fit_full_predictions(self, test_blocked_data, y_test=None):
+        return self._trim_values(self.estimator.predict_proba(test_blocked_data.get_all_data()))
+
+    def _fit_partial_predictions(self, k, mode, test_blocked_data, y_test=None):
+        if mode == "keep_k":
+            col_indices = test_blocked_data.get_block_indices(k)
+            reduced_data = test_blocked_data.get_block(k)
+        elif mode == "keep_rest":
+            col_indices = test_blocked_data.get_all_except_block_indices(k)
+            reduced_data = test_blocked_data.get_all_except_block(k)
+        else:
+            raise ValueError("Invalid mode")
+        coef_, intercept_ = extract_coef_and_intercept(self.estimator)
+        reduced_coef_ = coef_[col_indices]
+        return self._trim_values(sp.special.expit(reduced_data @ reduced_coef_ + intercept_))
+
+    def _trim_values(self, values):
+        if self.trim is not None:
+            assert 0 < self.trim < 0.5, "Limit must be between 0 and 0.5"
+            return np.clip(values, self.trim, 1 - self.trim)
+        else:
+            return values
+
+
 class GenericLOOPPM(PartialPredictionModelBase, ABC):
 
     def __init__(self, estimator, alpha_grid=np.logspace(-4, 4, 10), link_fn=lambda a: a, l_dot=lambda a, b: b-a,
                  l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1, hyperparameter_scorer=mean_squared_error,
                  trim=None, fixed_intercept=True):
-        super().__init__()
-        self.estimator = estimator
-        self.alpha_grid = alpha_grid
-        self.link_fn = link_fn
-        self.l_dot = l_dot
-        self.l_doubledot = l_doubledot
-        self.r_doubledot = r_doubledot
+        super().__init__(estimator)
+        self.aloo_calculator = GlmAlooCalculator(copy.deepcopy(self.estimator), alpha_grid, link_fn=link_fn,
+                                                 l_doubledot=l_doubledot, r_doubledot=r_doubledot,
+                                                 hyperparameter_scorer=hyperparameter_scorer, trim=trim)
         self.trim = trim
-        self.hyperparameter_scorer = hyperparameter_scorer
-        self.alpha_ = None
-        self._cache = None
         self.fixed_intercept = fixed_intercept
 
-    def _get_loo_fitted_parameters(self, X, y, coef_, alpha=0, constant_term=True):
-        orig_preds = self.link_fn(X @ coef_)
-        l_doubledot_vals = self.l_doubledot(y, orig_preds)
-        J = X.T * l_doubledot_vals @ X
-        if self.r_doubledot is not None:
-            r_doubledot_vals = self.r_doubledot(coef_) * np.ones_like(coef_)
-            if constant_term:
-                r_doubledot_vals[-1] = 0
-            reg_curvature = np.diag(r_doubledot_vals)
-            J += alpha * reg_curvature
-        normal_eqn_mat = np.linalg.inv(J) @ X.T
-        h_vals = np.sum(X.T * normal_eqn_mat, axis=0) * l_doubledot_vals
-        loo_fitted_parameters = coef_[:, np.newaxis] + normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
-        return loo_fitted_parameters
+    def _fit_model(self, train_blocked_data, y_train):
+        if y_train.ndim == 1:
+            self.alpha_ = self.aloo_calculator.get_aloocv_alpha(train_blocked_data.get_all_data(), y_train)
+            if hasattr(self.estimator, "alpha"):
+                self.estimator.set_params(alpha=self.alpha_)
+            elif hasattr(self.estimator, "C"):
+                self.estimator.set_params(C=1/self.alpha_)
+        else:
+            self.multi_target = True
+            self.n_targets = y_train.shape[1]
+            self.alphas_ = np.zeros(self.n_targets)
+            self.estimators = [copy.deepcopy(self.estimator) for i in range(self.n_targets)]
+            self.aloo_calculators = [copy.deepcopy(self.aloo_calculator) for i in range(self.n_targets)]
+            for j in range(self.n_targets):
+                self.alphas_[j] = self.aloo_calculator.get_aloocv_alpha(train_blocked_data.get_all_data(),
+                                                                        y_train[:, j])
+                if hasattr(self.estimator, "alpha"):
+                    self.estimators[j].set_params(alpha=self.alphas_[j])
+                elif hasattr(self.estimator, "C"):
+                    self.estimators[j].set_params(C=1/self.alphas_[j])
 
-    def _fit_single_target(self, train_blocked_data, y_train, test_blocked_data, alpha=None,
-                           partial_preds=True, mode="keep_k"):
-        train_data_full = train_blocked_data.get_all_data()
-        train_data_full1 = np.hstack([train_data_full, np.ones((train_data_full.shape[0], 1))])
-        # Tag on constant feature vector
-        estimator = copy.deepcopy(self.estimator)
-        if hasattr(estimator, "alpha"):
-            estimator.set_params(alpha=alpha)
-        elif hasattr(estimator, "C"):
-            estimator.set_params(C=1/alpha)
+    def _fit_full_predictions(self, test_blocked_data, y_test=None):
+        if y_test is None:
+            raise ValueError("Need to supply y_test for LOO")
+        X1 = np.hstack([test_blocked_data.get_all_data(), np.ones((test_blocked_data.n_samples, 1))])
+        if not self.multi_target:
+            fitted_parameters = self.aloo_calculator.get_aloo_fitted_parameters(test_blocked_data.get_all_data(),
+                                                                                y_test, self.alpha_, cache=True)
+            return self.aloo_calculator.score_to_pred(np.sum(fitted_parameters.T * X1, axis=1))
         else:
-            alpha = 0
-        estimator.fit(train_data_full, y_train)
-        coef_ = estimator.coef_
-        if coef_.ndim > 1:
-            augmented_coef_ = np.concatenate([coef_.ravel(), estimator.intercept_])
-        else:
-            augmented_coef_ = np.array(list(coef_) + [estimator.intercept_])
-        loo_fitted_parameters = self._get_loo_fitted_parameters(train_data_full1, y_train, augmented_coef_, alpha)
-        test_data_full = test_blocked_data.get_all_data()
-        test_data_full1 = np.hstack([test_data_full, np.ones((test_data_full.shape[0], 1))])
-        full_preds = self._trim_values(self.link_fn(np.sum(loo_fitted_parameters.T * test_data_full1, axis=1)))
-        if partial_preds:
-            partial_preds = dict({})
-            for k in range(self.n_blocks):
-                # modified_data = blocked_data.get_modified_data(k, mode)
-                # modified_data = np.hstack([modified_data, np.ones((modified_data.shape[0], 1))])
-                if mode == "keep_k":
-                    col_indices = test_blocked_data.get_block_indices(k)
-                    reduced_data = test_blocked_data.get_block(k)
-                elif mode == "keep_rest":
-                    col_indices = test_blocked_data.get_all_except_block_indices(k)
-                    reduced_data = test_blocked_data.get_all_except_block(k)
-                else:
-                    raise ValueError("Invalid mode")
-                # reduced_data = np.hstack([reduced_data, np.ones((reduced_data.shape[0], 1))])
-                reduced_parameters = loo_fitted_parameters.T[:, col_indices]
-                if self.fixed_intercept and len(col_indices) == 0:
-                    intercept = estimator.intercept_
-                else:
-                    intercept = loo_fitted_parameters.T[:, -1]
-                partial_preds[k] = self._trim_values(self.link_fn(np.sum(reduced_parameters * reduced_data, axis=1)
-                                                                  + intercept))
-            return full_preds, partial_preds
-        else:
+            full_preds = np.empty_like(y_test)
+            for j in range(self.n_targets):
+                aloo_calculator = self.aloo_calculators[j]
+                fitted_parameters = aloo_calculator.get_aloo_fitted_parameters(test_blocked_data.get_all_data(),
+                                                                               y_test[:, j], self.alphas_[j],
+                                                                               cache=True)
+                full_preds[:, j] = self.aloo_calculator.score_to_pred(np.sum(fitted_parameters.T * X1, axis=1))
             return full_preds
+                # full_preds, partial_preds = self._fit_single_target(train_blocked_data, y_train[:, j],
+                #                                                     test_blocked_data, alpha_, mode=mode)
+                # self.alpha_[j] = self.aloo_calculator.score_to_pred(np.sum(fitted_parameters.T * X1, axis=1))
+                # self._full_preds[:, j] = full_preds
+                # for k in range(self.n_blocks):
+                #     self._partial_preds[k][:, j] = partial_preds[k]
 
-    def fit(self, train_blocked_data, y_train, test_blocked_data, mode="keep_k"):
-        self.n_blocks = train_blocked_data.n_blocks
-        if y_train.ndim > 1:
-            self.alpha_ = np.empty(y.shape[1])
-            self._full_preds = np.empty_like(y)
-            for k in range(self.n_blocks):
-                self._partial_preds[k] = np.empty_like(y)
-            for j in range(y_train.shape[1]):
-                alpha_ = self._fit_hyperparameter(train_blocked_data, y_train[:, j])
-                full_preds, partial_preds = self._fit_single_target(train_blocked_data, y_train[:, j],
-                                                                    test_blocked_data, alpha_, mode=mode)
-                self.alpha_[j] = alpha_
-                self._full_preds[:, j] = full_preds
-                for k in range(self.n_blocks):
-                    self._partial_preds[k][:, j] = partial_preds[k]
+    def _fit_partial_predictions(self, k, mode, test_blocked_data, y_test=None):
+        if y_test is None:
+            raise ValueError("Need to supply y_test for LOO")
+        if mode == "keep_k":
+            col_indices = test_blocked_data.get_block_indices(k)
+            reduced_data = test_blocked_data.get_block(k)
+        elif mode == "keep_rest":
+            col_indices = test_blocked_data.get_all_except_block_indices(k)
+            reduced_data = test_blocked_data.get_all_except_block(k)
         else:
-            alpha_ = self._fit_hyperparameter(train_blocked_data, y_train)
-            self._full_preds, self._partial_preds = self._fit_single_target(train_blocked_data, y_train,
-                                                                            test_blocked_data, alpha_, mode=mode)
-            self.alpha_ = alpha_
-
-    def _fit_hyperparameter(self, blocked_data, y):
-        if isinstance(self.estimator, Ridge):
-            ridge_cv = RidgeCV(alphas=self.alpha_grid)
-            ridge_cv.fit(blocked_data.get_all_data(), y)
-            alpha_ = ridge_cv.alpha_
+            raise ValueError("Invalid mode")
+        reduced_data1 = np.hstack([reduced_data, np.ones((test_blocked_data.n_samples, 1))])
+        col_indices = np.append(col_indices, -1)
+        if not self.multi_target:
+            fitted_parameters = self.aloo_calculator.get_aloo_fitted_parameters()
+            reduced_parameters = fitted_parameters.T[:, col_indices]
+            return self.aloo_calculator.score_to_pred(np.sum(reduced_parameters.T * reduced_data1, axis=1))
         else:
-            cv_scores = np.zeros_like(self.alpha_grid)
-            for i, alpha in enumerate(self.alpha_grid):
-                full_preds = self._fit_single_target(blocked_data, y, alpha, partial_preds=False)
-                cv_scores[i] = self.hyperparameter_scorer(y, full_preds)
-            alpha_ = self.alpha_grid[np.argmin(cv_scores)]
-        return alpha_
+            partial_preds = np.empty_like(y_test)
+            for j in range(self.n_targets):
+                aloo_calculator = self.aloo_calculators[j]
+                fitted_parameters = aloo_calculator.get_aloo_fitted_parameters()
+                reduced_parameters = fitted_parameters.T[:, col_indices]
+                partial_preds[:, j] = aloo_calculator.score_to_pred(np.sum(reduced_parameters.T * reduced_data1,
+                                                                           axis=1))
+                return partial_preds
 
     def _trim_values(self, values):
         if self.trim is not None:
@@ -375,3 +433,85 @@ def get_alpha_grid(X, y, start=-5, stop=5, num=100):
     base = np.max(alpha_opts_)
     alphas = np.logspace(start, stop, num=num) * base
     return alphas
+
+
+class GlmAlooCalculator:
+
+    def __init__(self, estimator, alpha_grid=np.logspace(-4, 4, 10), link_fn=lambda a: a, l_dot=lambda a, b: b-a,
+                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1, hyperparameter_scorer=mean_squared_error,
+                 trim=None):
+        super().__init__()
+        self.estimator = estimator
+        self.alpha_grid = alpha_grid
+        self.link_fn = link_fn
+        self.l_dot = l_dot
+        self.l_doubledot = l_doubledot
+        self.r_doubledot = r_doubledot
+        self.trim = trim
+        self.hyperparameter_scorer = hyperparameter_scorer
+        self.alpha_ = None
+        self.loo_fitted_parameters = None
+
+    def get_aloo_fitted_parameters(self, X=None, y=None, alpha=None, cache=False):
+        if self.loo_fitted_parameters is not None:
+            return self.loo_fitted_parameters
+        else:
+            if hasattr(self.estimator, "alpha"):
+                self.estimator.set_params(alpha=alpha)
+            elif hasattr(self.estimator, "C"):
+                self.estimator.set_params(C=1/alpha)
+            else:
+                raise ValueError("Estimator has no regularization parameter.")
+            self.estimator.fit(X, y)
+            X1 = np.hstack([X, np.ones((X.shape[0], 1))])
+            augmented_coef_ = extract_coef_and_intercept(self.estimator, merge=True)
+            orig_preds = self.link_fn(X1 @ augmented_coef_)
+            l_doubledot_vals = self.l_doubledot(y, orig_preds)
+            J = X1.T * l_doubledot_vals @ X1
+            if self.r_doubledot is not None:
+                r_doubledot_vals = self.r_doubledot(augmented_coef_) * np.ones_like(augmented_coef_)
+                r_doubledot_vals[-1] = 0
+                reg_curvature = np.diag(r_doubledot_vals)
+                J += alpha * reg_curvature
+            normal_eqn_mat = np.linalg.inv(J) @ X1.T
+            h_vals = np.sum(X1.T * normal_eqn_mat, axis=0) * l_doubledot_vals
+            loo_fitted_parameters = augmented_coef_[:, np.newaxis] + normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
+            if cache:
+                self.loo_fitted_parameters = loo_fitted_parameters
+            return loo_fitted_parameters
+
+    def score_to_pred(self, score):
+        return self._trim_values(self.link_fn(score))
+
+    def get_aloocv_alpha(self, X, y, return_cv=False):
+        cv_scores = np.zeros_like(self.alpha_grid)
+        for i, alpha in enumerate(self.alpha_grid):
+            loo_fitted_parameters = self.get_aloo_fitted_parameters(X, y, alpha)
+            X1 = np.hstack([X, np.ones((X.shape[0], 1))])
+            preds = self.score_to_pred(np.sum(loo_fitted_parameters.T * X1, axis=1))
+            cv_scores[i] = self.hyperparameter_scorer(y, preds)
+        self.alpha_ = self.alpha_grid[np.argmin(cv_scores)]
+        if return_cv:
+            return self.alpha_, cv_scores
+        else:
+            return self.alpha_
+
+    def _trim_values(self, values):
+        if self.trim is not None:
+            assert 0 < self.trim < 0.5, "Limit must be between 0 and 0.5"
+            return np.clip(values, self.trim, 1 - self.trim)
+        else:
+            return values
+
+
+def extract_coef_and_intercept(estimator, merge=False):
+    coef_ = estimator.coef_
+    intercept_ = estimator.intercept_
+    if coef_.ndim > 1:
+        coef_ = coef_.ravel()
+        intercept_ = intercept_[0]
+    if merge:
+        augmented_coef_ = np.append(coef_, intercept_)
+        return augmented_coef_
+    else:
+        return coef_, intercept_
