@@ -248,9 +248,25 @@ class GenericPPM(PartialPredictionModelBase, ABC):
 
 class GlmPPM(PartialPredictionModelBase, ABC):
     """
-    PPM class for GLM predictors. Not implemented yet.
+    PPM class for GLM predictors. Not fully implemented yet.
     """
-    pass
+    def __init__(self, estimator, alpha_grid=np.logspace(-4, 4, 10), link_fn=lambda a: a, l_dot=lambda a, b: b-a,
+                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1, hyperparameter_scorer=mean_squared_error,
+                 trim=None):
+        super().__init__(estimator)
+        self.aloo_calculator = GlmAlooCalculator(copy.deepcopy(self.estimator), alpha_grid, link_fn=link_fn,
+                                                 l_dot=l_dot, l_doubledot=l_doubledot, r_doubledot=r_doubledot,
+                                                 hyperparameter_scorer=hyperparameter_scorer, trim=trim)
+        self.trim = trim
+
+    def _fit_model(self, train_blocked_data, y_train):
+        self.alpha_ = self.aloo_calculator.get_aloocv_alpha(train_blocked_data.get_all_data(), y_train)
+        if hasattr(self.estimator, "alpha"):
+            self.estimator.set_params(alpha=self.alpha_)
+        elif hasattr(self.estimator, "C"):
+            self.estimator.set_params(C=1/self.alpha_)
+        else:
+            warnings.warn("Estimator has no regularization parameter.")
 
 
 class RidgePPM(PartialPredictionModelBase, ABC):
@@ -341,11 +357,10 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
                  trim=None, fixed_intercept=True):
         super().__init__(estimator)
         self.aloo_calculator = GlmAlooCalculator(copy.deepcopy(self.estimator), alpha_grid, link_fn=link_fn,
-                                                 l_doubledot=l_doubledot, r_doubledot=r_doubledot,
+                                                 l_dot=l_dot, l_doubledot=l_doubledot, r_doubledot=r_doubledot,
                                                  hyperparameter_scorer=hyperparameter_scorer, trim=trim)
         self.trim = trim
         self.fixed_intercept = fixed_intercept
-        self.multi_target = False
 
     def _fit_model(self, train_blocked_data, y_train):
         self.alpha_ = self.aloo_calculator.get_aloocv_alpha(train_blocked_data.get_all_data(), y_train)
@@ -452,7 +467,6 @@ class GlmAlooCalculator:
                 self.estimator.set_params(C=1/alpha)
             else:
                 alpha = 0
-                # raise ValueError("Estimator has no regularization parameter.")
             estimator = copy.deepcopy(self.estimator)
             estimator.fit(X, y)
             X1 = np.hstack([X, np.ones((X.shape[0], 1))])
