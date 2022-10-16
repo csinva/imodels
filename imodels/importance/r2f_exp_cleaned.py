@@ -1,5 +1,6 @@
 import copy
 from abc import ABC, abstractmethod
+import warnings
 
 import numpy as np
 import scipy as sp
@@ -69,41 +70,6 @@ class GMDI:
         self.is_fitted = False
         self.oob = oob
 
-    def _fit_importance_scores(self, X, y):
-        if self.oob:
-            n_samples = len(y)
-            train_indices = _generate_sample_indices(self.transformer.estimator.random_state, n_samples, n_samples)
-            test_indices = _generate_unsampled_indices(self.transformer.estimator.random_state, n_samples, n_samples)
-            all_data = self.transformer.transform(X)
-            train_blocked_data, test_blocked_data = all_data.train_test_split(train_indices, test_indices)
-            y_train = y[train_indices]
-            y_test = y[test_indices]
-        else:
-            blocked_data = self.transformer.transform(X)
-            train_blocked_data = blocked_data
-            test_blocked_data = blocked_data
-            y_train = y
-            y_test = y
-        if train_blocked_data.get_all_data().shape[1] == 0: #checking if learnt representation is empty
-            self._scores = np.zeros(X.shape[1])
-            for k in range(X.shape[1]):
-                self._scores[k] = np.NaN
-        else:
-            self.partial_prediction_model.fit(train_blocked_data, y_train, test_blocked_data, y_test, self.mode)
-            self.n_features = self.partial_prediction_model.n_blocks
-            self._scores = np.zeros(self.n_features)
-            if self.mode == "keep_k":
-                for k in range(self.n_features): #checking if there are any stumps associated to the feature in the tree
-                    partial_preds = self.partial_prediction_model.get_partial_predictions(k)
-                    self._scores[k] = self.scoring_fn(y_test, partial_preds)
-            elif self.mode == "keep_rest":
-                full_preds = self.partial_prediction_model.get_full_predictions()
-                full_score = self.scoring_fn(y_test, full_preds)
-                for k in range(self.n_features):
-                    partial_preds = self.partial_prediction_model.get_partial_predictions(k)
-                    self._scores[k] = full_score - self.scoring_fn(y_test, partial_preds)
-            self.is_fitted = True
-
     def get_scores(self, X=None, y=None):
         if self.is_fitted:
             pass
@@ -113,6 +79,73 @@ class GMDI:
             else:
                 self._fit_importance_scores(X, y)
         return self._scores
+
+    def _fit_importance_scores(self, X, y):
+        blocked_data = self.transformer.transform(X)
+        self.n_features = blocked_data.n_blocks
+        if self.oob:
+            train_blocked_data, test_blocked_data, y_train, y_test = self._train_test_split(blocked_data, y)
+        else:
+            train_blocked_data = test_blocked_data = blocked_data
+            y_train = y_test = y
+        if train_blocked_data.get_all_data().shape[1] == 0: #checking if learnt representation is empty
+            self._scores = np.zeros(X.shape[1])
+            for k in range(X.shape[1]):
+                self._scores[k] = np.NaN
+        else:
+            if y.ndim == 1:
+                full_preds, partial_preds = self._fit_one_target(train_blocked_data, y_train, test_blocked_data, y_test)
+            else:
+                full_preds_list = []
+                partial_preds_list = []
+                for j in range(y.ndim):
+                    yj_train = y_train[:, j]
+                    yj_test = y_test[:, j]
+                    full_preds_j, partial_preds_j = self._fit_one_target(train_blocked_data, yj_train,
+                                                                         test_blocked_data, yj_test, multitarget=True)
+                    full_preds_list.append(full_preds_j)
+                    partial_preds_list.append(partial_preds_j)
+                full_preds = np.array(full_preds_list).T
+                partial_preds = dict()
+                for k in range(self.n_features):
+                    partial_preds[k] = np.array([partial_preds_j[k] for partial_preds_j in partial_preds_list]).T
+            self._score_partial_predictions(full_preds, partial_preds, y_test)
+        self.is_fitted = True
+
+    def _fit_one_target(self, train_blocked_data, y_train, test_blocked_data, y_test, multitarget=False):
+        partial_preds = dict()
+        if multitarget:
+            ppm = copy.deepcopy(self.partial_prediction_model)
+        else:
+            ppm = self.partial_prediction_model
+        ppm.fit(train_blocked_data, y_train, test_blocked_data, y_test, self.mode)
+        full_preds = ppm.get_full_predictions()
+        for k in range(self.n_features):
+            partial_preds[k] = ppm.get_partial_predictions(k)
+        return full_preds, partial_preds
+
+    def _score_partial_predictions(self, full_preds, partial_preds, y_test):
+        self._scores = np.zeros(self.n_features)
+        if self.mode == "keep_k":
+            for k in range(self.n_features):
+                self._scores[k] = self.scoring_fn(y_test, partial_preds[k])
+        elif self.mode == "keep_rest":
+            full_score = self.scoring_fn(y_test, full_preds)
+            for k in range(self.n_features):
+                self._scores[k] = full_score - self.scoring_fn(y_test, partial_preds[k])
+
+    def _train_test_split(self, blocked_data, y):
+        n_samples = len(y)
+        train_indices = _generate_sample_indices(self.transformer.estimator.random_state, n_samples, n_samples)
+        test_indices = _generate_unsampled_indices(self.transformer.estimator.random_state, n_samples, n_samples)
+        train_blocked_data, test_blocked_data = blocked_data.train_test_split(train_indices, test_indices)
+        if y.ndim > 1:
+            y_train = y[train_indices, :]
+            y_test = y[test_indices, :]
+        else:
+            y_train = y[train_indices]
+            y_test = y[test_indices]
+        return train_blocked_data, test_blocked_data, y_train, y_test
 
 
 class GMDIEnsemble:
@@ -133,16 +166,6 @@ class GMDIEnsemble:
         # n_samples = len(y)
         scores = []
         for gmdi_object in self.gmdi_objects:
-            # if self.subsetting_scheme is None:
-            #     sample_indices = list(range(n_samples))
-            # else:
-            #     estimator = gmdi_object.transformer.estimator
-            #     if self.subsetting_scheme == "oob":
-            #         sample_indices = _generate_unsampled_indices(estimator.random_state, n_samples, n_samples)
-            #     elif self.subsetting_scheme == "inbag":
-            #         sample_indices = _generate_sample_indices(estimator.random_state, n_samples, n_samples)
-            #     else:
-            #         raise ValueError("Unsupported subsetting scheme")
             scores.append(gmdi_object.get_scores(X, y))
         self._scores = np.nanmean(scores, axis=0)
         self.is_fitted = True
@@ -325,49 +348,21 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
         self.multi_target = False
 
     def _fit_model(self, train_blocked_data, y_train):
-        if y_train.ndim == 1:
-            self.alpha_ = self.aloo_calculator.get_aloocv_alpha(train_blocked_data.get_all_data(), y_train)
-            if hasattr(self.estimator, "alpha"):
-                self.estimator.set_params(alpha=self.alpha_)
-            elif hasattr(self.estimator, "C"):
-                self.estimator.set_params(C=1/self.alpha_)
+        self.alpha_ = self.aloo_calculator.get_aloocv_alpha(train_blocked_data.get_all_data(), y_train)
+        if hasattr(self.estimator, "alpha"):
+            self.estimator.set_params(alpha=self.alpha_)
+        elif hasattr(self.estimator, "C"):
+            self.estimator.set_params(C=1/self.alpha_)
         else:
-            self.multi_target = True
-            self.n_targets = y_train.shape[1]
-            self.alphas_ = np.zeros(self.n_targets)
-            self.estimators = [copy.deepcopy(self.estimator) for i in range(self.n_targets)]
-            self.aloo_calculators = [copy.deepcopy(self.aloo_calculator) for i in range(self.n_targets)]
-            for j in range(self.n_targets):
-                self.alphas_[j] = self.aloo_calculator.get_aloocv_alpha(train_blocked_data.get_all_data(),
-                                                                        y_train[:, j])
-                if hasattr(self.estimator, "alpha"):
-                    self.estimators[j].set_params(alpha=self.alphas_[j])
-                elif hasattr(self.estimator, "C"):
-                    self.estimators[j].set_params(C=1/self.alphas_[j])
+            warnings.warn("Estimator has no regularization parameter.")
 
     def _fit_full_predictions(self, test_blocked_data, y_test=None):
         if y_test is None:
             raise ValueError("Need to supply y_test for LOO")
         X1 = np.hstack([test_blocked_data.get_all_data(), np.ones((test_blocked_data.n_samples, 1))])
-        if not self.multi_target:
-            fitted_parameters = self.aloo_calculator.get_aloo_fitted_parameters(test_blocked_data.get_all_data(),
-                                                                                y_test, self.alpha_, cache=True)
-            return self.aloo_calculator.score_to_pred(np.sum(fitted_parameters.T * X1, axis=1))
-        else:
-            full_preds = np.empty_like(y_test)
-            for j in range(self.n_targets):
-                aloo_calculator = self.aloo_calculators[j]
-                fitted_parameters = aloo_calculator.get_aloo_fitted_parameters(test_blocked_data.get_all_data(),
-                                                                               y_test[:, j], self.alphas_[j],
-                                                                               cache=True)
-                full_preds[:, j] = self.aloo_calculator.score_to_pred(np.sum(fitted_parameters.T * X1, axis=1))
-            return full_preds
-                # full_preds, partial_preds = self._fit_single_target(train_blocked_data, y_train[:, j],
-                #                                                     test_blocked_data, alpha_, mode=mode)
-                # self.alpha_[j] = self.aloo_calculator.score_to_pred(np.sum(fitted_parameters.T * X1, axis=1))
-                # self._full_preds[:, j] = full_preds
-                # for k in range(self.n_blocks):
-                #     self._partial_preds[k][:, j] = partial_preds[k]
+        fitted_parameters = self.aloo_calculator.get_aloo_fitted_parameters(test_blocked_data.get_all_data(),
+                                                                            y_test, self.alpha_, cache=True)
+        return self.aloo_calculator.score_to_pred(np.sum(fitted_parameters.T * X1, axis=1))
 
     def _fit_partial_predictions(self, k, mode, test_blocked_data, y_test=None):
         if y_test is None:
@@ -382,27 +377,13 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
             raise ValueError("Invalid mode")
         reduced_data1 = np.hstack([reduced_data, np.ones((test_blocked_data.n_samples, 1))])
         col_indices = np.append(col_indices, -1)
-        if not self.multi_target:
-            if self.fixed_intercept and len(col_indices) == 1:
-                _, intercept = extract_coef_and_intercept(self.aloo_calculator.estimator)
-                return np.repeat(self.aloo_calculator.score_to_pred(intercept), len(y_test))
-            else:
-                fitted_parameters = self.aloo_calculator.get_aloo_fitted_parameters()
-                reduced_parameters = fitted_parameters.T[:, col_indices]
-                return self.aloo_calculator.score_to_pred(np.sum(reduced_parameters * reduced_data1, axis=1))
+        if self.fixed_intercept and len(col_indices) == 1:
+            _, intercept = extract_coef_and_intercept(self.aloo_calculator.estimator)
+            return np.repeat(self.aloo_calculator.score_to_pred(intercept), len(y_test))
         else:
-            partial_preds = np.empty_like(y_test)
-            for j in range(self.n_targets):
-                aloo_calculator = self.aloo_calculators[j]
-                if self.fixed_intercept and len(col_indices) == 1:
-                    _, intercept = extract_coef_and_intercept(self.aloo_calculator.estimator)
-                    partial_preds[:, j] = np.repeat(aloo_calculator.score_to_pred(intercept), len(y_test))
-                else:
-                    fitted_parameters = aloo_calculator.get_aloo_fitted_parameters()
-                    reduced_parameters = fitted_parameters.T[:, col_indices]
-                    partial_preds[:, j] = aloo_calculator.score_to_pred(np.sum(reduced_parameters * reduced_data1,
-                                                                               axis=1))
-                return partial_preds
+            fitted_parameters = self.aloo_calculator.get_aloo_fitted_parameters()
+            reduced_parameters = fitted_parameters.T[:, col_indices]
+            return self.aloo_calculator.score_to_pred(np.sum(reduced_parameters * reduced_data1, axis=1))
 
     def _trim_values(self, values):
         if self.trim is not None:
@@ -422,7 +403,7 @@ class RidgeLOOPPM(GenericLOOPPM, ABC):
             alphas = get_alpha_grid(full_data, y)
         else:
             alphas = alphas
-        self.alpha_grid = alphas
+        self.aloo_calculator.alpha_grid = alphas
 
 
 class LogisticLOOPPM(GenericLOOPPM, ABC):

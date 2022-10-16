@@ -676,10 +676,6 @@ class TestLogisticGMDI:
         self.rf_model = RandomForestClassifier(max_features=0.33, min_samples_leaf=5, n_estimators=5)
         self.rf_model.fit(self.X, self.y)
 
-    def test_setup(self):
-        log_ppm = gmdi_new.LogisticPPM()
-        log_ppm.fit(self.X, self.y)
-
     def test_ppm(self):
         blocked_data = rep_new.IdentityTransformer(self.p).transform(self.X)
         train_indices = np.arange(70)
@@ -695,11 +691,37 @@ class TestLogisticGMDI:
             scores[k] = log_loss(y_test, partial_preds)
         return scores
 
-
     def test_oob_nonloo(self):
         new_transformer_list = [rep_new.CompositeTransformer([
             rep_new.IdentityTransformer(self.p), rep_new.TreeTransformer(self.p, estimator)], adj_std="max")
             for estimator in self.rf_model.estimators_]
+        new_ppm = gmdi_new.LogisticPPM(alphas=np.logspace(-4, 3, 100))
+        gmdi_obj_new = gmdi_new.GMDIEnsemble(new_transformer_list, new_ppm, roc_auc_score, oob=True)
+        new_scores_oob = gmdi_obj_new.get_scores(self.X, self.y)
+        print(new_scores_oob)
+        gmdi_obj_new = gmdi_new.GMDIEnsemble(new_transformer_list, new_ppm, roc_auc_score, oob=False)
+        new_scores = gmdi_obj_new.get_scores(self.X, self.y)
+        print(new_scores)
+        return
+
+class TestMultitargetGMDI:
+    def setup(self):
+        np.random.seed(42)
+        random.seed(42)
+        self.p = 10
+        self.n = 100
+        self.beta = np.array([1] + [0] * (self.p - 1))
+        self.sigma = 1
+        self.X = np.random.randn(self.n, self.p)
+        score = self.X @ self.beta + self.sigma * np.random.randn(self.n)
+        self.y = np.random.multinomial(1, (0.3, 0.3, 0.4), self.n)
+        self.rf_model = RandomForestClassifier(max_features=0.33, min_samples_leaf=5, n_estimators=5)
+        self.rf_model.fit(self.X, self.y)
+
+    def test_multitarget(self):
+        new_transformer_list = [rep_new.CompositeTransformer([rep_new.IdentityTransformer(self.p),
+                                                              rep_new.TreeTransformer(self.p, estimator)], adj_std="max")
+                                for estimator in self.rf_model.estimators_]
         new_ppm = gmdi_new.LogisticPPM(alphas=np.logspace(-4, 3, 100))
         gmdi_obj_new = gmdi_new.GMDIEnsemble(new_transformer_list, new_ppm, roc_auc_score, oob=True)
         new_scores_oob = gmdi_obj_new.get_scores(self.X, self.y)
