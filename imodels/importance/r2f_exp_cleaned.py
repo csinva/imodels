@@ -74,8 +74,8 @@ class GMDI:
             n_samples = len(y)
             train_indices = _generate_sample_indices(self.transformer.estimator.random_state, n_samples, n_samples)
             test_indices = _generate_unsampled_indices(self.transformer.estimator.random_state, n_samples, n_samples)
-            train_blocked_data = self.transformer.transform(X[train_indices, :])
-            test_blocked_data = self.transformer.transform(X[test_indices, :])
+            all_data = self.transformer.transform(X)
+            train_blocked_data, test_blocked_data = all_data.train_test_split(train_indices, test_indices)
             y_train = y[train_indices]
             y_test = y[test_indices]
         else:
@@ -119,7 +119,7 @@ class GMDIEnsemble:
 
     def __init__(self, transformers, partial_prediction_model, scoring_fn, mode="keep_k", oob=False):
         self.n_transformers = len(transformers)
-        self.gmdi_objects = [GMDI(transformer, partial_prediction_model, scoring_fn, mode, oob)
+        self.gmdi_objects = [GMDI(transformer, copy.deepcopy(partial_prediction_model), scoring_fn, mode, oob)
                              for transformer in transformers]
         self.oob = oob
         self.scoring_fn = scoring_fn
@@ -470,10 +470,12 @@ class GlmAlooCalculator:
             elif hasattr(self.estimator, "C"):
                 self.estimator.set_params(C=1/alpha)
             else:
-                raise ValueError("Estimator has no regularization parameter.")
-            self.estimator.fit(X, y)
+                alpha = 0
+                # raise ValueError("Estimator has no regularization parameter.")
+            estimator = copy.deepcopy(self.estimator)
+            estimator.fit(X, y)
             X1 = np.hstack([X, np.ones((X.shape[0], 1))])
-            augmented_coef_ = extract_coef_and_intercept(self.estimator, merge=True)
+            augmented_coef_ = extract_coef_and_intercept(estimator, merge=True)
             orig_preds = self.link_fn(X1 @ augmented_coef_)
             l_doubledot_vals = self.l_doubledot(y, orig_preds)
             J = X1.T * l_doubledot_vals @ X1
@@ -487,6 +489,7 @@ class GlmAlooCalculator:
             loo_fitted_parameters = augmented_coef_[:, np.newaxis] + normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
             if cache:
                 self.loo_fitted_parameters = loo_fitted_parameters
+                self.estimator = estimator
             return loo_fitted_parameters
 
     def score_to_pred(self, score):

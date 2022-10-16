@@ -79,6 +79,13 @@ class BlockPartitionedData:
             all_data = np.hstack(data_blocks + [self._common_block])
         return all_data
 
+    def train_test_split(self, train_indices, test_indices):
+        train_blocks = [self.get_block(k)[train_indices,: ] for k in range(self.n_blocks)]
+        train_blocked_data = BlockPartitionedData(train_blocks)
+        test_blocks = [self.get_block(k)[test_indices,: ] for k in range(self.n_blocks)]
+        test_blocked_data = BlockPartitionedData(test_blocks)
+        return train_blocked_data, test_blocked_data
+
     def __repr__(self):
         return self.get_all_data().__repr__()
 
