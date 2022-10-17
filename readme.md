@@ -82,7 +82,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | Iterative random<br/>forest | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [🔗](https://github.com/Yu-Group/iterative-Random-Forest), [📄](https://www.pnas.org/content/115/8/1943) | Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected |
 | Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), ㅤㅤ[📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
 | <b>Greedy tree sums</b> | [🗂️](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs), ㅤㅤ[📄](https://arxiv.org/abs/2201.11931) | Sum of small trees with very few total rules (FIGS)                          |
-| <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/tree/hierarchical_shrinkage.html), ㅤㅤ[📄](https://arxiv.org/abs/2202.00858) | Improve any tree-based model with ultra-fast, post-hoc regularization |
+| <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/tree/hierarchical_shrinkage.html), ㅤㅤ[📄](https://arxiv.org/abs/2202.00858) | Improve a decision tree, random forest, or<br/>gradient-boosting ensemble with ultra-fast, post-hoc regularization |
 | Distillation<br/>wrapper | [🗂️](https://csinva.io/imodels/util/distillation.html)  | Train a black-box model,<br/>then distill it into an interpretable model |
 | More models                 | ⌛                                                            | (Coming soon!) Lightweight Rule Induction, MLRules, ... |
 
