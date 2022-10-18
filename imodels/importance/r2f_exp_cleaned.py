@@ -41,6 +41,12 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
             scoring_fn = r2_score
         else:
             scoring_fn = roc_auc_score
+    #elif scoring_fn == "mdi_oob":
+    #    def mdi_oob_score(y_true,y_pred,partial_params):
+    #        return np.dot(y_true,y_pred - partial_params[-1])
+    #    scoring_fn = mdi_oob_score
+    #else:
+    #    scoring_fn = scoring_fn
     if not regression:
         if len(np.unique(y)) > 2:
             y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
@@ -95,7 +101,7 @@ class GMDI:
                 self._scores[k] = np.NaN
         else:
             if y.ndim == 1:
-                full_preds, partial_preds = self._fit_one_target(train_blocked_data, y_train, test_blocked_data, y_test)
+                full_preds, partial_preds,partial_params = self._fit_one_target(train_blocked_data, y_train, test_blocked_data, y_test)
             else:
                 full_preds_list = []
                 partial_preds_list = []
@@ -110,11 +116,12 @@ class GMDI:
                 partial_preds = dict()
                 for k in range(self.n_features):
                     partial_preds[k] = np.array([partial_preds_j[k] for partial_preds_j in partial_preds_list]).T
-            self._score_partial_predictions(full_preds, partial_preds, y_test)
+            self._score_partial_predictions(full_preds, partial_params,partial_preds, y_test)
         self.is_fitted = True
 
     def _fit_one_target(self, train_blocked_data, y_train, test_blocked_data, y_test, multitarget=False):
         partial_preds = dict()
+        partial_params = dict()
         if multitarget:
             ppm = copy.deepcopy(self.partial_prediction_model)
         else:
@@ -122,14 +129,22 @@ class GMDI:
         ppm.fit(train_blocked_data, y_train, test_blocked_data, y_test, self.mode)
         full_preds = ppm.get_full_predictions()
         for k in range(self.n_features):
-            partial_preds[k] = ppm.get_partial_predictions(k)
-        return full_preds, partial_preds
+            partial_preds[k],partial_params[k] = ppm.get_partial_predictions(k)
+        return full_preds, partial_preds, partial_params
 
-    def _score_partial_predictions(self, full_preds, partial_preds, y_test):
+    def _score_partial_predictions(self, full_preds,partial_params,partial_preds, y_test):
         self._scores = np.zeros(self.n_features)
         if self.mode == "keep_k":
             for k in range(self.n_features):
-                self._scores[k] = self.scoring_fn(y_test, partial_preds[k])
+                if self.scoring_fn == "mdi_oob":
+                    if len(partial_params[k]) == 1: #only intercept model 
+                        self._scores[k] = np.dot(y_test,partial_preds[k] - partial_params[k])/len(y_test)
+                    elif partial_params[k].ndim == 1: #partial prediction model without LOO
+                        self._scores[k] = np.dot(y_test,partial_preds[k] - partial_params[k][-1])/len(y_test)
+                    else: #LOO partial prediction model
+                         self._scores[k] = np.dot(y_test,partial_preds[k] - partial_params[k][:,-1])/len(y_test)
+                else:
+                    self._scores[k] = self.scoring_fn(y_test, partial_preds[k])
         elif self.mode == "keep_rest":
             full_score = self.scoring_fn(y_test, full_preds)
             for k in range(self.n_features):
@@ -293,7 +308,8 @@ class RidgePPM(PartialPredictionModelBase, ABC):
             reduced_data = test_blocked_data.get_all_except_block(k)
         else:
             raise ValueError("Invalid mode")
-        return reduced_data @ self.estimator.coef_[col_indices] + self.estimator.intercept_
+        partial_coef_ = np.append(self.estimator.coef_, self.estimator.intercept_)
+        return reduced_data @ self.estimator.coef_[col_indices] + self.estimator.intercept_ , partial_coef_
 
     def set_alphas(self, alphas="default", blocked_data=None, y=None):
         full_data = blocked_data.get_all_data()
@@ -341,7 +357,7 @@ class LogisticPPM(PartialPredictionModelBase, ABC):
             raise ValueError("Invalid mode")
         coef_, intercept_ = extract_coef_and_intercept(self.estimator)
         reduced_coef_ = coef_[col_indices]
-        return self._trim_values(sp.special.expit(reduced_data @ reduced_coef_ + intercept_))
+        return self._trim_values(sp.special.expit(reduced_data @ reduced_coef_ + intercept_)),reduced_coef_
 
     def _trim_values(self, values):
         if self.trim is not None:
@@ -378,6 +394,7 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
         X1 = np.hstack([test_blocked_data.get_all_data(), np.ones((test_blocked_data.n_samples, 1))])
         fitted_parameters = self.aloo_calculator.get_aloo_fitted_parameters(test_blocked_data.get_all_data(),
                                                                             y_test, self.alpha_, cache=True)
+        
         return self.aloo_calculator.score_to_pred(np.sum(fitted_parameters.T * X1, axis=1))
 
     def _fit_partial_predictions(self, k, mode, test_blocked_data, y_test=None):
@@ -395,11 +412,11 @@ class GenericLOOPPM(PartialPredictionModelBase, ABC):
         col_indices = np.append(col_indices, -1)
         if self.fixed_intercept and len(col_indices) == 1:
             _, intercept = extract_coef_and_intercept(self.aloo_calculator.estimator)
-            return np.repeat(self.aloo_calculator.score_to_pred(intercept), len(y_test))
+            return np.repeat(self.aloo_calculator.score_to_pred(intercept), len(y_test)), [intercept] #returning learnt intercept for null model  
         else:
             fitted_parameters = self.aloo_calculator.get_aloo_fitted_parameters()
             reduced_parameters = fitted_parameters.T[:, col_indices]
-            return self.aloo_calculator.score_to_pred(np.sum(reduced_parameters * reduced_data1, axis=1))
+            return self.aloo_calculator.score_to_pred(np.sum(reduced_parameters * reduced_data1, axis=1)), reduced_parameters #returning learnt parameters for partial model
 
     def _trim_values(self, values):
         if self.trim is not None:
@@ -482,6 +499,7 @@ class GlmAlooCalculator:
                 J += alpha * reg_curvature
             normal_eqn_mat = np.linalg.inv(J) @ X1.T
             h_vals = np.sum(X1.T * normal_eqn_mat, axis=0) * l_doubledot_vals
+            a = normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
             loo_fitted_parameters = augmented_coef_[:, np.newaxis] + normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
             if cache:
                 self.loo_fitted_parameters = loo_fitted_parameters
