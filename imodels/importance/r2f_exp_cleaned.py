@@ -16,7 +16,7 @@ from imodels.importance.representation_cleaned import TreeTransformer, IdentityT
 
 def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k", 
                   partial_prediction_model="auto", scoring_fn="auto",
-                  include_raw=True, drop_features=True, oob=False):
+                  include_raw=True, drop_features=True, oob=False, center=True):
 
     p = X.shape[1]
     fit = copy.deepcopy(fit)
@@ -45,7 +45,7 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
         if len(np.unique(y)) > 2:
             y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
     
-    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, oob)
+    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, oob, center)
     scores = gmdi.get_scores(X, y)
     
     results = pd.DataFrame(data={'importance': scores})
@@ -60,7 +60,7 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
 
 class GMDI:
 
-    def __init__(self, transformer, partial_prediction_model, scoring_fn, mode="keep_k", oob=False):
+    def __init__(self, transformer, partial_prediction_model, scoring_fn, mode="keep_k", oob=False, center=True):
         self.transformer = transformer
         self.partial_prediction_model = partial_prediction_model
         self.scoring_fn = scoring_fn
@@ -69,6 +69,7 @@ class GMDI:
         self._scores = None
         self.is_fitted = False
         self.oob = oob
+        self.center = center
 
     def get_scores(self, X=None, y=None):
         if self.is_fitted:
@@ -81,7 +82,7 @@ class GMDI:
         return self._scores
 
     def _fit_importance_scores(self, X, y):
-        blocked_data = self.transformer.transform(X)
+        blocked_data = self.transformer.transform(X, center=self.center)
         self.n_features = blocked_data.n_blocks
         if self.oob:
             train_blocked_data, test_blocked_data, y_train, y_test = self._train_test_split(blocked_data, y)
@@ -150,9 +151,9 @@ class GMDI:
 
 class GMDIEnsemble:
 
-    def __init__(self, transformers, partial_prediction_model, scoring_fn, mode="keep_k", oob=False):
+    def __init__(self, transformers, partial_prediction_model, scoring_fn, mode="keep_k", oob=False, center=True):
         self.n_transformers = len(transformers)
-        self.gmdi_objects = [GMDI(transformer, copy.deepcopy(partial_prediction_model), scoring_fn, mode, oob)
+        self.gmdi_objects = [GMDI(transformer, copy.deepcopy(partial_prediction_model), scoring_fn, mode, oob, center)
                              for transformer in transformers]
         self.oob = oob
         self.scoring_fn = scoring_fn
