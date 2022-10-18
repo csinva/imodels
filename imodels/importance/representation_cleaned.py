@@ -330,9 +330,9 @@ def make_stump(node_no, tree_struct, parent_stump, is_right_child, normalize=Fal
     # Get quantities relevant to the node in question
     feature = tree_struct.feature[node_no]
     threshold = tree_struct.threshold[node_no]
-    left_size = tree_struct.n_node_samples[left_child]
-    right_size = tree_struct.n_node_samples[right_child]
-    parent_size = tree_struct.n_node_samples[node_no]
+    left_size = tree_struct.weighted_n_node_samples[left_child]
+    right_size = tree_struct.weighted_n_node_samples[right_child]
+    parent_size = tree_struct.weighted_n_node_samples[node_no]
     normalization = parent_size if normalize else 1
     left_val = - np.sqrt(right_size / (left_size * normalization))
     right_val = np.sqrt(left_size / (right_size * normalization))
