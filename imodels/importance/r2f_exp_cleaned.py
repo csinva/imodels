@@ -11,7 +11,7 @@ from sklearn.linear_model import RidgeCV, LogisticRegressionCV, Ridge, LogisticR
 from sklearn.metrics import roc_auc_score, mean_squared_error, log_loss
 from sklearn.preprocessing import OneHotEncoder
 
-from imodels.importance.representation_cleaned import TreeTransformer, IdentityTransformer, CompositeTransformer
+from imodels.importance.representation_cleaned import TreeTransformer, IdentityTransformer, CompositeTransformer,BlockPartitionedData
 
 
 def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k", 
@@ -51,7 +51,7 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
         if len(np.unique(y)) > 2:
             y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
     
-    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, oob, center)
+    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, oob, center,include_raw,drop_features)
     scores = gmdi.get_scores(X, y)
     
     results = pd.DataFrame(data={'importance': scores})
@@ -66,7 +66,7 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
 
 class GMDI:
 
-    def __init__(self, transformer, partial_prediction_model, scoring_fn, mode="keep_k", oob=False, center=True):
+    def __init__(self, transformer, partial_prediction_model, scoring_fn, mode="keep_k", oob=False, center=True,include_raw = True, drop_features = True):
         self.transformer = transformer
         self.partial_prediction_model = partial_prediction_model
         self.scoring_fn = scoring_fn
@@ -76,6 +76,8 @@ class GMDI:
         self.is_fitted = False
         self.oob = oob
         self.center = center
+        self.include_raw = include_raw
+        self.drop_features = drop_features
 
     def get_scores(self, X=None, y=None):
         if self.is_fitted:
@@ -90,6 +92,15 @@ class GMDI:
     def _fit_importance_scores(self, X, y):
         blocked_data = self.transformer.transform(X, center=self.center)
         self.n_features = blocked_data.n_blocks
+        if self.include_raw and self.drop_features == False:
+            data_blocks = []
+            min_adj_factor = np.nanmin(np.concatenate(self.transformer.all_adj_factors, axis=0))
+            for k in range(self.n_features):
+                if blocked_data.get_block(k).shape[1] == 1 and X[:,[k]].std() > 0.0 : #only contains raw feature
+                    data_blocks.append(blocked_data.get_all_data()[:,blocked_data.get_block_indices(k)]*min_adj_factor/X[:,[k]].std())
+                else:
+                    data_blocks.append(blocked_data.get_all_data()[:,blocked_data.get_block_indices(k)])
+            blocked_data = BlockPartitionedData(data_blocks)
         if self.oob:
             train_blocked_data, test_blocked_data, y_train, y_test = self._train_test_split(blocked_data, y)
         else:
@@ -166,9 +177,9 @@ class GMDI:
 
 class GMDIEnsemble:
 
-    def __init__(self, transformers, partial_prediction_model, scoring_fn, mode="keep_k", oob=False, center=True):
+    def __init__(self, transformers, partial_prediction_model, scoring_fn, mode="keep_k", oob=False, center=True,include_raw = True,drop_features = True):
         self.n_transformers = len(transformers)
-        self.gmdi_objects = [GMDI(transformer, copy.deepcopy(partial_prediction_model), scoring_fn, mode, oob, center)
+        self.gmdi_objects = [GMDI(transformer, copy.deepcopy(partial_prediction_model), scoring_fn, mode, oob, center,include_raw,drop_features)
                              for transformer in transformers]
         self.oob = oob
         self.scoring_fn = scoring_fn
@@ -176,6 +187,8 @@ class GMDIEnsemble:
         self.n_features = None
         self._scores = None
         self.is_fitted = False
+        self.include_raw = include_raw
+        self.drop_features = drop_features
 
     def _fit_importance_scores(self, X, y):
         assert X.shape[0] == len(y)

@@ -146,6 +146,7 @@ class CompositeTransformer(BlockTransformerBase, ABC):
         self.adj_std = adj_std
         self.drop_features = drop_features
         self.estimator = self.block_transformer_list[self.reference_index].estimator
+        self.all_adj_factors = []
 
     def transform_one_feature(self, X, k, center=True, rescale=False):
         data_blocks = []
@@ -154,13 +155,13 @@ class CompositeTransformer(BlockTransformerBase, ABC):
             data_blocks.append(data_block)
         # Return empty block if highest priority block is empty and drop_features is True
         if data_blocks[self.reference_index].shape[1] == 0:
+            self.all_adj_factors.append(np.array([np.NaN]))
             if self.drop_features:
                 return data_blocks[self.reference_index]
-            else: #return data_block with next highest priority
+            else:
                 return data_blocks[1]
-        #if self.drop_features and data_blocks[self.reference_index].shape[1] == 0:
-        #    return data_blocks[self.reference_index]
         else:
+            self.all_adj_factors.append(data_blocks[self.reference_index].std(axis = 0))
             if self.adj_std == "max":
                 adj_factor = np.array([max(data_block.std(axis=0)) for data_block in data_blocks])
             elif self.adj_std == "mean":
@@ -173,6 +174,10 @@ class CompositeTransformer(BlockTransformerBase, ABC):
             adj_factor /= adj_factor[self.reference_index] # Normalize so that reference block is unadjusted
             composite_block = np.hstack([data_blocks[i] / adj_factor[i] for i in range(len(data_blocks))])
             return composite_block
+            
+            
+        
+                
 
 
 class TreeTransformer(BlockTransformerBase, ABC):
