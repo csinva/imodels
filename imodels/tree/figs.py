@@ -200,6 +200,8 @@ class FIGS(BaseEstimator):
         else:
             self.feature_names_ = feature_names
 
+        n_samples, self.n_features_in_ = X.shape
+
         X, y = check_X_y(X, y)
         y = y.astype(float)
         if sample_weight is not None:

@@ -26,6 +26,7 @@ from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn import metrics
 
 # installable with: `pip install imodels`
+# TODO remove path when https://github.com/mepland/imodels/tree/fixes is included in regular imodels release
 import sys,os
 sys.path.append(os.path.expanduser('~/imodels'))
 
@@ -36,7 +37,7 @@ np.random.seed(13)
 
 # %% [markdown] pycharm={"name": "#%% md\n"}
 # Let's start by loading some data in...  
-# Note, weed to still load the reg dataset first to get the same splits as in `imodels_demo.ipynb` due to the call to random
+# Note, we need to still load the reg dataset first to get the same splits as in `imodels_demo.ipynb` due to the call to random
 
 # %% jupyter={"outputs_hidden": false} pycharm={"name": "#%%\n"}
 # ames housing dataset: https://www.openml.org/search?type=data&status=active&id=43926
@@ -78,9 +79,10 @@ print(model_figs.print_tree(X_train, y_train))
 # %%
 model_figs.plot(fig_size=7)
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # ***
 # # `dtreeviz` Integration
+# One tree at a time only, showing tree 0 here
 
 # %%
 from dtreeviz import trees
@@ -113,3 +115,26 @@ trees.describe_node_sample(sk_dtree, node_id=8)
 
 # %%
 trees.ctreeviz_leaf_samples(sk_dtree)
+
+# %% [markdown]
+# ***
+# # `SKompiler` Integration
+# One tree at a time only, showing tree 0 here
+#
+# Currently needs https://github.com/mepland/SKompiler/tree/fixes to run
+
+# %%
+# TODO remove path when https://github.com/mepland/SKompiler/tree/fixes is included in regular skompiler release
+import sys,os
+sys.path.append(os.path.expanduser('~/SKompiler'))
+
+from skompiler import skompile
+
+# %% tags=[]
+expr = skompile(dt.predict_proba, feat_names)
+
+# %%
+print(expr.to('sqlalchemy/sqlite', component=1, assign_to='tree_0'))
+
+# %% tags=[]
+print(expr.to('python/code'))
