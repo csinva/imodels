@@ -115,6 +115,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
     # note the trailing underscore also trips the sklearn_is_fitted protections
     _state['tree_'] = tree
     _state['classes_'] = np.arange(n_classes)
+    _state['n_outputs_'] = n_outputs
 
     # construct sklearn object and __setstate__()
     if isinstance(figs, ClassifierMixin):
