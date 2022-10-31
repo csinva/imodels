@@ -26,10 +26,6 @@ from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn import metrics
 
 # installable with: `pip install imodels`
-# TODO remove path when https://github.com/mepland/imodels/tree/fixes is included in regular imodels release
-import sys,os
-sys.path.append(os.path.expanduser('~/imodels'))
-
 import imodels
 from imodels import FIGSClassifier
 import demo_helper
@@ -63,12 +59,6 @@ model_figs = FIGSClassifier(max_rules=7)
 # %% jupyter={"outputs_hidden": false} pycharm={"name": "#%%\n"}
 # specify a decision tree with a maximum depth
 model_figs.fit(X_train, y_train, feature_names=feat_names);
-
-# %%
-# calculate mse on the training data
-# probs = figs.predict_proba(X_test)
-# print(f'test mse: {np.mean(np.square(preds-y)):0.2f}')
-# demo_helper.viz_classification_preds(probs, y_test)
 
 # %%
 print(model_figs)
@@ -120,17 +110,12 @@ trees.ctreeviz_leaf_samples(sk_dtree)
 # ***
 # # `SKompiler` Integration
 # One tree at a time only, showing tree 0 here
-#
-# Currently needs https://github.com/mepland/SKompiler/tree/fixes to run
-
-# %%
-# TODO remove path when https://github.com/mepland/SKompiler/tree/fixes is included in regular skompiler release
-import sys,os
-sys.path.append(os.path.expanduser('~/SKompiler'))
-
-from skompiler import skompile
 
 # %% tags=[]
+from skompiler import skompile
+from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
+
+dt = extract_sklearn_tree_from_figs(model_figs, tree_num=0, n_classes=2)
 expr = skompile(dt.predict_proba, feat_names)
 
 # %%
