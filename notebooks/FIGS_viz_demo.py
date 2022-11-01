@@ -80,10 +80,10 @@ from dtreeviz.models.sklearn_decision_trees import ShadowSKDTree
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 
 dt = extract_sklearn_tree_from_figs(model_figs, tree_num=0, n_classes=2)
-sk_dtree = ShadowSKDTree(dt, X_train, y_train, feat_names, 'y', [0, 1])
+shadow_dtree = ShadowSKDTree(dt, X_train, y_train, feat_names, 'y', [0, 1])
 
 # %%
-trees.dtreeviz(sk_dtree)
+trees.dtreeviz(shadow_dtree)
 
 # %%
 x_example = X_train[13]
@@ -92,19 +92,19 @@ x_example = X_train[13]
 list(zip(feat_names,x_example))
 
 # %%
-print(trees.explain_prediction_path(sk_dtree, x=x_example, explanation_type='plain_english'))
+print(trees.explain_prediction_path(shadow_dtree, x=x_example, explanation_type='plain_english'))
 
 # %%
-trees.dtreeviz(sk_dtree, X=x_example)
+trees.dtreeviz(shadow_dtree, X=x_example)
 
 # %%
-trees.dtreeviz(sk_dtree, show_node_labels=True, fancy=False)
+trees.dtreeviz(shadow_dtree, show_node_labels=True, fancy=False)
 
 # %%
-trees.describe_node_sample(sk_dtree, node_id=8)
+trees.describe_node_sample(shadow_dtree, node_id=8)
 
 # %%
-trees.ctreeviz_leaf_samples(sk_dtree)
+trees.ctreeviz_leaf_samples(shadow_dtree)
 
 # %% [markdown]
 # ***
