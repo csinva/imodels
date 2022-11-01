@@ -14,6 +14,18 @@ from sklearn.preprocessing import OneHotEncoder
 from imodels.importance.representation_cleaned import TreeTransformer, IdentityTransformer, CompositeTransformer,BlockPartitionedData
 
 
+def huber_loss(y,preds,epsilon=1.35):
+    total_loss = 0
+    for i in range(len(y)):
+        sample_absolute_error = np.abs(y[i] - preds[i])
+        if sample_absolute_error < epsilon:
+            total_loss += 0.5*((y[i] - preds[i])**2)
+        else:
+            sample_robust_loss = epsilon*sample_absolute_error - 0.5*epsilon**2
+            total_loss += sample_robust_loss
+    return total_loss/len(y)
+    
+
 def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k", 
                   partial_prediction_model="auto", scoring_fn="auto",
                   include_raw=True, drop_features=True, oob=False, center=True):
@@ -446,9 +458,9 @@ class RidgeLOOPPM(GenericLOOPPM, ABC):
         self.aloo_calculator.alpha_grid = alphas
 
 class RobustLOOPPM(GenericLOOPPM,ABC):
-    def __init__(self,alpha_grid = np.logspace(0,2,25),fixed_intercept = True, **kwargs):
+    def __init__(self,alpha_grid = np.linspace(1,4,25),fixed_intercept = True, **kwargs):
         super().__init__(HuberRegressor(**kwargs),alpha_grid,l_dot = lambda a,b,c: (b-a)/(1 + ((a-b)/c)**2)**0.5,
-                         l_doubledot = lambda a,b,c : (1 + (((a-b)/c)**2))**(-1.5),hyperparameter_scorer = mean_squared_error, fixed_intercept = True)   #a is labels, b is preds, c is epsilon
+                         l_doubledot = lambda a,b,c : (1 + (((a-b)/c)**2))**(-1.5),hyperparameter_scorer = huber_loss, fixed_intercept = fixed_intercept)   #a is labels, b is preds, c is epsilon
 
 
 
@@ -496,8 +508,6 @@ class GlmAlooCalculator:
                 self.estimator.set_params(alpha=alpha)
             elif hasattr(self.estimator, "C"):
                 self.estimator.set_params(C=1/alpha)
-            elif hasattr(self.estimator,"epsilon"):
-                self.estimator.set_params(epsilon = alpha)
             else:
                 alpha = 0
             estimator = copy.deepcopy(self.estimator)
@@ -506,7 +516,7 @@ class GlmAlooCalculator:
             augmented_coef_ = extract_coef_and_intercept(estimator, merge=True)
             orig_preds = self.link_fn(X1 @ augmented_coef_)
             if hasattr(self.estimator,"epsilon"):
-                l_doubledot_vals = self.l_doubledot(y,orig_preds,alpha)
+                l_doubledot_vals = self.l_doubledot(y,orig_preds,self.estimator.epsilon)
             else:
                 l_doubledot_vals = self.l_doubledot(y, orig_preds)
             J = X1.T * l_doubledot_vals @ X1
@@ -514,15 +524,12 @@ class GlmAlooCalculator:
                 r_doubledot_vals = self.r_doubledot(augmented_coef_) * np.ones_like(augmented_coef_)
                 r_doubledot_vals[-1] = 0
                 reg_curvature = np.diag(r_doubledot_vals)
-                if hasattr(self.estimator,"epsilon"):
-                    J += self.estimator.alpha * reg_curvature
-                else:
-                    J += alpha * reg_curvature
+                J += alpha * reg_curvature
             normal_eqn_mat = np.linalg.inv(J) @ X1.T
             h_vals = np.sum(X1.T * normal_eqn_mat, axis=0) * l_doubledot_vals
             if hasattr(self.estimator,"epsilon"):
-                a = normal_eqn_mat * self.l_dot(y, orig_preds,alpha) / (1 - h_vals)
-                loo_fitted_parameters = augmented_coef_[:, np.newaxis] + normal_eqn_mat * self.l_dot(y, orig_preds,alpha) / (1 - h_vals)
+                a = normal_eqn_mat * self.l_dot(y, orig_preds,self.estimator.epsilon) / (1 - h_vals)
+                loo_fitted_parameters = augmented_coef_[:, np.newaxis] + normal_eqn_mat * self.l_dot(y, orig_preds,self.estimator.epsilon) / (1 - h_vals)
             else:
                 a = normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
                 loo_fitted_parameters = augmented_coef_[:, np.newaxis] + normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
@@ -540,8 +547,12 @@ class GlmAlooCalculator:
             loo_fitted_parameters = self.get_aloo_fitted_parameters(X, y, alpha)
             X1 = np.hstack([X, np.ones((X.shape[0], 1))])
             preds = self.score_to_pred(np.sum(loo_fitted_parameters.T * X1, axis=1))
-            cv_scores[i] = self.hyperparameter_scorer(y, preds)
+            if hasattr(self.estimator,"epsilon"):
+                cv_scores[i] = self.hyperparameter_scorer(y, preds,self.estimator.epsilon)
+            else:
+                cv_scores[i] = self.hyperparameter_scorer(y, preds)
         self.alpha_ = self.alpha_grid[np.argmin(cv_scores)]
+        #print(self.alpha_)
         if return_cv:
             return self.alpha_, cv_scores
         else:
