@@ -458,7 +458,7 @@ class RidgeLOOPPM(GenericLOOPPM, ABC):
         self.aloo_calculator.alpha_grid = alphas
 
 class RobustLOOPPM(GenericLOOPPM,ABC):
-    def __init__(self,alpha_grid = np.linspace(1,4,25),fixed_intercept = True, **kwargs):
+    def __init__(self,alpha_grid = np.linspace(-4,3,100),fixed_intercept = True, **kwargs):
         super().__init__(HuberRegressor(**kwargs),alpha_grid,l_dot = lambda a,b,c: (b-a)/(1 + ((a-b)/c)**2)**0.5,
                          l_doubledot = lambda a,b,c : (1 + (((a-b)/c)**2))**(-1.5),hyperparameter_scorer = huber_loss, fixed_intercept = fixed_intercept)   #a is labels, b is preds, c is epsilon
 
