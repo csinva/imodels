@@ -7,7 +7,7 @@ import scipy as sp
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.ensemble._forest import _generate_unsampled_indices, _generate_sample_indices
-from sklearn.linear_model import RidgeCV, LogisticRegressionCV, Ridge, LogisticRegression
+from sklearn.linear_model import RidgeCV, LogisticRegressionCV, Ridge, LogisticRegression,HuberRegressor
 from sklearn.metrics import roc_auc_score, mean_squared_error, log_loss
 from sklearn.preprocessing import OneHotEncoder
 
@@ -41,12 +41,6 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
             scoring_fn = r2_score
         else:
             scoring_fn = roc_auc_score
-    #elif scoring_fn == "mdi_oob":
-    #    def mdi_oob_score(y_true,y_pred,partial_params):
-    #        return np.dot(y_true,y_pred - partial_params[-1])
-    #    scoring_fn = mdi_oob_score
-    #else:
-    #    scoring_fn = scoring_fn
     if not regression:
         if len(np.unique(y)) > 2:
             y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
@@ -451,6 +445,12 @@ class RidgeLOOPPM(GenericLOOPPM, ABC):
             alphas = alphas
         self.aloo_calculator.alpha_grid = alphas
 
+class RobustLOOPPM(GenericLOOPPM,ABC):
+    def __init__(self,alpha_grid = np.logspace(0,2,25),fixed_intercept = True, **kwargs):
+        super().__init__(HuberRegressor(**kwargs),alpha_grid,l_dot = lambda a,b,c: (b-a)/(1 + ((a-b)/c)**2)**0.5,
+                         l_doubledot = lambda a,b,c : (1 + (((a-b)/c)**2))**(-1.5),hyperparameter_scorer = mean_squared_error, fixed_intercept = True)   #a is labels, b is preds, c is epsilon
+
+
 
 class LogisticLOOPPM(GenericLOOPPM, ABC):
 
@@ -496,6 +496,8 @@ class GlmAlooCalculator:
                 self.estimator.set_params(alpha=alpha)
             elif hasattr(self.estimator, "C"):
                 self.estimator.set_params(C=1/alpha)
+            elif hasattr(self.estimator,"epsilon"):
+                self.estimator.set_params(epsilon = alpha)
             else:
                 alpha = 0
             estimator = copy.deepcopy(self.estimator)
@@ -503,17 +505,27 @@ class GlmAlooCalculator:
             X1 = np.hstack([X, np.ones((X.shape[0], 1))])
             augmented_coef_ = extract_coef_and_intercept(estimator, merge=True)
             orig_preds = self.link_fn(X1 @ augmented_coef_)
-            l_doubledot_vals = self.l_doubledot(y, orig_preds)
+            if hasattr(self.estimator,"epsilon"):
+                l_doubledot_vals = self.l_doubledot(y,orig_preds,alpha)
+            else:
+                l_doubledot_vals = self.l_doubledot(y, orig_preds)
             J = X1.T * l_doubledot_vals @ X1
             if self.r_doubledot is not None:
                 r_doubledot_vals = self.r_doubledot(augmented_coef_) * np.ones_like(augmented_coef_)
                 r_doubledot_vals[-1] = 0
                 reg_curvature = np.diag(r_doubledot_vals)
-                J += alpha * reg_curvature
+                if hasattr(self.estimator,"epsilon"):
+                    J += self.estimator.alpha * reg_curvature
+                else:
+                    J += alpha * reg_curvature
             normal_eqn_mat = np.linalg.inv(J) @ X1.T
             h_vals = np.sum(X1.T * normal_eqn_mat, axis=0) * l_doubledot_vals
-            a = normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
-            loo_fitted_parameters = augmented_coef_[:, np.newaxis] + normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
+            if hasattr(self.estimator,"epsilon"):
+                a = normal_eqn_mat * self.l_dot(y, orig_preds,alpha) / (1 - h_vals)
+                loo_fitted_parameters = augmented_coef_[:, np.newaxis] + normal_eqn_mat * self.l_dot(y, orig_preds,alpha) / (1 - h_vals)
+            else:
+                a = normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
+                loo_fitted_parameters = augmented_coef_[:, np.newaxis] + normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
             if cache:
                 self.loo_fitted_parameters = loo_fitted_parameters
                 self.estimator = estimator
