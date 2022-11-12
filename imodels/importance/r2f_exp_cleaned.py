@@ -28,7 +28,7 @@ def huber_loss(y,preds,epsilon=1.35):
 
 def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k", 
                   partial_prediction_model="auto", scoring_fn="auto",
-                  include_raw=True, drop_features=True, oob=False, center=True):
+                  include_raw=True, drop_features=True, oob=False, training=False, center=True):
 
     p = X.shape[1]
     fit = copy.deepcopy(fit)
@@ -57,7 +57,7 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
         if len(np.unique(y)) > 2:
             y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
     
-    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, oob, center,include_raw,drop_features)
+    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, oob, training, center,include_raw,drop_features)
     scores = gmdi.get_scores(X, y)
     
     results = pd.DataFrame(data={'importance': scores})
