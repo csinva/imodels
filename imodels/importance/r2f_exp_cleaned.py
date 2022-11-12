@@ -72,7 +72,7 @@ def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
 
 class GMDI:
 
-    def __init__(self, transformer, partial_prediction_model, scoring_fn, mode="keep_k", oob=False, center=True,include_raw = True, drop_features = True):
+    def __init__(self, transformer, partial_prediction_model, scoring_fn, mode="keep_k", oob=False, training=False, center=True,include_raw = True, drop_features = True):
         self.transformer = transformer
         self.partial_prediction_model = partial_prediction_model
         self.scoring_fn = scoring_fn
@@ -81,6 +81,7 @@ class GMDI:
         self._scores = None
         self.is_fitted = False
         self.oob = oob
+        self.training = training
         self.center = center
         self.include_raw = include_raw
         self.drop_features = drop_features
@@ -108,7 +109,12 @@ class GMDI:
                     data_blocks.append(blocked_data.get_all_data()[:,blocked_data.get_block_indices(k)])
             blocked_data = BlockPartitionedData(data_blocks)
         if self.oob:
-            train_blocked_data, test_blocked_data, y_train, y_test = self._train_test_split(blocked_data, y)
+            if self.training:
+                train_blocked_data, test_blocked_data, y_train, y_test = self._train_test_split(blocked_data, y)
+                test_blocked_data = copy.deepcopy(train_blocked_data)
+                y_test = copy.deepcopy(y_train)
+            else:
+                train_blocked_data, test_blocked_data, y_train, y_test = self._train_test_split(blocked_data, y)
         else:
             train_blocked_data = test_blocked_data = blocked_data
             y_train = y_test = y
@@ -458,7 +464,7 @@ class RidgeLOOPPM(GenericLOOPPM, ABC):
         self.aloo_calculator.alpha_grid = alphas
 
 class RobustLOOPPM(GenericLOOPPM,ABC):
-    def __init__(self,alpha_grid = np.linspace(-4,3,100),fixed_intercept = True, **kwargs):
+    def __init__(self,alpha_grid = np.linspace(0.01,3,100),fixed_intercept = True, **kwargs):
         super().__init__(HuberRegressor(**kwargs),alpha_grid,l_dot = lambda a,b,c: (b-a)/(1 + ((a-b)/c)**2)**0.5,
                          l_doubledot = lambda a,b,c : (1 + (((a-b)/c)**2))**(-1.5),hyperparameter_scorer = huber_loss, fixed_intercept = fixed_intercept)   #a is labels, b is preds, c is epsilon
 
