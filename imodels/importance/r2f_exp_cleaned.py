@@ -189,11 +189,12 @@ class GMDI:
 
 class GMDIEnsemble:
 
-    def __init__(self, transformers, partial_prediction_model, scoring_fn, mode="keep_k", oob=False, center=True,include_raw = True,drop_features = True):
+    def __init__(self, transformers, partial_prediction_model, scoring_fn, mode="keep_k", oob=False, training=False, center=True,include_raw = True,drop_features = True):
         self.n_transformers = len(transformers)
-        self.gmdi_objects = [GMDI(transformer, copy.deepcopy(partial_prediction_model), scoring_fn, mode, oob, center,include_raw,drop_features)
+        self.gmdi_objects = [GMDI(transformer, copy.deepcopy(partial_prediction_model), scoring_fn, mode, oob, training, center,include_raw,drop_features)
                              for transformer in transformers]
         self.oob = oob
+        self.training = training
         self.scoring_fn = scoring_fn
         self.mode = mode
         self.n_features = None
