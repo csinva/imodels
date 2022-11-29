@@ -57,7 +57,7 @@ def _extract_arrays_from_figs_tree(figs_tree):
 
     return tree_data, np.array(value_sklearn_array)
 
-def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
+def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predictions=False):
     """Takes in a FIGS model and convert tree tree_num to a sklearn decision tree
     """
 
@@ -128,4 +128,17 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
     except:
         raise Exception(f'Did not successfully run __setstate__() when translating to {type(dt)}, did sklearn update?')
 
-    return dt
+    if not with_leaf_predictions:
+        return dt
+    else:
+        leaf_values_dict = {}
+        def _read_node(node):
+            if node is None:
+                return None
+            elif node.left is None and node.right is None:
+                leaf_values_dict[node.node_id] = node.value[0][0]
+            _read_node(node.left)
+            _read_node(node.right)
+        _read_node(figs_tree)
+
+        return dt, leaf_values_dict
