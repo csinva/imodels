@@ -128,11 +128,12 @@ class GMDI:
             else:
                 full_preds_list = []
                 partial_preds_list = []
-                for j in range(y.ndim):
+                partial_params = None
+                for j in range(y.shape[1]):
                     yj_train = y_train[:, j]
                     yj_test = y_test[:, j]
-                    full_preds_j, partial_preds_j = self._fit_one_target(train_blocked_data, yj_train,
-                                                                         test_blocked_data, yj_test, multitarget=True)
+                    full_preds_j, partial_preds_j, _ = self._fit_one_target(train_blocked_data, yj_train,
+                                                                            test_blocked_data, yj_test, multitarget=True)
                     full_preds_list.append(full_preds_j)
                     partial_preds_list.append(partial_preds_j)
                 full_preds = np.array(full_preds_list).T
@@ -160,6 +161,8 @@ class GMDI:
         if self.mode == "keep_k":
             for k in range(self.n_features):
                 if self.scoring_fn == "mdi_oob":
+                    if partial_params is None:
+                        raise ValueError("scoring_fn='mdi_oob' has not been implemented for multi-task y.")
                     if len(partial_params[k]) == 1: #only intercept model 
                         self._scores[k] = np.dot(y_test,partial_preds[k] - partial_params[k])/len(y_test)
                     elif partial_params[k].ndim == 1: #partial prediction model without LOO
