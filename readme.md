@@ -28,7 +28,7 @@ Modern machine-learning models are increasingly complex, often making them diffi
 
 ```python
 from sklearn.model_selection import train_test_split
-from imodels import get_clean_dataset, HSTreeClassifierCV # import any model here
+from imodels import get_clean_dataset, HSTreeRegressorCV # import any model here
 
 # prepare data (a sample clinical dataset)
 X, y, feature_names = get_clean_dataset('csi_pecarn_pred')
