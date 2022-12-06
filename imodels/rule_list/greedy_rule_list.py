@@ -1,19 +1,25 @@
-'''Greedy rule list. Greedily splits on one feature at a time along a single path.
+'''Greedy rule list.
+Greedily splits on one feature at a time along a single path.
+Tries to find rules which maximize the probability of class 1.
+Currently only supports binary classification.
 '''
 
 import math
 from copy import deepcopy
 
+import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils import check_X_y
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_array, check_is_fitted
-
+from sklearn.tree import DecisionTreeClassifier
 from imodels.rule_list.rule_list import RuleList
 
 
 class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
-    def __init__(self, max_depth: int = 5, class_weight=None, criterion: str = 'gini', strategy: str = 'max'):
+    def __init__(self, max_depth: int = 5, class_weight=None,
+                 criterion: str = 'gini'):
         '''
         Params
         ------
@@ -21,18 +27,13 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             Maximum depth the list can achieve
         criterion: str
             Criterion used to split
-            'gini', 'entropy', or 'neg_corr'
-        strategy: str
-            How to select which side of split becomes leaf node
-            Currently only supports 'max' - (higher risk side of split becomes leaf node)
+            'gini', 'entropy', or 'log_loss'
         '''
 
         self.max_depth = max_depth
         self.class_weight = class_weight
         self.criterion = criterion
-        self.strategy = strategy
         self.depth = 0  # tracks the fitted depth
-        self._estimator_type = 'classifier'
 
     def fit(self, X, y, depth: int = 0, feature_names=None, verbose=False):
         """
@@ -46,48 +47,54 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             the depth of the current layer (used to recurse)
         """
 
-        # set self.feature_names and make sure X, y are not pandas type
-        if 'pandas' in str(type(X)):
-            X = X.values
+        if feature_names is None:
+            if isinstance(X, pd.DataFrame):
+                self.feature_names_ = X.columns
+            else:
+                self.feature_names_ = ['X' + str(i) for i in range(X.shape[1])]
         else:
-            if feature_names is None:
-                self.feature_names_ = ['feat ' + str(i) for i in range(X.shape[1])]
-        if feature_names is not None:
             self.feature_names_ = feature_names
+        X, y = check_X_y(X, y)
+        return self.fit_node_recursive(X, y, depth=0, verbose=verbose)
+
+    def fit_node_recursive(self, X, y, depth: int, verbose):
 
         # base case 1: no data in this group
-        if len(y) == 0:
+        if y.size == 0:
             return []
 
         # base case 2: all y is the same in this group
-        elif self._all_same(y):
+        elif np.all(y == y[0]):
             return [{'val': y[0], 'num_pts': y.size}]
 
-        # base case 3: max depth reached 
+        # base case 3: max depth reached
         elif depth >= self.max_depth:
             return []
 
-        # recursively generate rule list 
+        # recursively generate rule list
         else:
 
             # find a split with the best value for the criterion
-            col, cutoff, criterion_val = self._find_best_split(X, y)
+            m = DecisionTreeClassifier(max_depth=1, criterion=self.criterion)
+            m.fit(X, y)
+            col = m.tree_.feature[0]
+            cutoff = m.tree_.threshold[0]
+            # col, cutoff, criterion_val = self._find_best_split(X, y)
+            
+            y_left = y[X[:, col] < cutoff]  # left-hand side data
+            y_right = y[X[:, col] >= cutoff]  # right-hand side data
+
 
             # put higher probability of class 1 on the right-hand side
-            if self.strategy == 'max':
-                y_left = y[X[:, col] < cutoff]  # left-hand side data
-                y_right = y[X[:, col] >= cutoff]  # right-hand side data
-                if len(y_left) > 0 and np.mean(y_left) > np.mean(y_right):
-                    flip = True
-                    tmp = deepcopy(y_left)
-                    y_left = deepcopy(y_right)
-                    y_right = tmp
-                    x_left = X[X[:, col] >= cutoff]
-                else:
-                    flip = False
-                    x_left = X[X[:, col] < cutoff]
+            if len(y_left) > 0 and np.mean(y_left) > np.mean(y_right):
+                flip = True
+                tmp = deepcopy(y_left)
+                y_left = deepcopy(y_right)
+                y_right = tmp
+                x_left = X[X[:, col] >= cutoff]
             else:
-                print('strategy must be max!')
+                flip = False
+                x_left = X[X[:, col] < cutoff]
 
             # print
             if verbose:
@@ -107,7 +114,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             }]
 
             # generate tree for the non-leaf data
-            par_node = par_node + self.fit(x_left, y_left, depth + 1, feature_names=feature_names, verbose=verbose)
+            par_node = par_node + \
+                self.fit_node_recursive(x_left, y_left, depth + 1, verbose=verbose)
 
             self.depth += 1  # increase the depth since we call fit once
             self.rules_ = par_node
@@ -173,9 +181,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
         print(s)
 
-    def _all_same(self, items):
-        return all(x == items[0] for x in items)
-
+    ######## HERE ONWARDS CUSTOM SPLITTING (DEPRECATED IN FAVOR OF SKLEARN STUMP) ########
+    ######################################################################################
     def _find_best_split(self, x, y):
         """
         Find the best split from all features

@@ -197,6 +197,8 @@ class FIGS(BaseEstimator):
         if feature_names is None:
             if isinstance(X, pd.DataFrame):
                 self.feature_names_ = X.columns
+            else:
+                self.feature_names_ = ['X' + str(i) for i in range(X.shape[1])]
         else:
             self.feature_names_ = feature_names
 
