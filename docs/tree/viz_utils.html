@@ -80,7 +80,7 @@ def _extract_arrays_from_figs_tree(figs_tree):
 
     return tree_data, np.array(value_sklearn_array)
 
-def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
+def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predictions=False):
     &#34;&#34;&#34;Takes in a FIGS model and convert tree tree_num to a sklearn decision tree
     &#34;&#34;&#34;
 
@@ -114,7 +114,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
     # n_samples = np.sum(figs_tree.value_sklearn)
     node_count = len(tree_data_array)
     features = np.array(tree_data_namedtuple.feature)
-    n_features = np.unique(features[np.where( 0 &lt; features )]).size
+    n_features = np.unique(features[np.where( 0 &lt;= features )]).size
     n_classes_array = np.array([n_classes], dtype=int)
     n_outputs = 1
 
@@ -123,6 +123,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
         &#39;node_count&#39;: node_count,
         &#39;nodes&#39;: tree_data_array,
         &#39;values&#39;: value_sklearns,
+        &#39;n_features_in_&#39;: figs.n_features_in_,
         # WARNING this circumvents
         # UserWarning: Trying to unpickle estimator DecisionTreeClassifier from version pre-0.18 when using version
         # https://github.com/scikit-learn/scikit-learn/blob/53acd0fe52cb5d8c6f5a86a1fc1352809240b68d/sklearn/base.py#L279
@@ -137,6 +138,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
     # note the trailing underscore also trips the sklearn_is_fitted protections
     _state[&#39;tree_&#39;] = tree
     _state[&#39;classes_&#39;] = np.arange(n_classes)
+    _state[&#39;n_outputs_&#39;] = n_outputs
 
     # construct sklearn object and __setstate__()
     if isinstance(figs, ClassifierMixin):
@@ -149,7 +151,20 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
     except:
         raise Exception(f&#39;Did not successfully run __setstate__() when translating to {type(dt)}, did sklearn update?&#39;)
 
-    return dt</code></pre>
+    if not with_leaf_predictions:
+        return dt
+    else:
+        leaf_values_dict = {}
+        def _read_node(node):
+            if node is None:
+                return None
+            elif node.left is None and node.right is None:
+                leaf_values_dict[node.node_id] = node.value[0][0]
+            _read_node(node.left)
+            _read_node(node.right)
+        _read_node(figs_tree)
+
+        return dt, leaf_values_dict</code></pre>
 </details>
 </section>
 <section>
@@ -160,7 +175,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="imodels.tree.viz_utils.extract_sklearn_tree_from_figs"><code class="name flex">
-<span>def <span class="ident">extract_sklearn_tree_from_figs</span></span>(<span>figs, tree_num, n_classes)</span>
+<span>def <span class="ident">extract_sklearn_tree_from_figs</span></span>(<span>figs, tree_num, n_classes, with_leaf_predictions=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Takes in a FIGS model and convert tree tree_num to a sklearn decision tree</p></div>
@@ -168,7 +183,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
+<pre><code class="python">def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predictions=False):
     &#34;&#34;&#34;Takes in a FIGS model and convert tree tree_num to a sklearn decision tree
     &#34;&#34;&#34;
 
@@ -202,7 +217,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
     # n_samples = np.sum(figs_tree.value_sklearn)
     node_count = len(tree_data_array)
     features = np.array(tree_data_namedtuple.feature)
-    n_features = np.unique(features[np.where( 0 &lt; features )]).size
+    n_features = np.unique(features[np.where( 0 &lt;= features )]).size
     n_classes_array = np.array([n_classes], dtype=int)
     n_outputs = 1
 
@@ -211,6 +226,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
         &#39;node_count&#39;: node_count,
         &#39;nodes&#39;: tree_data_array,
         &#39;values&#39;: value_sklearns,
+        &#39;n_features_in_&#39;: figs.n_features_in_,
         # WARNING this circumvents
         # UserWarning: Trying to unpickle estimator DecisionTreeClassifier from version pre-0.18 when using version
         # https://github.com/scikit-learn/scikit-learn/blob/53acd0fe52cb5d8c6f5a86a1fc1352809240b68d/sklearn/base.py#L279
@@ -225,6 +241,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
     # note the trailing underscore also trips the sklearn_is_fitted protections
     _state[&#39;tree_&#39;] = tree
     _state[&#39;classes_&#39;] = np.arange(n_classes)
+    _state[&#39;n_outputs_&#39;] = n_outputs
 
     # construct sklearn object and __setstate__()
     if isinstance(figs, ClassifierMixin):
@@ -237,7 +254,20 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes):
     except:
         raise Exception(f&#39;Did not successfully run __setstate__() when translating to {type(dt)}, did sklearn update?&#39;)
 
-    return dt</code></pre>
+    if not with_leaf_predictions:
+        return dt
+    else:
+        leaf_values_dict = {}
+        def _read_node(node):
+            if node is None:
+                return None
+            elif node.left is None and node.right is None:
+                leaf_values_dict[node.node_id] = node.value[0][0]
+            _read_node(node.left)
+            _read_node(node.right)
+        _read_node(figs_tree)
+
+        return dt, leaf_values_dict</code></pre>
 </details>
 </dd>
 </dl>

@@ -220,8 +220,12 @@ class FIGS(BaseEstimator):
         if feature_names is None:
             if isinstance(X, pd.DataFrame):
                 self.feature_names_ = X.columns
+            else:
+                self.feature_names_ = [&#39;X&#39; + str(i) for i in range(X.shape[1])]
         else:
             self.feature_names_ = feature_names
+
+        n_samples, self.n_features_in_ = X.shape
 
         X, y = check_X_y(X, y)
         y = y.astype(float)
@@ -728,8 +732,12 @@ The number of features to consider when looking for the best split (see <a href=
         if feature_names is None:
             if isinstance(X, pd.DataFrame):
                 self.feature_names_ = X.columns
+            else:
+                self.feature_names_ = [&#39;X&#39; + str(i) for i in range(X.shape[1])]
         else:
             self.feature_names_ = feature_names
+
+        n_samples, self.n_features_in_ = X.shape
 
         X, y = check_X_y(X, y)
         y = y.astype(float)
@@ -1037,8 +1045,12 @@ are ignored while searching for a split in each node.</p></div>
     if feature_names is None:
         if isinstance(X, pd.DataFrame):
             self.feature_names_ = X.columns
+        else:
+            self.feature_names_ = [&#39;X&#39; + str(i) for i in range(X.shape[1])]
     else:
         self.feature_names_ = feature_names
+
+    n_samples, self.n_features_in_ = X.shape
 
     X, y = check_X_y(X, y)
     y = y.astype(float)
