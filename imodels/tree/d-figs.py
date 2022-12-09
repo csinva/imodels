@@ -26,7 +26,7 @@ class D_FIGS(FIGSRegressor):
     feature_phases = None
 
     def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None,
-                 max_features: str = None, feature_phases={}):
+                 max_features: str = None, feature_phases=None):
         super().__init__(max_rules, min_impurity_decrease, random_state, max_features)
         self.feature_phases = feature_phases
 
@@ -59,6 +59,7 @@ class D_FIGS(FIGSRegressor):
     def fit_phase_1(self, X, y):
         self.fit(X, y)
         # Store a deep copy of the whole model for easier prediction use in the future
+        self.feature_phases = {}
         self.feature_phases[1] = (X, y, deepcopy(self))
         return self
 
@@ -84,6 +85,69 @@ class D_FIGS(FIGSRegressor):
         self.extend_trees(X, y, all_leaves, max_rules=max_rules)
         self.feature_phases[phase_idx + 1] = (X, y, deepcopy(self))
         return self
+
+    '''
+    This will infer the newly added features from the last stored X
+    This function only delete samples for a newly generated root!!!
+    '''
+
+    def remove_na_samples(self, X):
+        phase_idx = len(self.feature_phases)  # infer the number of phase from the dict
+        prev_phase = self.feature_phases[phase_idx][0]
+        new_phase = X[:, len(prev_phase[0]):]
+        cur_idxs = np.ones(X.shape[0], dtype=bool)
+        for i in range(len(cur_idxs)):
+            if cur_idxs[i]:
+                new_feature = new_phase[i]
+                # new phase features for the particular sample i
+                # If the new phase has nan, which means it is not valid and should be false in the idxs
+                if np.isnan(new_feature).any():
+                    cur_idxs[i] = False
+        return cur_idxs
+
+    def update_potential_splits(self, X, y, potential_splits, y_predictions_per_tree, y_residuals_per_tree):
+
+        for tree_num_ in range(len(self.trees_)):
+            y_predictions_per_tree[tree_num_] = self._predict_tree(self.trees_[tree_num_], X)
+        y_predictions_per_tree[-1] = np.zeros(X.shape[0])  # dummy 0 preds for possible new trees
+
+        # update residuals for each tree
+        # -1 is key for potential new tree
+        for tree_num_ in list(range(len(self.trees_))) + [-1]:
+            y_residuals_per_tree[tree_num_] = deepcopy(y)
+
+            # subtract predictions of all other trees
+            for tree_num_other_ in range(len(self.trees_)):
+                if not tree_num_other_ == tree_num_:
+                    y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_other_]
+
+        # recompute all impurities + update potential_split children
+        potential_splits_new = []
+        for potential_split in potential_splits:
+            y_target = y_residuals_per_tree[potential_split.tree_num]
+
+            # re-calculate the best split
+            potential_split_updated = self._construct_node_with_stump(X=X,
+                                                                      y=y_target,
+                                                                      idxs=potential_split.idxs,
+                                                                      tree_num=potential_split.tree_num,
+                                                                      max_features=self.max_features)
+
+            # need to preserve certain attributes from before (value at this split + is_root)
+            # value may change because residuals may have changed, but we want it to store the value from before
+            potential_split.setattrs(
+                feature=potential_split_updated.feature,
+                threshold=potential_split_updated.threshold,
+                impurity_reduction=potential_split_updated.impurity_reduction,
+                left_temp=potential_split_updated.left_temp,
+                right_temp=potential_split_updated.right_temp,
+            )
+
+            # this is a valid split
+            if potential_split.impurity_reduction is not None:
+                potential_splits_new.append(potential_split)
+        sorted_potential_splits_new = sorted(potential_splits_new, key=lambda x: x.impurity_reduction)
+        return sorted_potential_splits_new, y_predictions_per_tree, y_residuals_per_tree
 
     def extend_trees(self, X, y, all_leaves, max_rules=15):
         # Need to add max_rules each time so that it's bigger than the complexity
@@ -115,10 +179,95 @@ class D_FIGS(FIGSRegressor):
                               idxs=potential_split.idxs)
                 # Add to the potential splits, and do the same fitting process as in the fig
                 potential_splits.append(leaf)
+        '''
+        phase_idx = len(self.feature_phases)  # infer the number of phase from the dict
+        prev_phase = self.feature_phases[phase_idx][0]
+        new_phase = X[:, len(prev_phase[0]):]
+        cur_idxs = np.ones(X.shape[0], dtype=bool)
+        for i in range(len(cur_idxs)):
+            if cur_idxs[i]:
+                new_feature = new_phase[i]
+                # new phase features for the particular sample i
+                # If the new phase has nan, which means it is not valid and should be false in the idxs
+                if np.isnan(new_feature).any():
+                    cur_idxs[i] = False
+        '''
+        cur_idxs = self.remove_na_samples(X)
+        node_new_root = Node(is_root=True, idxs=cur_idxs,
+                             tree_num=-1)
+        potential_splits.append(node_new_root)
+        # //TODO DEBUG
+        '''
+        ## Add new root
+        phase_idx = len(self.feature_phases)  # infer the number of phase from the dict
+        prev_phase = self.feature_phases[phase_idx][0]
+        new_phase = X[:, len(prev_phase[0]):]
+        cur_idxs = np.ones(X.shape[0], dtype=bool)
+        for i in range(len(cur_idxs)):
+            if cur_idxs[i]:
+                new_feature = new_phase[i]
+                # new phase features for the particular sample i
+                # If the new phase has nan, which means it is not valid and should be false in the idxs
+                if np.isnan(new_feature).any():
+                    cur_idxs[i] = False
+        node_new_root = Node(is_root=True, idxs=cur_idxs,
+                             tree_num=-1)
+        potential_splits.append(node_new_root)
 
+
+        for tree_num_ in range(len(self.trees_)):
+            y_predictions_per_tree[tree_num_] = self._predict_tree(self.trees_[tree_num_], X)
+        y_predictions_per_tree[-1] = np.zeros(X.shape[0])  # dummy 0 preds for possible new trees
+
+        # update residuals for each tree
+        # -1 is key for potential new tree
+        for tree_num_ in list(range(len(self.trees_))) + [-1]:
+            y_residuals_per_tree[tree_num_] = deepcopy(y)
+
+            # subtract predictions of all other trees
+            for tree_num_other_ in range(len(self.trees_)):
+                if not tree_num_other_ == tree_num_:
+                    y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[tree_num_other_]
+
+        # recompute all impurities + update potential_split children
+        potential_splits_new = []
+        for potential_split in potential_splits:
+            y_target = y_residuals_per_tree[potential_split.tree_num]
+
+            # re-calculate the best split
+            potential_split_updated = self._construct_node_with_stump(X=X,
+                                                                      y=y_target,
+                                                                      idxs=potential_split.idxs,
+                                                                      tree_num=potential_split.tree_num,
+                                                                      max_features=self.max_features)
+
+            # need to preserve certain attributes from before (value at this split + is_root)
+            # value may change because residuals may have changed, but we want it to store the value from before
+            potential_split.setattrs(
+                feature=potential_split_updated.feature,
+                threshold=potential_split_updated.threshold,
+                impurity_reduction=potential_split_updated.impurity_reduction,
+                left_temp=potential_split_updated.left_temp,
+                right_temp=potential_split_updated.right_temp,
+            )
+
+            # this is a valid split
+            if potential_split.impurity_reduction is not None:
+                potential_splits_new.append(potential_split)
+        '''
+        # sort so the largest impurity reduction comes last (should probs make this a heap later)
+        potential_splits, y_predictions_per_tree, y_residuals_per_tree = self.update_potential_splits(X,
+                                                                                                      y,
+                                                                                                      potential_splits,
+                                                                                                      y_predictions_per_tree,
+                                                                                                      y_residuals_per_tree)
+        # //TODO DEBUG END
         # for i in potential_splits:
         #    print(i.impurity_reduction)
-        potential_splits = sorted(potential_splits, key=lambda x: x.impurity_reduction)
+
+        # original: line 253
+        # potential_splits = sorted(potential_splits, key=lambda x: x.impurity_reduction)
+
         finished = False
         while len(potential_splits) > 0 and not finished:
             # print('potential_splits', [str(s) for s in potential_splits])
@@ -143,6 +292,7 @@ class D_FIGS(FIGSRegressor):
                         node_.tree_num = len(self.trees_) - 1
 
                 # add new root potential node
+                '''
                 phase_idx = len(self.feature_phases)  # infer the number of phase from the dict
                 prev_phase = self.feature_phases[phase_idx][0]
                 new_phase = X[:, len(prev_phase[0]):]
@@ -154,25 +304,8 @@ class D_FIGS(FIGSRegressor):
                         # If the new phase has nan, which means it is not valid and should be false in the idxs
                         if np.isnan(new_feature).any():
                             cur_idxs[i] = False
-                node_new_root = Node(is_root=True, idxs=cur_idxs,
-                                     tree_num=-1)
-                potential_splits.append(node_new_root)
-
-            if first_extend:
-                first_extend = False
-                # Since we consider about deleting samples with na features,
-                # we should do the same for the new node
-                phase_idx = len(self.feature_phases)  # infer the number of phase from the dict
-                prev_phase = self.feature_phases[phase_idx][0]
-                new_phase = X[:, len(prev_phase[0]):]
-                cur_idxs = np.ones(X.shape[0], dtype=bool)
-                for i in range(len(cur_idxs)):
-                    if cur_idxs[i]:
-                        new_feature = new_phase[i]
-                        # new phase features for the particular sample i
-                        # If the new phase has nan, which means it is not valid and should be false in the idxs
-                        if np.isnan(new_feature).any():
-                            cur_idxs[i] = False
+                '''
+                cur_idxs = self.remove_na_samples(X)
                 node_new_root = Node(is_root=True, idxs=cur_idxs,
                                      tree_num=-1)
                 potential_splits.append(node_new_root)
@@ -186,6 +319,8 @@ class D_FIGS(FIGSRegressor):
             potential_splits.append(split_node.left)
             potential_splits.append(split_node.right)
 
+            '''
+            Debug, replace with function
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
                 y_predictions_per_tree[tree_num_] = self._predict_tree(self.trees_[tree_num_], X)
@@ -228,7 +363,14 @@ class D_FIGS(FIGSRegressor):
                     potential_splits_new.append(potential_split)
 
             # sort so largest impurity reduction comes last (should probs make this a heap later)
-            potential_splits = sorted(potential_splits_new, key=lambda x: x.impurity_reduction)
+            '''
+
+            # potential_splits = sorted(potential_splits_new, key=lambda x: x.impurity_reduction)
+            potential_splits, y_predictions_per_tree, y_residuals_per_tree = self.update_potential_splits(X,
+                                                                                                          y,
+                                                                                                          potential_splits,
+                                                                                                          y_predictions_per_tree,
+                                                                                                          y_residuals_per_tree)
             if self.max_rules is not None and self.complexity_ >= self.max_rules:
                 finished = True
                 break
@@ -278,6 +420,10 @@ class D_FIGS(FIGSRegressor):
                 s2.append(curr)
         return s2
 
+    def predict_phase_i(self, X, phase):
+        model = self.feature_phases[phase][2]
+        return model.predict(X)
+
 
 if __name__ == '__main__':
     '''
@@ -305,12 +451,15 @@ if __name__ == '__main__':
     # Data generating function
     # 1[X0 < 0.5 and X1 < 0.5] + 1[X2 < 0.5 and X3 < 0.5]
     # This is uniform since NaN is Float
-    X_fig_large_na = np.random.uniform(0, 1, (20000, 4))
-    y_fig_large_na = [0.0] * 20000
+
+    X_fig_large_na = np.random.uniform(0, 1, (50000, 4))
+    y_fig_large_na = [0.0] * 50000
     for idx in range(len(X_fig_large_na)):
         x1_x2 = X_fig_large_na[idx][0] < 0.5 and X_fig_large_na[idx][1] < 0.5
         x3_x4 = X_fig_large_na[idx][2] < 0.5 and X_fig_large_na[idx][3] < 0.5
         prob = np.random.uniform(0, 1)
+        # This data generating function will also randomly assign na to the second phase
+
         if prob <= 0.2:
             X_fig_large_na[idx][2] = np.nan
             X_fig_large_na[idx][3] = np.nan
@@ -320,12 +469,35 @@ if __name__ == '__main__':
         elif x1_x2 or x3_x4:
             y_fig_large_na[idx] = 1.0
     X_fig_large_1_na = X_fig_large_na[:, :2]
+
     if (np.isnan(X_fig_large_na).any()):
         print("The later phase has missing values, (some samples' features are nan)")
-    clf1 = D_FIGS(max_rules=4)
-    clf1.fit_phase_1(X_fig_large_1_na, np.array(y_fig_large_na))
-    clf1.fit_phase_n(X_fig_large_na, np.array(y_fig_large_na), max_rules=8)
-    print(clf1.predict(
+
+    d_fig = D_FIGS(max_rules=2)
+    d_fig.fit_phase_1(X_fig_large_1_na, np.array(y_fig_large_na))
+    d_fig.fit_phase_n(X_fig_large_na, np.array(y_fig_large_na), max_rules=2)
+    print(d_fig.predict(
         [[1, 1, 1, 1], [1, 0, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 1, 1], [0, 0, 1, 0], [1, 0, 1, 0]]))
     print("")
     print("Correct answer is" + "[0, 1, 1, 2, 1, 1, 0]")
+
+
+    '''
+    node = Node()
+    node.idxs = [False, True, False]
+    node2 = Node()
+    node2.idxs = [False, True, False]
+    all_leaves = []
+    all_leaves += [node]
+    all_leaves += [node2]
+    for node in all_leaves:
+        print(node.idxs)
+        for i in range(len(node.idxs)):
+            if node.idxs[i]:
+                node.idxs[i] = False
+    for node in all_leaves:
+        print(node.idxs)
+    '''
+
+
+
