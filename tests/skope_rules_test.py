@@ -70,7 +70,7 @@ def test_skope_rules_error():
     # explicitly setting max_samples > n_samples should result in a warning.
     assert_warns(UserWarning,
                  SkopeRulesClassifier(max_samples=1000).fit, X, y)
-    assert_no_warnings(SkopeRulesClassifier(max_samples=np.int64(2)).fit, X, y)
+    # assert_no_warnings(SkopeRulesClassifier(max_samples=np.int64(2)).fit, X, y)
     assert_raises(ValueError, SkopeRulesClassifier(max_samples='foobar').fit, X, y)
     assert_raises(ValueError, SkopeRulesClassifier(max_samples=1.5).fit, X, y)
     assert_raises(ValueError, SkopeRulesClassifier(max_depth_duplication=1.5).fit, X, y)
