@@ -25,22 +25,25 @@
 from functools import partial
 
 import numpy as np
+import sklearn
+from sklearn.ensemble import AdaBoostClassifier, AdaBoostRegressor
 from sklearn.base import BaseEstimator, ClassifierMixin, MetaEstimatorMixin
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import normalize
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
 from imodels.rule_set.slipper_util import SlipperBaseEstimator
+from imodels.util.arguments import check_fit_arguments
 from imodels.util.convert import tree_to_code, tree_to_rules, dict_to_rule
 from imodels.util.rule import Rule, get_feature_dict, replace_feature_name
 
 
-class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, ClassifierMixin):
+class BoostedRulesClassifier(AdaBoostClassifier):
     &#39;&#39;&#39;An easy-interpretable classifier optimizing simple logical rules.
-    Currently limited to only binary classification.
-    
+
     Params
     ------
     estimator: object with fit and predict methods
@@ -48,148 +51,67 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
         For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator
     &#39;&#39;&#39;
 
-    def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1), random_state=0):
-        self.n_estimators = n_estimators
-        self.estimator = estimator
-        self.random_state = random_state
+    def __init__(
+        self,
+        estimator=partial(DecisionTreeClassifier, max_depth=1),
+        *,
+        n_estimators=15,
+        learning_rate=1.0,
+        random_state=None,
+    ):
 
-    def fit(self, X, y, feature_names=None, sample_weight=None):
-        &#34;&#34;&#34;Fit the model according to the given training data.
+        super().__init__(
+            base_estimator=estimator(), # in 1.2, this was renamed to just estimator
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            random_state=random_state,
+        )
+        # self.estimator = estimator
 
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            Training vector, where n_samples is the number of samples and
-            n_features is the number of features.
+    def fit(self, X, y, feature_names=None, **kwargs):
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        super().fit(X, y, **kwargs)
 
-        y : array-like, shape (n_samples,)
-            Target vector relative to X. Has to follow the convention 0 for
-            normal data, 1 for anomalies.
+class BoostedRulesRegressor(AdaBoostRegressor):
+    &#39;&#39;&#39;An easy-interpretable regressor optimizing simple logical rules.
 
-        sample_weight : array-like, shape (n_samples,) optional
-            Array of weights that are assigned to individual samples, typically
-            the amount in case of transactions data. Used to grow regression
-            trees producing further rules to be tested.
-            If not provided, then each sample is given unit weight.
+    Params
+    ------
+    estimator: object with fit and predict methods
+        Defaults to DecisionTreeRegressor with AdaBoost.
+    &#39;&#39;&#39;
 
-        Returns
-        -------
-        self : object
-            Returns self.
-        &#34;&#34;&#34;
+    def __init__(
+        self,
+        estimator=partial(DecisionTreeRegressor, max_depth=1),
+        *,
+        n_estimators=15,
+        learning_rate=1.0,
+        random_state=13,
+    ):
 
-        X, y = check_X_y(X, y)
-        check_classification_targets(y)
-        self.n_features_ = X.shape[1]
-        self.classes_ = unique_labels(y)
-        np.random.seed(self.random_state)
+        super().__init__(
+            base_estimator=estimator(), # in 1.2, this was renamed to just estimator
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            random_state=random_state,
+        )
+        # self.estimator = estimator
 
-        if feature_names is None:
-            feature_names = [f&#39;X_{i + 1}&#39; for i in range(X.shape[1])]
-        self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
-        self.feature_placeholders = list(self.feature_dict_.keys())
-        self.feature_names = list(self.feature_dict_.values())
+    def fit(self, X, y, feature_names=None, **kwargs):
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        super().fit(X, y, **kwargs)
 
-        n_train = y.shape[0]
-        w = np.ones(n_train) / n_train
-        self.estimators_ = []
-        self.estimator_weights_ = []
-        self.estimator_errors_ = []
-        self.estimator_mean_prediction_ = [] # this is just for printing
-        if feature_names is not None:
-            self.feature_names = feature_names
-        for _ in range(self.n_estimators):
-            # Fit a classifier with the specific weights
-            clf = self.estimator()
-            clf.fit(X, y, sample_weight=w)  # uses w as the sampling weight!
-            preds = clf.predict(X)
-            self.estimator_mean_prediction_.append(np.mean(preds)) # just for printing
 
-            # Indicator function
-            miss = preds != y
-
-            # Equivalent with 1/-1 to update weights
-            miss2 = np.ones(miss.size)
-            miss2[~miss] = -1
-
-            # Error
-            err_m = np.dot(w, miss) / sum(w)
-            if err_m &lt; 1e-3:
-                return self
-
-            # Alpha
-            alpha_m = 0.5 * np.log((1 - err_m) / float(err_m))
-
-            # New weights
-            w = np.multiply(w, np.exp([float(x) * alpha_m
-                                       for x in miss2]))
-
-            self.estimators_.append(deepcopy(clf))
-            self.estimator_weights_.append(alpha_m)
-            self.estimator_errors_.append(err_m)
-
-        rules = []
-
-        for est, est_weight in zip(self.estimators_, self.estimator_weights_):
-            if type(clf) == DecisionTreeClassifier:
-                est_rules_values = tree_to_rules(est, self.feature_placeholders, prediction_values=True)
-                est_rules = list(map(lambda x: x[0], est_rules_values))
-
-                # BRS scores are difference between class 1 % and class 0 % in a node
-                est_values = np.array(list(map(lambda x: x[1], est_rules_values)))
-                rule_scores = (est_values[:, 1] - est_values[:, 0]) / est_values.sum(axis=1)
-
-                compos_score = est_weight * rule_scores
-                rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
-
-            if type(clf) == SlipperBaseEstimator:
-                # SLIPPER uses uniform confidence over in rule observations
-                est_rule = dict_to_rule(est.rule, est.feature_dict)
-                rules += [Rule(est_rule, args=[est_weight])]
-
-        self.rules_without_feature_names_ = rules
-        self.rules_ = [
-            replace_feature_name(rule, self.feature_dict_)
-            for rule in self.rules_without_feature_names_
-        ]
-        self.complexity_ = self._get_complexity()
-        return self
-
-    def predict_proba(self, X):
-        &#39;&#39;&#39; Predict probabilities for X &#39;&#39;&#39;
-        check_is_fitted(self)
-        X = check_array(X)
-
-        # Add to prediction
-        n_train = X.shape[0]
-        n_estimators = len(self.estimators_)
-        n_classes = 2  # hard-coded for now!
-        preds = np.zeros((n_train, n_classes))
-        for i in range(n_estimators):
-            preds += self.estimator_weights_[i] * self.estimators_[i].predict_proba(X)
-        pred_values = preds / n_estimators
-        return normalize(pred_values, norm=&#39;l1&#39;)
-
-    def predict(self, X):
-        &#34;&#34;&#34;Predict outcome for X
-        &#34;&#34;&#34;
-        check_is_fitted(self)
-        X = check_array(X)
-        return self._eval_weighted_rule_sum(X) &gt; 0
-
-    def __str__(self):
-        try:
-            s = &#39;&gt; ------------------------------\n&#39;
-            s += &#39;&gt; BoostedRules:\n&#39;
-            s += &#39;&gt; \tRule \u2192 predicted probability (final prediction is weighted sum of all predictions)\n&#39;
-            s += &#39;&gt; ------------------------------\n&#39;
-            for i in range(len(self.estimators_)):
-                s += f&#39;  If\033[96m {str(self.rules_[i])}\033[00m \u2192 {self.estimator_mean_prediction_[i]:.2f} (weight: {self.estimator_weights_[i]:.2f})\n&#39;
-            # for est in self.estimators_:
-            #     s += &#39;\t&#39; + tree_to_code(est, self.feature_names)
-            return s
-        except:
-            return f&#39;BoostedRules with {len(self.estimators_)} estimators&#39;</code></pre>
+if __name__ == &#39;__main__&#39;:
+    np.random.seed(13)
+    X, Y = sklearn.datasets.load_breast_cancer(as_frame=True, return_X_y=True)
+    model = BoostedRulesClassifier(estimator=SlipperBaseEstimator)
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.3)
+    model.fit(X_train, y_train, feature_names=X_train.columns)
+    y_pred = model.predict(X_test)
+    acc = model.score(X_test, y_test)
+    print(&#39;acc&#39;, acc)</code></pre>
 </details>
 </section>
 <section>
@@ -203,11 +125,10 @@ class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, Classif
 <dl>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier"><code class="flex name class">
 <span>class <span class="ident">BoostedRulesClassifier</span></span>
-<span>(</span><span>n_estimators=10, estimator=functools.partial(&lt;class &#x27;sklearn.tree._classes.DecisionTreeClassifier&#x27;&gt;, max_depth=1), random_state=0)</span>
+<span>(</span><span>estimator=functools.partial(&lt;class &#x27;sklearn.tree._classes.DecisionTreeClassifier&#x27;&gt;, max_depth=1), *, n_estimators=15, learning_rate=1.0, random_state=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>An easy-interpretable classifier optimizing simple logical rules.
-Currently limited to only binary classification.</p>
+<div class="desc"><p>An easy-interpretable classifier optimizing simple logical rules.</p>
 <h2 id="params">Params</h2>
 <p>estimator: object with fit and predict methods
 Defaults to DecisionTreeClassifier with AdaBoost.
@@ -216,10 +137,9 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BoostedRulesClassifier(RuleSet, BaseEstimator, MetaEstimatorMixin, ClassifierMixin):
+<pre><code class="python">class BoostedRulesClassifier(AdaBoostClassifier):
     &#39;&#39;&#39;An easy-interpretable classifier optimizing simple logical rules.
-    Currently limited to only binary classification.
-    
+
     Params
     ------
     estimator: object with fit and predict methods
@@ -227,155 +147,35 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
         For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator
     &#39;&#39;&#39;
 
-    def __init__(self, n_estimators=10, estimator=partial(DecisionTreeClassifier, max_depth=1), random_state=0):
-        self.n_estimators = n_estimators
-        self.estimator = estimator
-        self.random_state = random_state
+    def __init__(
+        self,
+        estimator=partial(DecisionTreeClassifier, max_depth=1),
+        *,
+        n_estimators=15,
+        learning_rate=1.0,
+        random_state=None,
+    ):
 
-    def fit(self, X, y, feature_names=None, sample_weight=None):
-        &#34;&#34;&#34;Fit the model according to the given training data.
+        super().__init__(
+            base_estimator=estimator(), # in 1.2, this was renamed to just estimator
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            random_state=random_state,
+        )
+        # self.estimator = estimator
 
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            Training vector, where n_samples is the number of samples and
-            n_features is the number of features.
-
-        y : array-like, shape (n_samples,)
-            Target vector relative to X. Has to follow the convention 0 for
-            normal data, 1 for anomalies.
-
-        sample_weight : array-like, shape (n_samples,) optional
-            Array of weights that are assigned to individual samples, typically
-            the amount in case of transactions data. Used to grow regression
-            trees producing further rules to be tested.
-            If not provided, then each sample is given unit weight.
-
-        Returns
-        -------
-        self : object
-            Returns self.
-        &#34;&#34;&#34;
-
-        X, y = check_X_y(X, y)
-        check_classification_targets(y)
-        self.n_features_ = X.shape[1]
-        self.classes_ = unique_labels(y)
-        np.random.seed(self.random_state)
-
-        if feature_names is None:
-            feature_names = [f&#39;X_{i + 1}&#39; for i in range(X.shape[1])]
-        self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
-        self.feature_placeholders = list(self.feature_dict_.keys())
-        self.feature_names = list(self.feature_dict_.values())
-
-        n_train = y.shape[0]
-        w = np.ones(n_train) / n_train
-        self.estimators_ = []
-        self.estimator_weights_ = []
-        self.estimator_errors_ = []
-        self.estimator_mean_prediction_ = [] # this is just for printing
-        if feature_names is not None:
-            self.feature_names = feature_names
-        for _ in range(self.n_estimators):
-            # Fit a classifier with the specific weights
-            clf = self.estimator()
-            clf.fit(X, y, sample_weight=w)  # uses w as the sampling weight!
-            preds = clf.predict(X)
-            self.estimator_mean_prediction_.append(np.mean(preds)) # just for printing
-
-            # Indicator function
-            miss = preds != y
-
-            # Equivalent with 1/-1 to update weights
-            miss2 = np.ones(miss.size)
-            miss2[~miss] = -1
-
-            # Error
-            err_m = np.dot(w, miss) / sum(w)
-            if err_m &lt; 1e-3:
-                return self
-
-            # Alpha
-            alpha_m = 0.5 * np.log((1 - err_m) / float(err_m))
-
-            # New weights
-            w = np.multiply(w, np.exp([float(x) * alpha_m
-                                       for x in miss2]))
-
-            self.estimators_.append(deepcopy(clf))
-            self.estimator_weights_.append(alpha_m)
-            self.estimator_errors_.append(err_m)
-
-        rules = []
-
-        for est, est_weight in zip(self.estimators_, self.estimator_weights_):
-            if type(clf) == DecisionTreeClassifier:
-                est_rules_values = tree_to_rules(est, self.feature_placeholders, prediction_values=True)
-                est_rules = list(map(lambda x: x[0], est_rules_values))
-
-                # BRS scores are difference between class 1 % and class 0 % in a node
-                est_values = np.array(list(map(lambda x: x[1], est_rules_values)))
-                rule_scores = (est_values[:, 1] - est_values[:, 0]) / est_values.sum(axis=1)
-
-                compos_score = est_weight * rule_scores
-                rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
-
-            if type(clf) == SlipperBaseEstimator:
-                # SLIPPER uses uniform confidence over in rule observations
-                est_rule = dict_to_rule(est.rule, est.feature_dict)
-                rules += [Rule(est_rule, args=[est_weight])]
-
-        self.rules_without_feature_names_ = rules
-        self.rules_ = [
-            replace_feature_name(rule, self.feature_dict_)
-            for rule in self.rules_without_feature_names_
-        ]
-        self.complexity_ = self._get_complexity()
-        return self
-
-    def predict_proba(self, X):
-        &#39;&#39;&#39; Predict probabilities for X &#39;&#39;&#39;
-        check_is_fitted(self)
-        X = check_array(X)
-
-        # Add to prediction
-        n_train = X.shape[0]
-        n_estimators = len(self.estimators_)
-        n_classes = 2  # hard-coded for now!
-        preds = np.zeros((n_train, n_classes))
-        for i in range(n_estimators):
-            preds += self.estimator_weights_[i] * self.estimators_[i].predict_proba(X)
-        pred_values = preds / n_estimators
-        return normalize(pred_values, norm=&#39;l1&#39;)
-
-    def predict(self, X):
-        &#34;&#34;&#34;Predict outcome for X
-        &#34;&#34;&#34;
-        check_is_fitted(self)
-        X = check_array(X)
-        return self._eval_weighted_rule_sum(X) &gt; 0
-
-    def __str__(self):
-        try:
-            s = &#39;&gt; ------------------------------\n&#39;
-            s += &#39;&gt; BoostedRules:\n&#39;
-            s += &#39;&gt; \tRule \u2192 predicted probability (final prediction is weighted sum of all predictions)\n&#39;
-            s += &#39;&gt; ------------------------------\n&#39;
-            for i in range(len(self.estimators_)):
-                s += f&#39;  If\033[96m {str(self.rules_[i])}\033[00m \u2192 {self.estimator_mean_prediction_[i]:.2f} (weight: {self.estimator_weights_[i]:.2f})\n&#39;
-            # for est in self.estimators_:
-            #     s += &#39;\t&#39; + tree_to_code(est, self.feature_names)
-            return s
-        except:
-            return f&#39;BoostedRules with {len(self.estimators_)} estimators&#39;</code></pre>
+    def fit(self, X, y, feature_names=None, **kwargs):
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        super().fit(X, y, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
-<li>sklearn.base.BaseEstimator</li>
-<li>sklearn.base.MetaEstimatorMixin</li>
+<li>sklearn.ensemble._weight_boosting.AdaBoostClassifier</li>
 <li>sklearn.base.ClassifierMixin</li>
+<li>sklearn.ensemble._weight_boosting.BaseWeightBoosting</li>
+<li>sklearn.ensemble._base.BaseEnsemble</li>
+<li>sklearn.base.MetaEstimatorMixin</li>
+<li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -384,176 +184,119 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, sample_weight=None)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Fit the model according to the given training data.</p>
+<div class="desc"><p>Build a boosted classifier from the training set (X, y).</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>array-like, shape (n_samples, n_features)</code></dt>
-<dd>Training vector, where n_samples is the number of samples and
-n_features is the number of features.</dd>
-<dt><strong><code>y</code></strong> :&ensp;<code>array-like, shape (n_samples,)</code></dt>
-<dd>Target vector relative to X. Has to follow the convention 0 for
-normal data, 1 for anomalies.</dd>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>array-like, shape (n_samples,) optional</code></dt>
-<dd>Array of weights that are assigned to individual samples, typically
-the amount in case of transactions data. Used to grow regression
-trees producing further rules to be tested.
-If not provided, then each sample is given unit weight.</dd>
+<dt><strong><code>X</code></strong> :&ensp;<code>{array-like, sparse matrix}</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>The training input samples. Sparse matrix can be CSC, CSR, COO,
+DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>The target values (class labels).</dd>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, default=<code>None</code></dt>
+<dd>Sample weights. If None, the sample weights are initialized to
+<code>1 / n_samples</code>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>Returns self.</dd>
+<dd>Fitted estimator.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y, feature_names=None, sample_weight=None):
-    &#34;&#34;&#34;Fit the model according to the given training data.
-
-    Parameters
-    ----------
-    X : array-like, shape (n_samples, n_features)
-        Training vector, where n_samples is the number of samples and
-        n_features is the number of features.
-
-    y : array-like, shape (n_samples,)
-        Target vector relative to X. Has to follow the convention 0 for
-        normal data, 1 for anomalies.
-
-    sample_weight : array-like, shape (n_samples,) optional
-        Array of weights that are assigned to individual samples, typically
-        the amount in case of transactions data. Used to grow regression
-        trees producing further rules to be tested.
-        If not provided, then each sample is given unit weight.
-
-    Returns
-    -------
-    self : object
-        Returns self.
-    &#34;&#34;&#34;
-
-    X, y = check_X_y(X, y)
-    check_classification_targets(y)
-    self.n_features_ = X.shape[1]
-    self.classes_ = unique_labels(y)
-    np.random.seed(self.random_state)
-
-    if feature_names is None:
-        feature_names = [f&#39;X_{i + 1}&#39; for i in range(X.shape[1])]
-    self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
-    self.feature_placeholders = list(self.feature_dict_.keys())
-    self.feature_names = list(self.feature_dict_.values())
-
-    n_train = y.shape[0]
-    w = np.ones(n_train) / n_train
-    self.estimators_ = []
-    self.estimator_weights_ = []
-    self.estimator_errors_ = []
-    self.estimator_mean_prediction_ = [] # this is just for printing
-    if feature_names is not None:
-        self.feature_names = feature_names
-    for _ in range(self.n_estimators):
-        # Fit a classifier with the specific weights
-        clf = self.estimator()
-        clf.fit(X, y, sample_weight=w)  # uses w as the sampling weight!
-        preds = clf.predict(X)
-        self.estimator_mean_prediction_.append(np.mean(preds)) # just for printing
-
-        # Indicator function
-        miss = preds != y
-
-        # Equivalent with 1/-1 to update weights
-        miss2 = np.ones(miss.size)
-        miss2[~miss] = -1
-
-        # Error
-        err_m = np.dot(w, miss) / sum(w)
-        if err_m &lt; 1e-3:
-            return self
-
-        # Alpha
-        alpha_m = 0.5 * np.log((1 - err_m) / float(err_m))
-
-        # New weights
-        w = np.multiply(w, np.exp([float(x) * alpha_m
-                                   for x in miss2]))
-
-        self.estimators_.append(deepcopy(clf))
-        self.estimator_weights_.append(alpha_m)
-        self.estimator_errors_.append(err_m)
-
-    rules = []
-
-    for est, est_weight in zip(self.estimators_, self.estimator_weights_):
-        if type(clf) == DecisionTreeClassifier:
-            est_rules_values = tree_to_rules(est, self.feature_placeholders, prediction_values=True)
-            est_rules = list(map(lambda x: x[0], est_rules_values))
-
-            # BRS scores are difference between class 1 % and class 0 % in a node
-            est_values = np.array(list(map(lambda x: x[1], est_rules_values)))
-            rule_scores = (est_values[:, 1] - est_values[:, 0]) / est_values.sum(axis=1)
-
-            compos_score = est_weight * rule_scores
-            rules += [Rule(r, args=[w]) for (r, w) in zip(est_rules, compos_score)]
-
-        if type(clf) == SlipperBaseEstimator:
-            # SLIPPER uses uniform confidence over in rule observations
-            est_rule = dict_to_rule(est.rule, est.feature_dict)
-            rules += [Rule(est_rule, args=[est_weight])]
-
-    self.rules_without_feature_names_ = rules
-    self.rules_ = [
-        replace_feature_name(rule, self.feature_dict_)
-        for rule in self.rules_without_feature_names_
-    ]
-    self.complexity_ = self._get_complexity()
-    return self</code></pre>
+<pre><code class="python">def fit(self, X, y, feature_names=None, **kwargs):
+    X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+    super().fit(X, y, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</dl>
+</dd>
+<dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor"><code class="flex name class">
+<span>class <span class="ident">BoostedRulesRegressor</span></span>
+<span>(</span><span>estimator=functools.partial(&lt;class &#x27;sklearn.tree._classes.DecisionTreeRegressor&#x27;&gt;, max_depth=1), *, n_estimators=15, learning_rate=1.0, random_state=13)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Predict outcome for X</p></div>
+<div class="desc"><p>An easy-interpretable regressor optimizing simple logical rules.</p>
+<h2 id="params">Params</h2>
+<p>estimator: object with fit and predict methods
+Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self, X):
-    &#34;&#34;&#34;Predict outcome for X
-    &#34;&#34;&#34;
-    check_is_fitted(self)
-    X = check_array(X)
-    return self._eval_weighted_rule_sum(X) &gt; 0</code></pre>
+<pre><code class="python">class BoostedRulesRegressor(AdaBoostRegressor):
+    &#39;&#39;&#39;An easy-interpretable regressor optimizing simple logical rules.
+
+    Params
+    ------
+    estimator: object with fit and predict methods
+        Defaults to DecisionTreeRegressor with AdaBoost.
+    &#39;&#39;&#39;
+
+    def __init__(
+        self,
+        estimator=partial(DecisionTreeRegressor, max_depth=1),
+        *,
+        n_estimators=15,
+        learning_rate=1.0,
+        random_state=13,
+    ):
+
+        super().__init__(
+            base_estimator=estimator(), # in 1.2, this was renamed to just estimator
+            n_estimators=n_estimators,
+            learning_rate=learning_rate,
+            random_state=random_state,
+        )
+        # self.estimator = estimator
+
+    def fit(self, X, y, feature_names=None, **kwargs):
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        super().fit(X, y, **kwargs)</code></pre>
 </details>
-</dd>
-<dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.predict_proba"><code class="name flex">
-<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.ensemble._weight_boosting.AdaBoostRegressor</li>
+<li>sklearn.base.RegressorMixin</li>
+<li>sklearn.ensemble._weight_boosting.BaseWeightBoosting</li>
+<li>sklearn.ensemble._base.BaseEnsemble</li>
+<li>sklearn.base.MetaEstimatorMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Predict probabilities for X</p></div>
+<div class="desc"><p>Build a boosted regressor from the training set (X, y).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>{array-like, sparse matrix}</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>The training input samples. Sparse matrix can be CSC, CSR, COO,
+DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>The target values (real numbers).</dd>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, default=<code>None</code></dt>
+<dd>Sample weights. If None, the sample weights are initialized to
+1 / n_samples.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>Fitted AdaBoostRegressor estimator.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict_proba(self, X):
-    &#39;&#39;&#39; Predict probabilities for X &#39;&#39;&#39;
-    check_is_fitted(self)
-    X = check_array(X)
-
-    # Add to prediction
-    n_train = X.shape[0]
-    n_estimators = len(self.estimators_)
-    n_classes = 2  # hard-coded for now!
-    preds = np.zeros((n_train, n_classes))
-    for i in range(n_estimators):
-        preds += self.estimator_weights_[i] * self.estimators_[i].predict_proba(X)
-    pred_values = preds / n_estimators
-    return normalize(pred_values, norm=&#39;l1&#39;)</code></pre>
+<pre><code class="python">def fit(self, X, y, feature_names=None, **kwargs):
+    X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+    super().fit(X, y, **kwargs)</code></pre>
 </details>
 </dd>
 </dl>
@@ -578,8 +321,12 @@ If not provided, then each sample is given unit weight.</dd>
 <h4><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.predict" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.predict_proba" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.predict_proba">predict_proba</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor.fit" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor.fit">fit</a></code></li>
 </ul>
 </li>
 </ul>

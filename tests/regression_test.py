@@ -6,7 +6,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 
 from imodels import RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor, HSTreeRegressor, HSTreeRegressorCV, \
-    FIGSRegressor, DistilledRegressor, TaoTreeRegressor
+    FIGSRegressor, DistilledRegressor, TaoTreeRegressor, BoostedRulesRegressor
 
 
 class TestClassRegression:
@@ -23,6 +23,7 @@ class TestClassRegression:
         '''
         for model_type in [RuleFitRegressor, SLIMRegressor, GreedyTreeRegressor,
                            FIGSRegressor, # TaoTreeRegressor,
+                           BoostedRulesRegressor,
                            partial(DistilledRegressor, teacher=RandomForestRegressor(n_estimators=3),
                                    student=DecisionTreeRegressor()),
                            ]:

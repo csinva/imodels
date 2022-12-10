@@ -26,7 +26,7 @@ from imodels.rule_set.slipper_util import SlipperBaseEstimator
 
 
 class SlipperClassifier(BoostedRulesClassifier):
-    def __init__(self, n_estimators=10):
+    def __init__(self, n_estimators=10, **kwargs):
         &#39;&#39;&#39;
         An estimator that supports building rules as described in
         A Simple, Fast, and Effective Rule Learner (1999).
@@ -34,7 +34,8 @@ class SlipperClassifier(BoostedRulesClassifier):
         ----------
         n_estimators
         &#39;&#39;&#39;
-        super().__init__(n_estimators, SlipperBaseEstimator)</code></pre>
+        super().__init__(estimator=SlipperBaseEstimator, n_estimators=n_estimators, **kwargs)
+        # super().__init__(n_estimators, SlipperBaseEstimator)</code></pre>
 </details>
 </section>
 <section>
@@ -48,11 +49,10 @@ class SlipperClassifier(BoostedRulesClassifier):
 <dl>
 <dt id="imodels.rule_set.slipper.SlipperClassifier"><code class="flex name class">
 <span>class <span class="ident">SlipperClassifier</span></span>
-<span>(</span><span>n_estimators=10)</span>
+<span>(</span><span>n_estimators=10, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>An easy-interpretable classifier optimizing simple logical rules.
-Currently limited to only binary classification.</p>
+<div class="desc"><p>An easy-interpretable classifier optimizing simple logical rules.</p>
 <h2 id="params">Params</h2>
 <p>estimator: object with fit and predict methods
 Defaults to DecisionTreeClassifier with AdaBoost.
@@ -70,7 +70,7 @@ Parameters</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SlipperClassifier(BoostedRulesClassifier):
-    def __init__(self, n_estimators=10):
+    def __init__(self, n_estimators=10, **kwargs):
         &#39;&#39;&#39;
         An estimator that supports building rules as described in
         A Simple, Fast, and Effective Rule Learner (1999).
@@ -78,23 +78,24 @@ Parameters</p>
         ----------
         n_estimators
         &#39;&#39;&#39;
-        super().__init__(n_estimators, SlipperBaseEstimator)</code></pre>
+        super().__init__(estimator=SlipperBaseEstimator, n_estimators=n_estimators, **kwargs)
+        # super().__init__(n_estimators, SlipperBaseEstimator)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></li>
-<li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
-<li>sklearn.base.BaseEstimator</li>
-<li>sklearn.base.MetaEstimatorMixin</li>
+<li>sklearn.ensemble._weight_boosting.AdaBoostClassifier</li>
 <li>sklearn.base.ClassifierMixin</li>
+<li>sklearn.ensemble._weight_boosting.BaseWeightBoosting</li>
+<li>sklearn.ensemble._base.BaseEnsemble</li>
+<li>sklearn.base.MetaEstimatorMixin</li>
+<li>sklearn.base.BaseEstimator</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.predict" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier.predict">predict</a></code></li>
-<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.predict_proba" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier.predict_proba">predict_proba</a></code></li>
 </ul>
 </li>
 </ul>

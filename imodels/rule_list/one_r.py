@@ -13,33 +13,21 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels import GreedyRuleListClassifier
 from imodels.rule_list.rule_list import RuleList
+from imodels.util.arguments import check_fit_arguments
 
 
 class OneRClassifier(GreedyRuleListClassifier):
     def __init__(self, max_depth=5, class_weight=None, criterion='gini'):
         self.max_depth = max_depth
-        self.feature_names = None
+        self.feature_names_ = None
         self.class_weight = class_weight
         self.criterion = criterion
         self._estimator_type = 'classifier'
 
-    def fit(self, X, y, depth=0, feature_names=None, verbose=False):
+    def fit(self, X, y, feature_names=None):
         """Fit oneR
         """
-
-        self.classes_ = unique_labels(y)
-
-        # set self.feature_names and make sure x, y are not pandas type
-        if 'pandas' in str(type(X)):
-            self.feature_names = X.columns
-            X = X.values
-        else:
-            if feature_names is None:
-                self.feature_names = ['feat ' + str(i) for i in range(X.shape[1])]
-        if feature_names is not None:
-            self.feature_names = feature_names
-        if 'pandas' in str(type(y)):
-            y = y.values
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
 
         ms = []
         accs = np.zeros(X.shape[1])
@@ -47,7 +35,7 @@ class OneRClassifier(GreedyRuleListClassifier):
             x = X[:, col_idx].reshape(-1, 1)
             m = GreedyRuleListClassifier(max_depth=self.max_depth, class_weight=self.class_weight,
                                          criterion=self.criterion)
-            feat_names_single = [self.feature_names[col_idx]]
+            feat_names_single = [self.feature_names_[col_idx]]
             m.fit(x, y, feature_names=feat_names_single)
             accs[col_idx] = np.mean(m.predict(x) == y)
             ms.append(m)

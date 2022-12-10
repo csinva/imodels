@@ -18,6 +18,7 @@ from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
+from imodels.util.arguments import check_fit_arguments
 from imodels.util.extract import extract_rulefit
 from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
 from imodels.util.score import score_linear
@@ -103,13 +104,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         """Fit and estimate linear combination of rule ensemble
 
         """
-        if feature_names is None and isinstance(X, pd.DataFrame):
-            feature_names = X.columns
-
-        X, y = check_X_y(X, y)
-        if isinstance(self, ClassifierMixin):
-            self.classes_ = unique_labels(y)
-        self.n_features_in_ = X.shape[1]
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
 
         self.n_features_ = X.shape[1]
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)

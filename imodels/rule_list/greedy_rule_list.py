@@ -15,6 +15,7 @@ from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.tree import DecisionTreeClassifier
 from imodels.rule_list.rule_list import RuleList
+from imodels.util.arguments import check_fit_arguments
 
 
 class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
@@ -46,15 +47,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         depth
             the depth of the current layer (used to recurse)
         """
-
-        if feature_names is None:
-            if isinstance(X, pd.DataFrame):
-                self.feature_names_ = X.columns
-            else:
-                self.feature_names_ = ['X' + str(i) for i in range(X.shape[1])]
-        else:
-            self.feature_names_ = feature_names
-        X, y = check_X_y(X, y)
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         return self.fit_node_recursive(X, y, depth=0, verbose=verbose)
 
     def fit_node_recursive(self, X, y, depth: int, verbose):

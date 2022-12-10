@@ -60,7 +60,7 @@ class TestClassClassificationBinary:
 
             # test acc
             acc_train = np.mean(preds == self.y_classification_binary)
-            print(type(m), m, 'final acc', acc_train)
+            # print(type(m), m, 'final acc', acc_train)
             assert acc_train > 0.8, 'acc greater than 0.8'
 
 

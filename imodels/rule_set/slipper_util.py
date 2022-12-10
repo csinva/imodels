@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import train_test_split
 
+from imodels.util.arguments import check_fit_arguments
+
 
 class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
     """ An estimator that supports building rules as described in
@@ -261,18 +263,18 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         """
         return self._rule_predict(X, self.rule)
 
-    def fit(self, X, y, sample_weight=None, features=None):
+    def fit(self, X, y, sample_weight=None, feature_names=None):
         """
         Main loop for training
         """
-
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names) 
         if sample_weight is not None:
             self.D = sample_weight
 
         X_grow, X_prune, y_grow, y_prune = \
             train_test_split(X, y, test_size=0.33)
 
-        self._make_feature_dict(X.shape[1], features)
+        self._make_feature_dict(X.shape[1], feature_names)
 
         rule = self._grow_rule(X_grow, y_grow)
         rule = self._prune_rule(X_prune, y_prune, rule)

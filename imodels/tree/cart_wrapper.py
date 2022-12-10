@@ -2,6 +2,7 @@
 # https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
 
 from sklearn.tree import DecisionTreeClassifier, export_text, DecisionTreeRegressor
+from imodels.util.arguments import check_fit_arguments
 
 from imodels.util.tree import compute_tree_complexity
 
@@ -37,10 +38,7 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
         self : DecisionTreeClassifier
             Fitted estimator.
         """
-        if feature_names is not None:
-            self.feature_names = feature_names
-        else:
-            self.feature_names = ["X" + str(i + 1) for i in range(X.shape[1])]
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         super().fit(X, y, sample_weight=sample_weight, check_input=check_input)
         self._set_complexity()
 

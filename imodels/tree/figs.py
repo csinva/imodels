@@ -14,6 +14,7 @@ from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import _check_sample_weight
 
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
+from imodels.util.arguments import check_fit_arguments
 
 plt.rcParams['figure.dpi'] = 300
 
@@ -190,22 +191,7 @@ class FIGS(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         """
-
-        if isinstance(self, ClassifierMixin):
-            self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
-
-        if feature_names is None:
-            if isinstance(X, pd.DataFrame):
-                self.feature_names_ = X.columns
-            else:
-                self.feature_names_ = ['X' + str(i) for i in range(X.shape[1])]
-        else:
-            self.feature_names_ = feature_names
-
-        n_samples, self.n_features_in_ = X.shape
-
-        X, y = check_X_y(X, y)
-        y = y.astype(float)
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
 

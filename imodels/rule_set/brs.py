@@ -24,6 +24,7 @@ from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
+from imodels.util.arguments import check_fit_arguments
 
 
 class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
@@ -101,17 +102,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         self.attr_level_num = defaultdict(int)  # any missing value defaults to 0
         self.attr_names = []
 
-        # get feature names
-        if feature_names is None:
-            if isinstance(X, pd.DataFrame):
-                feature_names = X.columns
-            else:
-                feature_names = ['X' + str(i) for i in range(X.shape[1])]
-
-        # checks
-        X, y = check_X_y(X, y)  # converts df to ndarray
-        check_classification_targets(y)
-        assert len(feature_names) == X.shape[1], 'feature_names should be same size as X.shape[1]'
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         np.random.seed(self.random_state)
 
         # convert to pandas DataFrame

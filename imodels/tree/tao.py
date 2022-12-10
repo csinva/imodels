@@ -12,6 +12,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_text
 from sklearn.utils import check_X_y
 
+from imodels.util.arguments import check_fit_arguments
+
 
 class TaoTree(BaseEstimator):
 
@@ -108,19 +110,17 @@ class TaoTree(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         """
-
-        if self.prediction_task == 'classification':
-            self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
-        else:
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        if isinstance(self, RegressorMixin):
             raise Warning('TAO Regression is not yet tested')
         X, y = check_X_y(X, y)
         y = y.astype(float)
         if feature_names is not None:
             self.feature_names_ = feature_names
         if self.model_type == 'CART':
-            if self.prediction_task == 'classification':
+            if isinstance(self, ClassifierMixin):
                 self.model = DecisionTreeClassifier(**self.model_args)
-            elif self.prediction_task == 'regression':
+            elif isinstance(self, RegressorMixin):
                 self.model = DecisionTreeRegressor(**self.model_args)
             self.model.fit(X, y, sample_weight=sample_weight)
             if self.verbose:
@@ -209,7 +209,7 @@ class TaoTree(BaseEstimator):
 
             # Skip over leaf nodes and nodes with too few samples ######################################
             if children_left[node_id] == children_right[node_id]:  # is leaf node
-                if self.prediction_task == 'regression' and X_node.shape[0] >= self.min_leaf_samples_tao:
+                if isinstance(self, RegressorMixin) and X_node.shape[0] >= self.min_leaf_samples_tao:
                     # old_score = self.model.score(X, y)
                     value[node_id] = np.mean(y_node)
                     """
@@ -234,9 +234,9 @@ class TaoTree(BaseEstimator):
                 def predict_from_node(x, node_id):
                     """Returns predictions for x starting at node node_id"""
                     if children_left[node_id] == children_right[node_id]:
-                        if self.prediction_task == 'regression':
+                        if isinstance(self, RegressorMixin):
                             return value[node_id]
-                        elif self.prediction_task == 'classification':
+                        if isinstance(self, ClassifierMixin):
                             return np.argmax(value[node_id])  # note value stores counts for each class
                     if x[feature[node_id]] <= threshold[node_id]:
                         return predict_from_node(x, children_left[node_id])
@@ -285,12 +285,12 @@ class TaoTree(BaseEstimator):
             best_score = -np.inf
             best_feat_num = None
             for feat_num in range(X.shape[1]):
-                if self.prediction_task == 'classification':
+                if isinstance(self, ClassifierMixin):
                     if self.node_model == 'linear':
                         m = LogisticRegression(**self.node_model_args)
                     elif self.node_model == 'stump':
                         m = DecisionTreeClassifier(max_depth=1, **self.node_model_args)
-                elif self.prediction_task == 'regression':
+                if isinstance(self, RegressorMixin):
                     if self.node_model == 'linear':
                         m = LinearRegression(**self.node_model_args)
                     elif self.node_model == 'stump':
@@ -366,14 +366,10 @@ class TaoTree(BaseEstimator):
 
 
 class TaoTreeRegressor(TaoTree, RegressorMixin):
-    def _init_prediction_task(self):
-        self.prediction_task = 'regression'
-
+    pass
 
 class TaoTreeClassifier(TaoTree, ClassifierMixin):
-    def _init_prediction_task(self):
-        self.prediction_task = 'classification'
-
+    pass
 
 if __name__ == '__main__':
     np.random.seed(13)

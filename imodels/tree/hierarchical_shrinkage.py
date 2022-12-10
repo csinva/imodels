@@ -11,6 +11,7 @@ from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_t
 from sklearn.ensemble import GradientBoostingClassifier
 
 from imodels.util import checks
+from imodels.util.arguments import check_fit_arguments
 from imodels.util.tree import compute_tree_complexity
 
 
@@ -54,7 +55,8 @@ class HSTree:
 
     def fit(self, X, y, *args, **kwargs):
         # remove feature_names if it exists (note: only works as keyword-arg)
-        self.feature_names = kwargs.pop('feature_names', None)  # None returned if not passed
+        feature_names = kwargs.pop('feature_names', None)  # None returned if not passed
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         self.estimator_ = self.estimator_.fit(X, y, *args, **kwargs)
         self._shrink()
 
