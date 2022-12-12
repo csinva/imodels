@@ -48,6 +48,7 @@ class BoostedRulesClassifier(AdaBoostClassifier):
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         super().fit(X, y, **kwargs)
+        self.complexity_ = len(self.estimators_)
 
 class BoostedRulesRegressor(AdaBoostRegressor):
     '''An easy-interpretable regressor optimizing simple logical rules.
@@ -78,6 +79,7 @@ class BoostedRulesRegressor(AdaBoostRegressor):
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         super().fit(X, y, **kwargs)
+        self.complexity_ = len(self.estimators_)
 
 
 if __name__ == '__main__':
@@ -88,4 +90,4 @@ if __name__ == '__main__':
     model.fit(X_train, y_train, feature_names=X_train.columns)
     y_pred = model.predict(X_test)
     acc = model.score(X_test, y_test)
-    print('acc', acc)
+    print('acc', acc, 'complexity', model.complexity_)
