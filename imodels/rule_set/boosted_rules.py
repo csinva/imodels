@@ -36,14 +36,22 @@ class BoostedRulesClassifier(AdaBoostClassifier):
         learning_rate=1.0,
         random_state=None,
     ):
+        try: # sklearn version >= 1.2
+            super().__init__(
+                estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+        except: # sklearn version < 1.2
+            super().__init__(
+                base_estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+            self.estimator = estimator
 
-        super().__init__(
-            base_estimator=estimator(), # in 1.2, this was renamed to just estimator
-            n_estimators=n_estimators,
-            learning_rate=learning_rate,
-            random_state=random_state,
-        )
-        # self.estimator = estimator
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
@@ -67,14 +75,21 @@ class BoostedRulesRegressor(AdaBoostRegressor):
         learning_rate=1.0,
         random_state=13,
     ):
-
-        super().__init__(
-            base_estimator=estimator(), # in 1.2, this was renamed to just estimator
-            n_estimators=n_estimators,
-            learning_rate=learning_rate,
-            random_state=random_state,
-        )
-        # self.estimator = estimator
+        try: # sklearn version >= 1.2
+            super().__init__(
+                estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+        except: # sklearn version < 1.2
+            super().__init__(
+                base_estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+            self.estimator = estimator
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
@@ -85,9 +100,10 @@ class BoostedRulesRegressor(AdaBoostRegressor):
 if __name__ == '__main__':
     np.random.seed(13)
     X, Y = sklearn.datasets.load_breast_cancer(as_frame=True, return_X_y=True)
-    model = BoostedRulesClassifier(estimator=SlipperBaseEstimator)
+    model = BoostedRulesClassifier(estimator=DecisionTreeClassifier)
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.3)
     model.fit(X_train, y_train, feature_names=X_train.columns)
     y_pred = model.predict(X_test)
     acc = model.score(X_test, y_test)
     print('acc', acc, 'complexity', model.complexity_)
+    print(model)

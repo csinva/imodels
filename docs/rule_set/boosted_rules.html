@@ -59,18 +59,27 @@ class BoostedRulesClassifier(AdaBoostClassifier):
         learning_rate=1.0,
         random_state=None,
     ):
+        try: # sklearn version &gt;= 1.2
+            super().__init__(
+                estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+        except: # sklearn version &lt; 1.2
+            super().__init__(
+                base_estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+            self.estimator = estimator
 
-        super().__init__(
-            base_estimator=estimator(), # in 1.2, this was renamed to just estimator
-            n_estimators=n_estimators,
-            learning_rate=learning_rate,
-            random_state=random_state,
-        )
-        # self.estimator = estimator
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         super().fit(X, y, **kwargs)
+        self.complexity_ = len(self.estimators_)
 
 class BoostedRulesRegressor(AdaBoostRegressor):
     &#39;&#39;&#39;An easy-interpretable regressor optimizing simple logical rules.
@@ -89,29 +98,38 @@ class BoostedRulesRegressor(AdaBoostRegressor):
         learning_rate=1.0,
         random_state=13,
     ):
-
-        super().__init__(
-            base_estimator=estimator(), # in 1.2, this was renamed to just estimator
-            n_estimators=n_estimators,
-            learning_rate=learning_rate,
-            random_state=random_state,
-        )
-        # self.estimator = estimator
+        try: # sklearn version &gt;= 1.2
+            super().__init__(
+                estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+        except: # sklearn version &lt; 1.2
+            super().__init__(
+                base_estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+            self.estimator = estimator
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         super().fit(X, y, **kwargs)
+        self.complexity_ = len(self.estimators_)
 
 
 if __name__ == &#39;__main__&#39;:
     np.random.seed(13)
     X, Y = sklearn.datasets.load_breast_cancer(as_frame=True, return_X_y=True)
-    model = BoostedRulesClassifier(estimator=SlipperBaseEstimator)
+    model = BoostedRulesClassifier(estimator=DecisionTreeClassifier)
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.3)
     model.fit(X_train, y_train, feature_names=X_train.columns)
     y_pred = model.predict(X_test)
     acc = model.score(X_test, y_test)
-    print(&#39;acc&#39;, acc)</code></pre>
+    print(&#39;acc&#39;, acc, &#39;complexity&#39;, model.complexity_)
+    print(model)</code></pre>
 </details>
 </section>
 <section>
@@ -155,18 +173,27 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
         learning_rate=1.0,
         random_state=None,
     ):
+        try: # sklearn version &gt;= 1.2
+            super().__init__(
+                estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+        except: # sklearn version &lt; 1.2
+            super().__init__(
+                base_estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+            self.estimator = estimator
 
-        super().__init__(
-            base_estimator=estimator(), # in 1.2, this was renamed to just estimator
-            n_estimators=n_estimators,
-            learning_rate=learning_rate,
-            random_state=random_state,
-        )
-        # self.estimator = estimator
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-        super().fit(X, y, **kwargs)</code></pre>
+        super().fit(X, y, **kwargs)
+        self.complexity_ = len(self.estimators_)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -210,7 +237,8 @@ DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
 </summary>
 <pre><code class="python">def fit(self, X, y, feature_names=None, **kwargs):
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-    super().fit(X, y, **kwargs)</code></pre>
+    super().fit(X, y, **kwargs)
+    self.complexity_ = len(self.estimators_)</code></pre>
 </details>
 </dd>
 </dl>
@@ -245,18 +273,26 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
         learning_rate=1.0,
         random_state=13,
     ):
-
-        super().__init__(
-            base_estimator=estimator(), # in 1.2, this was renamed to just estimator
-            n_estimators=n_estimators,
-            learning_rate=learning_rate,
-            random_state=random_state,
-        )
-        # self.estimator = estimator
+        try: # sklearn version &gt;= 1.2
+            super().__init__(
+                estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+        except: # sklearn version &lt; 1.2
+            super().__init__(
+                base_estimator=estimator(),
+                n_estimators=n_estimators,
+                learning_rate=learning_rate,
+                random_state=random_state,
+            )
+            self.estimator = estimator
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-        super().fit(X, y, **kwargs)</code></pre>
+        super().fit(X, y, **kwargs)
+        self.complexity_ = len(self.estimators_)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -296,7 +332,8 @@ DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
 </summary>
 <pre><code class="python">def fit(self, X, y, feature_names=None, **kwargs):
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-    super().fit(X, y, **kwargs)</code></pre>
+    super().fit(X, y, **kwargs)
+    self.complexity_ = len(self.estimators_)</code></pre>
 </details>
 </dd>
 </dl>
