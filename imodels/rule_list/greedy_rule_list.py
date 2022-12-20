@@ -73,7 +73,9 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             col = m.tree_.feature[0]
             cutoff = m.tree_.threshold[0]
             # col, cutoff, criterion_val = self._find_best_split(X, y)
-            
+            if col == -2:
+                return []
+                
             y_left = y[X[:, col] < cutoff]  # left-hand side data
             y_right = y[X[:, col] >= cutoff]  # right-hand side data
 
@@ -136,24 +138,28 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         X = check_array(X)
         return np.argmax(self.predict_proba(X), axis=1)
 
+    """
     def __str__(self):
-        s = ''
-        for rule in self.rules_:
-            s += f"mean {rule['val'].round(3)} ({rule['num_pts']} pts)\n"
-            if 'col' in rule:
-                s += f"if {rule['col']} >= {rule['cutoff']} then {rule['val_right'].round(3)} ({rule['num_pts_right']} pts)\n"
-        return s
+        # s = ''
+        # for rule in self.rules_:
+        #     s += f"mean {rule['val'].round(3)} ({rule['num_pts']} pts)\n"
+        #     if 'col' in rule:
+        #         s += f"if {rule['col']} >= {rule['cutoff']} then {rule['val_right'].round(3)} ({rule['num_pts_right']} pts)\n"
+        # return s
+    """
 
-    def _print_list(self):
+    def __str__(self):
         '''Print out the list in a nice way
         '''
-        s = ''
+        s = '> ------------------------------\n> Greedy Rule List\n> ------------------------------\n'
 
         def red(s):
-            return f"\033[91m{s}\033[00m"
+            # return f"\033[91m{s}\033[00m"
+            return s
 
         def cyan(s):
-            return f"\033[96m{s}\033[00m"
+            # return f"\033[96m{s}\033[00m"
+            return s
 
         def rule_name(rule):
             if rule['flip']:
@@ -163,16 +169,16 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         # rule = self.rules_[0]
         #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
         for rule in self.rules_:
-            s += f"\t{'':>35} => {cyan((100 * rule['val']).round(2)):>6}% risk ({rule['num_pts']} pts)\n"
+            s += u'\u2193\n' + f"{cyan((100 * rule['val']).round(2))}% risk ({rule['num_pts']} pts)\n"
             #         s += f"\t{'Else':>45} => {cyan((100 * rule['val']).round(2)):>6}% IwI ({rule['val'] * rule['num_pts']:.0f}/{rule['num_pts']} pts)\n"
             if 'col' in rule:
                 #             prefix = f"if {rule['col']} >= {rule['cutoff']}"
                 prefix = f"if {rule_name(rule)}"
-                val = f"{100 * rule['val_right'].round(3):.4}"
-                s += f"{prefix:>43} ===> {red(val)}% risk ({rule['num_pts_right']} pts)\n"
+                val = f"{100 * rule['val_right'].round(3)}"
+                s += f"\t{prefix} ==> {red(val)}% risk ({rule['num_pts_right']} pts)\n"
         # rule = self.rules_[-1]
         #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
-        print(s)
+        return s
 
     ######## HERE ONWARDS CUSTOM SPLITTING (DEPRECATED IN FAVOR OF SKLEARN STUMP) ########
     ######################################################################################
