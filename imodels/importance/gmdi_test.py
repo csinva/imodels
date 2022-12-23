@@ -8,9 +8,9 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.metrics import r2_score, log_loss, roc_auc_score
 
 import imodels.importance.representation_cleaned as rep_new
-import imodels.importance.r2f_exp_cleaned as gmdi_new
-import imodels.importance.representation as rep_old
-import imodels.importance.r2f_experimental as gmdi_old
+import imodels.importance.r2f_exp_cleaned as gmdi_old
+import imodels.importance.block_transformers as rep_old
+import imodels.importance.gmdi as gmdi_new
 
 class TestRepresentation:
 

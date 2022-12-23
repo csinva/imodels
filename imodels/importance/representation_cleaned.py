@@ -1,4 +1,3 @@
-import copy
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -8,14 +7,27 @@ from sklearn.ensemble import BaseEnsemble
 
 
 class BlockPartitionedData:
+    """
+    Abstraction for a feature matrix in which the columns are grouped into
+    blocks.
+    """
 
     def __init__(self, data_blocks, common_block=None):
+        """
+
+        Parameters
+        ----------
+        data_blocks: list of ndarray
+
+        common_block
+        """
         self.n_blocks = len(data_blocks)
         self.n_samples = data_blocks[0].shape[0]
         self._data_blocks = data_blocks
         self._common_block = common_block
         self._create_block_indices()
-        self._means = [np.mean(data_block, axis=0) for data_block in self._data_blocks]
+        self._means = [np.mean(data_block, axis=0) for data_block in
+                       self._data_blocks]
 
     def get_all_data(self):
         if self._common_block is None:
@@ -39,6 +51,16 @@ class BlockPartitionedData:
             self._common_block_indices = list(range(start_index, stop_index))
 
     def get_block_indices(self, k):
+        """
+
+        Parameters
+        ----------
+        k
+
+        Returns
+        -------
+
+        """
         block_indices = self._common_block_indices + self._block_indices_dict[k]
         return block_indices
 
