@@ -6,6 +6,8 @@ from collections import defaultdict
 from sklearn.ensemble import BaseEnsemble
 
 from local_stumps import make_stumps, tree_feature_transform
+
+
 class BlockPartitionedData:
     """
     Abstraction for a feature matrix in which the columns are grouped into
@@ -189,18 +191,9 @@ class BlockTransformerBase(ABC):
     An interface for block transformers, objects that transform a data matrix
     into a BlockPartitionedData object comprising one block of engineered
     features for each original feature
-
-    Parameters
-    ----------
-    n_features: int or None
-        The number of features in the original data matrix to be supplied,
-        used for validation.
     """
-    def __init__(self, n_features=None):
-        self.n_features = n_features
 
-    @abstractmethod
-    def transform_one_feature(self, X, k, center=True, rescale=False):
+    def transform_one_feature(self, X, k, center=True, normalize=False):
         """
         Obtain a block of engineered features associated with the original
         feature with index k.
@@ -211,17 +204,22 @@ class BlockTransformerBase(ABC):
             The data matrix to be transformed
         center: bool
             Flag for whether to center the transformed data
-        rescale: bool
+        normalize: bool
             Flag for whether to rescale the transformed data to have unit
             variance
 
         Returns
         -------
+        data_block: ndarray
+            The block of engineered features associated with the original
+            feature with index k.
 
         """
-        pass
+        data_block = self._transform_one_feature(X, k)
+        data_block = _center_and_normalize(data_block, center, normalize)
+        return data_block
 
-    def transform(self, X, center=True, rescale=False):
+    def transform(self, X, center=True, normalize=False):
         """
         Transform a data matrix into a BlockPartitionedData object comprising
         one block for each original feature in X
@@ -232,7 +230,7 @@ class BlockTransformerBase(ABC):
             The data matrix to be transformed
         center: bool
             Flag for whether to center the transformed data
-        rescale: bool
+        normalize: bool
             Flag for whether to rescale the transformed data to have unit
             variance
 
@@ -241,15 +239,15 @@ class BlockTransformerBase(ABC):
         blocked_data: BlockPartitionedData object
             The transformed data
         """
-        if self.n_features is None:
-            self.n_features = X.shape[1]
-        elif self.n_features != X.shape[1]:
-            raise ValueError("Number of features does not match value "
-                             "supplied during initialization")
-        data_blocks = [self.transform_one_feature(X, k, center, rescale) for
-                       k in range(self.n_features)]
+        n_features = X.shape[1]
+        data_blocks = [self.transform_one_feature(X, k, center, normalize) for
+                       k in range(n_features)]
         blocked_data = BlockPartitionedData(data_blocks)
         return blocked_data
+
+    @abstractmethod
+    def _transform_one_feature(self, X, k):
+        pass
 
 
 class IdentityTransformer(BlockTransformerBase, ABC):
@@ -258,81 +256,8 @@ class IdentityTransformer(BlockTransformerBase, ABC):
     block k containing only the original feature k.
     """
 
-    def __init__(self, n_features):
-        super().__init__(n_features)
-        self.priority = 1
-
-    def transform_one_feature(self, X, k, center=True, rescale=False):
-        assert X.shape[1] == self.n_features, "n_features does not match that of X."
-        data_block = X[:, [k]]
-        data_block = BlockTransformerBase.post_process(data_block, center, rescale)
-        return data_block
-
-
-class CompositeTransformer(BlockTransformerBase, ABC):
-    """
-    A block transformer that is built by concatenating the blocks of the same
-    index from a list of block transformers.
-
-    Parameters
-    ----------
-    block_transformer_list: list of BlockTransformer objects
-        The list of block transformers to combine
-    adj_std: bool
-    drop_features
-
-    """
-
-    def __init__(self, block_transformer_list, adj_std=None, drop_features=True):
-        """
-
-
-        """
-        n_features = block_transformer_list[0].n_features
-        super().__init__(n_features)
-        self.block_transformer_list = block_transformer_list
-        # Check that all block transformers have the same number of original
-        # features
-        for block_transformer in block_transformer_list:
-            assert block_transformer.n_features == self.n_features
-        self.priority = 3
-        # Calculate the index of the transformer with the highest priority
-        self.reference_index = np.argmax([block_transformer.priority
-                                          for block_transformer in block_transformer_list])
-        self.adj_std = adj_std
-        self.drop_features = drop_features
-        self.estimator = self.block_transformer_list[self.reference_index].estimator
-        self.all_adj_factors = [] # check if need to keep this
-
-    def transform_one_feature(self, X, k, center=True, rescale=False):
-        data_blocks = []
-        for block_transformer in self.block_transformer_list:
-            data_block = block_transformer.transform_one_feature(X, k, center,
-                                                                 rescale)
-            data_blocks.append(data_block)
-        # Return empty block if highest priority block is empty and drop_features is True
-        if data_blocks[self.reference_index].shape[1] == 0:
-            self.all_adj_factors.append(np.array([np.NaN]))
-            if self.drop_features:
-                return data_blocks[self.reference_index]
-            else:
-                return data_blocks[1]
-        else:
-            self.all_adj_factors.append(data_blocks[self.reference_index].std(axis=0))
-            if self.adj_std == "max":
-                adj_factor = np.array([max(data_block.std(axis=0)) for
-                                       data_block in data_blocks])
-            elif self.adj_std == "mean":
-                adj_factor = np.array([np.mean(data_block.std(axis=0)) for
-                                       data_block in data_blocks])
-            else:
-                adj_factor = np.ones(len(data_blocks))
-            for i in range(len(adj_factor)):
-                if adj_factor[i] == 0: # Only constant features in block
-                    adj_factor[i] = 1
-            adj_factor /= adj_factor[self.reference_index] # Normalize so that reference block is unadjusted
-            composite_block = np.hstack([data_blocks[i] / adj_factor[i] for i in range(len(data_blocks))])
-            return composite_block
+    def _transform_one_feature(self, X, k):
+        return X[:, [k]]
 
 
 class TreeTransformer(BlockTransformerBase, ABC):
@@ -345,9 +270,6 @@ class TreeTransformer(BlockTransformerBase, ABC):
 
     Parameters
     ----------
-    n_features: int or None
-        The number of features in the original data matrix to be supplied,
-        used for validation.
     estimator: scikit-learn estimator
         The scikit-learn tree or tree ensemble estimator object.
     data: ndarray
@@ -356,10 +278,8 @@ class TreeTransformer(BlockTransformerBase, ABC):
         the node values of the resulting engineered features.
     """
 
-    def __init__(self, n_features, estimator, data=None):
-        super().__init__(n_features)
+    def __init__(self, estimator, data=None):
         self.estimator = estimator
-        self.priority = 2
         # Check if single tree or tree ensemble
         if isinstance(estimator, BaseEnsemble):
             tree_models = estimator.estimators_
@@ -379,16 +299,73 @@ class TreeTransformer(BlockTransformerBase, ABC):
         self.stumps = defaultdict(list)
         for stump in all_stumps:
             self.stumps[stump.feature].append(stump)
-        self._num_splits_per_feature = np.array([len(self.stumps[k]) for
-                                                 k in range(self.n_features)])
+        self.n_splits = np.array([len(self.stumps[k]) for
+                                  k in range(self.n_features)])
 
-    def transform_one_feature(self, X, k, center=True, rescale=False):
-        data_block = tree_feature_transform(self.stumps[k], X)
-        data_block = _center_and_rescale(data_block, center, rescale)
-        return data_block
+    def _transform_one_feature(self, X, k):
+        return tree_feature_transform(self.stumps[k], X)
 
-    def get_num_splits(self, k):
-        return self._num_splits_per_feature[k]
+
+class CompositeTransformer(BlockTransformerBase, ABC):
+    """
+    A block transformer that is built by concatenating the blocks of the same
+    index from a list of block transformers.
+
+    Parameters
+    ----------
+    block_transformer_list: list of BlockTransformer objects
+        The list of block transformers to combine
+    rescale_mode: string in {"max", "mean", None}
+        Flag for the type of rescaling to be done to the blocks from different
+        base transformers. If "max", divide each block by the max std deviation
+        of a column within the block. If "mean", divide each block by the mean
+        std deviation of a column within the block. If None, do not rescale.
+    drop_features: bool
+        Flag for whether to return an empty block if that from the first
+        transformer in the list is trivial.
+    """
+
+    def __init__(self, block_transformer_list, rescale_mode=None,
+                 drop_features=True):
+        self.block_transformer_list = block_transformer_list
+        assert len(self.block_transformer_list) > 0, "Need at least one base" \
+                                                     "transformer."
+        self.rescale_mode = rescale_mode
+        self.drop_features = drop_features
+
+    def _transform_one_feature(self, X, k):
+        data_blocks = []
+        for block_transformer in self.block_transformer_list:
+            data_block = block_transformer.transform_one_feature(
+                X, k, center=False, normalize=False)
+            data_blocks.append(data_block)
+        # Handle trivial blocks
+        trivial_block_indices = \
+            [idx for idx, data_block in enumerate(data_blocks) if
+             _empty_or_constant(data_block)]
+        if (0 in trivial_block_indices and self.drop_features) or \
+                (len(trivial_block_indices) == len(data_blocks)):
+            # If first block is trivial and self.drop_features is True,
+            # return empty block
+            return np.empty((X.shape[0], 0))
+        else:
+            # Remove trivial blocks
+            for idx in reversed(trivial_block_indices):
+                data_blocks.pop(idx)
+        composite_block = np.hstack(_rescale_blocks(data_blocks,
+                                                    self.rescale_mode))
+        return composite_block
+
+
+class GmdiDefaultTransformer(CompositeTransformer, ABC):
+    """
+    Default block transformer used in GMDI. For each original feature, this
+    forms a block comprising the local decision stumps, from a single tree
+    model, that split on the feature, and appends the original feature.
+    """
+    def __init__(self, tree_model, rescale_mode="max", drop_features=True):
+        super().__init__([TreeTransformer(tree_model), IdentityTransformer()],
+                         rescale_mode, drop_features)
 
 
 def _update_n_node_samples(tree, X):
@@ -398,10 +375,10 @@ def _update_n_node_samples(tree, X):
         tree.tree_.n_node_samples[i] = new_n_node_samples[i]
 
 
-def _center_and_rescale(data_block, center, rescale):
+def _center_and_normalize(data_block, center, normalize):
     if center:
         data_block -= data_block.mean(axis=0)
-    if rescale:
+    if normalize:
         std = data_block.std(axis=0)
         if any(std == 0):
             raise Warning("No recaling done."
@@ -411,3 +388,25 @@ def _center_and_rescale(data_block, center, rescale):
             data_block = (data_block - data_block_mean) / \
                          data_block.std(axis=0) + data_block_mean
     return data_block
+
+
+def _rescale_blocks(data_blocks, rescale_mode):
+    if rescale_mode == "max":
+        scale_factors = np.array([max(data_block.std(axis=0)) for
+                                  data_block in data_blocks])
+    elif rescale_mode == "mean":
+        scale_factors = np.array([np.mean(data_block.std(axis=0)) for
+                                  data_block in data_blocks])
+    elif rescale_mode is None:
+        scale_factors = np.ones(len(data_blocks))
+    else:
+        raise ValueError("Invalid rescale mode.")
+    scale_factors = scale_factors / scale_factors[0]
+    rescaled_data_blocks = \
+        [data_block / scale_factor for data_block, scale_factor in
+         zip(data_blocks, scale_factors)]
+    return rescaled_data_blocks
+
+
+def _empty_or_constant(data_block):
+    return data_block.shape[1] == 0 or max(data_block.std(axis=0)) == 0
