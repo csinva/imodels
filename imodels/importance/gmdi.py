@@ -1,96 +1,250 @@
 import copy
 
 import numpy as np
-
 import pandas as pd
-from sklearn.ensemble._forest import _generate_unsampled_indices, _generate_sample_indices
+from sklearn.ensemble._forest import _generate_unsampled_indices, \
+    _generate_sample_indices
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import OneHotEncoder
 
-from imodels.importance.block_transformers import \
-    TreeTransformer, IdentityTransformer, CompositeTransformer, \
-    BlockPartitionedData
-from imodels.importance.ppms import RidgeLOOPPM, LogisticLOOPPM
-
-
-def GMDI_pipeline(X, y, fit, regression=True, mode="keep_k",
-                  partial_prediction_model="auto", scoring_fn="auto",
-                  include_raw=True, drop_features=True, oob=False, training=False, center=True):
-    p = X.shape[1]
-    fit = copy.deepcopy(fit)
-    if include_raw:
-        tree_transformers = [CompositeTransformer([TreeTransformer(p, tree_model),
-                                                   IdentityTransformer(p)], adj_std="max", drop_features=drop_features)
-                             for tree_model in fit.estimators_]
-    else:
-        tree_transformers = [TreeTransformer(p, tree_model) for tree_model in fit.estimators_]
-
-    if partial_prediction_model == "auto":
-        if regression:
-            partial_prediction_model = RidgeLOOPPM()
-        else:
-            partial_prediction_model = LogisticLOOPPM(max_iter=1000)
-    if scoring_fn == "auto":
-        if regression:
-            def r2_score(y_true, y_pred):
-                numerator = ((y_true - y_pred) ** 2).sum(axis=0, dtype=np.float64)
-                denominator = ((y_true - np.mean(y_true, axis=0)) ** 2).sum(axis=0, dtype=np.float64)
-                return 1 - numerator / denominator
-
-            scoring_fn = r2_score
-        else:
-            scoring_fn = roc_auc_score
-    if not regression:
-        if len(np.unique(y)) > 2:
-            y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
-
-    gmdi = GMDIEnsemble(tree_transformers, partial_prediction_model, scoring_fn, mode, oob, training, center,
-                        include_raw, drop_features)
-    scores = gmdi.get_scores(X, y)
-
-    results = pd.DataFrame(data={'importance': scores})
-
-    if isinstance(X, pd.DataFrame):
-        results.index = X.columns
-    results.index.name = 'var'
-    results.reset_index(inplace=True)
-
-    return results
+from block_transformers import GmdiDefaultTransformer, TreeTransformer
+from ppms import RidgePPM, LogisticPPM
 
 
 class GMDI:
+    """
+    The class object for computing GMDI feature importances. Generalized mean
+    decrease in impurity (GMDI) is a flexible framework for computing RF
+    feature importances. For more details, refer to [paper].
 
-    def __init__(self, transformer, partial_prediction_model, scoring_fn,
-                 mode="keep_k", training=False, center=True,
-                 include_raw=True, drop_features=True):
-        self.transformer = transformer
+    Parameters
+    ----------
+    rf_model: scikit-learn random forest object or None
+        The RF model to be used for interpretation. If None, then a new
+        RandomForestRegressor or RandomForestClassifier is instantiated with
+        **kwargs, depending on the task flag.
+    partial_prediction_model: A _PartialPredictionModelBase object or "auto"
+        The partial prediction model to be used for computing partial
+        predictions.
+        If value is set to "auto", then a default is chosen as follows:
+         - If task is set to "regression", then RidgePPM is used.
+         - If task is set to "classification", then LogisticPPM is used.
+    scoring_fns: function or dict with functions as values or "auto"
+        The scoring functions used for evaluating the partial predictions.
+        If "auto", then a default is chosen as follows:
+         - If task is set to "regression", then r2_score is used.
+         - If task is set to "classification", then roc_auc_score is used.
+    mode: string in {"keep_k", "keep_rest"}
+        Mode for the method. "keep_k" imputes the mean of each feature not
+        in block k when making a partial model prediction, while "keep_rest"
+        imputes the mean of each feature in block k. "keep_k" is strongly
+        recommended for computational considerations.
+    sample_split: string in {"loo", "oob"} or None
+        The sample splitting strategy to be used for overcoming entropy bias
+        in the feature importances. "loo" is strongly recommended for
+        performance.
+    include_raw: bool
+        Flag for whether to augment the local decision stump features extracted
+        from the RF model with the original features.
+    drop_features: bool
+        Flag for whether to use an intercept model for the partial predictions
+        on a given feature if a tree does not have any nodes that split on it,
+        or to use a model on the raw feature (if include_raw is True).
+    refit_rf: bool
+        Flag for whether to refit the supplied RF model when fitting the GMDI
+        feature importances.
+    task: string in {"regression", "classifcation"}
+        The supervised learning task for the RF model. Used for choosing
+        defaults for partial_prediction_model and scoring_fns. Currently only
+        regression and classification are supported.
+    """
+
+    def __init__(self,
+                 rf_model=None,
+                 partial_prediction_model="auto",
+                 scoring_fns="auto",
+                 mode="keep_k",
+                 sample_split="loo",
+                 include_raw=True,
+                 drop_features=True,
+                 refit_rf=True,
+                 task="regression",
+                 **kwargs):
+        if rf_model is not None:
+            self.rf_model = copy.deepcopy(rf_model)
+        elif task == "regression":
+            self.rf_model = RandomForestRegressor(**kwargs)
+        elif task == "classification":
+            self.rf_model = RandomForestClassifier(**kwargs)
+        else:
+            raise ValueError("Unsupported task.")
         self.partial_prediction_model = partial_prediction_model
-        self.scoring_fn = scoring_fn
+        self.scoring_fns = scoring_fns
         self.mode = mode
-        self.n_features = None
-        self._scores = None
-        self.is_fitted = False
-        self.training = training
-        self.center = center
+        self.sample_split = sample_split
         self.include_raw = include_raw
         self.drop_features = drop_features
+        self.refit_rf = refit_rf
+        self.task = task
+        self.is_fitted = False
+        self._scores = pd.DataFrame({})
 
     def get_scores(self, X=None, y=None):
         """
-        Get feature importance scores. If no data is supplied, then check
-        if the scores are already fitted, if so return them, else throw and
-        error. If data is supplied, fit the scores before returning them.
+        Obtain the GMDI feature importances.
 
         Parameters
         ----------
-        X
-        y
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix. If a pd.DataFrame object is supplied, then
+            the column names are used in the output
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
 
         Returns
         -------
-        scores: dict of {int, ndarray} pairs
-            A dictionary with feature indices as the keys and arrays of
-            gmdi feature importance scores as the values
+        scores: pd.DataFrame of shape (n_features, n_scoring_fns)
+            The GMDI feature importances.
+        """
+        if self.is_fitted:
+            pass
+        else:
+            if X is None or y is None:
+                raise ValueError("Not yet fitted. Need X and y as inputs.")
+            else:
+                self._fit_importance_scores(X, y)
+        return self._scores
+
+    def _fit_importance_scores(self, X, y):
+        if self.refit_rf:
+            self.rf_model.fit(X, y)
+        all_scores = []
+        if self.task == "regression":
+            ppm, scoring_fns = self._get_reg_defaults()
+        elif self.task == "classification":
+            ppm, scoring_fns = self._get_classification_defaults()
+            if len(np.unique(y)) > 2:
+                y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
+        else:
+            ppm, scoring_fns = self.partial_prediction_model, self.scoring_fns
+        for tree_model in self.rf_model.estimators_:
+            transformer = GmdiDefaultTransformer(
+                tree_model, drop_features=self.drop_features) if \
+                self.include_raw else TreeTransformer(tree_model)
+            if self.sample_split == "loo":
+                ppm.loo = True
+                gmdi_helper = GmdiHelper(transformer, ppm, scoring_fns,
+                                         self.mode, oob=False)
+            elif self.sample_split == "oob":
+                ppm.loo = False
+                gmdi_helper = GmdiHelper(transformer, ppm, scoring_fns,
+                                         self.mode, oob=True)
+            elif self.sample_split is None:
+                ppm.loo = False
+                gmdi_helper = GmdiHelper(transformer, ppm, scoring_fns,
+                                         self.mode, oob=False)
+            else:
+                raise ValueError("Unsupported sample splitting strategy.")
+            scores = gmdi_helper.get_scores(X, y)
+            if scores is not None:
+                all_scores.append(scores)
+        for fn_name in scoring_fns.keys():
+            self._scores[fn_name] = np.mean([scores[fn_name] for scores
+                                             in all_scores], axis=0)
+        if isinstance(X, pd.DataFrame):
+            self._scores.index = X.columns
+        self._scores.index.name = 'var'
+        self._scores.reset_index(inplace=True)
+        self.is_fitted = True
+
+    def _get_reg_defaults(self):
+        if self.partial_prediction_model == "auto":
+            ppm = RidgePPM()
+        else:
+            ppm = self.partial_prediction_model
+        if self.scoring_fns == "auto":
+            scoring_fns = {"importance": _fast_r2_score}
+        else:
+            scoring_fns = self.scoring_fns
+        return ppm, scoring_fns
+
+    def _get_classification_defaults(self):
+        if self.partial_prediction_model == "auto":
+            ppm = LogisticPPM()
+        else:
+            ppm = self.partial_prediction_model
+        if self.scoring_fns == "auto":
+            scoring_fns = {"importance": roc_auc_score}
+        else:
+            scoring_fns = self.scoring_fns
+        return ppm, scoring_fns
+
+
+class GmdiHelper:
+    """
+    A class that is primarily used by GMDI for fitting the GMDI scores for
+    a single tree in the RF. This class can also be used for further extensions
+    of the GMDI framework by supplying block transformers that provide
+    other types of feature engineering.
+
+    Parameters
+    ----------
+    transformer: A BlockTransformerBase object
+        A block feature transformer used to generate blocks of engineered
+        features for each original feature. GMDI is computed by evaluating
+        partial models on these blocks.
+    partial_prediction_model: A _PartialPredictionModelBase object
+        The partial prediction model to be used for computing partial
+        predictions.
+    scoring_fns: function or dict with functions as values
+        The scoring functions used for evaluating the partial predictions.
+    mode: string in {"keep_k", "keep_rest"}
+        Mode for the method. "keep_k" imputes the mean of each feature not
+        in block k when making a partial model prediction, while "keep_rest"
+        imputes the mean of each feature in block k. "keep_k" is strongly
+        recommended for computational considerations.
+    oob: bool
+        Flag for whether to use out-of-bag sample splitting (bag indices are
+        defined by the estimator object attached to the supplied transformer).
+    center: bool
+        Flag for whether to center the engineered features.
+    normalize: bool
+        Flag for whether to rescale the engineered features to have unit
+        variance.
+    """
+
+    def __init__(self, transformer, partial_prediction_model, scoring_fns,
+                 mode="keep_k", oob=False, center=True, normalize=False):
+        self.transformer = transformer
+        self.partial_prediction_model = copy.deepcopy(partial_prediction_model)
+        self.scoring_fns = scoring_fns
+        self.mode = mode
+        self.oob = oob
+        if self.oob and hasattr(partial_prediction_model, "loo") and \
+                partial_prediction_model.loo:
+            raise ValueError("Cannot use LOO together with OOB.")
+        self.center = center
+        self.normalize = normalize
+        self._scores = None
+        self.is_fitted = False
+
+    def get_scores(self, X=None, y=None):
+        """
+        Obtain the GMDI feature importances.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix. If a pd.DataFrame object is supplied, then
+            the column names are used in the output
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
+
+        Returns
+        -------
+        scores: pd.DataFrame of shape (n_features, n_scoring_fns)
+            The GMDI feature importances.
         """
         if X is None or y is None:
             if self.is_fitted:
@@ -102,94 +256,78 @@ class GMDI:
         return self._scores
 
     def _fit_importance_scores(self, X, y):
-        blocked_data = self.transformer.transform(X, center=self.center)
+        blocked_data = self.transformer.transform(X, center=self.center,
+                                                  normalize=self.normalize)
         self.n_features = blocked_data.n_blocks
-        if self.include_raw and self.drop_features == False:
-            data_blocks = []
-            min_adj_factor = np.nanmin(np.concatenate(self.transformer.all_adj_factors, axis=0))
-            for k in range(self.n_features):
-                if blocked_data.get_block(k).shape[1] == 1 and X[:, [k]].std() > 0.0:  # only contains raw feature
-                    data_blocks.append(
-                        blocked_data.get_all_data()[:, blocked_data.get_block_indices(k)] * min_adj_factor / X[:,
-                                                                                                             [k]].std())
-                else:
-                    data_blocks.append(blocked_data.get_all_data()[:, blocked_data.get_block_indices(k)])
-            blocked_data = BlockPartitionedData(data_blocks)
         if self.oob:
-            if self.training:
-                train_blocked_data, test_blocked_data, y_train, y_test = self._train_test_split(blocked_data, y)
-                test_blocked_data = copy.deepcopy(train_blocked_data)
-                y_test = copy.deepcopy(y_train)
-            else:
-                train_blocked_data, test_blocked_data, y_train, y_test = self._train_test_split(blocked_data, y)
+            train_blocked_data, test_blocked_data, y_train, y_test = \
+                self._train_test_split(blocked_data, y)
         else:
             train_blocked_data = test_blocked_data = blocked_data
             y_train = y_test = y
-        if train_blocked_data.get_all_data().shape[1] == 0:  # checking if learnt representation is empty
-            self._scores = np.zeros(X.shape[1])
-            for k in range(X.shape[1]):
-                self._scores[k] = np.NaN
+        if train_blocked_data.get_all_data().shape[1] == 0:
+            self._scores = None
+            raise Warning("Transformer representation is empty.")
         else:
-            if y.ndim == 1:
-                full_preds, partial_preds, partial_params = self._fit_one_target(train_blocked_data, y_train,
-                                                                                 test_blocked_data, y_test)
-            else:
-                full_preds_list = []
-                partial_preds_list = []
-                partial_params = None
-                for j in range(y.shape[1]):
-                    yj_train = y_train[:, j]
-                    yj_test = y_test[:, j]
-                    full_preds_j, partial_preds_j, _ = self._fit_one_target(train_blocked_data, yj_train,
-                                                                            test_blocked_data, yj_test,
-                                                                            multitarget=True)
-                    full_preds_list.append(full_preds_j)
-                    partial_preds_list.append(partial_preds_j)
-                full_preds = np.array(full_preds_list).T
-                partial_preds = dict()
-                for k in range(self.n_features):
-                    partial_preds[k] = np.array([partial_preds_j[k] for partial_preds_j in partial_preds_list]).T
-            self._score_partial_predictions(full_preds, partial_params, partial_preds, y_test)
+            full_preds, partial_preds = self._get_preds(
+                train_blocked_data, y_train, test_blocked_data, y_test)
+            self._score_partial_predictions(full_preds, partial_preds, y_test)
         self.is_fitted = True
 
-    def _fit_one_target(self, train_blocked_data, y_train, test_blocked_data, y_test, multitarget=False):
-        partial_preds = dict()
-        partial_params = dict()
-        if multitarget:
-            ppm = copy.deepcopy(self.partial_prediction_model)
-        else:
-            ppm = self.partial_prediction_model
-        ppm.fit(train_blocked_data, y_train, test_blocked_data, y_test, self.mode)
+    def _get_preds_one_target(self, train_blocked_data, y_train,
+                              test_blocked_data, y_test):
+        ppm = self.partial_prediction_model
+        ppm.fit(train_blocked_data, y_train, test_blocked_data,
+                y_test, self.mode)
         full_preds = ppm.get_full_predictions()
-        for k in range(self.n_features):
-            partial_preds[k], partial_params[k] = ppm.get_partial_predictions(k)
-        return full_preds, partial_preds, partial_params
+        partial_preds = ppm.get_all_partial_predictions()
+        return full_preds, partial_preds
 
-    def _score_partial_predictions(self, full_preds, partial_params, partial_preds, y_test):
-        self._scores = np.zeros(self.n_features)
-        if self.mode == "keep_k":
+    def _get_preds(self, train_blocked_data, y_train,
+                   test_blocked_data, y_test):
+        if y_train.ndim == 1:
+            return self._get_preds_one_target(train_blocked_data, y_train,
+                                              test_blocked_data, y_test)
+        else:
+            full_preds_list = []
+            partial_preds_list = []
+            for j in range(y_train.shape[1]):
+                yj_train = y_train[:, j]
+                yj_test = y_test[:, j]
+                full_preds_j, partial_preds_j = self._get_preds_one_target(
+                    train_blocked_data, yj_train, test_blocked_data, yj_test)
+                full_preds_list.append(full_preds_j)
+                partial_preds_list.append(partial_preds_j)
+            full_preds = np.array(full_preds_list).T
+            partial_preds = dict()
             for k in range(self.n_features):
-                if self.scoring_fn == "mdi_oob":
-                    if partial_params is None:
-                        raise ValueError("scoring_fn='mdi_oob' has not been implemented for multi-task y.")
-                    if len(partial_params[k]) == 1:  # only intercept model
-                        self._scores[k] = np.dot(y_test, partial_preds[k] - partial_params[k]) / len(y_test)
-                    elif partial_params[k].ndim == 1:  # partial prediction model without LOO
-                        self._scores[k] = np.dot(y_test, partial_preds[k] - partial_params[k][-1]) / len(y_test)
-                    else:  # LOO partial prediction model
-                        self._scores[k] = np.dot(y_test, partial_preds[k] - partial_params[k][:, -1]) / len(y_test)
-                else:
-                    self._scores[k] = self.scoring_fn(y_test, partial_preds[k])
-        elif self.mode == "keep_rest":
-            full_score = self.scoring_fn(y_test, full_preds)
-            for k in range(self.n_features):
-                self._scores[k] = full_score - self.scoring_fn(y_test, partial_preds[k])
+                partial_preds[k] = \
+                    np.array([partial_preds_j[k] for partial_preds_j in
+                              partial_preds_list]).T
+            return full_preds, partial_preds
+
+    def _score_partial_predictions(self, full_preds, partial_preds, y_test):
+        scoring_fns = self.scoring_fns if hasattr(self.scoring_fns, "__len__") \
+            else {"importance": self.scoring_fns}
+        all_scores = pd.DataFrame({})
+        for fn_name, scoring_fn in scoring_fns.items():
+            scores = _partial_preds_to_scores(partial_preds, y_test,
+                                              scoring_fn)
+            if self.mode == "keep_rest":
+                full_score = scoring_fn(y_test, full_preds)
+                scores = full_score - scores
+            scores = scores.ravel()
+            all_scores[fn_name] = scores
+        self._scores_ = all_scores
 
     def _train_test_split(self, blocked_data, y):
         n_samples = len(y)
-        train_indices = _generate_sample_indices(self.transformer.estimator.random_state, n_samples, n_samples)
-        test_indices = _generate_unsampled_indices(self.transformer.estimator.random_state, n_samples, n_samples)
-        train_blocked_data, test_blocked_data = blocked_data.train_test_split(train_indices, test_indices)
+        train_indices = _generate_sample_indices(
+            self.transformer.estimator.random_state, n_samples, n_samples)
+        test_indices = _generate_unsampled_indices(
+            self.transformer.estimator.random_state, n_samples, n_samples)
+        train_blocked_data, test_blocked_data = \
+            blocked_data.train_test_split(train_indices, test_indices)
         if y.ndim > 1:
             y_train = y[train_indices, :]
             y_test = y[test_indices, :]
@@ -199,43 +337,17 @@ class GMDI:
         return train_blocked_data, test_blocked_data, y_train, y_test
 
 
-class GMDIEnsemble:
+def _partial_preds_to_scores(partial_preds, y_test, scoring_fn):
+    scores = []
+    for k, y_pred in partial_preds.items():
+        if not hasattr(y_pred, "__len__"):  # if constant model
+            y_pred = np.ones_like(y_test) * y_pred
+        scores.append(scoring_fn(y_test, y_pred))
+    return np.vstack(scores)
 
-    def __init__(self, transformers, partial_prediction_model, scoring_fn,
-                 mode="keep_k", oob=False, training=False,
-                 center=True, include_raw=True, drop_features=True):
-        self.n_transformers = len(transformers)
-        self.gmdi_objects = [
-            GMDI(transformer, copy.deepcopy(partial_prediction_model),
-                 scoring_fn, mode, oob, training, center,
-                 include_raw, drop_features)
-            for transformer in transformers]
-        self.oob = oob
-        self.training = training
-        self.scoring_fn = scoring_fn
-        self.mode = mode
-        self.n_features = None
-        self._scores = None
-        self.is_fitted = False
-        self.include_raw = include_raw
-        self.drop_features = drop_features
 
-    def _fit_importance_scores(self, X, y):
-        assert X.shape[0] == len(y)
-        # n_samples = len(y)
-        scores = []
-        for gmdi_object in self.gmdi_objects:
-            scores.append(gmdi_object.get_scores(X, y))
-        self._scores = np.nanmean(scores, axis=0)
-        self.is_fitted = True
-        self.n_features = self.gmdi_objects[0].n_features
-
-    def get_scores(self, X=None, y=None):
-        if self.is_fitted:
-            pass
-        else:
-            if X is None or y is None:
-                raise ValueError("Not yet fitted. Need X and y as inputs.")
-            else:
-                self._fit_importance_scores(X, y)
-        return self._scores
+def _fast_r2_score(y_true, y_pred):
+    numerator = ((y_true - y_pred) ** 2).sum(axis=0, dtype=np.float64)
+    denominator = ((y_true - np.mean(y_true, axis=0)) ** 2). \
+        sum(axis=0, dtype=np.float64)
+    return 1 - numerator / denominator

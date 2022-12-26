@@ -299,8 +299,7 @@ class TreeTransformer(BlockTransformerBase, ABC):
         self.stumps = defaultdict(list)
         for stump in all_stumps:
             self.stumps[stump.feature].append(stump)
-        self.n_splits = np.array([len(self.stumps[k]) for
-                                  k in range(self.n_features)])
+        self.n_splits = {k: len(stumps) for k, stumps in self.stumps.items()}
 
     def _transform_one_feature(self, X, k):
         return tree_feature_transform(self.stumps[k], X)
@@ -362,6 +361,19 @@ class GmdiDefaultTransformer(CompositeTransformer, ABC):
     Default block transformer used in GMDI. For each original feature, this
     forms a block comprising the local decision stumps, from a single tree
     model, that split on the feature, and appends the original feature.
+
+    Parameters
+    ----------
+    tree_model: scikit-learn estimator
+        The scikit-learn tree estimator object.
+    rescale_mode: string in {"max", "mean", None}
+        Flag for the type of rescaling to be done to the blocks from different
+        base transformers. If "max", divide each block by the max std deviation
+        of a column within the block. If "mean", divide each block by the mean
+        std deviation of a column within the block. If None, do not rescale.
+    drop_features: bool
+        Flag for whether to return an empty block if that from the first
+        transformer in the list is trivial.
     """
     def __init__(self, tree_model, rescale_mode="max", drop_features=True):
         super().__init__([TreeTransformer(tree_model), IdentityTransformer()],

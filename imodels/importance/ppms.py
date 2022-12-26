@@ -5,14 +5,13 @@ from functools import partial
 
 import numpy as np
 import scipy as sp
-from skimage.metrics import mean_squared_error
 
-from sklearn.linear_model import RidgeCV, LogisticRegressionCV, Ridge, \
-    LogisticRegression, HuberRegressor
-from sklearn.metrics import log_loss
+from sklearn.linear_model import RidgeCV, Ridge, LogisticRegression, \
+    HuberRegressor
+from sklearn.metrics import log_loss, mean_squared_error
 
 
-class PartialPredictionModelBase(ABC):
+class _PartialPredictionModelBase(ABC):
     """
     An interface for partial prediction models, objects that make use of a
     block partitioned data object, fits a regression or classification model
@@ -23,12 +22,12 @@ class PartialPredictionModelBase(ABC):
     Parameters
     ----------
     estimator: scikit estimator object
-        The regression or classification model used to obtain predictions
+        The regression or classification model used to obtain predictions.
 
     """
 
     def __init__(self, estimator):
-        self.estimator = estimator
+        self.estimator = copy.deepcopy(estimator)
         self.n_blocks = None
         self._partial_preds = dict({})
         self._full_preds = None
@@ -58,8 +57,8 @@ class PartialPredictionModelBase(ABC):
         """
         self.n_blocks = train_blocked_data.n_blocks
         self._fit_model(train_blocked_data, y_train)
-        self._full_preds = self._fit_full_predictions(test_blocked_data,
-                                                      y_test)
+        self._full_preds = \
+            self._fit_full_predictions(test_blocked_data, y_test)
         for k in range(self.n_blocks):
             self._partial_preds[k] = \
                 self._fit_partial_predictions(k, mode, test_blocked_data,
@@ -81,18 +80,13 @@ class PartialPredictionModelBase(ABC):
         pass
 
     @abstractmethod
-    def _fit_partial_predictions(self, k, mode, test_blocked_data, y_test=None):
+    def _fit_partial_predictions(self, k, mode, test_blocked_data,
+                                 y_test=None):
         """
         Calculate the predictions made by the model on modified copies of the
         data.
         """
         pass
-
-    def get_partial_predictions(self, k):
-        """
-        Get the predictions made by the model on modified copies of the data.
-        """
-        return self._partial_preds[k]
 
     def get_full_predictions(self):
         """
@@ -100,8 +94,17 @@ class PartialPredictionModelBase(ABC):
         """
         return self._full_preds
 
+    def get_partial_predictions(self, k):
+        """
+        Get the predictions made by the model on modified copies of the data.
+        """
+        return self._partial_preds[k]
 
-class GenericPPM(PartialPredictionModelBase, ABC):
+    def get_all_partial_predictions(self):
+        return self._partial_preds
+
+
+class GenericPPM(_PartialPredictionModelBase, ABC):
     """
     Partial prediction model for arbitrary estimators. May be slow.
     """
@@ -116,7 +119,8 @@ class GenericPPM(PartialPredictionModelBase, ABC):
         pred_func = self._get_pred_func()
         return pred_func(test_blocked_data.get_all_data())
 
-    def _fit_partial_predictions(self, k, mode, test_blocked_data, y_test=None):
+    def _fit_partial_predictions(self, k, mode, test_blocked_data,
+                                 y_test=None):
         pred_func = self._get_pred_func()
         modified_data = test_blocked_data.get_modified_data(k, mode)
         return pred_func(modified_data)
@@ -129,349 +133,250 @@ class GenericPPM(PartialPredictionModelBase, ABC):
         return pred_func
 
 
-class GlmPPM(PartialPredictionModelBase, ABC):
+class GlmPPM(_PartialPredictionModelBase, ABC):
     """
-    PPM class for GLM predictors. Not fully implemented yet.
-    """
-
-    def __init__(self, estimator, alpha_grid=np.logspace(-4, 4, 10),
-                 link_fn=lambda a: a, l_dot=lambda a, b: b - a,
-                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1,
-                 hyperparameter_scorer=mean_squared_error,
-                 trim=None):
-        super().__init__(estimator)
-        self.aloo_calculator = _GlmAlooCalculator(copy.deepcopy(self.estimator), alpha_grid, link_fn=link_fn,
-                                                  l_dot=l_dot, l_doubledot=l_doubledot, r_doubledot=r_doubledot,
-                                                  hyperparameter_scorer=hyperparameter_scorer, trim=trim)
-        self.trim = trim
-
-    def _fit_model(self, train_blocked_data, y_train):
-        self.alpha_ = self.aloo_calculator.get_aloocv_alpha(train_blocked_data.get_all_data(), y_train)
-        if hasattr(self.estimator, "alpha"):
-            self.estimator.set_params(alpha=self.alpha_)
-        elif hasattr(self.estimator, "C"):
-            self.estimator.set_params(C=1 / self.alpha_)
-        else:
-            warnings.warn("Estimator has no regularization parameter.")
-
-
-class RidgePPM(PartialPredictionModelBase, ABC):
-    """
-    PPM class with ridge as the regression model (default).
-    """
-
-    def __init__(self, **kwargs):
-        super().__init__(estimator=RidgeCV(**kwargs))
-
-    def _fit_model(self, train_blocked_data, y_train):
-        self.estimator.fit(train_blocked_data.get_all_data(), y_train)
-
-    def _fit_full_predictions(self, test_blocked_data, y_test=None):
-        return self.estimator.predict(test_blocked_data.get_all_data())
-
-    def _fit_partial_predictions(self, k, mode, test_blocked_data,
-                                 y_test=None):
-        if mode == "keep_k":
-            # Instead of modifying the data, we subset only those features
-            # in the block to reduce computational cost. This is equivalent
-            # to imputing the mean if the data is centered
-            col_indices = test_blocked_data.get_block_indices(k)
-            reduced_data = test_blocked_data.get_block(k)
-        elif mode == "keep_rest":
-            col_indices = test_blocked_data.get_all_except_block_indices(k)
-            reduced_data = test_blocked_data.get_all_except_block(k)
-        else:
-            raise ValueError("Invalid mode")
-        partial_coef_ = np.append(self.estimator.coef_,
-                                  self.estimator.intercept_)
-        partial_preds = reduced_data @ self.estimator.coef_[col_indices] + \
-                        self.estimator.intercept_
-        return partial_preds, partial_coef_
-
-    def set_alphas(self, alphas="default", blocked_data=None, y=None):
-        full_data = blocked_data.get_all_data()
-        if alphas == "default":
-            alphas = get_alpha_grid(full_data, y)
-        else:
-            alphas = alphas
-        self.estimator = RidgeCV(alphas=alphas)
-
-
-class LogisticPPM(PartialPredictionModelBase, ABC):
-
-    def __init__(self, loo_model_selection=True, alphas=np.logspace(-4, 4, 10),
-                 trim=0.01, **kwargs):
-        if loo_model_selection:
-            self.alphas = alphas
-            super().__init__(estimator=LogisticRegression(**kwargs))
-        else:
-            super().__init__(estimator=LogisticRegressionCV(alphas, **kwargs))
-        self.loo_model_selection = loo_model_selection
-        self.trim = trim
-
-    def _fit_model(self, train_blocked_data, y_train):
-        if self.loo_model_selection:
-            aloo_calculator = _GlmAlooCalculator(copy.deepcopy(self.estimator), self.alphas, link_fn=sp.special.expit,
-                                                 l_doubledot=lambda a, b: b * (1 - b), hyperparameter_scorer=log_loss,
-                                                 trim=self.trim)
-            alpha_ = aloo_calculator.get_aloocv_alpha(train_blocked_data.get_all_data(), y_train)
-            self.estimator.set_params(C=1 / alpha_)
-            self.estimator.fit(train_blocked_data.get_all_data(), y_train)
-        else:
-            self.estimator.fit(train_blocked_data.get_all_data(), y_train)
-
-    def _fit_full_predictions(self, test_blocked_data, y_test=None):
-        return self._trim_values(self.estimator.predict_proba(test_blocked_data.get_all_data()))
-
-    def _fit_partial_predictions(self, k, mode, test_blocked_data, y_test=None):
-        if mode == "keep_k":
-            col_indices = test_blocked_data.get_block_indices(k)
-            reduced_data = test_blocked_data.get_block(k)
-        elif mode == "keep_rest":
-            col_indices = test_blocked_data.get_all_except_block_indices(k)
-            reduced_data = test_blocked_data.get_all_except_block(k)
-        else:
-            raise ValueError("Invalid mode")
-        coef_, intercept_ = _extract_coef_and_intercept(self.estimator)
-        reduced_coef_ = coef_[col_indices]
-        return self._trim_values(sp.special.expit(reduced_data @ reduced_coef_ + intercept_)), reduced_coef_
-
-    def _trim_values(self, values):
-        if self.trim is not None:
-            assert 0 < self.trim < 0.5, "Limit must be between 0 and 0.5"
-            return np.clip(values, self.trim, 1 - self.trim)
-        else:
-            return values
-
-
-class GenericLOOPPM(PartialPredictionModelBase, ABC):
-    """
-    PPM class that fits (approximate) leave-one-out predictions for a GLM
-    estimator.
+    PPM class for GLM estimator. The GLM estimator is assumed to have a single
+    regularization hyperparameter accessible as a named attribute called either
+    "alpha" or "C". When fitting, the PPM class will select this hyperparameter
+    using efficient approximate leave-one-out calculations.
 
     Parameters
     ----------
     estimator: scikit estimator object
-        The regression or classification model used to obtain predictions
-    alpha_grid: ndarray
-        The values of the regularization hyperparameter alpha to try.
-    link_fn: function
-        Vectorized GLM link function
+        The regression or classification model used to obtain predictions.
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    inv_link_fn: function
+        The inverse of the GLM link function.
     l_dot: function
-        Vectorized first derivative of the link function
+        The first derivative of the log likelihood (with respect to the linear
+        predictor), as a function of the linear predictor and the response y.
     l_doubledot: function
-        Vectorized second derivative of the link function
+        The second derivative of the log likelihood (with respect to the linear
+        predictor), as a function of the linear predictor and the true response
+        y.
     r_doubledot: function
-        Vectorized second derivative of the regularizer function
+        The second derivative of the regularizer with respect to each
+        coefficient. We assume that the regularizer is separable and symmetric
+        with respect to the coefficients.
     hyperparameter_scorer: function
-        Vectorized function to compute loss used to select the regularization
-        hyperparameter alpha.
-    trim: float or None
-        The amount by which to trim the predictitons (used when estimator is
-        a classifier model as extreme predicted probabilities may be unstable.)
-    fixed_intercept: bool
-        If True, use
-
+        The function used to evaluate different hyperparameter values.
+        Typically, this is the loglikelihood as a function of the linear
+        predictor and the true response y.
+    trim: float
+        The amount by which to trim predicted probabilities away from 0 and 1.
+        This helps to stabilize some loss calculations.
     """
 
-    def __init__(self, estimator, alpha_grid=np.logspace(-4, 4, 10),
-                 link_fn=lambda a: a, l_dot=lambda a, b: b - a,
-                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1,
-                 hyperparameter_scorer=mean_squared_error,
-                 trim=None, fixed_intercept=True):
-
-        super().__init__(estimator)
-        self.aloo_calculator = \
-            _GlmAlooCalculator(copy.deepcopy(self.estimator), alpha_grid,
-                               link_fn=link_fn, l_dot=l_dot,
-                               l_doubledot=l_doubledot,
-                               r_doubledot=r_doubledot,
-                               hyperparameter_scorer=hyperparameter_scorer,
-                               trim=trim)
-        self.trim = trim
-        self.fixed_intercept = fixed_intercept
-
-    def _fit_model(self, train_blocked_data, y_train):
-        self.alpha_ = self.aloo_calculator. \
-            get_aloocv_alpha(train_blocked_data.get_all_data(), y_train)
-        if hasattr(self.estimator, "alpha"):
-            self.estimator.set_params(alpha=self.alpha_)
-        elif hasattr(self.estimator, "C"):
-            self.estimator.set_params(C=1 / self.alpha_)
-        else:
-            warnings.warn("Estimator has no regularization parameter.")
-
-    def _fit_full_predictions(self, test_blocked_data, y_test=None):
-        if y_test is None:
-            raise ValueError("Need to supply y_test for LOO")
-        X1 = np.hstack([test_blocked_data.get_all_data(),
-                        np.ones((test_blocked_data.n_samples, 1))])
-        fitted_parameters = self.aloo_calculator \
-            .get_aloo_fitted_parameters(test_blocked_data.get_all_data(),
-                                        y_test, self.alpha_, cache=True)
-        full_preds = self.aloo_calculator.score_to_pred(
-            np.sum(fitted_parameters.T * X1, axis=1))
-
-        return full_preds
-
-    def _fit_partial_predictions(self, k, mode, test_blocked_data,
-                                 y_test=None):
-        if y_test is None:
-            raise ValueError("Need to supply y_test for LOO")
-        if mode == "keep_k":
-            col_indices = test_blocked_data.get_block_indices(k)
-            reduced_data = test_blocked_data.get_block(k)
-        elif mode == "keep_rest":
-            col_indices = test_blocked_data.get_all_except_block_indices(k)
-            reduced_data = test_blocked_data.get_all_except_block(k)
-        else:
-            raise ValueError("Invalid mode")
-        reduced_data1 = np.hstack([reduced_data,
-                                   np.ones((test_blocked_data.n_samples, 1))])
-        col_indices = np.append(col_indices, -1)
-        if self.fixed_intercept and len(col_indices) == 1:
-            _, intercept = _extract_coef_and_intercept(self.aloo_calculator.estimator)
-            return np.repeat(self.aloo_calculator.score_to_pred(intercept), len(y_test)), [
-                intercept]  # returning learnt intercept for null model
-        else:
-            fitted_parameters = self.aloo_calculator.get_aloo_fitted_parameters()
-            reduced_parameters = fitted_parameters.T[:, col_indices]
-            partial_preds = self.aloo_calculator.score_to_pred(
-                np.sum(reduced_parameters * reduced_data1, axis=1))
-            return partial_preds, reduced_parameters  # returning learnt parameters for partial model
-
-    def _trim_values(self, values):
-        if self.trim is not None:
-            assert 0 < self.trim < 0.5, "Limit must be between 0 and 0.5"
-            return np.clip(values, self.trim, 1 - self.trim)
-        else:
-            return values
-
-
-class RidgeLOOPPM(GenericLOOPPM, ABC):
-    def __init__(self, alpha_grid=np.logspace(-5, 5, 100),
-                 fixed_intercept=True, **kwargs):
-        super().__init__(Ridge(**kwargs), alpha_grid,
-                         fixed_intercept=fixed_intercept)
-
-    def set_alphas(self, alphas="default", blocked_data=None, y=None):
-        full_data = blocked_data.get_all_data()
-        if alphas == "default":
-            alphas = get_alpha_grid(full_data, y)
-        else:
-            alphas = alphas
-        self.aloo_calculator.alpha_grid = alphas
-
-
-class RobustLOOPPM(GenericLOOPPM, ABC):
-    def __init__(self, alpha_grid=np.linspace(0.01, 3, 100),
-                 fixed_intercept=True, epsilon=1.35, **kwargs):
-        loss_fn = partial(huber_loss, epsilon=epsilon)
-        l_dot = lambda a, b: (b - a) / (1 + ((a - b) / epsilon) ** 2) ** 0.5
-        l_doubledot=lambda a, b: (1 + (((a - b) / epsilon) ** 2)) ** (-1.5)
-        super().__init__(
-            HuberRegressor(**kwargs), alpha_grid, l_dot=l_dot,
-            l_doubledot=l_doubledot,
-            hyperparameter_scorer=loss_fn, fixed_intercept=fixed_intercept)
-
-
-class LogisticLOOPPM(GenericLOOPPM, ABC):
-
-    def __init__(self, alpha_grid=np.logspace(-4, 4, 10),
-                 fixed_intercept=True, **kwargs):
-        super().__init__(LogisticRegression(**kwargs), alpha_grid,
-                         link_fn=sp.special.expit,
-                         l_doubledot=lambda a, b: b * (1 - b),
-                         hyperparameter_scorer=log_loss,
-                         trim=0.01, fixed_intercept=fixed_intercept)
-
-
-class _GlmAlooCalculator:
-    """
-    Class to perform approximate leave-one-out calculations
-    """
-
-    def __init__(self, estimator, alpha_grid=np.logspace(-4, 4, 10),
-                 link_fn=lambda a: a, l_dot=lambda a, b: b - a,
+    def __init__(self, estimator, loo=True, alpha_grid=np.logspace(-4, 4, 10),
+                 inv_link_fn=lambda a: a, l_dot=lambda a, b: b - a,
                  l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1,
                  hyperparameter_scorer=mean_squared_error,
                  trim=None):
-        super().__init__()
-        self.estimator = estimator
+        super().__init__(estimator)
+        self.loo = loo
         self.alpha_grid = alpha_grid
-        self.link_fn = link_fn
+        self.inv_link_fn = inv_link_fn
         self.l_dot = l_dot
         self.l_doubledot = l_doubledot
         self.r_doubledot = r_doubledot
         self.trim = trim
         self.hyperparameter_scorer = hyperparameter_scorer
         self.alpha_ = None
-        self.loo_fitted_parameters = None
+        self.loo_coefficients_ = None
+        self.coefficients_ = None
+        self._intercept_pred = None
 
-    def get_aloo_fitted_parameters(self, X=None, y=None, alpha=None,
-                                   cache=False):
+    def _fit_model(self, train_blocked_data, y_train):
+        # Compute regularization hyperparameter using approximate LOOCV
+        X_train = train_blocked_data.get_all_data()
+        if isinstance(self.estimator, Ridge):
+            cv = RidgeCV(alphas=self.alpha_grid)
+            cv.fit(X_train, y_train)
+            self.alpha_ = cv.alpha_
+        else:
+            self.alpha_ = self._get_aloocv_alpha(X_train, y_train)
+        # Fit the model on the training set and compute the coefficients
+        if self.loo:
+            self.loo_coefficients_ = \
+                self._fit_loo_coefficients(X_train, y_train, self.alpha_)
+        else:
+            self.coefficients_ = \
+                self._fit_coefficients(X_train, y_train, self.alpha_)
+
+    def _fit_full_predictions(self, test_blocked_data, y_test=None):
+        X_test = test_blocked_data.get_all_data()
+        if self.loo:
+            preds = _get_preds(X_test, self.loo_coefficients_,
+                               self.inv_link_fn)
+        else:
+            preds = _get_preds(X_test, self.coefficients_,
+                               self.inv_link_fn)
+        return _trim_values(preds, self.trim)
+
+    def _fit_partial_predictions(self, k, mode, test_blocked_data,
+                                 y_test=None):
+        if mode == "keep_k":
+            block_indices = test_blocked_data.get_block_indices(k)
+            data_block = test_blocked_data.get_block(k)
+        elif mode == "keep_rest":
+            block_indices = test_blocked_data.get_all_except_block_indices(k)
+            data_block = test_blocked_data.get_all_except_block(k)
+        else:
+            raise ValueError("Invalid mode")
+        if len(block_indices) == 0: # If empty block
+            return self.intercept_pred
+        else:
+            if self.loo:
+                coefs = self.loo_coefficients_[:, block_indices]
+                intercept = self.loo_coefficients_[:, -1]
+            else:
+                coefs = self.coefficients_[block_indices]
+                intercept = self.coefficients_[-1]
+            return _trim_values(_get_preds(data_block, coefs, self.inv_link_fn,
+                                           intercept), self.trim)
+
+    @property
+    def intercept_pred(self):
+        if self._intercept_pred is None:
+            self._intercept_pred = \
+                _trim_values(self.inv_link_fn(self.coefficients_[-1]),
+                             self.trim)
+        return self._intercept_pred
+
+    def _fit_coefficients(self, X, y, alpha):
+        _set_alpha(self.estimator, alpha)
+        self.estimator.fit(X, y)
+        self.coefficients_ = _extract_coef_and_intercept(self.estimator)
+        return self.coefficients_
+
+    def _fit_loo_coefficients(self, X, y, alpha):
         """
         Get the coefficient (and intercept) for each LOO model. Since we fit
         one model for each sample, this gives an ndarray of shape (n_samples,
         n_features + 1)
         """
-        if self.loo_fitted_parameters is not None:
-            return self.loo_fitted_parameters
-        else:
-            if hasattr(self.estimator, "alpha"):
-                self.estimator.set_params(alpha=alpha)
-            elif hasattr(self.estimator, "C"):
-                self.estimator.set_params(C=1 / alpha)
-            else:
-                alpha = 0
-            estimator = copy.deepcopy(self.estimator)
-            estimator.fit(X, y)
-            X1 = np.hstack([X, np.ones((X.shape[0], 1))])
-            augmented_coef_ = _extract_coef_and_intercept(estimator,
-                                                          merge=True)
-            orig_preds = self.link_fn(X1 @ augmented_coef_)
-            l_doubledot_vals = self.l_doubledot(y, orig_preds)
-            J = X1.T * l_doubledot_vals @ X1
-            if self.r_doubledot is not None:
-                r_doubledot_vals = self.r_doubledot(augmented_coef_) * \
-                                   np.ones_like(augmented_coef_)
-                r_doubledot_vals[-1] = 0 # Do not penalize constant term
-                reg_curvature = np.diag(r_doubledot_vals)
-                J += alpha * reg_curvature
-            normal_eqn_mat = np.linalg.inv(J) @ X1.T
-            h_vals = np.sum(X1.T * normal_eqn_mat, axis=0) * l_doubledot_vals
-            loo_fitted_parameters = \
-                augmented_coef_[:, np.newaxis] + \
-                normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
-            if cache:
-                self.loo_fitted_parameters = loo_fitted_parameters
-                self.estimator = estimator
-            return loo_fitted_parameters
+        orig_coef_ = self._fit_coefficients(X, y, alpha)
+        X1 = np.hstack([X, np.ones((X.shape[0], 1))])
+        orig_preds = _get_preds(X, orig_coef_, self.inv_link_fn)
+        l_doubledot_vals = self.l_doubledot(y, orig_preds)
+        J = X1.T * l_doubledot_vals @ X1
+        if self.r_doubledot is not None:
+            r_doubledot_vals = self.r_doubledot(orig_coef_) * \
+                               np.ones_like(orig_coef_)
+            r_doubledot_vals[-1] = 0 # Do not penalize constant term
+            reg_curvature = np.diag(r_doubledot_vals)
+            J += alpha * reg_curvature
+        normal_eqn_mat = np.linalg.inv(J) @ X1.T
+        h_vals = np.sum(X1.T * normal_eqn_mat, axis=0) * l_doubledot_vals
+        loo_coef_ = orig_coef_[:, np.newaxis] + \
+                    normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
+        return loo_coef_.T
 
-    def score_to_pred(self, score):
-        return self._trim_values(self.link_fn(score))
-
-    def get_aloocv_alpha(self, X, y):
+    def _get_aloocv_alpha(self, X, y):
         cv_scores = np.zeros_like(self.alpha_grid)
         for i, alpha in enumerate(self.alpha_grid):
-            loo_fitted_parameters = self.get_aloo_fitted_parameters(X, y,
-                                                                    alpha)
+            loo_coef_ = self._fit_loo_coefficients(X, y, alpha)
             X1 = np.hstack([X, np.ones((X.shape[0], 1))])
-            preds = self.score_to_pred(np.sum(loo_fitted_parameters.T * X1,
-                                              axis=1))
+            sample_scores = np.sum(loo_coef_.T * X1, axis=1)
+            preds = _trim_values(self.inv_link_fn(sample_scores), self.trim)
             cv_scores[i] = self.hyperparameter_scorer(y, preds)
         self.alpha_ = self.alpha_grid[np.argmin(cv_scores)]
         return self.alpha_
 
-    def _trim_values(self, values):
-        if self.trim is not None:
-            assert 0 < self.trim < 0.5, "Limit must be between 0 and 0.5"
-            return np.clip(values, self.trim, 1 - self.trim)
+
+class RidgePPM(GlmPPM, ABC):
+    """
+    PPM class that uses ridge as the estimator.
+
+    Parameters
+    ----------
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    **kwargs
+        Other Parameters are passed on to Ridge().
+    """
+
+    def __init__(self, loo=True, alpha_grid=np.logspace(-5, 5, 100), **kwargs):
+        super().__init__(Ridge(**kwargs), loo, alpha_grid)
+
+    def set_alphas(self, alphas="default", blocked_data=None, y=None):
+        full_data = blocked_data.get_all_data()
+        if alphas == "default":
+            alphas = get_alpha_grid(full_data, y)
         else:
-            return values
+            alphas = alphas
+        self.alpha_grid = alphas
 
 
-def _extract_coef_and_intercept(estimator, merge=False):
+class LogisticPPM(GlmPPM, ABC):
+    """
+    PPM class that uses logistic regression as the estimator.
+
+    Parameters
+    ----------
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    max_iter: int
+        The maximum number of iterations for the LogisticRegression solver.
+    **kwargs
+        Other Parameters are passed on to LogisticRegression().
+    """
+
+    def __init__(self, loo=True, alpha_grid=np.logspace(-4, 4, 10),
+                 max_iter=1000, **kwargs):
+        super().__init__(LogisticRegression(max_iter=max_iter, **kwargs),
+                         loo, alpha_grid,
+                         inv_link_fn=sp.special.expit,
+                         l_doubledot=lambda a, b: b * (1 - b),
+                         hyperparameter_scorer=log_loss,
+                         trim=0.01)
+
+
+class RobustPPM(GlmPPM, ABC):
+    """
+    PPM class that uses Huber robust regression as the estimator.
+
+    Parameters
+    ----------
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    epsilon: float
+        The robustness parameter for Huber regression. The smaller the epsilon,
+        the more robust it is to outliers. Epsilon must be in the range
+        [1, inf).
+    **kwargs
+        Other Parameters are passed on to LogisticRegression().
+    """
+    def __init__(self, loo=True, alpha_grid=np.linspace(0.01, 3, 100),
+                 epsilon=1.35, **kwargs):
+        loss_fn = partial(huber_loss, epsilon=epsilon)
+        l_dot = lambda a, b: (b - a) / (1 + ((a - b) / epsilon) ** 2) ** 0.5
+        l_doubledot=lambda a, b: (1 + (((a - b) / epsilon) ** 2)) ** (-1.5)
+        super().__init__(
+            HuberRegressor(**kwargs), loo, alpha_grid,
+            l_dot=l_dot,
+            l_doubledot=l_doubledot,
+            hyperparameter_scorer=loss_fn)
+
+
+def _trim_values(values, trim=None):
+    if trim is not None:
+        assert 0 < trim < 0.5, "Limit must be between 0 and 0.5"
+        return np.clip(values, trim, 1 - trim)
+    else:
+        return values
+
+
+def _extract_coef_and_intercept(estimator):
     """
     Get the coefficient vector and intercept from a GLM estimator
     """
@@ -480,11 +385,31 @@ def _extract_coef_and_intercept(estimator, merge=False):
     if coef_.ndim > 1:  # For classifer estimators
         coef_ = coef_.ravel()
         intercept_ = intercept_[0]
-    if merge:
-        augmented_coef_ = np.append(coef_, intercept_)
-        return augmented_coef_
+    augmented_coef_ = np.append(coef_, intercept_)
+    return augmented_coef_
+
+
+def _set_alpha(estimator, alpha):
+    if hasattr(estimator, "alpha"):
+        estimator.set_params(alpha=alpha)
+    elif hasattr(estimator, "C"):
+        estimator.set_params(C=1/alpha)
     else:
-        return coef_, intercept_
+        warnings.warn("Estimator has no regularization parameter.")
+
+
+def _get_preds(data_block, coefs, inv_link_fn, intercept=None):
+    if coefs.ndim > 1: # LOO predictions
+        if coefs.shape[1] == (data_block.shape[1] + 1):
+            intercept = coefs[:, -1]
+            coefs = coefs[:, :-1]
+        lin_preds = np.sum(data_block * coefs, axis=1) + intercept
+    else:
+        if len(coefs) == (data_block.shape[1] + 1):
+            intercept = coefs[-1]
+            coefs = coefs[:-1]
+        lin_preds = data_block @ coefs + intercept
+    return inv_link_fn(lin_preds)
 
 
 def huber_loss(y, preds, epsilon=1.35):
