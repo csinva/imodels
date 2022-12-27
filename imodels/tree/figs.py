@@ -15,6 +15,7 @@ from sklearn.utils.validation import _check_sample_weight
 
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 from imodels.util.arguments import check_fit_arguments
+from imodels.util.data_util import encode_categories
 
 plt.rcParams['figure.dpi'] = 300
 
@@ -182,7 +183,14 @@ class FIGS(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
+    def _encode_categories(self, X, categorical_features):
+        encoder = None
+        if hasattr(self, "_encoder"):
+            encoder = self._encoder
+        return encode_categories(X, categorical_features, encoder)
+
+
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None, categorical_features=None):
         """
         Params
         ------
@@ -191,6 +199,8 @@ class FIGS(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         """
+        if categorical_features is not None:
+            X, self._encoder = self._encode_categories(X, categorical_features)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
@@ -375,7 +385,9 @@ class FIGS(BaseEstimator):
                 s = s.replace(f'X_{i}', feature_names[i])
         return s
 
-    def predict(self, X):
+    def predict(self, X, categorical_features=None):
+        if hasattr(self, "_encoder"):
+            X = self._encode_categories(X, categorical_features=categorical_features)
         X = check_array(X)
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
@@ -385,7 +397,9 @@ class FIGS(BaseEstimator):
         elif isinstance(self, ClassifierMixin):
             return (preds > 0.5).astype(int)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X, categorical_features=None):
+        if hasattr(self, "_encoder"):
+            X = self._encode_categories(X, categorical_features=categorical_features)
         X = check_array(X)
         if isinstance(self, RegressorMixin):
             return NotImplemented
@@ -449,8 +463,8 @@ class FIGS(BaseEstimator):
             except IndexError:
                 ax.axis('off')
                 continue
-
-            ax.set_title(f"Tree {i}")
+            ttl = f"Tree {i}" if n_plots > 1 else f"Tree {tree_number}"
+            ax.set_title(ttl)
         if filename is not None:
             plt.savefig(filename)
             return
@@ -522,10 +536,29 @@ if __name__ == '__main__':
     X_cls, Y_cls = datasets.load_breast_cancer(return_X_y=True)
     X_reg, Y_reg = datasets.make_friedman1(100)
 
+    categories = ['cat', 'dog', 'bird', 'fish']
+    categories_2 = ['bear', 'chicken', 'cow']
+
+    X_cat = pd.DataFrame(X_reg)
+    X_cat['pet1'] = np.random.choice(categories, size=(100, 1))
+    X_cat['pet2'] = np.random.choice(categories_2, size=(100, 1))
+
+    # X_cat.columns[-1] = "pet"
+    Y_cat = Y_reg
+
+    est = FIGSRegressor(max_rules=10)
+    est.fit(X_cat, Y_cat, categorical_features=['pet1', 'pet2'])
+    est.predict(X_cat, categorical_features=['pet1', 'pet2'])
+    est.plot(tree_number=1)
+
+
+
     est = FIGSClassifier(max_rules=10)
     # est.fit(X_cls, Y_cls, sample_weight=np.arange(0, X_cls.shape[0]))
     est.fit(X_cls, Y_cls, sample_weight=[1] * X_cls.shape[0])
     est.predict(X_cls)
+
+
 
     est = FIGSRegressorCV()
     est.fit(X_reg, Y_reg)

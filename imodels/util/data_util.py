@@ -8,6 +8,7 @@ import requests
 import sklearn.datasets
 from scipy.sparse import issparse
 from sklearn.datasets import fetch_openml
+from sklearn.preprocessing import OneHotEncoder
 
 from ..util.tree_interaction_utils import make_rj, make_vp
 
@@ -156,3 +157,21 @@ def _download_imodels_dataset(dataset_fname, data_path: str):
     os.makedirs(oj(data_path, 'imodels_data'), exist_ok=True)
     with open(oj(data_path, 'imodels_data', dataset_fname), 'w') as f:
         f.write(r.text)
+
+
+def encode_categories(X, features, encoder=None):
+    columns_to_keep = list(set(X.columns).difference(features))
+    X_encoded = X.loc[:, columns_to_keep]
+    X_cat = pd.DataFrame({f: X.loc[:, f] for f in features})
+
+    if encoder is None:
+        one_hot_encoder = OneHotEncoder(sparse=False, categories="auto")
+        X_one_hot = pd.DataFrame(one_hot_encoder.fit_transform(X_cat))
+    else:
+        one_hot_encoder = encoder
+        X_one_hot = pd.DataFrame(one_hot_encoder.transform(X_cat))
+    X_one_hot.columns = one_hot_encoder.get_feature_names_out(features)
+    X_encoded = pd.concat([X_encoded,X_one_hot], axis=1)
+    if encoder is not None:
+        return X_encoded
+    return X_encoded, one_hot_encoder
