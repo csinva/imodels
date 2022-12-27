@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from sklearn.ensemble import BaseEnsemble
 
-from local_stumps import make_stumps, tree_feature_transform
+from .local_stumps import make_stumps, tree_feature_transform
 
 
 class BlockPartitionedData:
@@ -280,6 +280,7 @@ class TreeTransformer(BlockTransformerBase, ABC):
 
     def __init__(self, estimator, data=None):
         self.estimator = estimator
+        self.oob_seed = self.estimator.random_state
         # Check if single tree or tree ensemble
         if isinstance(estimator, BaseEnsemble):
             tree_models = estimator.estimators_
@@ -329,6 +330,11 @@ class CompositeTransformer(BlockTransformerBase, ABC):
         self.block_transformer_list = block_transformer_list
         assert len(self.block_transformer_list) > 0, "Need at least one base" \
                                                      "transformer."
+        for transformer in block_transformer_list:
+            if hasattr(transformer, "oob_seed") and \
+                    transformer.oob_seed is not None:
+                self.oob_seed = transformer.oob_seed
+                break
         self.rescale_mode = rescale_mode
         self.drop_features = drop_features
 

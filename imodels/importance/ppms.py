@@ -280,7 +280,7 @@ class GlmPPM(_PartialPredictionModelBase, ABC):
         for i, alpha in enumerate(self.alpha_grid):
             loo_coef_ = self._fit_loo_coefficients(X, y, alpha)
             X1 = np.hstack([X, np.ones((X.shape[0], 1))])
-            sample_scores = np.sum(loo_coef_.T * X1, axis=1)
+            sample_scores = np.sum(loo_coef_ * X1, axis=1)
             preds = _trim_values(self.inv_link_fn(sample_scores), self.trim)
             cv_scores[i] = self.hyperparameter_scorer(y, preds)
         self.alpha_ = self.alpha_grid[np.argmin(cv_scores)]
@@ -325,18 +325,21 @@ class LogisticPPM(GlmPPM, ABC):
         The grid of alpha values for hyperparameter optimization.
     max_iter: int
         The maximum number of iterations for the LogisticRegression solver.
+    trim: float
+        The amount by which to trim predicted probabilities away from 0 and 1.
+        This helps to stabilize some loss calculations.
     **kwargs
         Other Parameters are passed on to LogisticRegression().
     """
 
     def __init__(self, loo=True, alpha_grid=np.logspace(-4, 4, 10),
-                 max_iter=1000, **kwargs):
+                 max_iter=1000, trim=0.01, **kwargs):
         super().__init__(LogisticRegression(max_iter=max_iter, **kwargs),
                          loo, alpha_grid,
                          inv_link_fn=sp.special.expit,
                          l_doubledot=lambda a, b: b * (1 - b),
                          hyperparameter_scorer=log_loss,
-                         trim=0.01)
+                         trim=trim)
 
 
 class RobustPPM(GlmPPM, ABC):

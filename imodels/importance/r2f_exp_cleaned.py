@@ -495,8 +495,12 @@ def get_alpha_grid(X, y, start=-5, stop=5, num=100):
 
 class GlmAlooCalculator:
 
-    def __init__(self, estimator, alpha_grid=np.logspace(-4, 4, 10), link_fn=lambda a: a, l_dot=lambda a, b: b-a,
-                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1, hyperparameter_scorer=mean_squared_error,
+    def __init__(self, estimator, alpha_grid=np.logspace(-4, 4, 10),
+                 link_fn=lambda a: a,
+                 l_dot=lambda a, b: b-a,
+                 l_doubledot=lambda a, b: 1,
+                 r_doubledot=lambda a: 1,
+                 hyperparameter_scorer=mean_squared_error,
                  trim=None):
         super().__init__()
         self.estimator = estimator

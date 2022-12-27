@@ -8,8 +8,8 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import OneHotEncoder
 
-from block_transformers import GmdiDefaultTransformer, TreeTransformer
-from ppms import RidgePPM, LogisticPPM
+from .block_transformers import GmdiDefaultTransformer, TreeTransformer
+from .ppms import RidgePPM, LogisticPPM
 
 
 class GMDI:
@@ -127,7 +127,9 @@ class GMDI:
             if len(np.unique(y)) > 2:
                 y = OneHotEncoder().fit_transform(y.reshape(-1, 1)).toarray()
         else:
-            ppm, scoring_fns = self.partial_prediction_model, self.scoring_fns
+            raise ValueError("Only regression and classification tasks "
+                             "currently supported.")
+            # ppm, scoring_fns = self.partial_prediction_model, self.scoring_fns
         for tree_model in self.rf_model.estimators_:
             transformer = GmdiDefaultTransformer(
                 tree_model, drop_features=self.drop_features) if \
@@ -149,6 +151,8 @@ class GMDI:
             scores = gmdi_helper.get_scores(X, y)
             if scores is not None:
                 all_scores.append(scores)
+        scoring_fns = scoring_fns if hasattr(scoring_fns, "__len__") \
+            else {"importance": scoring_fns}
         for fn_name in scoring_fns.keys():
             self._scores[fn_name] = np.mean([scores[fn_name] for scores
                                              in all_scores], axis=0)
@@ -276,7 +280,7 @@ class GmdiHelper:
 
     def _get_preds_one_target(self, train_blocked_data, y_train,
                               test_blocked_data, y_test):
-        ppm = self.partial_prediction_model
+        ppm = copy.deepcopy(self.partial_prediction_model)
         ppm.fit(train_blocked_data, y_train, test_blocked_data,
                 y_test, self.mode)
         full_preds = ppm.get_full_predictions()
@@ -307,7 +311,8 @@ class GmdiHelper:
             return full_preds, partial_preds
 
     def _score_partial_predictions(self, full_preds, partial_preds, y_test):
-        scoring_fns = self.scoring_fns if hasattr(self.scoring_fns, "__len__") \
+        scoring_fns = self.scoring_fns if hasattr(self.scoring_fns,
+                                                  "__len__") \
             else {"importance": self.scoring_fns}
         all_scores = pd.DataFrame({})
         for fn_name, scoring_fn in scoring_fns.items():
@@ -318,14 +323,14 @@ class GmdiHelper:
                 scores = full_score - scores
             scores = scores.ravel()
             all_scores[fn_name] = scores
-        self._scores_ = all_scores
+        self._scores = all_scores
 
     def _train_test_split(self, blocked_data, y):
         n_samples = len(y)
         train_indices = _generate_sample_indices(
-            self.transformer.estimator.random_state, n_samples, n_samples)
+            self.transformer.oob_seed, n_samples, n_samples)
         test_indices = _generate_unsampled_indices(
-            self.transformer.estimator.random_state, n_samples, n_samples)
+            self.transformer.oob_seed, n_samples, n_samples)
         train_blocked_data, test_blocked_data = \
             blocked_data.train_test_split(train_indices, test_indices)
         if y.ndim > 1:
@@ -342,6 +347,9 @@ def _partial_preds_to_scores(partial_preds, y_test, scoring_fn):
     for k, y_pred in partial_preds.items():
         if not hasattr(y_pred, "__len__"):  # if constant model
             y_pred = np.ones_like(y_test) * y_pred
+        elif y_test.shape != y_pred.shape:
+            # if constant model for multitarget prediction
+            y_pred = np.array([y_pred] * y_test.shape[0])
         scores.append(scoring_fn(y_test, y_pred))
     return np.vstack(scores)
 

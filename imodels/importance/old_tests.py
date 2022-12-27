@@ -332,7 +332,7 @@ class TestGMDI:
         alpha = new_ppm.alpha_
         old_transformer = rep_old.TreeTransformer(estimator=self.tree_model, pca=False, add_raw=True,
                                                   normalize_raw=True)
-        X_transformed_old, start_indices_old = old_transformer.transform(self.X, center=True, return_indices=True)
+        X_transformed_old, start_indices_old = old_transformer.transform(self.X, center=True)
         ridge = Ridge(alpha=alpha)
         ridge.fit(X_transformed_old, self.y)
         old_beta_ = ridge.coef_
@@ -380,7 +380,7 @@ class TestGMDI:
         alpha = new_ppm.alpha_
         old_transformer = rep_old.TreeTransformer(estimator=tree_model, pca=False, add_raw=True,
                                                   normalize_raw=True)
-        X_transformed_old, start_indices_old = old_transformer.transform(self.X, center=True, return_indices=True)
+        X_transformed_old, start_indices_old = old_transformer.transform(self.X, center=True)
         ridge = Ridge(alpha=alpha)
         ridge.fit(X_transformed_old, self.y)
         old_beta_ = ridge.coef_
