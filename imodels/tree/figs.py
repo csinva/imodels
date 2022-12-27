@@ -4,6 +4,7 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.special import expit
 import sklearn.datasets
 from sklearn import datasets
 from sklearn import tree
@@ -357,7 +358,8 @@ class FIGS(BaseEstimator):
     def __str__(self):
         s = '> ------------------------------\n'
         s += '> FIGS-Fast Interpretable Greedy-Tree Sums:\n'
-        s += '> \tPredictions are made by summing the "Val" reached by traversing each tree\n'
+        s += '> \tPredictions are made by summing the "Val" reached by traversing each tree.\n'
+        s += '> \tFor classifiers, a sigmoid function is then applied to the sum.\n'
         s += '> ------------------------------\n'
         s += '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
         if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
@@ -392,7 +394,7 @@ class FIGS(BaseEstimator):
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
             preds += self._predict_tree(tree, X)
-        preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
+        preds = expit(preds) # constrain to range of probabilities
         return np.vstack((1 - preds, preds)).transpose()
 
     def _predict_tree(self, root: Node, X):
