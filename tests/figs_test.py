@@ -3,6 +3,7 @@ import random
 from functools import partial
 
 import numpy as np
+import pandas as pd
 from sklearn.tree import DecisionTreeRegressor
 
 from imodels import FIGSClassifier, FIGSRegressor, FIGSClassifierCV, FIGSRegressorCV
@@ -35,6 +36,25 @@ class TestFIGS:
                                      n_jobs=10,
                                      verbose=2)
         comb_model.fit(self.X, self.y_reg)
+
+    def test_categorical(self):
+        """Test FIGS with categorical data"""
+        categories = ['cat', 'dog', 'bird', 'fish']
+        categories_2 = ['bear', 'chicken', 'cow']
+
+        self.X_cat = pd.DataFrame(self.X)
+        self.X_cat['pet1'] = np.random.choice(categories, size=(self.n, 1))
+        self.X_cat['pet2'] = np.random.choice(categories_2, size=(self.n, 1))
+
+        figs_reg = FIGSRegressor()
+        figs_cls = FIGSClassifier()
+
+        figs_reg.fit(self.X_cat, self.y_reg, categorical_features=["pet1", 'pet2'])
+        figs_reg.predict(self.X_cat, categorical_features=["pet1", 'pet2'])
+
+        figs_cls.fit(self.X_cat, self.y_reg, categorical_features=["pet1", 'pet2'])
+        figs_cls.predict_proba(self.X_cat, categorical_features=["pet1", 'pet2'])
+
 
     def test_fitting(self):
         '''Test on a real (small) dataset
@@ -87,3 +107,4 @@ if __name__ == '__main__':
     t = TestFIGS()
     t.setup()
     t.test_fitting()
+    t.test_categorical()

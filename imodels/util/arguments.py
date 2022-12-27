@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin
 from sklearn.utils.validation import check_X_y
-from sklearn.utils.validation import _check_sample_weight
 from sklearn.utils.multiclass import check_classification_targets
+
 
 def check_fit_arguments(model, X, y, feature_names):
     """Process arguments for fit and predict methods.
@@ -26,3 +26,5 @@ def check_fit_arguments(model, X, y, feature_names):
     return X, y, model.feature_names_
     # if sample_weight is not None:
         # sample_weight = _check_sample_weight(sample_weight, X)
+
+
