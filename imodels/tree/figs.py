@@ -87,13 +87,15 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     """
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None,
+    def __init__(self, max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None,
                  max_features: str = None):
         """
         Params
         ------
         max_rules: int
             Max total number of rules across all trees
+        max_trees: int
+            Max total number of trees
         min_impurity_decrease: float
             A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
         max_features
@@ -101,6 +103,7 @@ class FIGS(BaseEstimator):
         """
         super().__init__()
         self.max_rules = max_rules
+        self.max_trees = max_trees
         self.min_impurity_decrease = min_impurity_decrease
         self.random_state = random_state
         self.max_features = max_features
@@ -493,18 +496,25 @@ class FIGSClassifier(FIGS, ClassifierMixin):
 
 class FIGSCV:
     def __init__(self, figs,
-                 n_rules_list: List[float] = [6, 12, 24, 30, 50],
+                 n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 n_trees_list: List[int] = None,
                  cv: int = 3, scoring=None, *args, **kwargs):
+
+        if n_trees_list is None:
+            n_trees_list = [None for _ in len(n_rules_list)]
+        if len(n_trees_list) != len(n_trees_list):
+            raise ValueError(f'len(n_trees_list) = {len(n_trees_list)} != len(n_trees_list) = {len(n_trees_list)}')
 
         self._figs_class = figs
         self.n_rules_list = np.array(n_rules_list)
+        self.n_trees_list = n_trees_list
         self.cv = cv
         self.scoring = scoring
 
     def fit(self, X, y):
         self.scores_ = []
-        for n_rules in self.n_rules_list:
-            est = self._figs_class(max_rules=n_rules)
+        for _i,n_rules in enumerate(self.n_rules_list):
+            est = self._figs_class(max_rules=n_rules, max_trees=n_trees_list[_i])
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             mean_score = np.mean(cv_scores)
             if len(self.scores_) == 0:
@@ -525,6 +535,9 @@ class FIGSCV:
     def max_rules(self):
         return self.figs.max_rules
 
+    @property
+    def max_trees(self):
+        return self.figs.max_trees
 
 class FIGSRegressorCV(FIGSCV):
     def __init__(self,
