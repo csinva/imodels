@@ -4,6 +4,7 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.special import expit
 import sklearn.datasets
 from sklearn import datasets
 from sklearn import tree
@@ -367,7 +368,8 @@ class FIGS(BaseEstimator):
     def __str__(self):
         s = '> ------------------------------\n'
         s += '> FIGS-Fast Interpretable Greedy-Tree Sums:\n'
-        s += '> \tPredictions are made by summing the "Val" reached by traversing each tree\n'
+        s += '> \tPredictions are made by summing the "Val" reached by traversing each tree.\n'
+        s += '> \tFor classifiers, a sigmoid function is then applied to the sum.\n'
         s += '> ------------------------------\n'
         s += '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
         if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
@@ -397,7 +399,11 @@ class FIGS(BaseEstimator):
         elif isinstance(self, ClassifierMixin):
             return (preds > 0.5).astype(int)
 
-    def predict_proba(self, X, categorical_features=None):
+    def predict_proba(self, X, categorical_features=None, use_clipped_prediction=False):
+        """Predict probability for classifiers:
+    Default behavior is to constrain the outputs to the range of probabilities, i.e. 0 to 1, with a sigmoid function.
+    Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.
+        """
         if hasattr(self, "_encoder"):
             X = self._encode_categories(X, categorical_features=categorical_features)
         X = check_array(X)
@@ -406,7 +412,13 @@ class FIGS(BaseEstimator):
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
             preds += self._predict_tree(tree, X)
-        preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
+        if use_clipped_prediction:
+            # old behavior, pre v1.3.9
+            # constrain to range of probabilities by clipping
+            preds = np.clip(preds, a_min=0., a_max=1.)
+        else:
+            # constrain to range of probabilities with a sigmoid function
+            preds = expit(preds)
         return np.vstack((1 - preds, preds)).transpose()
 
     def _predict_tree(self, root: Node, X):

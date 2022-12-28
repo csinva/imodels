@@ -31,7 +31,7 @@ def viz_classification_preds(probs, y_test):
 
 
 def get_ames_data():
-    housing = fetch_openml(name="house_prices", as_frame=True)
+    housing = fetch_openml(name="house_prices", as_frame=True, parser='auto')
     housing_target = housing['target'].values
     housing_data_numeric = housing['data'].select_dtypes('number').drop(columns=['Id']).dropna(axis=1)
     feature_names = housing_data_numeric.columns.values
