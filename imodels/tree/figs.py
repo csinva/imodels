@@ -235,6 +235,10 @@ class FIGS(BaseEstimator):
             if split_node.impurity_reduction < self.min_impurity_decrease:
                 finished = True
                 break
+            elif split_node.is_root and self.max_trees is not None and len(self.trees_) >= self.max_trees:
+                # If the node is the root of a new tree and we have reached self.max_trees,
+                # don't split on it, but allow later splits to continue growing existing trees
+                break
 
             # split on node
             if verbose:
@@ -497,11 +501,9 @@ class FIGSClassifier(FIGS, ClassifierMixin):
 class FIGSCV:
     def __init__(self, figs,
                  n_rules_list: List[int] = [6, 12, 24, 30, 50],
-                 n_trees_list: List[int] = None,
+                 n_trees_list: List[int] = [5, 5, 5, 5, 5],
                  cv: int = 3, scoring=None, *args, **kwargs):
 
-        if n_trees_list is None:
-            n_trees_list = [None for _ in len(n_rules_list)]
         if len(n_trees_list) != len(n_trees_list):
             raise ValueError(f'len(n_trees_list) = {len(n_trees_list)} != len(n_trees_list) = {len(n_trees_list)}')
 
