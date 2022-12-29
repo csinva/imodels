@@ -504,12 +504,12 @@ class FIGSCV:
                  n_trees_list: List[int] = [5, 5, 5, 5, 5],
                  cv: int = 3, scoring=None, *args, **kwargs):
 
-        if len(n_trees_list) != len(n_trees_list):
-            raise ValueError(f'len(n_trees_list) = {len(n_trees_list)} != len(n_trees_list) = {len(n_trees_list)}')
+        if len(n_rules_list) != len(n_trees_list):
+            raise ValueError(f'len(n_rules_list) = {len(n_rules_list)} != len(n_trees_list) = {len(n_trees_list)}')
 
         self._figs_class = figs
         self.n_rules_list = np.array(n_rules_list)
-        self.n_trees_list = n_trees_list
+        self.n_trees_list = np.array(n_trees_list)
         self.cv = cv
         self.scoring = scoring
 
