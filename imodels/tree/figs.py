@@ -12,7 +12,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
-from sklearn.utils.validation import _check_sample_weight
+from sklearn.utils.validation import _check_sample_weight, check_is_fitted
 
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 from imodels.util.arguments import check_fit_arguments
@@ -313,7 +313,8 @@ class FIGS(BaseEstimator):
                 finished = True
                 break
 
-        # annotate final tree with node_id and value_sklearn
+        # annotate final tree with node_id and value_sklearn, and prepare importance_data_
+        importance_data = []
         for tree_ in self.trees_:
             node_counter = iter(range(0, int(1e06)))
             def _annotate_node(node: Node, X, y):
@@ -341,6 +342,31 @@ class FIGS(BaseEstimator):
                 _annotate_node(node.right, X[~idxs_left], y[~idxs_left])
 
             _annotate_node(tree_, X, y)
+
+            # now that the samples per node are known, we can start to compute the importances
+            importance_data_tree = np.zeros(len(self.feature_names_))
+
+            def _importances(node: Node):
+                if node is None or node.left is None:
+                    return 0.
+
+                # TODO does not incorporate sample weights, but will if added to value_sklearn
+                importance_data_tree[node.feature] += (
+                    np.sum(node.value_sklearn) * (node.impurity if node.impurity is not None else 0.) -
+                    np.sum(node.left.value_sklearn) * node.left.impurity -
+                    np.sum(node.right.value_sklearn) * node.right.impurity
+                )
+
+                return np.sum(node.value_sklearn) + _importances(node.left) + _importances(node.right)
+
+            # require the tree to have more than 1 node, otherwise just leave importance_data_tree as zeros
+            if 1 < next(node_counter):
+                tree_samples = _importances(tree_)
+                importance_data_tree /= tree_samples
+
+            importance_data.append(importance_data_tree)
+
+        self.importance_data_ = importance_data
 
         return self
 
@@ -444,6 +470,18 @@ class FIGS(BaseEstimator):
         for i in range(X.shape[0]):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
+
+    @property
+    def feature_importances_(self):
+        """Gini impurity-based feature importances
+        """
+        check_is_fitted(self)
+
+        avg_feature_importances = np.mean(
+            self.importance_data_, axis=0, dtype=np.float64
+        )
+
+        return avg_feature_importances / np.sum(avg_feature_importances)
 
     def plot(self, cols=2, feature_names=None, filename=None, label="all",
              impurity=False, tree_number=None, dpi=150, fig_size=None):
