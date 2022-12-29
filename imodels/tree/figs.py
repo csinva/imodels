@@ -238,7 +238,7 @@ class FIGS(BaseEstimator):
             elif split_node.is_root and self.max_trees is not None and len(self.trees_) >= self.max_trees:
                 # If the node is the root of a new tree and we have reached self.max_trees,
                 # don't split on it, but allow later splits to continue growing existing trees
-                break
+                continue
 
             # split on node
             if verbose:
@@ -516,7 +516,7 @@ class FIGSCV:
     def fit(self, X, y):
         self.scores_ = []
         for _i,n_rules in enumerate(self.n_rules_list):
-            est = self._figs_class(max_rules=n_rules, max_trees=n_trees_list[_i])
+            est = self._figs_class(max_rules=n_rules, max_trees=self.n_trees_list[_i])
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             mean_score = np.mean(cv_scores)
             if len(self.scores_) == 0:
@@ -544,16 +544,18 @@ class FIGSCV:
 class FIGSRegressorCV(FIGSCV):
     def __init__(self,
                  n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 n_trees_list: List[int] = [5, 5, 5, 5, 5],
                  cv: int = 3, scoring='r2', *args, **kwargs):
-        super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor, n_rules_list=n_rules_list,
+        super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor, n_rules_list=n_rules_list, n_trees_list=n_trees_list,
                                               cv=cv, scoring=scoring, *args, **kwargs)
 
 
 class FIGSClassifierCV(FIGSCV):
     def __init__(self,
                  n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 n_trees_list: List[int] = [5, 5, 5, 5, 5],
                  cv: int = 3, scoring="accuracy", *args, **kwargs):
-        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier, n_rules_list=n_rules_list,
+        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier, n_rules_list=n_rules_list, n_trees_list=n_trees_list,
                                                cv=cv, scoring=scoring, *args, **kwargs)
 
 
