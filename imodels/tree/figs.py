@@ -497,7 +497,7 @@ class FIGS(BaseEstimator):
         fig, axs = plt.subplots(n_plots, dpi=dpi)
         if fig_size is not None:
             fig.set_size_inches(fig_size, fig_size)
-        criterion = "squared_error" if isinstance(self, RegressorMixin) else "gini"
+
         n_classes = 1 if isinstance(self, RegressorMixin) else 2
         ax_size = int(len(self.trees_))
         for i in range(n_plots):
