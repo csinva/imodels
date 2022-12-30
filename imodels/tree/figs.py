@@ -353,7 +353,7 @@ class FIGS(BaseEstimator):
 
                 # TODO does not incorporate sample weights, but will if added to value_sklearn
                 importance_data_tree[node.feature] += (
-                    np.sum(node.value_sklearn) * (node.impurity if node.impurity is not None else 0.) -
+                    np.sum(node.value_sklearn) * node.impurity -
                     np.sum(node.left.value_sklearn) * node.left.impurity -
                     np.sum(node.right.value_sklearn) * node.right.impurity
                 )
