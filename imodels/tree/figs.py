@@ -297,6 +297,7 @@ class FIGS(BaseEstimator):
                     feature=potential_split_updated.feature,
                     threshold=potential_split_updated.threshold,
                     impurity_reduction=potential_split_updated.impurity_reduction,
+                    impurity=potential_split_updated.impurity,
                     left_temp=potential_split_updated.left_temp,
                     right_temp=potential_split_updated.right_temp,
                 )
