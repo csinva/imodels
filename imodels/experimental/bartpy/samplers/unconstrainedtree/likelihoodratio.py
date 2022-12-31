@@ -72,24 +72,24 @@ class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
             mutation: PruneMutation = mutation
             return self.log_tree_ratio_prune(model, mutation)
 
-    def log_likihood_ratio(self, model: Model, tree: Tree, proposal: TreeMutation):
+    def log_likelihood_ratio(self, model: Model, tree: Tree, proposal: TreeMutation):
         if proposal.kind == "grow":
             proposal: GrowMutation = proposal
-            return self.log_likihood_ratio_grow(model, proposal)
+            return self.log_likelihood_ratio_grow(model, proposal)
         if proposal.kind == "prune":
             proposal: PruneMutation = proposal
-            return self.log_likihood_ratio_prune(model, proposal)
+            return self.log_likelihood_ratio_prune(model, proposal)
         else:
             raise NotImplementedError("Only prune and grow mutations supported")
 
     @staticmethod
-    def log_likihood_ratio_grow(model: Model, proposal: TreeMutation):
+    def log_likelihood_ratio_grow(model: Model, proposal: TreeMutation):
         new_model_l, old_model_l = log_grow_ratio(proposal.existing_node, proposal.updated_node.left_child,
                                                   proposal.updated_node.right_child, model.sigma, model.sigma_m)
         return (new_model_l - old_model_l), (new_model_l, old_model_l)
 
     @staticmethod
-    def log_likihood_ratio_prune(model: Model, proposal: TreeMutation):
+    def log_likelihood_ratio_prune(model: Model, proposal: TreeMutation):
         old_model_l, new_model_l = log_grow_ratio(proposal.updated_node, proposal.existing_node.left_child,
                                                   proposal.existing_node.right_child, model.sigma, model.sigma_m)
         return (new_model_l - old_model_l), (new_model_l, old_model_l)

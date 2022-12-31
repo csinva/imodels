@@ -14,10 +14,10 @@ class TreeMutationSampler(Sampler):
     A sampler for tree mutation space.
     Responsible for producing samples of ways to mutate a tree within a model
 
-    A general schema of implementation is to combine a proposer and likihood evaluator to:
+    A general schema of implementation is to combine a proposer and likelihood evaluator to:
      - propose a mutation
-     - assess likihood
-     - accept if likihood higher than a uniform(0, 1) draw
+     - assess likelihood
+     - accept if likelihood higher than a uniform(0, 1) draw
     """
 
     def sample(self, model: Model, tree: Tree) -> Optional[TreeMutation]:
@@ -58,7 +58,7 @@ class TreeMutationLikihoodRatio(ABC):
 
     def log_probability_ratio(self, model: Model, tree: Tree, mutation: TreeMutation) -> Tuple[float, tuple, tuple]:
         """
-        Calculated the ratio of the likihood of a mutation over the likihood of the reverse movement
+        Calculated the ratio of the likelihood of a mutation over the likelihood of the reverse movement
 
         Main access point for the class
 
@@ -76,7 +76,7 @@ class TreeMutationLikihoodRatio(ABC):
         float
             logged ratio of likelihoods
         """
-        log_likelihood_ratio, (l_new, l_old) = self.log_likihood_ratio(model, tree, mutation)
+        log_likelihood_ratio, (l_new, l_old) = self.log_likelihood_ratio(model, tree, mutation)
         log_transition_ratio, (t_new, t_old) = self.log_transition_ratio(tree, mutation)
         log_prior_ratio, (p_new, p_old) = self.log_tree_ratio(model, tree, mutation)
         bayes_term = log_transition_ratio + log_prior_ratio
@@ -91,9 +91,9 @@ class TreeMutationLikihoodRatio(ABC):
     @abstractmethod
     def log_transition_ratio(self, tree: Tree, mutation: TreeMutation) -> float:
         """
-        The logged ratio of the likihood of making the transition to the likihood of making the reverse transition.
+        The logged ratio of the likelihood of making the transition to the likelihood of making the reverse transition.
         e.g. in the case of using only grow and prune mutations:
-            log(likihood of growing from tree to the post mutation tree / likihood of pruning from the post mutation tree to the tree)
+            log(likelihood of growing from tree to the post mutation tree / likelihood of pruning from the post mutation tree to the tree)
 
         Parameters
         ----------
@@ -105,14 +105,14 @@ class TreeMutationLikihoodRatio(ABC):
         Returns
         -------
         float
-            logged likihood ratio
+            logged likelihood ratio
         """
         raise NotImplementedError()
 
     @abstractmethod
     def log_tree_ratio(self, model: Model, tree: Tree, mutation: TreeMutation) -> float:
         """
-        Logged ratio of the likihood of the tree before and after the mutation
+        Logged ratio of the likelihood of the tree before and after the mutation
         i.e. the product of the probability of all split nodes being split and all leaf node note being split
 
         Parameters
@@ -127,15 +127,15 @@ class TreeMutationLikihoodRatio(ABC):
         Returns
         -------
         float
-            logged likihood ratio
+            logged likelihood ratio
         """
 
         raise NotImplementedError()
 
     @abstractmethod
-    def log_likihood_ratio(self, model: Model, tree: Tree, mutation: TreeMutation):
+    def log_likelihood_ratio(self, model: Model, tree: Tree, mutation: TreeMutation):
         """
-        The logged ratio of the likihood of all the data points before and after the mutation
+        The logged ratio of the likelihood of all the data points before and after the mutation
         Generally more complex trees should be able to fit the data better than simple trees
 
         Parameters
@@ -150,6 +150,6 @@ class TreeMutationLikihoodRatio(ABC):
         Returns
         -------
         float
-            logged likihood ratio
+            logged likelihood ratio
         """
         raise NotImplementedError()
