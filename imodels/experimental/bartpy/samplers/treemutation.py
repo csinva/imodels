@@ -51,7 +51,7 @@ class TreeMutationProposer(ABC):
         raise NotImplementedError()
 
 
-class TreeMutationLikihoodRatio(ABC):
+class TreeMutationLikelihoodRatio(ABC):
     """
     Responsible for evaluating the ratio of mutations to the reverse movement
     """

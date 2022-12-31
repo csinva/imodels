@@ -6,9 +6,9 @@ from ...model import Model
 from ...mutation import TreeMutation
 from ...samplers.sampler import Sampler
 from ...samplers.scalar import UniformScalarSampler
-from ...samplers.treemutation import TreeMutationLikihoodRatio
+from ...samplers.treemutation import TreeMutationLikelihoodRatio
 from ...samplers.treemutation import TreeMutationProposer
-from ...samplers.oblivioustrees.likelihoodratio import UniformTreeMutationLikihoodRatio
+from ...samplers.oblivioustrees.likelihoodratio import UniformTreeMutationLikelihoodRatio
 from ...samplers.oblivioustrees.proposer import UniformMutationProposer
 from ...tree import Tree, mutate
 
@@ -26,12 +26,12 @@ class UnconstrainedTreeMutationSampler(Sampler):
     Parameters
     ----------
     proposer: TreeMutationProposer
-    likelihood_ratio: TreeMutationLikihoodRatio
+    likelihood_ratio: TreeMutationLikelihoodRatio
     """
 
     def __init__(self,
                  proposer: TreeMutationProposer,
-                 likelihood_ratio: TreeMutationLikihoodRatio,
+                 likelihood_ratio: TreeMutationLikelihoodRatio,
                  scalar_sampler=UniformScalarSampler()):
         self.proposer = proposer
         self.likelihood_ratio = likelihood_ratio
@@ -56,5 +56,5 @@ class UnconstrainedTreeMutationSampler(Sampler):
 def get_tree_sampler(p_grow: float,
                      p_prune: float):
     proposer = UniformMutationProposer(p_grow, p_prune)
-    likelihood = UniformTreeMutationLikihoodRatio([p_grow, p_prune])
+    likelihood = UniformTreeMutationLikelihoodRatio([p_grow, p_prune])
     return UnconstrainedTreeMutationSampler(proposer, likelihood)

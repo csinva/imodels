@@ -5,7 +5,7 @@ import numpy as np
 from ...model import Model
 from ...mutation import TreeMutation, GrowMutation, PruneMutation
 from ...node import LeafNode, TreeNode
-from ...samplers.treemutation import TreeMutationLikihoodRatio
+from ...samplers.treemutation import TreeMutationLikelihoodRatio
 from ...sigma import Sigma
 from ...tree import Tree
 
@@ -46,7 +46,7 @@ def log_grow_ratio(combined_node: LeafNode, left_node: LeafNode, right_node: Lea
     # return first_term + ((var_mu / (2 * var)) * resp_contribution)
 
 
-class UniformTreeMutationLikihoodRatio(TreeMutationLikihoodRatio):
+class UniformTreeMutationLikelihoodRatio(TreeMutationLikelihoodRatio):
 
     def __init__(self,
                  prob_method: List[float] = None):
