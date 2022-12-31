@@ -212,7 +212,7 @@ class TreeClassifier:
 
         Returns
         ---
-        real number : the inaccuracy produced by applying this model overthe given dataset, with
+        real number : the inaccuracy produced by applying this model over the given dataset, with
             optionals for weighted inaccuracy
         """
         return 1 - self.score(X, y, weight=weight)
@@ -230,7 +230,7 @@ class TreeClassifier:
 
         Returns
         ---
-        real number : the accuracy produced by applying this model overthe given dataset, with
+        real number : the accuracy produced by applying this model over the given dataset, with
             optionals for weighted accuracy
         """
         y_hat = self.predict(X)

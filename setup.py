@@ -19,7 +19,7 @@ required_pypi = [
 
 extra_deps = [
     'cvxpy',  # optionally requires cvxpy for slim
-    'corels',  # optinally requires corels for optimalrulelistclassifier
+    'corels',  # optionally requires corels for optimalrulelistclassifier
     'gosdt-deprecated',  # optionally requires gosdt for optimaltreeclassifier
     'irf',  # optionally require irf for iterativeRandomForestClassifier
 ]

@@ -189,7 +189,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
 
         Returns
         ---
-        real number : the accuracy produced by applying this model overthe given dataset, with
+        real number : the accuracy produced by applying this model over the given dataset, with
             optionals for weighted accuracy
         """
         validation.check_is_fitted(self)

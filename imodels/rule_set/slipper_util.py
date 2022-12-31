@@ -90,7 +90,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
 
     def _grow_rule(self, X, y):
         """ Starts with empty conjunction of conditions and
-        greedily adds rules to maximize Z_tilda
+        greedily adds rules to maximize Z_tilde
         """
 
         stop_condition = False
@@ -114,11 +114,11 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
                     for A_c in pivots
                 ]
 
-                # get max Z_tilda and update candidate accordingly
-                tildas = [self._grow_rule_obj(X, y, r) for r in feature_candidates]
-                if max(tildas) > self._grow_rule_obj(X, y, candidate_rule):
+                # get max Z_tilde and update candidate accordingly
+                tildes = [self._grow_rule_obj(X, y, r) for r in feature_candidates]
+                if max(tildes) > self._grow_rule_obj(X, y, candidate_rule):
                     candidate_rule = feature_candidates[
-                        tildas.index(max(tildas))
+                        tildes.index(max(tildes))
                     ]
 
             preds = self._rule_predict(X, candidate_rule)
