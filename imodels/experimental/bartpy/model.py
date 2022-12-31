@@ -33,7 +33,7 @@ class Model:
         self._sigma = sigma
         self._prediction = None
         self._initializer = initializer
-        self._check_initilizer()
+        self._check_initializer()
         self.classification = classification
 
         if trees is None:
@@ -54,7 +54,7 @@ class Model:
             self.n_trees = len(trees)
             self._trees = trees
 
-    def _check_initilizer(self):
+    def _check_initializer(self):
         if not hasattr(self._initializer, "_tree"):
             return
         elif self._initializer._tree is None:

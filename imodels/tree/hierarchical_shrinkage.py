@@ -27,7 +27,7 @@ class HSTree:
         Params
         ------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
-            Defaults to CART Classification Tree with 20 max leaf ndoes
+            Defaults to CART Classification Tree with 20 max leaf nodes
             Note: this estimator will be directly modified
 
         reg_param: float
@@ -179,7 +179,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
         ------
         estimator_
             Sklearn estimator (already initialized).
-            If no estimator_ is passsed, sklearn decision tree is used
+            If no estimator_ is passed, sklearn decision tree is used
 
         max_rules
             If estimator is None, then max_leaf_nodes is passed to the default decision tree
@@ -222,7 +222,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
         ------
         estimator_
             Sklearn estimator (already initialized).
-            If no estimator_ is passsed, sklearn decision tree is used
+            If no estimator_ is passed, sklearn decision tree is used
 
         max_rules
             If estimator is None, then max_leaf_nodes is passed to the default decision tree

@@ -36,10 +36,10 @@ def log_grow_ratio(combined_node: LeafNode, left_node: LeafNode, right_node: Lea
 
     big_model_l = numerator_first + numerator_second
 
-    denumerator_first = np.log(np.sqrt((var * (var + n * var_mu))))
-    denumerator_second = (var_mu / (2 * var)) * combined_resp_contribution
+    denominator_first = np.log(np.sqrt((var * (var + n * var_mu))))
+    denominator_second = (var_mu / (2 * var)) * combined_resp_contribution
 
-    small_model_l = denumerator_first + denumerator_second
+    small_model_l = denominator_first + denominator_second
 
     return big_model_l, small_model_l
 

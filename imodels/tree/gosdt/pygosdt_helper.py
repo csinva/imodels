@@ -157,7 +157,7 @@ class TreeClassifier:
 
         Returns
         ---
-        array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+        array-like, shape = [n_samples by 1] : a column where each element is the prediction
             associated with each row
         """
         # Perform an encoding if an encoding unit is specified
@@ -327,7 +327,7 @@ class TreeClassifier:
         """
         Returns
         ---
-        string : pseuodocode representing the logic of this classifier
+        string : pseudocode representing the logic of this classifier
         """
         cases = []
         for group in self.__groups__():

@@ -37,7 +37,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
 
     def _condition_classify(self, X, condition):
         """
-        Helper funciton to make classificaitons for a condition
+        Helper function to make classifications for a condition
         in a rule
         """
 
@@ -65,7 +65,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         return preds
 
     def _get_design_matrices(self, X, y, rule):
-        """ produce design matrices used in most equaitons"""
+        """ produce design matrices used in most equations"""
         preds = self._rule_predict(X, rule)
 
         W_plus_idx = np.where((preds == 1) & (y == 1))
@@ -90,7 +90,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
 
     def _grow_rule(self, X, y):
         """ Starts with empty conjunction of conditions and
-        greedily adds rules to mazimize Z_tilda
+        greedily adds rules to maximize Z_tilda
         """
 
         stop_condition = False
@@ -226,7 +226,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
     def _set_rule_or_default(self, X, y, learned_rule):
         """
         Compare output of eq 5 between learned rule and default rule
-        return rule that minmizes eq 5
+        return rule that minimizes eq 5
         """
 
         rules = [self._make_default_rule(X, y), learned_rule]
