@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.ensemble._forest import _generate_unsampled_indices, \
     _generate_sample_indices
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import log_loss
 from sklearn.preprocessing import OneHotEncoder
 
 from .block_transformers import GmdiDefaultTransformer, TreeTransformer
@@ -34,7 +34,7 @@ class GMDI:
         The scoring functions used for evaluating the partial predictions.
         If "auto", then a default is chosen as follows:
          - If task is set to "regression", then r2_score is used.
-         - If task is set to "classification", then roc_auc_score is used.
+         - If task is set to "classification", then log_loss is used.
     mode: string in {"keep_k", "keep_rest"}
         Mode for the method. "keep_k" imputes the mean of each feature not
         in block k when making a partial model prediction, while "keep_rest"
@@ -71,6 +71,9 @@ class GMDI:
                  refit_rf=True,
                  task="regression",
                  **kwargs):
+        assert sample_split in ["loo", "oob", None]
+        assert task in ["regression", "classification"]
+        assert mode in ["keep_k", "keep_rest"]
         if rf_model is not None:
             self.rf_model = copy.deepcopy(rf_model)
         elif task == "regression":
@@ -179,7 +182,7 @@ class GMDI:
         else:
             ppm = self.partial_prediction_model
         if self.scoring_fns == "auto":
-            scoring_fns = {"importance": roc_auc_score}
+            scoring_fns = {"importance": log_loss}
         else:
             scoring_fns = self.scoring_fns
         return ppm, scoring_fns
