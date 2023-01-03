@@ -2,6 +2,7 @@ import copy
 
 import numpy as np
 import pandas as pd
+import warnings
 from sklearn.ensemble._forest import _generate_unsampled_indices, \
     _generate_sample_indices
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
@@ -153,6 +154,8 @@ class GMDI:
         scoring_fns = scoring_fns if isinstance(scoring_fns, dict) \
             else {"importance": scoring_fns}
         for fn_name in scoring_fns.keys():
+            if len(all_scores) == 0:
+                raise ValueError("Transformer representation was empty for all trees.")
             self._scores[fn_name] = np.mean([scores[fn_name] for scores
                                              in all_scores], axis=0)
         if isinstance(X, pd.DataFrame):
@@ -282,7 +285,7 @@ class GmdiHelper:
             y_train = y_test = y
         if train_blocked_data.get_all_data().shape[1] == 0:
             self._scores = None
-            raise Warning("Transformer representation is empty.")
+            # warnings.warn("Transformer representation is empty.")
         else:
             full_preds, partial_preds = self._get_preds(
                 train_blocked_data, y_train, test_blocked_data, y_test)
