@@ -153,7 +153,7 @@ class FIGSExt(BaseEstimator):
     def _init_decision_function(self):
         &#34;&#34;&#34;Sets decision function based on prediction_task
         &#34;&#34;&#34;
-        # used by sklearn GrriidSearchCV, BaggingClassifier
+        # used by sklearn GridSearchCV, BaggingClassifier
         if self.prediction_task == &#39;classification&#39;:
             decision_function = lambda x: self.predict_proba(x)[:, 1]
         elif self.prediction_task == &#39;regression&#39;:
@@ -632,7 +632,7 @@ tree-growing phase</p></div>
     def _init_decision_function(self):
         &#34;&#34;&#34;Sets decision function based on prediction_task
         &#34;&#34;&#34;
-        # used by sklearn GrriidSearchCV, BaggingClassifier
+        # used by sklearn GridSearchCV, BaggingClassifier
         if self.prediction_task == &#39;classification&#39;:
             decision_function = lambda x: self.predict_proba(x)[:, 1]
         elif self.prediction_task == &#39;regression&#39;:

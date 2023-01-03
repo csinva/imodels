@@ -464,7 +464,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             [mean_squared_error(self.data.y.unnormalize_y(preds), y) for preds in predictions_transformed])
         return predictions_std
 
-    def chain_precitions(self, X, chain_number):
+    def chain_predictions(self, X, chain_number):
         predictions_transformed = self._chain_pred_arr(X, chain_number)
         preds_arr = [self.data.y.unnormalize_y(preds) for preds in predictions_transformed]
         return preds_arr
@@ -1925,7 +1925,7 @@ set to <code>-1</code> to use all cores</dd>
             [mean_squared_error(self.data.y.unnormalize_y(preds), y) for preds in predictions_transformed])
         return predictions_std
 
-    def chain_precitions(self, X, chain_number):
+    def chain_predictions(self, X, chain_number):
         predictions_transformed = self._chain_pred_arr(X, chain_number)
         preds_arr = [self.data.y.unnormalize_y(preds) for preds in predictions_transformed]
         return preds_arr
@@ -2284,8 +2284,8 @@ def probs(self) -&gt; List:
     return predictions_std</code></pre>
 </details>
 </dd>
-<dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_precitions"><code class="name flex">
-<span>def <span class="ident">chain_precitions</span></span>(<span>self, X, chain_number)</span>
+<dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_predictions"><code class="name flex">
+<span>def <span class="ident">chain_predictions</span></span>(<span>self, X, chain_number)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -2293,7 +2293,7 @@ def probs(self) -&gt; List:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def chain_precitions(self, X, chain_number):
+<pre><code class="python">def chain_predictions(self, X, chain_number):
     predictions_transformed = self._chain_pred_arr(X, chain_number)
     preds_arr = [self.data.y.unnormalize_y(preds) for preds in predictions_transformed]
     return preds_arr</code></pre>
@@ -2768,7 +2768,7 @@ The sum of squared errors over all observations</p>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.acceptance_trace" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.acceptance_trace">acceptance_trace</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.between_chains_var" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.between_chains_var">between_chains_var</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_mse_std" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_mse_std">chain_mse_std</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_precitions" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_precitions">chain_precitions</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_predictions" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.chain_predictions">chain_predictions</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.complexity_" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.complexity_">complexity_</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_chains" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_chains">f_chains</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_delayed_chains" href="#imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_delayed_chains">f_delayed_chains</a></code></li>

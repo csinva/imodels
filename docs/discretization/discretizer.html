@@ -183,7 +183,7 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
             max values for the range of x
 
         keep_pointwise_bins : boolean
-            If True, treat duplicate bin_edges as a pointiwse bin,
+            If True, treat duplicate bin_edges as a pointwise bin,
             i.e., [a, a]. If False, these bins are in effect ignored.
 
         Returns
@@ -480,7 +480,7 @@ class BasicDiscretizer(AbstractDiscretizer):
 
     manual_discretizer_ : dictionary
         Provides bin_edges to feed into _quantile_discretization()
-        and do quantile discreization manually for features where
+        and do quantile discretization manually for features where
         KBinsDiscretizer() failed. Ignored if strategy != &#39;quantile&#39;
         or no errors in KBinsDiscretizer().
 
@@ -515,7 +515,7 @@ class BasicDiscretizer(AbstractDiscretizer):
         self
         &#34;&#34;&#34;
 
-        # initalization and error checking
+        # initialization and error checking
         self._fit_preprocessing(X)
 
         # apply KBinsDiscretizer to the selected columns
@@ -734,7 +734,7 @@ class RFDiscretizer(AbstractDiscretizer):
 
         Parameters
         ----------
-        X : data frame of shape (n_samples, n_fatures)
+        X : data frame of shape (n_samples, n_features)
             Training data used to fit RF
 
         y : array-like of shape (n_samples,)
@@ -1119,7 +1119,7 @@ per feature when encode = "onehot".</p>
             max values for the range of x
 
         keep_pointwise_bins : boolean
-            If True, treat duplicate bin_edges as a pointiwse bin,
+            If True, treat duplicate bin_edges as a pointwise bin,
             i.e., [a, a]. If False, these bins are in effect ignored.
 
         Returns
@@ -1287,7 +1287,7 @@ per feature when encode = "onehot".</p>
 <dd>Primary discretization method used to bin numeric data</dd>
 <dt><strong><code>manual_discretizer_</code></strong> :&ensp;<code>dictionary</code></dt>
 <dd>Provides bin_edges to feed into _quantile_discretization()
-and do quantile discreization manually for features where
+and do quantile discretization manually for features where
 KBinsDiscretizer() failed. Ignored if strategy != 'quantile'
 or no errors in KBinsDiscretizer().</dd>
 <dt><strong><code>onehot_</code></strong> :&ensp;<code>object</code> of <code>class OneHotEncoder()</code></dt>
@@ -1352,7 +1352,7 @@ or no errors in KBinsDiscretizer().</dd>
 
     manual_discretizer_ : dictionary
         Provides bin_edges to feed into _quantile_discretization()
-        and do quantile discreization manually for features where
+        and do quantile discretization manually for features where
         KBinsDiscretizer() failed. Ignored if strategy != &#39;quantile&#39;
         or no errors in KBinsDiscretizer().
 
@@ -1387,7 +1387,7 @@ or no errors in KBinsDiscretizer().</dd>
         self
         &#34;&#34;&#34;
 
-        # initalization and error checking
+        # initialization and error checking
         self._fit_preprocessing(X)
 
         # apply KBinsDiscretizer to the selected columns
@@ -1509,7 +1509,7 @@ or no errors in KBinsDiscretizer().</dd>
     self
     &#34;&#34;&#34;
 
-    # initalization and error checking
+    # initialization and error checking
     self._fit_preprocessing(X)
 
     # apply KBinsDiscretizer to the selected columns
@@ -2135,7 +2135,7 @@ in missing_rf_cols_</dd>
 
         Parameters
         ----------
-        X : data frame of shape (n_samples, n_fatures)
+        X : data frame of shape (n_samples, n_features)
             Training data used to fit RF
 
         y : array-like of shape (n_samples,)

@@ -60,7 +60,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
 
     def _condition_classify(self, X, condition):
         &#34;&#34;&#34;
-        Helper funciton to make classificaitons for a condition
+        Helper function to make classifications for a condition
         in a rule
         &#34;&#34;&#34;
 
@@ -88,7 +88,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         return preds
 
     def _get_design_matrices(self, X, y, rule):
-        &#34;&#34;&#34; produce design matrices used in most equaitons&#34;&#34;&#34;
+        &#34;&#34;&#34; produce design matrices used in most equations&#34;&#34;&#34;
         preds = self._rule_predict(X, rule)
 
         W_plus_idx = np.where((preds == 1) &amp; (y == 1))
@@ -113,7 +113,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
 
     def _grow_rule(self, X, y):
         &#34;&#34;&#34; Starts with empty conjunction of conditions and
-        greedily adds rules to mazimize Z_tilda
+        greedily adds rules to maximize Z_tilde
         &#34;&#34;&#34;
 
         stop_condition = False
@@ -137,11 +137,11 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
                     for A_c in pivots
                 ]
 
-                # get max Z_tilda and update candidate accordingly
-                tildas = [self._grow_rule_obj(X, y, r) for r in feature_candidates]
-                if max(tildas) &gt; self._grow_rule_obj(X, y, candidate_rule):
+                # get max Z_tilde and update candidate accordingly
+                tildes = [self._grow_rule_obj(X, y, r) for r in feature_candidates]
+                if max(tildes) &gt; self._grow_rule_obj(X, y, candidate_rule):
                     candidate_rule = feature_candidates[
-                        tildas.index(max(tildas))
+                        tildes.index(max(tildes))
                     ]
 
             preds = self._rule_predict(X, candidate_rule)
@@ -249,7 +249,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
     def _set_rule_or_default(self, X, y, learned_rule):
         &#34;&#34;&#34;
         Compare output of eq 5 between learned rule and default rule
-        return rule that minmizes eq 5
+        return rule that minimizes eq 5
         &#34;&#34;&#34;
 
         rules = [self._make_default_rule(X, y), learned_rule]
@@ -356,7 +356,7 @@ as part of the SlipperRulesClassifier.</p></div>
 
     def _condition_classify(self, X, condition):
         &#34;&#34;&#34;
-        Helper funciton to make classificaitons for a condition
+        Helper function to make classifications for a condition
         in a rule
         &#34;&#34;&#34;
 
@@ -384,7 +384,7 @@ as part of the SlipperRulesClassifier.</p></div>
         return preds
 
     def _get_design_matrices(self, X, y, rule):
-        &#34;&#34;&#34; produce design matrices used in most equaitons&#34;&#34;&#34;
+        &#34;&#34;&#34; produce design matrices used in most equations&#34;&#34;&#34;
         preds = self._rule_predict(X, rule)
 
         W_plus_idx = np.where((preds == 1) &amp; (y == 1))
@@ -409,7 +409,7 @@ as part of the SlipperRulesClassifier.</p></div>
 
     def _grow_rule(self, X, y):
         &#34;&#34;&#34; Starts with empty conjunction of conditions and
-        greedily adds rules to mazimize Z_tilda
+        greedily adds rules to maximize Z_tilde
         &#34;&#34;&#34;
 
         stop_condition = False
@@ -433,11 +433,11 @@ as part of the SlipperRulesClassifier.</p></div>
                     for A_c in pivots
                 ]
 
-                # get max Z_tilda and update candidate accordingly
-                tildas = [self._grow_rule_obj(X, y, r) for r in feature_candidates]
-                if max(tildas) &gt; self._grow_rule_obj(X, y, candidate_rule):
+                # get max Z_tilde and update candidate accordingly
+                tildes = [self._grow_rule_obj(X, y, r) for r in feature_candidates]
+                if max(tildes) &gt; self._grow_rule_obj(X, y, candidate_rule):
                     candidate_rule = feature_candidates[
-                        tildas.index(max(tildas))
+                        tildes.index(max(tildes))
                     ]
 
             preds = self._rule_predict(X, candidate_rule)
@@ -545,7 +545,7 @@ as part of the SlipperRulesClassifier.</p></div>
     def _set_rule_or_default(self, X, y, learned_rule):
         &#34;&#34;&#34;
         Compare output of eq 5 between learned rule and default rule
-        return rule that minmizes eq 5
+        return rule that minimizes eq 5
         &#34;&#34;&#34;
 
         rules = [self._make_default_rule(X, y), learned_rule]

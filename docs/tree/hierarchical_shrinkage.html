@@ -30,7 +30,8 @@ from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics import r2_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, \
+    export_text
 from sklearn.ensemble import GradientBoostingClassifier
 
 from imodels.util import checks
@@ -50,7 +51,7 @@ class HSTree:
         Params
         ------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
-            Defaults to CART Classification Tree with 20 max leaf ndoes
+            Defaults to CART Classification Tree with 20 max leaf nodes
             Note: this estimator will be directly modified
 
         reg_param: float
@@ -76,11 +77,11 @@ class HSTree:
         return {&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
                 &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
 
-    def fit(self, X, y, *args, **kwargs):
+    def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # remove feature_names if it exists (note: only works as keyword-arg)
         feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-        self.estimator_ = self.estimator_.fit(X, y, *args, **kwargs)
+        self.estimator_ = self.estimator_.fit(X, y, sample_weight, *args, **kwargs)
         self._shrink()
 
         # compute complexity
@@ -181,6 +182,27 @@ class HSTree:
         else:
             return s + export_text(self.estimator_, show_weights=True)
 
+    def __repr__(self):
+        # s = self.__class__.__name__
+        # s += &#34;(&#34;
+        # s += &#34;estimator_=&#34;
+        # s += repr(self.estimator_)
+        # s += &#34;, &#34;
+        # s += &#34;reg_param=&#34;
+        # s += str(self.reg_param)
+        # s += &#34;, &#34;
+        # s += &#34;shrinkage_scheme_=&#34;
+        # s += self.shrinkage_scheme_
+        # s += &#34;)&#34;
+        # return s
+        attr_list = [&#34;estimator_&#34;, &#34;reg_param&#34;, &#34;shrinkage_scheme_&#34;]
+        s = self.__class__.__name__
+        s += &#34;(&#34;
+        for attr in attr_list:
+            s += attr + &#34;=&#34; + repr(getattr(self, attr)) + &#34;, &#34;
+        s = s[:-2] + &#34;)&#34;
+        return s
+
 
 class HSTreeRegressor(HSTree, RegressorMixin):
     ...
@@ -202,7 +224,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
         ------
         estimator_
             Sklearn estimator (already initialized).
-            If no estimator_ is passsed, sklearn decision tree is used
+            If no estimator_ is passed, sklearn decision tree is used
 
         max_rules
             If estimator is None, then max_leaf_nodes is passed to the default decision tree
@@ -232,6 +254,16 @@ class HSTreeClassifierCV(HSTreeClassifier):
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y, *args, **kwargs)
 
+    def __repr__(self):
+        attr_list = [&#34;estimator_&#34;, &#34;reg_param_list&#34;, &#34;shrinkage_scheme_&#34;,
+                     &#34;cv&#34;, &#34;scoring&#34;]
+        s = self.__class__.__name__
+        s += &#34;(&#34;
+        for attr in attr_list:
+            s += attr + &#34;=&#34; + repr(getattr(self, attr)) + &#34;, &#34;
+        s = s[:-2] + &#34;)&#34;
+        return s
+
 
 class HSTreeRegressorCV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator = None,
@@ -245,7 +277,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
         ------
         estimator_
             Sklearn estimator (already initialized).
-            If no estimator_ is passsed, sklearn decision tree is used
+            If no estimator_ is passed, sklearn decision tree is used
 
         max_rules
             If estimator is None, then max_leaf_nodes is passed to the default decision tree
@@ -274,6 +306,16 @@ class HSTreeRegressorCV(HSTreeRegressor):
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y, *args, **kwargs)
+
+    def __repr__(self):
+        attr_list = [&#34;estimator_&#34;, &#34;reg_param_list&#34;, &#34;shrinkage_scheme_&#34;,
+                     &#34;cv&#34;, &#34;scoring&#34;]
+        s = self.__class__.__name__
+        s += &#34;(&#34;
+        for attr in attr_list:
+            s += attr + &#34;=&#34; + repr(getattr(self, attr)) + &#34;, &#34;
+        s = s[:-2] + &#34;)&#34;
+        return s
 
 
 if __name__ == &#39;__main__&#39;:
@@ -338,7 +380,7 @@ Experiments over a wide variety of datasets show that hierarchical shrinkage sub
 <a href="https://arxiv.org/abs/2202.00858">https://arxiv.org/abs/2202.00858</a></p>
 <h2 id="params">Params</h2>
 <p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
-Defaults to CART Classification Tree with 20 max leaf ndoes
+Defaults to CART Classification Tree with 20 max leaf nodes
 Note: this estimator will be directly modified</p>
 <p>reg_param: float
 Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
@@ -363,7 +405,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         Params
         ------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
-            Defaults to CART Classification Tree with 20 max leaf ndoes
+            Defaults to CART Classification Tree with 20 max leaf nodes
             Note: this estimator will be directly modified
 
         reg_param: float
@@ -389,11 +431,11 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         return {&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
                 &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
 
-    def fit(self, X, y, *args, **kwargs):
+    def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # remove feature_names if it exists (note: only works as keyword-arg)
         feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-        self.estimator_ = self.estimator_.fit(X, y, *args, **kwargs)
+        self.estimator_ = self.estimator_.fit(X, y, sample_weight, *args, **kwargs)
         self._shrink()
 
         # compute complexity
@@ -492,7 +534,28 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         if hasattr(self, &#39;feature_names&#39;) and self.feature_names is not None:
             return s + export_text(self.estimator_, feature_names=self.feature_names, show_weights=True)
         else:
-            return s + export_text(self.estimator_, show_weights=True)</code></pre>
+            return s + export_text(self.estimator_, show_weights=True)
+
+    def __repr__(self):
+        # s = self.__class__.__name__
+        # s += &#34;(&#34;
+        # s += &#34;estimator_=&#34;
+        # s += repr(self.estimator_)
+        # s += &#34;, &#34;
+        # s += &#34;reg_param=&#34;
+        # s += str(self.reg_param)
+        # s += &#34;, &#34;
+        # s += &#34;shrinkage_scheme_=&#34;
+        # s += self.shrinkage_scheme_
+        # s += &#34;)&#34;
+        # return s
+        attr_list = [&#34;estimator_&#34;, &#34;reg_param&#34;, &#34;shrinkage_scheme_&#34;]
+        s = self.__class__.__name__
+        s += &#34;(&#34;
+        for attr in attr_list:
+            s += attr + &#34;=&#34; + repr(getattr(self, attr)) + &#34;, &#34;
+        s = s[:-2] + &#34;)&#34;
+        return s</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -502,7 +565,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y, *args, **kwargs)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -510,11 +573,11 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y, *args, **kwargs):
+<pre><code class="python">def fit(self, X, y, sample_weight=None, *args, **kwargs):
     # remove feature_names if it exists (note: only works as keyword-arg)
     feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-    self.estimator_ = self.estimator_.fit(X, y, *args, **kwargs)
+    self.estimator_ = self.estimator_.fit(X, y, sample_weight, *args, **kwargs)
     self._shrink()
 
     # compute complexity
@@ -608,7 +671,7 @@ Experiments over a wide variety of datasets show that hierarchical shrinkage sub
 <a href="https://arxiv.org/abs/2202.00858">https://arxiv.org/abs/2202.00858</a></p>
 <h2 id="params">Params</h2>
 <p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
-Defaults to CART Classification Tree with 20 max leaf ndoes
+Defaults to CART Classification Tree with 20 max leaf nodes
 Note: this estimator will be directly modified</p>
 <p>reg_param: float
 Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
@@ -645,7 +708,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <h2 id="params">Params</h2>
 <p>estimator_
 Sklearn estimator (already initialized).
-If no estimator_ is passsed, sklearn decision tree is used</p>
+If no estimator_ is passed, sklearn decision tree is used</p>
 <p>max_rules
 If estimator is None, then max_leaf_nodes is passed to the default decision tree</p>
 <p>args, kwargs
@@ -666,7 +729,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         ------
         estimator_
             Sklearn estimator (already initialized).
-            If no estimator_ is passsed, sklearn decision tree is used
+            If no estimator_ is passed, sklearn decision tree is used
 
         max_rules
             If estimator is None, then max_leaf_nodes is passed to the default decision tree
@@ -694,7 +757,17 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y, *args, **kwargs)</code></pre>
+        super().fit(X=X, y=y, *args, **kwargs)
+
+    def __repr__(self):
+        attr_list = [&#34;estimator_&#34;, &#34;reg_param_list&#34;, &#34;shrinkage_scheme_&#34;,
+                     &#34;cv&#34;, &#34;scoring&#34;]
+        s = self.__class__.__name__
+        s += &#34;(&#34;
+        for attr in attr_list:
+            s += attr + &#34;=&#34; + repr(getattr(self, attr)) + &#34;, &#34;
+        s = s[:-2] + &#34;)&#34;
+        return s</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -738,7 +811,7 @@ Experiments over a wide variety of datasets show that hierarchical shrinkage sub
 <a href="https://arxiv.org/abs/2202.00858">https://arxiv.org/abs/2202.00858</a></p>
 <h2 id="params">Params</h2>
 <p>estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
-Defaults to CART Classification Tree with 20 max leaf ndoes
+Defaults to CART Classification Tree with 20 max leaf nodes
 Note: this estimator will be directly modified</p>
 <p>reg_param: float
 Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</p>
@@ -775,7 +848,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <h2 id="params">Params</h2>
 <p>estimator_
 Sklearn estimator (already initialized).
-If no estimator_ is passsed, sklearn decision tree is used</p>
+If no estimator_ is passed, sklearn decision tree is used</p>
 <p>max_rules
 If estimator is None, then max_leaf_nodes is passed to the default decision tree</p>
 <p>args, kwargs
@@ -796,7 +869,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         ------
         estimator_
             Sklearn estimator (already initialized).
-            If no estimator_ is passsed, sklearn decision tree is used
+            If no estimator_ is passed, sklearn decision tree is used
 
         max_rules
             If estimator is None, then max_leaf_nodes is passed to the default decision tree
@@ -824,7 +897,17 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y, *args, **kwargs)</code></pre>
+        super().fit(X=X, y=y, *args, **kwargs)
+
+    def __repr__(self):
+        attr_list = [&#34;estimator_&#34;, &#34;reg_param_list&#34;, &#34;shrinkage_scheme_&#34;,
+                     &#34;cv&#34;, &#34;scoring&#34;]
+        s = self.__class__.__name__
+        s += &#34;(&#34;
+        for attr in attr_list:
+            s += attr + &#34;=&#34; + repr(getattr(self, attr)) + &#34;, &#34;
+        s = s[:-2] + &#34;)&#34;
+        return s</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

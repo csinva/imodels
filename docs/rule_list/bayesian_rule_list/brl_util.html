@@ -62,7 +62,7 @@
 # dictionary whose keys are a string Pickle-dump of the antecedent list d, and
 # whose values are a list [a,b] where a is (proportional to) the log posterior of
 # d, and b is the number of times d is present in the MCMC samples.
-# - d_star - the BRL-point antecedent list. A list of indicies corresponding to
+# - d_star - the BRL-point antecedent list. A list of indices corresponding to
 # variable &#34;itemsets.&#34;
 # - itemsets - A list of itemsets. itemsets[d_star[i]] is the antecedent in
 # position i on the BRL-point list
@@ -248,7 +248,7 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
         minrulesize = int(floor(avgrulesize))
         maxrulesize = int(ceil(avgrulesize))
         # Run through all perms again
-        likelihds = []
+        likelihoods = []
         d_ts = []
         beta_Z, logalpha_pmf, logbeta_pmf = prior_calculations(lbda, len(X), eta,
                                                                maxlhs)  # get the constants needed to compute the prior
@@ -267,11 +267,11 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
                         # Compute the likelihood
                         R_t = d_t.index(0)
                         N_t = compute_rule_usage(d_t, R_t, X, Y)
-                        likelihds.append(
+                        likelihoods.append(
                             fn_logposterior(d_t, R_t, N_t, alpha, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen,
                                             lhs_len))
-        likelihds = array(likelihds)
-        d_star = d_ts[likelihds.argmax()]
+        likelihoods = array(likelihoods)
+        d_star = d_ts[likelihoods.argmax()]
     except RuntimeWarning:
         # This can happen if all perms are identically [0], or if no soln is found within the len and width bounds (probably the chains didn&#39;t converge)
         print(&#39;No suitable point estimate found&#39;)
@@ -450,7 +450,7 @@ def proposal(d_t, R_t, X, Y, alpha):
         move_probs = array(move_probs_default)
         Jratios = array([1., move_probs[2] / float(move_probs[1]), move_probs[1] / float(move_probs[2])])
     u = random.random()
-    # First we will find the indicies for the insertion-deletion. indx1 is the item to be moved, indx2 is the new location
+    # First we will find the indices for the insertion-deletion. indx1 is the item to be moved, indx2 is the new location
     if u &lt; sum(move_probs[:1]):
         # This is an on-list move.
         step = &#39;move&#39;
@@ -509,18 +509,18 @@ def prior_calculations(lbda, maxlen, eta, maxlhs):
 def fn_logposterior(d_t, R_t, N_t, alpha, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len):
     &#39;&#39;&#39;# Compute log posterior
     &#39;&#39;&#39;
-    logliklihood = fn_logliklihood(d_t, N_t, R_t, alpha)
+    loglikelihood = fn_loglikelihood(d_t, N_t, R_t, alpha)
     logprior = fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len)
-    return logliklihood + logprior
+    return loglikelihood + logprior
 
 
-def fn_logliklihood(d_t, N_t, R_t, alpha):
+def fn_loglikelihood(d_t, N_t, R_t, alpha):
     &#39;&#39;&#39;Compute log likelihood
     &#39;&#39;&#39;
     gammaln_Nt_jk = gammaln(N_t + alpha)
     gammaln_Nt_j = gammaln(sum(N_t + alpha, 1))
-    logliklihood = sum(gammaln_Nt_jk) - sum(gammaln_Nt_j)
-    return logliklihood
+    loglikelihood = sum(gammaln_Nt_jk) - sum(gammaln_Nt_j)
+    return loglikelihood
 
 
 def fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len):
@@ -684,8 +684,8 @@ def compute_rule_usage(d_star, R_star, X, Y):
     return [0., 0.]</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_list.bayesian_rule_list.brl_util.fn_logliklihood"><code class="name flex">
-<span>def <span class="ident">fn_logliklihood</span></span>(<span>d_t, N_t, R_t, alpha)</span>
+<dt id="imodels.rule_list.bayesian_rule_list.brl_util.fn_loglikelihood"><code class="name flex">
+<span>def <span class="ident">fn_loglikelihood</span></span>(<span>d_t, N_t, R_t, alpha)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute log likelihood</p></div>
@@ -693,13 +693,13 @@ def compute_rule_usage(d_star, R_star, X, Y):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fn_logliklihood(d_t, N_t, R_t, alpha):
+<pre><code class="python">def fn_loglikelihood(d_t, N_t, R_t, alpha):
     &#39;&#39;&#39;Compute log likelihood
     &#39;&#39;&#39;
     gammaln_Nt_jk = gammaln(N_t + alpha)
     gammaln_Nt_j = gammaln(sum(N_t + alpha, 1))
-    logliklihood = sum(gammaln_Nt_jk) - sum(gammaln_Nt_j)
-    return logliklihood</code></pre>
+    loglikelihood = sum(gammaln_Nt_jk) - sum(gammaln_Nt_j)
+    return loglikelihood</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_list.bayesian_rule_list.brl_util.fn_logposterior"><code class="name flex">
@@ -714,9 +714,9 @@ def compute_rule_usage(d_star, R_star, X, Y):
 <pre><code class="python">def fn_logposterior(d_t, R_t, N_t, alpha, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len):
     &#39;&#39;&#39;# Compute log posterior
     &#39;&#39;&#39;
-    logliklihood = fn_logliklihood(d_t, N_t, R_t, alpha)
+    loglikelihood = fn_loglikelihood(d_t, N_t, R_t, alpha)
     logprior = fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len)
-    return logliklihood + logprior</code></pre>
+    return loglikelihood + logprior</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_list.bayesian_rule_list.brl_util.fn_logprior"><code class="name flex">
@@ -859,7 +859,7 @@ Get logalpha (length of list) (overloaded notation in this code, unrelated to th
         minrulesize = int(floor(avgrulesize))
         maxrulesize = int(ceil(avgrulesize))
         # Run through all perms again
-        likelihds = []
+        likelihoods = []
         d_ts = []
         beta_Z, logalpha_pmf, logbeta_pmf = prior_calculations(lbda, len(X), eta,
                                                                maxlhs)  # get the constants needed to compute the prior
@@ -878,11 +878,11 @@ Get logalpha (length of list) (overloaded notation in this code, unrelated to th
                         # Compute the likelihood
                         R_t = d_t.index(0)
                         N_t = compute_rule_usage(d_t, R_t, X, Y)
-                        likelihds.append(
+                        likelihoods.append(
                             fn_logposterior(d_t, R_t, N_t, alpha, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen,
                                             lhs_len))
-        likelihds = array(likelihds)
-        d_star = d_ts[likelihds.argmax()]
+        likelihoods = array(likelihoods)
+        d_star = d_ts[likelihoods.argmax()]
     except RuntimeWarning:
         # This can happen if all perms are identically [0], or if no soln is found within the len and width bounds (probably the chains didn&#39;t converge)
         print(&#39;No suitable point estimate found&#39;)
@@ -1130,7 +1130,7 @@ Get logalpha (length of list) (overloaded notation in this code, unrelated to th
         move_probs = array(move_probs_default)
         Jratios = array([1., move_probs[2] / float(move_probs[1]), move_probs[1] / float(move_probs[2])])
     u = random.random()
-    # First we will find the indicies for the insertion-deletion. indx1 is the item to be moved, indx2 is the new location
+    # First we will find the indices for the insertion-deletion. indx1 is the item to be moved, indx2 is the new location
     if u &lt; sum(move_probs[:1]):
         # This is an on-list move.
         step = &#39;move&#39;
@@ -1246,7 +1246,7 @@ log-posterior value (so it doesn't need to be re-computed in future chains).</p>
 <li><code><a title="imodels.rule_list.bayesian_rule_list.brl_util.bayesdl_mcmc" href="#imodels.rule_list.bayesian_rule_list.brl_util.bayesdl_mcmc">bayesdl_mcmc</a></code></li>
 <li><code><a title="imodels.rule_list.bayesian_rule_list.brl_util.compute_rule_usage" href="#imodels.rule_list.bayesian_rule_list.brl_util.compute_rule_usage">compute_rule_usage</a></code></li>
 <li><code><a title="imodels.rule_list.bayesian_rule_list.brl_util.default_permsdic" href="#imodels.rule_list.bayesian_rule_list.brl_util.default_permsdic">default_permsdic</a></code></li>
-<li><code><a title="imodels.rule_list.bayesian_rule_list.brl_util.fn_logliklihood" href="#imodels.rule_list.bayesian_rule_list.brl_util.fn_logliklihood">fn_logliklihood</a></code></li>
+<li><code><a title="imodels.rule_list.bayesian_rule_list.brl_util.fn_loglikelihood" href="#imodels.rule_list.bayesian_rule_list.brl_util.fn_loglikelihood">fn_loglikelihood</a></code></li>
 <li><code><a title="imodels.rule_list.bayesian_rule_list.brl_util.fn_logposterior" href="#imodels.rule_list.bayesian_rule_list.brl_util.fn_logposterior">fn_logposterior</a></code></li>
 <li><code><a title="imodels.rule_list.bayesian_rule_list.brl_util.fn_logprior" href="#imodels.rule_list.bayesian_rule_list.brl_util.fn_logprior">fn_logprior</a></code></li>
 <li><code><a title="imodels.rule_list.bayesian_rule_list.brl_util.gelmanrubin" href="#imodels.rule_list.bayesian_rule_list.brl_util.gelmanrubin">gelmanrubin</a></code></li>

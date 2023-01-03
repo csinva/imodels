@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from typing import List
+
+import numpy as np
+
+from ...model import Model
+from ...mutation import TreeMutation, GrowMutation, PruneMutation
+from ...node import LeafNode, TreeNode
+from ...samplers.treemutation import TreeMutationLikelihoodRatio
+from ...sigma import Sigma
+from ...tree import Tree
+
+
+def log_grow_ratio(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float):
+    # deviation: https: // www.cs.ubc.ca / ~murphyk / Papers / bayesGauss.pdf
+    var = np.power(sigma.current_value(), 2)
+    var_mu = np.power(sigma_mu, 2)
+    n = combined_node.data.X.n_obsv
+    n_l = left_node.data.X.n_obsv
+    n_r = right_node.data.X.n_obsv
+
+    # first_term = (var * (var + n * sigma_mu)) / ((var + n_l * var_mu) * (var + n_r * var_mu))
+    # first_term = np.log(np.sqrt(first_term))
+
+    combined_y_sum = combined_node.data.y.summed_y()
+    left_y_sum = left_node.data.y.summed_y()
+    right_y_sum = right_node.data.y.summed_y()
+
+    left_resp_contribution = np.square(left_y_sum) / (var + n_l * sigma_mu)
+    right_resp_contribution = np.square(right_y_sum) / (var + n_r * sigma_mu)
+    combined_resp_contribution = np.square(combined_y_sum) / (var + n * sigma_mu)
+
+    # resp_contribution = left_resp_contribution + right_resp_contribution - combined_resp_contribution
+
+    numerator_first = np.log(np.sqrt(((var + n_l * var_mu) * (var + n_r * var_mu))))
+    numerator_second = (var_mu / (2 * var)) * (left_resp_contribution + right_resp_contribution)
+
+    big_model_l = numerator_first + numerator_second
+
+    denominator_first = np.log(np.sqrt((var * (var + n * var_mu))))
+    denominator_second = (var_mu / (2 * var)) * combined_resp_contribution
+
+    small_model_l = denominator_first + denominator_second
+
+    return big_model_l, small_model_l
+
+    # return first_term + ((var_mu / (2 * var)) * resp_contribution)
+
+
+class UniformTreeMutationLikelihoodRatio(TreeMutationLikelihoodRatio):
+
+    def __init__(self,
+                 prob_method: List[float] = None):
+        if prob_method is None:
+            prob_method = [0.5, 0.5]
+        self.prob_method = prob_method
+
+    def log_transition_ratio(self, tree: Tree, mutation: TreeMutation):
+        if mutation.kind == &#34;prune&#34;:
+            mutation: PruneMutation = mutation
+            return self.log_prune_transition_ratio(tree, mutation)
+        if mutation.kind == &#34;grow&#34;:
+            mutation: GrowMutation = mutation
+            return self.log_grow_transition_ratio(tree, mutation)
+        else:
+            raise NotImplementedError(&#34;kind {} not supported&#34;.format(mutation.kind))
+
+    def log_tree_ratio(self, model: Model, tree: Tree, mutation: TreeMutation):
+        if mutation.kind == &#34;grow&#34;:
+            mutation: GrowMutation = mutation
+            return self.log_tree_ratio_grow(model, tree, mutation)
+        if mutation.kind == &#34;prune&#34;:
+            mutation: PruneMutation = mutation
+            return self.log_tree_ratio_prune(model, mutation)
+
+    def log_likelihood_ratio(self, model: Model, tree: Tree, proposal: TreeMutation):
+        if proposal.kind == &#34;grow&#34;:
+            proposal: GrowMutation = proposal
+            return self.log_likelihood_ratio_grow(model, proposal)
+        if proposal.kind == &#34;prune&#34;:
+            proposal: PruneMutation = proposal
+            return self.log_likelihood_ratio_prune(model, proposal)
+        else:
+            raise NotImplementedError(&#34;Only prune and grow mutations supported&#34;)
+
+    @staticmethod
+    def log_likelihood_ratio_grow(model: Model, proposal: TreeMutation):
+        new_model_l, old_model_l = log_grow_ratio(proposal.existing_node, proposal.updated_node.left_child,
+                                                  proposal.updated_node.right_child, model.sigma, model.sigma_m)
+        return (new_model_l - old_model_l), (new_model_l, old_model_l)
+
+    @staticmethod
+    def log_likelihood_ratio_prune(model: Model, proposal: TreeMutation):
+        old_model_l, new_model_l = log_grow_ratio(proposal.updated_node, proposal.existing_node.left_child,
+                                                  proposal.existing_node.right_child, model.sigma, model.sigma_m)
+        return (new_model_l - old_model_l), (new_model_l, old_model_l)
+
+    def log_grow_transition_ratio(self, tree: Tree, mutation: GrowMutation):
+        prob_prune_selected = - np.log(n_prunable_decision_nodes(tree) + 1)
+        prob_grow_selected = log_probability_split_within_tree(tree, mutation)
+
+        prob_selection_ratio = prob_prune_selected - prob_grow_selected
+        prune_grow_ratio = np.log(self.prob_method[1] / self.prob_method[0])
+
+        numerator = prob_prune_selected
+        denominator = prob_grow_selected
+
+        # return prune_grow_ratio + prob_selection_ratio
+        return numerator - denominator, (numerator, denominator)
+
+    def log_prune_transition_ratio(self, tree: Tree, mutation: PruneMutation):
+        if n_splittable_leaf_nodes(tree) == 1:
+            prob_grow_node_selected = - np.inf  # Infinitely unlikely to be able to prune a null tree
+        else:
+            prob_grow_node_selected = - np.log(n_splittable_leaf_nodes(tree) - 1)
+        prob_split = log_probability_split_within_node(GrowMutation(mutation.updated_node, mutation.existing_node))
+        prob_grow_selected = prob_grow_node_selected + prob_split
+
+        prob_prune_selected = - np.log(n_prunable_decision_nodes(tree))
+
+        prob_selection_ratio = prob_grow_selected - prob_prune_selected
+        grow_prune_ratio = np.log(self.prob_method[0] / self.prob_method[1])
+
+        numerator = prob_grow_selected
+        denominator = prob_prune_selected
+
+        # return grow_prune_ratio + prob_selection_ratio
+
+        return numerator - denominator, (numerator, denominator)
+
+    @staticmethod
+    def log_tree_ratio_grow(model: Model, tree: Tree, proposal: GrowMutation):
+        denominator = log_probability_node_not_split(model, proposal.existing_node)
+
+        prob_left_not_split = log_probability_node_not_split(model, proposal.updated_node.left_child)
+        prob_right_not_split = log_probability_node_not_split(model, proposal.updated_node.right_child)
+        prob_updated_node_split = log_probability_node_split(model, proposal.updated_node)
+        prob_chosen_split = log_probability_split_within_tree(tree, proposal)
+        numerator = prob_left_not_split + prob_right_not_split + prob_updated_node_split + prob_chosen_split
+
+        return numerator - denominator, (numerator, denominator)
+
+    @staticmethod
+    def log_tree_ratio_prune(model: Model, proposal: PruneMutation):
+        numerator = log_probability_node_not_split(model, proposal.updated_node)
+
+        prob_left_not_split = log_probability_node_not_split(model, proposal.existing_node.left_child)
+        prob_right_not_split = log_probability_node_not_split(model, proposal.existing_node.left_child)
+        prob_updated_node_split = log_probability_node_split(model, proposal.existing_node)
+        prob_chosen_split = log_probability_split_within_node(
+            GrowMutation(proposal.updated_node, proposal.existing_node))
+        denominator = prob_left_not_split + prob_right_not_split + prob_updated_node_split + prob_chosen_split
+
+        return numerator - denominator, (numerator, denominator)
+
+
+def n_prunable_decision_nodes(tree: Tree) -&gt; int:
+    &#34;&#34;&#34;
+    The number of prunable decision nodes
+    i.e. how many decision nodes have two leaf children
+    &#34;&#34;&#34;
+    return len(tree.prunable_decision_nodes)
+
+
+def n_splittable_leaf_nodes(tree: Tree) -&gt; int:
+    &#34;&#34;&#34;
+    The number of splittable leaf nodes
+    i.e. how many leaf nodes have more than one distinct values in their covariate matrix
+    &#34;&#34;&#34;
+    return len(tree.splittable_leaf_nodes)
+
+
+def log_probability_split_within_tree(tree: Tree, mutation: GrowMutation) -&gt; float:
+    &#34;&#34;&#34;
+    The log probability of the particular grow mutation being selected conditional on growing a given tree
+    i.e.
+    log(P(mutation | node)P(node| tree)
+
+    &#34;&#34;&#34;
+    prob_node_chosen_to_split_on = - np.log(n_splittable_leaf_nodes(tree))
+    prob_split_chosen = log_probability_split_within_node(mutation)
+    return prob_node_chosen_to_split_on + prob_split_chosen
+
+
+def log_probability_split_within_node(mutation: GrowMutation) -&gt; float:
+    &#34;&#34;&#34;
+    The log probability of the particular grow mutation being selected conditional on growing a given node
+
+    i.e.
+    log(P(splitting_value | splitting_variable, node, grow) * P(splitting_variable | node, grow))
+    &#34;&#34;&#34;
+
+    prob_splitting_variable_selected = - np.log(mutation.existing_node.data.X.n_splittable_variables)
+    splitting_variable = mutation.updated_node.most_recent_split_condition().splitting_variable
+    splitting_value = mutation.updated_node.most_recent_split_condition().splitting_value
+    prob_value_selected_within_variable = np.log(
+        mutation.existing_node.data.X.proportion_of_value_in_variable(splitting_variable, splitting_value))
+    return prob_splitting_variable_selected + prob_value_selected_within_variable
+
+
+def log_probability_node_split(model: Model, node: TreeNode):
+    return np.log(model.alpha * np.power(1 + node.depth, -model.beta))
+
+
+def log_probability_node_not_split(model: Model, node: TreeNode):
+    return np.log(1. - model.alpha * np.power(1 + node.depth, -model.beta))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_grow_ratio"><code class="name flex">
+<span>def <span class="ident">log_grow_ratio</span></span>(<span>combined_node: <a title="imodels.experimental.bartpy.node.LeafNode" href="../../node.html#imodels.experimental.bartpy.node.LeafNode">LeafNode</a>, left_node: <a title="imodels.experimental.bartpy.node.LeafNode" href="../../node.html#imodels.experimental.bartpy.node.LeafNode">LeafNode</a>, right_node: <a title="imodels.experimental.bartpy.node.LeafNode" href="../../node.html#imodels.experimental.bartpy.node.LeafNode">LeafNode</a>, sigma: <a title="imodels.experimental.bartpy.sigma.Sigma" href="../../sigma.html#imodels.experimental.bartpy.sigma.Sigma">Sigma</a>, sigma_mu: float)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_grow_ratio(combined_node: LeafNode, left_node: LeafNode, right_node: LeafNode, sigma: Sigma, sigma_mu: float):
+    # deviation: https: // www.cs.ubc.ca / ~murphyk / Papers / bayesGauss.pdf
+    var = np.power(sigma.current_value(), 2)
+    var_mu = np.power(sigma_mu, 2)
+    n = combined_node.data.X.n_obsv
+    n_l = left_node.data.X.n_obsv
+    n_r = right_node.data.X.n_obsv
+
+    # first_term = (var * (var + n * sigma_mu)) / ((var + n_l * var_mu) * (var + n_r * var_mu))
+    # first_term = np.log(np.sqrt(first_term))
+
+    combined_y_sum = combined_node.data.y.summed_y()
+    left_y_sum = left_node.data.y.summed_y()
+    right_y_sum = right_node.data.y.summed_y()
+
+    left_resp_contribution = np.square(left_y_sum) / (var + n_l * sigma_mu)
+    right_resp_contribution = np.square(right_y_sum) / (var + n_r * sigma_mu)
+    combined_resp_contribution = np.square(combined_y_sum) / (var + n * sigma_mu)
+
+    # resp_contribution = left_resp_contribution + right_resp_contribution - combined_resp_contribution
+
+    numerator_first = np.log(np.sqrt(((var + n_l * var_mu) * (var + n_r * var_mu))))
+    numerator_second = (var_mu / (2 * var)) * (left_resp_contribution + right_resp_contribution)
+
+    big_model_l = numerator_first + numerator_second
+
+    denominator_first = np.log(np.sqrt((var * (var + n * var_mu))))
+    denominator_second = (var_mu / (2 * var)) * combined_resp_contribution
+
+    small_model_l = denominator_first + denominator_second
+
+    return big_model_l, small_model_l
+
+    # return first_term + ((var_mu / (2 * var)) * resp_contribution)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_node_not_split"><code class="name flex">
+<span>def <span class="ident">log_probability_node_not_split</span></span>(<span>model: <a title="imodels.experimental.bartpy.model.Model" href="../../model.html#imodels.experimental.bartpy.model.Model">Model</a>, node: <a title="imodels.experimental.bartpy.node.TreeNode" href="../../node.html#imodels.experimental.bartpy.node.TreeNode">TreeNode</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_probability_node_not_split(model: Model, node: TreeNode):
+    return np.log(1. - model.alpha * np.power(1 + node.depth, -model.beta))</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_node_split"><code class="name flex">
+<span>def <span class="ident">log_probability_node_split</span></span>(<span>model: <a title="imodels.experimental.bartpy.model.Model" href="../../model.html#imodels.experimental.bartpy.model.Model">Model</a>, node: <a title="imodels.experimental.bartpy.node.TreeNode" href="../../node.html#imodels.experimental.bartpy.node.TreeNode">TreeNode</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_probability_node_split(model: Model, node: TreeNode):
+    return np.log(model.alpha * np.power(1 + node.depth, -model.beta))</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_split_within_node"><code class="name flex">
+<span>def <span class="ident">log_probability_split_within_node</span></span>(<span>mutation: <a title="imodels.experimental.bartpy.mutation.GrowMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.GrowMutation">GrowMutation</a>) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The log probability of the particular grow mutation being selected conditional on growing a given node</p>
+<p>i.e.
+log(P(splitting_value | splitting_variable, node, grow) * P(splitting_variable | node, grow))</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_probability_split_within_node(mutation: GrowMutation) -&gt; float:
+    &#34;&#34;&#34;
+    The log probability of the particular grow mutation being selected conditional on growing a given node
+
+    i.e.
+    log(P(splitting_value | splitting_variable, node, grow) * P(splitting_variable | node, grow))
+    &#34;&#34;&#34;
+
+    prob_splitting_variable_selected = - np.log(mutation.existing_node.data.X.n_splittable_variables)
+    splitting_variable = mutation.updated_node.most_recent_split_condition().splitting_variable
+    splitting_value = mutation.updated_node.most_recent_split_condition().splitting_value
+    prob_value_selected_within_variable = np.log(
+        mutation.existing_node.data.X.proportion_of_value_in_variable(splitting_variable, splitting_value))
+    return prob_splitting_variable_selected + prob_value_selected_within_variable</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_split_within_tree"><code class="name flex">
+<span>def <span class="ident">log_probability_split_within_tree</span></span>(<span>tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>, mutation: <a title="imodels.experimental.bartpy.mutation.GrowMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.GrowMutation">GrowMutation</a>) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The log probability of the particular grow mutation being selected conditional on growing a given tree
+i.e.
+log(P(mutation | node)P(node| tree)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_probability_split_within_tree(tree: Tree, mutation: GrowMutation) -&gt; float:
+    &#34;&#34;&#34;
+    The log probability of the particular grow mutation being selected conditional on growing a given tree
+    i.e.
+    log(P(mutation | node)P(node| tree)
+
+    &#34;&#34;&#34;
+    prob_node_chosen_to_split_on = - np.log(n_splittable_leaf_nodes(tree))
+    prob_split_chosen = log_probability_split_within_node(mutation)
+    return prob_node_chosen_to_split_on + prob_split_chosen</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.n_prunable_decision_nodes"><code class="name flex">
+<span>def <span class="ident">n_prunable_decision_nodes</span></span>(<span>tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The number of prunable decision nodes
+i.e. how many decision nodes have two leaf children</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def n_prunable_decision_nodes(tree: Tree) -&gt; int:
+    &#34;&#34;&#34;
+    The number of prunable decision nodes
+    i.e. how many decision nodes have two leaf children
+    &#34;&#34;&#34;
+    return len(tree.prunable_decision_nodes)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.n_splittable_leaf_nodes"><code class="name flex">
+<span>def <span class="ident">n_splittable_leaf_nodes</span></span>(<span>tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The number of splittable leaf nodes
+i.e. how many leaf nodes have more than one distinct values in their covariate matrix</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def n_splittable_leaf_nodes(tree: Tree) -&gt; int:
+    &#34;&#34;&#34;
+    The number of splittable leaf nodes
+    i.e. how many leaf nodes have more than one distinct values in their covariate matrix
+    &#34;&#34;&#34;
+    return len(tree.splittable_leaf_nodes)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio"><code class="flex name class">
+<span>class <span class="ident">UniformTreeMutationLikelihoodRatio</span></span>
+<span>(</span><span>prob_method: List[float] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Responsible for evaluating the ratio of mutations to the reverse movement</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class UniformTreeMutationLikelihoodRatio(TreeMutationLikelihoodRatio):
+
+    def __init__(self,
+                 prob_method: List[float] = None):
+        if prob_method is None:
+            prob_method = [0.5, 0.5]
+        self.prob_method = prob_method
+
+    def log_transition_ratio(self, tree: Tree, mutation: TreeMutation):
+        if mutation.kind == &#34;prune&#34;:
+            mutation: PruneMutation = mutation
+            return self.log_prune_transition_ratio(tree, mutation)
+        if mutation.kind == &#34;grow&#34;:
+            mutation: GrowMutation = mutation
+            return self.log_grow_transition_ratio(tree, mutation)
+        else:
+            raise NotImplementedError(&#34;kind {} not supported&#34;.format(mutation.kind))
+
+    def log_tree_ratio(self, model: Model, tree: Tree, mutation: TreeMutation):
+        if mutation.kind == &#34;grow&#34;:
+            mutation: GrowMutation = mutation
+            return self.log_tree_ratio_grow(model, tree, mutation)
+        if mutation.kind == &#34;prune&#34;:
+            mutation: PruneMutation = mutation
+            return self.log_tree_ratio_prune(model, mutation)
+
+    def log_likelihood_ratio(self, model: Model, tree: Tree, proposal: TreeMutation):
+        if proposal.kind == &#34;grow&#34;:
+            proposal: GrowMutation = proposal
+            return self.log_likelihood_ratio_grow(model, proposal)
+        if proposal.kind == &#34;prune&#34;:
+            proposal: PruneMutation = proposal
+            return self.log_likelihood_ratio_prune(model, proposal)
+        else:
+            raise NotImplementedError(&#34;Only prune and grow mutations supported&#34;)
+
+    @staticmethod
+    def log_likelihood_ratio_grow(model: Model, proposal: TreeMutation):
+        new_model_l, old_model_l = log_grow_ratio(proposal.existing_node, proposal.updated_node.left_child,
+                                                  proposal.updated_node.right_child, model.sigma, model.sigma_m)
+        return (new_model_l - old_model_l), (new_model_l, old_model_l)
+
+    @staticmethod
+    def log_likelihood_ratio_prune(model: Model, proposal: TreeMutation):
+        old_model_l, new_model_l = log_grow_ratio(proposal.updated_node, proposal.existing_node.left_child,
+                                                  proposal.existing_node.right_child, model.sigma, model.sigma_m)
+        return (new_model_l - old_model_l), (new_model_l, old_model_l)
+
+    def log_grow_transition_ratio(self, tree: Tree, mutation: GrowMutation):
+        prob_prune_selected = - np.log(n_prunable_decision_nodes(tree) + 1)
+        prob_grow_selected = log_probability_split_within_tree(tree, mutation)
+
+        prob_selection_ratio = prob_prune_selected - prob_grow_selected
+        prune_grow_ratio = np.log(self.prob_method[1] / self.prob_method[0])
+
+        numerator = prob_prune_selected
+        denominator = prob_grow_selected
+
+        # return prune_grow_ratio + prob_selection_ratio
+        return numerator - denominator, (numerator, denominator)
+
+    def log_prune_transition_ratio(self, tree: Tree, mutation: PruneMutation):
+        if n_splittable_leaf_nodes(tree) == 1:
+            prob_grow_node_selected = - np.inf  # Infinitely unlikely to be able to prune a null tree
+        else:
+            prob_grow_node_selected = - np.log(n_splittable_leaf_nodes(tree) - 1)
+        prob_split = log_probability_split_within_node(GrowMutation(mutation.updated_node, mutation.existing_node))
+        prob_grow_selected = prob_grow_node_selected + prob_split
+
+        prob_prune_selected = - np.log(n_prunable_decision_nodes(tree))
+
+        prob_selection_ratio = prob_grow_selected - prob_prune_selected
+        grow_prune_ratio = np.log(self.prob_method[0] / self.prob_method[1])
+
+        numerator = prob_grow_selected
+        denominator = prob_prune_selected
+
+        # return grow_prune_ratio + prob_selection_ratio
+
+        return numerator - denominator, (numerator, denominator)
+
+    @staticmethod
+    def log_tree_ratio_grow(model: Model, tree: Tree, proposal: GrowMutation):
+        denominator = log_probability_node_not_split(model, proposal.existing_node)
+
+        prob_left_not_split = log_probability_node_not_split(model, proposal.updated_node.left_child)
+        prob_right_not_split = log_probability_node_not_split(model, proposal.updated_node.right_child)
+        prob_updated_node_split = log_probability_node_split(model, proposal.updated_node)
+        prob_chosen_split = log_probability_split_within_tree(tree, proposal)
+        numerator = prob_left_not_split + prob_right_not_split + prob_updated_node_split + prob_chosen_split
+
+        return numerator - denominator, (numerator, denominator)
+
+    @staticmethod
+    def log_tree_ratio_prune(model: Model, proposal: PruneMutation):
+        numerator = log_probability_node_not_split(model, proposal.updated_node)
+
+        prob_left_not_split = log_probability_node_not_split(model, proposal.existing_node.left_child)
+        prob_right_not_split = log_probability_node_not_split(model, proposal.existing_node.left_child)
+        prob_updated_node_split = log_probability_node_split(model, proposal.existing_node)
+        prob_chosen_split = log_probability_split_within_node(
+            GrowMutation(proposal.updated_node, proposal.existing_node))
+        denominator = prob_left_not_split + prob_right_not_split + prob_updated_node_split + prob_chosen_split
+
+        return numerator - denominator, (numerator, denominator)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio" href="../treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio">TreeMutationLikelihoodRatio</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_likelihood_ratio_grow"><code class="name flex">
+<span>def <span class="ident">log_likelihood_ratio_grow</span></span>(<span>model: <a title="imodels.experimental.bartpy.model.Model" href="../../model.html#imodels.experimental.bartpy.model.Model">Model</a>, proposal: <a title="imodels.experimental.bartpy.mutation.TreeMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.TreeMutation">TreeMutation</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def log_likelihood_ratio_grow(model: Model, proposal: TreeMutation):
+    new_model_l, old_model_l = log_grow_ratio(proposal.existing_node, proposal.updated_node.left_child,
+                                              proposal.updated_node.right_child, model.sigma, model.sigma_m)
+    return (new_model_l - old_model_l), (new_model_l, old_model_l)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_likelihood_ratio_prune"><code class="name flex">
+<span>def <span class="ident">log_likelihood_ratio_prune</span></span>(<span>model: <a title="imodels.experimental.bartpy.model.Model" href="../../model.html#imodels.experimental.bartpy.model.Model">Model</a>, proposal: <a title="imodels.experimental.bartpy.mutation.TreeMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.TreeMutation">TreeMutation</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def log_likelihood_ratio_prune(model: Model, proposal: TreeMutation):
+    old_model_l, new_model_l = log_grow_ratio(proposal.updated_node, proposal.existing_node.left_child,
+                                              proposal.existing_node.right_child, model.sigma, model.sigma_m)
+    return (new_model_l - old_model_l), (new_model_l, old_model_l)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_tree_ratio_grow"><code class="name flex">
+<span>def <span class="ident">log_tree_ratio_grow</span></span>(<span>model: <a title="imodels.experimental.bartpy.model.Model" href="../../model.html#imodels.experimental.bartpy.model.Model">Model</a>, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>, proposal: <a title="imodels.experimental.bartpy.mutation.GrowMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.GrowMutation">GrowMutation</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def log_tree_ratio_grow(model: Model, tree: Tree, proposal: GrowMutation):
+    denominator = log_probability_node_not_split(model, proposal.existing_node)
+
+    prob_left_not_split = log_probability_node_not_split(model, proposal.updated_node.left_child)
+    prob_right_not_split = log_probability_node_not_split(model, proposal.updated_node.right_child)
+    prob_updated_node_split = log_probability_node_split(model, proposal.updated_node)
+    prob_chosen_split = log_probability_split_within_tree(tree, proposal)
+    numerator = prob_left_not_split + prob_right_not_split + prob_updated_node_split + prob_chosen_split
+
+    return numerator - denominator, (numerator, denominator)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_tree_ratio_prune"><code class="name flex">
+<span>def <span class="ident">log_tree_ratio_prune</span></span>(<span>model: <a title="imodels.experimental.bartpy.model.Model" href="../../model.html#imodels.experimental.bartpy.model.Model">Model</a>, proposal: <a title="imodels.experimental.bartpy.mutation.PruneMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.PruneMutation">PruneMutation</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def log_tree_ratio_prune(model: Model, proposal: PruneMutation):
+    numerator = log_probability_node_not_split(model, proposal.updated_node)
+
+    prob_left_not_split = log_probability_node_not_split(model, proposal.existing_node.left_child)
+    prob_right_not_split = log_probability_node_not_split(model, proposal.existing_node.left_child)
+    prob_updated_node_split = log_probability_node_split(model, proposal.existing_node)
+    prob_chosen_split = log_probability_split_within_node(
+        GrowMutation(proposal.updated_node, proposal.existing_node))
+    denominator = prob_left_not_split + prob_right_not_split + prob_updated_node_split + prob_chosen_split
+
+    return numerator - denominator, (numerator, denominator)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_grow_transition_ratio"><code class="name flex">
+<span>def <span class="ident">log_grow_transition_ratio</span></span>(<span>self, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>, mutation: <a title="imodels.experimental.bartpy.mutation.GrowMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.GrowMutation">GrowMutation</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_grow_transition_ratio(self, tree: Tree, mutation: GrowMutation):
+    prob_prune_selected = - np.log(n_prunable_decision_nodes(tree) + 1)
+    prob_grow_selected = log_probability_split_within_tree(tree, mutation)
+
+    prob_selection_ratio = prob_prune_selected - prob_grow_selected
+    prune_grow_ratio = np.log(self.prob_method[1] / self.prob_method[0])
+
+    numerator = prob_prune_selected
+    denominator = prob_grow_selected
+
+    # return prune_grow_ratio + prob_selection_ratio
+    return numerator - denominator, (numerator, denominator)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_prune_transition_ratio"><code class="name flex">
+<span>def <span class="ident">log_prune_transition_ratio</span></span>(<span>self, tree: <a title="imodels.experimental.bartpy.tree.Tree" href="../../tree.html#imodels.experimental.bartpy.tree.Tree">Tree</a>, mutation: <a title="imodels.experimental.bartpy.mutation.PruneMutation" href="../../mutation.html#imodels.experimental.bartpy.mutation.PruneMutation">PruneMutation</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_prune_transition_ratio(self, tree: Tree, mutation: PruneMutation):
+    if n_splittable_leaf_nodes(tree) == 1:
+        prob_grow_node_selected = - np.inf  # Infinitely unlikely to be able to prune a null tree
+    else:
+        prob_grow_node_selected = - np.log(n_splittable_leaf_nodes(tree) - 1)
+    prob_split = log_probability_split_within_node(GrowMutation(mutation.updated_node, mutation.existing_node))
+    prob_grow_selected = prob_grow_node_selected + prob_split
+
+    prob_prune_selected = - np.log(n_prunable_decision_nodes(tree))
+
+    prob_selection_ratio = prob_grow_selected - prob_prune_selected
+    grow_prune_ratio = np.log(self.prob_method[0] / self.prob_method[1])
+
+    numerator = prob_grow_selected
+    denominator = prob_prune_selected
+
+    # return grow_prune_ratio + prob_selection_ratio
+
+    return numerator - denominator, (numerator, denominator)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio" href="../treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio">TreeMutationLikelihoodRatio</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio.log_likelihood_ratio" href="../treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio.log_likelihood_ratio">log_likelihood_ratio</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio.log_probability_ratio" href="../treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio.log_probability_ratio">log_probability_ratio</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio.log_transition_ratio" href="../treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio.log_transition_ratio">log_transition_ratio</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio.log_tree_ratio" href="../treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationLikelihoodRatio.log_tree_ratio">log_tree_ratio</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index 🔍</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree" href="index.html">imodels.experimental.bartpy.samplers.unconstrainedtree</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_grow_ratio" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_grow_ratio">log_grow_ratio</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_node_not_split" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_node_not_split">log_probability_node_not_split</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_node_split" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_node_split">log_probability_node_split</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_split_within_node" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_split_within_node">log_probability_split_within_node</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_split_within_tree" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.log_probability_split_within_tree">log_probability_split_within_tree</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.n_prunable_decision_nodes" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.n_prunable_decision_nodes">n_prunable_decision_nodes</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.n_splittable_leaf_nodes" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.n_splittable_leaf_nodes">n_splittable_leaf_nodes</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio">UniformTreeMutationLikelihoodRatio</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_grow_transition_ratio" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_grow_transition_ratio">log_grow_transition_ratio</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_likelihood_ratio_grow" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_likelihood_ratio_grow">log_likelihood_ratio_grow</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_likelihood_ratio_prune" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_likelihood_ratio_prune">log_likelihood_ratio_prune</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_prune_transition_ratio" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_prune_transition_ratio">log_prune_transition_ratio</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_tree_ratio_grow" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_tree_ratio_grow">log_tree_ratio_grow</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_tree_ratio_prune" href="#imodels.experimental.bartpy.samplers.unconstrainedtree.likelihoodratio.UniformTreeMutationLikelihoodRatio.log_tree_ratio_prune">log_tree_ratio_prune</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 c122.0,82.7 120.5,78.6 120.5,78.6 c119.2,72.0 123.4,76.3 123.4,76.3 c127.3,80.9 125.5,87.3 125.5,87.3 c122.9,97.6 130.6,101.9 134.4,103.2" fill="currentcolor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">

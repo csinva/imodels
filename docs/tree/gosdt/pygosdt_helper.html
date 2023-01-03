@@ -180,7 +180,7 @@ class TreeClassifier:
 
         Returns
         ---
-        array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+        array-like, shape = [n_samples by 1] : a column where each element is the prediction
             associated with each row
         &#34;&#34;&#34;
         # Perform an encoding if an encoding unit is specified
@@ -235,7 +235,7 @@ class TreeClassifier:
 
         Returns
         ---
-        real number : the inaccuracy produced by applying this model overthe given dataset, with
+        real number : the inaccuracy produced by applying this model over the given dataset, with
             optionals for weighted inaccuracy
         &#34;&#34;&#34;
         return 1 - self.score(X, y, weight=weight)
@@ -253,7 +253,7 @@ class TreeClassifier:
 
         Returns
         ---
-        real number : the accuracy produced by applying this model overthe given dataset, with
+        real number : the accuracy produced by applying this model over the given dataset, with
             optionals for weighted accuracy
         &#34;&#34;&#34;
         y_hat = self.predict(X)
@@ -350,7 +350,7 @@ class TreeClassifier:
         &#34;&#34;&#34;
         Returns
         ---
-        string : pseuodocode representing the logic of this classifier
+        string : pseudocode representing the logic of this classifier
         &#34;&#34;&#34;
         cases = []
         for group in self.__groups__():
@@ -803,7 +803,7 @@ differs from the feature space of the original data.</p></div>
 
         Returns
         ---
-        array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+        array-like, shape = [n_samples by 1] : a column where each element is the prediction
             associated with each row
         &#34;&#34;&#34;
         # Perform an encoding if an encoding unit is specified
@@ -858,7 +858,7 @@ differs from the feature space of the original data.</p></div>
 
         Returns
         ---
-        real number : the inaccuracy produced by applying this model overthe given dataset, with
+        real number : the inaccuracy produced by applying this model over the given dataset, with
             optionals for weighted inaccuracy
         &#34;&#34;&#34;
         return 1 - self.score(X, y, weight=weight)
@@ -876,7 +876,7 @@ differs from the feature space of the original data.</p></div>
 
         Returns
         ---
-        real number : the accuracy produced by applying this model overthe given dataset, with
+        real number : the accuracy produced by applying this model over the given dataset, with
             optionals for weighted accuracy
         &#34;&#34;&#34;
         y_hat = self.predict(X)
@@ -973,7 +973,7 @@ differs from the feature space of the original data.</p></div>
         &#34;&#34;&#34;
         Returns
         ---
-        string : pseuodocode representing the logic of this classifier
+        string : pseudocode representing the logic of this classifier
         &#34;&#34;&#34;
         cases = []
         for group in self.__groups__():
@@ -1251,7 +1251,7 @@ prediction)</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>real number : the inaccuracy produced by applying this model overthe given dataset, with</code></dt>
+<dt><code>real number : the inaccuracy produced by applying this model over the given dataset, with</code></dt>
 <dd>optionals for weighted inaccuracy</dd>
 </dl></div>
 <details class="source">
@@ -1271,7 +1271,7 @@ prediction)</dd>
 
     Returns
     ---
-    real number : the inaccuracy produced by applying this model overthe given dataset, with
+    real number : the inaccuracy produced by applying this model over the given dataset, with
         optionals for weighted inaccuracy
     &#34;&#34;&#34;
     return 1 - self.score(X, y, weight=weight)</code></pre>
@@ -1510,7 +1510,7 @@ used for prediction</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>array-like, shape = [n_sampels by 1] : a column where each element is the prediction</code></dt>
+<dt><code>array-like, shape = [n_samples by 1] : a column where each element is the prediction</code></dt>
 <dd>associated with each row</dd>
 </dl></div>
 <details class="source">
@@ -1531,7 +1531,7 @@ used for prediction</dd>
 
     Returns
     ---
-    array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+    array-like, shape = [n_samples by 1] : a column where each element is the prediction
         associated with each row
     &#34;&#34;&#34;
     # Perform an encoding if an encoding unit is specified
@@ -1561,7 +1561,7 @@ used for prediction</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>real number : the accuracy produced by applying this model overthe given dataset, with</code></dt>
+<dt><code>real number : the accuracy produced by applying this model over the given dataset, with</code></dt>
 <dd>optionals for weighted accuracy</dd>
 </dl></div>
 <details class="source">
@@ -1581,7 +1581,7 @@ used for prediction</dd>
 
     Returns
     ---
-    real number : the accuracy produced by applying this model overthe given dataset, with
+    real number : the accuracy produced by applying this model over the given dataset, with
         optionals for weighted accuracy
     &#34;&#34;&#34;
     y_hat = self.predict(X)
