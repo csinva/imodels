@@ -1,6 +1,6 @@
 '''
 # Discretization MDLP
-Python implementation of Fayyad and Irani's MDLP criterion discretiation algorithm
+Python implementation of Fayyad and Irani's MDLP criterion discretization algorithm
 
 **Reference:**
 Irani, Keki B. "Multi-interval discretization of continuous-valued attributes for classiﬁcation learning." (1993).
@@ -111,7 +111,7 @@ class MDLPDiscretizer(object):
         '''
         Given an attribute, find all potential cut_points (boundary points)
         :param feature: feature of interest
-        :param partition_index: indices of rows for which feature value falls whithin interval of interest
+        :param partition_index: indices of rows for which feature value falls within interval of interest
         :return: array with potential cut_points
         '''
         # get dataframe with only rows of interest, and feature and class columns

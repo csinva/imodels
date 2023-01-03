@@ -157,7 +157,7 @@ class TreeClassifier:
 
         Returns
         ---
-        array-like, shape = [n_sampels by 1] : a column where each element is the prediction
+        array-like, shape = [n_samples by 1] : a column where each element is the prediction
             associated with each row
         """
         # Perform an encoding if an encoding unit is specified
@@ -212,7 +212,7 @@ class TreeClassifier:
 
         Returns
         ---
-        real number : the inaccuracy produced by applying this model overthe given dataset, with
+        real number : the inaccuracy produced by applying this model over the given dataset, with
             optionals for weighted inaccuracy
         """
         return 1 - self.score(X, y, weight=weight)
@@ -230,7 +230,7 @@ class TreeClassifier:
 
         Returns
         ---
-        real number : the accuracy produced by applying this model overthe given dataset, with
+        real number : the accuracy produced by applying this model over the given dataset, with
             optionals for weighted accuracy
         """
         y_hat = self.predict(X)
@@ -327,7 +327,7 @@ class TreeClassifier:
         """
         Returns
         ---
-        string : pseuodocode representing the logic of this classifier
+        string : pseudocode representing the logic of this classifier
         """
         cases = []
         for group in self.__groups__():

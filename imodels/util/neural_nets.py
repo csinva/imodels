@@ -24,7 +24,7 @@ Example
     dt.fit(X, y)
 
 
-    # pepare net
+    # prepare net
     net = Net(dt)
 
 

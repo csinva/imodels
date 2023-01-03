@@ -232,9 +232,9 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                 self.pattern_space[k] = self.pattern_space[k] + tmp
 
     def _generate_rules(self, X, y, verbose):
-        '''This function generates rules that satisfy supp and maxlen using fpgrowth, then it selects the top n_rules rules that make data have the biggest decrease in entropy
-        there are two ways to generate rules. fpgrowth can handle cases where the maxlen is small. If maxlen<=3, fpgrowth can generates rules much faster than randomforest.
-        If maxlen is big, fpgrowh tends to generate too many rules that overflow the memories.
+        '''This function generates rules that satisfy supp and maxlen using fpgrowth, then it selects the top n_rules rules that make data have the biggest decrease in entropy.
+        There are two ways to generate rules. fpgrowth can handle cases where the maxlen is small. If maxlen<=3, fpgrowth can generates rules much faster than randomforest.
+        If maxlen is big, fpgrowth tends to generate too many rules that overflow the memory.
         '''
 
         df = 1 - X  # df has negative associations

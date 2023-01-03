@@ -7,8 +7,8 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
 
 from imodels.util.tree_interaction_utils import get_interacting_features
-from ..diagnostics.residuals import plot_qq, plot_homoskedasity_diagnostics
-from ..diagnostics.sampling import plot_tree_mutation_acceptance_rate, plot_tree_likelihhod, plot_tree_probs
+from ..diagnostics.residuals import plot_qq, plot_homoscedasticity_diagnostics
+from ..diagnostics.sampling import plot_tree_mutation_acceptance_rate, plot_tree_likelihood, plot_tree_probs
 from ..diagnostics.sigma import plot_sigma_convergence
 from ..diagnostics.trees import plot_tree_depth
 from ..initializers.sklearntreeinitializer import SklearnTreeInitializer
@@ -21,9 +21,9 @@ def plot_diagnostics(model: SklearnModel):
     plot_qq(model, ax1)
     plot_tree_depth(model, ax2)
     plot_sigma_convergence(model, ax3)
-    plot_homoskedasity_diagnostics(model, ax4)
+    plot_homoscedasticity_diagnostics(model, ax4)
     plot_tree_mutation_acceptance_rate(model, ax5)
-    # plot_tree_likelihhod(model, ax6)
+    # plot_tree_likelihood(model, ax6)
     # plot_tree_probs(model, ax7)
 
     plt.show()
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     # plot_tree_depth(bart_figs, ax2,
     #                 f"FIGS initialization (MSE: {np.round(mean_squared_error(bart_figs_preds, y_test), 4)}"
     #                 f", FIGS MSE: {np.round(mean_squared_error(figs_preds, y_test), 2)})", x_label=True)
-    # plt.title(f"Bayesian tree with different initilization of Friedman 1 dataset n={n}")
+    # plt.title(f"Bayesian tree with different initialization of Friedman 1 dataset n={n}")
 
     plt.show()
 

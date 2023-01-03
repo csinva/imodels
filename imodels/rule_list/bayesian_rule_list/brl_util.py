@@ -39,7 +39,7 @@
 # dictionary whose keys are a string Pickle-dump of the antecedent list d, and
 # whose values are a list [a,b] where a is (proportional to) the log posterior of
 # d, and b is the number of times d is present in the MCMC samples.
-# - d_star - the BRL-point antecedent list. A list of indicies corresponding to
+# - d_star - the BRL-point antecedent list. A list of indices corresponding to
 # variable "itemsets."
 # - itemsets - A list of itemsets. itemsets[d_star[i]] is the antecedent in
 # position i on the BRL-point list
@@ -225,7 +225,7 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
         minrulesize = int(floor(avgrulesize))
         maxrulesize = int(ceil(avgrulesize))
         # Run through all perms again
-        likelihds = []
+        likelihoods = []
         d_ts = []
         beta_Z, logalpha_pmf, logbeta_pmf = prior_calculations(lbda, len(X), eta,
                                                                maxlhs)  # get the constants needed to compute the prior
@@ -244,11 +244,11 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
                         # Compute the likelihood
                         R_t = d_t.index(0)
                         N_t = compute_rule_usage(d_t, R_t, X, Y)
-                        likelihds.append(
+                        likelihoods.append(
                             fn_logposterior(d_t, R_t, N_t, alpha, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen,
                                             lhs_len))
-        likelihds = array(likelihds)
-        d_star = d_ts[likelihds.argmax()]
+        likelihoods = array(likelihoods)
+        d_star = d_ts[likelihoods.argmax()]
     except RuntimeWarning:
         # This can happen if all perms are identically [0], or if no soln is found within the len and width bounds (probably the chains didn't converge)
         print('No suitable point estimate found')
@@ -427,7 +427,7 @@ def proposal(d_t, R_t, X, Y, alpha):
         move_probs = array(move_probs_default)
         Jratios = array([1., move_probs[2] / float(move_probs[1]), move_probs[1] / float(move_probs[2])])
     u = random.random()
-    # First we will find the indicies for the insertion-deletion. indx1 is the item to be moved, indx2 is the new location
+    # First we will find the indices for the insertion-deletion. indx1 is the item to be moved, indx2 is the new location
     if u < sum(move_probs[:1]):
         # This is an on-list move.
         step = 'move'
@@ -486,18 +486,18 @@ def prior_calculations(lbda, maxlen, eta, maxlhs):
 def fn_logposterior(d_t, R_t, N_t, alpha, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len):
     '''# Compute log posterior
     '''
-    logliklihood = fn_logliklihood(d_t, N_t, R_t, alpha)
+    loglikelihood = fn_loglikelihood(d_t, N_t, R_t, alpha)
     logprior = fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len)
-    return logliklihood + logprior
+    return loglikelihood + logprior
 
 
-def fn_logliklihood(d_t, N_t, R_t, alpha):
+def fn_loglikelihood(d_t, N_t, R_t, alpha):
     '''Compute log likelihood
     '''
     gammaln_Nt_jk = gammaln(N_t + alpha)
     gammaln_Nt_j = gammaln(sum(N_t + alpha, 1))
-    logliklihood = sum(gammaln_Nt_jk) - sum(gammaln_Nt_j)
-    return logliklihood
+    loglikelihood = sum(gammaln_Nt_jk) - sum(gammaln_Nt_j)
+    return loglikelihood
 
 
 def fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len):
