@@ -40,10 +40,14 @@ class GMDI:
         in block k when making a partial model prediction, while "keep_rest"
         imputes the mean of each feature in block k. "keep_k" is strongly
         recommended for computational considerations.
-    sample_split: string in {"loo", "oob"} or None
-        The sample splitting strategy to be used for overcoming entropy bias
-        in the feature importances. "loo" is strongly recommended for
-        performance.
+    sample_split: string in {"loo", "oob", "inbag"} or None
+        The sample splitting strategy to be used when evaluating the partial
+        model predictions. The default "loo" (leave-one-out) is strongly
+        recommended for performance and in particular, for overcoming the known
+        correlation and entropy biases suffered by MDI. "oob" (out-of-bag) can
+        also be used to overcome these biases. "inbag" is the sample splitting
+        strategy used by MDI. If None, no sample splitting is performed and the
+        full data set is used to evaluate the partial model predictions.
     include_raw: bool
         Flag for whether to augment the local decision stump features extracted
         from the RF model with the original features.
@@ -71,9 +75,9 @@ class GMDI:
                  refit_rf=True,
                  task="regression",
                  **kwargs):
-        assert sample_split in ["loo", "oob", None]
-        assert task in ["regression", "classification"]
         assert mode in ["keep_k", "keep_rest"]
+        assert sample_split in ["loo", "oob", "inbag", None]
+        assert task in ["regression", "classification"]
         if rf_model is not None:
             self.rf_model = copy.deepcopy(rf_model)
         elif task == "regression":
@@ -139,22 +143,14 @@ class GMDI:
                 self.include_raw else TreeTransformer(tree_model)
             if self.sample_split == "loo":
                 ppm.loo = True
-                gmdi_helper = GmdiHelper(transformer, ppm, scoring_fns,
-                                         self.mode, oob=False)
-            elif self.sample_split == "oob":
-                ppm.loo = False
-                gmdi_helper = GmdiHelper(transformer, ppm, scoring_fns,
-                                         self.mode, oob=True)
-            elif self.sample_split is None:
-                ppm.loo = False
-                gmdi_helper = GmdiHelper(transformer, ppm, scoring_fns,
-                                         self.mode, oob=False)
             else:
-                raise ValueError("Unsupported sample splitting strategy.")
+                ppm.loo = False
+            gmdi_helper = GmdiHelper(transformer, ppm, scoring_fns,
+                                     self.mode, self.sample_split)
             scores = gmdi_helper.get_scores(X, y)
             if scores is not None:
                 all_scores.append(scores)
-        scoring_fns = scoring_fns if hasattr(scoring_fns, "__len__") \
+        scoring_fns = scoring_fns if isinstance(scoring_fns, dict) \
             else {"importance": scoring_fns}
         for fn_name in scoring_fns.keys():
             self._scores[fn_name] = np.mean([scores[fn_name] for scores
@@ -211,9 +207,14 @@ class GmdiHelper:
         in block k when making a partial model prediction, while "keep_rest"
         imputes the mean of each feature in block k. "keep_k" is strongly
         recommended for computational considerations.
-    oob: bool
-        Flag for whether to use out-of-bag sample splitting (bag indices are
-        defined by the estimator object attached to the supplied transformer).
+    sample_split: string in {"loo", "oob", "inbag"} or None
+        The sample splitting strategy to be used when evaluating the partial
+        model predictions. The default "loo" (leave-one-out) is strongly
+        recommended for performance and in particular, for overcoming the known
+        correlation and entropy biases suffered by MDI. "oob" (out-of-bag) can
+        also be used to overcome these biases. "inbag" is the sample splitting
+        strategy used by MDI. If None, no sample splitting is performed and the
+        full data set is used to evaluate the partial model predictions.
     center: bool
         Flag for whether to center the engineered features.
     normalize: bool
@@ -222,15 +223,17 @@ class GmdiHelper:
     """
 
     def __init__(self, transformer, partial_prediction_model, scoring_fns,
-                 mode="keep_k", oob=False, center=True, normalize=False):
+                 mode="keep_k", sample_split="loo", center=True, normalize=False):
+        assert mode in ["keep_k", "keep_rest"]
+        assert sample_split in ["loo", "oob", "inbag", None]
         self.transformer = transformer
         self.partial_prediction_model = copy.deepcopy(partial_prediction_model)
         self.scoring_fns = scoring_fns
         self.mode = mode
-        self.oob = oob
-        if self.oob and hasattr(partial_prediction_model, "loo") and \
+        self.sample_split = sample_split
+        if sample_split in ["oob", "inbag"] and hasattr(partial_prediction_model, "loo") and \
                 partial_prediction_model.loo:
-            raise ValueError("Cannot use LOO together with OOB.")
+            raise ValueError("Cannot use LOO together with OOB or in-bag sample splitting.")
         self.center = center
         self.normalize = normalize
         self._scores = None
@@ -266,9 +269,14 @@ class GmdiHelper:
         blocked_data = self.transformer.transform(X, center=self.center,
                                                   normalize=self.normalize)
         self.n_features = blocked_data.n_blocks
-        if self.oob:
+        if self.sample_split == "oob":
             train_blocked_data, test_blocked_data, y_train, y_test = \
                 self._train_test_split(blocked_data, y)
+        elif self.sample_split == "inbag":
+            train_blocked_data, _, y_train, _ = \
+                self._train_test_split(blocked_data, y)
+            test_blocked_data = copy.deepcopy(train_blocked_data)
+            y_test = copy.deepcopy(y_train)
         else:
             train_blocked_data = test_blocked_data = blocked_data
             y_train = y_test = y
@@ -314,8 +322,7 @@ class GmdiHelper:
             return full_preds, partial_preds
 
     def _score_partial_predictions(self, full_preds, partial_preds, y_test):
-        scoring_fns = self.scoring_fns if hasattr(self.scoring_fns,
-                                                  "__len__") \
+        scoring_fns = self.scoring_fns if isinstance(self.scoring_fns, dict) \
             else {"importance": self.scoring_fns}
         all_scores = pd.DataFrame({})
         for fn_name, scoring_fn in scoring_fns.items():
