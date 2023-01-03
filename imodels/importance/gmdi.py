@@ -275,8 +275,8 @@ class GmdiHelper:
         elif self.sample_split == "inbag":
             train_blocked_data, _, y_train, _ = \
                 self._train_test_split(blocked_data, y)
-            test_blocked_data = copy.deepcopy(train_blocked_data)
-            y_test = copy.deepcopy(y_train)
+            test_blocked_data = train_blocked_data
+            y_test = y_train
         else:
             train_blocked_data = test_blocked_data = blocked_data
             y_train = y_test = y
