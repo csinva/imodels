@@ -15,7 +15,7 @@ def plot_tree_mutation_acceptance_rate(model: SklearnModel, ax=None):
     ax.set_ylim((0, 1.1))
     return ax
 
-def plot_tree_likelihhod(model: SklearnModel, ax=None):
+def plot_tree_likelihood(model: SklearnModel, ax=None):
     if ax is None:
         fig, ax = plt.subplots(1, 1)
 

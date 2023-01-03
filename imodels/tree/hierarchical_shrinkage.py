@@ -7,7 +7,8 @@ from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics import r2_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, \
+    export_text
 from sklearn.ensemble import GradientBoostingClassifier
 
 from imodels.util import checks
@@ -27,7 +28,7 @@ class HSTree:
         Params
         ------
         estimator_: sklearn tree or tree ensemble model (e.g. RandomForest or GradientBoosting)
-            Defaults to CART Classification Tree with 20 max leaf ndoes
+            Defaults to CART Classification Tree with 20 max leaf nodes
             Note: this estimator will be directly modified
 
         reg_param: float
@@ -53,11 +54,11 @@ class HSTree:
         return {'reg_param': self.reg_param, 'estimator_': self.estimator_,
                 'shrinkage_scheme_': self.shrinkage_scheme_}
 
-    def fit(self, X, y, *args, **kwargs):
+    def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # remove feature_names if it exists (note: only works as keyword-arg)
         feature_names = kwargs.pop('feature_names', None)  # None returned if not passed
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-        self.estimator_ = self.estimator_.fit(X, y, *args, **kwargs)
+        self.estimator_ = self.estimator_.fit(X, y, sample_weight, *args, **kwargs)
         self._shrink()
 
         # compute complexity
@@ -158,6 +159,27 @@ class HSTree:
         else:
             return s + export_text(self.estimator_, show_weights=True)
 
+    def __repr__(self):
+        # s = self.__class__.__name__
+        # s += "("
+        # s += "estimator_="
+        # s += repr(self.estimator_)
+        # s += ", "
+        # s += "reg_param="
+        # s += str(self.reg_param)
+        # s += ", "
+        # s += "shrinkage_scheme_="
+        # s += self.shrinkage_scheme_
+        # s += ")"
+        # return s
+        attr_list = ["estimator_", "reg_param", "shrinkage_scheme_"]
+        s = self.__class__.__name__
+        s += "("
+        for attr in attr_list:
+            s += attr + "=" + repr(getattr(self, attr)) + ", "
+        s = s[:-2] + ")"
+        return s
+
 
 class HSTreeRegressor(HSTree, RegressorMixin):
     ...
@@ -179,7 +201,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
         ------
         estimator_
             Sklearn estimator (already initialized).
-            If no estimator_ is passsed, sklearn decision tree is used
+            If no estimator_ is passed, sklearn decision tree is used
 
         max_rules
             If estimator is None, then max_leaf_nodes is passed to the default decision tree
@@ -209,6 +231,16 @@ class HSTreeClassifierCV(HSTreeClassifier):
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y, *args, **kwargs)
 
+    def __repr__(self):
+        attr_list = ["estimator_", "reg_param_list", "shrinkage_scheme_",
+                     "cv", "scoring"]
+        s = self.__class__.__name__
+        s += "("
+        for attr in attr_list:
+            s += attr + "=" + repr(getattr(self, attr)) + ", "
+        s = s[:-2] + ")"
+        return s
+
 
 class HSTreeRegressorCV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator = None,
@@ -222,7 +254,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
         ------
         estimator_
             Sklearn estimator (already initialized).
-            If no estimator_ is passsed, sklearn decision tree is used
+            If no estimator_ is passed, sklearn decision tree is used
 
         max_rules
             If estimator is None, then max_leaf_nodes is passed to the default decision tree
@@ -251,6 +283,16 @@ class HSTreeRegressorCV(HSTreeRegressor):
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y, *args, **kwargs)
+
+    def __repr__(self):
+        attr_list = ["estimator_", "reg_param_list", "shrinkage_scheme_",
+                     "cv", "scoring"]
+        s = self.__class__.__name__
+        s += "("
+        for attr in attr_list:
+            s += attr + "=" + repr(getattr(self, attr)) + ", "
+        s = s[:-2] + ")"
+        return s
 
 
 if __name__ == '__main__':

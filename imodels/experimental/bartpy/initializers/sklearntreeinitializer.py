@@ -79,14 +79,14 @@ def get_child(node, direction):
     return
 
 
-def enumarate_tree(tree: Node, num_iter=iter(range(int(1e+06)))):
+def enumerate_tree(tree: Node, num_iter=iter(range(int(1e+06)))):
     if tree is None:
         return
     tree.number = next(num_iter)
     # if hasattr(tree, 'left'):
-    enumarate_tree(get_child(tree, 'left'), num_iter)
+    enumerate_tree(get_child(tree, 'left'), num_iter)
     # if hasattr(tree, 'right'):
-    enumarate_tree(get_child(tree, 'right'), num_iter)
+    enumerate_tree(get_child(tree, 'right'), num_iter)
 
 
 def fill_nodes_dict(tree: Node, node_dict: dict):
@@ -102,7 +102,7 @@ def fill_nodes_dict(tree: Node, node_dict: dict):
 class SkTree:
     def __init__(self, tree: Node):
         nodes_dict = {}
-        enumarate_tree(tree, num_iter=iter(range(int(1e+06))))
+        enumerate_tree(tree, num_iter=iter(range(int(1e+06))))
         fill_nodes_dict(tree, nodes_dict)
         self.children_left = []
         self.children_right = []

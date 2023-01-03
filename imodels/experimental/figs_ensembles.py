@@ -130,7 +130,7 @@ class FIGSExt(BaseEstimator):
     def _init_decision_function(self):
         """Sets decision function based on prediction_task
         """
-        # used by sklearn GrriidSearchCV, BaggingClassifier
+        # used by sklearn GridSearchCV, BaggingClassifier
         if self.prediction_task == 'classification':
             decision_function = lambda x: self.predict_proba(x)[:, 1]
         elif self.prediction_task == 'regression':

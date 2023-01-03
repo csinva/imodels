@@ -118,7 +118,7 @@ def plot_within_chain(model: SklearnModel, ax=None, title="Within Chain Variatio
 
     for c in range(n_chains):
         clr = next(color)
-        chain_preds = model.chain_precitions(X, c)
+        chain_preds = model.chain_predictions(X, c)
         mean_pred = np.array(chain_preds).mean(axis=0)
 
         y_plt = [mean_squared_error(mean_pred, p) for p in chain_preds]

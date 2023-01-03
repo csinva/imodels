@@ -160,7 +160,7 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
             max values for the range of x
 
         keep_pointwise_bins : boolean
-            If True, treat duplicate bin_edges as a pointiwse bin,
+            If True, treat duplicate bin_edges as a pointwise bin,
             i.e., [a, a]. If False, these bins are in effect ignored.
 
         Returns
@@ -457,7 +457,7 @@ class BasicDiscretizer(AbstractDiscretizer):
 
     manual_discretizer_ : dictionary
         Provides bin_edges to feed into _quantile_discretization()
-        and do quantile discreization manually for features where
+        and do quantile discretization manually for features where
         KBinsDiscretizer() failed. Ignored if strategy != 'quantile'
         or no errors in KBinsDiscretizer().
 
@@ -492,7 +492,7 @@ class BasicDiscretizer(AbstractDiscretizer):
         self
         """
 
-        # initalization and error checking
+        # initialization and error checking
         self._fit_preprocessing(X)
 
         # apply KBinsDiscretizer to the selected columns
@@ -711,7 +711,7 @@ class RFDiscretizer(AbstractDiscretizer):
 
         Parameters
         ----------
-        X : data frame of shape (n_samples, n_fatures)
+        X : data frame of shape (n_samples, n_features)
             Training data used to fit RF
 
         y : array-like of shape (n_samples,)

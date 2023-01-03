@@ -441,7 +441,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             [mean_squared_error(self.data.y.unnormalize_y(preds), y) for preds in predictions_transformed])
         return predictions_std
 
-    def chain_precitions(self, X, chain_number):
+    def chain_predictions(self, X, chain_number):
         predictions_transformed = self._chain_pred_arr(X, chain_number)
         preds_arr = [self.data.y.unnormalize_y(preds) for preds in predictions_transformed]
         return preds_arr
