@@ -27,6 +27,7 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.special import expit
 import sklearn.datasets
 from sklearn import datasets
 from sklearn import tree
@@ -34,10 +35,11 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
-from sklearn.utils.validation import _check_sample_weight
+from sklearn.utils.validation import _check_sample_weight, check_is_fitted
 
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 from imodels.util.arguments import check_fit_arguments
+from imodels.util.data_util import encode_categories
 
 plt.rcParams[&#39;figure.dpi&#39;] = 300
 
@@ -108,13 +110,15 @@ class FIGS(BaseEstimator):
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None,
+    def __init__(self, max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None,
                  max_features: str = None):
         &#34;&#34;&#34;
         Params
         ------
         max_rules: int
             Max total number of rules across all trees
+        max_trees: int
+            Max total number of trees
         min_impurity_decrease: float
             A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
         max_features
@@ -122,6 +126,7 @@ class FIGS(BaseEstimator):
         &#34;&#34;&#34;
         super().__init__()
         self.max_rules = max_rules
+        self.max_trees = max_trees
         self.min_impurity_decrease = min_impurity_decrease
         self.random_state = random_state
         self.max_features = max_features
@@ -205,7 +210,14 @@ class FIGS(BaseEstimator):
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
+    def _encode_categories(self, X, categorical_features):
+        encoder = None
+        if hasattr(self, &#34;_encoder&#34;):
+            encoder = self._encoder
+        return encode_categories(X, categorical_features, encoder)
+
+
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None, categorical_features=None):
         &#34;&#34;&#34;
         Params
         ------
@@ -214,6 +226,8 @@ class FIGS(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         &#34;&#34;&#34;
+        if categorical_features is not None:
+            X, self._encoder = self._encode_categories(X, categorical_features)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
@@ -244,6 +258,10 @@ class FIGS(BaseEstimator):
             if split_node.impurity_reduction &lt; self.min_impurity_decrease:
                 finished = True
                 break
+            elif split_node.is_root and self.max_trees is not None and len(self.trees_) &gt;= self.max_trees:
+                # If the node is the root of a new tree and we have reached self.max_trees,
+                # don&#39;t split on it, but allow later splits to continue growing existing trees
+                continue
 
             # split on node
             if verbose:
@@ -309,6 +327,7 @@ class FIGS(BaseEstimator):
                     feature=potential_split_updated.feature,
                     threshold=potential_split_updated.threshold,
                     impurity_reduction=potential_split_updated.impurity_reduction,
+                    impurity=potential_split_updated.impurity,
                     left_temp=potential_split_updated.left_temp,
                     right_temp=potential_split_updated.right_temp,
                 )
@@ -325,7 +344,8 @@ class FIGS(BaseEstimator):
                 finished = True
                 break
 
-        # annotate final tree with node_id and value_sklearn
+        # annotate final tree with node_id and value_sklearn, and prepare importance_data_
+        importance_data = []
         for tree_ in self.trees_:
             node_counter = iter(range(0, int(1e06)))
             def _annotate_node(node: Node, X, y):
@@ -354,6 +374,31 @@ class FIGS(BaseEstimator):
 
             _annotate_node(tree_, X, y)
 
+            # now that the samples per node are known, we can start to compute the importances
+            importance_data_tree = np.zeros(len(self.feature_names_))
+
+            def _importances(node: Node):
+                if node is None or node.left is None:
+                    return 0.
+
+                # TODO does not incorporate sample weights, but will if added to value_sklearn
+                importance_data_tree[node.feature] += (
+                    np.sum(node.value_sklearn) * node.impurity -
+                    np.sum(node.left.value_sklearn) * node.left.impurity -
+                    np.sum(node.right.value_sklearn) * node.right.impurity
+                )
+
+                return np.sum(node.value_sklearn) + _importances(node.left) + _importances(node.right)
+
+            # require the tree to have more than 1 node, otherwise just leave importance_data_tree as zeros
+            if 1 &lt; next(node_counter):
+                tree_samples = _importances(tree_)
+                importance_data_tree /= tree_samples
+
+            importance_data.append(importance_data_tree)
+
+        self.importance_data_ = importance_data
+
         return self
 
     def _tree_to_str(self, root: Node, prefix=&#39;&#39;):
@@ -380,7 +425,8 @@ class FIGS(BaseEstimator):
     def __str__(self):
         s = &#39;&gt; ------------------------------\n&#39;
         s += &#39;&gt; FIGS-Fast Interpretable Greedy-Tree Sums:\n&#39;
-        s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree\n&#39;
+        s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree.\n&#39;
+        s += &#39;&gt; \tFor classifiers, a sigmoid function is then applied to the sum.\n&#39;
         s += &#39;&gt; ------------------------------\n&#39;
         s += &#39;\n\t+\n&#39;.join([self._tree_to_str(t) for t in self.trees_])
         if hasattr(self, &#39;feature_names_&#39;) and self.feature_names_ is not None:
@@ -398,7 +444,9 @@ class FIGS(BaseEstimator):
                 s = s.replace(f&#39;X_{i}&#39;, feature_names[i])
         return s
 
-    def predict(self, X):
+    def predict(self, X, categorical_features=None):
+        if hasattr(self, &#34;_encoder&#34;):
+            X = self._encode_categories(X, categorical_features=categorical_features)
         X = check_array(X)
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
@@ -408,14 +456,26 @@ class FIGS(BaseEstimator):
         elif isinstance(self, ClassifierMixin):
             return (preds &gt; 0.5).astype(int)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X, categorical_features=None, use_clipped_prediction=False):
+        &#34;&#34;&#34;Predict probability for classifiers:
+    Default behavior is to constrain the outputs to the range of probabilities, i.e. 0 to 1, with a sigmoid function.
+    Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.
+        &#34;&#34;&#34;
+        if hasattr(self, &#34;_encoder&#34;):
+            X = self._encode_categories(X, categorical_features=categorical_features)
         X = check_array(X)
         if isinstance(self, RegressorMixin):
             return NotImplemented
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
             preds += self._predict_tree(tree, X)
-        preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
+        if use_clipped_prediction:
+            # old behavior, pre v1.3.9
+            # constrain to range of probabilities by clipping
+            preds = np.clip(preds, a_min=0., a_max=1.)
+        else:
+            # constrain to range of probabilities with a sigmoid function
+            preds = expit(preds)
         return np.vstack((1 - preds, preds)).transpose()
 
     def _predict_tree(self, root: Node, X):
@@ -442,6 +502,18 @@ class FIGS(BaseEstimator):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
+    @property
+    def feature_importances_(self):
+        &#34;&#34;&#34;Gini impurity-based feature importances
+        &#34;&#34;&#34;
+        check_is_fitted(self)
+
+        avg_feature_importances = np.mean(
+            self.importance_data_, axis=0, dtype=np.float64
+        )
+
+        return avg_feature_importances / np.sum(avg_feature_importances)
+
     def plot(self, cols=2, feature_names=None, filename=None, label=&#34;all&#34;,
              impurity=False, tree_number=None, dpi=150, fig_size=None):
         is_single_tree = len(self.trees_) &lt; 2 or tree_number is not None
@@ -456,7 +528,7 @@ class FIGS(BaseEstimator):
         fig, axs = plt.subplots(n_plots, dpi=dpi)
         if fig_size is not None:
             fig.set_size_inches(fig_size, fig_size)
-        criterion = &#34;squared_error&#34; if isinstance(self, RegressorMixin) else &#34;gini&#34;
+
         n_classes = 1 if isinstance(self, RegressorMixin) else 2
         ax_size = int(len(self.trees_))
         for i in range(n_plots):
@@ -472,8 +544,8 @@ class FIGS(BaseEstimator):
             except IndexError:
                 ax.axis(&#39;off&#39;)
                 continue
-
-            ax.set_title(f&#34;Tree {i}&#34;)
+            ttl = f&#34;Tree {i}&#34; if n_plots &gt; 1 else f&#34;Tree {tree_number}&#34;
+            ax.set_title(ttl)
         if filename is not None:
             plt.savefig(filename)
             return
@@ -490,18 +562,23 @@ class FIGSClassifier(FIGS, ClassifierMixin):
 
 class FIGSCV:
     def __init__(self, figs,
-                 n_rules_list: List[float] = [6, 12, 24, 30, 50],
+                 n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 n_trees_list: List[int] = [5, 5, 5, 5, 5],
                  cv: int = 3, scoring=None, *args, **kwargs):
+
+        if len(n_rules_list) != len(n_trees_list):
+            raise ValueError(f&#39;len(n_rules_list) = {len(n_rules_list)} != len(n_trees_list) = {len(n_trees_list)}&#39;)
 
         self._figs_class = figs
         self.n_rules_list = np.array(n_rules_list)
+        self.n_trees_list = np.array(n_trees_list)
         self.cv = cv
         self.scoring = scoring
 
     def fit(self, X, y):
         self.scores_ = []
-        for n_rules in self.n_rules_list:
-            est = self._figs_class(max_rules=n_rules)
+        for _i,n_rules in enumerate(self.n_rules_list):
+            est = self._figs_class(max_rules=n_rules, max_trees=self.n_trees_list[_i])
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             mean_score = np.mean(cv_scores)
             if len(self.scores_) == 0:
@@ -522,20 +599,25 @@ class FIGSCV:
     def max_rules(self):
         return self.figs.max_rules
 
+    @property
+    def max_trees(self):
+        return self.figs.max_trees
 
 class FIGSRegressorCV(FIGSCV):
     def __init__(self,
                  n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 n_trees_list: List[int] = [5, 5, 5, 5, 5],
                  cv: int = 3, scoring=&#39;r2&#39;, *args, **kwargs):
-        super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor, n_rules_list=n_rules_list,
+        super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor, n_rules_list=n_rules_list, n_trees_list=n_trees_list,
                                               cv=cv, scoring=scoring, *args, **kwargs)
 
 
 class FIGSClassifierCV(FIGSCV):
     def __init__(self,
                  n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 n_trees_list: List[int] = [5, 5, 5, 5, 5],
                  cv: int = 3, scoring=&#34;accuracy&#34;, *args, **kwargs):
-        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier, n_rules_list=n_rules_list,
+        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier, n_rules_list=n_rules_list, n_trees_list=n_trees_list,
                                                cv=cv, scoring=scoring, *args, **kwargs)
 
 
@@ -545,10 +627,29 @@ if __name__ == &#39;__main__&#39;:
     X_cls, Y_cls = datasets.load_breast_cancer(return_X_y=True)
     X_reg, Y_reg = datasets.make_friedman1(100)
 
+    categories = [&#39;cat&#39;, &#39;dog&#39;, &#39;bird&#39;, &#39;fish&#39;]
+    categories_2 = [&#39;bear&#39;, &#39;chicken&#39;, &#39;cow&#39;]
+
+    X_cat = pd.DataFrame(X_reg)
+    X_cat[&#39;pet1&#39;] = np.random.choice(categories, size=(100, 1))
+    X_cat[&#39;pet2&#39;] = np.random.choice(categories_2, size=(100, 1))
+
+    # X_cat.columns[-1] = &#34;pet&#34;
+    Y_cat = Y_reg
+
+    est = FIGSRegressor(max_rules=10)
+    est.fit(X_cat, Y_cat, categorical_features=[&#39;pet1&#39;, &#39;pet2&#39;])
+    est.predict(X_cat, categorical_features=[&#39;pet1&#39;, &#39;pet2&#39;])
+    est.plot(tree_number=1)
+
+
+
     est = FIGSClassifier(max_rules=10)
     # est.fit(X_cls, Y_cls, sample_weight=np.arange(0, X_cls.shape[0]))
     est.fit(X_cls, Y_cls, sample_weight=[1] * X_cls.shape[0])
     est.predict(X_cls)
+
+
 
     est = FIGSRegressorCV()
     est.fit(X_reg, Y_reg)
@@ -576,7 +677,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="imodels.tree.figs.FIGS"><code class="flex name class">
 <span>class <span class="ident">FIGS</span></span>
-<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None)</span>
+<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
@@ -588,6 +689,8 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 <h2 id="params">Params</h2>
 <p>max_rules: int
 Max total number of rules across all trees
+max_trees: int
+Max total number of trees
 min_impurity_decrease: float
 A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
 max_features
@@ -605,13 +708,15 @@ The number of features to consider when looking for the best split (see <a href=
     https://arxiv.org/abs/2201.11931
     &#34;&#34;&#34;
 
-    def __init__(self, max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None,
+    def __init__(self, max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None,
                  max_features: str = None):
         &#34;&#34;&#34;
         Params
         ------
         max_rules: int
             Max total number of rules across all trees
+        max_trees: int
+            Max total number of trees
         min_impurity_decrease: float
             A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
         max_features
@@ -619,6 +724,7 @@ The number of features to consider when looking for the best split (see <a href=
         &#34;&#34;&#34;
         super().__init__()
         self.max_rules = max_rules
+        self.max_trees = max_trees
         self.min_impurity_decrease = min_impurity_decrease
         self.random_state = random_state
         self.max_features = max_features
@@ -702,7 +808,14 @@ The number of features to consider when looking for the best split (see <a href=
         node_split.setattrs(left_temp=node_left, right_temp=node_right, )
         return node_split
 
-    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
+    def _encode_categories(self, X, categorical_features):
+        encoder = None
+        if hasattr(self, &#34;_encoder&#34;):
+            encoder = self._encoder
+        return encode_categories(X, categorical_features, encoder)
+
+
+    def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None, categorical_features=None):
         &#34;&#34;&#34;
         Params
         ------
@@ -711,6 +824,8 @@ The number of features to consider when looking for the best split (see <a href=
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         &#34;&#34;&#34;
+        if categorical_features is not None:
+            X, self._encoder = self._encode_categories(X, categorical_features)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
@@ -741,6 +856,10 @@ The number of features to consider when looking for the best split (see <a href=
             if split_node.impurity_reduction &lt; self.min_impurity_decrease:
                 finished = True
                 break
+            elif split_node.is_root and self.max_trees is not None and len(self.trees_) &gt;= self.max_trees:
+                # If the node is the root of a new tree and we have reached self.max_trees,
+                # don&#39;t split on it, but allow later splits to continue growing existing trees
+                continue
 
             # split on node
             if verbose:
@@ -806,6 +925,7 @@ The number of features to consider when looking for the best split (see <a href=
                     feature=potential_split_updated.feature,
                     threshold=potential_split_updated.threshold,
                     impurity_reduction=potential_split_updated.impurity_reduction,
+                    impurity=potential_split_updated.impurity,
                     left_temp=potential_split_updated.left_temp,
                     right_temp=potential_split_updated.right_temp,
                 )
@@ -822,7 +942,8 @@ The number of features to consider when looking for the best split (see <a href=
                 finished = True
                 break
 
-        # annotate final tree with node_id and value_sklearn
+        # annotate final tree with node_id and value_sklearn, and prepare importance_data_
+        importance_data = []
         for tree_ in self.trees_:
             node_counter = iter(range(0, int(1e06)))
             def _annotate_node(node: Node, X, y):
@@ -851,6 +972,31 @@ The number of features to consider when looking for the best split (see <a href=
 
             _annotate_node(tree_, X, y)
 
+            # now that the samples per node are known, we can start to compute the importances
+            importance_data_tree = np.zeros(len(self.feature_names_))
+
+            def _importances(node: Node):
+                if node is None or node.left is None:
+                    return 0.
+
+                # TODO does not incorporate sample weights, but will if added to value_sklearn
+                importance_data_tree[node.feature] += (
+                    np.sum(node.value_sklearn) * node.impurity -
+                    np.sum(node.left.value_sklearn) * node.left.impurity -
+                    np.sum(node.right.value_sklearn) * node.right.impurity
+                )
+
+                return np.sum(node.value_sklearn) + _importances(node.left) + _importances(node.right)
+
+            # require the tree to have more than 1 node, otherwise just leave importance_data_tree as zeros
+            if 1 &lt; next(node_counter):
+                tree_samples = _importances(tree_)
+                importance_data_tree /= tree_samples
+
+            importance_data.append(importance_data_tree)
+
+        self.importance_data_ = importance_data
+
         return self
 
     def _tree_to_str(self, root: Node, prefix=&#39;&#39;):
@@ -877,7 +1023,8 @@ The number of features to consider when looking for the best split (see <a href=
     def __str__(self):
         s = &#39;&gt; ------------------------------\n&#39;
         s += &#39;&gt; FIGS-Fast Interpretable Greedy-Tree Sums:\n&#39;
-        s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree\n&#39;
+        s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree.\n&#39;
+        s += &#39;&gt; \tFor classifiers, a sigmoid function is then applied to the sum.\n&#39;
         s += &#39;&gt; ------------------------------\n&#39;
         s += &#39;\n\t+\n&#39;.join([self._tree_to_str(t) for t in self.trees_])
         if hasattr(self, &#39;feature_names_&#39;) and self.feature_names_ is not None:
@@ -895,7 +1042,9 @@ The number of features to consider when looking for the best split (see <a href=
                 s = s.replace(f&#39;X_{i}&#39;, feature_names[i])
         return s
 
-    def predict(self, X):
+    def predict(self, X, categorical_features=None):
+        if hasattr(self, &#34;_encoder&#34;):
+            X = self._encode_categories(X, categorical_features=categorical_features)
         X = check_array(X)
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
@@ -905,14 +1054,26 @@ The number of features to consider when looking for the best split (see <a href=
         elif isinstance(self, ClassifierMixin):
             return (preds &gt; 0.5).astype(int)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X, categorical_features=None, use_clipped_prediction=False):
+        &#34;&#34;&#34;Predict probability for classifiers:
+    Default behavior is to constrain the outputs to the range of probabilities, i.e. 0 to 1, with a sigmoid function.
+    Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.
+        &#34;&#34;&#34;
+        if hasattr(self, &#34;_encoder&#34;):
+            X = self._encode_categories(X, categorical_features=categorical_features)
         X = check_array(X)
         if isinstance(self, RegressorMixin):
             return NotImplemented
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
             preds += self._predict_tree(tree, X)
-        preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
+        if use_clipped_prediction:
+            # old behavior, pre v1.3.9
+            # constrain to range of probabilities by clipping
+            preds = np.clip(preds, a_min=0., a_max=1.)
+        else:
+            # constrain to range of probabilities with a sigmoid function
+            preds = expit(preds)
         return np.vstack((1 - preds, preds)).transpose()
 
     def _predict_tree(self, root: Node, X):
@@ -939,6 +1100,18 @@ The number of features to consider when looking for the best split (see <a href=
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
 
+    @property
+    def feature_importances_(self):
+        &#34;&#34;&#34;Gini impurity-based feature importances
+        &#34;&#34;&#34;
+        check_is_fitted(self)
+
+        avg_feature_importances = np.mean(
+            self.importance_data_, axis=0, dtype=np.float64
+        )
+
+        return avg_feature_importances / np.sum(avg_feature_importances)
+
     def plot(self, cols=2, feature_names=None, filename=None, label=&#34;all&#34;,
              impurity=False, tree_number=None, dpi=150, fig_size=None):
         is_single_tree = len(self.trees_) &lt; 2 or tree_number is not None
@@ -953,7 +1126,7 @@ The number of features to consider when looking for the best split (see <a href=
         fig, axs = plt.subplots(n_plots, dpi=dpi)
         if fig_size is not None:
             fig.set_size_inches(fig_size, fig_size)
-        criterion = &#34;squared_error&#34; if isinstance(self, RegressorMixin) else &#34;gini&#34;
+
         n_classes = 1 if isinstance(self, RegressorMixin) else 2
         ax_size = int(len(self.trees_))
         for i in range(n_plots):
@@ -969,8 +1142,8 @@ The number of features to consider when looking for the best split (see <a href=
             except IndexError:
                 ax.axis(&#39;off&#39;)
                 continue
-
-            ax.set_title(f&#34;Tree {i}&#34;)
+            ttl = f&#34;Tree {i}&#34; if n_plots &gt; 1 else f&#34;Tree {tree_number}&#34;
+            ax.set_title(ttl)
         if filename is not None:
             plt.savefig(filename)
             return
@@ -985,10 +1158,33 @@ The number of features to consider when looking for the best split (see <a href=
 <li><a title="imodels.tree.figs.FIGSClassifier" href="#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></li>
 <li><a title="imodels.tree.figs.FIGSRegressor" href="#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="imodels.tree.figs.FIGS.feature_importances_"><code class="name">var <span class="ident">feature_importances_</span></code></dt>
+<dd>
+<div class="desc"><p>Gini impurity-based feature importances</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def feature_importances_(self):
+    &#34;&#34;&#34;Gini impurity-based feature importances
+    &#34;&#34;&#34;
+    check_is_fitted(self)
+
+    avg_feature_importances = np.mean(
+        self.importance_data_, axis=0, dtype=np.float64
+    )
+
+    return avg_feature_importances / np.sum(avg_feature_importances)</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.figs.FIGS.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=False, sample_weight=None)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=False, sample_weight=None, categorical_features=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="params">Params</h2>
@@ -1000,7 +1196,7 @@ are ignored while searching for a split in each node.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None):
+<pre><code class="python">def fit(self, X, y=None, feature_names=None, verbose=False, sample_weight=None, categorical_features=None):
     &#34;&#34;&#34;
     Params
     ------
@@ -1009,6 +1205,8 @@ are ignored while searching for a split in each node.</p></div>
         Splits that would create child nodes with net zero or negative weight
         are ignored while searching for a split in each node.
     &#34;&#34;&#34;
+    if categorical_features is not None:
+        X, self._encoder = self._encode_categories(X, categorical_features)
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
     if sample_weight is not None:
         sample_weight = _check_sample_weight(sample_weight, X)
@@ -1039,6 +1237,10 @@ are ignored while searching for a split in each node.</p></div>
         if split_node.impurity_reduction &lt; self.min_impurity_decrease:
             finished = True
             break
+        elif split_node.is_root and self.max_trees is not None and len(self.trees_) &gt;= self.max_trees:
+            # If the node is the root of a new tree and we have reached self.max_trees,
+            # don&#39;t split on it, but allow later splits to continue growing existing trees
+            continue
 
         # split on node
         if verbose:
@@ -1104,6 +1306,7 @@ are ignored while searching for a split in each node.</p></div>
                 feature=potential_split_updated.feature,
                 threshold=potential_split_updated.threshold,
                 impurity_reduction=potential_split_updated.impurity_reduction,
+                impurity=potential_split_updated.impurity,
                 left_temp=potential_split_updated.left_temp,
                 right_temp=potential_split_updated.right_temp,
             )
@@ -1120,7 +1323,8 @@ are ignored while searching for a split in each node.</p></div>
             finished = True
             break
 
-    # annotate final tree with node_id and value_sklearn
+    # annotate final tree with node_id and value_sklearn, and prepare importance_data_
+    importance_data = []
     for tree_ in self.trees_:
         node_counter = iter(range(0, int(1e06)))
         def _annotate_node(node: Node, X, y):
@@ -1149,6 +1353,31 @@ are ignored while searching for a split in each node.</p></div>
 
         _annotate_node(tree_, X, y)
 
+        # now that the samples per node are known, we can start to compute the importances
+        importance_data_tree = np.zeros(len(self.feature_names_))
+
+        def _importances(node: Node):
+            if node is None or node.left is None:
+                return 0.
+
+            # TODO does not incorporate sample weights, but will if added to value_sklearn
+            importance_data_tree[node.feature] += (
+                np.sum(node.value_sklearn) * node.impurity -
+                np.sum(node.left.value_sklearn) * node.left.impurity -
+                np.sum(node.right.value_sklearn) * node.right.impurity
+            )
+
+            return np.sum(node.value_sklearn) + _importances(node.left) + _importances(node.right)
+
+        # require the tree to have more than 1 node, otherwise just leave importance_data_tree as zeros
+        if 1 &lt; next(node_counter):
+            tree_samples = _importances(tree_)
+            importance_data_tree /= tree_samples
+
+        importance_data.append(importance_data_tree)
+
+    self.importance_data_ = importance_data
+
     return self</code></pre>
 </details>
 </dd>
@@ -1175,7 +1404,7 @@ are ignored while searching for a split in each node.</p></div>
     fig, axs = plt.subplots(n_plots, dpi=dpi)
     if fig_size is not None:
         fig.set_size_inches(fig_size, fig_size)
-    criterion = &#34;squared_error&#34; if isinstance(self, RegressorMixin) else &#34;gini&#34;
+
     n_classes = 1 if isinstance(self, RegressorMixin) else 2
     ax_size = int(len(self.trees_))
     for i in range(n_plots):
@@ -1191,8 +1420,8 @@ are ignored while searching for a split in each node.</p></div>
         except IndexError:
             ax.axis(&#39;off&#39;)
             continue
-
-        ax.set_title(f&#34;Tree {i}&#34;)
+        ttl = f&#34;Tree {i}&#34; if n_plots &gt; 1 else f&#34;Tree {tree_number}&#34;
+        ax.set_title(ttl)
     if filename is not None:
         plt.savefig(filename)
         return
@@ -1200,7 +1429,7 @@ are ignored while searching for a split in each node.</p></div>
 </details>
 </dd>
 <dt id="imodels.tree.figs.FIGS.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+<span>def <span class="ident">predict</span></span>(<span>self, X, categorical_features=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1208,7 +1437,9 @@ are ignored while searching for a split in each node.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self, X):
+<pre><code class="python">def predict(self, X, categorical_features=None):
+    if hasattr(self, &#34;_encoder&#34;):
+        X = self._encode_categories(X, categorical_features=categorical_features)
     X = check_array(X)
     preds = np.zeros(X.shape[0])
     for tree in self.trees_:
@@ -1220,22 +1451,36 @@ are ignored while searching for a split in each node.</p></div>
 </details>
 </dd>
 <dt id="imodels.tree.figs.FIGS.predict_proba"><code class="name flex">
-<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X, categorical_features=None, use_clipped_prediction=False)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Predict probability for classifiers:
+Default behavior is to constrain the outputs to the range of probabilities, i.e. 0 to 1, with a sigmoid function.
+Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict_proba(self, X):
+<pre><code class="python">def predict_proba(self, X, categorical_features=None, use_clipped_prediction=False):
+    &#34;&#34;&#34;Predict probability for classifiers:
+Default behavior is to constrain the outputs to the range of probabilities, i.e. 0 to 1, with a sigmoid function.
+Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.
+    &#34;&#34;&#34;
+    if hasattr(self, &#34;_encoder&#34;):
+        X = self._encode_categories(X, categorical_features=categorical_features)
     X = check_array(X)
     if isinstance(self, RegressorMixin):
         return NotImplemented
     preds = np.zeros(X.shape[0])
     for tree in self.trees_:
         preds += self._predict_tree(tree, X)
-    preds = np.clip(preds, a_min=0., a_max=1.)  # constrain to range of probabilities
+    if use_clipped_prediction:
+        # old behavior, pre v1.3.9
+        # constrain to range of probabilities by clipping
+        preds = np.clip(preds, a_min=0., a_max=1.)
+    else:
+        # constrain to range of probabilities with a sigmoid function
+        preds = expit(preds)
     return np.vstack((1 - preds, preds)).transpose()</code></pre>
 </details>
 </dd>
@@ -1263,7 +1508,7 @@ are ignored while searching for a split in each node.</p></div>
 </dd>
 <dt id="imodels.tree.figs.FIGSCV"><code class="flex name class">
 <span>class <span class="ident">FIGSCV</span></span>
-<span>(</span><span>figs, n_rules_list: List[float] = [6, 12, 24, 30, 50], cv: int = 3, scoring=None, *args, **kwargs)</span>
+<span>(</span><span>figs, n_rules_list: List[int] = [6, 12, 24, 30, 50], n_trees_list: List[int] = [5, 5, 5, 5, 5], cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1273,18 +1518,23 @@ are ignored while searching for a split in each node.</p></div>
 </summary>
 <pre><code class="python">class FIGSCV:
     def __init__(self, figs,
-                 n_rules_list: List[float] = [6, 12, 24, 30, 50],
+                 n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 n_trees_list: List[int] = [5, 5, 5, 5, 5],
                  cv: int = 3, scoring=None, *args, **kwargs):
+
+        if len(n_rules_list) != len(n_trees_list):
+            raise ValueError(f&#39;len(n_rules_list) = {len(n_rules_list)} != len(n_trees_list) = {len(n_trees_list)}&#39;)
 
         self._figs_class = figs
         self.n_rules_list = np.array(n_rules_list)
+        self.n_trees_list = np.array(n_trees_list)
         self.cv = cv
         self.scoring = scoring
 
     def fit(self, X, y):
         self.scores_ = []
-        for n_rules in self.n_rules_list:
-            est = self._figs_class(max_rules=n_rules)
+        for _i,n_rules in enumerate(self.n_rules_list):
+            est = self._figs_class(max_rules=n_rules, max_trees=self.n_trees_list[_i])
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             mean_score = np.mean(cv_scores)
             if len(self.scores_) == 0:
@@ -1303,7 +1553,11 @@ are ignored while searching for a split in each node.</p></div>
 
     @property
     def max_rules(self):
-        return self.figs.max_rules</code></pre>
+        return self.figs.max_rules
+
+    @property
+    def max_trees(self):
+        return self.figs.max_trees</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -1324,6 +1578,18 @@ def max_rules(self):
     return self.figs.max_rules</code></pre>
 </details>
 </dd>
+<dt id="imodels.tree.figs.FIGSCV.max_trees"><code class="name">var <span class="ident">max_trees</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def max_trees(self):
+    return self.figs.max_trees</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -1338,8 +1604,8 @@ def max_rules(self):
 </summary>
 <pre><code class="python">def fit(self, X, y):
     self.scores_ = []
-    for n_rules in self.n_rules_list:
-        est = self._figs_class(max_rules=n_rules)
+    for _i,n_rules in enumerate(self.n_rules_list):
+        est = self._figs_class(max_rules=n_rules, max_trees=self.n_trees_list[_i])
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         mean_score = np.mean(cv_scores)
         if len(self.scores_) == 0:
@@ -1381,7 +1647,7 @@ def max_rules(self):
 </dd>
 <dt id="imodels.tree.figs.FIGSClassifier"><code class="flex name class">
 <span>class <span class="ident">FIGSClassifier</span></span>
-<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None)</span>
+<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
@@ -1393,6 +1659,8 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 <h2 id="params">Params</h2>
 <p>max_rules: int
 Max total number of rules across all trees
+max_trees: int
+Max total number of trees
 min_impurity_decrease: float
 A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
 max_features
@@ -1414,14 +1682,16 @@ The number of features to consider when looking for the best split (see <a href=
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.figs.FIGS.feature_importances_" href="#imodels.tree.figs.FIGS.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="imodels.tree.figs.FIGSClassifierCV"><code class="flex name class">
 <span>class <span class="ident">FIGSClassifierCV</span></span>
-<span>(</span><span>n_rules_list: List[int] = [6, 12, 24, 30, 50], cv: int = 3, scoring='accuracy', *args, **kwargs)</span>
+<span>(</span><span>n_rules_list: List[int] = [6, 12, 24, 30, 50], n_trees_list: List[int] = [5, 5, 5, 5, 5], cv: int = 3, scoring='accuracy', *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1432,8 +1702,9 @@ The number of features to consider when looking for the best split (see <a href=
 <pre><code class="python">class FIGSClassifierCV(FIGSCV):
     def __init__(self,
                  n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 n_trees_list: List[int] = [5, 5, 5, 5, 5],
                  cv: int = 3, scoring=&#34;accuracy&#34;, *args, **kwargs):
-        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier, n_rules_list=n_rules_list,
+        super(FIGSClassifierCV, self).__init__(figs=FIGSClassifier, n_rules_list=n_rules_list, n_trees_list=n_trees_list,
                                                cv=cv, scoring=scoring, *args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1443,7 +1714,7 @@ The number of features to consider when looking for the best split (see <a href=
 </dd>
 <dt id="imodels.tree.figs.FIGSRegressor"><code class="flex name class">
 <span>class <span class="ident">FIGSRegressor</span></span>
-<span>(</span><span>max_rules: int = 12, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None)</span>
+<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
@@ -1455,6 +1726,8 @@ Experiments across real-world datasets show that FIGS achieves state-of-the-art 
 <h2 id="params">Params</h2>
 <p>max_rules: int
 Max total number of rules across all trees
+max_trees: int
+Max total number of trees
 min_impurity_decrease: float
 A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
 max_features
@@ -1476,14 +1749,16 @@ The number of features to consider when looking for the best split (see <a href=
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.figs.FIGS.feature_importances_" href="#imodels.tree.figs.FIGS.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
 <dt id="imodels.tree.figs.FIGSRegressorCV"><code class="flex name class">
 <span>class <span class="ident">FIGSRegressorCV</span></span>
-<span>(</span><span>n_rules_list: List[int] = [6, 12, 24, 30, 50], cv: int = 3, scoring='r2', *args, **kwargs)</span>
+<span>(</span><span>n_rules_list: List[int] = [6, 12, 24, 30, 50], n_trees_list: List[int] = [5, 5, 5, 5, 5], cv: int = 3, scoring='r2', *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1494,8 +1769,9 @@ The number of features to consider when looking for the best split (see <a href=
 <pre><code class="python">class FIGSRegressorCV(FIGSCV):
     def __init__(self,
                  n_rules_list: List[int] = [6, 12, 24, 30, 50],
+                 n_trees_list: List[int] = [5, 5, 5, 5, 5],
                  cv: int = 3, scoring=&#39;r2&#39;, *args, **kwargs):
-        super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor, n_rules_list=n_rules_list,
+        super(FIGSRegressorCV, self).__init__(figs=FIGSRegressor, n_rules_list=n_rules_list, n_trees_list=n_trees_list,
                                               cv=cv, scoring=scoring, *args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1631,6 +1907,7 @@ The number of features to consider when looking for the best split (see <a href=
 <li>
 <h4><code><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></code></h4>
 <ul class="">
+<li><code><a title="imodels.tree.figs.FIGS.feature_importances_" href="#imodels.tree.figs.FIGS.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.plot" href="#imodels.tree.figs.FIGS.plot">plot</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict" href="#imodels.tree.figs.FIGS.predict">predict</a></code></li>
@@ -1643,6 +1920,7 @@ The number of features to consider when looking for the best split (see <a href=
 <ul class="">
 <li><code><a title="imodels.tree.figs.FIGSCV.fit" href="#imodels.tree.figs.FIGSCV.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.max_rules" href="#imodels.tree.figs.FIGSCV.max_rules">max_rules</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.max_trees" href="#imodels.tree.figs.FIGSCV.max_trees">max_trees</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.predict" href="#imodels.tree.figs.FIGSCV.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.predict_proba" href="#imodels.tree.figs.FIGSCV.predict_proba">predict_proba</a></code></li>
 </ul>

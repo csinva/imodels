@@ -31,6 +31,7 @@ import requests
 import sklearn.datasets
 from scipy.sparse import issparse
 from sklearn.datasets import fetch_openml
+from sklearn.preprocessing import OneHotEncoder
 
 from ..util.tree_interaction_utils import make_rj, make_vp
 
@@ -178,7 +179,25 @@ def _download_imodels_dataset(dataset_fname, data_path: str):
 
     os.makedirs(oj(data_path, &#39;imodels_data&#39;), exist_ok=True)
     with open(oj(data_path, &#39;imodels_data&#39;, dataset_fname), &#39;w&#39;) as f:
-        f.write(r.text)</code></pre>
+        f.write(r.text)
+
+
+def encode_categories(X, features, encoder=None):
+    columns_to_keep = list(set(X.columns).difference(features))
+    X_encoded = X.loc[:, columns_to_keep]
+    X_cat = pd.DataFrame({f: X.loc[:, f] for f in features})
+
+    if encoder is None:
+        one_hot_encoder = OneHotEncoder(sparse=False, categories=&#34;auto&#34;)
+        X_one_hot = pd.DataFrame(one_hot_encoder.fit_transform(X_cat))
+    else:
+        one_hot_encoder = encoder
+        X_one_hot = pd.DataFrame(one_hot_encoder.transform(X_cat))
+    X_one_hot.columns = one_hot_encoder.get_feature_names_out(features)
+    X_encoded = pd.concat([X_encoded,X_one_hot], axis=1)
+    if encoder is not None:
+        return X_encoded
+    return X_encoded, one_hot_encoder</code></pre>
 </details>
 </section>
 <section>
@@ -188,6 +207,33 @@ def _download_imodels_dataset(dataset_fname, data_path: str):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="imodels.util.data_util.encode_categories"><code class="name flex">
+<span>def <span class="ident">encode_categories</span></span>(<span>X, features, encoder=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def encode_categories(X, features, encoder=None):
+    columns_to_keep = list(set(X.columns).difference(features))
+    X_encoded = X.loc[:, columns_to_keep]
+    X_cat = pd.DataFrame({f: X.loc[:, f] for f in features})
+
+    if encoder is None:
+        one_hot_encoder = OneHotEncoder(sparse=False, categories=&#34;auto&#34;)
+        X_one_hot = pd.DataFrame(one_hot_encoder.fit_transform(X_cat))
+    else:
+        one_hot_encoder = encoder
+        X_one_hot = pd.DataFrame(one_hot_encoder.transform(X_cat))
+    X_one_hot.columns = one_hot_encoder.get_feature_names_out(features)
+    X_encoded = pd.concat([X_encoded,X_one_hot], axis=1)
+    if encoder is not None:
+        return X_encoded
+    return X_encoded, one_hot_encoder</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.data_util.get_clean_dataset"><code class="name flex">
 <span>def <span class="ident">get_clean_dataset</span></span>(<span>dataset_name: str, data_source: str = 'imodels', data_path='data', convertna=True) ‑> Tuple[numpy.ndarray, numpy.ndarray, list]</span>
 </code></dt>
@@ -331,6 +377,7 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="imodels.util.data_util.encode_categories" href="#imodels.util.data_util.encode_categories">encode_categories</a></code></li>
 <li><code><a title="imodels.util.data_util.get_clean_dataset" href="#imodels.util.data_util.get_clean_dataset">get_clean_dataset</a></code></li>
 </ul>
 </li>

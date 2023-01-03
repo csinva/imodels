@@ -75,7 +75,7 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
         s += &#39;&gt; Greedy CART Tree:\n&#39;
         s += &#39;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#39;
         s += &#39;&gt; ------------------------------&#39; + &#39;\n&#39;
-        if self.feature_names is not None:
+        if hasattr(self, &#39;feature_names&#39;) and self.feature_names is not None:
             return s + export_text(self, feature_names=self.feature_names, show_weights=True)
         else:
             return s + export_text(self, show_weights=True)
@@ -121,7 +121,7 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
         self.complexity_ = compute_tree_complexity(self.tree_)
 
     def __str__(self):
-        if self.feature_names is not None:
+        if hasattr(self, &#39;feature_names&#39;) and self.feature_names is not None:
             return &#39;GreedyTree:\n&#39; + export_text(self, feature_names=self.feature_names, show_weights=True)
         else:
             return &#39;GreedyTree:\n&#39; + export_text(self, show_weights=True)</code></pre>
@@ -191,7 +191,7 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
         s += &#39;&gt; Greedy CART Tree:\n&#39;
         s += &#39;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#39;
         s += &#39;&gt; ------------------------------&#39; + &#39;\n&#39;
-        if self.feature_names is not None:
+        if hasattr(self, &#39;feature_names&#39;) and self.feature_names is not None:
             return s + export_text(self, feature_names=self.feature_names, show_weights=True)
         else:
             return s + export_text(self, show_weights=True)</code></pre>
@@ -329,7 +329,7 @@ Don't use this parameter unless you know what you do.</dd>
         self.complexity_ = compute_tree_complexity(self.tree_)
 
     def __str__(self):
-        if self.feature_names is not None:
+        if hasattr(self, &#39;feature_names&#39;) and self.feature_names is not None:
             return &#39;GreedyTree:\n&#39; + export_text(self, feature_names=self.feature_names, show_weights=True)
         else:
             return &#39;GreedyTree:\n&#39; + export_text(self, show_weights=True)</code></pre>
