@@ -332,7 +332,7 @@ class LogisticPPM(GlmPPM, ABC):
         Other Parameters are passed on to LogisticRegression().
     """
 
-    def __init__(self, loo=True, alpha_grid=np.logspace(-4, 4, 10),
+    def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25),
                  max_iter=1000, trim=0.01, **kwargs):
         super().__init__(LogisticRegression(max_iter=max_iter, **kwargs),
                          loo, alpha_grid,
@@ -359,13 +359,13 @@ class RobustPPM(GlmPPM, ABC):
     **kwargs
         Other Parameters are passed on to LogisticRegression().
     """
-    def __init__(self, loo=True, alpha_grid=np.linspace(0.01, 3, 100),
-                 epsilon=1.35, **kwargs):
+    def __init__(self, loo=True, alpha_grid=np.linspace(-2, 3, 25),
+                 epsilon=1.35, max_iter=2000, **kwargs):
         loss_fn = partial(huber_loss, epsilon=epsilon)
         l_dot = lambda a, b: (b - a) / (1 + ((a - b) / epsilon) ** 2) ** 0.5
         l_doubledot=lambda a, b: (1 + (((a - b) / epsilon) ** 2)) ** (-1.5)
         super().__init__(
-            HuberRegressor(**kwargs), loo, alpha_grid,
+            HuberRegressor(max_iter=max_iter, **kwargs), loo, alpha_grid,
             l_dot=l_dot,
             l_doubledot=l_doubledot,
             hyperparameter_scorer=loss_fn)
