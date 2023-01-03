@@ -331,6 +331,12 @@ class GmdiHelper:
             if self.mode == "keep_rest":
                 full_score = scoring_fn(y_test, full_preds)
                 scores = full_score - scores
+            if len(partial_preds) != scores.size:
+                if len(scoring_fns) > 1:
+                    msg = "scoring_fn={} should return one value for each feature.".format(fn_name)
+                else:
+                    msg = "scoring_fns should return one value for each feature.".format(fn_name)
+                raise ValueError("Unexpected dimensions. {}".format(msg))
             scores = scores.ravel()
             all_scores[fn_name] = scores
         self._scores = all_scores
@@ -364,8 +370,11 @@ def _partial_preds_to_scores(partial_preds, y_test, scoring_fn):
     return np.vstack(scores)
 
 
-def _fast_r2_score(y_true, y_pred):
+def _fast_r2_score(y_true, y_pred, multiclass=False):
     numerator = ((y_true - y_pred) ** 2).sum(axis=0, dtype=np.float64)
     denominator = ((y_true - np.mean(y_true, axis=0)) ** 2). \
         sum(axis=0, dtype=np.float64)
-    return 1 - numerator / denominator
+    if multiclass:
+        return np.mean(1 - numerator / denominator)
+    else:
+        return 1 - numerator / denominator
