@@ -359,7 +359,7 @@ class RobustPPM(GlmPPM, ABC):
     **kwargs
         Other Parameters are passed on to LogisticRegression().
     """
-    def __init__(self, loo=True, alpha_grid=np.linspace(-2, 3, 25),
+    def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25),
                  epsilon=1.35, max_iter=2000, **kwargs):
         loss_fn = partial(huber_loss, epsilon=epsilon)
         l_dot = lambda a, b: (b - a) / (1 + ((a - b) / epsilon) ** 2) ** 0.5
