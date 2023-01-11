@@ -168,13 +168,17 @@ class GlmPPM(_PartialPredictionModelBase, ABC):
     trim: float
         The amount by which to trim predicted probabilities away from 0 and 1.
         This helps to stabilize some loss calculations.
+    gcv_mode: string in {"auto", "svd", "eigen"}
+        Flag indicating which strategy to use when performing leave-one-out
+        cross-validation for ridge regression, if applicable.
+        See gcv_mode in sklearn.linear_model.RidgeCV for details.
     """
 
     def __init__(self, estimator, loo=True, alpha_grid=np.logspace(-4, 4, 10),
                  inv_link_fn=lambda a: a, l_dot=lambda a, b: b - a,
                  l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1,
                  hyperparameter_scorer=mean_squared_error,
-                 trim=None):
+                 trim=None, gcv_mode='auto'):
         super().__init__(estimator)
         self.loo = loo
         self.alpha_grid = alpha_grid
@@ -183,6 +187,7 @@ class GlmPPM(_PartialPredictionModelBase, ABC):
         self.l_doubledot = l_doubledot
         self.r_doubledot = r_doubledot
         self.trim = trim
+        self.gcv_mode = gcv_mode
         self.hyperparameter_scorer = hyperparameter_scorer
         self.alpha_ = None
         self.loo_coefficients_ = None
@@ -193,7 +198,7 @@ class GlmPPM(_PartialPredictionModelBase, ABC):
         # Compute regularization hyperparameter using approximate LOOCV
         X_train = train_blocked_data.get_all_data()
         if isinstance(self.estimator, Ridge):
-            cv = RidgeCV(alphas=self.alpha_grid)
+            cv = RidgeCV(alphas=self.alpha_grid, gcv_mode=self.gcv_mode)
             cv.fit(X_train, y_train)
             self.alpha_ = cv.alpha_
         else:
@@ -297,12 +302,17 @@ class RidgePPM(GlmPPM, ABC):
         Flag for whether to also use LOO calculations for making predictions.
     alpha_grid: ndarray of shape (n_alphas, )
         The grid of alpha values for hyperparameter optimization.
+    gcv_mode: string in {"auto", "svd", "eigen"}
+        Flag indicating which strategy to use when performing leave-one-out
+        cross-validation for ridge regression.
+        See gcv_mode in sklearn.linear_model.RidgeCV for details.
     **kwargs
         Other Parameters are passed on to Ridge().
     """
 
-    def __init__(self, loo=True, alpha_grid=np.logspace(-5, 5, 100), **kwargs):
-        super().__init__(Ridge(**kwargs), loo, alpha_grid)
+    def __init__(self, loo=True, alpha_grid=np.logspace(-5, 5, 100),
+                 gcv_mode='auto', **kwargs):
+        super().__init__(Ridge(**kwargs), loo, alpha_grid, gcv_mode=gcv_mode)
 
     def set_alphas(self, alphas="default", blocked_data=None, y=None):
         full_data = blocked_data.get_all_data()
