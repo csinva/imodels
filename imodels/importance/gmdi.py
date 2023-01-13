@@ -181,7 +181,7 @@ class GMDI:
         else:
             ppm = self.partial_prediction_model
         if self.scoring_fns == "auto":
-            scoring_fns = {"importance": log_loss}
+            scoring_fns = {"importance": _neg_log_loss}
         else:
             scoring_fns = self.scoring_fns
         return ppm, scoring_fns
@@ -381,3 +381,7 @@ def _fast_r2_score(y_true, y_pred, multiclass=False):
         return np.mean(1 - numerator / denominator)
     else:
         return 1 - numerator / denominator
+
+
+def _neg_log_loss(y_true, y_pred):
+    return -log_loss(y_true, y_pred)
