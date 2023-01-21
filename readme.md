@@ -98,7 +98,7 @@ Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementa
 Demos are contained in the [notebooks](notebooks) folder.
 
 <details>
-<summary><a href="notebooks/imodels_demo.ipynb">Quickstart demo</a></summary>
+<summary><a href="https://github.com/csinva/imodels/blob/master/notebooks/imodels_demo.ipynb">Quickstart demo</a></summary>
 Shows how to fit, predict, and visualize with different interpretable models
 </details>
 
@@ -120,8 +120,8 @@ Shows an example of using <code>imodels</code> for deriving a clinical decision 
 <details>
 <summary>Posthoc analysis</summary>
 We also include some demos of posthoc analysis, which occurs after fitting models:
-<a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and 
-<a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
+<a href="https://github.com/csinva/imodels/blob/master/notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and 
+<a href="https://github.com/csinva/imodels/blob/master/notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
 </details>
 
 ## What's the difference between the models?
@@ -176,7 +176,7 @@ Different models support different machine-learning tasks. Current support for d
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
 | Greedy tree sums (FIGS) | [FIGSClassifier](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier) | [FIGSRegressor](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor) |                                                              |
 | Hierarchical shrinkage | [HSTreeClassifierCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV) | [HSTreeRegressorCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV) | Wraps any sklearn tree-based model |
-| Distillation |  | [DistilledRegressor](https://csinva.io/imodels/docs/util/distillation.html#imodels.util.distillation.DistilledRegressor) | Wraps any sklearn-compatible models |
+| Distillation |  | [DistilledRegressor](https://csinva.io/imodels/util/distillation.html#imodels.util.distillation.DistilledRegressor) | Wraps any sklearn-compatible models |
 
 ### Extras
 
