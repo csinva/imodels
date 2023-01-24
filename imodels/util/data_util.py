@@ -90,11 +90,12 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
     assert data_source in ['imodels', 'pmlb', 'sklearn',
                            'openml', 'synthetic'], data_source + ' not correct'
     if test_size is not None:
-        def _split(X, y):
-            return train_test_split(X, y, test_size=test_size, random_state=random_state)
+        def _split(X, y, feature_names):
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+            return X_train, X_test, y_train, y_test, feature_names
     else:
-        def _split(X, y):
-            return X, y
+        def _split(X, y, feature_names):
+            return X, y, feature_names
 
     if data_source == 'imodels':
         if not dataset_name.endswith('csv'):
@@ -106,7 +107,7 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
         feature_names = df.columns.values[:-1]
         if convertna:
             X = np.nan_to_num(X.astype('float32'))
-        return *_split(X, y), _clean_feat_names(feature_names)
+        return _split(X, y, _clean_feat_names(feature_names))
     elif data_source == 'pmlb':
         from pmlb import fetch_data
         feature_names = list(
@@ -116,7 +117,7 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
                           local_cache_dir=oj(data_path, 'pmlb_data'))
         if np.unique(y).size == 2:  # if binary classification, ensure that the classes are 0 and 1
             y -= np.min(y)
-        return *_split(_clean_features(X), y), _clean_feat_names(feature_names)
+        return _split(_clean_features(X), y, _clean_feat_names(feature_names))
     elif data_source == 'sklearn':
         if dataset_name == 'diabetes':
             data = sklearn.datasets.load_diabetes()
@@ -134,7 +135,7 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
         if isinstance(y, pd.Series):
             y = y.values
         y = _define_openml_outcomes(y, dataset_name)
-        return *_split(_clean_features(X), y), _clean_feat_names(feature_names)
+        return _split(_clean_features(X), y, _clean_feat_names(feature_names))
     elif data_source == 'synthetic':
         if dataset_name == 'friedman1':
             X, y = sklearn.datasets.make_friedman1(
@@ -147,7 +148,7 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
             X, y = make_rj()
         elif dataset_name == "vo_pati":
             X, y = make_vp()
-        return *_split(X, y), ['X_' + str(i + 1) for i in range(X.shape[1])]
+        return _split(X, y, ['X_' + str(i + 1) for i in range(X.shape[1])])
 
 
 def _download_imodels_dataset(dataset_fname, data_path: str):
