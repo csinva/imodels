@@ -8,9 +8,10 @@ import requests
 import sklearn.datasets
 from scipy.sparse import issparse
 from sklearn.datasets import fetch_openml
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 
-from ..util.tree_interaction_utils import make_rj, make_vp
+from imodels.util.tree_interaction_utils import make_rj, make_vp
 
 
 def _define_openml_outcomes(y, data_id: str):
@@ -43,8 +44,9 @@ def _clean_features(X):
     return X.astype(float)
 
 
-def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path='data', convertna=True) -> Tuple[
-    np.ndarray, np.ndarray, list]:
+def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path='data',
+                      convertna: bool = True, test_size: float = None, random_state: int = 42) -> Tuple[
+        np.ndarray, np.ndarray, list]:
     """Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
     If data is not downloaded, will download and cache. Otherwise will load locally.
     Cleans features so that they are type float and features names don't start with a digit.
@@ -57,6 +59,12 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
         options: 'imodels', 'pmlb', 'sklearn', 'openml', 'synthetic'
     data_path: str
         path to load/save data (default: 'data')
+    test_size: float, optional
+        if not None, will split data into train and test sets (with fraction test_size in test set)
+        & change the return signature to `X_train, X_test, y_train, y_test, feature_names`
+    random_state: int, optional
+        if test_size is not None, will use this random state to split data
+
 
     Returns
     -------
@@ -79,7 +87,15 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
     X, y, feature_names = imodels.get_clean_dataset('california_housing', data_source='sklearn')
     ```
     """
-    assert data_source in ['imodels', 'pmlb', 'sklearn', 'openml', 'synthetic'], data_source + ' not correct'
+    assert data_source in ['imodels', 'pmlb', 'sklearn',
+                           'openml', 'synthetic'], data_source + ' not correct'
+    if test_size is not None:
+        def _split(X, y):
+            return train_test_split(X, y, test_size=test_size, random_state=random_state)
+    else:
+        def _split(X, y):
+            return X, y
+
     if data_source == 'imodels':
         if not dataset_name.endswith('csv'):
             dataset_name = dataset_name + '.csv'
@@ -90,34 +106,39 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
         feature_names = df.columns.values[:-1]
         if convertna:
             X = np.nan_to_num(X.astype('float32'))
-        return X, y, _clean_feat_names(feature_names)
+        return *_split(X, y), _clean_feat_names(feature_names)
     elif data_source == 'pmlb':
         from pmlb import fetch_data
         feature_names = list(
             fetch_data(dataset_name, return_X_y=False, local_cache_dir=oj(data_path, 'pmlb_data')).columns)
         feature_names.remove('target')
-        X, y = fetch_data(dataset_name, return_X_y=True, local_cache_dir=oj(data_path, 'pmlb_data'))
+        X, y = fetch_data(dataset_name, return_X_y=True,
+                          local_cache_dir=oj(data_path, 'pmlb_data'))
         if np.unique(y).size == 2:  # if binary classification, ensure that the classes are 0 and 1
             y -= np.min(y)
-        return _clean_features(X), y, _clean_feat_names(feature_names)
+        return *_split(_clean_features(X), y), _clean_feat_names(feature_names)
     elif data_source == 'sklearn':
         if dataset_name == 'diabetes':
             data = sklearn.datasets.load_diabetes()
         elif dataset_name == 'california_housing':
-            data = sklearn.datasets.fetch_california_housing(data_home=oj(data_path, 'sklearn_data'))
+            data = sklearn.datasets.fetch_california_housing(
+                data_home=oj(data_path, 'sklearn_data'))
         return data['data'], data['target'], _clean_feat_names(data['feature_names'])
     elif data_source == 'openml':  # note this api might change in newer sklearn - should give dataset-id not name
-        data = sklearn.datasets.fetch_openml(data_id=dataset_name, data_home=oj(data_path, 'openml_data'))
-        X, y, feature_names = data['data'], data['target'], _clean_feat_names(data['feature_names'])
+        data = sklearn.datasets.fetch_openml(
+            data_id=dataset_name, data_home=oj(data_path, 'openml_data'))
+        X, y, feature_names = data['data'], data['target'], _clean_feat_names(
+            data['feature_names'])
         if isinstance(X, pd.DataFrame):
             X = X.values
         if isinstance(y, pd.Series):
             y = y.values
         y = _define_openml_outcomes(y, dataset_name)
-        return _clean_features(X), y, _clean_feat_names(feature_names)
+        return *_split(_clean_features(X), y), _clean_feat_names(feature_names)
     elif data_source == 'synthetic':
         if dataset_name == 'friedman1':
-            X, y = sklearn.datasets.make_friedman1(n_samples=200, n_features=10)
+            X, y = sklearn.datasets.make_friedman1(
+                n_samples=200, n_features=10)
         elif dataset_name == 'friedman2':
             X, y = sklearn.datasets.make_friedman2(n_samples=200)
         elif dataset_name == 'friedman3':
@@ -126,28 +147,12 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
             X, y = make_rj()
         elif dataset_name == "vo_pati":
             X, y = make_vp()
-        return X, y, ['X_' + str(i + 1) for i in range(X.shape[1])]
-
-
-def _get_openml_dataset(data_id: int) -> pd.DataFrame:
-    dataset = fetch_openml(data_id=data_id, as_frame=False)
-    X = dataset.data
-    if issparse(X):
-        X = X.toarray()
-    y = (dataset.target == dataset.target[0]).astype(int)
-    feature_names = dataset.feature_names
-
-    target_name = dataset.target_names
-    if target_name[0].lower() == 'class':
-        target_name = [dataset.target[0]]
-
-    X_df = pd.DataFrame(X, columns=feature_names)
-    y_df = pd.DataFrame(y, columns=target_name)
-    return pd.concat((X_df, y_df), axis=1)
+        return *_split(X, y), ['X_' + str(i + 1) for i in range(X.shape[1])]
 
 
 def _download_imodels_dataset(dataset_fname, data_path: str):
-    dataset_fname = dataset_fname.split('/')[-1]  # remove anything about the path
+    dataset_fname = dataset_fname.split(
+        '/')[-1]  # remove anything about the path
     download_path = f'https://raw.githubusercontent.com/csinva/imodels-data/master/data_cleaned/{dataset_fname}'
     r = requests.get(download_path)
     if r.status_code == 404:
@@ -171,7 +176,15 @@ def encode_categories(X, features, encoder=None):
         one_hot_encoder = encoder
         X_one_hot = pd.DataFrame(one_hot_encoder.transform(X_cat))
     X_one_hot.columns = one_hot_encoder.get_feature_names_out(features)
-    X_encoded = pd.concat([X_encoded,X_one_hot], axis=1)
+    X_encoded = pd.concat([X_encoded, X_one_hot], axis=1)
     if encoder is not None:
         return X_encoded
     return X_encoded, one_hot_encoder
+
+
+if __name__ == '__main__':
+    import imodels
+    # X, y, feature_names = imodels.get_clean_dataset('compas_two_year_clean', data_source='imodels', test_size=0.5)
+    X_train, X_test, y_train, y_test, feature_names = imodels.get_clean_dataset(
+        'compas_two_year_clean', data_source='imodels', test_size=0.5)
+    print(X_train.shape, y_train.shape)
