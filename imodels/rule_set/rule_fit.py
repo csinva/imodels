@@ -11,6 +11,7 @@ from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
+import scipy
 from scipy.special import softmax
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.base import TransformerMixin
@@ -145,6 +146,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         For classification, returns discrete output.
         '''
         check_is_fitted(self)
+        if scipy.sparse.issparse(X):
+            X = X.toarray()
         X = check_array(X)
         if isinstance(self, RegressorMixin):
             return self._predict_continuous_output(X)
@@ -153,6 +156,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
     def predict_proba(self, X):
         check_is_fitted(self)
+        if scipy.sparse.issparse(X):
+            X = X.toarray()
         X = check_array(X)
         continuous_output = self._predict_continuous_output(X)
         logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
