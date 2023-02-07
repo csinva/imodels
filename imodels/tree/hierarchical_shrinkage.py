@@ -58,7 +58,7 @@ class HSTree:
         # remove feature_names if it exists (note: only works as keyword-arg)
         feature_names = kwargs.pop('feature_names', None)  # None returned if not passed
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-        self.estimator_ = self.estimator_.fit(X, y, sample_weight, *args, **kwargs)
+        self.estimator_ = self.estimator_.fit(X, y, *args, sample_weight=sample_weight, **kwargs)
         self._shrink()
 
         # compute complexity
