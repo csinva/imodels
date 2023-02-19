@@ -406,14 +406,10 @@ class CompositeTransformer(BlockTransformerBase, ABC):
 
     def _fit_one_feature(self, X, k):
         data_blocks = []
-        centers = []
-        scales = []
         for block_transformer in self.block_transformer_list:
             data_block = block_transformer.fit_transform_one_feature(
                 X, k, center=False, normalize=False)
             data_blocks.append(data_block)
-            centers.append(block_transformer._centers[k])
-            scales.append(block_transformer._scales[k])
 
         # Handle trivial blocks
         self._trivial_block_indices[k] = \
@@ -429,11 +425,13 @@ class CompositeTransformer(BlockTransformerBase, ABC):
             # Remove trivial blocks
             for idx in reversed(self._trivial_block_indices[k]):
                 data_blocks.pop(idx)
-                centers.pop(idx)
-                scales.pop(idx)
-            self._centers[k] = np.hstack(centers)
-            self._scales[k] = np.hstack(scales)
         self._rescale_factors[k] = _get_rescale_factors(data_blocks, self.rescale_mode)
+        composite_block = np.hstack(
+            [data_block / scale_factor for data_block, scale_factor in
+             zip(data_blocks, self._rescale_factors[k])]
+        )
+        self._centers[k] = composite_block.mean(axis=0)
+        self._scales[k] = composite_block.std(axis=0)
 
     def _transform_one_feature(self, X, k):
         data_blocks = []
@@ -459,14 +457,10 @@ class CompositeTransformer(BlockTransformerBase, ABC):
 
     def _fit_transform_one_feature(self, X, k):
         data_blocks = []
-        centers = []
-        scales = []
         for block_transformer in self.block_transformer_list:
             data_block = block_transformer.fit_transform_one_feature(
                 X, k, center=False, normalize=False)
             data_blocks.append(data_block)
-            centers.append(block_transformer._centers[k])
-            scales.append(block_transformer._scales[k])
         # Handle trivial blocks
         self._trivial_block_indices[k] = \
             [idx for idx, data_block in enumerate(data_blocks) if
@@ -482,15 +476,13 @@ class CompositeTransformer(BlockTransformerBase, ABC):
             # Remove trivial blocks
             for idx in reversed(self._trivial_block_indices[k]):
                 data_blocks.pop(idx)
-                centers.pop(idx)
-                scales.pop(idx)
-            self._centers[k] = np.hstack(centers)
-            self._scales[k] = np.hstack(scales)
         self._rescale_factors[k] = _get_rescale_factors(data_blocks, self.rescale_mode)
         composite_block = np.hstack(
             [data_block / scale_factor for data_block, scale_factor in
              zip(data_blocks, self._rescale_factors[k])]
         )
+        self._centers[k] = composite_block.mean(axis=0)
+        self._scales[k] = composite_block.std(axis=0)
         return composite_block
 
 
