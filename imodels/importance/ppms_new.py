@@ -274,7 +274,7 @@ class _GlmPPM(PartialPredictionModelBase, ABC):
         self.estimator.fit(X, y)
         return _extract_coef_and_intercept(self.estimator)
 
-    def _fit_loo_coefficients(self, X, y, alpha):
+    def _fit_loo_coefficients(self, X, y, alpha, max_h=1-1e-4):
         """
         Get the coefficient (and intercept) for each LOO model. Since we fit
         one model for each sample, this gives an ndarray of shape (n_samples,
@@ -284,6 +284,8 @@ class _GlmPPM(PartialPredictionModelBase, ABC):
         X1 = np.hstack([X, np.ones((X.shape[0], 1))])
         orig_preds = _get_preds(X, orig_coef_, self.inv_link_fn)
         support_idxs = orig_coef_ != 0
+        if not any(support_idxs):
+            return orig_coef_ * np.ones_like(X1)
         X1 = X1[:, support_idxs]
         orig_coef_ = orig_coef_[support_idxs]
         l_doubledot_vals = self.l_doubledot(y, orig_preds)
@@ -296,6 +298,7 @@ class _GlmPPM(PartialPredictionModelBase, ABC):
             J += alpha * reg_curvature
         normal_eqn_mat = np.linalg.inv(J) @ X1.T
         h_vals = np.sum(X1.T * normal_eqn_mat, axis=0) * l_doubledot_vals
+        h_vals[h_vals == 1] = max_h
         loo_coef_ = orig_coef_[:, np.newaxis] + \
                     normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
         if not all(support_idxs):
