@@ -7,7 +7,7 @@ import numpy as np
 import scipy as sp
 
 from sklearn.linear_model import RidgeCV, Ridge, \
-    LogisticRegression, HuberRegressor
+    LogisticRegression, HuberRegressor, Lasso
 from sklearn.metrics import log_loss, mean_squared_error
 from scipy.special import softmax
 
@@ -283,6 +283,9 @@ class _GlmPPM(PartialPredictionModelBase, ABC):
         orig_coef_ = self._fit_coefficients(X, y, alpha)
         X1 = np.hstack([X, np.ones((X.shape[0], 1))])
         orig_preds = _get_preds(X, orig_coef_, self.inv_link_fn)
+        support_idxs = orig_coef_ != 0
+        X1 = X1[:, support_idxs]
+        orig_coef_ = orig_coef_[support_idxs]
         l_doubledot_vals = self.l_doubledot(y, orig_preds)
         J = X1.T * l_doubledot_vals @ X1
         if self.r_doubledot is not None:
@@ -295,6 +298,10 @@ class _GlmPPM(PartialPredictionModelBase, ABC):
         h_vals = np.sum(X1.T * normal_eqn_mat, axis=0) * l_doubledot_vals
         loo_coef_ = orig_coef_[:, np.newaxis] + \
                     normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
+        if not all(support_idxs):
+            loo_coef_dense_ = np.zeros((X.shape[1] + 1, X.shape[0]))
+            loo_coef_dense_[support_idxs, :] = loo_coef_
+            loo_coef_ = loo_coef_dense_
         return loo_coef_.T
 
     def _get_aloocv_alpha(self, X, y):
@@ -399,11 +406,17 @@ class LogisticClassifierPPM(GlmClassifierPPM, PartialPredictionModelBase, ABC):
     """
 
     def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25),
-                 max_iter=1000, trim=0.01, **kwargs):
-        super().__init__(LogisticRegression(max_iter=max_iter, **kwargs),
+                 penalty='l2', max_iter=1000, trim=0.01, **kwargs):
+        assert penalty in ['l2', 'l1']
+        if penalty == 'l2':
+            r_doubledot = lambda a: 1
+        elif penalty == 'l1':
+            r_doubledot = None
+        super().__init__(LogisticRegression(penalty=penalty, max_iter=max_iter, **kwargs),
                          loo, alpha_grid,
                          inv_link_fn=sp.special.expit,
                          l_doubledot=lambda a, b: b * (1 - b),
+                         r_doubledot=r_doubledot,
                          hyperparameter_scorer=log_loss,
                          trim=trim)
 
@@ -435,6 +448,28 @@ class RobustRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
             l_dot=l_dot,
             l_doubledot=l_doubledot,
             hyperparameter_scorer=loss_fn)
+
+
+class LassoRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
+    """
+    PPM class that uses lasso as the estimator.
+
+    Parameters
+    ----------
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    gcv_mode: string in {"auto", "svd", "eigen"}
+        Flag indicating which strategy to use when performing leave-one-out
+        cross-validation for ridge regression.
+        See gcv_mode in sklearn.linear_model.RidgeCV for details.
+    **kwargs
+        Other Parameters are passed on to Ridge().
+    """
+
+    def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25), **kwargs):
+        super().__init__(Lasso(**kwargs), loo, alpha_grid, r_doubledot=None)
 
 
 def _trim_values(values, trim=None):
