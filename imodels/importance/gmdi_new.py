@@ -79,6 +79,7 @@ class ForestGMDI:
         self.is_fitted = False
         self.prediction_score_ = pd.DataFrame({})
         self.feature_importances_ = pd.DataFrame({})
+        self.feature_importances_by_tree_ = {}
 
     def get_scores(self, X, y):
         """
@@ -125,10 +126,13 @@ class ForestGMDI:
         scoring_fns = self.scoring_fns if isinstance(self.scoring_fns, dict) \
             else {"importance": self.scoring_fns}
         for fn_name, scoring_fn in scoring_fns.items():
-            self.feature_importances_[fn_name] = np.mean([scores[fn_name] for scores in all_scores], axis=0)
+            self.feature_importances_by_tree_[fn_name] = pd.concat([scores[fn_name] for scores in all_scores], axis=1)
+            self.feature_importances_by_tree_[fn_name].columns = np.arange(len(all_scores))
+            self.feature_importances_[fn_name] = np.mean(self.feature_importances_by_tree_[fn_name], axis=0)
             self.prediction_score_[fn_name] = [scoring_fn(y[~np.isnan(full_preds)], full_preds[~np.isnan(full_preds)])]
         if not isinstance(scoring_fns, dict):
             self.prediction_score_ = self.prediction_score_["importance"]
+            self.feature_importances_ = self.feature_importances_["importance"]
         if isinstance(X, pd.DataFrame):
             self.feature_importances_.index = X.columns
         self.feature_importances_.index.name = 'var'
