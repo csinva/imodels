@@ -130,7 +130,7 @@ class ForestGMDI:
             self.feature_importances_by_tree_[fn_name].columns = np.arange(len(all_scores))
             self.feature_importances_[fn_name] = np.mean(self.feature_importances_by_tree_[fn_name], axis=1)
             self.prediction_score_[fn_name] = [scoring_fn(y[~np.isnan(full_preds)], full_preds[~np.isnan(full_preds)])]
-        if list(self.scoring_fns.keys()) == ["importance"]:
+        if list(scoring_fns.keys()) == ["importance"]:
             self.prediction_score_ = self.prediction_score_["importance"]
             self.feature_importances_by_tree_ = self.feature_importances_by_tree_["importance"]
         if isinstance(X, pd.DataFrame):
