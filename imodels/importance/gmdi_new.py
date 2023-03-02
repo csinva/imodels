@@ -1,8 +1,11 @@
 import numpy as np
 import pandas as pd
+from scipy.spatial.distance import pdist
+from functools import partial
 
 from .ppms_new import PartialPredictionModelBase, GenericRegressorPPM, GenericClassifierPPM
 from .block_transformers_new import _blocked_train_test_split
+from .ranking_stability import tauAP_b, rbo
 
 
 class ForestGMDI:
@@ -100,6 +103,23 @@ class ForestGMDI:
         """
         self._fit_importance_scores(X, y)
         return self.feature_importances_
+
+    def get_stability_scores(self, B=10, metrics="auto"):
+        if metrics == "auto":
+            metrics = {"tauAP": partial(tauAP_b, decreasing=False), "RBO": partial(rbo, p=0.9, side="bottom")}
+        elif not isinstance(metrics, dict):
+            raise ValueError("`metrics` must be 'auto' or a dictionary "
+                             "where the key is the metric name and the value is the evaluation function")
+        n_trees = self.feature_importances_by_tree_.shape[1]
+        fi_scores_boot_ls = []
+        for b in range(B):
+            bootstrap_sample = np.random.choice(n_trees, n_trees, replace=True)
+            fi_scores_boot_ls.append(self.feature_importances_by_tree_[bootstrap_sample].mean(axis=1))
+        fi_scores_boot = pd.concat(fi_scores_boot_ls, axis=1)
+        stability_results = {}
+        for metric_name, metric_fun in metrics.items():
+            stability_results[metric_name] = [np.mean(pdist(fi_scores_boot.T, metric=metric_fun))]
+        return pd.DataFrame(stability_results)
 
     def _fit_importance_scores(self, X, y):
         all_scores = []

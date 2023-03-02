@@ -55,6 +55,7 @@ class _RandomForestPlus(BaseEstimator):
         self.estimators_ = []
         self._tree_random_states = []
         self.prediction_score_ = None
+        self.gmdi_ = None
         self.gmdi_scores_ = None
         self._n_samples_train = X.shape[0]
 
@@ -181,6 +182,11 @@ class _RandomForestPlus(BaseEstimator):
             self.gmdi_ = gmdi_obj
             self.gmdi_scores_ = gmdi_obj.get_scores(X, y)
         return self.gmdi_scores_
+
+    def get_gmdi_stability_scores(self, B=10, metrics="auto"):
+        if self.gmdi_ is None:
+            raise ValueError("Need to compute gmdi scores first using self.get_gmdi_scores(X, y)")
+        return self.gmdi_.get_stability_scores(B=B, metrics=metrics)
 
     def _get_pred_func(self):
         if hasattr(self.prediction_model, "predict_proba_loo"):
