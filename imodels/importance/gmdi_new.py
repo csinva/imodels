@@ -106,7 +106,7 @@ class ForestGMDI:
 
     def get_stability_scores(self, B=10, metrics="auto"):
         if metrics == "auto":
-            metrics = {"tauAP": partial(tauAP_b, decreasing=False), "RBO": partial(rbo, p=0.9, side="bottom")}
+            metrics = {"tauAP": tauAP_b, "RBO": partial(rbo, p=0.9)}
         elif not isinstance(metrics, dict):
             raise ValueError("`metrics` must be 'auto' or a dictionary "
                              "where the key is the metric name and the value is the evaluation function")
