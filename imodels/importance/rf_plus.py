@@ -8,11 +8,11 @@ from sklearn.metrics import r2_score, roc_auc_score, log_loss
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.preprocessing import OneHotEncoder
 
-from imodels.importance.block_transformers_new import GmdiDefaultTransformer, TreeTransformer, \
+from imodels.importance.block_transformers import GmdiDefaultTransformer, TreeTransformer, \
     CompositeTransformer, IdentityTransformer
-from imodels.importance.ppms_new import PartialPredictionModelBase, GlmClassifierPPM, \
+from imodels.importance.ppms import PartialPredictionModelBase, GlmClassifierPPM, \
     RidgeRegressorPPM, LogisticClassifierPPM
-from imodels.importance.gmdi_new import ForestGMDI, \
+from imodels.importance.gmdi import ForestGMDI, \
     _get_default_sample_split, _validate_sample_split, _get_sample_split_data
 
 
