@@ -17,6 +17,41 @@ from imodels.importance.gmdi_new import ForestGMDI, \
 
 
 class _RandomForestPlus(BaseEstimator):
+    """
+    The class object for the Random Forest Plus (RF+) estimator, which can
+    be used as a prediction model or interpreted via generalized
+    mean decrease in impurity (GMDI). For more details, refer to [paper].
+
+    Parameters
+    ----------
+    rf_model: scikit-learn random forest object or None
+        The RF model to be used to build RF+. If None, then a new
+        RandomForestRegressor() or RandomForestClassifier() is instantiated.
+    prediction_model: A PartialPredictionModelBase object, scikit-learn type estimator, or "auto"
+        The prediction model to be used for making (full and partial) predictions
+        using the block transformed data.
+        If value is set to "auto", then a default is chosen as follows:
+         - For RandomForestPlusRegressor, RidgeRegressorPPM is used.
+         - For RandomForestPlusClassifier, LogisticClassifierPPM is used.
+    sample_split: string in {"loo", "oob", "inbag"} or None
+        The sample splitting strategy to be used for fitting RF+. If "oob",
+        RF+ is trained on the out-of-bag data. If "inbag", RF+ is trained on the
+        in-bag data. Otherwise, RF+ is trained on the full training data.
+    include_raw: bool
+        Flag for whether to augment the local decision stump features extracted
+        from the RF model with the original features.
+    drop_features: bool
+        Flag for whether to use an intercept model for the partial predictions
+        on a given feature if a tree does not have any nodes that split on it,
+        or to use a model on the raw feature (if include_raw is True).
+    add_transformers: list of BlockTransformerBase objects or None
+        Additional block transformers (if any) to include in the RF+ model.
+    center: bool
+        Flag for whether to center the transformed data in the transformers.
+    normalize: bool
+        Flag for whether to rescale the transformed data to have unit
+        variance in the transformers.
+    """
 
     def __init__(self, rf_model=None, prediction_model=None, sample_split="auto",
                  include_raw=True, drop_features=True, add_transformers=None,
@@ -51,6 +86,22 @@ class _RandomForestPlus(BaseEstimator):
         _validate_sample_split(self.sample_split, prediction_model, self._is_ppm)
 
     def fit(self, X, y, sample_weight=None, **kwargs):
+        """
+        Fit (or train) Random Forest Plus (RF+) prediction model.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix.
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
+        sample_weight: array-like of shape (n_samples,) or None
+            Sample weights to use in random forest fit.
+            If None, samples are equally weighted.
+        **kwargs:
+            Additional arguments to pass to self.prediction_model.fit()
+
+        """
         self.transformers_ = []
         self.estimators_ = []
         self._tree_random_states = []
@@ -121,6 +172,20 @@ class _RandomForestPlus(BaseEstimator):
         self._full_preds = full_preds
 
     def predict(self, X):
+        """
+        Make predictions on new data using the fitted model.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix, for which to make predictions.
+
+        Returns
+        -------
+        y: ndarray of shape (n_samples,) or (n_samples, n_targets)
+            The predicted values
+
+        """
         X = check_array(X)
         check_is_fitted(self, "estimators_")
         if self._task == "regression":
@@ -137,6 +202,21 @@ class _RandomForestPlus(BaseEstimator):
         return predictions
 
     def predict_proba(self, X):
+        """
+        Predict class probabilities on new data using the fitted
+        (classification) model.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix, for which to make predictions.
+
+        Returns
+        -------
+        y: ndarray of shape (n_samples, n_classes)
+            The predicted class probabilities.
+
+        """
         X = check_array(X)
         check_is_fitted(self, "estimators_")
         if not hasattr(self.estimators_[0], "predict_proba"):
@@ -152,6 +232,46 @@ class _RandomForestPlus(BaseEstimator):
 
     def get_gmdi_scores(self, X=None, y=None,
                         scoring_fns="auto", sample_split="inherit", mode="keep_k"):
+        """
+        Obtain GMDI feature importances. Generalized mean decrease in impurity (GMDI)
+        is a flexible framework for computing RF feature importances. For more
+        details, refer to [paper].
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix. Generally should be the same X as that used for
+            fitting the RF+ prediction model. If a pd.DataFrame object is supplied, then
+            the column names are used in the output.
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses. Generally should be the same y as that used for
+            fitting the RF+ prediction model.
+        scoring_fns: a function or dict with functions as value and function name (str) as key or "auto"
+            The scoring functions used for evaluating the partial predictions.
+            If "auto", then a default is chosen as follows:
+             - For RandomForestPlusRegressor, then r-squared (_fast_r2_score) is used.
+             - For RandomForestPlusClassifier, then the negative log-loss (_neg_log_loss) is used.
+        sample_split: string in {"loo", "oob", "inbag", "inherit"} or None
+            The sample splitting strategy to be used when evaluating the partial
+            model predictions in GMDI. If "inherit" (default), uses the same sample splitting
+            strategy as used when fitting the RF+ prediction model. Assuming None or "loo" were used
+            as the sample splitting scheme for fitting the RF+ prediction model,
+            "loo" (leave-one-out) is strongly recommended here in GMDI as it overcomes
+            the known correlation and entropy biases suffered by MDI. "oob" (out-of-bag) can
+            also be used to overcome these biases. "inbag" is the sample splitting
+            strategy used by MDI. If None, no sample splitting is performed and the
+            full data set is used to evaluate the partial model predictions.
+        mode: string in {"keep_k", "keep_rest"}
+            Mode for the method. "keep_k" imputes the mean of each feature not
+            in block k when making a partial model prediction, while "keep_rest"
+            imputes the mean of each feature in block k. "keep_k" is strongly
+            recommended for computational considerations.
+
+        Returns
+        -------
+        scores: pd.DataFrame of shape (n_features, n_scoring_fns)
+            The GMDI feature importances.
+        """
         if X is None or y is None:
             if self.gmdi_scores_ is None:
                 raise ValueError("Need X and y as inputs.")
@@ -184,6 +304,38 @@ class _RandomForestPlus(BaseEstimator):
         return self.gmdi_scores_
 
     def get_gmdi_stability_scores(self, B=10, metrics="auto"):
+        """
+        Evaluate the stability of the GMDI feature importance rankings
+        across bootstrapped samples of trees. Can be used to select the GLM
+        and scoring metric in a data-driven manner, where the GLM and metric, which
+        yields the most stable feature rankings across bootstrapped samples is selected.
+
+        Parameters
+        ----------
+        B: int
+            Number of bootstrap samples.
+        metrics: "auto" or a dict with functions as value and function name (str) as key
+            Metric(s) used to evaluate the stability between two sets of feature importances.
+            If "auto", then the feature importance stability metrics are:
+                (1) Rank-based overlap (RBO) with p=0.9 (from "A Similarity Measure for
+                Indefinite Rankings" by Webber et al. (2010)). Intuitively, this metric gives
+                more weight to features with the largest importances, with most of the weight
+                going to the ~1/(1-p) features with the largest importances.
+                (2) A weighted kendall tau metric (tauAP_b from "The Treatment of Ties in
+                AP Correlation" by Urbano and Marrero (2017)), which also gives more weight
+                to the features with the largest importances, but uses a different weighting
+                scheme from RBO.
+            Note that these default metrics assume that a higher GMDI score indicates
+            greater importance and thus give more weight to these features with high
+            importance/ranks. If a lower GMDI score indicates higher importance, then invert
+            either these stability metrics or the GMDI scores before evaluating the stability.
+
+        Returns
+        -------
+        stability_results: pd.DataFrame of shape (n_features, n_metrics)
+            The stability scores of the GMDI feature rankings across bootstrapped samples.
+
+        """
         if self.gmdi_ is None:
             raise ValueError("Need to compute gmdi scores first using self.get_gmdi_scores(X, y)")
         return self.gmdi_.get_stability_scores(B=B, metrics=metrics)
@@ -201,14 +353,44 @@ class _RandomForestPlus(BaseEstimator):
 
 
 class RandomForestPlusRegressor(_RandomForestPlus, RegressorMixin):
+    """
+    The class object for the Random Forest Plus (RF+) regression estimator, which can
+    be used as a prediction model or interpreted via generalized
+    mean decrease in impurity (GMDI). For more details, refer to [paper].
+    """
     ...
 
 
 class RandomForestPlusClassifier(_RandomForestPlus, ClassifierMixin):
+    """
+    The class object for the Random Forest Plus (RF+) classification estimator, which can
+    be used as a prediction model or interpreted via generalized
+    mean decrease in impurity (GMDI). For more details, refer to [paper].
+    """
     ...
 
 
 def _fast_r2_score(y_true, y_pred, multiclass=False):
+    """
+    Evaluates the r-squared value between the observed and estimated responses.
+    Equivalent to sklearn.metrics.r2_score but without the robust error
+    checking, thus leading to a much faster implementation (at the cost of
+    this error checking). For multi-class responses, returns the mean
+    r-squared value across each column in the response matrix.
+
+    Parameters
+    ----------
+    y_true: array-like of shape (n_samples, n_targets)
+        Observed responses.
+    y_pred: array-like of shape (n_samples, n_targets)
+        Predicted responses.
+    multiclass: bool
+        Whether or not the responses are multi-class.
+
+    Returns
+    -------
+    Scalar quantity, measuring the r-squared value.
+    """
     numerator = ((y_true - y_pred) ** 2).sum(axis=0, dtype=np.float64)
     denominator = ((y_true - np.mean(y_true, axis=0)) ** 2). \
         sum(axis=0, dtype=np.float64)
@@ -219,4 +401,19 @@ def _fast_r2_score(y_true, y_pred, multiclass=False):
 
 
 def _neg_log_loss(y_true, y_pred):
+    """
+    Evaluates the negative log-loss between the observed and
+    predicted responses.
+
+    Parameters
+    ----------
+    y_true: array-like of shape (n_samples, n_targets)
+        Observed responses.
+    y_pred: array-like of shape (n_samples, n_targets)
+        Predicted probabilies.
+
+    Returns
+    -------
+    Scalar quantity, measuring the negative log-loss value.
+    """
     return -log_loss(y_true, y_pred)

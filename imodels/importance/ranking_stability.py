@@ -3,6 +3,28 @@ from scipy.stats import rankdata
 
 
 def tauAP_b(x, y, decreasing=True):
+    """
+    Weighted kendall tau correlation metric, which handles ties.
+    Proposed in "The Treatment of Ties in AP Correlation" by
+    Urbano and Marrero (2017). This is the python implementation
+    of ircor::tauAP_b from R.
+
+    Parameters
+    ----------
+    x: array-like of shape (n,)
+        Numeric vector.
+    y: array-like of shape (n,)
+        Numeric vector of same length as x.
+    decreasing: bool
+        Should the sort order be increasing or decreasing (default)?
+
+    Returns
+    -------
+    Scalar value between -1 and 1, quantifying how much the
+    rankings of x and y agree with each other. A higher
+    values indicates greater similarity.
+
+    """
     if decreasing:
         return tauAP_b(-x, -y, decreasing=False)
     else:
@@ -28,6 +50,36 @@ def _tauAP_b_ties(x, y):
 
 
 def rbo(s, t, p, k=None, side="top", uneven_lengths=True):
+    """
+    Rank-based overlap (RBO) metric.
+    Proposed in "A Similarity Measure for Indefinite Rankings" by
+    Webber et al. (2010). This is the python implementation
+    of gespeR::rbo from R.
+
+    Parameters
+    ----------
+    s: array-like of shape (n,)
+        Numeric vector.
+    t: array-like of shape (n,)
+        Numeric vector of same length as s.
+    p: float between 0 and 1
+        Weighting parameter in [0, 1]. High p implies strong emphasis
+        on the top-ranked elements (i.e, the larger elements).
+    k: None or int
+        Evaluation depth for extrapolation
+    side: string in {"top", "bottom"}
+        Evaluate similarity between the top or the bottom of the
+        ranked lists.
+    uneven_lengths: bool
+        Indicator if lists have uneven lengths.
+
+    Returns
+    -------
+    Scalar value between 0 and 1, quantifying how much the
+    rankings of x and y agree with each other. A higher
+    values indicates greater similarity.
+
+    """
     assert side in ["top", "bottom"]
     if k is None:
         k = int(np.floor(max(len(s), len(t)) / 2))

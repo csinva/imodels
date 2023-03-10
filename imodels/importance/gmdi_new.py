@@ -10,32 +10,25 @@ from .ranking_stability import tauAP_b, rbo
 
 class ForestGMDI:
     """
-    The class object for computing GMDI feature importances. Generalized mean
-    decrease in impurity (GMDI) is a flexible framework for computing RF
+    The class object for computing GMDI feature importances for a forest or collection of trees.
+    Generalized mean decrease in impurity (GMDI) is a flexible framework for computing RF
     feature importances. For more details, refer to [paper].
 
     Parameters
     ----------
-    rf_model: scikit-learn random forest object or None
-        The RF model to be used for interpretation. If None, then a new
-        RandomForestRegressor or RandomForestClassifier is instantiated with
-        **kwargs, depending on the task flag.
-    prediction_model: A PartialPredictionModelBase object or "auto"
-        The partial prediction model to be used for computing partial
-        predictions.
-        If value is set to "auto", then a default is chosen as follows:
-         - If task is set to "regression", then RidgePPM is used.
-         - If task is set to "classification", then LogisticPPM is used.
-    scoring_fns: function or dict with functions as values or "auto"
+    estimators: list of fitted PartialPredictionModelBase objects or scikit-learn type estimators
+        The fitted partial prediction models (one per tree) to use for evaluating
+        feature importance via GMDI. If not a PartialPredictionModelBase, then
+        the estimator is coerced into a PartialPredictionModelBase object via
+        GenericRegressorPPM or GenericClassifierPPM depending on the specified
+        task. Note that these generic PPMs may be computationally expensive.
+    transformers: list of BlockTransformerBase objects
+        The block feature transformers used to generate blocks of engineered
+        features for each original feature. The transformed data is then used
+        as input into the partial prediction models. Should be the same length
+        as estimators.
+    scoring_fns: a function or dict with functions as value and function name (str) as key
         The scoring functions used for evaluating the partial predictions.
-        If "auto", then a default is chosen as follows:
-         - If task is set to "regression", then r2_score is used.
-         - If task is set to "classification", then log_loss is used.
-    mode: string in {"keep_k", "keep_rest"}
-        Mode for the method. "keep_k" imputes the mean of each feature not
-        in block k when making a partial model prediction, while "keep_rest"
-        imputes the mean of each feature in block k. "keep_k" is strongly
-        recommended for computational considerations.
     sample_split: string in {"loo", "oob", "inbag"} or None
         The sample splitting strategy to be used when evaluating the partial
         model predictions. The default "loo" (leave-one-out) is strongly
@@ -44,22 +37,24 @@ class ForestGMDI:
         also be used to overcome these biases. "inbag" is the sample splitting
         strategy used by MDI. If None, no sample splitting is performed and the
         full data set is used to evaluate the partial model predictions.
-    include_raw: bool
-        Flag for whether to augment the local decision stump features extracted
-        from the RF model with the original features.
-    drop_features: bool
-        Flag for whether to use an intercept model for the partial predictions
-        on a given feature if a tree does not have any nodes that split on it,
-        or to use a model on the raw feature (if include_raw is True).
-    refit_rf: bool
-        Flag for whether to refit the supplied RF model when fitting the GMDI
-        feature importances.
-    store_prediction_model: bool
-        Flag for whether to store fitted RF+ prediction model
+    tree_random_states: list of int or None
+        Random states from each tree in the fitted random forest; used in
+        sample splitting and only required if sample_split = "oob" or "inbag".
+        Should be the same length as estimators.
+    mode: string in {"keep_k", "keep_rest"}
+        Mode for the method. "keep_k" imputes the mean of each feature not
+        in block k when making a partial model prediction, while "keep_rest"
+        imputes the mean of each feature in block k. "keep_k" is strongly
+        recommended for computational considerations.
     task: string in {"regression", "classification"}
         The supervised learning task for the RF model. Used for choosing
-        defaults for prediction_model and scoring_fns. Currently only
-        regression and classification are supported.
+        defaults for the scoring_fns. Currently only regression and
+        classification are supported.
+    center: bool
+        Flag for whether to center the transformed data in the transformers.
+    normalize: bool
+        Flag for whether to rescale the transformed data to have unit
+        variance in the transformers.
     """
 
     def __init__(self, estimators, transformers, scoring_fns,
@@ -86,7 +81,7 @@ class ForestGMDI:
 
     def get_scores(self, X, y):
         """
-        Obtain the GMDI feature importances.
+        Obtain the GMDI feature importances for a forest.
 
         Parameters
         ----------
@@ -105,8 +100,40 @@ class ForestGMDI:
         return self.feature_importances_
 
     def get_stability_scores(self, B=10, metrics="auto"):
+        """
+        Evaluate the stability of the GMDI feature importance rankings
+        across bootstrapped samples of trees. Can be used to select the GLM
+        and scoring metric in a data-driven manner, where the GLM and metric that
+        yields the most stable feature rankings across bootstrapped samples is selected.
+
+        Parameters
+        ----------
+        B: int
+            Number of bootstrap samples.
+        metrics: "auto" or a dict with functions as value and function name (str) as key
+            Metric(s) used to evaluate the stability between two sets of feature importances.
+            If "auto", then the feature importance stability metrics are:
+                (1) Rank-based overlap (RBO) with p=0.9 (from "A Similarity Measure for
+                Indefinite Rankings" by Webber et al. (2010)). Intuitively, this metric gives
+                more weight to features with the largest importances, with most of the weight
+                going to the ~1/(1-p) features with the largest importances.
+                (2) A weighted kendall tau metric (tauAP_b from "The Treatment of Ties in
+                AP Correlation" by Urbano and Marrero (2017)), which also gives more weight
+                to the features with the largest importances, but uses a different weighting
+                scheme from RBO.
+            Note that these default metrics assume that a higher GMDI score indicates
+            greater importance and thus give more weight to these features with high
+            importance/ranks. If a lower GMDI score indicates higher importance, then invert
+            either these stability metrics or the GMDI scores before evaluating the stability.
+
+        Returns
+        -------
+        stability_results: pd.DataFrame of shape (n_features, n_metrics)
+            The stability scores of the GMDI feature rankings across bootstrapped samples.
+
+        """
         if metrics == "auto":
-            metrics = {"tauAP": tauAP_b, "RBO": partial(rbo, p=0.9)}
+            metrics = {"RBO": partial(rbo, p=0.9), "tauAP": tauAP_b}
         elif not isinstance(metrics, dict):
             raise ValueError("`metrics` must be 'auto' or a dictionary "
                              "where the key is the metric name and the value is the evaluation function")
@@ -162,27 +189,24 @@ class ForestGMDI:
 
 class TreeGMDI:
     """
-    A class that is primarily used by GMDI for fitting the GMDI scores for
-    a single tree in the RF. This class can also be used for further extensions
-    of the GMDI framework by supplying block transformers that provide
-    other types of feature engineering.
+    The class object for computing GMDI feature importances for a single tree.
+    Generalized mean decrease in impurity (GMDI) is a flexible framework for computing RF
+    feature importances. For more details, refer to [paper].
 
     Parameters
     ----------
-    transformer: A BlockTransformerBase object
+    estimator: a fitted PartialPredictionModelBase object or scikit-learn type estimator
+        The fitted partial prediction model to use for evaluating
+        feature importance via GMDI. If not a PartialPredictionModelBase, then
+        the estimator is coerced into a PartialPredictionModelBase object via
+        GenericRegressorPPM or GenericClassifierPPM depending on the specified
+        task. Note that these generic PPMs may be computationally expensive.
+    transformer: a BlockTransformerBase object
         A block feature transformer used to generate blocks of engineered
-        features for each original feature. GMDI is computed by evaluating
-        partial models on these blocks.
-    prediction_model: A PartialPredictionModelBase object
-        The partial prediction model to be used for computing partial
-        predictions.
-    scoring_fns: function or dict with functions as values
+        features for each original feature. The transformed data is then used
+        as input into the partial prediction models.
+    scoring_fns: a function or dict with functions as value and function name (str) as key
         The scoring functions used for evaluating the partial predictions.
-    mode: string in {"keep_k", "keep_rest"}
-        Mode for the method. "keep_k" imputes the mean of each feature not
-        in block k when making a partial model prediction, while "keep_rest"
-        imputes the mean of each feature in block k. "keep_k" is strongly
-        recommended for computational considerations.
     sample_split: string in {"loo", "oob", "inbag"} or None
         The sample splitting strategy to be used when evaluating the partial
         model predictions. The default "loo" (leave-one-out) is strongly
@@ -191,13 +215,23 @@ class TreeGMDI:
         also be used to overcome these biases. "inbag" is the sample splitting
         strategy used by MDI. If None, no sample splitting is performed and the
         full data set is used to evaluate the partial model predictions.
-    store_prediction_model: bool
-        Flag for whether to store fitted RF+ prediction model
+    tree_random_state: int or None
+        Random state of the fitted tree; used in sample splitting and
+        only required if sample_split = "oob" or "inbag".
+    mode: string in {"keep_k", "keep_rest"}
+        Mode for the method. "keep_k" imputes the mean of each feature not
+        in block k when making a partial model prediction, while "keep_rest"
+        imputes the mean of each feature in block k. "keep_k" is strongly
+        recommended for computational considerations.
+    task: string in {"regression", "classification"}
+        The supervised learning task for the RF model. Used for choosing
+        defaults for the scoring_fns. Currently only regression and
+        classification are supported.
     center: bool
-        Flag for whether to center the engineered features.
+        Flag for whether to center the transformed data in the transformers.
     normalize: bool
-        Flag for whether to rescale the engineered features to have unit
-        variance.
+        Flag for whether to rescale the transformed data to have unit
+        variance in the transformers.
     """
 
     def __init__(self, estimator, transformer, scoring_fns,
@@ -225,7 +259,7 @@ class TreeGMDI:
 
     def get_scores(self, X, y):
         """
-        Obtain the GMDI feature importances.
+        Obtain the GMDI feature importances for a single tree.
 
         Parameters
         ----------

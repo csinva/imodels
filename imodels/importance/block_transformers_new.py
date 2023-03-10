@@ -175,6 +175,25 @@ class BlockPartitionedData:
         return all_data
 
     def train_test_split(self, train_indices, test_indices):
+        """
+        Split the data intro training and test partitions given the
+        training and test indices. Return the training and test
+        block partitioned data objects.
+
+        Parameters
+        ----------
+        train_indices: array-like of shape (n_train_samples,)
+            The indices corresponding to the training samples
+        test_indices: array-like of shape (n_test_samples,)
+            The indices corresponding to the training samples
+
+        Returns
+        -------
+        train_blocked_data: BlockPartitionedData
+            Returns the training block partitioned data set
+        test_blocked_data: BlockPartitionedData
+            Returns the test block partitioned data set
+        """
         train_blocks = [self.get_block(k)[train_indices, :] for
                         k in range(self.n_blocks)]
         train_blocked_data = BlockPartitionedData(train_blocks)
@@ -200,23 +219,37 @@ class BlockTransformerBase(ABC):
         self.is_fitted = False
 
     def fit(self, X):
+        """
+        Fit (or train) the block transformer using the data matrix X.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be used in training
+        """
         for k in range(X.shape[1]):
             self._fit_one_feature(X, k)
         self.is_fitted = True
 
     def check_is_fitted(self):
+        """
+        Check if the transformer has been fitted. Returns an error if not
+        previously fitted.
+        """
         if not self.is_fitted:
             raise AttributeError("Transformer has not yet been fitted.")
 
     def transform_one_feature(self, X, k, center=True, normalize=False):
         """
         Obtain a block of engineered features associated with the original
-        feature with index k.
+        feature with index k using the (previously) fitted transformer.
 
         Parameters
         ----------
         X: ndarray
             The data matrix to be transformed
+        k: int
+            Index of feature in X to be transformed
         center: bool
             Flag for whether to center the transformed data
         normalize: bool
@@ -228,7 +261,6 @@ class BlockTransformerBase(ABC):
         data_block: ndarray
             The block of engineered features associated with the original
             feature with index k.
-
         """
         data_block = self._transform_one_feature(X, k)
         data_block = self._center_and_normalize(data_block, k, center, normalize)
@@ -237,7 +269,8 @@ class BlockTransformerBase(ABC):
     def transform(self, X, center=True, normalize=False):
         """
         Transform a data matrix into a BlockPartitionedData object comprising
-        one block for each original feature in X
+        one block for each original feature in X using the (previously) fitted
+        trasnformer.
 
         Parameters
         ----------
@@ -262,11 +295,53 @@ class BlockTransformerBase(ABC):
         return blocked_data
 
     def fit_transform_one_feature(self, X, k, center=True, normalize=False):
+        """
+        Fit the transformer and obtain a block of engineered features associated with
+        the original feature with index k using this fitted transformer.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be fitted and transformed
+        k: int
+            Index of feature in X to be fitted and transformed
+        center: bool
+            Flag for whether to center the transformed data
+        normalize: bool
+            Flag for whether to rescale the transformed data to have unit
+            variance
+
+        Returns
+        -------
+        data_block: ndarray
+            The block of engineered features associated with the original
+            feature with index k.
+        """
         data_block = self._fit_transform_one_feature(X, k)
         data_block = self._center_and_normalize(data_block, k, center, normalize)
         return data_block
 
     def fit_transform(self, X, center=True, normalize=False):
+        """
+        Fit the transformer and transform a data matrix into a BlockPartitionedData
+        object comprising one block for each original feature in X using this
+        fitted transformer.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be transformed
+        center: bool
+            Flag for whether to center the transformed data
+        normalize: bool
+            Flag for whether to rescale the transformed data to have unit
+            variance
+
+        Returns
+        -------
+        blocked_data: BlockPartitionedData object
+            The transformed data
+        """
         n_features = X.shape[1]
         data_blocks = [self.fit_transform_one_feature(X, k, center, normalize) for
                        k in range(n_features)]

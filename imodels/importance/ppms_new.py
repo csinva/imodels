@@ -32,23 +32,14 @@ class PartialPredictionModelBase(ABC):
 
     def fit(self, X, y):
         """
-        Fit the partial predictions model. The regression or classification
-        model is fit on the training data, and then the predictions are made
-        and scored on the test data. Test and training data can be the same.
+        Fit the partial prediction model.
 
         Parameters
         ----------
-        train_blocked_data: BlockPartitionedData object
-            Training covariate data
-        y_train: ndarray of shape (n_samples, n_targets)
-            Training response data
-        test_blocked_data: BlockPartitionedData object
-            Test covariate data
-        y_test: ndarray of shape (n_samples, n_targets)
-            Training response data
-        mode: string in {"keep_k", "keep_rest"}
-            Mode for the method. "keep_k" imputes the mean of each feature not
-            in block k, "keep_rest" imputes the mean of each feature in block k
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix.
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
         """
         self._fit_model(X, y)
         self.is_fitted = True
@@ -57,22 +48,77 @@ class PartialPredictionModelBase(ABC):
     def _fit_model(self, X, y):
         """
         Fit the regression or classification model on all the data.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix.
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
         """
         pass
 
     @abstractmethod
     def predict(self, X):
+        """
+        Make predictions on new data using the fitted model.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix, for which to make predictions.
+        """
         pass
 
     @abstractmethod
     def predict_full(self, blocked_data):
+        """
+        Make predictions using all the data based upon the fitted model.
+        Used to make full predictions in GMDI.
+
+        Parameters
+        ----------
+        blocked_data: BlockPartitionedData object
+            The block partitioned covariate data, for which to make predictions.
+        """
         pass
 
     @abstractmethod
     def predict_partial_k(self, blocked_data, k, mode):
+        """
+        Make predictions on modified copies of the data based on the fitted model,
+        for a particular feature k of interest. Used to get partial predictions
+        for feature k in GMDI.
+
+        Parameters
+        ----------
+        blocked_data: BlockPartitionedData object
+            The block partitioned covariate data, for which to make predictions.
+        k: int
+            Index of feature in X of interest.
+        mode: string in {"keep_k", "keep_rest"}
+            Mode for the method. "keep_k" imputes the mean of each feature not
+            in block k, "keep_rest" imputes the mean of each feature in block k
+        """
         pass
 
     def predict_partial(self, blocked_data, mode):
+        """
+        Make predictions on modified copies of the data based on the fitted model,
+        for each feature under study. Used to get partial predictions in GMDI.
+
+        Parameters
+        ----------
+        blocked_data: BlockPartitionedData object
+            The block partitioned covariate data, for which to make predictions.
+        mode: string in {"keep_k", "keep_rest"}
+            Mode for the method. "keep_k" imputes the mean of each feature not
+            in block k, "keep_rest" imputes the mean of each feature in block k
+
+        Returns
+        -------
+        List of length n_features of partial predictions for each feature.
+        """
         n_blocks = blocked_data.n_blocks
         partial_preds = {}
         for k in range(n_blocks):
@@ -103,12 +149,15 @@ class _GenericPPM(PartialPredictionModelBase, ABC):
 
 
 class GenericRegressorPPM(_GenericPPM, PartialPredictionModelBase, ABC):
+    """
+    Partial prediction model for arbitrary regression estimators. May be slow.
+    """
     ...
 
 
 class GenericClassifierPPM(_GenericPPM, PartialPredictionModelBase, ABC):
     """
-    Partial prediction model for arbitrary estimators. May be slow.
+    Partial prediction model for arbitrary classification estimators. May be slow.
     """
 
     def predict_proba(self, X):
@@ -319,10 +368,16 @@ class _GlmPPM(PartialPredictionModelBase, ABC):
 
 
 class GlmRegressorPPM(_GlmPPM, PartialPredictionModelBase, ABC):
+    """
+    PPM class for GLM regression estimator.
+    """
     ...
 
 
 class GlmClassifierPPM(_GlmPPM, PartialPredictionModelBase, ABC):
+    """
+    PPM class for GLM classification estimator.
+    """
 
     def predict_proba(self, X):
         probs = self.predict(X)
@@ -370,11 +425,17 @@ class _RidgePPM(_GlmPPM, PartialPredictionModelBase, ABC):
 
 class RidgeRegressorPPM(_RidgePPM, GlmRegressorPPM,
                         PartialPredictionModelBase, ABC):
+    """
+    PPM class for regression that uses ridge as the GLM estimator.
+    """
     ...
 
 
 class RidgeClassifierPPM(_RidgePPM, GlmClassifierPPM,
                          PartialPredictionModelBase, ABC):
+    """
+    PPM class for classification that uses ridge as the GLM estimator.
+    """
 
     def predict_proba(self, X):
         probs = softmax(self.predict(X))
@@ -391,7 +452,7 @@ class RidgeClassifierPPM(_RidgePPM, GlmClassifierPPM,
 
 class LogisticClassifierPPM(GlmClassifierPPM, PartialPredictionModelBase, ABC):
     """
-    PPM class that uses logistic regression as the estimator.
+    PPM class for classification that uses logistic regression as the estimator.
 
     Parameters
     ----------
@@ -426,7 +487,7 @@ class LogisticClassifierPPM(GlmClassifierPPM, PartialPredictionModelBase, ABC):
 
 class RobustRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
     """
-    PPM class that uses Huber robust regression as the estimator.
+    PPM class for regression that uses Huber robust regression as the estimator.
 
     Parameters
     ----------
@@ -455,7 +516,7 @@ class RobustRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
 
 class LassoRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
     """
-    PPM class that uses lasso as the estimator.
+    PPM class for regression that uses lasso as the estimator.
 
     Parameters
     ----------
@@ -463,12 +524,8 @@ class LassoRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
         Flag for whether to also use LOO calculations for making predictions.
     alpha_grid: ndarray of shape (n_alphas, )
         The grid of alpha values for hyperparameter optimization.
-    gcv_mode: string in {"auto", "svd", "eigen"}
-        Flag indicating which strategy to use when performing leave-one-out
-        cross-validation for ridge regression.
-        See gcv_mode in sklearn.linear_model.RidgeCV for details.
     **kwargs
-        Other Parameters are passed on to Ridge().
+        Other Parameters are passed on to Lasso().
     """
 
     def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25), **kwargs):
@@ -520,6 +577,25 @@ def _get_preds(data_block, coefs, inv_link_fn, intercept=None):
 
 
 def huber_loss(y, preds, epsilon=1.35):
+    """
+    Evaluates Huber loss function.
+
+    Parameters
+    ----------
+    y: array-like of shape (n,)
+        Vector of observed responses.
+    preds: array-like of shape (n,)
+        Vector of estimated/predicted responses.
+    epsilon: float
+        Threshold, determining transition between squared
+        and absolute loss in Huber loss function.
+
+    Returns
+    -------
+    Scalar value, quantifying the Huber loss. Lower loss
+    indicates better fit.
+
+    """
     total_loss = 0
     for i in range(len(y)):
         sample_absolute_error = np.abs(y[i] - preds[i])
