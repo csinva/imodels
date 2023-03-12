@@ -7,10 +7,8 @@ Currently only supports binary classification.
 import math
 from copy import deepcopy
 
-import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_X_y
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.tree import DecisionTreeClassifier
@@ -101,7 +99,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                 'col': self.feature_names_[col],
                 'index_col': col,
                 'cutoff': cutoff,
-                'val': np.mean(y),  # values before splitting
+                'val': np.mean(y_left),  # will be the values before splitting in the next lower level
                 'flip': flip,
                 'val_right': np.mean(y_right),
                 'num_pts': y.size,
@@ -128,7 +126,11 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             for j, rule in enumerate(self.rules_):
                 if j == len(self.rules_) - 1:
                     probs[i] = rule['val']
-                elif x[rule['index_col']] >= rule['cutoff']:
+                    continue
+                regular_condition = x[rule["index_col"]] >= rule["cutoff"]
+                flipped_condition = x[rule["index_col"]] < rule["cutoff"]
+                condition = flipped_condition if rule["flip"] else regular_condition
+                if condition:
                     probs[i] = rule['val_right']
                     break
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
