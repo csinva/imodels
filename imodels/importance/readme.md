@@ -42,7 +42,7 @@ gmdi_scores = rf_plus_model.get_gmdi_scores(X, y)
 
 For each fitted tree in the forest:
 
-1. Transform `X` using the tree stump features from the fitted tree, and append any additional engineered features (e.g., the raw `X` features) to this transformed dataset.
+1. Transform `X` using the learnt "stump" features from the fitted tree, and append any additional engineered features (e.g., the raw `X` features) to this transformed dataset.
 
 2. Fit a prediction model on this augmented transformed dataset to predict `y`. Here, we recommend fitting a generalized linear model (GLM) to leverage computational speed-ups.
 
@@ -52,25 +52,25 @@ For each fitted tree in the forest:
 
 This gives the GMDI scores for a single tree. To get the GMDI scores for the forest, these scores are averaged across all trees in the forest. 
 
-<p align="center">
+<!-- <p align="center">
 	<img src="" width="80%">
 </p>  
 <p align="center">	
 	<i>Overview of GMDI.</i>
-</p>
+</p> -->
 
 ## Practical Considerations
 
 We show in [Agarwal et al. (2023)]() that this framework is indeed a proper generalization of the popular MDI feature importance score. However, as a result of the increased flexibility provided by GMDI, there are several choices that must be made by the analyst to run GMDI in practice. In particular,
 
 1. In Step 1: What feature engineering/transformations to include?
-	- We recommend including the raw feature (i.e., `X`) in this transformed dataset, which is done by default (via `RandomForestPlus*(include_raw=True)`). To include additional transformations, create custom `BlockTransformerBase` object(s) and use the `add_transformers` argument in `RandomForestPlus*()`.
+	- We recommend including the raw feature (i.e., `X`) in this transformed dataset. This is done by default via `RandomForestPlus*(include_raw=True)`. To include additional transformations, create custom `BlockTransformerBase` object(s) and use the `add_transformers` argument in `RandomForestPlus*()`.
 
 2. In Step 2: Which GLM?
 	- We recommend using `RidgeRegressorPPM()` for regression tasks and `LogisticClassifierPPM()` for classification tasks and thus set these to be the defaults. To use a custom prediction model, use the `prediction_model` argument in `RandomForestPlus*()`.
 
 3. In Step 3: Which sample splitting strategy (if any) to use when making the partial model predictions?
-	- We recommend using a leave-one-out (`"loo"`) sample splitting strategy as it overcomes the known correlation and entropy biases suffered by MDI. Out-of-bag (`"oob"`) can also be used to overcome these biases but tends to be more unstable than leave-one-out. MDI uses an in-bag sample splitting scheme and is not recommended. The sample splitting strategy is set to `"loo"` by default but can be changed via the `sample_split` argument in `RandomForestPlus*()`.
+	- We recommend using a leave-one-out (`"loo"`) sample splitting strategy as it overcomes the known correlation and entropy biases suffered by MDI. Out-of-bag (`"oob"`) can also be used to overcome these biases but tends to be more unstable than leave-one-out across different random forest fits. MDI uses an in-bag sample splitting scheme and is not recommended. The sample splitting strategy is set to `"loo"` by default but can be changed via the `sample_split` argument in `RandomForestPlus*()`.
 
 4. In Step 4: Which similarity metric to use?
 	- We recommend using r-squared for regression tasks and log-loss for classification tasks, which are the defaults. To use a custom metric, use the `scoring_fns` argument in the `get_gmdi_scores()` method.
