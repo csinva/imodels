@@ -8,17 +8,17 @@ from .block_transformers import _blocked_train_test_split
 from .ranking_stability import tauAP_b, rbo
 
 
-class ForestGMDI:
+class ForestMDIPlus:
     """
-    The class object for computing GMDI feature importances for a forest or collection of trees.
-    Generalized mean decrease in impurity (GMDI) is a flexible framework for computing RF
+    The class object for computing MDI+ feature importances for a forest or collection of trees.
+    Generalized mean decrease in impurity (MDI+) is a flexible framework for computing RF
     feature importances. For more details, refer to [paper].
 
     Parameters
     ----------
     estimators: list of fitted PartialPredictionModelBase objects or scikit-learn type estimators
         The fitted partial prediction models (one per tree) to use for evaluating
-        feature importance via GMDI. If not a PartialPredictionModelBase, then
+        feature importance via MDI+. If not a PartialPredictionModelBase, then
         the estimator is coerced into a PartialPredictionModelBase object via
         GenericRegressorPPM or GenericClassifierPPM depending on the specified
         task. Note that these generic PPMs may be computationally expensive.
@@ -81,7 +81,7 @@ class ForestGMDI:
 
     def get_scores(self, X, y):
         """
-        Obtain the GMDI feature importances for a forest.
+        Obtain the MDI+ feature importances for a forest.
 
         Parameters
         ----------
@@ -94,14 +94,14 @@ class ForestGMDI:
         Returns
         -------
         scores: pd.DataFrame of shape (n_features, n_scoring_fns)
-            The GMDI feature importances.
+            The MDI+ feature importances.
         """
         self._fit_importance_scores(X, y)
         return self.feature_importances_
 
     def get_stability_scores(self, B=10, metrics="auto"):
         """
-        Evaluate the stability of the GMDI feature importance rankings
+        Evaluate the stability of the MDI+ feature importance rankings
         across bootstrapped samples of trees. Can be used to select the GLM
         and scoring metric in a data-driven manner, where the GLM and metric that
         yields the most stable feature rankings across bootstrapped samples is selected.
@@ -121,15 +121,15 @@ class ForestGMDI:
                 AP Correlation" by Urbano and Marrero (2017)), which also gives more weight
                 to the features with the largest importances, but uses a different weighting
                 scheme from RBO.
-            Note that these default metrics assume that a higher GMDI score indicates
+            Note that these default metrics assume that a higher MDI+ score indicates
             greater importance and thus give more weight to these features with high
-            importance/ranks. If a lower GMDI score indicates higher importance, then invert
-            either these stability metrics or the GMDI scores before evaluating the stability.
+            importance/ranks. If a lower MDI+ score indicates higher importance, then invert
+            either these stability metrics or the MDI+ scores before evaluating the stability.
 
         Returns
         -------
         stability_results: pd.DataFrame of shape (n_features, n_metrics)
-            The stability scores of the GMDI feature rankings across bootstrapped samples.
+            The stability scores of the MDI+ feature rankings across bootstrapped samples.
 
         """
         if metrics == "auto":
@@ -139,7 +139,7 @@ class ForestGMDI:
                              "where the key is the metric name and the value is the evaluation function")
         single_scoring_fn = not isinstance(self.feature_importances_by_tree_, dict)
         if single_scoring_fn:
-            feature_importances_dict = {"gmdi_score": self.feature_importances_by_tree_}
+            feature_importances_dict = {"mdi_plus_score": self.feature_importances_by_tree_}
         else:
             feature_importances_dict = self.feature_importances_by_tree_
         stability_dict = {}
@@ -164,19 +164,19 @@ class ForestGMDI:
         all_full_preds = []
         for estimator, transformer, tree_random_state in \
                 zip(self.estimators, self.transformers, self.tree_random_states):
-            tree_gmdi = TreeGMDI(estimator=estimator,
-                                 transformer=transformer,
-                                 scoring_fns=self.scoring_fns,
-                                 sample_split=self.sample_split,
-                                 tree_random_state=tree_random_state,
-                                 mode=self.mode,
-                                 task=self.task,
-                                 center=self.center,
-                                 normalize=self.normalize)
-            scores = tree_gmdi.get_scores(X, y)
+            tree_mdi_plus = TreeMDIPlus(estimator=estimator,
+                                        transformer=transformer,
+                                        scoring_fns=self.scoring_fns,
+                                        sample_split=self.sample_split,
+                                        tree_random_state=tree_random_state,
+                                        mode=self.mode,
+                                        task=self.task,
+                                        center=self.center,
+                                        normalize=self.normalize)
+            scores = tree_mdi_plus.get_scores(X, y)
             if scores is not None:
                 all_scores.append(scores)
-                all_full_preds.append(tree_gmdi._full_preds)
+                all_full_preds.append(tree_mdi_plus._full_preds)
         if len(all_scores) == 0:
             raise ValueError("Transformer representation was empty for all trees.")
         full_preds = np.nanmean(all_full_preds, axis=0)
@@ -198,17 +198,17 @@ class ForestGMDI:
         self.is_fitted = True
 
 
-class TreeGMDI:
+class TreeMDIPlus:
     """
-    The class object for computing GMDI feature importances for a single tree.
-    Generalized mean decrease in impurity (GMDI) is a flexible framework for computing RF
+    The class object for computing MDI+ feature importances for a single tree.
+    Generalized mean decrease in impurity (MDI+) is a flexible framework for computing RF
     feature importances. For more details, refer to [paper].
 
     Parameters
     ----------
     estimator: a fitted PartialPredictionModelBase object or scikit-learn type estimator
         The fitted partial prediction model to use for evaluating
-        feature importance via GMDI. If not a PartialPredictionModelBase, then
+        feature importance via MDI+. If not a PartialPredictionModelBase, then
         the estimator is coerced into a PartialPredictionModelBase object via
         GenericRegressorPPM or GenericClassifierPPM depending on the specified
         task. Note that these generic PPMs may be computationally expensive.
@@ -270,7 +270,7 @@ class TreeGMDI:
 
     def get_scores(self, X, y):
         """
-        Obtain the GMDI feature importances for a single tree.
+        Obtain the MDI+ feature importances for a single tree.
 
         Parameters
         ----------
@@ -283,7 +283,7 @@ class TreeGMDI:
         Returns
         -------
         scores: pd.DataFrame of shape (n_features, n_scoring_fns)
-            The GMDI feature importances.
+            The MDI+ feature importances.
         """
         self._fit_importance_scores(X, y)
         return self.feature_importances_

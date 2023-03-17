@@ -8,11 +8,11 @@ from sklearn.metrics import r2_score, roc_auc_score, log_loss
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.preprocessing import OneHotEncoder
 
-from imodels.importance.block_transformers import GmdiDefaultTransformer, TreeTransformer, \
+from imodels.importance.block_transformers import MDIPlusDefaultTransformer, TreeTransformer, \
     CompositeTransformer, IdentityTransformer
 from imodels.importance.ppms import PartialPredictionModelBase, GlmClassifierPPM, \
     RidgeRegressorPPM, LogisticClassifierPPM
-from imodels.importance.gmdi import ForestGMDI, \
+from imodels.importance.mdi_plus import ForestMDIPlus, \
     _get_default_sample_split, _validate_sample_split, _get_sample_split_data
 
 
@@ -20,7 +20,7 @@ class _RandomForestPlus(BaseEstimator):
     """
     The class object for the Random Forest Plus (RF+) estimator, which can
     be used as a prediction model or interpreted via generalized
-    mean decrease in impurity (GMDI). For more details, refer to [paper].
+    mean decrease in impurity (MDI+). For more details, refer to [paper].
 
     Parameters
     ----------
@@ -106,8 +106,8 @@ class _RandomForestPlus(BaseEstimator):
         self.estimators_ = []
         self._tree_random_states = []
         self.prediction_score_ = None
-        self.gmdi_ = None
-        self.gmdi_scores_ = None
+        self.mdi_plus_ = None
+        self.mdi_plus_scores_ = None
         self._n_samples_train = X.shape[0]
 
         # fit random forest
@@ -126,7 +126,7 @@ class _RandomForestPlus(BaseEstimator):
             # get transformer
             if self.add_transformers is None:
                 if self.include_raw:
-                    transformer = GmdiDefaultTransformer(tree_model, drop_features=self.drop_features)
+                    transformer = MDIPlusDefaultTransformer(tree_model, drop_features=self.drop_features)
                 else:
                     transformer = TreeTransformer(tree_model)
             else:
@@ -151,7 +151,7 @@ class _RandomForestPlus(BaseEstimator):
                 # get full predictions
                 pred_func = self._get_pred_func()
                 full_preds = pred_func(test_blocked_data.get_all_data())
-                full_preds_n = np.empty(n_samples) if full_preds.ndim == 1\
+                full_preds_n = np.empty(n_samples) if full_preds.ndim == 1 \
                     else np.empty((n_samples, full_preds.shape[1]))
                 full_preds_n[:] = np.nan
                 full_preds_n[test_indices] = full_preds
@@ -230,10 +230,10 @@ class _RandomForestPlus(BaseEstimator):
         predictions = predictions / len(self.estimators_)
         return predictions
 
-    def get_gmdi_scores(self, X=None, y=None,
-                        scoring_fns="auto", sample_split="inherit", mode="keep_k"):
+    def get_mdi_plus_scores(self, X=None, y=None,
+                            scoring_fns="auto", sample_split="inherit", mode="keep_k"):
         """
-        Obtain GMDI feature importances. Generalized mean decrease in impurity (GMDI)
+        Obtain MDI+ feature importances. Generalized mean decrease in impurity (MDI+)
         is a flexible framework for computing RF feature importances. For more
         details, refer to [paper].
 
@@ -253,10 +253,10 @@ class _RandomForestPlus(BaseEstimator):
              - For RandomForestPlusClassifier, then the negative log-loss (_neg_log_loss) is used.
         sample_split: string in {"loo", "oob", "inbag", "inherit"} or None
             The sample splitting strategy to be used when evaluating the partial
-            model predictions in GMDI. If "inherit" (default), uses the same sample splitting
+            model predictions in MDI+. If "inherit" (default), uses the same sample splitting
             strategy as used when fitting the RF+ prediction model. Assuming None or "loo" were used
             as the sample splitting scheme for fitting the RF+ prediction model,
-            "loo" (leave-one-out) is strongly recommended here in GMDI as it overcomes
+            "loo" (leave-one-out) is strongly recommended here in MDI+ as it overcomes
             the known correlation and entropy biases suffered by MDI. "oob" (out-of-bag) can
             also be used to overcome these biases. "inbag" is the sample splitting
             strategy used by MDI. If None, no sample splitting is performed and the
@@ -270,17 +270,17 @@ class _RandomForestPlus(BaseEstimator):
         Returns
         -------
         scores: pd.DataFrame of shape (n_features, n_scoring_fns)
-            The GMDI feature importances.
+            The MDI+ feature importances.
         """
         if X is None or y is None:
-            if self.gmdi_scores_ is None:
+            if self.mdi_plus_scores_ is None:
                 raise ValueError("Need X and y as inputs.")
         else:
             # get defaults
             if sample_split == "inherit":
                 sample_split = self.sample_split
             if X.shape[0] != self._n_samples_train and sample_split is not None:
-                raise ValueError("Set sample_split=None to fit GMDI on non-training X and y. "
+                raise ValueError("Set sample_split=None to fit MDI+ on non-training X and y. "
                                  "To use other sample_split schemes, input the training X and y data.")
             if scoring_fns == "auto":
                 scoring_fns = {"importance": _fast_r2_score} if self._task == "regression" \
@@ -289,23 +289,23 @@ class _RandomForestPlus(BaseEstimator):
             if isinstance(self.prediction_model, GlmClassifierPPM):
                 if self._multi_class:
                     y = self._y_encoder.transform(y.reshape(-1, 1)).toarray()
-            # compute GMDI for forest
-            gmdi_obj = ForestGMDI(estimators=self.estimators_,
-                                  transformers=self.transformers_,
-                                  scoring_fns=scoring_fns,
-                                  sample_split=sample_split,
-                                  tree_random_states=self._tree_random_states,
-                                  mode=mode,
-                                  task=self._task,
-                                  center=self.center,
-                                  normalize=self.normalize)
-            self.gmdi_ = gmdi_obj
-            self.gmdi_scores_ = gmdi_obj.get_scores(X, y)
-        return self.gmdi_scores_
+            # compute MDI+ for forest
+            mdi_plus_obj = ForestMDIPlus(estimators=self.estimators_,
+                                         transformers=self.transformers_,
+                                         scoring_fns=scoring_fns,
+                                         sample_split=sample_split,
+                                         tree_random_states=self._tree_random_states,
+                                         mode=mode,
+                                         task=self._task,
+                                         center=self.center,
+                                         normalize=self.normalize)
+            self.mdi_plus_ = mdi_plus_obj
+            self.mdi_plus_scores_ = mdi_plus_obj.get_scores(X, y)
+        return self.mdi_plus_scores_
 
-    def get_gmdi_stability_scores(self, B=10, metrics="auto"):
+    def get_mdi_plus_stability_scores(self, B=10, metrics="auto"):
         """
-        Evaluate the stability of the GMDI feature importance rankings
+        Evaluate the stability of the MDI+ feature importance rankings
         across bootstrapped samples of trees. Can be used to select the GLM
         and scoring metric in a data-driven manner, where the GLM and metric, which
         yields the most stable feature rankings across bootstrapped samples is selected.
@@ -325,20 +325,20 @@ class _RandomForestPlus(BaseEstimator):
                 AP Correlation" by Urbano and Marrero (2017)), which also gives more weight
                 to the features with the largest importances, but uses a different weighting
                 scheme from RBO.
-            Note that these default metrics assume that a higher GMDI score indicates
+            Note that these default metrics assume that a higher MDI+ score indicates
             greater importance and thus give more weight to these features with high
-            importance/ranks. If a lower GMDI score indicates higher importance, then invert
-            either these stability metrics or the GMDI scores before evaluating the stability.
+            importance/ranks. If a lower MDI+ score indicates higher importance, then invert
+            either these stability metrics or the MDI+ scores before evaluating the stability.
 
         Returns
         -------
         stability_results: pd.DataFrame of shape (n_features, n_metrics)
-            The stability scores of the GMDI feature rankings across bootstrapped samples.
+            The stability scores of the MDI+ feature rankings across bootstrapped samples.
 
         """
-        if self.gmdi_ is None:
-            raise ValueError("Need to compute gmdi scores first using self.get_gmdi_scores(X, y)")
-        return self.gmdi_.get_stability_scores(B=B, metrics=metrics)
+        if self.mdi_plus_ is None:
+            raise ValueError("Need to compute MDI+ scores first using self.get_mdi_plus_scores(X, y)")
+        return self.mdi_plus_.get_stability_scores(B=B, metrics=metrics)
 
     def _get_pred_func(self):
         if hasattr(self.prediction_model, "predict_proba_loo"):
@@ -356,7 +356,7 @@ class RandomForestPlusRegressor(_RandomForestPlus, RegressorMixin):
     """
     The class object for the Random Forest Plus (RF+) regression estimator, which can
     be used as a prediction model or interpreted via generalized
-    mean decrease in impurity (GMDI). For more details, refer to [paper].
+    mean decrease in impurity (MDI+). For more details, refer to [paper].
     """
     ...
 
@@ -365,7 +365,7 @@ class RandomForestPlusClassifier(_RandomForestPlus, ClassifierMixin):
     """
     The class object for the Random Forest Plus (RF+) classification estimator, which can
     be used as a prediction model or interpreted via generalized
-    mean decrease in impurity (GMDI). For more details, refer to [paper].
+    mean decrease in impurity (MDI+). For more details, refer to [paper].
     """
     ...
 

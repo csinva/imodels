@@ -561,9 +561,9 @@ class CompositeTransformer(BlockTransformerBase, ABC):
         return composite_block
 
 
-class GmdiDefaultTransformer(CompositeTransformer, ABC):
+class MDIPlusDefaultTransformer(CompositeTransformer, ABC):
     """
-    Default block transformer used in GMDI. For each original feature, this
+    Default block transformer used in MDI+. For each original feature, this
     forms a block comprising the local decision stumps, from a single tree
     model, that split on the feature, and appends the original feature.
 

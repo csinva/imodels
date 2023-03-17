@@ -9,9 +9,9 @@ from sklearn.metrics import r2_score, log_loss, roc_auc_score, \
     mean_squared_error
 
 from imodels.importance.block_transformers import IdentityTransformer, \
-    TreeTransformer, CompositeTransformer, GmdiDefaultTransformer
+    TreeTransformer, CompositeTransformer, MDIPlusDefaultTransformer
 from imodels.importance.ppms import RidgePPM, LogisticPPM, RobustPPM
-from imodels.importance.gmdi import GmdiHelper, GMDI
+from imodels.importance.mdi_plus import GmdiHelper, GMDI
 
 
 class TestTransformers:
@@ -61,13 +61,13 @@ class TestTransformers:
 
     def test_gmdi_default(self):
         # Test number of engineered features without drop_features
-        gmdi_transformer = GmdiDefaultTransformer(tree_model=self.tree_model,
-                                                  drop_features=False)
+        gmdi_transformer = MDIPlusDefaultTransformer(tree_model=self.tree_model,
+                                                     drop_features=False)
         assert gmdi_transformer.transform(self.X).get_all_data().shape[1] == \
                self.p + self.n_internal_nodes
         # Test number of engineered features with drop_features
-        gmdi_transformer = GmdiDefaultTransformer(tree_model=self.tree_model,
-                                                  drop_features=True)
+        gmdi_transformer = MDIPlusDefaultTransformer(tree_model=self.tree_model,
+                                                     drop_features=True)
 
         assert gmdi_transformer.transform(self.X).get_all_data().shape[1] == \
                self.n_internal_nodes + \
@@ -79,9 +79,9 @@ class TestTransformers:
         composite_transformer_rescaling = gmdi_transformer.\
             transform_one_feature(self.X, 0).std(axis=0)[3]
         assert np.isclose(tree_transformer_max, composite_transformer_rescaling)
-        gmdi_transformer = GmdiDefaultTransformer(tree_model=self.tree_model,
-                                                  rescale_mode="mean",
-                                                  drop_features=True)
+        gmdi_transformer = MDIPlusDefaultTransformer(tree_model=self.tree_model,
+                                                     rescale_mode="mean",
+                                                     drop_features=True)
         tree_transformer_mean = np.mean(
             tree_transformer.transform_one_feature(self.X, 0).std(axis=0))
         composite_transformer_rescaling = gmdi_transformer. \
@@ -188,7 +188,7 @@ class TestPPM:
         assert np.isclose(logistic_ppm.alpha_, 8.902150854450374)
 
     def test_ridge_predictions(self):
-        gmdi_transformer = GmdiDefaultTransformer(tree_model=self.tree_model)
+        gmdi_transformer = MDIPlusDefaultTransformer(tree_model=self.tree_model)
         blocked_data = gmdi_transformer.transform(self.X)
         ridge_ppm = RidgePPM(loo=False, alpha_grid=np.logspace(-4, 3, 100))
         ridge_ppm.fit(blocked_data, self.y, blocked_data)
@@ -203,7 +203,7 @@ class TestPPM:
                           0.1637922129748298)
 
     def test_ridge_loo_predictions(self):
-        gmdi_transformer = GmdiDefaultTransformer(tree_model=self.tree_model)
+        gmdi_transformer = MDIPlusDefaultTransformer(tree_model=self.tree_model)
         blocked_data = gmdi_transformer.transform(self.X)
         ridge_ppm = RidgePPM(loo=True, alpha_grid=np.logspace(-4, 3, 100))
         ridge_ppm.fit(blocked_data, self.y, blocked_data)
@@ -218,7 +218,7 @@ class TestPPM:
                           0.1637922129748298)
 
     def test_logistic_loo_predictions(self):
-        gmdi_transformer = GmdiDefaultTransformer(tree_model=self.tree_model)
+        gmdi_transformer = MDIPlusDefaultTransformer(tree_model=self.tree_model)
         blocked_data = gmdi_transformer.transform(self.X)
         logistic_ppm = LogisticPPM(loo=True, alpha_grid=np.logspace(-4, 3, 100))
         logistic_ppm.fit(blocked_data, self.y_bin, blocked_data)
@@ -233,7 +233,7 @@ class TestPPM:
                           0.609994765464111)
 
     def test_robust_loo_predictions(self):
-        gmdi_transformer = GmdiDefaultTransformer(tree_model=self.tree_model)
+        gmdi_transformer = MDIPlusDefaultTransformer(tree_model=self.tree_model)
         blocked_data = gmdi_transformer.transform(self.X)
         robust_ppm = RobustPPM(loo=True, alpha_grid=np.logspace(-4, 3, 100))
         robust_ppm.fit(blocked_data, self.y, blocked_data)
@@ -269,7 +269,7 @@ class TestGMDI:
         self.rf_model.fit(self.X, self.y)
 
     def test_gmdi_helper(self):
-        gmdi_transformer = GmdiDefaultTransformer(tree_model=self.tree_model)
+        gmdi_transformer = MDIPlusDefaultTransformer(tree_model=self.tree_model)
         ridge_ppm = RidgePPM(loo=True, alpha_grid=np.logspace(-4, 3, 100))
         scoring_fns = r2_score
         gmdi_helper = GmdiHelper(gmdi_transformer, ridge_ppm, scoring_fns)

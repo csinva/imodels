@@ -74,7 +74,7 @@ class PartialPredictionModelBase(ABC):
     def predict_full(self, blocked_data):
         """
         Make predictions using all the data based upon the fitted model.
-        Used to make full predictions in GMDI.
+        Used to make full predictions in MDI+.
 
         Parameters
         ----------
@@ -88,7 +88,7 @@ class PartialPredictionModelBase(ABC):
         """
         Make predictions on modified copies of the data based on the fitted model,
         for a particular feature k of interest. Used to get partial predictions
-        for feature k in GMDI.
+        for feature k in MDI+.
 
         Parameters
         ----------
@@ -105,7 +105,7 @@ class PartialPredictionModelBase(ABC):
     def predict_partial(self, blocked_data, mode):
         """
         Make predictions on modified copies of the data based on the fitted model,
-        for each feature under study. Used to get partial predictions in GMDI.
+        for each feature under study. Used to get partial predictions in MDI+.
 
         Parameters
         ----------
