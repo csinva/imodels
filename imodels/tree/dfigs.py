@@ -20,7 +20,7 @@ from imodels import FIGSRegressor
 
 
 class D_FIGS(FIGSRegressor):
-    # Needs to store the old X and y
+     # Needs to store the old X and y
 
     # feature_phases = {1 : (X, y, model), 2 : (X_phase2, y, model)}
     feature_phases = None
@@ -56,17 +56,28 @@ class D_FIGS(FIGSRegressor):
                     new_idx.append(node.idx[i])
             node.idx = new_idx  # The leaves that we can potentially split on now contain only samples with new_phase'''
 
-    def fit_phase_1(self, X, y):
+    def fit_phase_1(self, X, y, feature_names=None, verbose=False, sample_weight=None):
         self.fit(X, y)
         # Store a deep copy of the whole model for easier prediction use in the future
         self.feature_phases = {}
         self.feature_phases[1] = (X, y, deepcopy(self))
         return self
 
-    def fit_phase_n(self, X, y, max_rules=15):
+    def fit_phase_n(self, X, y, max_rules=15, feature_names=None, verbose=False, sample_weight=None):
+        if isinstance(self, ClassifierMixin):
+            self.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
+
+        if feature_names is None:
+            if isinstance(X, pd.DataFrame):
+                self.feature_names_ = X.columns
+        else:
+            self.feature_names_ = feature_names
+        X, y = check_X_y(X, y, force_all_finite=False)
+        y = y.astype(float)
         phase_idx = len(self.feature_phases)  # infer the number of phase from the dict
         prev_phase = self.feature_phases[phase_idx][0]
-        new_phase = X[:, len(prev_phase[0]):]
+        # print(prev_phase)
+        new_phase = X[:, len(prev_phase.iloc[0]):]
         all_leaves = []
         for node in self.trees_:
             all_leaves += self.get_leaves(node)
@@ -94,7 +105,7 @@ class D_FIGS(FIGSRegressor):
     def remove_na_samples(self, X):
         phase_idx = len(self.feature_phases)  # infer the number of phase from the dict
         prev_phase = self.feature_phases[phase_idx][0]
-        new_phase = X[:, len(prev_phase[0]):]
+        new_phase = X[:, len(prev_phase.iloc[0]):]
         cur_idxs = np.ones(X.shape[0], dtype=bool)
         for i in range(len(cur_idxs)):
             if cur_idxs[i]:
@@ -424,6 +435,9 @@ class D_FIGS(FIGSRegressor):
         model = self.feature_phases[phase][2]
         return model.predict(X)
 
+    def predict_proba_phase_i(self, X, phase):
+        model = self.feature_phases[phase][2]
+        return model.predict_proba(X)
 
 if __name__ == '__main__':
     '''
