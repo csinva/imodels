@@ -58,9 +58,9 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         elif np.all(y == y[0]):
             return [{'val': y[0], 'num_pts': y.size}]
 
-        # base case 3: max depth reached
-        elif depth >= self.max_depth:
-            return []
+         # base case 3: max depth reached
+        elif depth == self.max_depth:
+            return [{'val': np.mean(y), 'num_pts': y.size}]
 
         # recursively generate rule list
         else:

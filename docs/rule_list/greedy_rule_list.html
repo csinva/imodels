@@ -34,10 +34,8 @@ Currently only supports binary classification.
 import math
 from copy import deepcopy
 
-import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_X_y
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.tree import DecisionTreeClassifier
@@ -87,9 +85,9 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         elif np.all(y == y[0]):
             return [{&#39;val&#39;: y[0], &#39;num_pts&#39;: y.size}]
 
-        # base case 3: max depth reached
-        elif depth &gt;= self.max_depth:
-            return []
+         # base case 3: max depth reached
+        elif depth == self.max_depth:
+            return [{&#39;val&#39;: np.mean(y), &#39;num_pts&#39;: y.size}]
 
         # recursively generate rule list
         else:
@@ -128,7 +126,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                 &#39;col&#39;: self.feature_names_[col],
                 &#39;index_col&#39;: col,
                 &#39;cutoff&#39;: cutoff,
-                &#39;val&#39;: np.mean(y),  # values before splitting
+                &#39;val&#39;: np.mean(y_left),  # will be the values before splitting in the next lower level
                 &#39;flip&#39;: flip,
                 &#39;val_right&#39;: np.mean(y_right),
                 &#39;num_pts&#39;: y.size,
@@ -155,7 +153,11 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             for j, rule in enumerate(self.rules_):
                 if j == len(self.rules_) - 1:
                     probs[i] = rule[&#39;val&#39;]
-                elif x[rule[&#39;index_col&#39;]] &gt;= rule[&#39;cutoff&#39;]:
+                    continue
+                regular_condition = x[rule[&#34;index_col&#34;]] &gt;= rule[&#34;cutoff&#34;]
+                flipped_condition = x[rule[&#34;index_col&#34;]] &lt; rule[&#34;cutoff&#34;]
+                condition = flipped_condition if rule[&#34;flip&#34;] else regular_condition
+                if condition:
                     probs[i] = rule[&#39;val_right&#39;]
                     break
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
@@ -434,9 +436,9 @@ Criterion used to split
         elif np.all(y == y[0]):
             return [{&#39;val&#39;: y[0], &#39;num_pts&#39;: y.size}]
 
-        # base case 3: max depth reached
-        elif depth &gt;= self.max_depth:
-            return []
+         # base case 3: max depth reached
+        elif depth == self.max_depth:
+            return [{&#39;val&#39;: np.mean(y), &#39;num_pts&#39;: y.size}]
 
         # recursively generate rule list
         else:
@@ -475,7 +477,7 @@ Criterion used to split
                 &#39;col&#39;: self.feature_names_[col],
                 &#39;index_col&#39;: col,
                 &#39;cutoff&#39;: cutoff,
-                &#39;val&#39;: np.mean(y),  # values before splitting
+                &#39;val&#39;: np.mean(y_left),  # will be the values before splitting in the next lower level
                 &#39;flip&#39;: flip,
                 &#39;val_right&#39;: np.mean(y_right),
                 &#39;num_pts&#39;: y.size,
@@ -502,7 +504,11 @@ Criterion used to split
             for j, rule in enumerate(self.rules_):
                 if j == len(self.rules_) - 1:
                     probs[i] = rule[&#39;val&#39;]
-                elif x[rule[&#39;index_col&#39;]] &gt;= rule[&#39;cutoff&#39;]:
+                    continue
+                regular_condition = x[rule[&#34;index_col&#34;]] &gt;= rule[&#34;cutoff&#34;]
+                flipped_condition = x[rule[&#34;index_col&#34;]] &lt; rule[&#34;cutoff&#34;]
+                condition = flipped_condition if rule[&#34;flip&#34;] else regular_condition
+                if condition:
                     probs[i] = rule[&#39;val_right&#39;]
                     break
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
@@ -771,9 +777,9 @@ the depth of the current layer (used to recurse)</p></div>
     elif np.all(y == y[0]):
         return [{&#39;val&#39;: y[0], &#39;num_pts&#39;: y.size}]
 
-    # base case 3: max depth reached
-    elif depth &gt;= self.max_depth:
-        return []
+     # base case 3: max depth reached
+    elif depth == self.max_depth:
+        return [{&#39;val&#39;: np.mean(y), &#39;num_pts&#39;: y.size}]
 
     # recursively generate rule list
     else:
@@ -812,7 +818,7 @@ the depth of the current layer (used to recurse)</p></div>
             &#39;col&#39;: self.feature_names_[col],
             &#39;index_col&#39;: col,
             &#39;cutoff&#39;: cutoff,
-            &#39;val&#39;: np.mean(y),  # values before splitting
+            &#39;val&#39;: np.mean(y_left),  # will be the values before splitting in the next lower level
             &#39;flip&#39;: flip,
             &#39;val_right&#39;: np.mean(y_right),
             &#39;num_pts&#39;: y.size,
@@ -864,7 +870,11 @@ the depth of the current layer (used to recurse)</p></div>
         for j, rule in enumerate(self.rules_):
             if j == len(self.rules_) - 1:
                 probs[i] = rule[&#39;val&#39;]
-            elif x[rule[&#39;index_col&#39;]] &gt;= rule[&#39;cutoff&#39;]:
+                continue
+            regular_condition = x[rule[&#34;index_col&#34;]] &gt;= rule[&#34;cutoff&#34;]
+            flipped_condition = x[rule[&#34;index_col&#34;]] &lt; rule[&#34;cutoff&#34;]
+            condition = flipped_condition if rule[&#34;flip&#34;] else regular_condition
+            if condition:
                 probs[i] = rule[&#39;val_right&#39;]
                 break
     return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)</code></pre>
