@@ -14,9 +14,8 @@ from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import _check_sample_weight
 from figs import Node
-from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
-from imodels import FIGSClassifier
-from imodels import FIGSRegressor
+from imodels.tree.figs import FIGSClassifier
+from imodels.tree.figs import FIGSRegressor
 
 
 class D_FIGS(FIGSRegressor):
@@ -512,6 +511,3 @@ if __name__ == '__main__':
     for node in all_leaves:
         print(node.idxs)
     '''
-
-
-
