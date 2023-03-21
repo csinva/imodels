@@ -13,9 +13,8 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import _check_sample_weight
-from figs import Node
 from imodels.tree.figs import FIGSClassifier
-from imodels.tree.figs import FIGSRegressor
+from imodels.tree.figs import FIGSRegressor, Node
 
 
 class D_FIGS(FIGSRegressor):
