@@ -82,7 +82,8 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
     if data_source == 'imodels':
         if not dataset_name.endswith('csv'):
             dataset_name = dataset_name + '.csv'
-        if not os.path.isfile(dataset_name):
+        print(oj(data_path, 'imodels_data', dataset_name))
+        if not os.path.isfile(oj(data_path, 'imodels_data', dataset_name)):
             _download_imodels_dataset(dataset_name, data_path)
         df = pd.read_csv(oj(data_path, 'imodels_data', dataset_name))
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
