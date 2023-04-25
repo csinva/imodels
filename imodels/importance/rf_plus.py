@@ -74,8 +74,8 @@ class _RandomForestPlus(BaseEstimator):
                 prediction_model = RidgeRegressorPPM()
             elif self._task == "classification":
                 prediction_model = LogisticClassifierPPM()
-        self.rf_model = copy.deepcopy(rf_model)
-        self.prediction_model = copy.deepcopy(prediction_model)
+        self.rf_model = rf_model
+        self.prediction_model = prediction_model
         self.include_raw = include_raw
         self.drop_features = drop_features
         self.add_transformers = add_transformers
