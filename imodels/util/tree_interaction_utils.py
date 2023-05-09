@@ -6,17 +6,19 @@ import pandas as pd
 
 
 def make_rj(n=300, p=50):
-    """Generates data according to the model in https://www.jstor.org/stable/27920185
+    """Generates data according to the model in Radchenko & James, 2010
     X_i ~ Unif([0,1]^p)
-    y = sqrt(0.5)[\sum_{i=1}^5 f_i(x) + f_1(x)f_2(x) + f_1(x)f_3(x)] + N(0,1)
+    y = sqrt(0.5)[sum_{i=1}^5 f_i(x) + f_1(x)f_2(x) + f_1(x)f_3(x)] + N(0,1)
     f_1(x) = x1, f_2(x) = (1+x2)^{-1}, f_3(x) = sin(x3), f_4(x) = e^x4, f_5(x) = x5^2
     function withing the sum are normalized
 
-    Args:
+    Params
+    ------
         n (int): number of sample
         p (int): number of features
 
-    Returns:
+    Returns
+    -------
         Tuple[np.array, np.array]: design matrix and label vector
 
     """

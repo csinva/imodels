@@ -7,9 +7,10 @@ from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics import r2_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
 
 from imodels.util import checks
+from imodels.util.tree import compute_tree_complexity
 
 
 class HSTree:
@@ -58,6 +59,7 @@ class HSTree:
     def fit(self, *args, **kwargs):
         self.estimator_.fit(*args, **kwargs)
         self._shrink()
+        self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
 
     def _shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
         """Shrink the tree
@@ -163,6 +165,16 @@ class HSTree:
         else:
             return NotImplemented
 
+    def __str__(self):
+        s = '> ------------------------------\n'
+        s += '> Decision Tree with Hierarchical Shrinkage\n'
+        s += '> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n'
+        s += '> ------------------------------' + '\n'
+        if hasattr(self, 'feature_names') and self.feature_names is not None:
+            return s + export_text(self.estimator_, feature_names=self.feature_names, show_weights=True)
+        else:
+            return s + export_text(self.estimator_, show_weights=True)
+
 
 class HSTreeRegressor(HSTree, RegressorMixin):
     def _init_prediction_task(self):
@@ -175,12 +187,27 @@ class HSTreeClassifier(HSTree, ClassifierMixin):
 
 
 class HSTreeClassifierCV(HSTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator,
-                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based',
+    def __init__(self, estimator_: BaseEstimator = None,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 shrinkage_scheme_: str = 'node_based',
+                 max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
-        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+        """Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+
+         Params
+        ------
+        estimator_
+            Sklearn estimator (already initialized).
+            If no estimator_ is passsed, sklearn decision tree is used
+
+        max_rules
+            If estimator is None, then max_leaf_nodes is passed to the default decision tree
+
+        args, kwargs
+            Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
         """
+        if estimator_ is None:
+            estimator_ = DecisionTreeClassifier(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
@@ -203,13 +230,27 @@ class HSTreeClassifierCV(HSTreeClassifier):
 
 
 class HSTreeRegressorCV(HSTreeRegressor):
-    def __init__(self, estimator_: BaseEstimator,
+    def __init__(self, estimator_: BaseEstimator = None,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
                  shrinkage_scheme_: str = 'node_based',
+                 max_leaf_nodes: int = 20,
                  cv: int = 3, scoring=None, *args, **kwargs):
-        """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
-        Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+        """Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
+
+         Params
+        ------
+        estimator_
+            Sklearn estimator (already initialized).
+            If no estimator_ is passsed, sklearn decision tree is used
+
+        max_rules
+            If estimator is None, then max_leaf_nodes is passed to the default decision tree
+
+        args, kwargs
+            Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args.
         """
+        if estimator_ is None:
+            estimator_ = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv

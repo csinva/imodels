@@ -918,7 +918,58 @@ if __name__ == &#39;__main__&#39;:
     bart.fit(X_train, y_train)
     preds_org = bart.predict(X_test)
     mse = np.linalg.norm(preds_org - y_test)
-    print(mse)</code></pre>
+    print(mse)
+    # tree = DecisionTreeClassifier()
+    # tree.fit(X, y)
+    # preds_tree = tree.predict_proba(X)
+    # bart_s = ShrunkBARTCV(copy.deepcopy(bart), scheme=&#34;node_based&#34;)
+    # bart_s.fit(X, y)
+    #
+    # # bart_s_c = ShrunkBART(copy.deepcopy(bart), reg_param=2, scheme=&#34;constant&#34;)
+    # # bart_s_c.fit(X, y)
+    # #
+    # # bart_s_l = ShrunkBART(copy.deepcopy(bart), reg_param=2, scheme=&#34;leaf_based&#34;)
+    # # bart_s_l.fit(X, y)
+    # # bart_s_cv = ShrunkBARTRegressorCV(estimator_=copy.deepcopy(bart))
+    # # bart_s_cv.fit(X, y)
+    # e_bart = ExpandedBART(estimator_=copy.deepcopy(bart))
+    # e_bart.fit(X, y)
+    #
+    # preds = bart_s.predict(X)
+    #
+    # # preds_c = bart_s_c.predict(X)
+    # # preds_l = bart_s_l.predict(X)
+    # # # preds_cv = bart_s_cv.predict(X)
+    # preds_bart_e = e_bart.predict(X)
+    # fig, ax = plt.subplots(1)
+    #
+    # ax.scatter(np.arange(len(y)), preds_org, c=&#34;orange&#34;, label=&#34;bart&#34;)
+    # ax.scatter(np.arange(len(y)), preds, c=&#34;purple&#34;, alpha=0.3, label=&#34;shrunk node&#34;)
+    # # ax.scatter(np.arange(len(y)), preds_c, c=&#34;blue&#34;, alpha=0.3, label=&#34;shrunk constant&#34;)
+    # # ax.scatter(np.arange(len(y)), preds_l, c=&#34;red&#34;, alpha=0.3, label=&#34;shrunk leaf&#34;)
+    # ax.scatter(np.arange(len(y)), preds_bart_e, c=&#34;green&#34;, alpha=0.3, label=&#34;average&#34;)
+    # # preds_all = [preds_org, preds_c, preds_l, preds_bart_e, preds]
+    # # shift = 0.5
+    # # rng = (np.min([np.min(p) for p in preds_all]) - shift, np.max([np.max(p) for p in preds_all]) + shift)
+    # # n_bins = 200
+    # # alpha = 0.8
+    # # ax.hist(preds_org, color=&#34;orange&#34;, alpha=alpha, label=&#34;bart&#34;, bins=n_bins, range=rng)
+    # # ax.hist(preds, color=&#34;purple&#34;, alpha=alpha, label=&#34;shrunk node&#34;, bins=n_bins, range=rng)
+    # # ax.hist(preds_c, color=&#34;blue&#34;, alpha=alpha, label=&#34;shrunk constant&#34;, bins=n_bins, range=rng)
+    # # ax.hist(preds_l, color=&#34;red&#34;, alpha=alpha, label=&#34;shrunk leaf&#34;, bins=n_bins, range=rng)
+    # # ax.hist(preds_bart_e, color=&#34;green&#34;, alpha=alpha, label=&#34;average&#34;, bins=n_bins, range=rng)
+    # #
+    # # ax.set_xlabel(&#34;Predicted Value&#34;)
+    # # ax.set_ylabel(&#34;Count&#34;)
+    #
+    # plt.title(np.mean(y))
+    #
+    # plt.legend(loc=&#34;upper left&#34;)
+    # plt.savefig(&#34;bart_shrink.png&#34;)
+    # # plt.show()
+    # #
+    # # plt.close()
+    #</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.sklearnmodel.run_chain"><code class="name flex">

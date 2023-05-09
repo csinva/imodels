@@ -3,6 +3,9 @@
 
 import itertools
 import operator
+import os
+import warnings
+from os.path import join as oj
 from bisect import bisect_left
 from collections import defaultdict
 from copy import deepcopy
@@ -13,6 +16,7 @@ import numpy as np
 import pandas as pd
 from mlxtend.frequent_patterns import fpgrowth
 from numpy.random import random
+from pandas import read_csv
 from scipy.sparse import csc_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
@@ -125,7 +129,8 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         # parameter checking
         if self.alpha_l is None or self.beta_l is None or len(self.alpha_l) != self.maxlen or len(
                 self.beta_l) != self.maxlen:
-            print('No or wrong input for alpha_l and beta_l - the model will use default parameters.')
+            if verbose:
+                print('No or wrong input for alpha_l and beta_l - the model will use default parameters.')
             self.C = [1.0 / self.maxlen] * self.maxlen
             self.C.insert(0, -1)
             self.alpha_l = [10] * (self.maxlen + 1)
@@ -135,7 +140,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             self.beta_l = [1] + list(self.beta_l)
 
         # setup
-        self._generate_rules(X, y)
+        self._generate_rules(X, y, verbose)
         n_rules_current = len(self.rules_)
         self.rules_len_list = [len(rule) for rule in self.rules_]
         maps = defaultdict(list)
@@ -172,7 +177,10 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                 cfmatrix, prob = self._compute_prob(rules_new, y)
                 T = T0 ** (1 - iter / self.num_iterations)  # temperature for simulated annealing
                 pt_new = sum(prob)
-                alpha = np.exp(float(pt_new - pt_curr) / T)
+                with warnings.catch_warnings():
+                    if not verbose:
+                        warnings.simplefilter("ignore")
+                    alpha = np.exp(float(pt_new - pt_curr) / T)
 
                 if pt_new > sum(maps[chain][-1][1]):
                     maps[chain].append([iter, prob, rules_new, [self.rules_[i] for i in rules_new]])
@@ -232,7 +240,7 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                 # print('subset', subset, 'tmp', tmp, 'k', k)
                 self.pattern_space[k] = self.pattern_space[k] + tmp
 
-    def _generate_rules(self, X, y):
+    def _generate_rules(self, X, y, verbose):
         '''This function generates rules that satisfy supp and maxlen using fpgrowth, then it selects the top n_rules rules that make data have the biggest decrease in entropy
         there are two ways to generate rules. fpgrowth can handle cases where the maxlen is small. If maxlen<=3, fpgrowth can generates rules much faster than randomforest.
         If maxlen is big, fpgrowh tends to generate too many rules that overflow the memories.
@@ -261,41 +269,51 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         self.rules_ = rules
 
         # select the top n_rules rules using secondary criteria, information gain
-        self._screen_rules(df, y)  # updates self.rules_
+        self._screen_rules(df, y, verbose)  # updates self.rules_
         self._set_pattern_space()
 
-    def _screen_rules(self, df, y):
+    def _screen_rules(self, df, y, verbose):
         '''Screening rules using information gain
         '''
         item_ind_dict = {}
         for i, name in enumerate(df.columns):
             item_ind_dict[name] = i
         indices = np.array(
-            list(itertools.chain.from_iterable([[item_ind_dict[x] for x in rule] for rule in self.rules_])))
+            list(itertools.chain.from_iterable([[
+                item_ind_dict[x] for x in rule]
+                for rule in self.rules_])))
         len_rules = [len(rule) for rule in self.rules_]
         indptr = list(_accumulate(len_rules))
         indptr.insert(0, 0)
         indptr = np.array(indptr)
         data = np.ones(len(indices))
-        rule_matrix = csc_matrix((data, indices, indptr), shape=(len(df.columns), len(self.rules_)))
-        mat = np.matrix(df) @ rule_matrix
+        rule_matrix = csc_matrix((data, indices, indptr),
+                                 shape=(len(df.columns),
+                                        len(self.rules_)))
+        mat = df.values @ rule_matrix
+        print('mat.shape', mat.shape)
         len_matrix = np.array([len_rules] * df.shape[0])
         Z = (mat == len_matrix).astype(int)
         Zpos = [Z[i] for i in np.where(y > 0)][0]
-        TP = np.array(np.sum(Zpos, axis=0).tolist()[0])
+        TP = np.sum(Zpos, axis=0)
         supp_select = np.where(TP >= self.supp * sum(y) / 100)[0]
-        FP = np.array(np.sum(Z, axis=0))[0] - TP
+        FP = np.sum(Z, axis=0) - TP
         TN = len(y) - np.sum(y) - FP
         FN = np.sum(y) - TP
         p1 = TP.astype(float) / (TP + FP)
         p2 = FN.astype(float) / (FN + TN)
         pp = (TP + FP).astype(float) / (TP + FP + TN + FN)
-        cond_entropy = -pp * (p1 * np.log(p1) + (1 - p1) * np.log(1 - p1)) - (1 - pp) * (
-                p2 * np.log(p2) + (1 - p2) * np.log(1 - p2))
-        cond_entropy[p1 * (1 - p1) == 0] = -((1 - pp) * (p2 * np.log(p2) + (1 - p2) * np.log(1 - p2)))[
-            p1 * (1 - p1) == 0]
-        cond_entropy[p2 * (1 - p2) == 0] = -(pp * (p1 * np.log(p1) + (1 - p1) * np.log(1 - p1)))[p2 * (1 - p2) == 0]
-        cond_entropy[p1 * (1 - p1) * p2 * (1 - p2) == 0] = 0
+        # p1 = np.clip(p1, a_min=1e-10, a_max=1-1e-10)
+        print('\n\n\n\np1.shape', p1.shape, 'pp.shape', pp.shape, 'cond_entropy.shape')  # , cond_entropy.shape)
+        with warnings.catch_warnings():
+            if not verbose:
+                warnings.simplefilter("ignore")  # ignore warnings about invalid values (e.g. log(0))
+            cond_entropy = -pp * (p1 * np.log(p1) + (1 - p1) * np.log(1 - p1)) - (1 - pp) * (
+                    p2 * np.log(p2) + (1 - p2) * np.log(1 - p2))
+            cond_entropy[p1 * (1 - p1) == 0] = -((1 - pp) * (p2 * np.log(p2) + (1 - p2) * np.log(1 - p2)))[
+                p1 * (1 - p1) == 0]
+            cond_entropy[p2 * (1 - p2) == 0] = -(pp * (p1 * np.log(p1) + (1 - p1) * np.log(1 - p1)))[p2 * (1 - p2) == 0]
+            cond_entropy[p1 * (1 - p1) * p2 * (1 - p2) == 0] = 0
         select = np.argsort(cond_entropy[supp_select])[::-1][-self.n_rules:]
         self.rules_ = [self.rules_[i] for i in supp_select[select]]
         self.RMatrix = np.array(Z[:, supp_select[select]])
@@ -510,3 +528,42 @@ def _extract_rules(tree, feature_names):
             rule.append(node)
         rules.append(rule)
     return rules
+
+
+if __name__ == '__main__':
+    test_dir = os.path.dirname(os.path.abspath(__file__))
+
+    df = read_csv(oj(test_dir, '../../tests/test_data', 'tictactoe_X.txt'), header=0, sep=" ")
+    Y = np.loadtxt(open(oj(test_dir, '../../tests/test_data', 'tictactoe_Y.txt'), "rb"), delimiter=" ")
+
+    lenY = len(Y)
+    idxs_train = sample(range(lenY), int(0.50 * lenY))
+    idxs_test = [i for i in range(lenY) if i not in idxs_train]
+    y_test = Y[idxs_test]
+    model = BayesianRuleSetClassifier(n_rules=100,
+                                      supp=5,
+                                      maxlen=3,
+                                      num_iterations=100,
+                                      num_chains=2,
+                                      alpha_pos=500, beta_pos=1,
+                                      alpha_neg=500, beta_neg=1,
+                                      alpha_l=None, beta_l=None)
+
+    # fit and check accuracy
+    np.random.seed(13)
+    # random.seed(13)
+    model.fit(df.iloc[idxs_train], Y[idxs_train])
+    y_pred = model.predict(df.iloc[idxs_test])
+    acc1 = np.mean(y_pred == y_test)
+    assert acc1 > 0.8
+
+    # try fitting np version
+    np.random.seed(13)
+    # random.seed(13)
+    model.fit(df.iloc[idxs_train].values, Y[idxs_train])
+    y_pred = model.predict(df.iloc[idxs_test].values)
+    y_test = Y[idxs_test]
+    acc2 = np.mean(y_pred == y_test)
+    assert acc2 > 0.8
+
+    # assert np.abs(acc1 - acc2) < 0.05 # todo: fix seeding

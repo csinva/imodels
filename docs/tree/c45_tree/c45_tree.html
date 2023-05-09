@@ -243,7 +243,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
             answerlist = sorted(answerlist.items(), key=lambda x: x[1], reverse=True)
             answer = answerlist[0][0]
             # prediction.append(self.resultType(answer))
-            prediction.append(np.float(answer))
+            prediction.append(float(answer))
 
         return np.array(prediction)
 
@@ -612,7 +612,7 @@ if __name__ == &#39;__main__&#39;:
             answerlist = sorted(answerlist.items(), key=lambda x: x[1], reverse=True)
             answer = answerlist[0][0]
             # prediction.append(self.resultType(answer))
-            prediction.append(np.float(answer))
+            prediction.append(float(answer))
 
         return np.array(prediction)
 
@@ -954,7 +954,9 @@ def root(self):
                 _add_label(next_node, label)
                 nodes.append(next_node)
 
-    self._calc_probs(source_node)</code></pre>
+    self._calc_probs(source_node)
+    # self.dom_.childNodes[0] = source_node
+    # self.tree_.source = source_node</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.c45_tree.c45_tree.C45TreeClassifier.predict"><code class="name flex">
@@ -1007,7 +1009,7 @@ def root(self):
         answerlist = sorted(answerlist.items(), key=lambda x: x[1], reverse=True)
         answer = answerlist[0][0]
         # prediction.append(self.resultType(answer))
-        prediction.append(np.float(answer))
+        prediction.append(float(answer))
 
     return np.array(prediction)</code></pre>
 </details>

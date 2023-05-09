@@ -74,6 +74,37 @@ Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementa
 </br>
 </p>
 
+## Demo notebooks
+
+Demos are contained in the [notebooks](notebooks) folder.
+
+<details>
+<summary><a href="notebooks/imodels_demo.ipynb">Quickstart demo</a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+
+<details>
+<summary><a href="https://auto.gluon.ai/dev/tutorials/tabular_prediction/tabular-interpretability.html">Autogluon demo</a></summary>
+Fit/select an interpretable model automatically using Autogluon AutoML
+</details>
+
+<details>
+<summary><a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ">Quickstart colab demo</a> <a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ"> <img src="https://colab.research.google.com/assets/colab-badge.svg"></a></summary>
+Shows how to fit, predict, and visualize with different interpretable models
+</details>
+
+<details>
+<summary><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">Clinical decision rule notebook</a></summary>
+Shows an example of using <code>imodels</code> for deriving a clinical decision rule
+</details>
+
+<details>
+<summary>Posthoc analysis</summary>
+We also include some demos of posthoc analysis, which occurs after fitting models:
+<a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and 
+<a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
+</details>
+
 ## What's the difference between the models?
 
 The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
@@ -101,32 +132,6 @@ Bayesian rule lists and greedy rule lists differ in how they select rules; bayes
 <details>
 <summary>Ex. FPSkope vs. SkopeRules</summary>
 FPSkope and SkopeRules differ only in the way they generate candidate rules: FPSkope uses FPgrowth whereas SkopeRules extracts rules from decision trees.
-</details>
-
-## Demo notebooks
-
-Demos are contained in the [notebooks](notebooks) folder.
-
-<details>
-<summary><a href="notebooks/imodels_demo.ipynb">Quickstart demo</a></summary>
-Shows how to fit, predict, and visualize with different interpretable models
-</details>
-
-<details>
-<summary><a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ">Quickstart colab demo</a> <a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ"> <img src="https://colab.research.google.com/assets/colab-badge.svg"></a></summary>
-Shows how to fit, predict, and visualize with different interpretable models
-</details>
-
-<details>
-<summary><a href="https://github.com/csinva/iai-clinical-decision-rule/blob/master/notebooks/05_fit_interpretable_models.ipynb">Clinical decision rule notebook</a></summary>
-Shows an example of using <code>imodels</code> for deriving a clinical decision rule
-</details>
-
-<details>
-<summary>Posthoc analysis</summary>
-We also include some demos of posthoc analysis, which occurs after fitting models:
-<a href="notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and 
-<a href="notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
 </details>
 
 ## Support for different tasks
@@ -198,7 +203,7 @@ Fit an interpretable model to explain a previous model's errors (ex. in <a href=
 
 <details>
 <summary><a href="https://csinva.io/imodels/util/index.html">Rule-based utils</a> for customizing models</summary>
-The code here contains many useful and customizable functions for rule-based learning in the [util folder](https://csinva.io/imodels/util/index.html). This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.
+The code here contains many useful and customizable functions for rule-based learning in the <a href="https://csinva.io/imodels/util/index.html">util folder</a>. This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.
 </details>
 
 ## Our favorite models

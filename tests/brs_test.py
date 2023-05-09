@@ -11,8 +11,8 @@ from imodels import *
 test_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-class TestBoaClassifier(unittest.TestCase):
-    def test_boa_tictactoe(self):
+class TestBRSClassifier(unittest.TestCase):
+    def test_brs_tictactoe(self):
         '''Test classifiers are properly sklearn-compatible
         '''
 
