@@ -108,7 +108,20 @@ class _RandomForestPlus(BaseEstimator):
         self.prediction_score_ = None
         self.mdi_plus_ = None
         self.mdi_plus_scores_ = None
+        self.feature_names_ = None
         self._n_samples_train = X.shape[0]
+
+        if isinstance(X, pd.DataFrame):
+            self.feature_names_ = list(X.columns)
+            X_array = X.values
+        elif isinstance(X, np.ndarray):
+            X_array = X
+        else:
+            raise ValueError("Input X must be a pandas DataFrame or numpy array.")
+        if isinstance(y, pd.DataFrame):
+            y = y.values.ravel()
+        elif not isinstance(y, np.ndarray):
+            raise ValueError("Input y must be a pandas DataFrame or numpy array.")
 
         # fit random forest
         n_samples = X.shape[0]
@@ -137,7 +150,7 @@ class _RandomForestPlus(BaseEstimator):
                 transformer = CompositeTransformer(base_transformer_list + self.add_transformers,
                                                    drop_features=self.drop_features)
             # fit transformer
-            blocked_data = transformer.fit_transform(X, center=self.center, normalize=self.normalize)
+            blocked_data = transformer.fit_transform(X_array, center=self.center, normalize=self.normalize)
             # do sample split
             train_blocked_data, test_blocked_data, y_train, y_test, test_indices = \
                 _get_sample_split_data(blocked_data, y, tree_model.random_state, self.sample_split)
@@ -188,14 +201,24 @@ class _RandomForestPlus(BaseEstimator):
         """
         X = check_array(X)
         check_is_fitted(self, "estimators_")
+        if isinstance(X, pd.DataFrame):
+            if self.feature_names_ is not None:
+                X_array = X.loc[:, self.feature_names_].values
+            else:
+                X_array = X.values
+        elif isinstance(X, np.ndarray):
+            X_array = X
+        else:
+            raise ValueError("Input X must be a pandas DataFrame or numpy array.")
+
         if self._task == "regression":
             predictions = 0
             for estimator, transformer in zip(self.estimators_, self.transformers_):
-                blocked_data = transformer.transform(X, center=self.center, normalize=self.normalize)
+                blocked_data = transformer.transform(X_array, center=self.center, normalize=self.normalize)
                 predictions += estimator.predict(blocked_data.get_all_data())
             predictions = predictions / len(self.estimators_)
         elif self._task == "classification":
-            prob_predictions = self.predict_proba(X)
+            prob_predictions = self.predict_proba(X_array)
             if prob_predictions.ndim == 1:
                 prob_predictions = np.stack([1-prob_predictions, prob_predictions], axis=1)
             predictions = self.rf_model.classes_[np.argmax(prob_predictions, axis=1)]
@@ -223,9 +246,19 @@ class _RandomForestPlus(BaseEstimator):
             raise AttributeError("'{}' object has no attribute 'predict_proba'".format(
                 self.estimators_[0].__class__.__name__)
             )
+        if isinstance(X, pd.DataFrame):
+            if self.feature_names_ is not None:
+                X_array = X.loc[:, self.feature_names_].values
+            else:
+                X_array = X.values
+        elif isinstance(X, np.ndarray):
+            X_array = X
+        else:
+            raise ValueError("Input X must be a pandas DataFrame or numpy array.")
+
         predictions = 0
         for estimator, transformer in zip(self.estimators_, self.transformers_):
-            blocked_data = transformer.transform(X, center=self.center, normalize=self.normalize)
+            blocked_data = transformer.transform(X_array, center=self.center, normalize=self.normalize)
             predictions += estimator.predict_proba(blocked_data.get_all_data())
         predictions = predictions / len(self.estimators_)
         return predictions
@@ -276,6 +309,20 @@ class _RandomForestPlus(BaseEstimator):
             if self.mdi_plus_scores_ is None:
                 raise ValueError("Need X and y as inputs.")
         else:
+            # convert data frame to array
+            if isinstance(X, pd.DataFrame):
+                if self.feature_names_ is not None:
+                    X_array = X.loc[:, self.feature_names_].values
+                else:
+                    X_array = X.values
+            elif isinstance(X, np.ndarray):
+                X_array = X
+            else:
+                raise ValueError("Input X must be a pandas DataFrame or numpy array.")
+            if isinstance(y, pd.DataFrame):
+                y = y.values.ravel()
+            elif not isinstance(y, np.ndarray):
+                raise ValueError("Input y must be a pandas DataFrame or numpy array.")
             # get defaults
             if sample_split == "inherit":
                 sample_split = self.sample_split
@@ -300,7 +347,11 @@ class _RandomForestPlus(BaseEstimator):
                                          center=self.center,
                                          normalize=self.normalize)
             self.mdi_plus_ = mdi_plus_obj
-            self.mdi_plus_scores_ = mdi_plus_obj.get_scores(X, y)
+            mdi_plus_scores = mdi_plus_obj.get_scores(X_array, y)
+            if self.feature_names_ is not None:
+                mdi_plus_scores["var"] = self.feature_names_
+                self.mdi_plus_.feature_importances_["var"] = self.feature_names_
+            self.mdi_plus_scores_ = mdi_plus_scores
         return self.mdi_plus_scores_
 
     def get_mdi_plus_stability_scores(self, B=10, metrics="auto"):
