@@ -248,7 +248,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         s += '> ------------------------------\n'
         return s + self.visualize().to_string(index=False) + '\n'
 
-    def _extract_rules(self, X, y) -> List[Rule]:
+    def _extract_rules(self, X, y) -> List[str]:
         return extract_rulefit(X, y,
                                feature_names=self.feature_placeholders,
                                n_estimators=self.n_estimators,
