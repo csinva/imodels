@@ -26,9 +26,10 @@ class TestClassClassificationBinary:
         '''
 
         for model_type in [
+            BoostedRulesClassifier,
             TaoTreeClassifier,
             RuleFitClassifier, GreedyRuleListClassifier,
-            SkopeRulesClassifier, BoostedRulesClassifier,
+            SkopeRulesClassifier,
             OneRClassifier, SlipperClassifier,
             GreedyTreeClassifier, OptimalTreeClassifier,
             C45TreeClassifier, FIGSClassifier,
