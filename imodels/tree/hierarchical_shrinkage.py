@@ -183,11 +183,21 @@ class HSTree:
 
 
 class HSTreeRegressor(HSTree, RegressorMixin):
-    ...
+    def __init__(self, estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
+                 reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
+        super().__init__(estimator_=estimator_,
+                         reg_param=reg_param,
+                         shrinkage_scheme_=shrinkage_scheme_,
+                         )
 
 
 class HSTreeClassifier(HSTree, ClassifierMixin):
-    ...
+    def __init__(self, estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
+                 reg_param: float = 1, shrinkage_scheme_: str = 'node_based'):
+        super().__init__(estimator_=estimator_,
+                         reg_param=reg_param,
+                         shrinkage_scheme_=shrinkage_scheme_,
+                         )
 
 
 def _get_cv_criterion(scorer):
