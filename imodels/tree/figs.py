@@ -378,7 +378,10 @@ class FIGS(BaseEstimator):
             # require the tree to have more than 1 node, otherwise just leave importance_data_tree as zeros
             if 1 < next(node_counter):
                 tree_samples = _importances(tree_)
-                importance_data_tree /= tree_samples
+                if tree_samples != 0:
+                    importance_data_tree /= tree_samples
+                else:
+                    importance_data_tree = 0
 
             importance_data.append(importance_data_tree)
 
