@@ -8,6 +8,7 @@ import math
 from copy import deepcopy
 
 import numpy as np
+import sklearn
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_array, check_is_fitted
