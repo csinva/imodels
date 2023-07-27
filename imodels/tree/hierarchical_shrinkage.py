@@ -2,6 +2,7 @@ from copy import deepcopy
 from typing import List
 
 import numpy as np
+import sklearn
 from sklearn import datasets
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin, clone
 from sklearn.metrics import r2_score
@@ -169,6 +170,42 @@ class HSTree(BaseEstimator):
         else:
             return NotImplemented
 
+    def __str__(self):
+        if sklearn.utils.validation.check_is_fitted(self):
+            s = '> ------------------------------\n'
+            s += '> Decision Tree with Hierarchical Shrinkage\n'
+            s += '> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n'
+            s += '> ------------------------------' + '\n'
+            if hasattr(self, 'feature_names') and self.feature_names is not None:
+                return s + export_text(self.estimator_, feature_names=self.feature_names, show_weights=True)
+            else:
+                return s + export_text(self.estimator_, show_weights=True)
+        else:
+            return self.__class__.__name__
+
+    def __repr__(self):
+        if sklearn.utils.validation.check_is_fitted(self):
+            # s = self.__class__.__name__
+            # s += "("
+            # s += "estimator_="
+            # s += repr(self.estimator_)
+            # s += ", "
+            # s += "reg_param="
+            # s += str(self.reg_param)
+            # s += ", "
+            # s += "shrinkage_scheme_="
+            # s += self.shrinkage_scheme_
+            # s += ")"
+            # return s
+            attr_list = ["estimator_", "reg_param", "shrinkage_scheme_"]
+            s = self.__class__.__name__
+            s += "("
+            for attr in attr_list:
+                s += attr + "=" + repr(getattr(self, attr)) + ", "
+            s = s[:-2] + ")"
+            return s
+        else:
+            return self.__class__.__name__
 
 class HSTreeClassifier(HSTree, ClassifierMixin):
     def __init__(self, estimator=None,
