@@ -73,7 +73,8 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-        if sklearn.utils.validation.check_is_fitted(self):
+        try:
+            sklearn.utils.validation.check_is_fitted(self)
             if self.split_or_linear == 'linear':
                 if self.is_root:
                     return f'X_{self.feature} * {self.value:0.3f} (Tree #{self.tree_num} linear root)'
@@ -86,7 +87,7 @@ class Node:
                     return f'Val: {self.value[0][0]:0.3f} (leaf)'
                 else:
                     return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
-        else:
+        except ValueError:
             return self.__class__.__name__
 
     def __repr__(self):
@@ -421,14 +422,15 @@ class FIGSExt(BaseEstimator):
                                                                                                      pprefix)
 
     def __str__(self):
-        if sklearn.utils.validation.check_is_fitted(self):
+        try:
+            sklearn.utils.validation.check_is_fitted(self)
             s = '------------\n' + \
                 '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
             if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
                 for i in range(len(self.feature_names_))[::-1]:
                     s = s.replace(f'X_{i}', self.feature_names_[i])
             return s
-        else:
+        except ValueError:
             return self.__class__.__name__
             
     def predict(self, X):
