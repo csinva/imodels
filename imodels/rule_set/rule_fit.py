@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import scipy
 from scipy.special import softmax
+import sklearn
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.base import TransformerMixin
 from sklearn.utils.multiclass import unique_labels
