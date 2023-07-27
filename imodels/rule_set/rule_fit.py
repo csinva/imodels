@@ -242,12 +242,15 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         return rules[['rule', 'coef']].round(decimals)
 
     def __str__(self):
-        s = '> ------------------------------\n'
-        s += '> RuleFit:\n'
-        s += '> \tPredictions are made by summing the coefficients of each rule\n'
-        s += '> ------------------------------\n'
-        return s + self.visualize().to_string(index=False) + '\n'
-
+        if sklearn.utils.validation.check_is_fitted(self):
+            s = '> ------------------------------\n'
+            s += '> RuleFit:\n'
+            s += '> \tPredictions are made by summing the coefficients of each rule\n'
+            s += '> ------------------------------\n'
+            return s + self.visualize().to_string(index=False) + '\n'
+        else:
+            return self.__class__.__name__
+    
     def _extract_rules(self, X, y) -> List[str]:
         return extract_rulefit(X, y,
                                feature_names=self.feature_placeholders,
