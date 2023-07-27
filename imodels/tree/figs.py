@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.special import expit
+import sklearn
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
