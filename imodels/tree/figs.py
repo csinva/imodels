@@ -52,14 +52,15 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-        if sklearn.utils.validation.check_is_fitted(self):
+        try:
+            sklearn.utils.validation.check_is_fitted(self)
             if self.is_root:
                 return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
             elif self.left is None and self.right is None:
                 return f'Val: {self.value[0][0]:0.3f} (leaf)'
             else:
                 return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
-        else:
+        except ValueError:
             return self.__class__.__name__
             
     def print_root(self, y):
@@ -415,7 +416,8 @@ class FIGS(BaseEstimator):
             self._tree_to_str_with_data(X[~left], y[~left], root.right, pprefix))
 
     def __str__(self):
-        if sklearn.utils.validation.check_is_fitted(self):
+        try:
+            sklearn.utils.validation.check_is_fitted(self)
             s = '> ------------------------------\n'
             s += '> FIGS-Fast Interpretable Greedy-Tree Sums:\n'
             s += '> \tPredictions are made by summing the "Val" reached by traversing each tree.\n'
@@ -426,7 +428,7 @@ class FIGS(BaseEstimator):
                 for i in range(len(self.feature_names_))[::-1]:
                     s = s.replace(f'X_{i}', self.feature_names_[i])
             return s
-        else:
+        except ValueError:
             return self.__class__.__name__
             
     def print_tree(self, X, y, feature_names=None):
