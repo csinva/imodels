@@ -145,7 +145,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
     def __str__(self):
         '''Print out the list in a nice way
         '''
-        if sklearn.utils.validation.check_is_fitted(self):
+        try:
+            sklearn.utils.validation.check_is_fitted(self)
             s = '> ------------------------------\n> Greedy Rule List\n> ------------------------------\n'
 
             def red(s):
@@ -174,7 +175,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             # rule = self.rules_[-1]
             #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
             return s
-        else:
+        except ValueError:
             return self.__class__.__name__
             
     ######## HERE ONWARDS CUSTOM SPLITTING (DEPRECATED IN FAVOR OF SKLEARN STUMP) ########
