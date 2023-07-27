@@ -206,7 +206,7 @@ class HSTree(BaseEstimator):
                 s += attr + "=" + repr(getattr(self, attr)) + ", "
             s = s[:-2] + ")"
             return s
-        except ValueError:
+        except :
             return self.__class__.__name__
 
 class HSTreeClassifier(HSTree, ClassifierMixin):
@@ -330,7 +330,7 @@ if __name__ == '__main__':
     print('X.shape', X.shape)
     print('ys', np.unique(y_train))
 
-    # m = HSTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
+    # m = HSTree(estimator=DecisionTreeClassifier(), reg_param=0.1)
     # m = DecisionTreeClassifier(max_leaf_nodes = 20,random_state=1, max_features=None)
     m = DecisionTreeRegressor(random_state=42, max_leaf_nodes=20)
     # print('best alpha', m.reg_param)
@@ -342,14 +342,15 @@ if __name__ == '__main__':
     # x = DecisionTreeRegressor(random_state = 42, ccp_alpha = 0.3)
     # x.fit(X_train,y_train)
 
-    # m = HSTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
-    # m = HSTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
-    m = HSTreeClassifierCV(estimator_=DecisionTreeRegressor(max_leaf_nodes=10, random_state=1),
+    # m = HSTree(estimator=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
+    # m = HSTree(estimator=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
+    m = HSTreeClassifierCV(estimator=DecisionTreeRegressor(max_leaf_nodes=10, random_state=1),
                            shrinkage_scheme_='node_based',
                            reg_param_list=[0.1, 1, 2, 5, 10, 25, 50, 100, 500])
-    # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
+    print(m)
+    # m = ShrunkTreeCV(estimator=DecisionTreeClassifier())
 
-    # m = HSTreeClassifier(estimator_ = GradientBoostingClassifier(random_state = 10),reg_param = 5)
+    # m = HSTreeClassifier(estimator = GradientBoostingClassifier(random_state = 10),reg_param = 5)
     m.fit(X_train, y_train)
     print('best alpha', m.reg_param)
     # m.predict_proba(X_train)  # just run this
