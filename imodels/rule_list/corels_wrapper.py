@@ -234,7 +234,8 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
         self.str_print = str_print
 
     def __str__(self):
-        if sklearn.utils.validation.check_is_fitted(self):
+        try:
+            sklearn.utils.validation.check_is_fitted(self)
             if corels_supported:
                 if self.str_print is not None:
                     return 'OptimalRuleList:\n\n' + self.str_print
@@ -242,7 +243,7 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
                     return 'OptimalRuleList:\n\n' + self.rl_.__str__()
             else:
                 return super().__str__()
-        else:
+        except ValueError:
             return self.__class__.__name__
             
     def _get_complexity(self):
