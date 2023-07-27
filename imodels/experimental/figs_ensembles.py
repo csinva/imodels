@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 from matplotlib import pyplot as plt
+import sklearn
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
