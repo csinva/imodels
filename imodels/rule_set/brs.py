@@ -18,6 +18,7 @@ from mlxtend.frequent_patterns import fpgrowth
 from numpy.random import random
 from pandas import read_csv
 from scipy.sparse import csc_matrix
+import sklearn
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils.multiclass import check_classification_targets
