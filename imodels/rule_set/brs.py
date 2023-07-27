@@ -193,9 +193,10 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         return self
 
     def __str__(self):
-        if sklearn.utils.validation.check_is_fitted(self):
+        try:
+            sklearn.utils.validation.check_is_fitted(self)
             return ' '.join(str(r) for r in self.rules_)
-        else:
+        except ValueError:
             return self.__class__.__name__
             
     def predict(self, X):
