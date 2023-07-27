@@ -4,6 +4,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
+import sklearn
 from sklearn.preprocessing import KBinsDiscretizer
 
 from imodels.rule_list.greedy_rule_list import GreedyRuleListClassifier
