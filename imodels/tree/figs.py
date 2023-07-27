@@ -77,8 +77,6 @@ class Node:
         else:
             return f'X_{self.feature} <= {self.threshold:0.3f}' + one_proportion
 
-    def __repr__(self):
-        return self.__str__(self)
 
 
 class FIGS(BaseEstimator):
