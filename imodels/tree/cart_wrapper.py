@@ -1,7 +1,6 @@
 # This is just a simple wrapper around sklearn decisiontree
 # https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
 
-import sklearn
 from sklearn.tree import DecisionTreeClassifier, export_text, DecisionTreeRegressor
 from imodels.util.arguments import check_fit_arguments
 
@@ -49,18 +48,15 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
         self.complexity_ = compute_tree_complexity(self.tree_)
 
     def __str__(self):
-        try:
-            sklearn.utils.validation.check_is_fitted(self)
-            s = '> ------------------------------\n'
-            s += '> Greedy CART Tree:\n'
-            s += '> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n'
-            s += '> ------------------------------' + '\n'
-            if hasattr(self, 'feature_names') and self.feature_names is not None:
-                return s + export_text(self, feature_names=self.feature_names, show_weights=True)
-            else:
-                return s + export_text(self, show_weights=True)
-        except ValueError:
-            return self.__class__.__name__
+        s = '> ------------------------------\n'
+        s += '> Greedy CART Tree:\n'
+        s += '> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n'
+        s += '> ------------------------------' + '\n'
+        if hasattr(self, 'feature_names') and self.feature_names is not None:
+            return s + export_text(self, feature_names=self.feature_names, show_weights=True)
+        else:
+            return s + export_text(self, show_weights=True)
+
 
 class GreedyTreeRegressor(DecisionTreeRegressor):
     """Wrapper around sklearn greedy tree regressor
@@ -102,11 +98,7 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
         self.complexity_ = compute_tree_complexity(self.tree_)
 
     def __str__(self):
-        try:
-            sklearn.utils.validation.check_is_fitted(self)
-            if hasattr(self, 'feature_names') and self.feature_names is not None:
-                return 'GreedyTree:\n' + export_text(self, feature_names=self.feature_names, show_weights=True)
-            else:
-                return 'GreedyTree:\n' + export_text(self, show_weights=True)
-        except ValueError:
-            return self.__class__.__name__                
+        if hasattr(self, 'feature_names') and self.feature_names is not None:
+            return 'GreedyTree:\n' + export_text(self, feature_names=self.feature_names, show_weights=True)
+        else:
+            return 'GreedyTree:\n' + export_text(self, show_weights=True)

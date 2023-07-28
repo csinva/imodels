@@ -4,7 +4,6 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-import sklearn
 from sklearn.preprocessing import KBinsDiscretizer
 
 from imodels.rule_list.greedy_rule_list import GreedyRuleListClassifier
@@ -234,18 +233,14 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
         self.str_print = str_print
 
     def __str__(self):
-        try:
-            sklearn.utils.validation.check_is_fitted(self)
-            if corels_supported:
-                if self.str_print is not None:
-                    return 'OptimalRuleList:\n\n' + self.str_print
-                else:
-                    return 'OptimalRuleList:\n\n' + self.rl_.__str__()
+        if corels_supported:
+            if self.str_print is not None:
+                return 'OptimalRuleList:\n\n' + self.str_print
             else:
-                return super().__str__()
-        except ValueError:
-            return self.__class__.__name__
-            
+                return 'OptimalRuleList:\n\n' + self.rl_.__str__()
+        else:
+            return super().__str__()
+
     def _get_complexity(self):
         return sum([len(corule['antecedents']) for corule in self.rl_.rules])
 
