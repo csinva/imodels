@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.special import expit
-import sklearn
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
@@ -52,17 +51,13 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-        try:
-            sklearn.utils.validation.check_is_fitted(self)
-            if self.is_root:
-                return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
-            elif self.left is None and self.right is None:
-                return f'Val: {self.value[0][0]:0.3f} (leaf)'
-            else:
-                return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
-        except ValueError:
-            return self.__class__.__name__
-            
+        if self.is_root:
+            return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
+        elif self.left is None and self.right is None:
+            return f'Val: {self.value[0][0]:0.3f} (leaf)'
+        else:
+            return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
+
     def print_root(self, y):
         try:
             one_count = pd.Series(y).value_counts()[1.0]
@@ -77,6 +72,8 @@ class Node:
         else:
             return f'X_{self.feature} <= {self.threshold:0.3f}' + one_proportion
 
+    def __repr__(self):
+        return self.__str__()
 
 
 class FIGS(BaseEstimator):
@@ -414,21 +411,17 @@ class FIGS(BaseEstimator):
             self._tree_to_str_with_data(X[~left], y[~left], root.right, pprefix))
 
     def __str__(self):
-        try:
-            sklearn.utils.validation.check_is_fitted(self)
-            s = '> ------------------------------\n'
-            s += '> FIGS-Fast Interpretable Greedy-Tree Sums:\n'
-            s += '> \tPredictions are made by summing the "Val" reached by traversing each tree.\n'
-            s += '> \tFor classifiers, a sigmoid function is then applied to the sum.\n'
-            s += '> ------------------------------\n'
-            s += '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
-            if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
-                for i in range(len(self.feature_names_))[::-1]:
-                    s = s.replace(f'X_{i}', self.feature_names_[i])
-            return s
-        except ValueError:
-            return self.__class__.__name__
-            
+        s = '> ------------------------------\n'
+        s += '> FIGS-Fast Interpretable Greedy-Tree Sums:\n'
+        s += '> \tPredictions are made by summing the "Val" reached by traversing each tree.\n'
+        s += '> \tFor classifiers, a sigmoid function is then applied to the sum.\n'
+        s += '> ------------------------------\n'
+        s += '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
+        if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
+            for i in range(len(self.feature_names_))[::-1]:
+                s = s.replace(f'X_{i}', self.feature_names_[i])
+        return s
+
     def print_tree(self, X, y, feature_names=None):
         s = '------------\n' + \
             '\n\t+\n'.join([self._tree_to_str_with_data(X, y, t)

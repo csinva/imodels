@@ -2,7 +2,6 @@ from copy import deepcopy
 
 import numpy as np
 from matplotlib import pyplot as plt
-import sklearn
 from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
@@ -73,22 +72,18 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-        try:
-            sklearn.utils.validation.check_is_fitted(self)
-            if self.split_or_linear == 'linear':
-                if self.is_root:
-                    return f'X_{self.feature} * {self.value:0.3f} (Tree #{self.tree_num} linear root)'
-                else:
-                    return f'X_{self.feature} * {self.value:0.3f} (linear)'
+        if self.split_or_linear == 'linear':
+            if self.is_root:
+                return f'X_{self.feature} * {self.value:0.3f} (Tree #{self.tree_num} linear root)'
             else:
-                if self.is_root:
-                    return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
-                elif self.left is None and self.right is None:
-                    return f'Val: {self.value[0][0]:0.3f} (leaf)'
-                else:
-                    return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
-        except ValueError:
-            return self.__class__.__name__
+                return f'X_{self.feature} * {self.value:0.3f} (linear)'
+        else:
+            if self.is_root:
+                return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
+            elif self.left is None and self.right is None:
+                return f'Val: {self.value[0][0]:0.3f} (leaf)'
+            else:
+                return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
 
     def __repr__(self):
         return self.__str__()
@@ -422,17 +417,13 @@ class FIGSExt(BaseEstimator):
                                                                                                      pprefix)
 
     def __str__(self):
-        try:
-            sklearn.utils.validation.check_is_fitted(self)
-            s = '------------\n' + \
-                '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
-            if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
-                for i in range(len(self.feature_names_))[::-1]:
-                    s = s.replace(f'X_{i}', self.feature_names_[i])
-            return s
-        except ValueError:
-            return self.__class__.__name__
-            
+        s = '------------\n' + \
+            '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
+        if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
+            for i in range(len(self.feature_names_))[::-1]:
+                s = s.replace(f'X_{i}', self.feature_names_[i])
+        return s
+
     def predict(self, X):
         if self.posthoc_ridge and self.weighted_model_:  # note, during fitting don't use the weighted moel
             X_feats = self._extract_tree_predictions(X)

@@ -8,7 +8,6 @@ import math
 from copy import deepcopy
 
 import numpy as np
-import sklearn
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_array, check_is_fitted
@@ -141,43 +140,48 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         X = check_array(X)
         return np.argmax(self.predict_proba(X), axis=1)
 
+    """
+    def __str__(self):
+        # s = ''
+        # for rule in self.rules_:
+        #     s += f"mean {rule['val'].round(3)} ({rule['num_pts']} pts)\n"
+        #     if 'col' in rule:
+        #         s += f"if {rule['col']} >= {rule['cutoff']} then {rule['val_right'].round(3)} ({rule['num_pts_right']} pts)\n"
+        # return s
+    """
 
     def __str__(self):
         '''Print out the list in a nice way
         '''
-        try:
-            sklearn.utils.validation.check_is_fitted(self)
-            s = '> ------------------------------\n> Greedy Rule List\n> ------------------------------\n'
+        s = '> ------------------------------\n> Greedy Rule List\n> ------------------------------\n'
 
-            def red(s):
-                # return f"\033[91m{s}\033[00m"
-                return s
-    
-            def cyan(s):
-                # return f"\033[96m{s}\033[00m"
-                return s
-    
-            def rule_name(rule):
-                if rule['flip']:
-                    return '~' + rule['col']
-                return rule['col']
-    
-            # rule = self.rules_[0]
-            #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
-            for rule in self.rules_:
-                s += u'\u2193\n' + f"{cyan((100 * rule['val']).round(2))}% risk ({rule['num_pts']} pts)\n"
-                #         s += f"\t{'Else':>45} => {cyan((100 * rule['val']).round(2)):>6}% IwI ({rule['val'] * rule['num_pts']:.0f}/{rule['num_pts']} pts)\n"
-                if 'col' in rule:
-                    #             prefix = f"if {rule['col']} >= {rule['cutoff']}"
-                    prefix = f"if {rule_name(rule)}"
-                    val = f"{100 * rule['val_right'].round(3)}"
-                    s += f"\t{prefix} ==> {red(val)}% risk ({rule['num_pts_right']} pts)\n"
-            # rule = self.rules_[-1]
-            #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
+        def red(s):
+            # return f"\033[91m{s}\033[00m"
             return s
-        except ValueError:
-            return self.__class__.__name__
-            
+
+        def cyan(s):
+            # return f"\033[96m{s}\033[00m"
+            return s
+
+        def rule_name(rule):
+            if rule['flip']:
+                return '~' + rule['col']
+            return rule['col']
+
+        # rule = self.rules_[0]
+        #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
+        for rule in self.rules_:
+            s += u'\u2193\n' + f"{cyan((100 * rule['val']).round(2))}% risk ({rule['num_pts']} pts)\n"
+            #         s += f"\t{'Else':>45} => {cyan((100 * rule['val']).round(2)):>6}% IwI ({rule['val'] * rule['num_pts']:.0f}/{rule['num_pts']} pts)\n"
+            if 'col' in rule:
+                #             prefix = f"if {rule['col']} >= {rule['cutoff']}"
+                prefix = f"if {rule_name(rule)}"
+                val = f"{100 * rule['val_right'].round(3)}"
+                s += f"\t{prefix} ==> {red(val)}% risk ({rule['num_pts_right']} pts)\n"
+        # rule = self.rules_[-1]
+        #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
+        return s
+
     ######## HERE ONWARDS CUSTOM SPLITTING (DEPRECATED IN FAVOR OF SKLEARN STUMP) ########
     ######################################################################################
     def _find_best_split(self, x, y):

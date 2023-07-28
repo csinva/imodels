@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 import scipy
 from scipy.special import softmax
-import sklearn
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.base import TransformerMixin
 from sklearn.utils.multiclass import unique_labels
@@ -243,16 +242,12 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         return rules[['rule', 'coef']].round(decimals)
 
     def __str__(self):
-        try:
-            sklearn.utils.validation.check_is_fitted(self)
-            s = '> ------------------------------\n'
-            s += '> RuleFit:\n'
-            s += '> \tPredictions are made by summing the coefficients of each rule\n'
-            s += '> ------------------------------\n'
-            return s + self.visualize().to_string(index=False) + '\n'
-        except ValueError:
-            return self.__class__.__name__
-    
+        s = '> ------------------------------\n'
+        s += '> RuleFit:\n'
+        s += '> \tPredictions are made by summing the coefficients of each rule\n'
+        s += '> ------------------------------\n'
+        return s + self.visualize().to_string(index=False) + '\n'
+
     def _extract_rules(self, X, y) -> List[str]:
         return extract_rulefit(X, y,
                                feature_names=self.feature_placeholders,
