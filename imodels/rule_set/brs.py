@@ -18,6 +18,7 @@ from mlxtend.frequent_patterns import fpgrowth
 from numpy.random import random
 from pandas import read_csv
 from scipy.sparse import csc_matrix
+import sklearn
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils.multiclass import check_classification_targets
@@ -192,8 +193,12 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         return self
 
     def __str__(self):
-        return ' '.join(str(r) for r in self.rules_)
-
+        try:
+            sklearn.utils.validation.check_is_fitted(self)
+            return ' '.join(str(r) for r in self.rules_)
+        except ValueError:
+            return self.__class__.__name__
+            
     def predict(self, X):
         check_is_fitted(self)
         if isinstance(X, np.ndarray):
