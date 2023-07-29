@@ -53,7 +53,6 @@ class Node:
 
     def __str__(self):
         try:
-            sklearn.utils.validation.check_is_fitted(self)
             if self.is_root:
                 return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
             elif self.left is None and self.right is None:
@@ -415,7 +414,6 @@ class FIGS(BaseEstimator):
 
     def __str__(self):
         try:
-            sklearn.utils.validation.check_is_fitted(self)
             s = '> ------------------------------\n'
             s += '> FIGS-Fast Interpretable Greedy-Tree Sums:\n'
             s += '> \tPredictions are made by summing the "Val" reached by traversing each tree.\n'
