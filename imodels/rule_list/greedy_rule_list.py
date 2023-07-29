@@ -146,7 +146,6 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         '''Print out the list in a nice way
         '''
         try:
-            sklearn.utils.validation.check_is_fitted(self)
             s = '> ------------------------------\n> Greedy Rule List\n> ------------------------------\n'
 
             def red(s):
