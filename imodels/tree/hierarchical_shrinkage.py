@@ -172,7 +172,7 @@ class HSTree(BaseEstimator):
 
     def __str__(self):
         try:
-            sklearn.utils.validation.check_is_fitted(self)
+            # sklearn.utils.validation.check_is_fitted(self)
             s = '> ------------------------------\n'
             s += '> Decision Tree with Hierarchical Shrinkage\n'
             s += '> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n'
@@ -186,7 +186,7 @@ class HSTree(BaseEstimator):
 
     def __repr__(self):
         try:
-            sklearn.utils.validation.check_is_fitted(self)
+            # sklearn.utils.validation.check_is_fitted(self)
             # s = self.__class__.__name__
             # s += "("
             # s += "estimator_="
