@@ -244,7 +244,6 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
     def __str__(self):
         try:
-            sklearn.utils.validation.check_is_fitted(self)
             s = '> ------------------------------\n'
             s += '> RuleFit:\n'
             s += '> \tPredictions are made by summing the coefficients of each rule\n'
