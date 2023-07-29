@@ -74,7 +74,6 @@ class Node:
 
     def __str__(self):
         try:
-            sklearn.utils.validation.check_is_fitted(self)
             if self.split_or_linear == 'linear':
                 if self.is_root:
                     return f'X_{self.feature} * {self.value:0.3f} (Tree #{self.tree_num} linear root)'
