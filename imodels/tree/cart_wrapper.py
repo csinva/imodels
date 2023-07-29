@@ -50,7 +50,6 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
 
     def __str__(self):
         try:
-            sklearn.utils.validation.check_is_fitted(self)
             s = '> ------------------------------\n'
             s += '> Greedy CART Tree:\n'
             s += '> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n'
@@ -103,7 +102,6 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
 
     def __str__(self):
         try:
-            sklearn.utils.validation.check_is_fitted(self)
             if hasattr(self, 'feature_names') and self.feature_names is not None:
                 return 'GreedyTree:\n' + export_text(self, feature_names=self.feature_names, show_weights=True)
             else:
