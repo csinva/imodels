@@ -235,7 +235,6 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
 
     def __str__(self):
         try:
-            sklearn.utils.validation.check_is_fitted(self)
             if corels_supported:
                 if self.str_print is not None:
                     return 'OptimalRuleList:\n\n' + self.str_print
