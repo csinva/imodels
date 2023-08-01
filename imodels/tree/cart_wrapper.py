@@ -9,8 +9,7 @@ from imodels.util.tree import compute_tree_complexity
 
 
 class GreedyTreeClassifier(DecisionTreeClassifier):
-    """Wrapper around sklearn greedy tree classifier
-    """
+    """Wrapper around sklearn greedy tree classifier"""
 
     def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         """Build a decision tree classifier from the training set (X, y).
@@ -44,26 +43,27 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
         self._set_complexity()
 
     def _set_complexity(self):
-        """Set complexity as number of non-leaf nodes
-        """
+        """Set complexity as number of non-leaf nodes"""
         self.complexity_ = compute_tree_complexity(self.tree_)
 
     def __str__(self):
         try:
-            s = '> ------------------------------\n'
-            s += '> Greedy CART Tree:\n'
-            s += '> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n'
-            s += '> ------------------------------' + '\n'
-            if hasattr(self, 'feature_names') and self.feature_names is not None:
-                return s + export_text(self, feature_names=self.feature_names, show_weights=True)
+            s = "> ------------------------------\n"
+            s += "> Greedy CART Tree:\n"
+            s += "> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n"
+            s += "> ------------------------------" + "\n"
+            if hasattr(self, "feature_names") and self.feature_names is not None:
+                return s + export_text(
+                    self, feature_names=self.feature_names, show_weights=True
+                )
             else:
                 return s + export_text(self, show_weights=True)
-        except ValueError:
+        except:
             return self.__class__.__name__
 
+
 class GreedyTreeRegressor(DecisionTreeRegressor):
-    """Wrapper around sklearn greedy tree regressor
-    """
+    """Wrapper around sklearn greedy tree regressor"""
 
     def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         """Build a decision tree regressor from the training set (X, y).
@@ -96,15 +96,16 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
         self._set_complexity()
 
     def _set_complexity(self):
-        """Set complexity as number of non-leaf nodes
-        """
+        """Set complexity as number of non-leaf nodes"""
         self.complexity_ = compute_tree_complexity(self.tree_)
 
     def __str__(self):
         try:
-            if hasattr(self, 'feature_names') and self.feature_names is not None:
-                return 'GreedyTree:\n' + export_text(self, feature_names=self.feature_names, show_weights=True)
+            if hasattr(self, "feature_names") and self.feature_names is not None:
+                return "GreedyTree:\n" + export_text(
+                    self, feature_names=self.feature_names, show_weights=True
+                )
             else:
-                return 'GreedyTree:\n' + export_text(self, show_weights=True)
+                return "GreedyTree:\n" + export_text(self, show_weights=True)
         except ValueError:
-            return self.__class__.__name__                
+            return self.__class__.__name__
