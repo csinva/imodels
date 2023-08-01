@@ -18,7 +18,9 @@ except:
     pass
 
 
-class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported else CorelsClassifier):
+class OptimalRuleListClassifier(
+    GreedyRuleListClassifier if not corels_supported else CorelsClassifier
+):
     """Certifiably Optimal RulE ListS classifier.
     This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
     rulelists for binary feature data and binary classification. As an alternative to other
@@ -80,12 +82,26 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
     --------
     """
 
-    def __init__(self, c=0.01, n_iter=10000, map_type="prefix", policy="lower_bound",
-                 verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0):
+    def __init__(
+        self,
+        c=0.01,
+        n_iter=10000,
+        map_type="prefix",
+        policy="lower_bound",
+        verbosity=[],
+        ablation=0,
+        max_card=2,
+        min_support=0.01,
+        random_state=0,
+    ):
         if corels_supported:
-            super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
+            super().__init__(
+                c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support
+            )
         else:
-            warnings.warn("Should install corels with pip install corels. Using GreedyRuleList instead.")
+            warnings.warn(
+                "Should install corels with pip install corels. Using GreedyRuleList instead."
+            )
             super().__init__()
             self.fit = super().fit
             self.predict = super().predict
@@ -95,7 +111,7 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
         self.random_state = random_state
         self.discretizer = None
         self.str_print = None
-        self._estimator_type = 'classifier'
+        self._estimator_type = "classifier"
 
     def fit(self, X, y, feature_names=None, prediction_name="prediction"):
         """
@@ -123,11 +139,11 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
                 feature_names = X.columns.tolist()
             X = X.values
         elif feature_names is None:
-            feature_names = ['X_' + str(i) for i in range(X.shape[1])]
+            feature_names = ["X_" + str(i) for i in range(X.shape[1])]
 
         # check if any non-binary values
         if not np.isin(X, [0, 1]).all().all():
-            self.discretizer = KBinsDiscretizer(encode='onehot-dense')
+            self.discretizer = KBinsDiscretizer(encode="onehot-dense")
             self.discretizer.fit(X, y)
             """
             feature_names = [f'{col}_{b}'
@@ -184,7 +200,9 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
         preds = self.predict(X)
         return np.vstack((1 - preds, preds)).transpose()
 
-    def _traverse_rule(self, X: np.ndarray, y: np.ndarray, feature_names: List[str], print_colors=False):
+    def _traverse_rule(
+        self, X: np.ndarray, y: np.ndarray, feature_names: List[str], print_colors=False
+    ):
         """Traverse rule and build up string representation
 
         Parameters
@@ -195,41 +213,46 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
         -------
 
         """
-        str_print = f''
+        str_print = f""
         df = pd.DataFrame(X, columns=feature_names)
-        df.loc[:, 'y'] = y
-        o = 'y'
-        str_print += f'   {df[o].sum()} / {df.shape[0]} (positive class / total)\n'
+        df.loc[:, "y"] = y
+        o = "y"
+        str_print += f"   {df[o].sum()} / {df.shape[0]} (positive class / total)\n"
         if print_colors:
-            color_start = '\033[96m'
-            color_end = '\033[00m'
+            color_start = "\033[96m"
+            color_end = "\033[00m"
         else:
-            color_start = ''
-            color_end = ''
+            color_start = ""
+            color_end = ""
         if len(self.rl_.rules) > 1:
-            str_print += f'\t\u2193 \n'
+            str_print += f"\t\u2193 \n"
         else:
-            str_print += '   No rules learned\n'
+            str_print += "   No rules learned\n"
         for j, rule in enumerate(self.rl_.rules[:-1]):
-            antecedents = rule['antecedents']
-            query = ''
+            antecedents = rule["antecedents"]
+            query = ""
             for i, feat_idx in enumerate(antecedents):
                 if i > 0:
-                    query += ' & '
+                    query += " & "
                 if feat_idx < 0:
-                    query += f'(`{feature_names[-feat_idx - 1]}` == 0)'
+                    query += f"(`{feature_names[-feat_idx - 1]}` == 0)"
                 else:
-                    query += f'(`{feature_names[feat_idx - 1]}` == 1)'
+                    query += f"(`{feature_names[feat_idx - 1]}` == 1)"
                 df_rhs = df.query(query)
                 idxs_satisfying_rule = df_rhs.index
                 df.drop(index=idxs_satisfying_rule, inplace=True)
                 computed_prob = 100 * df_rhs[o].sum() / (df_rhs.shape[0] + 1e-10)
 
                 # add to str_print
-                query_print = query.replace('== 1', '').replace('(', '').replace(')', '').replace('`', '')
-                str_print += f'{color_start}If {query_print:<35}{color_end} \u2192 {df_rhs[o].sum():>3} / {df_rhs.shape[0]:>4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():>3} / {df.shape[0]:>5}\t \n'
+                query_print = (
+                    query.replace("== 1", "")
+                    .replace("(", "")
+                    .replace(")", "")
+                    .replace("`", "")
+                )
+                str_print += f"{color_start}If {query_print:<35}{color_end} \u2192 {df_rhs[o].sum():>3} / {df_rhs.shape[0]:>4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():>3} / {df.shape[0]:>5}\t \n"
                 if not (j == len(self.rl_.rules) - 2 and i == len(antecedents) - 1):
-                    str_print += '\t\u2193 \n'
+                    str_print += "\t\u2193 \n"
 
         self.str_print = str_print
 
@@ -237,19 +260,19 @@ class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported
         try:
             if corels_supported:
                 if self.str_print is not None:
-                    return 'OptimalRuleList:\n\n' + self.str_print
+                    return "OptimalRuleList:\n\n" + self.str_print
                 else:
-                    return 'OptimalRuleList:\n\n' + self.rl_.__str__()
+                    return "OptimalRuleList:\n\n" + self.rl_.__str__()
             else:
                 return super().__str__()
-        except ValueError:
+        except:
             return self.__class__.__name__
-            
+
     def _get_complexity(self):
-        return sum([len(corule['antecedents']) for corule in self.rl_.rules])
+        return sum([len(corule["antecedents"]) for corule in self.rl_.rules])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     X = (np.random.randn(40, 2) > 0).astype(int)
     y = (X[:, 0] > 0).astype(int)
     y[-2:] = 1 - y[-2:]
