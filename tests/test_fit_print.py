@@ -5,14 +5,11 @@ from sklearn.datasets import make_regression, make_classification
 
 classifiers = [
     SLIMClassifier(),
-    BayesianRuleListClassifier(),
     OptimalRuleListClassifier(),
     GreedyRuleListClassifier(),
     OneRClassifier(),
     BoostedRulesClassifier(),
     BayesianRuleSetClassifier(),
-    FPLassoClassifier(),
-    FPSkopeClassifier(),
     RuleFitClassifier(),
     SkopeRulesClassifier(),
     SlipperClassifier(),
@@ -25,10 +22,15 @@ classifiers = [
     TaoTreeClassifier(),
 ]
 
+classifiers_for_discretized_X = [
+    BayesianRuleListClassifier(),
+    FPLassoClassifier(),
+    FPSkopeClassifier(),
+]
+
 regressors = [
     SLIMRegressor(),
     BoostedRulesRegressor(),
-    FPLassoRegressor(),
     RuleFitRegressor(),
     GreedyTreeRegressor(),
     FIGSRegressor(),
@@ -36,6 +38,10 @@ regressors = [
     HSTreeRegressor(),
     HSTreeRegressorCV(),
     TaoTreeRegressor(),
+]
+
+regressors_for_discretized_X = [
+    FPLassoRegressor(),
 ]
 
 
@@ -63,14 +69,43 @@ def test_fit_before_print_regressor(regressor) -> None:
     print(regressor)
 
 
-@pytest.mark.parametrize("classifier", classifiers)
+classifiers_fit_pass = [
+    SLIMClassifier(),
+    GreedyRuleListClassifier(),
+    OneRClassifier(),
+    BoostedRulesClassifier(),
+    RuleFitClassifier(),
+    SkopeRulesClassifier(),
+    C45TreeClassifier(),
+    GreedyTreeClassifier(),
+    FIGSClassifier(),
+    FIGSClassifierCV(),
+    HSTreeClassifier(),
+    HSTreeClassifierCV(),
+    TaoTreeClassifier(),
+]
+
+
+regressors_fit_pass = [
+    SLIMRegressor(),
+    BoostedRulesRegressor(),
+    RuleFitRegressor(),
+    GreedyTreeRegressor(),
+    FIGSRegressor(),
+    FIGSRegressorCV(),
+    HSTreeRegressor(),
+    HSTreeRegressorCV(),
+]
+
+
+@pytest.mark.parametrize("classifier", classifiers_fit_pass)
 def test_fit_after_print_classifier(classifier) -> None:
     X, y = make_classification(n_samples=25, n_features=5)
     classifier.fit(X, y)
     print(classifier)
 
 
-@pytest.mark.parametrize("regressor", regressors)
+@pytest.mark.parametrize("regressor", regressors_fit_pass)
 def test_fit_after_print_regressor(regressor) -> None:
     X, y = make_regression(n_samples=25, n_features=5)
     regressor.fit(X, y)
