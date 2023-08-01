@@ -33,30 +33,30 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
     Parameters
     ----------
-    tree_size:      Number of terminal nodes in generated trees. If exp_rand_tree_size=True, 
+    tree_size:      Number of terminal nodes in generated trees. If exp_rand_tree_size=True,
                     this will be the mean number of terminal nodes.
-    sample_fract:   fraction of randomly chosen training observations used to produce each tree. 
+    sample_fract:   fraction of randomly chosen training observations used to produce each tree.
                     FP 2004 (Sec. 2)
     max_rules:      total number of terms included in the final model (both linear and rules)
                     approximate total number of candidate rules generated for fitting also is based on this
                     Note that actual number of candidate rules will usually be lower than this due to duplicates.
-    memory_par:     scale multiplier (shrinkage factor) applied to each new tree when 
+    memory_par:     scale multiplier (shrinkage factor) applied to each new tree when
                     sequentially induced. FP 2004 (Sec. 2)
     lin_standardise: If True, the linear terms will be standardised as per Friedman Sec 3.2
                     by multiplying the winsorised variable by 0.4/stdev.
-    lin_trim_quantile: If lin_standardise is True, this quantile will be used to trim linear 
+    lin_trim_quantile: If lin_standardise is True, this quantile will be used to trim linear
                     terms before standardisation.
-    exp_rand_tree_size: If True, each boosted tree will have a different maximum number of 
-                    terminal nodes based on an exponential distribution about tree_size. 
+    exp_rand_tree_size: If True, each boosted tree will have a different maximum number of
+                    terminal nodes based on an exponential distribution about tree_size.
                     (Friedman Sec 3.3)
     include_linear: Include linear terms as opposed to only rules
     alpha:          Regularization strength, will override max_rules parameter
-    cv:             Whether to use cross-validation scores to select the regularization strength 
+    cv:             Whether to use cross-validation scores to select the regularization strength
                     the final regularization value out of all that satisfy max_rules. If False, the
                     least regularization possible is used.
     random_state:   Integer to initialise random objects and provide repeatability.
-    tree_generator: Optional: this object will be used as provided to generate the rules. 
-                    This will override almost all the other properties above. 
+    tree_generator: Optional: this object will be used as provided to generate the rules.
+                    This will override almost all the other properties above.
                     Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
 
     Attributes
@@ -69,20 +69,22 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
     """
 
-    def __init__(self,
-                 n_estimators=100,
-                 tree_size=4,
-                 sample_fract='default',
-                 max_rules=30,
-                 memory_par=0.01,
-                 tree_generator=None,
-                 lin_trim_quantile=0.025,
-                 lin_standardise=True,
-                 exp_rand_tree_size=True,
-                 include_linear=True,
-                 alpha=None,
-                 cv=True,
-                 random_state=None):
+    def __init__(
+        self,
+        n_estimators=100,
+        tree_size=4,
+        sample_fract="default",
+        max_rules=30,
+        memory_par=0.01,
+        tree_generator=None,
+        lin_trim_quantile=0.025,
+        lin_standardise=True,
+        exp_rand_tree_size=True,
+        include_linear=True,
+        alpha=None,
+        cv=True,
+        random_state=None,
+    ):
         self.n_estimators = n_estimators
         self.tree_size = tree_size
         self.sample_fract = sample_fract
@@ -103,9 +105,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.mean = None
 
     def fit(self, X, y=None, feature_names=None):
-        """Fit and estimate linear combination of rule ensemble
-
-        """
+        """Fit and estimate linear combination of rule ensemble"""
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
 
         self.n_features_ = X.shape[1]
@@ -114,22 +114,25 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.feature_names = np.array(list(self.feature_dict_.values()))
 
         extracted_rules = self._extract_rules(X, y)
-        self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(X, y, extracted_rules)
+        (
+            self.rules_without_feature_names_,
+            self.coef,
+            self.intercept,
+        ) = self._score_rules(X, y, extracted_rules)
         self.rules_ = [
-            replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
+            replace_feature_name(rule, self.feature_dict_)
+            for rule in self.rules_without_feature_names_
         ]
 
         # count total rule terms, plus nonzero linear terms
         self.complexity_ = self._get_complexity()
         if self.include_linear:
-            self.complexity_ += np.sum(
-                np.array(self.coef[:X.shape[1]]) != 0)
+            self.complexity_ += np.sum(np.array(self.coef[: X.shape[1]]) != 0)
 
         return self
 
     def _predict_continuous_output(self, X):
-        """Predict outcome of linear model for X
-        """
+        """Predict outcome of linear model for X"""
         if type(X) == pd.DataFrame:
             X = X.values.astype(np.float32)
 
@@ -139,13 +142,13 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         if self.include_linear:
             if self.lin_standardise:
                 X = self.friedscale.scale(X)
-            y_pred += X @ self.coef[:X.shape[1]]
+            y_pred += X @ self.coef[: X.shape[1]]
         return y_pred + self.intercept
 
     def predict(self, X):
-        '''Predict. For regression returns continuous output.
+        """Predict. For regression returns continuous output.
         For classification, returns discrete output.
-        '''
+        """
         check_is_fitted(self)
         if scipy.sparse.issparse(X):
             X = X.toarray()
@@ -181,7 +184,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         df = pd.DataFrame(X, columns=self.feature_placeholders)
         X_transformed = np.zeros((X.shape[0], len(rules)))
         for i, r in enumerate(rules):
-            features_r_uses = [term.split(' ')[0] for term in r.split(' and ')]
+            features_r_uses = [term.split(" ")[0] for term in r.split(" and ")]
             X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
@@ -193,7 +196,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         exclude_zero_coef: If True (default), returns only the rules with an estimated
                            coefficient not equalt to  zero.
 
-        subregion: If None (default) returns global importances (FP 2004 eq. 28/29), else returns importance over 
+        subregion: If None (default) returns global importances (FP 2004 eq. 28/29), else returns importance over
                            subregion of inputs (FP 2004 eq. 30/31/32).
 
         Returns
@@ -215,9 +218,13 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                 importance = abs(coef) * self.stddev[i]
             else:
                 subregion = np.array(subregion)
-                importance = sum(abs(coef) * abs([x[i] for x in self.winsorizer.trim(subregion)] - self.mean[i])) / len(
-                    subregion)
-            output_rules += [(self.feature_names[i], 'linear', coef, 1, importance)]
+                importance = sum(
+                    abs(coef)
+                    * abs(
+                        [x[i] for x in self.winsorizer.trim(subregion)] - self.mean[i]
+                    )
+                ) / len(subregion)
+            output_rules += [(self.feature_names[i], "linear", coef, 1, importance)]
 
         # Add rules
         for i in range(0, len(self.rules_)):
@@ -230,8 +237,12 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                 rkx = self.transform(subregion, [rule])[:, -1]
                 importance = sum(abs(coef) * abs(rkx - rule.support)) / len(subregion)
 
-            output_rules += [(self.rules_[i].rule, 'rule', coef, rule.support, importance)]
-        rules = pd.DataFrame(output_rules, columns=["rule", "type", "coef", "support", "importance"])
+            output_rules += [
+                (self.rules_[i].rule, "rule", coef, rule.support, importance)
+            ]
+        rules = pd.DataFrame(
+            output_rules, columns=["rule", "type", "coef", "support", "importance"]
+        )
         if exclude_zero_coef:
             rules = rules.ix[rules.coef != 0]
         return rules
@@ -239,35 +250,37 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     def visualize(self, decimals=2):
         rules = self._get_rules()
         rules = rules[rules.coef != 0].sort_values("support", ascending=False)
-        pd.set_option('display.max_colwidth', None)
-        return rules[['rule', 'coef']].round(decimals)
+        pd.set_option("display.max_colwidth", None)
+        return rules[["rule", "coef"]].round(decimals)
 
     def __str__(self):
         try:
-            s = '> ------------------------------\n'
-            s += '> RuleFit:\n'
-            s += '> \tPredictions are made by summing the coefficients of each rule\n'
-            s += '> ------------------------------\n'
-            return s + self.visualize().to_string(index=False) + '\n'
-        except ValueError:
+            s = "> ------------------------------\n"
+            s += "> RuleFit:\n"
+            s += "> \tPredictions are made by summing the coefficients of each rule\n"
+            s += "> ------------------------------\n"
+            return s + self.visualize().to_string(index=False) + "\n"
+        except:
             return self.__class__.__name__
-    
+
     def _extract_rules(self, X, y) -> List[str]:
-        return extract_rulefit(X, y,
-                               feature_names=self.feature_placeholders,
-                               n_estimators=self.n_estimators,
-                               tree_size=self.tree_size,
-                               memory_par=self.memory_par,
-                               tree_generator=self.tree_generator,
-                               exp_rand_tree_size=self.exp_rand_tree_size,
-                               random_state=self.random_state)
+        return extract_rulefit(
+            X,
+            y,
+            feature_names=self.feature_placeholders,
+            n_estimators=self.n_estimators,
+            tree_size=self.tree_size,
+            memory_par=self.memory_par,
+            tree_generator=self.tree_generator,
+            exp_rand_tree_size=self.exp_rand_tree_size,
+            random_state=self.random_state,
+        )
 
     def _score_rules(self, X, y, rules) -> Tuple[List[Rule], List[float], float]:
         X_concat = np.zeros([X.shape[0], 0])
 
         # standardise linear variables if requested (for regression model only)
         if self.include_linear:
-
             # standard deviation and mean of winsorized features
             self.winsorizer.train(X)
             winsorized_X = self.winsorizer.trim(X)
@@ -288,13 +301,19 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         # no rules fit and self.include_linear == False
         if X_concat.shape[1] == 0:
             return [], [], 0
-        prediction_task = 'regression' if isinstance(self, RegressorMixin) else 'classification'
-        return score_linear(X_concat, y, rules,
-                            prediction_task=prediction_task,
-                            max_rules=self.max_rules,
-                            alpha=self.alpha,
-                            cv=self.cv,
-                            random_state=self.random_state)
+        prediction_task = (
+            "regression" if isinstance(self, RegressorMixin) else "classification"
+        )
+        return score_linear(
+            X_concat,
+            y,
+            rules,
+            prediction_task=prediction_task,
+            max_rules=self.max_rules,
+            alpha=self.alpha,
+            cv=self.cv,
+            random_state=self.random_state,
+        )
 
 
 class RuleFitRegressor(RuleFit, RegressorMixin):
