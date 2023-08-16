@@ -2,7 +2,7 @@
 
 MDI+ is a novel feature importance framework, which generalizes the popular mean decrease in impurity (MDI) importance score for random forests. At its core, MDI+ expands upon a recently discovered connection between linear regression and decision trees. In doing so, MDI+ enables practitioners to (1) tailor the feature importance computation to the data/problem structure and (2) incorporate additional features or knowledge to mitigate known biases of decision trees. In both real data case studies and extensive real-data-inspired simulations, MDI+ outperforms commonly used feature importance measures (e.g., MDI, permutation-based scores, and TreeSHAP) by substantional margins. 
 
-For further details, we refer to [Agarwal et al. (2023)]().
+For further details, we refer to [Agarwal et al. (2023)](https://arxiv.org/pdf/2307.01932.pdf).
 
 **Regression Example Usage:**
 
