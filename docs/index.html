@@ -98,7 +98,7 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 </tr>
 <tr>
 <td style="text-align: left;">Slipper rule set</td>
-<td><a href="https://csinva.io/imodels/rule_set/slipper.html">🗂️</a>, ㅤㅤ<a href="https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf">📄</a></td>
+<td><a href="https://csinva.io/imodels/rule_set/slipper.html">🗂️</a>, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ<a href="https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf">📄</a></td>
 <td>Sequentially learns a set of rules with SLIPPER</td>
 </tr>
 <tr>
@@ -123,7 +123,7 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 </tr>
 <tr>
 <td style="text-align: left;">OneR rule list</td>
-<td><a href="https://csinva.io/imodels/rule_list/one_r.html">🗂️</a>, ㅤㅤ<a href="https://link.springer.com/article/10.1023/A:1022631118932">📄</a></td>
+<td><a href="https://csinva.io/imodels/rule_list/one_r.html">🗂️</a>, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, <a href="https://link.springer.com/article/10.1023/A:1022631118932">📄</a></td>
 <td>Fits rule list restricted to only one feature</td>
 </tr>
 <tr>
@@ -143,7 +143,7 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 </tr>
 <tr>
 <td style="text-align: left;">TAO rule tree</td>
-<td><a href="https://csinva.io/imodels/tree/tao.html">🗂️</a>, ㅤㅤ<a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">📄</a></td>
+<td><a href="https://csinva.io/imodels/tree/tao.html">🗂️</a>, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ<a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">📄</a></td>
 <td>Fits tree using alternating optimization</td>
 </tr>
 <tr>
@@ -153,17 +153,22 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 </tr>
 <tr>
 <td style="text-align: left;">Sparse integer<br/>linear model</td>
-<td><a href="https://csinva.io/imodels/algebraic/slim.html">🗂️</a>, ㅤㅤ<a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">📄</a></td>
+<td><a href="https://csinva.io/imodels/algebraic/slim.html">🗂️</a>, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ<a href="https://link.springer.com/article/10.1007/s10994-015-5528-6">📄</a></td>
 <td>Sparse linear model with integer coefficients</td>
 </tr>
 <tr>
+<td style="text-align: left;">Tree GAM</td>
+<td><a href="https://csinva.io/imodels/algebraic/gam.html">🗂️</a>, <a href="https://github.com/interpretml/interpret">🔗</a>, <a href="https://dl.acm.org/doi/abs/10.1145/2339530.2339556">📄</a></td>
+<td>Generalized additive model fit with short boosted trees</td>
+</tr>
+<tr>
 <td style="text-align: left;"><b>Greedy tree sums</b></td>
-<td><a href="https://csinva.io/imodels/tree/figs.html#imodels.tree.figs">🗂️</a>, ㅤㅤ<a href="https://arxiv.org/abs/2201.11931">📄</a></td>
+<td><a href="https://csinva.io/imodels/tree/figs.html#imodels.tree.figs">🗂️</a>, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ<a href="https://arxiv.org/abs/2201.11931">📄</a></td>
 <td>Sum of small trees with very few total rules (FIGS)</td>
 </tr>
 <tr>
 <td style="text-align: left;"><b>Hierarchical<br/> shrinkage wrapper</b></td>
-<td><a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html">🗂️</a>, ㅤㅤ<a href="https://arxiv.org/abs/2202.00858">📄</a></td>
+<td><a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html">🗂️</a>, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ<a href="https://arxiv.org/abs/2202.00858">📄</a></td>
 <td>Improve a decision tree, random forest, or<br/>gradient-boosting ensemble with ultra-fast, post-hoc regularization</td>
 </tr>
 <tr>
@@ -506,6 +511,7 @@ url          = {https://doi.org/10.21105/joss.03192},
 # Github repo available [here](https://github.com/csinva/imodels)
 
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
+from .algebraic.gam import TreeGAMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 from .experimental.bartpy import BART
@@ -536,7 +542,6 @@ from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
 from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
-from .importance.representation import TreeTransformer
 
 CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
                BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier,

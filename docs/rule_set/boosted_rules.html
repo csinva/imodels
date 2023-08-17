@@ -53,7 +53,7 @@ class BoostedRulesClassifier(AdaBoostClassifier):
 
     def __init__(
         self,
-        estimator=partial(DecisionTreeClassifier, max_depth=1),
+        estimator=DecisionTreeClassifier(max_depth=1),
         *,
         n_estimators=15,
         learning_rate=1.0,
@@ -61,14 +61,14 @@ class BoostedRulesClassifier(AdaBoostClassifier):
     ):
         try: # sklearn version &gt;= 1.2
             super().__init__(
-                estimator=estimator(),
+                estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,
             )
         except: # sklearn version &lt; 1.2
             super().__init__(
-                base_estimator=estimator(),
+                base_estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,
@@ -92,7 +92,7 @@ class BoostedRulesRegressor(AdaBoostRegressor):
 
     def __init__(
         self,
-        estimator=partial(DecisionTreeRegressor, max_depth=1),
+        estimator=DecisionTreeRegressor(max_depth=1),
         *,
         n_estimators=15,
         learning_rate=1.0,
@@ -100,14 +100,14 @@ class BoostedRulesRegressor(AdaBoostRegressor):
     ):
         try: # sklearn version &gt;= 1.2
             super().__init__(
-                estimator=estimator(),
+                estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,
             )
         except: # sklearn version &lt; 1.2
             super().__init__(
-                base_estimator=estimator(),
+                base_estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,
@@ -143,7 +143,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier"><code class="flex name class">
 <span>class <span class="ident">BoostedRulesClassifier</span></span>
-<span>(</span><span>estimator=functools.partial(&lt;class &#x27;sklearn.tree._classes.DecisionTreeClassifier&#x27;&gt;, max_depth=1), *, n_estimators=15, learning_rate=1.0, random_state=None)</span>
+<span>(</span><span>estimator=DecisionTreeClassifier(max_depth=1), *, n_estimators=15, learning_rate=1.0, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An easy-interpretable classifier optimizing simple logical rules.</p>
@@ -167,7 +167,7 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 
     def __init__(
         self,
-        estimator=partial(DecisionTreeClassifier, max_depth=1),
+        estimator=DecisionTreeClassifier(max_depth=1),
         *,
         n_estimators=15,
         learning_rate=1.0,
@@ -175,14 +175,14 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
     ):
         try: # sklearn version &gt;= 1.2
             super().__init__(
-                estimator=estimator(),
+                estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,
             )
         except: # sklearn version &lt; 1.2
             super().__init__(
-                base_estimator=estimator(),
+                base_estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,
@@ -214,17 +214,17 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Build a boosted classifier from the training set (X, y).</p>
+<div class="desc"><p>Build a boosted classifier/regressor from the training set (X, y).</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>X</code></strong> :&ensp;<code>{array-like, sparse matrix}</code> of <code>shape (n_samples, n_features)</code></dt>
 <dd>The training input samples. Sparse matrix can be CSC, CSR, COO,
 DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
-<dd>The target values (class labels).</dd>
+<dd>The target values.</dd>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, default=<code>None</code></dt>
 <dd>Sample weights. If None, the sample weights are initialized to
-<code>1 / n_samples</code>.</dd>
+1 / n_samples.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -245,7 +245,7 @@ DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
 </dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor"><code class="flex name class">
 <span>class <span class="ident">BoostedRulesRegressor</span></span>
-<span>(</span><span>estimator=functools.partial(&lt;class &#x27;sklearn.tree._classes.DecisionTreeRegressor&#x27;&gt;, max_depth=1), *, n_estimators=15, learning_rate=1.0, random_state=13)</span>
+<span>(</span><span>estimator=DecisionTreeRegressor(max_depth=1), *, n_estimators=15, learning_rate=1.0, random_state=13)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An easy-interpretable regressor optimizing simple logical rules.</p>
@@ -267,7 +267,7 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
 
     def __init__(
         self,
-        estimator=partial(DecisionTreeRegressor, max_depth=1),
+        estimator=DecisionTreeRegressor(max_depth=1),
         *,
         n_estimators=15,
         learning_rate=1.0,
@@ -275,14 +275,14 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
     ):
         try: # sklearn version &gt;= 1.2
             super().__init__(
-                estimator=estimator(),
+                estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,
             )
         except: # sklearn version &lt; 1.2
             super().__init__(
-                base_estimator=estimator(),
+                base_estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,
@@ -309,14 +309,14 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Build a boosted regressor from the training set (X, y).</p>
+<div class="desc"><p>Build a boosted classifier/regressor from the training set (X, y).</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>X</code></strong> :&ensp;<code>{array-like, sparse matrix}</code> of <code>shape (n_samples, n_features)</code></dt>
 <dd>The training input samples. Sparse matrix can be CSC, CSR, COO,
 DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
-<dd>The target values (real numbers).</dd>
+<dd>The target values.</dd>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, default=<code>None</code></dt>
 <dd>Sample weights. If None, the sample weights are initialized to
 1 / n_samples.</dd>
@@ -324,7 +324,7 @@ DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>Fitted AdaBoostRegressor estimator.</dd>
+<dd>Fitted estimator.</dd>
 </dl></div>
 <details class="source">
 <summary>

@@ -278,7 +278,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         s += &#39;&gt; ------------------------------\n&#39;
         return s + self.visualize().to_string(index=False) + &#39;\n&#39;
 
-    def _extract_rules(self, X, y) -&gt; List[Rule]:
+    def _extract_rules(self, X, y) -&gt; List[str]:
         return extract_rulefit(X, y,
                                feature_names=self.feature_placeholders,
                                n_estimators=self.n_estimators,
@@ -615,7 +615,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
         s += &#39;&gt; ------------------------------\n&#39;
         return s + self.visualize().to_string(index=False) + &#39;\n&#39;
 
-    def _extract_rules(self, X, y) -&gt; List[Rule]:
+    def _extract_rules(self, X, y) -&gt; List[str]:
         return extract_rulefit(X, y,
                                feature_names=self.feature_placeholders,
                                n_estimators=self.n_estimators,
@@ -663,6 +663,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.base.TransformerMixin</li>
+<li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 </ul>
 <h3>Subclasses</h3>
@@ -873,6 +874,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.base.TransformerMixin</li>
+<li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
@@ -948,6 +950,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.base.TransformerMixin</li>
+<li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>

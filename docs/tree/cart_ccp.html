@@ -391,15 +391,6 @@ high cardinality features (many unique values). See
 <dd>The number of classes (for single output problems),
 or a list containing the number of classes for each
 output (for multi-output problems).</dd>
-<dt><strong><code>n_features_</code></strong> :&ensp;<code>int</code></dt>
-<dd>
-<p>The number of features when <code>fit</code> is performed.</p>
-<div class="admonition deprecated">
-<p class="admonition-title">Deprecated since version:&ensp;1.0</p>
-<p><code>n_features_</code> is deprecated in 1.0 and will be removed in
-1.2. Use <code>n_features_in_</code> instead.</p>
-</div>
-</dd>
 <dt><strong><code>n_features_in_</code></strong> :&ensp;<code>int</code></dt>
 <dd>
 <p>Number of features seen during :term:<code>fit</code>.</p>
@@ -556,7 +547,7 @@ ignored if they would result in any single class carrying a
 negative weight in either child node.</dd>
 <dt><strong><code>check_input</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
 <dd>Allow to bypass several input checking.
-Don't use this parameter unless you know what you do.</dd>
+Don't use this parameter unless you know what you're doing.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -591,7 +582,7 @@ returned.</p>
 to a sparse <code>csr_matrix</code>.</dd>
 <dt><strong><code>check_input</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
 <dd>Allow to bypass several input checking.
-Don't use this parameter unless you know what you do.</dd>
+Don't use this parameter unless you know what you're doing.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -621,7 +612,7 @@ class in a leaf.</p>
 to a sparse <code>csr_matrix</code>.</dd>
 <dt><strong><code>check_input</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
 <dd>Allow to bypass several input checking.
-Don't use this parameter unless you know what you do.</dd>
+Don't use this parameter unless you know what you're doing.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -661,7 +652,7 @@ each label set be correctly predicted.</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>score</code></strong> :&ensp;<code>float</code></dt>
-<dd>Mean accuracy of <code>self.predict(X)</code> wrt. <code>y</code>.</dd>
+<dd>Mean accuracy of <code>self.predict(X)</code> w.r.t. <code>y</code>.</dd>
 </dl></div>
 <details class="source">
 <summary>

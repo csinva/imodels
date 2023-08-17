@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import numpy as np
+import pandas as pd
+from scipy.spatial.distance import pdist
+from functools import partial
+
+from .ppms import PartialPredictionModelBase, GenericRegressorPPM, GenericClassifierPPM
+from .block_transformers import _blocked_train_test_split
+from .ranking_stability import tauAP_b, rbo
+
+
+class ForestMDIPlus:
+    &#34;&#34;&#34;
+    The class object for computing MDI+ feature importances for a forest or collection of trees.
+    Generalized mean decrease in impurity (MDI+) is a flexible framework for computing RF
+    feature importances. For more details, refer to [paper].
+
+    Parameters
+    ----------
+    estimators: list of fitted PartialPredictionModelBase objects or scikit-learn type estimators
+        The fitted partial prediction models (one per tree) to use for evaluating
+        feature importance via MDI+. If not a PartialPredictionModelBase, then
+        the estimator is coerced into a PartialPredictionModelBase object via
+        GenericRegressorPPM or GenericClassifierPPM depending on the specified
+        task. Note that these generic PPMs may be computationally expensive.
+    transformers: list of BlockTransformerBase objects
+        The block feature transformers used to generate blocks of engineered
+        features for each original feature. The transformed data is then used
+        as input into the partial prediction models. Should be the same length
+        as estimators.
+    scoring_fns: a function or dict with functions as value and function name (str) as key
+        The scoring functions used for evaluating the partial predictions.
+    sample_split: string in {&#34;loo&#34;, &#34;oob&#34;, &#34;inbag&#34;} or None
+        The sample splitting strategy to be used when evaluating the partial
+        model predictions. The default &#34;loo&#34; (leave-one-out) is strongly
+        recommended for performance and in particular, for overcoming the known
+        correlation and entropy biases suffered by MDI. &#34;oob&#34; (out-of-bag) can
+        also be used to overcome these biases. &#34;inbag&#34; is the sample splitting
+        strategy used by MDI. If None, no sample splitting is performed and the
+        full data set is used to evaluate the partial model predictions.
+    tree_random_states: list of int or None
+        Random states from each tree in the fitted random forest; used in
+        sample splitting and only required if sample_split = &#34;oob&#34; or &#34;inbag&#34;.
+        Should be the same length as estimators.
+    mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+        Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+        in block k when making a partial model prediction, while &#34;keep_rest&#34;
+        imputes the mean of each feature in block k. &#34;keep_k&#34; is strongly
+        recommended for computational considerations.
+    task: string in {&#34;regression&#34;, &#34;classification&#34;}
+        The supervised learning task for the RF model. Used for choosing
+        defaults for the scoring_fns. Currently only regression and
+        classification are supported.
+    center: bool
+        Flag for whether to center the transformed data in the transformers.
+    normalize: bool
+        Flag for whether to rescale the transformed data to have unit
+        variance in the transformers.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimators, transformers, scoring_fns,
+                 sample_split=&#34;loo&#34;, tree_random_states=None, mode=&#34;keep_k&#34;,
+                 task=&#34;regression&#34;, center=True, normalize=False):
+        assert sample_split in [&#34;loo&#34;, &#34;oob&#34;, &#34;inbag&#34;, None]
+        assert mode in [&#34;keep_k&#34;, &#34;keep_rest&#34;]
+        assert task in [&#34;regression&#34;, &#34;classification&#34;]
+        self.estimators = estimators
+        self.transformers = transformers
+        self.scoring_fns = scoring_fns
+        self.sample_split = sample_split
+        self.tree_random_states = tree_random_states
+        if self.sample_split in [&#34;oob&#34;, &#34;inbag&#34;] and not self.tree_random_states:
+            raise ValueError(&#34;Must specify tree_random_states to use &#39;oob&#39; or &#39;inbag&#39; sample_split.&#34;)
+        self.mode = mode
+        self.task = task
+        self.center = center
+        self.normalize = normalize
+        self.is_fitted = False
+        self.prediction_score_ = pd.DataFrame({})
+        self.feature_importances_ = pd.DataFrame({})
+        self.feature_importances_by_tree_ = {}
+
+    def get_scores(self, X, y):
+        &#34;&#34;&#34;
+        Obtain the MDI+ feature importances for a forest.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix. If a pd.DataFrame object is supplied, then
+            the column names are used in the output
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
+
+        Returns
+        -------
+        scores: pd.DataFrame of shape (n_features, n_scoring_fns)
+            The MDI+ feature importances.
+        &#34;&#34;&#34;
+        self._fit_importance_scores(X, y)
+        return self.feature_importances_
+
+    def get_stability_scores(self, B=10, metrics=&#34;auto&#34;):
+        &#34;&#34;&#34;
+        Evaluate the stability of the MDI+ feature importance rankings
+        across bootstrapped samples of trees. Can be used to select the GLM
+        and scoring metric in a data-driven manner, where the GLM and metric that
+        yields the most stable feature rankings across bootstrapped samples is selected.
+
+        Parameters
+        ----------
+        B: int
+            Number of bootstrap samples.
+        metrics: &#34;auto&#34; or a dict with functions as value and function name (str) as key
+            Metric(s) used to evaluate the stability between two sets of feature importances.
+            If &#34;auto&#34;, then the feature importance stability metrics are:
+                (1) Rank-based overlap (RBO) with p=0.9 (from &#34;A Similarity Measure for
+                Indefinite Rankings&#34; by Webber et al. (2010)). Intuitively, this metric gives
+                more weight to features with the largest importances, with most of the weight
+                going to the ~1/(1-p) features with the largest importances.
+                (2) A weighted kendall tau metric (tauAP_b from &#34;The Treatment of Ties in
+                AP Correlation&#34; by Urbano and Marrero (2017)), which also gives more weight
+                to the features with the largest importances, but uses a different weighting
+                scheme from RBO.
+            Note that these default metrics assume that a higher MDI+ score indicates
+            greater importance and thus give more weight to these features with high
+            importance/ranks. If a lower MDI+ score indicates higher importance, then invert
+            either these stability metrics or the MDI+ scores before evaluating the stability.
+
+        Returns
+        -------
+        stability_results: pd.DataFrame of shape (n_features, n_metrics)
+            The stability scores of the MDI+ feature rankings across bootstrapped samples.
+
+        &#34;&#34;&#34;
+        if metrics == &#34;auto&#34;:
+            metrics = {&#34;RBO&#34;: partial(rbo, p=0.9), &#34;tauAP&#34;: tauAP_b}
+        elif not isinstance(metrics, dict):
+            raise ValueError(&#34;`metrics` must be &#39;auto&#39; or a dictionary &#34;
+                             &#34;where the key is the metric name and the value is the evaluation function&#34;)
+        single_scoring_fn = not isinstance(self.feature_importances_by_tree_, dict)
+        if single_scoring_fn:
+            feature_importances_dict = {&#34;mdi_plus_score&#34;: self.feature_importances_by_tree_}
+        else:
+            feature_importances_dict = self.feature_importances_by_tree_
+        stability_dict = {}
+        for scoring_fn_name, feature_importances_by_tree in feature_importances_dict.items():
+            n_trees = feature_importances_by_tree.shape[1]
+            fi_scores_boot_ls = []
+            for b in range(B):
+                bootstrap_sample = np.random.choice(n_trees, n_trees, replace=True)
+                fi_scores_boot_ls.append(feature_importances_by_tree[bootstrap_sample].mean(axis=1))
+            fi_scores_boot = pd.concat(fi_scores_boot_ls, axis=1)
+            stability_results = {&#34;scorer&#34;: [scoring_fn_name]}
+            for metric_name, metric_fun in metrics.items():
+                stability_results[metric_name] = [np.mean(pdist(fi_scores_boot.T, metric=metric_fun))]
+            stability_dict[scoring_fn_name] = pd.DataFrame(stability_results)
+        stability_df = pd.concat(stability_dict, axis=0).reset_index(drop=True)
+        if single_scoring_fn:
+            stability_df = stability_df.drop(columns=[&#34;scorer&#34;])
+        return stability_df
+
+    def _fit_importance_scores(self, X, y):
+        all_scores = []
+        all_full_preds = []
+        for estimator, transformer, tree_random_state in \
+                zip(self.estimators, self.transformers, self.tree_random_states):
+            tree_mdi_plus = TreeMDIPlus(estimator=estimator,
+                                        transformer=transformer,
+                                        scoring_fns=self.scoring_fns,
+                                        sample_split=self.sample_split,
+                                        tree_random_state=tree_random_state,
+                                        mode=self.mode,
+                                        task=self.task,
+                                        center=self.center,
+                                        normalize=self.normalize)
+            scores = tree_mdi_plus.get_scores(X, y)
+            if scores is not None:
+                all_scores.append(scores)
+                all_full_preds.append(tree_mdi_plus._full_preds)
+        if len(all_scores) == 0:
+            raise ValueError(&#34;Transformer representation was empty for all trees.&#34;)
+        full_preds = np.nanmean(all_full_preds, axis=0)
+        self._full_preds = full_preds
+        scoring_fns = self.scoring_fns if isinstance(self.scoring_fns, dict) \
+            else {&#34;importance&#34;: self.scoring_fns}
+        for fn_name, scoring_fn in scoring_fns.items():
+            self.feature_importances_by_tree_[fn_name] = pd.concat([scores[fn_name] for scores in all_scores], axis=1)
+            self.feature_importances_by_tree_[fn_name].columns = np.arange(len(all_scores))
+            self.feature_importances_[fn_name] = np.mean(self.feature_importances_by_tree_[fn_name], axis=1)
+            self.prediction_score_[fn_name] = [scoring_fn(y[~np.isnan(full_preds)], full_preds[~np.isnan(full_preds)])]
+        if list(scoring_fns.keys()) == [&#34;importance&#34;]:
+            self.prediction_score_ = self.prediction_score_[&#34;importance&#34;]
+            self.feature_importances_by_tree_ = self.feature_importances_by_tree_[&#34;importance&#34;]
+        if isinstance(X, pd.DataFrame):
+            self.feature_importances_.index = X.columns
+        self.feature_importances_.index.name = &#39;var&#39;
+        self.feature_importances_.reset_index(inplace=True)
+        self.is_fitted = True
+
+
+class TreeMDIPlus:
+    &#34;&#34;&#34;
+    The class object for computing MDI+ feature importances for a single tree.
+    Generalized mean decrease in impurity (MDI+) is a flexible framework for computing RF
+    feature importances. For more details, refer to [paper].
+
+    Parameters
+    ----------
+    estimator: a fitted PartialPredictionModelBase object or scikit-learn type estimator
+        The fitted partial prediction model to use for evaluating
+        feature importance via MDI+. If not a PartialPredictionModelBase, then
+        the estimator is coerced into a PartialPredictionModelBase object via
+        GenericRegressorPPM or GenericClassifierPPM depending on the specified
+        task. Note that these generic PPMs may be computationally expensive.
+    transformer: a BlockTransformerBase object
+        A block feature transformer used to generate blocks of engineered
+        features for each original feature. The transformed data is then used
+        as input into the partial prediction models.
+    scoring_fns: a function or dict with functions as value and function name (str) as key
+        The scoring functions used for evaluating the partial predictions.
+    sample_split: string in {&#34;loo&#34;, &#34;oob&#34;, &#34;inbag&#34;} or None
+        The sample splitting strategy to be used when evaluating the partial
+        model predictions. The default &#34;loo&#34; (leave-one-out) is strongly
+        recommended for performance and in particular, for overcoming the known
+        correlation and entropy biases suffered by MDI. &#34;oob&#34; (out-of-bag) can
+        also be used to overcome these biases. &#34;inbag&#34; is the sample splitting
+        strategy used by MDI. If None, no sample splitting is performed and the
+        full data set is used to evaluate the partial model predictions.
+    tree_random_state: int or None
+        Random state of the fitted tree; used in sample splitting and
+        only required if sample_split = &#34;oob&#34; or &#34;inbag&#34;.
+    mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+        Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+        in block k when making a partial model prediction, while &#34;keep_rest&#34;
+        imputes the mean of each feature in block k. &#34;keep_k&#34; is strongly
+        recommended for computational considerations.
+    task: string in {&#34;regression&#34;, &#34;classification&#34;}
+        The supervised learning task for the RF model. Used for choosing
+        defaults for the scoring_fns. Currently only regression and
+        classification are supported.
+    center: bool
+        Flag for whether to center the transformed data in the transformers.
+    normalize: bool
+        Flag for whether to rescale the transformed data to have unit
+        variance in the transformers.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator, transformer, scoring_fns,
+                 sample_split=&#34;loo&#34;, tree_random_state=None, mode=&#34;keep_k&#34;,
+                 task=&#34;regression&#34;, center=True, normalize=False):
+        assert sample_split in [&#34;loo&#34;, &#34;oob&#34;, &#34;inbag&#34;, &#34;auto&#34;, None]
+        assert mode in [&#34;keep_k&#34;, &#34;keep_rest&#34;]
+        assert task in [&#34;regression&#34;, &#34;classification&#34;]
+        self.estimator = estimator
+        self.transformer = transformer
+        self.scoring_fns = scoring_fns
+        self.sample_split = sample_split
+        self.tree_random_state = tree_random_state
+        _validate_sample_split(self.sample_split, self.estimator, isinstance(self.estimator, PartialPredictionModelBase))
+        if self.sample_split in [&#34;oob&#34;, &#34;inbag&#34;] and not self.tree_random_state:
+            raise ValueError(&#34;Must specify tree_random_state to use &#39;oob&#39; or &#39;inbag&#39; sample_split.&#34;)
+        self.mode = mode
+        self.task = task
+        self.center = center
+        self.normalize = normalize
+        self.is_fitted = False
+        self._full_preds = None
+        self.prediction_score_ = None
+        self.feature_importances_ = None
+
+    def get_scores(self, X, y):
+        &#34;&#34;&#34;
+        Obtain the MDI+ feature importances for a single tree.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix. If a pd.DataFrame object is supplied, then
+            the column names are used in the output
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
+
+        Returns
+        -------
+        scores: pd.DataFrame of shape (n_features, n_scoring_fns)
+            The MDI+ feature importances.
+        &#34;&#34;&#34;
+        self._fit_importance_scores(X, y)
+        return self.feature_importances_
+
+    def _fit_importance_scores(self, X, y):
+        n_samples = y.shape[0]
+        blocked_data = self.transformer.transform(X, center=self.center,
+                                                  normalize=self.normalize)
+        self.n_features = blocked_data.n_blocks
+        train_blocked_data, test_blocked_data, y_train, y_test, test_indices = \
+            _get_sample_split_data(blocked_data, y, self.tree_random_state, self.sample_split)
+        if train_blocked_data.get_all_data().shape[1] != 0:
+            if hasattr(self.estimator, &#34;predict_full&#34;) and \
+                    hasattr(self.estimator, &#34;predict_partial&#34;):
+                full_preds = self.estimator.predict_full(test_blocked_data)
+                partial_preds = self.estimator.predict_partial(test_blocked_data, mode=self.mode)
+            else:
+                if self.task == &#34;regression&#34;:
+                    ppm = GenericRegressorPPM(self.estimator)
+                elif self.task == &#34;classification&#34;:
+                    ppm = GenericClassifierPPM(self.estimator)
+                full_preds = ppm.predict_full(test_blocked_data)
+                partial_preds = ppm.predict_partial(test_blocked_data, mode=self.mode)
+            self._score_full_predictions(y_test, full_preds)
+            self._score_partial_predictions(y_test, full_preds, partial_preds)
+
+            full_preds_n = np.empty(n_samples) if full_preds.ndim == 1 \
+                else np.empty((n_samples, full_preds.shape[1]))
+            full_preds_n[:] = np.nan
+            full_preds_n[test_indices] = full_preds
+            self._full_preds = full_preds_n
+        self.is_fitted = True
+
+    def _score_full_predictions(self, y_test, full_preds):
+        scoring_fns = self.scoring_fns if isinstance(self.scoring_fns, dict) \
+            else {&#34;score&#34;: self.scoring_fns}
+        all_prediction_scores = pd.DataFrame({})
+        for fn_name, scoring_fn in scoring_fns.items():
+            scores = scoring_fn(y_test, full_preds)
+            all_prediction_scores[fn_name] = [scores]
+        self.prediction_score_ = all_prediction_scores
+
+    def _score_partial_predictions(self, y_test, full_preds, partial_preds):
+        scoring_fns = self.scoring_fns if isinstance(self.scoring_fns, dict) \
+            else {&#34;importance&#34;: self.scoring_fns}
+        all_scores = pd.DataFrame({})
+        for fn_name, scoring_fn in scoring_fns.items():
+            scores = _partial_preds_to_scores(partial_preds, y_test, scoring_fn)
+            if self.mode == &#34;keep_rest&#34;:
+                full_score = scoring_fn(y_test, full_preds)
+                scores = full_score - scores
+            if len(partial_preds) != scores.size:
+                if len(scoring_fns) &gt; 1:
+                    msg = &#34;scoring_fn={} should return one value for each feature.&#34;.format(fn_name)
+                else:
+                    msg = &#34;scoring_fns should return one value for each feature.&#34;.format(fn_name)
+                raise ValueError(&#34;Unexpected dimensions. {}&#34;.format(msg))
+            scores = scores.ravel()
+            all_scores[fn_name] = scores
+        self.feature_importances_ = all_scores
+
+
+def _partial_preds_to_scores(partial_preds, y_test, scoring_fn):
+    scores = []
+    for k, y_pred in partial_preds.items():
+        if isinstance(y_pred, tuple):  # if constant model
+            y_pred = np.ones_like(y_test) * y_pred[1]
+        scores.append(scoring_fn(y_test, y_pred))
+    return np.vstack(scores)
+
+
+def _get_default_sample_split(sample_split, prediction_model, is_ppm):
+    if sample_split == &#34;auto&#34;:
+        sample_split = &#34;oob&#34;
+        if is_ppm:
+            if prediction_model.loo:
+                sample_split = &#34;loo&#34;
+    return sample_split
+
+
+def _validate_sample_split(sample_split, prediction_model, is_ppm):
+    if sample_split in [&#34;oob&#34;, &#34;inbag&#34;] and is_ppm:
+        if prediction_model.loo:
+            raise ValueError(&#34;Cannot use LOO together with OOB or in-bag sample splitting.&#34;)
+
+
+def _get_sample_split_data(blocked_data, y, random_state, sample_split):
+    if sample_split == &#34;oob&#34;:
+        train_blocked_data, test_blocked_data, y_train, y_test, _, test_indices = \
+            _blocked_train_test_split(blocked_data, y, random_state)
+    elif sample_split == &#34;inbag&#34;:
+        train_blocked_data, _, y_train, _, test_indices, _ = \
+            _blocked_train_test_split(blocked_data, y, random_state)
+        test_blocked_data = train_blocked_data
+        y_test = y_train
+    else:
+        train_blocked_data = test_blocked_data = blocked_data
+        y_train = y_test = y
+        test_indices = np.arange(y.shape[0])
+    return train_blocked_data, test_blocked_data, y_train, y_test, test_indices</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.importance.mdi_plus.ForestMDIPlus"><code class="flex name class">
+<span>class <span class="ident">ForestMDIPlus</span></span>
+<span>(</span><span>estimators, transformers, scoring_fns, sample_split='loo', tree_random_states=None, mode='keep_k', task='regression', center=True, normalize=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The class object for computing MDI+ feature importances for a forest or collection of trees.
+Generalized mean decrease in impurity (MDI+) is a flexible framework for computing RF
+feature importances. For more details, refer to [paper].</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>estimators</code></strong> :&ensp;<code>list</code> of <code>fitted PartialPredictionModelBase objects</code> or <code>scikit-learn type estimators</code></dt>
+<dd>The fitted partial prediction models (one per tree) to use for evaluating
+feature importance via MDI+. If not a PartialPredictionModelBase, then
+the estimator is coerced into a PartialPredictionModelBase object via
+GenericRegressorPPM or GenericClassifierPPM depending on the specified
+task. Note that these generic PPMs may be computationally expensive.</dd>
+<dt><strong><code>transformers</code></strong> :&ensp;<code>list</code> of <code>BlockTransformerBase objects</code></dt>
+<dd>The block feature transformers used to generate blocks of engineered
+features for each original feature. The transformed data is then used
+as input into the partial prediction models. Should be the same length
+as estimators.</dd>
+<dt><strong><code>scoring_fns</code></strong> :&ensp;<code>a function</code> or <code>dict with functions as value and function name (str) as key</code></dt>
+<dd>The scoring functions used for evaluating the partial predictions.</dd>
+<dt><strong><code>sample_split</code></strong> :&ensp;<code>string in {"loo", "oob", "inbag"}</code> or <code>None</code></dt>
+<dd>The sample splitting strategy to be used when evaluating the partial
+model predictions. The default "loo" (leave-one-out) is strongly
+recommended for performance and in particular, for overcoming the known
+correlation and entropy biases suffered by MDI. "oob" (out-of-bag) can
+also be used to overcome these biases. "inbag" is the sample splitting
+strategy used by MDI. If None, no sample splitting is performed and the
+full data set is used to evaluate the partial model predictions.</dd>
+<dt><strong><code>tree_random_states</code></strong> :&ensp;<code>list</code> of <code>int</code> or <code>None</code></dt>
+<dd>Random states from each tree in the fitted random forest; used in
+sample splitting and only required if sample_split = "oob" or "inbag".
+Should be the same length as estimators.</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>string in {"keep_k", "keep_rest"}</code></dt>
+<dd>Mode for the method. "keep_k" imputes the mean of each feature not
+in block k when making a partial model prediction, while "keep_rest"
+imputes the mean of each feature in block k. "keep_k" is strongly
+recommended for computational considerations.</dd>
+<dt><strong><code>task</code></strong> :&ensp;<code>string in {"regression", "classification"}</code></dt>
+<dd>The supervised learning task for the RF model. Used for choosing
+defaults for the scoring_fns. Currently only regression and
+classification are supported.</dd>
+<dt><strong><code>center</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to center the transformed data in the transformers.</dd>
+<dt><strong><code>normalize</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to rescale the transformed data to have unit
+variance in the transformers.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ForestMDIPlus:
+    &#34;&#34;&#34;
+    The class object for computing MDI+ feature importances for a forest or collection of trees.
+    Generalized mean decrease in impurity (MDI+) is a flexible framework for computing RF
+    feature importances. For more details, refer to [paper].
+
+    Parameters
+    ----------
+    estimators: list of fitted PartialPredictionModelBase objects or scikit-learn type estimators
+        The fitted partial prediction models (one per tree) to use for evaluating
+        feature importance via MDI+. If not a PartialPredictionModelBase, then
+        the estimator is coerced into a PartialPredictionModelBase object via
+        GenericRegressorPPM or GenericClassifierPPM depending on the specified
+        task. Note that these generic PPMs may be computationally expensive.
+    transformers: list of BlockTransformerBase objects
+        The block feature transformers used to generate blocks of engineered
+        features for each original feature. The transformed data is then used
+        as input into the partial prediction models. Should be the same length
+        as estimators.
+    scoring_fns: a function or dict with functions as value and function name (str) as key
+        The scoring functions used for evaluating the partial predictions.
+    sample_split: string in {&#34;loo&#34;, &#34;oob&#34;, &#34;inbag&#34;} or None
+        The sample splitting strategy to be used when evaluating the partial
+        model predictions. The default &#34;loo&#34; (leave-one-out) is strongly
+        recommended for performance and in particular, for overcoming the known
+        correlation and entropy biases suffered by MDI. &#34;oob&#34; (out-of-bag) can
+        also be used to overcome these biases. &#34;inbag&#34; is the sample splitting
+        strategy used by MDI. If None, no sample splitting is performed and the
+        full data set is used to evaluate the partial model predictions.
+    tree_random_states: list of int or None
+        Random states from each tree in the fitted random forest; used in
+        sample splitting and only required if sample_split = &#34;oob&#34; or &#34;inbag&#34;.
+        Should be the same length as estimators.
+    mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+        Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+        in block k when making a partial model prediction, while &#34;keep_rest&#34;
+        imputes the mean of each feature in block k. &#34;keep_k&#34; is strongly
+        recommended for computational considerations.
+    task: string in {&#34;regression&#34;, &#34;classification&#34;}
+        The supervised learning task for the RF model. Used for choosing
+        defaults for the scoring_fns. Currently only regression and
+        classification are supported.
+    center: bool
+        Flag for whether to center the transformed data in the transformers.
+    normalize: bool
+        Flag for whether to rescale the transformed data to have unit
+        variance in the transformers.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimators, transformers, scoring_fns,
+                 sample_split=&#34;loo&#34;, tree_random_states=None, mode=&#34;keep_k&#34;,
+                 task=&#34;regression&#34;, center=True, normalize=False):
+        assert sample_split in [&#34;loo&#34;, &#34;oob&#34;, &#34;inbag&#34;, None]
+        assert mode in [&#34;keep_k&#34;, &#34;keep_rest&#34;]
+        assert task in [&#34;regression&#34;, &#34;classification&#34;]
+        self.estimators = estimators
+        self.transformers = transformers
+        self.scoring_fns = scoring_fns
+        self.sample_split = sample_split
+        self.tree_random_states = tree_random_states
+        if self.sample_split in [&#34;oob&#34;, &#34;inbag&#34;] and not self.tree_random_states:
+            raise ValueError(&#34;Must specify tree_random_states to use &#39;oob&#39; or &#39;inbag&#39; sample_split.&#34;)
+        self.mode = mode
+        self.task = task
+        self.center = center
+        self.normalize = normalize
+        self.is_fitted = False
+        self.prediction_score_ = pd.DataFrame({})
+        self.feature_importances_ = pd.DataFrame({})
+        self.feature_importances_by_tree_ = {}
+
+    def get_scores(self, X, y):
+        &#34;&#34;&#34;
+        Obtain the MDI+ feature importances for a forest.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix. If a pd.DataFrame object is supplied, then
+            the column names are used in the output
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
+
+        Returns
+        -------
+        scores: pd.DataFrame of shape (n_features, n_scoring_fns)
+            The MDI+ feature importances.
+        &#34;&#34;&#34;
+        self._fit_importance_scores(X, y)
+        return self.feature_importances_
+
+    def get_stability_scores(self, B=10, metrics=&#34;auto&#34;):
+        &#34;&#34;&#34;
+        Evaluate the stability of the MDI+ feature importance rankings
+        across bootstrapped samples of trees. Can be used to select the GLM
+        and scoring metric in a data-driven manner, where the GLM and metric that
+        yields the most stable feature rankings across bootstrapped samples is selected.
+
+        Parameters
+        ----------
+        B: int
+            Number of bootstrap samples.
+        metrics: &#34;auto&#34; or a dict with functions as value and function name (str) as key
+            Metric(s) used to evaluate the stability between two sets of feature importances.
+            If &#34;auto&#34;, then the feature importance stability metrics are:
+                (1) Rank-based overlap (RBO) with p=0.9 (from &#34;A Similarity Measure for
+                Indefinite Rankings&#34; by Webber et al. (2010)). Intuitively, this metric gives
+                more weight to features with the largest importances, with most of the weight
+                going to the ~1/(1-p) features with the largest importances.
+                (2) A weighted kendall tau metric (tauAP_b from &#34;The Treatment of Ties in
+                AP Correlation&#34; by Urbano and Marrero (2017)), which also gives more weight
+                to the features with the largest importances, but uses a different weighting
+                scheme from RBO.
+            Note that these default metrics assume that a higher MDI+ score indicates
+            greater importance and thus give more weight to these features with high
+            importance/ranks. If a lower MDI+ score indicates higher importance, then invert
+            either these stability metrics or the MDI+ scores before evaluating the stability.
+
+        Returns
+        -------
+        stability_results: pd.DataFrame of shape (n_features, n_metrics)
+            The stability scores of the MDI+ feature rankings across bootstrapped samples.
+
+        &#34;&#34;&#34;
+        if metrics == &#34;auto&#34;:
+            metrics = {&#34;RBO&#34;: partial(rbo, p=0.9), &#34;tauAP&#34;: tauAP_b}
+        elif not isinstance(metrics, dict):
+            raise ValueError(&#34;`metrics` must be &#39;auto&#39; or a dictionary &#34;
+                             &#34;where the key is the metric name and the value is the evaluation function&#34;)
+        single_scoring_fn = not isinstance(self.feature_importances_by_tree_, dict)
+        if single_scoring_fn:
+            feature_importances_dict = {&#34;mdi_plus_score&#34;: self.feature_importances_by_tree_}
+        else:
+            feature_importances_dict = self.feature_importances_by_tree_
+        stability_dict = {}
+        for scoring_fn_name, feature_importances_by_tree in feature_importances_dict.items():
+            n_trees = feature_importances_by_tree.shape[1]
+            fi_scores_boot_ls = []
+            for b in range(B):
+                bootstrap_sample = np.random.choice(n_trees, n_trees, replace=True)
+                fi_scores_boot_ls.append(feature_importances_by_tree[bootstrap_sample].mean(axis=1))
+            fi_scores_boot = pd.concat(fi_scores_boot_ls, axis=1)
+            stability_results = {&#34;scorer&#34;: [scoring_fn_name]}
+            for metric_name, metric_fun in metrics.items():
+                stability_results[metric_name] = [np.mean(pdist(fi_scores_boot.T, metric=metric_fun))]
+            stability_dict[scoring_fn_name] = pd.DataFrame(stability_results)
+        stability_df = pd.concat(stability_dict, axis=0).reset_index(drop=True)
+        if single_scoring_fn:
+            stability_df = stability_df.drop(columns=[&#34;scorer&#34;])
+        return stability_df
+
+    def _fit_importance_scores(self, X, y):
+        all_scores = []
+        all_full_preds = []
+        for estimator, transformer, tree_random_state in \
+                zip(self.estimators, self.transformers, self.tree_random_states):
+            tree_mdi_plus = TreeMDIPlus(estimator=estimator,
+                                        transformer=transformer,
+                                        scoring_fns=self.scoring_fns,
+                                        sample_split=self.sample_split,
+                                        tree_random_state=tree_random_state,
+                                        mode=self.mode,
+                                        task=self.task,
+                                        center=self.center,
+                                        normalize=self.normalize)
+            scores = tree_mdi_plus.get_scores(X, y)
+            if scores is not None:
+                all_scores.append(scores)
+                all_full_preds.append(tree_mdi_plus._full_preds)
+        if len(all_scores) == 0:
+            raise ValueError(&#34;Transformer representation was empty for all trees.&#34;)
+        full_preds = np.nanmean(all_full_preds, axis=0)
+        self._full_preds = full_preds
+        scoring_fns = self.scoring_fns if isinstance(self.scoring_fns, dict) \
+            else {&#34;importance&#34;: self.scoring_fns}
+        for fn_name, scoring_fn in scoring_fns.items():
+            self.feature_importances_by_tree_[fn_name] = pd.concat([scores[fn_name] for scores in all_scores], axis=1)
+            self.feature_importances_by_tree_[fn_name].columns = np.arange(len(all_scores))
+            self.feature_importances_[fn_name] = np.mean(self.feature_importances_by_tree_[fn_name], axis=1)
+            self.prediction_score_[fn_name] = [scoring_fn(y[~np.isnan(full_preds)], full_preds[~np.isnan(full_preds)])]
+        if list(scoring_fns.keys()) == [&#34;importance&#34;]:
+            self.prediction_score_ = self.prediction_score_[&#34;importance&#34;]
+            self.feature_importances_by_tree_ = self.feature_importances_by_tree_[&#34;importance&#34;]
+        if isinstance(X, pd.DataFrame):
+            self.feature_importances_.index = X.columns
+        self.feature_importances_.index.name = &#39;var&#39;
+        self.feature_importances_.reset_index(inplace=True)
+        self.is_fitted = True</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.importance.mdi_plus.ForestMDIPlus.get_scores"><code class="name flex">
+<span>def <span class="ident">get_scores</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Obtain the MDI+ feature importances for a forest.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>The covariate matrix. If a pd.DataFrame object is supplied, then
+the column names are used in the output</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_targets)</code></dt>
+<dd>The observed responses.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>scores</code></strong> :&ensp;<code>pd.DataFrame</code> of <code>shape (n_features, n_scoring_fns)</code></dt>
+<dd>The MDI+ feature importances.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_scores(self, X, y):
+    &#34;&#34;&#34;
+    Obtain the MDI+ feature importances for a forest.
+
+    Parameters
+    ----------
+    X: ndarray of shape (n_samples, n_features)
+        The covariate matrix. If a pd.DataFrame object is supplied, then
+        the column names are used in the output
+    y: ndarray of shape (n_samples, n_targets)
+        The observed responses.
+
+    Returns
+    -------
+    scores: pd.DataFrame of shape (n_features, n_scoring_fns)
+        The MDI+ feature importances.
+    &#34;&#34;&#34;
+    self._fit_importance_scores(X, y)
+    return self.feature_importances_</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.mdi_plus.ForestMDIPlus.get_stability_scores"><code class="name flex">
+<span>def <span class="ident">get_stability_scores</span></span>(<span>self, B=10, metrics='auto')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Evaluate the stability of the MDI+ feature importance rankings
+across bootstrapped samples of trees. Can be used to select the GLM
+and scoring metric in a data-driven manner, where the GLM and metric that
+yields the most stable feature rankings across bootstrapped samples is selected.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>B</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of bootstrap samples.</dd>
+<dt><strong><code>metrics</code></strong> :&ensp;<code>"auto"</code> or <code>a dict with functions as value and function name (str) as key</code></dt>
+<dd>Metric(s) used to evaluate the stability between two sets of feature importances.
+If "auto", then the feature importance stability metrics are:
+(1) Rank-based overlap (RBO) with p=0.9 (from "A Similarity Measure for
+Indefinite Rankings" by Webber et al. (2010)). Intuitively, this metric gives
+more weight to features with the largest importances, with most of the weight
+going to the ~1/(1-p) features with the largest importances.
+(2) A weighted kendall tau metric (tauAP_b from "The Treatment of Ties in
+AP Correlation" by Urbano and Marrero (2017)), which also gives more weight
+to the features with the largest importances, but uses a different weighting
+scheme from RBO.
+Note that these default metrics assume that a higher MDI+ score indicates
+greater importance and thus give more weight to these features with high
+importance/ranks. If a lower MDI+ score indicates higher importance, then invert
+either these stability metrics or the MDI+ scores before evaluating the stability.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>stability_results</code></strong> :&ensp;<code>pd.DataFrame</code> of <code>shape (n_features, n_metrics)</code></dt>
+<dd>The stability scores of the MDI+ feature rankings across bootstrapped samples.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_stability_scores(self, B=10, metrics=&#34;auto&#34;):
+    &#34;&#34;&#34;
+    Evaluate the stability of the MDI+ feature importance rankings
+    across bootstrapped samples of trees. Can be used to select the GLM
+    and scoring metric in a data-driven manner, where the GLM and metric that
+    yields the most stable feature rankings across bootstrapped samples is selected.
+
+    Parameters
+    ----------
+    B: int
+        Number of bootstrap samples.
+    metrics: &#34;auto&#34; or a dict with functions as value and function name (str) as key
+        Metric(s) used to evaluate the stability between two sets of feature importances.
+        If &#34;auto&#34;, then the feature importance stability metrics are:
+            (1) Rank-based overlap (RBO) with p=0.9 (from &#34;A Similarity Measure for
+            Indefinite Rankings&#34; by Webber et al. (2010)). Intuitively, this metric gives
+            more weight to features with the largest importances, with most of the weight
+            going to the ~1/(1-p) features with the largest importances.
+            (2) A weighted kendall tau metric (tauAP_b from &#34;The Treatment of Ties in
+            AP Correlation&#34; by Urbano and Marrero (2017)), which also gives more weight
+            to the features with the largest importances, but uses a different weighting
+            scheme from RBO.
+        Note that these default metrics assume that a higher MDI+ score indicates
+        greater importance and thus give more weight to these features with high
+        importance/ranks. If a lower MDI+ score indicates higher importance, then invert
+        either these stability metrics or the MDI+ scores before evaluating the stability.
+
+    Returns
+    -------
+    stability_results: pd.DataFrame of shape (n_features, n_metrics)
+        The stability scores of the MDI+ feature rankings across bootstrapped samples.
+
+    &#34;&#34;&#34;
+    if metrics == &#34;auto&#34;:
+        metrics = {&#34;RBO&#34;: partial(rbo, p=0.9), &#34;tauAP&#34;: tauAP_b}
+    elif not isinstance(metrics, dict):
+        raise ValueError(&#34;`metrics` must be &#39;auto&#39; or a dictionary &#34;
+                         &#34;where the key is the metric name and the value is the evaluation function&#34;)
+    single_scoring_fn = not isinstance(self.feature_importances_by_tree_, dict)
+    if single_scoring_fn:
+        feature_importances_dict = {&#34;mdi_plus_score&#34;: self.feature_importances_by_tree_}
+    else:
+        feature_importances_dict = self.feature_importances_by_tree_
+    stability_dict = {}
+    for scoring_fn_name, feature_importances_by_tree in feature_importances_dict.items():
+        n_trees = feature_importances_by_tree.shape[1]
+        fi_scores_boot_ls = []
+        for b in range(B):
+            bootstrap_sample = np.random.choice(n_trees, n_trees, replace=True)
+            fi_scores_boot_ls.append(feature_importances_by_tree[bootstrap_sample].mean(axis=1))
+        fi_scores_boot = pd.concat(fi_scores_boot_ls, axis=1)
+        stability_results = {&#34;scorer&#34;: [scoring_fn_name]}
+        for metric_name, metric_fun in metrics.items():
+            stability_results[metric_name] = [np.mean(pdist(fi_scores_boot.T, metric=metric_fun))]
+        stability_dict[scoring_fn_name] = pd.DataFrame(stability_results)
+    stability_df = pd.concat(stability_dict, axis=0).reset_index(drop=True)
+    if single_scoring_fn:
+        stability_df = stability_df.drop(columns=[&#34;scorer&#34;])
+    return stability_df</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.importance.mdi_plus.TreeMDIPlus"><code class="flex name class">
+<span>class <span class="ident">TreeMDIPlus</span></span>
+<span>(</span><span>estimator, transformer, scoring_fns, sample_split='loo', tree_random_state=None, mode='keep_k', task='regression', center=True, normalize=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The class object for computing MDI+ feature importances for a single tree.
+Generalized mean decrease in impurity (MDI+) is a flexible framework for computing RF
+feature importances. For more details, refer to [paper].</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>estimator</code></strong> :&ensp;<code>a fitted PartialPredictionModelBase object</code> or <code>scikit-learn type estimator</code></dt>
+<dd>The fitted partial prediction model to use for evaluating
+feature importance via MDI+. If not a PartialPredictionModelBase, then
+the estimator is coerced into a PartialPredictionModelBase object via
+GenericRegressorPPM or GenericClassifierPPM depending on the specified
+task. Note that these generic PPMs may be computationally expensive.</dd>
+<dt><strong><code>transformer</code></strong> :&ensp;<code>a BlockTransformerBase object</code></dt>
+<dd>A block feature transformer used to generate blocks of engineered
+features for each original feature. The transformed data is then used
+as input into the partial prediction models.</dd>
+<dt><strong><code>scoring_fns</code></strong> :&ensp;<code>a function</code> or <code>dict with functions as value and function name (str) as key</code></dt>
+<dd>The scoring functions used for evaluating the partial predictions.</dd>
+<dt><strong><code>sample_split</code></strong> :&ensp;<code>string in {"loo", "oob", "inbag"}</code> or <code>None</code></dt>
+<dd>The sample splitting strategy to be used when evaluating the partial
+model predictions. The default "loo" (leave-one-out) is strongly
+recommended for performance and in particular, for overcoming the known
+correlation and entropy biases suffered by MDI. "oob" (out-of-bag) can
+also be used to overcome these biases. "inbag" is the sample splitting
+strategy used by MDI. If None, no sample splitting is performed and the
+full data set is used to evaluate the partial model predictions.</dd>
+<dt><strong><code>tree_random_state</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>Random state of the fitted tree; used in sample splitting and
+only required if sample_split = "oob" or "inbag".</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>string in {"keep_k", "keep_rest"}</code></dt>
+<dd>Mode for the method. "keep_k" imputes the mean of each feature not
+in block k when making a partial model prediction, while "keep_rest"
+imputes the mean of each feature in block k. "keep_k" is strongly
+recommended for computational considerations.</dd>
+<dt><strong><code>task</code></strong> :&ensp;<code>string in {"regression", "classification"}</code></dt>
+<dd>The supervised learning task for the RF model. Used for choosing
+defaults for the scoring_fns. Currently only regression and
+classification are supported.</dd>
+<dt><strong><code>center</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to center the transformed data in the transformers.</dd>
+<dt><strong><code>normalize</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to rescale the transformed data to have unit
+variance in the transformers.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TreeMDIPlus:
+    &#34;&#34;&#34;
+    The class object for computing MDI+ feature importances for a single tree.
+    Generalized mean decrease in impurity (MDI+) is a flexible framework for computing RF
+    feature importances. For more details, refer to [paper].
+
+    Parameters
+    ----------
+    estimator: a fitted PartialPredictionModelBase object or scikit-learn type estimator
+        The fitted partial prediction model to use for evaluating
+        feature importance via MDI+. If not a PartialPredictionModelBase, then
+        the estimator is coerced into a PartialPredictionModelBase object via
+        GenericRegressorPPM or GenericClassifierPPM depending on the specified
+        task. Note that these generic PPMs may be computationally expensive.
+    transformer: a BlockTransformerBase object
+        A block feature transformer used to generate blocks of engineered
+        features for each original feature. The transformed data is then used
+        as input into the partial prediction models.
+    scoring_fns: a function or dict with functions as value and function name (str) as key
+        The scoring functions used for evaluating the partial predictions.
+    sample_split: string in {&#34;loo&#34;, &#34;oob&#34;, &#34;inbag&#34;} or None
+        The sample splitting strategy to be used when evaluating the partial
+        model predictions. The default &#34;loo&#34; (leave-one-out) is strongly
+        recommended for performance and in particular, for overcoming the known
+        correlation and entropy biases suffered by MDI. &#34;oob&#34; (out-of-bag) can
+        also be used to overcome these biases. &#34;inbag&#34; is the sample splitting
+        strategy used by MDI. If None, no sample splitting is performed and the
+        full data set is used to evaluate the partial model predictions.
+    tree_random_state: int or None
+        Random state of the fitted tree; used in sample splitting and
+        only required if sample_split = &#34;oob&#34; or &#34;inbag&#34;.
+    mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+        Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+        in block k when making a partial model prediction, while &#34;keep_rest&#34;
+        imputes the mean of each feature in block k. &#34;keep_k&#34; is strongly
+        recommended for computational considerations.
+    task: string in {&#34;regression&#34;, &#34;classification&#34;}
+        The supervised learning task for the RF model. Used for choosing
+        defaults for the scoring_fns. Currently only regression and
+        classification are supported.
+    center: bool
+        Flag for whether to center the transformed data in the transformers.
+    normalize: bool
+        Flag for whether to rescale the transformed data to have unit
+        variance in the transformers.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator, transformer, scoring_fns,
+                 sample_split=&#34;loo&#34;, tree_random_state=None, mode=&#34;keep_k&#34;,
+                 task=&#34;regression&#34;, center=True, normalize=False):
+        assert sample_split in [&#34;loo&#34;, &#34;oob&#34;, &#34;inbag&#34;, &#34;auto&#34;, None]
+        assert mode in [&#34;keep_k&#34;, &#34;keep_rest&#34;]
+        assert task in [&#34;regression&#34;, &#34;classification&#34;]
+        self.estimator = estimator
+        self.transformer = transformer
+        self.scoring_fns = scoring_fns
+        self.sample_split = sample_split
+        self.tree_random_state = tree_random_state
+        _validate_sample_split(self.sample_split, self.estimator, isinstance(self.estimator, PartialPredictionModelBase))
+        if self.sample_split in [&#34;oob&#34;, &#34;inbag&#34;] and not self.tree_random_state:
+            raise ValueError(&#34;Must specify tree_random_state to use &#39;oob&#39; or &#39;inbag&#39; sample_split.&#34;)
+        self.mode = mode
+        self.task = task
+        self.center = center
+        self.normalize = normalize
+        self.is_fitted = False
+        self._full_preds = None
+        self.prediction_score_ = None
+        self.feature_importances_ = None
+
+    def get_scores(self, X, y):
+        &#34;&#34;&#34;
+        Obtain the MDI+ feature importances for a single tree.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix. If a pd.DataFrame object is supplied, then
+            the column names are used in the output
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
+
+        Returns
+        -------
+        scores: pd.DataFrame of shape (n_features, n_scoring_fns)
+            The MDI+ feature importances.
+        &#34;&#34;&#34;
+        self._fit_importance_scores(X, y)
+        return self.feature_importances_
+
+    def _fit_importance_scores(self, X, y):
+        n_samples = y.shape[0]
+        blocked_data = self.transformer.transform(X, center=self.center,
+                                                  normalize=self.normalize)
+        self.n_features = blocked_data.n_blocks
+        train_blocked_data, test_blocked_data, y_train, y_test, test_indices = \
+            _get_sample_split_data(blocked_data, y, self.tree_random_state, self.sample_split)
+        if train_blocked_data.get_all_data().shape[1] != 0:
+            if hasattr(self.estimator, &#34;predict_full&#34;) and \
+                    hasattr(self.estimator, &#34;predict_partial&#34;):
+                full_preds = self.estimator.predict_full(test_blocked_data)
+                partial_preds = self.estimator.predict_partial(test_blocked_data, mode=self.mode)
+            else:
+                if self.task == &#34;regression&#34;:
+                    ppm = GenericRegressorPPM(self.estimator)
+                elif self.task == &#34;classification&#34;:
+                    ppm = GenericClassifierPPM(self.estimator)
+                full_preds = ppm.predict_full(test_blocked_data)
+                partial_preds = ppm.predict_partial(test_blocked_data, mode=self.mode)
+            self._score_full_predictions(y_test, full_preds)
+            self._score_partial_predictions(y_test, full_preds, partial_preds)
+
+            full_preds_n = np.empty(n_samples) if full_preds.ndim == 1 \
+                else np.empty((n_samples, full_preds.shape[1]))
+            full_preds_n[:] = np.nan
+            full_preds_n[test_indices] = full_preds
+            self._full_preds = full_preds_n
+        self.is_fitted = True
+
+    def _score_full_predictions(self, y_test, full_preds):
+        scoring_fns = self.scoring_fns if isinstance(self.scoring_fns, dict) \
+            else {&#34;score&#34;: self.scoring_fns}
+        all_prediction_scores = pd.DataFrame({})
+        for fn_name, scoring_fn in scoring_fns.items():
+            scores = scoring_fn(y_test, full_preds)
+            all_prediction_scores[fn_name] = [scores]
+        self.prediction_score_ = all_prediction_scores
+
+    def _score_partial_predictions(self, y_test, full_preds, partial_preds):
+        scoring_fns = self.scoring_fns if isinstance(self.scoring_fns, dict) \
+            else {&#34;importance&#34;: self.scoring_fns}
+        all_scores = pd.DataFrame({})
+        for fn_name, scoring_fn in scoring_fns.items():
+            scores = _partial_preds_to_scores(partial_preds, y_test, scoring_fn)
+            if self.mode == &#34;keep_rest&#34;:
+                full_score = scoring_fn(y_test, full_preds)
+                scores = full_score - scores
+            if len(partial_preds) != scores.size:
+                if len(scoring_fns) &gt; 1:
+                    msg = &#34;scoring_fn={} should return one value for each feature.&#34;.format(fn_name)
+                else:
+                    msg = &#34;scoring_fns should return one value for each feature.&#34;.format(fn_name)
+                raise ValueError(&#34;Unexpected dimensions. {}&#34;.format(msg))
+            scores = scores.ravel()
+            all_scores[fn_name] = scores
+        self.feature_importances_ = all_scores</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.importance.mdi_plus.TreeMDIPlus.get_scores"><code class="name flex">
+<span>def <span class="ident">get_scores</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Obtain the MDI+ feature importances for a single tree.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>The covariate matrix. If a pd.DataFrame object is supplied, then
+the column names are used in the output</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_targets)</code></dt>
+<dd>The observed responses.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>scores</code></strong> :&ensp;<code>pd.DataFrame</code> of <code>shape (n_features, n_scoring_fns)</code></dt>
+<dd>The MDI+ feature importances.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_scores(self, X, y):
+    &#34;&#34;&#34;
+    Obtain the MDI+ feature importances for a single tree.
+
+    Parameters
+    ----------
+    X: ndarray of shape (n_samples, n_features)
+        The covariate matrix. If a pd.DataFrame object is supplied, then
+        the column names are used in the output
+    y: ndarray of shape (n_samples, n_targets)
+        The observed responses.
+
+    Returns
+    -------
+    scores: pd.DataFrame of shape (n_features, n_scoring_fns)
+        The MDI+ feature importances.
+    &#34;&#34;&#34;
+    self._fit_importance_scores(X, y)
+    return self.feature_importances_</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index 🔍</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.importance" href="index.html">imodels.importance</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.importance.mdi_plus.ForestMDIPlus" href="#imodels.importance.mdi_plus.ForestMDIPlus">ForestMDIPlus</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.importance.mdi_plus.ForestMDIPlus.get_scores" href="#imodels.importance.mdi_plus.ForestMDIPlus.get_scores">get_scores</a></code></li>
+<li><code><a title="imodels.importance.mdi_plus.ForestMDIPlus.get_stability_scores" href="#imodels.importance.mdi_plus.ForestMDIPlus.get_stability_scores">get_stability_scores</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.importance.mdi_plus.TreeMDIPlus" href="#imodels.importance.mdi_plus.TreeMDIPlus">TreeMDIPlus</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.importance.mdi_plus.TreeMDIPlus.get_scores" href="#imodels.importance.mdi_plus.TreeMDIPlus.get_scores">get_scores</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 c122.0,82.7 120.5,78.6 120.5,78.6 c119.2,72.0 123.4,76.3 123.4,76.3 c127.3,80.9 125.5,87.3 125.5,87.3 c122.9,97.6 130.6,101.9 134.4,103.2" fill="currentcolor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">

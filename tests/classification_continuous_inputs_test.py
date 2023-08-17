@@ -4,7 +4,7 @@ import numpy as np
 from imodels import *  # noqa: F403
 
 
-class TestClassClassificationBinary:
+class TestClassClassificationContinuousInputs:
     '''Tests simple classification for different models. Note: still doesn't test all the models!
     '''
 
@@ -33,6 +33,7 @@ class TestClassClassificationBinary:
             OneRClassifier, SlipperClassifier,
             GreedyTreeClassifier, OptimalTreeClassifier,
             C45TreeClassifier, FIGSClassifier,
+            # TreeGAMClassifier,
         ]:  # IRFClassifier, SLIMClassifier, BayesianRuleSetClassifier,
 
             init_kwargs = {}
@@ -66,6 +67,6 @@ class TestClassClassificationBinary:
 
 
 if __name__ == '__main__':
-    t = TestClassClassificationBinary()
+    t = TestClassClassificationContinuousInputs()
     t.setup()
     t.test_classification_binary()
