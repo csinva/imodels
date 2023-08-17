@@ -38,7 +38,7 @@ def test_skope_rules():
         "bootstrap": [True, False],
         "bootstrap_features": [True, False],
         "max_depth": [2],
-        "max_features": ["auto", 1, 0.1],
+        "max_features": [None, 1, 0.1],
         "min_samples_split": [2, 0.1],
         "n_jobs": [-1, 2]})
 
