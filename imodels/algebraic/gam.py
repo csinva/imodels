@@ -7,14 +7,9 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets
-from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_X_y
-from sklearn.utils.validation import check_random_state
-from sklearn.utils.validation import column_or_1d
-from sklearn.utils.validation import check_consistent_length
 from sklearn.utils.validation import _check_sample_weight
 from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
-from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score
 from tqdm import tqdm
@@ -34,17 +29,44 @@ class TreeGAMClassifier(BaseEstimator):
         self,
         n_boosting_rounds=100,
         max_leaf_nodes=3,
+        reg_param=0.0,
         n_boosting_rounds_marginal=0,
         max_leaf_nodes_marginal=2,
-        fit_linear_marginal=False,
+        reg_param_marginal=0.0,
+        fit_linear_marginal=None,
         random_state=None,
     ):
-        self.max_leaf_nodes = max_leaf_nodes
-        self.random_state = random_state
+        """
+        Params
+        ------
+        n_boosting_rounds : int
+            Number of boosting rounds for the cyclic boosting.
+        max_leaf_nodes : int
+            Maximum number of leaf nodes for the trees in the cyclic boosting.
+        reg_param : float
+            Regularization parameter for the cyclic boosting.
+        n_boosting_rounds_marginal : int
+            Number of boosting rounds for the marginal boosting.
+        max_leaf_nodes_marginal : int
+            Maximum number of leaf nodes for the trees in the marginal boosting.
+        reg_param_marginal : float
+            Regularization parameter for the marginal boosting.
+        fit_linear_marginal : str [None, "None", "ridge", "NNLS"]
+            Whether to fit a linear model to the marginal effects.
+            NNLS for non-negative least squares
+            ridge for ridge regression
+            None for no linear model
+        random_state : int
+            Random seed.
+        """
         self.n_boosting_rounds = n_boosting_rounds
+        self.max_leaf_nodes = max_leaf_nodes
+        self.reg_param = reg_param
         self.max_leaf_nodes_marginal = max_leaf_nodes_marginal
+        self.reg_param_marginal = reg_param_marginal
         self.n_boosting_rounds_marginal = n_boosting_rounds_marginal
         self.fit_linear_marginal = fit_linear_marginal
+        self.random_state = random_state
 
     def fit(self, X, y, sample_weight=None, learning_rate=0.01, validation_frac=0.15):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
@@ -110,11 +132,18 @@ class TreeGAMClassifier(BaseEstimator):
                 n_estimators=self.n_boosting_rounds_marginal,
             )
             est.fit(X_, residuals_train, sample_weight=sample_weight_train)
+            if self.reg_param_marginal > 0:
+                est = imodels.HSTreeRegressor(est, reg_param=self.reg_param_marginal)
             self.estimators_marginal.append(est)
 
-        if self.fit_linear_marginal:
-            linear_marginal = RidgeCV(fit_intercept=False)
-            # linear_marginal = LinearRegression(fit_intercept=False, positive=True)
+        if (
+            self.fit_linear_marginal is not None
+            and not self.fit_linear_marginal == "None"
+        ):
+            if self.fit_linear_marginal.lower() == "ridge":
+                linear_marginal = RidgeCV(fit_intercept=False)
+            elif self.fit_linear_marginal.lower() == "nnls":
+                linear_marginal = LinearRegression(fit_intercept=False, positive=True)
             linear_marginal.fit(
                 np.array([est.predict(X_train) for est in self.estimators_marginal]).T,
                 residuals_train,
@@ -149,6 +178,8 @@ class TreeGAMClassifier(BaseEstimator):
                 )
                 if not succesfully_split_on_feature:
                     continue
+                if self.reg_param > 0:
+                    est = imodels.HSTreeRegressor(est, reg_param=self.reg_param)
                 self.estimators_.append(est)
                 residuals_train = residuals_train - self.learning_rate * est.predict(
                     X_train

@@ -129,7 +129,7 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
         return data['data'], data['target'], _clean_feat_names(data['feature_names'])
     elif data_source == 'openml':  # note this api might change in newer sklearn - should give dataset-id not name
         data = sklearn.datasets.fetch_openml(
-            data_id=dataset_name, data_home=oj(data_path, 'openml_data'))
+            data_id=dataset_name, data_home=oj(data_path, 'openml_data'), parser='auto')
         X, y, feature_names = data['data'], data['target'], _clean_feat_names(
             data['feature_names'])
         if isinstance(X, pd.DataFrame):
