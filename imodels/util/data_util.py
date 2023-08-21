@@ -124,6 +124,8 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
         elif dataset_name == 'california_housing':
             data = sklearn.datasets.fetch_california_housing(
                 data_home=oj(data_path, 'sklearn_data'))
+        elif dataset_name == 'breast_cancer':
+            data = sklearn.datasets.load_breast_cancer()
         return data['data'], data['target'], _clean_feat_names(data['feature_names'])
     elif data_source == 'openml':  # note this api might change in newer sklearn - should give dataset-id not name
         data = sklearn.datasets.fetch_openml(
