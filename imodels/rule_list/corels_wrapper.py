@@ -257,16 +257,13 @@ class OptimalRuleListClassifier(
         self.str_print = str_print
 
     def __str__(self):
-        try:
-            if corels_supported:
-                if self.str_print is not None:
-                    return "OptimalRuleList:\n\n" + self.str_print
-                else:
-                    return "OptimalRuleList:\n\n" + self.rl_.__str__()
+        if corels_supported:
+            if self.str_print is not None:
+                return "OptimalRuleList:\n\n" + self.str_print
             else:
-                return super().__str__()
-        except:
-            return self.__class__.__name__
+                return "OptimalRuleList:\n\n" + self.rl_.__str__()
+        else:
+            return super().__str__()
 
     def _get_complexity(self):
         return sum([len(corule["antecedents"]) for corule in self.rl_.rules])
