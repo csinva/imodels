@@ -85,7 +85,6 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-        try:
             if self.split_or_linear == "linear":
                 if self.is_root:
                     return f"X_{self.feature} * {self.value:0.3f} (Tree #{self.tree_num} linear root)"
@@ -98,8 +97,6 @@ class Node:
                     return f"Val: {self.value[0][0]:0.3f} (leaf)"
                 else:
                     return f"X_{self.feature} <= {self.threshold:0.3f} (split)"
-        except:
-            return self.__class__.__name__
 
     def __repr__(self):
         return self.__str__()
