@@ -85,18 +85,18 @@ class Node:
             setattr(self, k, v)
 
     def __str__(self):
-            if self.split_or_linear == "linear":
-                if self.is_root:
-                    return f"X_{self.feature} * {self.value:0.3f} (Tree #{self.tree_num} linear root)"
-                else:
-                    return f"X_{self.feature} * {self.value:0.3f} (linear)"
+        if self.split_or_linear == "linear":
+            if self.is_root:
+                return f"X_{self.feature} * {self.value:0.3f} (Tree #{self.tree_num} linear root)"
             else:
-                if self.is_root:
-                    return f"X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)"
-                elif self.left is None and self.right is None:
-                    return f"Val: {self.value[0][0]:0.3f} (leaf)"
-                else:
-                    return f"X_{self.feature} <= {self.threshold:0.3f} (split)"
+                return f"X_{self.feature} * {self.value:0.3f} (linear)"
+        else:
+            if self.is_root:
+                return f"X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)"
+            elif self.left is None and self.right is None:
+                return f"Val: {self.value[0][0]:0.3f} (leaf)"
+            else:
+                return f"X_{self.feature} <= {self.threshold:0.3f} (split)"
 
     def __repr__(self):
         return self.__str__()
@@ -495,17 +495,14 @@ class FIGSExt(BaseEstimator):
         )
 
     def __str__(self):
-        try:
-            sklearn.utils.validation.check_is_fitted(self)
-            s = "------------\n" + "\n\t+\n".join(
-                [self._tree_to_str(t) for t in self.trees_]
-            )
-            if hasattr(self, "feature_names_") and self.feature_names_ is not None:
-                for i in range(len(self.feature_names_))[::-1]:
-                    s = s.replace(f"X_{i}", self.feature_names_[i])
-            return s
-        except ValueError:
-            return self.__class__.__name__
+        sklearn.utils.validation.check_is_fitted(self)
+        s = "------------\n" + "\n\t+\n".join(
+            [self._tree_to_str(t) for t in self.trees_]
+        )
+        if hasattr(self, "feature_names_") and self.feature_names_ is not None:
+            for i in range(len(self.feature_names_))[::-1]:
+                s = s.replace(f"X_{i}", self.feature_names_[i])
+        return s
 
     def predict(self, X):
         if (
