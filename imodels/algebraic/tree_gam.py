@@ -16,8 +16,10 @@ from tqdm import tqdm
 
 import imodels
 
+from sklearn.base import RegressorMixin, ClassifierMixin
 
-class TreeGAMClassifier(BaseEstimator):
+
+class TreeGAM(BaseEstimator):
     """Tree-based GAM classifier.
     Uses cyclical boosting to fit a GAM with small trees.
     Simplified version of the explainable boosting machine described in https://github.com/interpretml/interpret
@@ -30,6 +32,7 @@ class TreeGAMClassifier(BaseEstimator):
         n_boosting_rounds=100,
         max_leaf_nodes=3,
         reg_param=0.0,
+        learning_rate: float = 0.01,
         n_boosting_rounds_marginal=0,
         max_leaf_nodes_marginal=2,
         reg_param_marginal=0.0,
@@ -45,6 +48,8 @@ class TreeGAMClassifier(BaseEstimator):
             Maximum number of leaf nodes for the trees in the cyclic boosting.
         reg_param : float
             Regularization parameter for the cyclic boosting.
+        learning_rate: float
+            Learning rate for the cyclic boosting.
         n_boosting_rounds_marginal : int
             Number of boosting rounds for the marginal boosting.
         max_leaf_nodes_marginal : int
@@ -56,21 +61,24 @@ class TreeGAMClassifier(BaseEstimator):
             NNLS for non-negative least squares
             ridge for ridge regression
             None for no linear model
+
         random_state : int
             Random seed.
         """
         self.n_boosting_rounds = n_boosting_rounds
         self.max_leaf_nodes = max_leaf_nodes
         self.reg_param = reg_param
+        self.learning_rate = learning_rate
         self.max_leaf_nodes_marginal = max_leaf_nodes_marginal
         self.reg_param_marginal = reg_param_marginal
         self.n_boosting_rounds_marginal = n_boosting_rounds_marginal
         self.fit_linear_marginal = fit_linear_marginal
         self.random_state = random_state
 
-    def fit(self, X, y, sample_weight=None, learning_rate=0.01, validation_frac=0.15):
+    def fit(self, X, y, sample_weight=None, validation_frac=0.15):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
-        check_classification_targets(y)
+        if isinstance(self, ClassifierMixin):
+            check_classification_targets(y)
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
 
         # split into train and validation for early stopping
@@ -91,7 +99,6 @@ class TreeGAMClassifier(BaseEstimator):
 
         self.estimators_marginal = []
         self.estimators_ = []
-        self.learning_rate = learning_rate
         self.bias_ = np.mean(y)
 
         if self.n_boosting_rounds_marginal > 0:
@@ -208,7 +215,10 @@ class TreeGAMClassifier(BaseEstimator):
         return np.array([1 - probs1, probs1]).T
 
     def predict(self, X):
-        return np.argmax(self.predict_proba(X), axis=1)
+        if isinstance(self, RegressorMixin):
+            return self.predict_proba(X)[:, 1]
+        elif isinstance(self, ClassifierMixin):
+            return np.argmax(self.predict_proba(X), axis=1)
 
     def get_shape_function_vals(self, X, max_evals=100):
         """Uses predict_proba to compute shape_function
@@ -234,6 +244,14 @@ class TreeGAMClassifier(BaseEstimator):
             feature_vals_list.append(feature_vals)
             shape_function_vals_list.append(shape_function_vals.tolist())
         return feature_vals_list, shape_function_vals_list
+
+
+class TreeGAMRegressor(TreeGAM, RegressorMixin):
+    ...
+
+
+class TreeGAMClassifier(TreeGAM, ClassifierMixin):
+    ...
 
 
 if __name__ == "__main__":

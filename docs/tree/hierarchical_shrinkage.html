@@ -31,9 +31,8 @@ from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics import r2_score, mean_squared_error, log_loss
 from sklearn.model_selection import cross_val_score, KFold
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, \
-    export_text
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor, RandomForestRegressor
 
 from imodels.util import checks
 from imodels.util.arguments import check_fit_arguments
@@ -41,8 +40,12 @@ from imodels.util.tree import compute_tree_complexity
 
 
 class HSTree:
-    def __init__(self, estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
-                 reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
+    def __init__(
+        self,
+        estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+        reg_param: float = 1,
+        shrinkage_scheme_: str = &#34;node_based&#34;,
+    ):
         &#34;&#34;&#34;HSTree (Tree with hierarchical shrinkage applied).
         Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
         It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
@@ -57,11 +60,11 @@ class HSTree:
 
         reg_param: float
             Higher is more regularization (can be arbitrarily large, should not be &lt; 0)
-        
+
         shrinkage_scheme: str
-            Experimental: Used to experiment with different forms of shrinkage. options are: 
+            Experimental: Used to experiment with different forms of shrinkage. options are:
                 (i) node_based shrinks based on number of samples in parent node
-                (ii) leaf_based only shrinks leaf nodes based on number of leaf samples 
+                (ii) leaf_based only shrinks leaf nodes based on number of leaf samples
                 (iii) constant shrinks every node by a constant lambda
         &#34;&#34;&#34;
         super().__init__()
@@ -73,41 +76,54 @@ class HSTree:
 
     def get_params(self, deep=True):
         if deep:
-            return deepcopy({&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-                             &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_})
-        return {&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-                &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
+            return deepcopy(
+                {
+                    &#34;reg_param&#34;: self.reg_param,
+                    &#34;estimator_&#34;: self.estimator_,
+                    &#34;shrinkage_scheme_&#34;: self.shrinkage_scheme_,
+                }
+            )
+        return {
+            &#34;reg_param&#34;: self.reg_param,
+            &#34;estimator_&#34;: self.estimator_,
+            &#34;shrinkage_scheme_&#34;: self.shrinkage_scheme_,
+        }
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # remove feature_names if it exists (note: only works as keyword-arg)
-        feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
+        feature_names = kwargs.pop(&#34;feature_names&#34;, None)  # None returned if not passed
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-        self.estimator_ = self.estimator_.fit(X, y, *args, sample_weight=sample_weight, **kwargs)
+        self.estimator_ = self.estimator_.fit(
+            X, y, *args, sample_weight=sample_weight, **kwargs
+        )
         self._shrink()
 
         # compute complexity
-        if hasattr(self.estimator_, &#39;tree_&#39;):
+        if hasattr(self.estimator_, &#34;tree_&#34;):
             self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
-        elif hasattr(self.estimator_, &#39;estimators_&#39;):
+        elif hasattr(self.estimator_, &#34;estimators_&#34;):
             self.complexity_ = 0
             for i in range(len(self.estimator_.estimators_)):
                 t = deepcopy(self.estimator_.estimators_[i])
                 if isinstance(t, np.ndarray):
-                    assert t.size == 1, &#39;multiple trees stored under tree_?&#39;
+                    assert t.size == 1, &#34;multiple trees stored under tree_?&#34;
                     t = t[0]
                 self.complexity_ += compute_tree_complexity(t.tree_)
         return self
 
-    def _shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
-        &#34;&#34;&#34;Shrink the tree
-        &#34;&#34;&#34;
+    def _shrink_tree(
+        self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0
+    ):
+        &#34;&#34;&#34;Shrink the tree&#34;&#34;&#34;
         if reg_param is None:
             reg_param = 1.0
         left = tree.children_left[i]
         right = tree.children_right[i]
         is_leaf = left == right
         n_samples = tree.weighted_n_node_samples[i]
-        if isinstance(self, RegressorMixin) or isinstance(self.estimator_, GradientBoostingClassifier):
+        if isinstance(self, RegressorMixin) or isinstance(
+            self.estimator_, GradientBoostingClassifier
+        ):
             val = deepcopy(tree.value[i, :, :])
         else:  # If classification, normalize to probability vector
             val = tree.value[i, :, :] / n_samples
@@ -119,42 +135,59 @@ class HSTree:
 
         # if has parent
         else:
-            if self.shrinkage_scheme_ == &#39;node_based&#39;:
+            if self.shrinkage_scheme_ == &#34;node_based&#34;:
                 val_new = (val - parent_val) / (1 + reg_param / parent_num)
-            elif self.shrinkage_scheme_ == &#39;constant&#39;:
+            elif self.shrinkage_scheme_ == &#34;constant&#34;:
                 val_new = (val - parent_val) / (1 + reg_param)
             else:  # leaf_based
                 val_new = 0
             cum_sum += val_new
 
         # Step 2: Update node values
-        if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
+        if (
+            self.shrinkage_scheme_ == &#34;node_based&#34;
+            or self.shrinkage_scheme_ == &#34;constant&#34;
+        ):
             tree.value[i, :, :] = cum_sum
         else:  # leaf_based
             if is_leaf:  # update node values if leaf_based
                 root_val = tree.value[0, :, :]
-                tree.value[i, :, :] = root_val + (val - root_val) / (1 + reg_param / n_samples)
+                tree.value[i, :, :] = root_val + (val - root_val) / (
+                    1 + reg_param / n_samples
+                )
             else:
                 tree.value[i, :, :] = val
 
                 # Step 3: Recurse if not leaf
         if not is_leaf:
-            self._shrink_tree(tree, reg_param, left,
-                              parent_val=val, parent_num=n_samples, cum_sum=deepcopy(cum_sum))
-            self._shrink_tree(tree, reg_param, right,
-                              parent_val=val, parent_num=n_samples, cum_sum=deepcopy(cum_sum))
+            self._shrink_tree(
+                tree,
+                reg_param,
+                left,
+                parent_val=val,
+                parent_num=n_samples,
+                cum_sum=deepcopy(cum_sum),
+            )
+            self._shrink_tree(
+                tree,
+                reg_param,
+                right,
+                parent_val=val,
+                parent_num=n_samples,
+                cum_sum=deepcopy(cum_sum),
+            )
 
             # edit the non-leaf nodes for later visualization (doesn&#39;t effect predictions)
 
         return tree
 
     def _shrink(self):
-        if hasattr(self.estimator_, &#39;tree_&#39;):
+        if hasattr(self.estimator_, &#34;tree_&#34;):
             self._shrink_tree(self.estimator_.tree_, self.reg_param)
-        elif hasattr(self.estimator_, &#39;estimators_&#39;):
+        elif hasattr(self.estimator_, &#34;estimators_&#34;):
             for t in self.estimator_.estimators_:
                 if isinstance(t, np.ndarray):
-                    assert t.size == 1, &#39;multiple trees stored under tree_?&#39;
+                    assert t.size == 1, &#34;multiple trees stored under tree_?&#34;
                     t = t[0]
                 self._shrink_tree(t.tree_, self.reg_param)
 
@@ -162,24 +195,26 @@ class HSTree:
         return self.estimator_.predict(X, *args, **kwargs)
 
     def predict_proba(self, X, *args, **kwargs):
-        if hasattr(self.estimator_, &#39;predict_proba&#39;):
+        if hasattr(self.estimator_, &#34;predict_proba&#34;):
             return self.estimator_.predict_proba(X, *args, **kwargs)
         else:
             return NotImplemented
 
     def score(self, X, y, *args, **kwargs):
-        if hasattr(self.estimator_, &#39;score&#39;):
+        if hasattr(self.estimator_, &#34;score&#34;):
             return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented
 
     def __str__(self):
-        s = &#39;&gt; ------------------------------\n&#39;
-        s += &#39;&gt; Decision Tree with Hierarchical Shrinkage\n&#39;
-        s += &#39;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#39;
-        s += &#39;&gt; ------------------------------&#39; + &#39;\n&#39;
-        if hasattr(self, &#39;feature_names&#39;) and self.feature_names is not None:
-            return s + export_text(self.estimator_, feature_names=self.feature_names, show_weights=True)
+        s = &#34;&gt; ------------------------------\n&#34;
+        s += &#34;&gt; Decision Tree with Hierarchical Shrinkage\n&#34;
+        s += &#34;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#34;
+        s += &#34;&gt; ------------------------------&#34; + &#34;\n&#34;
+        if hasattr(self, &#34;feature_names&#34;) and self.feature_names is not None:
+            return s + export_text(
+                self.estimator_, feature_names=self.feature_names, show_weights=True
+            )
         else:
             return s + export_text(self.estimator_, show_weights=True)
 
@@ -206,25 +241,35 @@ class HSTree:
 
 
 class HSTreeRegressor(HSTree, RegressorMixin):
-    def __init__(self, estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
-                 reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
-        super().__init__(estimator_=estimator_,
-                         reg_param=reg_param,
-                         shrinkage_scheme_=shrinkage_scheme_,
-                         )
+    def __init__(
+        self,
+        estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
+        reg_param: float = 1,
+        shrinkage_scheme_: str = &#34;node_based&#34;,
+    ):
+        super().__init__(
+            estimator_=estimator_,
+            reg_param=reg_param,
+            shrinkage_scheme_=shrinkage_scheme_,
+        )
 
 
 class HSTreeClassifier(HSTree, ClassifierMixin):
-    def __init__(self, estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
-                 reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
-        super().__init__(estimator_=estimator_,
-                         reg_param=reg_param,
-                         shrinkage_scheme_=shrinkage_scheme_,
-                         )
+    def __init__(
+        self,
+        estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+        reg_param: float = 1,
+        shrinkage_scheme_: str = &#34;node_based&#34;,
+    ):
+        super().__init__(
+            estimator_=estimator_,
+            reg_param=reg_param,
+            shrinkage_scheme_=shrinkage_scheme_,
+        )
 
 
 def _get_cv_criterion(scorer):
-    y_true = np.random.binomial(n=1, p=.5, size=100)
+    y_true = np.random.binomial(n=1, p=0.5, size=100)
 
     y_pred_good = y_true
     y_pred_bad = np.random.uniform(0, 1, 100)
@@ -239,11 +284,17 @@ def _get_cv_criterion(scorer):
 
 
 class HSTreeClassifierCV(HSTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator = None,
-                 reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500],
-                 shrinkage_scheme_: str = &#39;node_based&#39;,
-                 max_leaf_nodes: int = 20,
-                 cv: int = 3, scoring=None, *args, **kwargs):
+    def __init__(
+        self,
+        estimator_: BaseEstimator = None,
+        reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500],
+        shrinkage_scheme_: str = &#34;node_based&#34;,
+        max_leaf_nodes: int = 20,
+        cv: int = 3,
+        scoring=None,
+        *args,
+        **kwargs
+    ):
         &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
          Params
@@ -273,7 +324,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
 
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = [[] for _ in self.reg_param_list]
-        scorer = kwargs.get(&#39;scoring&#39;, log_loss)
+        scorer = kwargs.get(&#34;scoring&#34;, log_loss)
         kf = KFold(n_splits=self.cv)
         for train_index, test_index in kf.split(X):
             X_out, y_out = X[test_index, :], y[test_index]
@@ -290,8 +341,13 @@ class HSTreeClassifierCV(HSTreeClassifier):
         super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
-        attr_list = [&#34;estimator_&#34;, &#34;reg_param_list&#34;, &#34;shrinkage_scheme_&#34;,
-                     &#34;cv&#34;, &#34;scoring&#34;]
+        attr_list = [
+            &#34;estimator_&#34;,
+            &#34;reg_param_list&#34;,
+            &#34;shrinkage_scheme_&#34;,
+            &#34;cv&#34;,
+            &#34;scoring&#34;,
+        ]
         s = self.__class__.__name__
         s += &#34;(&#34;
         for attr in attr_list:
@@ -301,11 +357,17 @@ class HSTreeClassifierCV(HSTreeClassifier):
 
 
 class HSTreeRegressorCV(HSTreeRegressor):
-    def __init__(self, estimator_: BaseEstimator = None,
-                 reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500],
-                 shrinkage_scheme_: str = &#39;node_based&#39;,
-                 max_leaf_nodes: int = 20,
-                 cv: int = 3, scoring=None, *args, **kwargs):
+    def __init__(
+        self,
+        estimator_: BaseEstimator = None,
+        reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500],
+        shrinkage_scheme_: str = &#34;node_based&#34;,
+        max_leaf_nodes: int = 20,
+        cv: int = 3,
+        scoring=None,
+        *args,
+        **kwargs
+    ):
         &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
          Params
@@ -336,7 +398,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = [[] for _ in self.reg_param_list]
         kf = KFold(n_splits=self.cv)
-        scorer = kwargs.get(&#39;scoring&#39;, mean_squared_error)
+        scorer = kwargs.get(&#34;scoring&#34;, mean_squared_error)
         for train_index, test_index in kf.split(X):
             X_out, y_out = X[test_index, :], y[test_index]
             X_in, y_in = X[train_index, :], y[train_index]
@@ -352,8 +414,13 @@ class HSTreeRegressorCV(HSTreeRegressor):
         super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
-        attr_list = [&#34;estimator_&#34;, &#34;reg_param_list&#34;, &#34;shrinkage_scheme_&#34;,
-                     &#34;cv&#34;, &#34;scoring&#34;]
+        attr_list = [
+            &#34;estimator_&#34;,
+            &#34;reg_param_list&#34;,
+            &#34;shrinkage_scheme_&#34;,
+            &#34;cv&#34;,
+            &#34;scoring&#34;,
+        ]
         s = self.__class__.__name__
         s += &#34;(&#34;
         for attr in attr_list:
@@ -362,7 +429,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
         return s
 
 
-if __name__ == &#39;__main__&#39;:
+if __name__ == &#34;__main__&#34;:
     np.random.seed(15)
     # X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
     # X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
@@ -373,34 +440,47 @@ if __name__ == &#39;__main__&#39;:
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.33, random_state=10
     )
-    print(&#39;X.shape&#39;, X.shape)
-    print(&#39;ys&#39;, np.unique(y_train))
+    print(&#34;X.shape&#34;, X.shape)
+    print(&#34;ys&#34;, np.unique(y_train))
 
     # m = HSTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
     # m = DecisionTreeClassifier(max_leaf_nodes = 20,random_state=1, max_features=None)
-    m = DecisionTreeClassifier(random_state=42)
+    # m = DecisionTreeClassifier(random_state=42)
+    m = GradientBoostingRegressor(random_state=10, n_estimators=5)
     # print(&#39;best alpha&#39;, m.reg_param)
     m.fit(X_train, y_train)
     # m.predict_proba(X_train)  # just run this
-    print(&#39;score&#39;, r2_score(y_test, m.predict(X_test)))
-    print(&#39;running again....&#39;)
+    print(&#34;score&#34;, r2_score(y_test, m.predict(X_test)))
+    print(&#34;running again....&#34;)
 
     # x = DecisionTreeRegressor(random_state = 42, ccp_alpha = 0.3)
     # x.fit(X_train,y_train)
 
     # m = HSTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
     # m = HSTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
-    m = HSTreeRegressorCV(estimator_=DecisionTreeClassifier(random_state=42),
-                          shrinkage_scheme_=&#39;node_based&#39;,
-                          reg_param_list=[0.1, 1, 2, 5, 10, 25, 50, 100, 500])
+    # m = HSTreeRegressorCV(
+    #     estimator_=DecisionTreeClassifier(random_state=42),
+    #     shrinkage_scheme_=&#34;node_based&#34;,
+    #     reg_param_list=[0.1, 1, 2, 5, 10, 25, 50, 100, 500],
+    # )
     # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
+    m = HSTreeRegressor(m)
+    print(&#34;score&#34;, r2_score(y_test, m.predict(X_test)))
 
-    # m = HSTreeClassifier(estimator_ = GradientBoostingClassifier(random_state = 10),reg_param = 5)
+
+
+    m = HSTreeRegressor(
+        estimator_=GradientBoostingRegressor(random_state=10, n_estimators=5,),
+        reg_param=1,
+    )
     m.fit(X_train, y_train)
-    print(&#39;best alpha&#39;, m.reg_param)
+    print(&#34;best alpha&#34;, m.reg_param)
     # m.predict_proba(X_train)  # just run this
     # print(&#39;score&#39;, m.score(X_test, y_test))
-    print(&#39;score&#39;, r2_score(y_test, m.predict(X_test)))</code></pre>
+    print(&#34;score&#34;, r2_score(y_test, m.predict(X_test)))
+
+
+    </code></pre>
 </details>
 </section>
 <section>
@@ -438,8 +518,12 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HSTree:
-    def __init__(self, estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
-                 reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
+    def __init__(
+        self,
+        estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+        reg_param: float = 1,
+        shrinkage_scheme_: str = &#34;node_based&#34;,
+    ):
         &#34;&#34;&#34;HSTree (Tree with hierarchical shrinkage applied).
         Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
         It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
@@ -454,11 +538,11 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 
         reg_param: float
             Higher is more regularization (can be arbitrarily large, should not be &lt; 0)
-        
+
         shrinkage_scheme: str
-            Experimental: Used to experiment with different forms of shrinkage. options are: 
+            Experimental: Used to experiment with different forms of shrinkage. options are:
                 (i) node_based shrinks based on number of samples in parent node
-                (ii) leaf_based only shrinks leaf nodes based on number of leaf samples 
+                (ii) leaf_based only shrinks leaf nodes based on number of leaf samples
                 (iii) constant shrinks every node by a constant lambda
         &#34;&#34;&#34;
         super().__init__()
@@ -470,41 +554,54 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 
     def get_params(self, deep=True):
         if deep:
-            return deepcopy({&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-                             &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_})
-        return {&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-                &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}
+            return deepcopy(
+                {
+                    &#34;reg_param&#34;: self.reg_param,
+                    &#34;estimator_&#34;: self.estimator_,
+                    &#34;shrinkage_scheme_&#34;: self.shrinkage_scheme_,
+                }
+            )
+        return {
+            &#34;reg_param&#34;: self.reg_param,
+            &#34;estimator_&#34;: self.estimator_,
+            &#34;shrinkage_scheme_&#34;: self.shrinkage_scheme_,
+        }
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # remove feature_names if it exists (note: only works as keyword-arg)
-        feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
+        feature_names = kwargs.pop(&#34;feature_names&#34;, None)  # None returned if not passed
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-        self.estimator_ = self.estimator_.fit(X, y, *args, sample_weight=sample_weight, **kwargs)
+        self.estimator_ = self.estimator_.fit(
+            X, y, *args, sample_weight=sample_weight, **kwargs
+        )
         self._shrink()
 
         # compute complexity
-        if hasattr(self.estimator_, &#39;tree_&#39;):
+        if hasattr(self.estimator_, &#34;tree_&#34;):
             self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
-        elif hasattr(self.estimator_, &#39;estimators_&#39;):
+        elif hasattr(self.estimator_, &#34;estimators_&#34;):
             self.complexity_ = 0
             for i in range(len(self.estimator_.estimators_)):
                 t = deepcopy(self.estimator_.estimators_[i])
                 if isinstance(t, np.ndarray):
-                    assert t.size == 1, &#39;multiple trees stored under tree_?&#39;
+                    assert t.size == 1, &#34;multiple trees stored under tree_?&#34;
                     t = t[0]
                 self.complexity_ += compute_tree_complexity(t.tree_)
         return self
 
-    def _shrink_tree(self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0):
-        &#34;&#34;&#34;Shrink the tree
-        &#34;&#34;&#34;
+    def _shrink_tree(
+        self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0
+    ):
+        &#34;&#34;&#34;Shrink the tree&#34;&#34;&#34;
         if reg_param is None:
             reg_param = 1.0
         left = tree.children_left[i]
         right = tree.children_right[i]
         is_leaf = left == right
         n_samples = tree.weighted_n_node_samples[i]
-        if isinstance(self, RegressorMixin) or isinstance(self.estimator_, GradientBoostingClassifier):
+        if isinstance(self, RegressorMixin) or isinstance(
+            self.estimator_, GradientBoostingClassifier
+        ):
             val = deepcopy(tree.value[i, :, :])
         else:  # If classification, normalize to probability vector
             val = tree.value[i, :, :] / n_samples
@@ -516,42 +613,59 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 
         # if has parent
         else:
-            if self.shrinkage_scheme_ == &#39;node_based&#39;:
+            if self.shrinkage_scheme_ == &#34;node_based&#34;:
                 val_new = (val - parent_val) / (1 + reg_param / parent_num)
-            elif self.shrinkage_scheme_ == &#39;constant&#39;:
+            elif self.shrinkage_scheme_ == &#34;constant&#34;:
                 val_new = (val - parent_val) / (1 + reg_param)
             else:  # leaf_based
                 val_new = 0
             cum_sum += val_new
 
         # Step 2: Update node values
-        if self.shrinkage_scheme_ == &#39;node_based&#39; or self.shrinkage_scheme_ == &#39;constant&#39;:
+        if (
+            self.shrinkage_scheme_ == &#34;node_based&#34;
+            or self.shrinkage_scheme_ == &#34;constant&#34;
+        ):
             tree.value[i, :, :] = cum_sum
         else:  # leaf_based
             if is_leaf:  # update node values if leaf_based
                 root_val = tree.value[0, :, :]
-                tree.value[i, :, :] = root_val + (val - root_val) / (1 + reg_param / n_samples)
+                tree.value[i, :, :] = root_val + (val - root_val) / (
+                    1 + reg_param / n_samples
+                )
             else:
                 tree.value[i, :, :] = val
 
                 # Step 3: Recurse if not leaf
         if not is_leaf:
-            self._shrink_tree(tree, reg_param, left,
-                              parent_val=val, parent_num=n_samples, cum_sum=deepcopy(cum_sum))
-            self._shrink_tree(tree, reg_param, right,
-                              parent_val=val, parent_num=n_samples, cum_sum=deepcopy(cum_sum))
+            self._shrink_tree(
+                tree,
+                reg_param,
+                left,
+                parent_val=val,
+                parent_num=n_samples,
+                cum_sum=deepcopy(cum_sum),
+            )
+            self._shrink_tree(
+                tree,
+                reg_param,
+                right,
+                parent_val=val,
+                parent_num=n_samples,
+                cum_sum=deepcopy(cum_sum),
+            )
 
             # edit the non-leaf nodes for later visualization (doesn&#39;t effect predictions)
 
         return tree
 
     def _shrink(self):
-        if hasattr(self.estimator_, &#39;tree_&#39;):
+        if hasattr(self.estimator_, &#34;tree_&#34;):
             self._shrink_tree(self.estimator_.tree_, self.reg_param)
-        elif hasattr(self.estimator_, &#39;estimators_&#39;):
+        elif hasattr(self.estimator_, &#34;estimators_&#34;):
             for t in self.estimator_.estimators_:
                 if isinstance(t, np.ndarray):
-                    assert t.size == 1, &#39;multiple trees stored under tree_?&#39;
+                    assert t.size == 1, &#34;multiple trees stored under tree_?&#34;
                     t = t[0]
                 self._shrink_tree(t.tree_, self.reg_param)
 
@@ -559,24 +673,26 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         return self.estimator_.predict(X, *args, **kwargs)
 
     def predict_proba(self, X, *args, **kwargs):
-        if hasattr(self.estimator_, &#39;predict_proba&#39;):
+        if hasattr(self.estimator_, &#34;predict_proba&#34;):
             return self.estimator_.predict_proba(X, *args, **kwargs)
         else:
             return NotImplemented
 
     def score(self, X, y, *args, **kwargs):
-        if hasattr(self.estimator_, &#39;score&#39;):
+        if hasattr(self.estimator_, &#34;score&#34;):
             return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented
 
     def __str__(self):
-        s = &#39;&gt; ------------------------------\n&#39;
-        s += &#39;&gt; Decision Tree with Hierarchical Shrinkage\n&#39;
-        s += &#39;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#39;
-        s += &#39;&gt; ------------------------------&#39; + &#39;\n&#39;
-        if hasattr(self, &#39;feature_names&#39;) and self.feature_names is not None:
-            return s + export_text(self.estimator_, feature_names=self.feature_names, show_weights=True)
+        s = &#34;&gt; ------------------------------\n&#34;
+        s += &#34;&gt; Decision Tree with Hierarchical Shrinkage\n&#34;
+        s += &#34;&gt; \tPrediction is made by looking at the value in the appropriate leaf of the tree\n&#34;
+        s += &#34;&gt; ------------------------------&#34; + &#34;\n&#34;
+        if hasattr(self, &#34;feature_names&#34;) and self.feature_names is not None:
+            return s + export_text(
+                self.estimator_, feature_names=self.feature_names, show_weights=True
+            )
         else:
             return s + export_text(self.estimator_, show_weights=True)
 
@@ -619,20 +735,22 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </summary>
 <pre><code class="python">def fit(self, X, y, sample_weight=None, *args, **kwargs):
     # remove feature_names if it exists (note: only works as keyword-arg)
-    feature_names = kwargs.pop(&#39;feature_names&#39;, None)  # None returned if not passed
+    feature_names = kwargs.pop(&#34;feature_names&#34;, None)  # None returned if not passed
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-    self.estimator_ = self.estimator_.fit(X, y, *args, sample_weight=sample_weight, **kwargs)
+    self.estimator_ = self.estimator_.fit(
+        X, y, *args, sample_weight=sample_weight, **kwargs
+    )
     self._shrink()
 
     # compute complexity
-    if hasattr(self.estimator_, &#39;tree_&#39;):
+    if hasattr(self.estimator_, &#34;tree_&#34;):
         self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
-    elif hasattr(self.estimator_, &#39;estimators_&#39;):
+    elif hasattr(self.estimator_, &#34;estimators_&#34;):
         self.complexity_ = 0
         for i in range(len(self.estimator_.estimators_)):
             t = deepcopy(self.estimator_.estimators_[i])
             if isinstance(t, np.ndarray):
-                assert t.size == 1, &#39;multiple trees stored under tree_?&#39;
+                assert t.size == 1, &#34;multiple trees stored under tree_?&#34;
                 t = t[0]
             self.complexity_ += compute_tree_complexity(t.tree_)
     return self</code></pre>
@@ -649,10 +767,18 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </summary>
 <pre><code class="python">def get_params(self, deep=True):
     if deep:
-        return deepcopy({&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-                         &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_})
-    return {&#39;reg_param&#39;: self.reg_param, &#39;estimator_&#39;: self.estimator_,
-            &#39;shrinkage_scheme_&#39;: self.shrinkage_scheme_}</code></pre>
+        return deepcopy(
+            {
+                &#34;reg_param&#34;: self.reg_param,
+                &#34;estimator_&#34;: self.estimator_,
+                &#34;shrinkage_scheme_&#34;: self.shrinkage_scheme_,
+            }
+        )
+    return {
+        &#34;reg_param&#34;: self.reg_param,
+        &#34;estimator_&#34;: self.estimator_,
+        &#34;shrinkage_scheme_&#34;: self.shrinkage_scheme_,
+    }</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.predict"><code class="name flex">
@@ -678,7 +804,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X, *args, **kwargs):
-    if hasattr(self.estimator_, &#39;predict_proba&#39;):
+    if hasattr(self.estimator_, &#34;predict_proba&#34;):
         return self.estimator_.predict_proba(X, *args, **kwargs)
     else:
         return NotImplemented</code></pre>
@@ -694,7 +820,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def score(self, X, y, *args, **kwargs):
-    if hasattr(self.estimator_, &#39;score&#39;):
+    if hasattr(self.estimator_, &#34;score&#34;):
         return self.estimator_.score(X, y, *args, **kwargs)
     else:
         return NotImplemented</code></pre>
@@ -729,12 +855,17 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HSTreeClassifier(HSTree, ClassifierMixin):
-    def __init__(self, estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
-                 reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
-        super().__init__(estimator_=estimator_,
-                         reg_param=reg_param,
-                         shrinkage_scheme_=shrinkage_scheme_,
-                         )</code></pre>
+    def __init__(
+        self,
+        estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+        reg_param: float = 1,
+        shrinkage_scheme_: str = &#34;node_based&#34;,
+    ):
+        super().__init__(
+            estimator_=estimator_,
+            reg_param=reg_param,
+            shrinkage_scheme_=shrinkage_scheme_,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -767,11 +898,17 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HSTreeClassifierCV(HSTreeClassifier):
-    def __init__(self, estimator_: BaseEstimator = None,
-                 reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500],
-                 shrinkage_scheme_: str = &#39;node_based&#39;,
-                 max_leaf_nodes: int = 20,
-                 cv: int = 3, scoring=None, *args, **kwargs):
+    def __init__(
+        self,
+        estimator_: BaseEstimator = None,
+        reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500],
+        shrinkage_scheme_: str = &#34;node_based&#34;,
+        max_leaf_nodes: int = 20,
+        cv: int = 3,
+        scoring=None,
+        *args,
+        **kwargs
+    ):
         &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
          Params
@@ -801,7 +938,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = [[] for _ in self.reg_param_list]
-        scorer = kwargs.get(&#39;scoring&#39;, log_loss)
+        scorer = kwargs.get(&#34;scoring&#34;, log_loss)
         kf = KFold(n_splits=self.cv)
         for train_index, test_index in kf.split(X):
             X_out, y_out = X[test_index, :], y[test_index]
@@ -818,8 +955,13 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
-        attr_list = [&#34;estimator_&#34;, &#34;reg_param_list&#34;, &#34;shrinkage_scheme_&#34;,
-                     &#34;cv&#34;, &#34;scoring&#34;]
+        attr_list = [
+            &#34;estimator_&#34;,
+            &#34;reg_param_list&#34;,
+            &#34;shrinkage_scheme_&#34;,
+            &#34;cv&#34;,
+            &#34;scoring&#34;,
+        ]
         s = self.__class__.__name__
         s += &#34;(&#34;
         for attr in attr_list:
@@ -846,7 +988,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 </summary>
 <pre><code class="python">def fit(self, X, y, *args, **kwargs):
     self.scores_ = [[] for _ in self.reg_param_list]
-    scorer = kwargs.get(&#39;scoring&#39;, log_loss)
+    scorer = kwargs.get(&#34;scoring&#34;, log_loss)
     kf = KFold(n_splits=self.cv)
     for train_index, test_index in kf.split(X):
         X_out, y_out = X[test_index, :], y[test_index]
@@ -892,12 +1034,17 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HSTreeRegressor(HSTree, RegressorMixin):
-    def __init__(self, estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
-                 reg_param: float = 1, shrinkage_scheme_: str = &#39;node_based&#39;):
-        super().__init__(estimator_=estimator_,
-                         reg_param=reg_param,
-                         shrinkage_scheme_=shrinkage_scheme_,
-                         )</code></pre>
+    def __init__(
+        self,
+        estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
+        reg_param: float = 1,
+        shrinkage_scheme_: str = &#34;node_based&#34;,
+    ):
+        super().__init__(
+            estimator_=estimator_,
+            reg_param=reg_param,
+            shrinkage_scheme_=shrinkage_scheme_,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -930,11 +1077,17 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HSTreeRegressorCV(HSTreeRegressor):
-    def __init__(self, estimator_: BaseEstimator = None,
-                 reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500],
-                 shrinkage_scheme_: str = &#39;node_based&#39;,
-                 max_leaf_nodes: int = 20,
-                 cv: int = 3, scoring=None, *args, **kwargs):
+    def __init__(
+        self,
+        estimator_: BaseEstimator = None,
+        reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500],
+        shrinkage_scheme_: str = &#34;node_based&#34;,
+        max_leaf_nodes: int = 20,
+        cv: int = 3,
+        scoring=None,
+        *args,
+        **kwargs
+    ):
         &#34;&#34;&#34;Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.
 
          Params
@@ -965,7 +1118,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
     def fit(self, X, y, *args, **kwargs):
         self.scores_ = [[] for _ in self.reg_param_list]
         kf = KFold(n_splits=self.cv)
-        scorer = kwargs.get(&#39;scoring&#39;, mean_squared_error)
+        scorer = kwargs.get(&#34;scoring&#34;, mean_squared_error)
         for train_index, test_index in kf.split(X):
             X_out, y_out = X[test_index, :], y[test_index]
             X_in, y_in = X[train_index, :], y[train_index]
@@ -981,8 +1134,13 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
-        attr_list = [&#34;estimator_&#34;, &#34;reg_param_list&#34;, &#34;shrinkage_scheme_&#34;,
-                     &#34;cv&#34;, &#34;scoring&#34;]
+        attr_list = [
+            &#34;estimator_&#34;,
+            &#34;reg_param_list&#34;,
+            &#34;shrinkage_scheme_&#34;,
+            &#34;cv&#34;,
+            &#34;scoring&#34;,
+        ]
         s = self.__class__.__name__
         s += &#34;(&#34;
         for attr in attr_list:
@@ -1010,7 +1168,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <pre><code class="python">def fit(self, X, y, *args, **kwargs):
     self.scores_ = [[] for _ in self.reg_param_list]
     kf = KFold(n_splits=self.cv)
-    scorer = kwargs.get(&#39;scoring&#39;, mean_squared_error)
+    scorer = kwargs.get(&#34;scoring&#34;, mean_squared_error)
     for train_index, test_index in kf.split(X):
         X_out, y_out = X[test_index, :], y[test_index]
         X_in, y_in = X[train_index, :], y[train_index]

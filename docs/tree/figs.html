@@ -401,7 +401,10 @@ class FIGS(BaseEstimator):
             # require the tree to have more than 1 node, otherwise just leave importance_data_tree as zeros
             if 1 &lt; next(node_counter):
                 tree_samples = _importances(tree_)
-                importance_data_tree /= tree_samples
+                if tree_samples != 0:
+                    importance_data_tree /= tree_samples
+                else:
+                    importance_data_tree = 0
 
             importance_data.append(importance_data_tree)
 
@@ -1015,7 +1018,10 @@ The number of features to consider when looking for the best split (see <a href=
             # require the tree to have more than 1 node, otherwise just leave importance_data_tree as zeros
             if 1 &lt; next(node_counter):
                 tree_samples = _importances(tree_)
-                importance_data_tree /= tree_samples
+                if tree_samples != 0:
+                    importance_data_tree /= tree_samples
+                else:
+                    importance_data_tree = 0
 
             importance_data.append(importance_data_tree)
 
@@ -1410,7 +1416,10 @@ are ignored while searching for a split in each node.</p></div>
         # require the tree to have more than 1 node, otherwise just leave importance_data_tree as zeros
         if 1 &lt; next(node_counter):
             tree_samples = _importances(tree_)
-            importance_data_tree /= tree_samples
+            if tree_samples != 0:
+                importance_data_tree /= tree_samples
+            else:
+                importance_data_tree = 0
 
         importance_data.append(importance_data_tree)
 

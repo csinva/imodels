@@ -147,10 +147,12 @@ def get_clean_dataset(dataset_name: str, data_source: str = &#39;imodels&#39;, d
         elif dataset_name == &#39;california_housing&#39;:
             data = sklearn.datasets.fetch_california_housing(
                 data_home=oj(data_path, &#39;sklearn_data&#39;))
+        elif dataset_name == &#39;breast_cancer&#39;:
+            data = sklearn.datasets.load_breast_cancer()
         return data[&#39;data&#39;], data[&#39;target&#39;], _clean_feat_names(data[&#39;feature_names&#39;])
     elif data_source == &#39;openml&#39;:  # note this api might change in newer sklearn - should give dataset-id not name
         data = sklearn.datasets.fetch_openml(
-            data_id=dataset_name, data_home=oj(data_path, &#39;openml_data&#39;))
+            data_id=dataset_name, data_home=oj(data_path, &#39;openml_data&#39;), parser=&#39;auto&#39;)
         X, y, feature_names = data[&#39;data&#39;], data[&#39;target&#39;], _clean_feat_names(
             data[&#39;feature_names&#39;])
         if isinstance(X, pd.DataFrame):
@@ -372,10 +374,12 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
         elif dataset_name == &#39;california_housing&#39;:
             data = sklearn.datasets.fetch_california_housing(
                 data_home=oj(data_path, &#39;sklearn_data&#39;))
+        elif dataset_name == &#39;breast_cancer&#39;:
+            data = sklearn.datasets.load_breast_cancer()
         return data[&#39;data&#39;], data[&#39;target&#39;], _clean_feat_names(data[&#39;feature_names&#39;])
     elif data_source == &#39;openml&#39;:  # note this api might change in newer sklearn - should give dataset-id not name
         data = sklearn.datasets.fetch_openml(
-            data_id=dataset_name, data_home=oj(data_path, &#39;openml_data&#39;))
+            data_id=dataset_name, data_home=oj(data_path, &#39;openml_data&#39;), parser=&#39;auto&#39;)
         X, y, feature_names = data[&#39;data&#39;], data[&#39;target&#39;], _clean_feat_names(
             data[&#39;feature_names&#39;])
         if isinstance(X, pd.DataFrame):
