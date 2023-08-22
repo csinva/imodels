@@ -1,0 +1,2075 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from abc import ABC, abstractmethod
+
+import numpy as np
+from collections import defaultdict
+
+from sklearn.ensemble import BaseEnsemble
+from sklearn.ensemble._forest import _generate_unsampled_indices, _generate_sample_indices
+
+from .local_stumps import make_stumps, tree_feature_transform
+
+
+class BlockPartitionedData:
+    &#34;&#34;&#34;
+    Abstraction for a feature matrix in which the columns are grouped into
+    blocks.
+
+    Parameters
+    ----------
+    data_blocks: list of ndarray
+        Blocks of feature columns
+    common_block: ndarray
+        A set of feature columns that should be common to all blocks
+    &#34;&#34;&#34;
+
+    def __init__(self, data_blocks, common_block=None):
+        self.n_blocks = len(data_blocks)
+        self.n_samples = data_blocks[0].shape[0]
+        self._data_blocks = data_blocks
+        self._common_block = common_block
+        self._create_block_indices()
+        self._means = [np.mean(data_block, axis=0) for data_block in
+                       self._data_blocks]
+
+    def get_all_data(self):
+        &#34;&#34;&#34;
+
+        Returns
+        -------
+        all_data: ndarray
+            Returns the data matrix obtained by concatenating all feature
+            blocks together
+        &#34;&#34;&#34;
+        if self._common_block is None:
+            all_data = np.hstack(self._data_blocks)
+        else:
+            all_data = np.hstack(self._data_blocks + [self._common_block])
+            # Common block appended at the end
+        return all_data
+
+    def _create_block_indices(self):
+        self._block_indices_dict = dict({})
+
+        start_index = 0
+        for k in range(self.n_blocks):
+            stop_index = start_index + self._data_blocks[k].shape[1]
+            self._block_indices_dict[k] = list(range(start_index, stop_index))
+            start_index = stop_index
+        if self._common_block is None:
+            self._common_block_indices = []
+        else:
+            stop_index = start_index + self._common_block.shape[1]
+            self._common_block_indices = list(range(start_index, stop_index))
+
+    def get_block_indices(self, k):
+        &#34;&#34;&#34;
+
+        Parameters
+        ----------
+        k: int
+            The index of the feature block desired
+
+        Returns
+        -------
+        block_indices: list of int
+            The indices of the features in the desired block
+        &#34;&#34;&#34;
+        block_indices = self._common_block_indices + self._block_indices_dict[k]
+        return block_indices
+
+    def get_block(self, k):
+        &#34;&#34;&#34;
+
+        Parameters
+        ----------
+        k: int
+            The index of the feature block desired
+
+        Returns
+        -------
+        block: ndarray
+            The feature block desired
+        &#34;&#34;&#34;
+        if self._common_block is None:
+            block = self._data_blocks[k]
+        else:
+            block = np.hstack([self._common_block, self._data_blocks[k]])
+        return block
+
+    def get_all_except_block_indices(self, k):
+        &#34;&#34;&#34;
+
+        Parameters
+        ----------
+        k: int
+            The index of the feature block not desired
+
+        Returns
+        -------
+        all_except_block_indices: list of int
+            The indices of the features not in the desired block
+        &#34;&#34;&#34;
+        if k not in self._block_indices_dict.keys():
+            raise ValueError(f&#34;{k} not a block index.&#34;)
+        all_except_block_indices = []
+        for block_no, block_indices in self._block_indices_dict.items():
+            if block_no != k:
+                all_except_block_indices += block_indices
+        all_except_block_indices += self._common_block_indices
+        return all_except_block_indices
+
+    def get_all_except_block(self, k):
+        &#34;&#34;&#34;
+
+        Parameters
+        ----------
+        k: int
+            The index of the feature block not desired
+
+        Returns
+        -------
+        all_except_block: ndarray
+            The features not in the desired block
+        &#34;&#34;&#34;
+        all_data = self.get_all_data()
+        all_except_block_indices = self.get_all_except_block_indices(k)
+        all_except_block = all_data[:, all_except_block_indices]
+        return all_except_block
+
+    def get_modified_data(self, k, mode=&#34;keep_k&#34;):
+        &#34;&#34;&#34;
+        Modify the data by either imputing the mean of each feature in block k
+        (keep_rest) or imputing the mean of each feature not in block k
+        (keep_k). Return the full data matrix with the modified data.
+
+        Parameters
+        ----------
+        k: int
+            The index of the feature block not to modify
+        mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+            Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+            in block k, &#34;keep_rest&#34; imputes the mean of each feature in block k
+
+        Returns
+        -------
+        all_data: ndarray
+            Returns the data matrix obtained by concatenating all feature
+            blocks together
+        &#34;&#34;&#34;
+        modified_blocks = [np.outer(np.ones(self.n_samples), self._means[i])
+                           for i in range(self.n_blocks)]
+        if mode == &#34;keep_k&#34;:
+            data_blocks = \
+                [self._data_blocks[i] if i == k else modified_blocks[i] for
+                 i in range(self.n_blocks)]
+        elif mode == &#34;keep_rest&#34;:
+            data_blocks = \
+                [modified_blocks[i] if i == k else self._data_blocks[i] for
+                 i in range(self.n_blocks)]
+        else:
+            raise ValueError(&#34;Unsupported mode.&#34;)
+        if self._common_block is None:
+            all_data = np.hstack(data_blocks)
+        else:
+            all_data = np.hstack(data_blocks + [self._common_block])
+        return all_data
+
+    def train_test_split(self, train_indices, test_indices):
+        &#34;&#34;&#34;
+        Split the data intro training and test partitions given the
+        training and test indices. Return the training and test
+        block partitioned data objects.
+
+        Parameters
+        ----------
+        train_indices: array-like of shape (n_train_samples,)
+            The indices corresponding to the training samples
+        test_indices: array-like of shape (n_test_samples,)
+            The indices corresponding to the training samples
+
+        Returns
+        -------
+        train_blocked_data: BlockPartitionedData
+            Returns the training block partitioned data set
+        test_blocked_data: BlockPartitionedData
+            Returns the test block partitioned data set
+        &#34;&#34;&#34;
+        train_blocks = [self.get_block(k)[train_indices, :] for
+                        k in range(self.n_blocks)]
+        train_blocked_data = BlockPartitionedData(train_blocks)
+        test_blocks = [self.get_block(k)[test_indices, :] for
+                       k in range(self.n_blocks)]
+        test_blocked_data = BlockPartitionedData(test_blocks)
+        return train_blocked_data, test_blocked_data
+
+    def __repr__(self):
+        return self.get_all_data().__repr__()
+
+
+class BlockTransformerBase(ABC):
+    &#34;&#34;&#34;
+    An interface for block transformers, objects that transform a data matrix
+    into a BlockPartitionedData object comprising one block of engineered
+    features for each original feature
+    &#34;&#34;&#34;
+
+    def __init__(self):
+        self._centers = {}
+        self._scales = {}
+        self.is_fitted = False
+
+    def fit(self, X):
+        &#34;&#34;&#34;
+        Fit (or train) the block transformer using the data matrix X.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be used in training
+        &#34;&#34;&#34;
+        for k in range(X.shape[1]):
+            self._fit_one_feature(X, k)
+        self.is_fitted = True
+
+    def check_is_fitted(self):
+        &#34;&#34;&#34;
+        Check if the transformer has been fitted. Returns an error if not
+        previously fitted.
+        &#34;&#34;&#34;
+        if not self.is_fitted:
+            raise AttributeError(&#34;Transformer has not yet been fitted.&#34;)
+
+    def transform_one_feature(self, X, k, center=True, normalize=False):
+        &#34;&#34;&#34;
+        Obtain a block of engineered features associated with the original
+        feature with index k using the (previously) fitted transformer.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be transformed
+        k: int
+            Index of feature in X to be transformed
+        center: bool
+            Flag for whether to center the transformed data
+        normalize: bool
+            Flag for whether to rescale the transformed data to have unit
+            variance
+
+        Returns
+        -------
+        data_block: ndarray
+            The block of engineered features associated with the original
+            feature with index k.
+        &#34;&#34;&#34;
+        data_block = self._transform_one_feature(X, k)
+        data_block = self._center_and_normalize(data_block, k, center, normalize)
+        return data_block
+
+    def transform(self, X, center=True, normalize=False):
+        &#34;&#34;&#34;
+        Transform a data matrix into a BlockPartitionedData object comprising
+        one block for each original feature in X using the (previously) fitted
+        trasnformer.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be transformed
+        center: bool
+            Flag for whether to center the transformed data
+        normalize: bool
+            Flag for whether to rescale the transformed data to have unit
+            variance
+
+        Returns
+        -------
+        blocked_data: BlockPartitionedData object
+            The transformed data
+        &#34;&#34;&#34;
+        self.check_is_fitted()
+        n_features = X.shape[1]
+        data_blocks = [self.transform_one_feature(X, k, center, normalize) for
+                       k in range(n_features)]
+        blocked_data = BlockPartitionedData(data_blocks)
+        return blocked_data
+
+    def fit_transform_one_feature(self, X, k, center=True, normalize=False):
+        &#34;&#34;&#34;
+        Fit the transformer and obtain a block of engineered features associated with
+        the original feature with index k using this fitted transformer.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be fitted and transformed
+        k: int
+            Index of feature in X to be fitted and transformed
+        center: bool
+            Flag for whether to center the transformed data
+        normalize: bool
+            Flag for whether to rescale the transformed data to have unit
+            variance
+
+        Returns
+        -------
+        data_block: ndarray
+            The block of engineered features associated with the original
+            feature with index k.
+        &#34;&#34;&#34;
+        data_block = self._fit_transform_one_feature(X, k)
+        data_block = self._center_and_normalize(data_block, k, center, normalize)
+        return data_block
+
+    def fit_transform(self, X, center=True, normalize=False):
+        &#34;&#34;&#34;
+        Fit the transformer and transform a data matrix into a BlockPartitionedData
+        object comprising one block for each original feature in X using this
+        fitted transformer.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be transformed
+        center: bool
+            Flag for whether to center the transformed data
+        normalize: bool
+            Flag for whether to rescale the transformed data to have unit
+            variance
+
+        Returns
+        -------
+        blocked_data: BlockPartitionedData object
+            The transformed data
+        &#34;&#34;&#34;
+        n_features = X.shape[1]
+        data_blocks = [self.fit_transform_one_feature(X, k, center, normalize) for
+                       k in range(n_features)]
+        blocked_data = BlockPartitionedData(data_blocks)
+        self.is_fitted = True
+        return blocked_data
+
+    @abstractmethod
+    def _fit_one_feature(self, X, k):
+        pass
+
+    @abstractmethod
+    def _transform_one_feature(self, X, k):
+        pass
+
+    def _fit_transform_one_feature(self, X, k):
+        self._fit_one_feature(X, k)
+        return self._transform_one_feature(X, k)
+
+    def _center_and_normalize(self, data_block, k, center=True, normalize=False):
+        if center:
+            data_block = data_block - self._centers[k]
+        if normalize:
+            if any(self._scales[k] == 0):
+                raise Warning(&#34;No recaling done.&#34;
+                              &#34;At least one feature is constant.&#34;)
+            else:
+                data_block = data_block / self._scales[k]
+        return data_block
+
+
+class IdentityTransformer(BlockTransformerBase, ABC):
+    &#34;&#34;&#34;
+    Block transformer that creates a block partitioned data object with each
+    block k containing only the original feature k.
+    &#34;&#34;&#34;
+
+    def _fit_one_feature(self, X, k):
+        self._centers[k] = np.mean(X[:, [k]])
+        self._scales[k] = np.std(X[:, [k]])
+
+    def _transform_one_feature(self, X, k):
+        return X[:, [k]]
+
+
+class TreeTransformer(BlockTransformerBase, ABC):
+    &#34;&#34;&#34;
+    A block transformer that transforms data using a representation built from
+    local decision stumps from a tree or tree ensemble. The transformer also
+    comes with metadata on the local decision stumps and methods that allow for
+    transformations using sub-representations corresponding to each of the
+    original features.
+
+    Parameters
+    ----------
+    estimator: scikit-learn estimator
+        The scikit-learn tree or tree ensemble estimator object.
+    data: ndarray
+        A data matrix that can be used to update the number of samples in each
+        node of the tree(s) in the supplied estimator object. This affects
+        the node values of the resulting engineered features.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator, data=None):
+        super().__init__()
+        self.estimator = estimator
+        self.oob_seed = self.estimator.random_state
+        # Check if single tree or tree ensemble
+        if isinstance(estimator, BaseEnsemble):
+            tree_models = estimator.estimators_
+            if data is not None:
+                # If a data matrix is supplied, use it to update the number
+                # of samples in each node
+                for tree_model in tree_models:
+                    _update_n_node_samples(tree_model, data)
+        else:
+            tree_models = [estimator]
+        # Make stumps for each tree
+        all_stumps = []
+        for tree_model in tree_models:
+            tree_stumps = make_stumps(tree_model.tree_)
+            all_stumps += tree_stumps
+        # Identify the stumps that split on feature k, for each k
+        self.stumps = defaultdict(list)
+        for stump in all_stumps:
+            self.stumps[stump.feature].append(stump)
+        self.n_splits = {k: len(stumps) for k, stumps in self.stumps.items()}
+
+    def _fit_one_feature(self, X, k):
+        stump_features = tree_feature_transform(self.stumps[k], X)
+        self._centers[k] = np.mean(stump_features, axis=0)
+        self._scales[k] = np.std(stump_features, axis=0)
+
+    def _transform_one_feature(self, X, k):
+        return tree_feature_transform(self.stumps[k], X)
+
+    def _fit_transform_one_feature(self, X, k):
+        stump_features = tree_feature_transform(self.stumps[k], X)
+        self._centers[k] = np.mean(stump_features, axis=0)
+        self._scales[k] = np.std(stump_features, axis=0)
+        return stump_features
+
+
+class CompositeTransformer(BlockTransformerBase, ABC):
+    &#34;&#34;&#34;
+    A block transformer that is built by concatenating the blocks of the same
+    index from a list of block transformers.
+
+    Parameters
+    ----------
+    block_transformer_list: list of BlockTransformer objects
+        The list of block transformers to combine
+    rescale_mode: string in {&#34;max&#34;, &#34;mean&#34;, None}
+        Flag for the type of rescaling to be done to the blocks from different
+        base transformers. If &#34;max&#34;, divide each block by the max std deviation
+        of a column within the block. If &#34;mean&#34;, divide each block by the mean
+        std deviation of a column within the block. If None, do not rescale.
+    drop_features: bool
+        Flag for whether to return an empty block if that from the first
+        transformer in the list is trivial.
+    &#34;&#34;&#34;
+
+    def __init__(self, block_transformer_list, rescale_mode=None, drop_features=True):
+        super().__init__()
+        self.block_transformer_list = block_transformer_list
+        assert len(self.block_transformer_list) &gt; 0, &#34;Need at least one base&#34; \
+                                                     &#34;transformer.&#34;
+        for transformer in block_transformer_list:
+            if hasattr(transformer, &#34;oob_seed&#34;) and \
+                    transformer.oob_seed is not None:
+                self.oob_seed = transformer.oob_seed
+                break
+        self.rescale_mode = rescale_mode
+        self.drop_features = drop_features
+        self._rescale_factors = {}
+        self._trivial_block_indices = {}
+
+    def _fit_one_feature(self, X, k):
+        data_blocks = []
+        for block_transformer in self.block_transformer_list:
+            data_block = block_transformer.fit_transform_one_feature(
+                X, k, center=False, normalize=False)
+            data_blocks.append(data_block)
+
+        # Handle trivial blocks
+        self._trivial_block_indices[k] = \
+            [idx for idx, data_block in enumerate(data_blocks) if
+             _empty_or_constant(data_block)]
+        if (0 in self._trivial_block_indices[k] and self.drop_features) or \
+                (len(self._trivial_block_indices[k]) == len(data_blocks)):
+            # If first block is trivial and self.drop_features is True,
+            self._centers[k] = np.array([0])
+            self._scales[k] = np.array([1])
+            return
+        else:
+            # Remove trivial blocks
+            for idx in reversed(self._trivial_block_indices[k]):
+                data_blocks.pop(idx)
+        self._rescale_factors[k] = _get_rescale_factors(data_blocks, self.rescale_mode)
+        composite_block = np.hstack(
+            [data_block / scale_factor for data_block, scale_factor in
+             zip(data_blocks, self._rescale_factors[k])]
+        )
+        self._centers[k] = composite_block.mean(axis=0)
+        self._scales[k] = composite_block.std(axis=0)
+
+    def _transform_one_feature(self, X, k):
+        data_blocks = []
+        for block_transformer in self.block_transformer_list:
+            data_block = block_transformer.transform_one_feature(
+                X, k, center=False, normalize=False)
+            data_blocks.append(data_block)
+        # Handle trivial blocks
+        if (0 in self._trivial_block_indices[k] and self.drop_features) or \
+                (len(self._trivial_block_indices[k]) == len(data_blocks)):
+            # If first block is trivial and self.drop_features is True,
+            # return empty block
+            return np.empty((X.shape[0], 0))
+        else:
+            # Remove trivial blocks
+            for idx in reversed(self._trivial_block_indices[k]):
+                data_blocks.pop(idx)
+        composite_block = np.hstack(
+            [data_block / scale_factor for data_block, scale_factor in
+             zip(data_blocks, self._rescale_factors[k])]
+        )
+        return composite_block
+
+    def _fit_transform_one_feature(self, X, k):
+        data_blocks = []
+        for block_transformer in self.block_transformer_list:
+            data_block = block_transformer.fit_transform_one_feature(
+                X, k, center=False, normalize=False)
+            data_blocks.append(data_block)
+        # Handle trivial blocks
+        self._trivial_block_indices[k] = \
+            [idx for idx, data_block in enumerate(data_blocks) if
+             _empty_or_constant(data_block)]
+        if (0 in self._trivial_block_indices[k] and self.drop_features) or \
+                (len(self._trivial_block_indices[k]) == len(data_blocks)):
+            # If first block is trivial and self.drop_features is True,
+            # return empty block
+            self._centers[k] = np.array([0])
+            self._scales[k] = np.array([1])
+            return np.empty((X.shape[0], 0))
+        else:
+            # Remove trivial blocks
+            for idx in reversed(self._trivial_block_indices[k]):
+                data_blocks.pop(idx)
+        self._rescale_factors[k] = _get_rescale_factors(data_blocks, self.rescale_mode)
+        composite_block = np.hstack(
+            [data_block / scale_factor for data_block, scale_factor in
+             zip(data_blocks, self._rescale_factors[k])]
+        )
+        self._centers[k] = composite_block.mean(axis=0)
+        self._scales[k] = composite_block.std(axis=0)
+        return composite_block
+
+
+class MDIPlusDefaultTransformer(CompositeTransformer, ABC):
+    &#34;&#34;&#34;
+    Default block transformer used in MDI+. For each original feature, this
+    forms a block comprising the local decision stumps, from a single tree
+    model, that split on the feature, and appends the original feature.
+
+    Parameters
+    ----------
+    tree_model: scikit-learn estimator
+        The scikit-learn tree estimator object.
+    rescale_mode: string in {&#34;max&#34;, &#34;mean&#34;, None}
+        Flag for the type of rescaling to be done to the blocks from different
+        base transformers. If &#34;max&#34;, divide each block by the max std deviation
+        of a column within the block. If &#34;mean&#34;, divide each block by the mean
+        std deviation of a column within the block. If None, do not rescale.
+    drop_features: bool
+        Flag for whether to return an empty block if that from the first
+        transformer in the list is trivial.
+    &#34;&#34;&#34;
+    def __init__(self, tree_model, rescale_mode=&#34;max&#34;, drop_features=True):
+        super().__init__([TreeTransformer(tree_model), IdentityTransformer()],
+                         rescale_mode, drop_features)
+
+
+def _update_n_node_samples(tree, X):
+    node_indicators = tree.decision_path(X)
+    new_n_node_samples = node_indicators.getnnz(axis=0)
+    for i in range(len(new_n_node_samples)):
+        tree.tree_.n_node_samples[i] = new_n_node_samples[i]
+
+
+def _get_rescale_factors(data_blocks, rescale_mode):
+    if rescale_mode == &#34;max&#34;:
+        scale_factors = np.array([max(data_block.std(axis=0)) for
+                                  data_block in data_blocks])
+    elif rescale_mode == &#34;mean&#34;:
+        scale_factors = np.array([np.mean(data_block.std(axis=0)) for
+                                  data_block in data_blocks])
+    elif rescale_mode is None:
+        scale_factors = np.ones(len(data_blocks))
+    else:
+        raise ValueError(&#34;Invalid rescale mode.&#34;)
+    scale_factors = scale_factors / scale_factors[0]
+    return scale_factors
+
+
+def _empty_or_constant(data_block):
+    return data_block.shape[1] == 0 or max(data_block.std(axis=0)) == 0
+
+
+def _blocked_train_test_split(blocked_data, y, oob_seed):
+    n_samples = len(y)
+    train_indices = _generate_sample_indices(oob_seed, n_samples, n_samples)
+    test_indices = _generate_unsampled_indices(oob_seed, n_samples, n_samples)
+    train_blocked_data, test_blocked_data = \
+        blocked_data.train_test_split(train_indices, test_indices)
+    if y.ndim &gt; 1:
+        y_train = y[train_indices, :]
+        y_test = y[test_indices, :]
+    else:
+        y_train = y[train_indices]
+        y_test = y[test_indices]
+    return train_blocked_data, test_blocked_data, y_train, y_test, train_indices, test_indices</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.importance.block_transformers.BlockPartitionedData"><code class="flex name class">
+<span>class <span class="ident">BlockPartitionedData</span></span>
+<span>(</span><span>data_blocks, common_block=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Abstraction for a feature matrix in which the columns are grouped into
+blocks.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data_blocks</code></strong> :&ensp;<code>list</code> of <code>ndarray</code></dt>
+<dd>Blocks of feature columns</dd>
+<dt><strong><code>common_block</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>A set of feature columns that should be common to all blocks</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BlockPartitionedData:
+    &#34;&#34;&#34;
+    Abstraction for a feature matrix in which the columns are grouped into
+    blocks.
+
+    Parameters
+    ----------
+    data_blocks: list of ndarray
+        Blocks of feature columns
+    common_block: ndarray
+        A set of feature columns that should be common to all blocks
+    &#34;&#34;&#34;
+
+    def __init__(self, data_blocks, common_block=None):
+        self.n_blocks = len(data_blocks)
+        self.n_samples = data_blocks[0].shape[0]
+        self._data_blocks = data_blocks
+        self._common_block = common_block
+        self._create_block_indices()
+        self._means = [np.mean(data_block, axis=0) for data_block in
+                       self._data_blocks]
+
+    def get_all_data(self):
+        &#34;&#34;&#34;
+
+        Returns
+        -------
+        all_data: ndarray
+            Returns the data matrix obtained by concatenating all feature
+            blocks together
+        &#34;&#34;&#34;
+        if self._common_block is None:
+            all_data = np.hstack(self._data_blocks)
+        else:
+            all_data = np.hstack(self._data_blocks + [self._common_block])
+            # Common block appended at the end
+        return all_data
+
+    def _create_block_indices(self):
+        self._block_indices_dict = dict({})
+
+        start_index = 0
+        for k in range(self.n_blocks):
+            stop_index = start_index + self._data_blocks[k].shape[1]
+            self._block_indices_dict[k] = list(range(start_index, stop_index))
+            start_index = stop_index
+        if self._common_block is None:
+            self._common_block_indices = []
+        else:
+            stop_index = start_index + self._common_block.shape[1]
+            self._common_block_indices = list(range(start_index, stop_index))
+
+    def get_block_indices(self, k):
+        &#34;&#34;&#34;
+
+        Parameters
+        ----------
+        k: int
+            The index of the feature block desired
+
+        Returns
+        -------
+        block_indices: list of int
+            The indices of the features in the desired block
+        &#34;&#34;&#34;
+        block_indices = self._common_block_indices + self._block_indices_dict[k]
+        return block_indices
+
+    def get_block(self, k):
+        &#34;&#34;&#34;
+
+        Parameters
+        ----------
+        k: int
+            The index of the feature block desired
+
+        Returns
+        -------
+        block: ndarray
+            The feature block desired
+        &#34;&#34;&#34;
+        if self._common_block is None:
+            block = self._data_blocks[k]
+        else:
+            block = np.hstack([self._common_block, self._data_blocks[k]])
+        return block
+
+    def get_all_except_block_indices(self, k):
+        &#34;&#34;&#34;
+
+        Parameters
+        ----------
+        k: int
+            The index of the feature block not desired
+
+        Returns
+        -------
+        all_except_block_indices: list of int
+            The indices of the features not in the desired block
+        &#34;&#34;&#34;
+        if k not in self._block_indices_dict.keys():
+            raise ValueError(f&#34;{k} not a block index.&#34;)
+        all_except_block_indices = []
+        for block_no, block_indices in self._block_indices_dict.items():
+            if block_no != k:
+                all_except_block_indices += block_indices
+        all_except_block_indices += self._common_block_indices
+        return all_except_block_indices
+
+    def get_all_except_block(self, k):
+        &#34;&#34;&#34;
+
+        Parameters
+        ----------
+        k: int
+            The index of the feature block not desired
+
+        Returns
+        -------
+        all_except_block: ndarray
+            The features not in the desired block
+        &#34;&#34;&#34;
+        all_data = self.get_all_data()
+        all_except_block_indices = self.get_all_except_block_indices(k)
+        all_except_block = all_data[:, all_except_block_indices]
+        return all_except_block
+
+    def get_modified_data(self, k, mode=&#34;keep_k&#34;):
+        &#34;&#34;&#34;
+        Modify the data by either imputing the mean of each feature in block k
+        (keep_rest) or imputing the mean of each feature not in block k
+        (keep_k). Return the full data matrix with the modified data.
+
+        Parameters
+        ----------
+        k: int
+            The index of the feature block not to modify
+        mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+            Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+            in block k, &#34;keep_rest&#34; imputes the mean of each feature in block k
+
+        Returns
+        -------
+        all_data: ndarray
+            Returns the data matrix obtained by concatenating all feature
+            blocks together
+        &#34;&#34;&#34;
+        modified_blocks = [np.outer(np.ones(self.n_samples), self._means[i])
+                           for i in range(self.n_blocks)]
+        if mode == &#34;keep_k&#34;:
+            data_blocks = \
+                [self._data_blocks[i] if i == k else modified_blocks[i] for
+                 i in range(self.n_blocks)]
+        elif mode == &#34;keep_rest&#34;:
+            data_blocks = \
+                [modified_blocks[i] if i == k else self._data_blocks[i] for
+                 i in range(self.n_blocks)]
+        else:
+            raise ValueError(&#34;Unsupported mode.&#34;)
+        if self._common_block is None:
+            all_data = np.hstack(data_blocks)
+        else:
+            all_data = np.hstack(data_blocks + [self._common_block])
+        return all_data
+
+    def train_test_split(self, train_indices, test_indices):
+        &#34;&#34;&#34;
+        Split the data intro training and test partitions given the
+        training and test indices. Return the training and test
+        block partitioned data objects.
+
+        Parameters
+        ----------
+        train_indices: array-like of shape (n_train_samples,)
+            The indices corresponding to the training samples
+        test_indices: array-like of shape (n_test_samples,)
+            The indices corresponding to the training samples
+
+        Returns
+        -------
+        train_blocked_data: BlockPartitionedData
+            Returns the training block partitioned data set
+        test_blocked_data: BlockPartitionedData
+            Returns the test block partitioned data set
+        &#34;&#34;&#34;
+        train_blocks = [self.get_block(k)[train_indices, :] for
+                        k in range(self.n_blocks)]
+        train_blocked_data = BlockPartitionedData(train_blocks)
+        test_blocks = [self.get_block(k)[test_indices, :] for
+                       k in range(self.n_blocks)]
+        test_blocked_data = BlockPartitionedData(test_blocks)
+        return train_blocked_data, test_blocked_data
+
+    def __repr__(self):
+        return self.get_all_data().__repr__()</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.importance.block_transformers.BlockPartitionedData.get_all_data"><code class="name flex">
+<span>def <span class="ident">get_all_data</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>all_data</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>Returns the data matrix obtained by concatenating all feature
+blocks together</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_all_data(self):
+    &#34;&#34;&#34;
+
+    Returns
+    -------
+    all_data: ndarray
+        Returns the data matrix obtained by concatenating all feature
+        blocks together
+    &#34;&#34;&#34;
+    if self._common_block is None:
+        all_data = np.hstack(self._data_blocks)
+    else:
+        all_data = np.hstack(self._data_blocks + [self._common_block])
+        # Common block appended at the end
+    return all_data</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockPartitionedData.get_all_except_block"><code class="name flex">
+<span>def <span class="ident">get_all_except_block</span></span>(<span>self, k)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>k</code></strong> :&ensp;<code>int</code></dt>
+<dd>The index of the feature block not desired</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>all_except_block</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The features not in the desired block</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_all_except_block(self, k):
+    &#34;&#34;&#34;
+
+    Parameters
+    ----------
+    k: int
+        The index of the feature block not desired
+
+    Returns
+    -------
+    all_except_block: ndarray
+        The features not in the desired block
+    &#34;&#34;&#34;
+    all_data = self.get_all_data()
+    all_except_block_indices = self.get_all_except_block_indices(k)
+    all_except_block = all_data[:, all_except_block_indices]
+    return all_except_block</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockPartitionedData.get_all_except_block_indices"><code class="name flex">
+<span>def <span class="ident">get_all_except_block_indices</span></span>(<span>self, k)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>k</code></strong> :&ensp;<code>int</code></dt>
+<dd>The index of the feature block not desired</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>all_except_block_indices</code></strong> :&ensp;<code>list</code> of <code>int</code></dt>
+<dd>The indices of the features not in the desired block</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_all_except_block_indices(self, k):
+    &#34;&#34;&#34;
+
+    Parameters
+    ----------
+    k: int
+        The index of the feature block not desired
+
+    Returns
+    -------
+    all_except_block_indices: list of int
+        The indices of the features not in the desired block
+    &#34;&#34;&#34;
+    if k not in self._block_indices_dict.keys():
+        raise ValueError(f&#34;{k} not a block index.&#34;)
+    all_except_block_indices = []
+    for block_no, block_indices in self._block_indices_dict.items():
+        if block_no != k:
+            all_except_block_indices += block_indices
+    all_except_block_indices += self._common_block_indices
+    return all_except_block_indices</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockPartitionedData.get_block"><code class="name flex">
+<span>def <span class="ident">get_block</span></span>(<span>self, k)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>k</code></strong> :&ensp;<code>int</code></dt>
+<dd>The index of the feature block desired</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>block</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The feature block desired</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_block(self, k):
+    &#34;&#34;&#34;
+
+    Parameters
+    ----------
+    k: int
+        The index of the feature block desired
+
+    Returns
+    -------
+    block: ndarray
+        The feature block desired
+    &#34;&#34;&#34;
+    if self._common_block is None:
+        block = self._data_blocks[k]
+    else:
+        block = np.hstack([self._common_block, self._data_blocks[k]])
+    return block</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockPartitionedData.get_block_indices"><code class="name flex">
+<span>def <span class="ident">get_block_indices</span></span>(<span>self, k)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>k</code></strong> :&ensp;<code>int</code></dt>
+<dd>The index of the feature block desired</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>block_indices</code></strong> :&ensp;<code>list</code> of <code>int</code></dt>
+<dd>The indices of the features in the desired block</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_block_indices(self, k):
+    &#34;&#34;&#34;
+
+    Parameters
+    ----------
+    k: int
+        The index of the feature block desired
+
+    Returns
+    -------
+    block_indices: list of int
+        The indices of the features in the desired block
+    &#34;&#34;&#34;
+    block_indices = self._common_block_indices + self._block_indices_dict[k]
+    return block_indices</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockPartitionedData.get_modified_data"><code class="name flex">
+<span>def <span class="ident">get_modified_data</span></span>(<span>self, k, mode='keep_k')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Modify the data by either imputing the mean of each feature in block k
+(keep_rest) or imputing the mean of each feature not in block k
+(keep_k). Return the full data matrix with the modified data.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>k</code></strong> :&ensp;<code>int</code></dt>
+<dd>The index of the feature block not to modify</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>string in {"keep_k", "keep_rest"}</code></dt>
+<dd>Mode for the method. "keep_k" imputes the mean of each feature not
+in block k, "keep_rest" imputes the mean of each feature in block k</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>all_data</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>Returns the data matrix obtained by concatenating all feature
+blocks together</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_modified_data(self, k, mode=&#34;keep_k&#34;):
+    &#34;&#34;&#34;
+    Modify the data by either imputing the mean of each feature in block k
+    (keep_rest) or imputing the mean of each feature not in block k
+    (keep_k). Return the full data matrix with the modified data.
+
+    Parameters
+    ----------
+    k: int
+        The index of the feature block not to modify
+    mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+        Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+        in block k, &#34;keep_rest&#34; imputes the mean of each feature in block k
+
+    Returns
+    -------
+    all_data: ndarray
+        Returns the data matrix obtained by concatenating all feature
+        blocks together
+    &#34;&#34;&#34;
+    modified_blocks = [np.outer(np.ones(self.n_samples), self._means[i])
+                       for i in range(self.n_blocks)]
+    if mode == &#34;keep_k&#34;:
+        data_blocks = \
+            [self._data_blocks[i] if i == k else modified_blocks[i] for
+             i in range(self.n_blocks)]
+    elif mode == &#34;keep_rest&#34;:
+        data_blocks = \
+            [modified_blocks[i] if i == k else self._data_blocks[i] for
+             i in range(self.n_blocks)]
+    else:
+        raise ValueError(&#34;Unsupported mode.&#34;)
+    if self._common_block is None:
+        all_data = np.hstack(data_blocks)
+    else:
+        all_data = np.hstack(data_blocks + [self._common_block])
+    return all_data</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockPartitionedData.train_test_split"><code class="name flex">
+<span>def <span class="ident">train_test_split</span></span>(<span>self, train_indices, test_indices)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Split the data intro training and test partitions given the
+training and test indices. Return the training and test
+block partitioned data objects.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>train_indices</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_train_samples,)</code></dt>
+<dd>The indices corresponding to the training samples</dd>
+<dt><strong><code>test_indices</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_test_samples,)</code></dt>
+<dd>The indices corresponding to the training samples</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>train_blocked_data</code></strong> :&ensp;<code><a title="imodels.importance.block_transformers.BlockPartitionedData" href="#imodels.importance.block_transformers.BlockPartitionedData">BlockPartitionedData</a></code></dt>
+<dd>Returns the training block partitioned data set</dd>
+<dt><strong><code>test_blocked_data</code></strong> :&ensp;<code><a title="imodels.importance.block_transformers.BlockPartitionedData" href="#imodels.importance.block_transformers.BlockPartitionedData">BlockPartitionedData</a></code></dt>
+<dd>Returns the test block partitioned data set</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def train_test_split(self, train_indices, test_indices):
+    &#34;&#34;&#34;
+    Split the data intro training and test partitions given the
+    training and test indices. Return the training and test
+    block partitioned data objects.
+
+    Parameters
+    ----------
+    train_indices: array-like of shape (n_train_samples,)
+        The indices corresponding to the training samples
+    test_indices: array-like of shape (n_test_samples,)
+        The indices corresponding to the training samples
+
+    Returns
+    -------
+    train_blocked_data: BlockPartitionedData
+        Returns the training block partitioned data set
+    test_blocked_data: BlockPartitionedData
+        Returns the test block partitioned data set
+    &#34;&#34;&#34;
+    train_blocks = [self.get_block(k)[train_indices, :] for
+                    k in range(self.n_blocks)]
+    train_blocked_data = BlockPartitionedData(train_blocks)
+    test_blocks = [self.get_block(k)[test_indices, :] for
+                   k in range(self.n_blocks)]
+    test_blocked_data = BlockPartitionedData(test_blocks)
+    return train_blocked_data, test_blocked_data</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockTransformerBase"><code class="flex name class">
+<span>class <span class="ident">BlockTransformerBase</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>An interface for block transformers, objects that transform a data matrix
+into a BlockPartitionedData object comprising one block of engineered
+features for each original feature</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BlockTransformerBase(ABC):
+    &#34;&#34;&#34;
+    An interface for block transformers, objects that transform a data matrix
+    into a BlockPartitionedData object comprising one block of engineered
+    features for each original feature
+    &#34;&#34;&#34;
+
+    def __init__(self):
+        self._centers = {}
+        self._scales = {}
+        self.is_fitted = False
+
+    def fit(self, X):
+        &#34;&#34;&#34;
+        Fit (or train) the block transformer using the data matrix X.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be used in training
+        &#34;&#34;&#34;
+        for k in range(X.shape[1]):
+            self._fit_one_feature(X, k)
+        self.is_fitted = True
+
+    def check_is_fitted(self):
+        &#34;&#34;&#34;
+        Check if the transformer has been fitted. Returns an error if not
+        previously fitted.
+        &#34;&#34;&#34;
+        if not self.is_fitted:
+            raise AttributeError(&#34;Transformer has not yet been fitted.&#34;)
+
+    def transform_one_feature(self, X, k, center=True, normalize=False):
+        &#34;&#34;&#34;
+        Obtain a block of engineered features associated with the original
+        feature with index k using the (previously) fitted transformer.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be transformed
+        k: int
+            Index of feature in X to be transformed
+        center: bool
+            Flag for whether to center the transformed data
+        normalize: bool
+            Flag for whether to rescale the transformed data to have unit
+            variance
+
+        Returns
+        -------
+        data_block: ndarray
+            The block of engineered features associated with the original
+            feature with index k.
+        &#34;&#34;&#34;
+        data_block = self._transform_one_feature(X, k)
+        data_block = self._center_and_normalize(data_block, k, center, normalize)
+        return data_block
+
+    def transform(self, X, center=True, normalize=False):
+        &#34;&#34;&#34;
+        Transform a data matrix into a BlockPartitionedData object comprising
+        one block for each original feature in X using the (previously) fitted
+        trasnformer.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be transformed
+        center: bool
+            Flag for whether to center the transformed data
+        normalize: bool
+            Flag for whether to rescale the transformed data to have unit
+            variance
+
+        Returns
+        -------
+        blocked_data: BlockPartitionedData object
+            The transformed data
+        &#34;&#34;&#34;
+        self.check_is_fitted()
+        n_features = X.shape[1]
+        data_blocks = [self.transform_one_feature(X, k, center, normalize) for
+                       k in range(n_features)]
+        blocked_data = BlockPartitionedData(data_blocks)
+        return blocked_data
+
+    def fit_transform_one_feature(self, X, k, center=True, normalize=False):
+        &#34;&#34;&#34;
+        Fit the transformer and obtain a block of engineered features associated with
+        the original feature with index k using this fitted transformer.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be fitted and transformed
+        k: int
+            Index of feature in X to be fitted and transformed
+        center: bool
+            Flag for whether to center the transformed data
+        normalize: bool
+            Flag for whether to rescale the transformed data to have unit
+            variance
+
+        Returns
+        -------
+        data_block: ndarray
+            The block of engineered features associated with the original
+            feature with index k.
+        &#34;&#34;&#34;
+        data_block = self._fit_transform_one_feature(X, k)
+        data_block = self._center_and_normalize(data_block, k, center, normalize)
+        return data_block
+
+    def fit_transform(self, X, center=True, normalize=False):
+        &#34;&#34;&#34;
+        Fit the transformer and transform a data matrix into a BlockPartitionedData
+        object comprising one block for each original feature in X using this
+        fitted transformer.
+
+        Parameters
+        ----------
+        X: ndarray
+            The data matrix to be transformed
+        center: bool
+            Flag for whether to center the transformed data
+        normalize: bool
+            Flag for whether to rescale the transformed data to have unit
+            variance
+
+        Returns
+        -------
+        blocked_data: BlockPartitionedData object
+            The transformed data
+        &#34;&#34;&#34;
+        n_features = X.shape[1]
+        data_blocks = [self.fit_transform_one_feature(X, k, center, normalize) for
+                       k in range(n_features)]
+        blocked_data = BlockPartitionedData(data_blocks)
+        self.is_fitted = True
+        return blocked_data
+
+    @abstractmethod
+    def _fit_one_feature(self, X, k):
+        pass
+
+    @abstractmethod
+    def _transform_one_feature(self, X, k):
+        pass
+
+    def _fit_transform_one_feature(self, X, k):
+        self._fit_one_feature(X, k)
+        return self._transform_one_feature(X, k)
+
+    def _center_and_normalize(self, data_block, k, center=True, normalize=False):
+        if center:
+            data_block = data_block - self._centers[k]
+        if normalize:
+            if any(self._scales[k] == 0):
+                raise Warning(&#34;No recaling done.&#34;
+                              &#34;At least one feature is constant.&#34;)
+            else:
+                data_block = data_block / self._scales[k]
+        return data_block</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.block_transformers.CompositeTransformer" href="#imodels.importance.block_transformers.CompositeTransformer">CompositeTransformer</a></li>
+<li><a title="imodels.importance.block_transformers.IdentityTransformer" href="#imodels.importance.block_transformers.IdentityTransformer">IdentityTransformer</a></li>
+<li><a title="imodels.importance.block_transformers.TreeTransformer" href="#imodels.importance.block_transformers.TreeTransformer">TreeTransformer</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted"><code class="name flex">
+<span>def <span class="ident">check_is_fitted</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if the transformer has been fitted. Returns an error if not
+previously fitted.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_is_fitted(self):
+    &#34;&#34;&#34;
+    Check if the transformer has been fitted. Returns an error if not
+    previously fitted.
+    &#34;&#34;&#34;
+    if not self.is_fitted:
+        raise AttributeError(&#34;Transformer has not yet been fitted.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockTransformerBase.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fit (or train) the block transformer using the data matrix X.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The data matrix to be used in training</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X):
+    &#34;&#34;&#34;
+    Fit (or train) the block transformer using the data matrix X.
+
+    Parameters
+    ----------
+    X: ndarray
+        The data matrix to be used in training
+    &#34;&#34;&#34;
+    for k in range(X.shape[1]):
+        self._fit_one_feature(X, k)
+    self.is_fitted = True</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockTransformerBase.fit_transform"><code class="name flex">
+<span>def <span class="ident">fit_transform</span></span>(<span>self, X, center=True, normalize=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fit the transformer and transform a data matrix into a BlockPartitionedData
+object comprising one block for each original feature in X using this
+fitted transformer.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The data matrix to be transformed</dd>
+<dt><strong><code>center</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to center the transformed data</dd>
+<dt><strong><code>normalize</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to rescale the transformed data to have unit
+variance</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>blocked_data</code></strong> :&ensp;<code><a title="imodels.importance.block_transformers.BlockPartitionedData" href="#imodels.importance.block_transformers.BlockPartitionedData">BlockPartitionedData</a> object</code></dt>
+<dd>The transformed data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit_transform(self, X, center=True, normalize=False):
+    &#34;&#34;&#34;
+    Fit the transformer and transform a data matrix into a BlockPartitionedData
+    object comprising one block for each original feature in X using this
+    fitted transformer.
+
+    Parameters
+    ----------
+    X: ndarray
+        The data matrix to be transformed
+    center: bool
+        Flag for whether to center the transformed data
+    normalize: bool
+        Flag for whether to rescale the transformed data to have unit
+        variance
+
+    Returns
+    -------
+    blocked_data: BlockPartitionedData object
+        The transformed data
+    &#34;&#34;&#34;
+    n_features = X.shape[1]
+    data_blocks = [self.fit_transform_one_feature(X, k, center, normalize) for
+                   k in range(n_features)]
+    blocked_data = BlockPartitionedData(data_blocks)
+    self.is_fitted = True
+    return blocked_data</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature"><code class="name flex">
+<span>def <span class="ident">fit_transform_one_feature</span></span>(<span>self, X, k, center=True, normalize=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fit the transformer and obtain a block of engineered features associated with
+the original feature with index k using this fitted transformer.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The data matrix to be fitted and transformed</dd>
+<dt><strong><code>k</code></strong> :&ensp;<code>int</code></dt>
+<dd>Index of feature in X to be fitted and transformed</dd>
+<dt><strong><code>center</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to center the transformed data</dd>
+<dt><strong><code>normalize</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to rescale the transformed data to have unit
+variance</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>data_block</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The block of engineered features associated with the original
+feature with index k.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit_transform_one_feature(self, X, k, center=True, normalize=False):
+    &#34;&#34;&#34;
+    Fit the transformer and obtain a block of engineered features associated with
+    the original feature with index k using this fitted transformer.
+
+    Parameters
+    ----------
+    X: ndarray
+        The data matrix to be fitted and transformed
+    k: int
+        Index of feature in X to be fitted and transformed
+    center: bool
+        Flag for whether to center the transformed data
+    normalize: bool
+        Flag for whether to rescale the transformed data to have unit
+        variance
+
+    Returns
+    -------
+    data_block: ndarray
+        The block of engineered features associated with the original
+        feature with index k.
+    &#34;&#34;&#34;
+    data_block = self._fit_transform_one_feature(X, k)
+    data_block = self._center_and_normalize(data_block, k, center, normalize)
+    return data_block</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockTransformerBase.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, X, center=True, normalize=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transform a data matrix into a BlockPartitionedData object comprising
+one block for each original feature in X using the (previously) fitted
+trasnformer.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The data matrix to be transformed</dd>
+<dt><strong><code>center</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to center the transformed data</dd>
+<dt><strong><code>normalize</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to rescale the transformed data to have unit
+variance</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>blocked_data</code></strong> :&ensp;<code><a title="imodels.importance.block_transformers.BlockPartitionedData" href="#imodels.importance.block_transformers.BlockPartitionedData">BlockPartitionedData</a> object</code></dt>
+<dd>The transformed data</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, X, center=True, normalize=False):
+    &#34;&#34;&#34;
+    Transform a data matrix into a BlockPartitionedData object comprising
+    one block for each original feature in X using the (previously) fitted
+    trasnformer.
+
+    Parameters
+    ----------
+    X: ndarray
+        The data matrix to be transformed
+    center: bool
+        Flag for whether to center the transformed data
+    normalize: bool
+        Flag for whether to rescale the transformed data to have unit
+        variance
+
+    Returns
+    -------
+    blocked_data: BlockPartitionedData object
+        The transformed data
+    &#34;&#34;&#34;
+    self.check_is_fitted()
+    n_features = X.shape[1]
+    data_blocks = [self.transform_one_feature(X, k, center, normalize) for
+                   k in range(n_features)]
+    blocked_data = BlockPartitionedData(data_blocks)
+    return blocked_data</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature"><code class="name flex">
+<span>def <span class="ident">transform_one_feature</span></span>(<span>self, X, k, center=True, normalize=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Obtain a block of engineered features associated with the original
+feature with index k using the (previously) fitted transformer.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The data matrix to be transformed</dd>
+<dt><strong><code>k</code></strong> :&ensp;<code>int</code></dt>
+<dd>Index of feature in X to be transformed</dd>
+<dt><strong><code>center</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to center the transformed data</dd>
+<dt><strong><code>normalize</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to rescale the transformed data to have unit
+variance</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>data_block</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The block of engineered features associated with the original
+feature with index k.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform_one_feature(self, X, k, center=True, normalize=False):
+    &#34;&#34;&#34;
+    Obtain a block of engineered features associated with the original
+    feature with index k using the (previously) fitted transformer.
+
+    Parameters
+    ----------
+    X: ndarray
+        The data matrix to be transformed
+    k: int
+        Index of feature in X to be transformed
+    center: bool
+        Flag for whether to center the transformed data
+    normalize: bool
+        Flag for whether to rescale the transformed data to have unit
+        variance
+
+    Returns
+    -------
+    data_block: ndarray
+        The block of engineered features associated with the original
+        feature with index k.
+    &#34;&#34;&#34;
+    data_block = self._transform_one_feature(X, k)
+    data_block = self._center_and_normalize(data_block, k, center, normalize)
+    return data_block</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.importance.block_transformers.CompositeTransformer"><code class="flex name class">
+<span>class <span class="ident">CompositeTransformer</span></span>
+<span>(</span><span>block_transformer_list, rescale_mode=None, drop_features=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A block transformer that is built by concatenating the blocks of the same
+index from a list of block transformers.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>block_transformer_list</code></strong> :&ensp;<code>list</code> of <code>BlockTransformer objects</code></dt>
+<dd>The list of block transformers to combine</dd>
+<dt><strong><code>rescale_mode</code></strong> :&ensp;<code>string in {"max", "mean", None}</code></dt>
+<dd>Flag for the type of rescaling to be done to the blocks from different
+base transformers. If "max", divide each block by the max std deviation
+of a column within the block. If "mean", divide each block by the mean
+std deviation of a column within the block. If None, do not rescale.</dd>
+<dt><strong><code>drop_features</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to return an empty block if that from the first
+transformer in the list is trivial.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CompositeTransformer(BlockTransformerBase, ABC):
+    &#34;&#34;&#34;
+    A block transformer that is built by concatenating the blocks of the same
+    index from a list of block transformers.
+
+    Parameters
+    ----------
+    block_transformer_list: list of BlockTransformer objects
+        The list of block transformers to combine
+    rescale_mode: string in {&#34;max&#34;, &#34;mean&#34;, None}
+        Flag for the type of rescaling to be done to the blocks from different
+        base transformers. If &#34;max&#34;, divide each block by the max std deviation
+        of a column within the block. If &#34;mean&#34;, divide each block by the mean
+        std deviation of a column within the block. If None, do not rescale.
+    drop_features: bool
+        Flag for whether to return an empty block if that from the first
+        transformer in the list is trivial.
+    &#34;&#34;&#34;
+
+    def __init__(self, block_transformer_list, rescale_mode=None, drop_features=True):
+        super().__init__()
+        self.block_transformer_list = block_transformer_list
+        assert len(self.block_transformer_list) &gt; 0, &#34;Need at least one base&#34; \
+                                                     &#34;transformer.&#34;
+        for transformer in block_transformer_list:
+            if hasattr(transformer, &#34;oob_seed&#34;) and \
+                    transformer.oob_seed is not None:
+                self.oob_seed = transformer.oob_seed
+                break
+        self.rescale_mode = rescale_mode
+        self.drop_features = drop_features
+        self._rescale_factors = {}
+        self._trivial_block_indices = {}
+
+    def _fit_one_feature(self, X, k):
+        data_blocks = []
+        for block_transformer in self.block_transformer_list:
+            data_block = block_transformer.fit_transform_one_feature(
+                X, k, center=False, normalize=False)
+            data_blocks.append(data_block)
+
+        # Handle trivial blocks
+        self._trivial_block_indices[k] = \
+            [idx for idx, data_block in enumerate(data_blocks) if
+             _empty_or_constant(data_block)]
+        if (0 in self._trivial_block_indices[k] and self.drop_features) or \
+                (len(self._trivial_block_indices[k]) == len(data_blocks)):
+            # If first block is trivial and self.drop_features is True,
+            self._centers[k] = np.array([0])
+            self._scales[k] = np.array([1])
+            return
+        else:
+            # Remove trivial blocks
+            for idx in reversed(self._trivial_block_indices[k]):
+                data_blocks.pop(idx)
+        self._rescale_factors[k] = _get_rescale_factors(data_blocks, self.rescale_mode)
+        composite_block = np.hstack(
+            [data_block / scale_factor for data_block, scale_factor in
+             zip(data_blocks, self._rescale_factors[k])]
+        )
+        self._centers[k] = composite_block.mean(axis=0)
+        self._scales[k] = composite_block.std(axis=0)
+
+    def _transform_one_feature(self, X, k):
+        data_blocks = []
+        for block_transformer in self.block_transformer_list:
+            data_block = block_transformer.transform_one_feature(
+                X, k, center=False, normalize=False)
+            data_blocks.append(data_block)
+        # Handle trivial blocks
+        if (0 in self._trivial_block_indices[k] and self.drop_features) or \
+                (len(self._trivial_block_indices[k]) == len(data_blocks)):
+            # If first block is trivial and self.drop_features is True,
+            # return empty block
+            return np.empty((X.shape[0], 0))
+        else:
+            # Remove trivial blocks
+            for idx in reversed(self._trivial_block_indices[k]):
+                data_blocks.pop(idx)
+        composite_block = np.hstack(
+            [data_block / scale_factor for data_block, scale_factor in
+             zip(data_blocks, self._rescale_factors[k])]
+        )
+        return composite_block
+
+    def _fit_transform_one_feature(self, X, k):
+        data_blocks = []
+        for block_transformer in self.block_transformer_list:
+            data_block = block_transformer.fit_transform_one_feature(
+                X, k, center=False, normalize=False)
+            data_blocks.append(data_block)
+        # Handle trivial blocks
+        self._trivial_block_indices[k] = \
+            [idx for idx, data_block in enumerate(data_blocks) if
+             _empty_or_constant(data_block)]
+        if (0 in self._trivial_block_indices[k] and self.drop_features) or \
+                (len(self._trivial_block_indices[k]) == len(data_blocks)):
+            # If first block is trivial and self.drop_features is True,
+            # return empty block
+            self._centers[k] = np.array([0])
+            self._scales[k] = np.array([1])
+            return np.empty((X.shape[0], 0))
+        else:
+            # Remove trivial blocks
+            for idx in reversed(self._trivial_block_indices[k]):
+                data_blocks.pop(idx)
+        self._rescale_factors[k] = _get_rescale_factors(data_blocks, self.rescale_mode)
+        composite_block = np.hstack(
+            [data_block / scale_factor for data_block, scale_factor in
+             zip(data_blocks, self._rescale_factors[k])]
+        )
+        self._centers[k] = composite_block.mean(axis=0)
+        self._scales[k] = composite_block.std(axis=0)
+        return composite_block</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.block_transformers.BlockTransformerBase" href="#imodels.importance.block_transformers.BlockTransformerBase">BlockTransformerBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.block_transformers.MDIPlusDefaultTransformer" href="#imodels.importance.block_transformers.MDIPlusDefaultTransformer">MDIPlusDefaultTransformer</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.block_transformers.BlockTransformerBase" href="#imodels.importance.block_transformers.BlockTransformerBase">BlockTransformerBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted" href="#imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted">check_is_fitted</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit" href="#imodels.importance.block_transformers.BlockTransformerBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit_transform" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform">fit_transform</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature">fit_transform_one_feature</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.transform" href="#imodels.importance.block_transformers.BlockTransformerBase.transform">transform</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature">transform_one_feature</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.importance.block_transformers.IdentityTransformer"><code class="flex name class">
+<span>class <span class="ident">IdentityTransformer</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Block transformer that creates a block partitioned data object with each
+block k containing only the original feature k.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IdentityTransformer(BlockTransformerBase, ABC):
+    &#34;&#34;&#34;
+    Block transformer that creates a block partitioned data object with each
+    block k containing only the original feature k.
+    &#34;&#34;&#34;
+
+    def _fit_one_feature(self, X, k):
+        self._centers[k] = np.mean(X[:, [k]])
+        self._scales[k] = np.std(X[:, [k]])
+
+    def _transform_one_feature(self, X, k):
+        return X[:, [k]]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.block_transformers.BlockTransformerBase" href="#imodels.importance.block_transformers.BlockTransformerBase">BlockTransformerBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.block_transformers.BlockTransformerBase" href="#imodels.importance.block_transformers.BlockTransformerBase">BlockTransformerBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted" href="#imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted">check_is_fitted</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit" href="#imodels.importance.block_transformers.BlockTransformerBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit_transform" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform">fit_transform</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature">fit_transform_one_feature</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.transform" href="#imodels.importance.block_transformers.BlockTransformerBase.transform">transform</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature">transform_one_feature</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.importance.block_transformers.MDIPlusDefaultTransformer"><code class="flex name class">
+<span>class <span class="ident">MDIPlusDefaultTransformer</span></span>
+<span>(</span><span>tree_model, rescale_mode='max', drop_features=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Default block transformer used in MDI+. For each original feature, this
+forms a block comprising the local decision stumps, from a single tree
+model, that split on the feature, and appends the original feature.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tree_model</code></strong> :&ensp;<code>scikit-learn estimator</code></dt>
+<dd>The scikit-learn tree estimator object.</dd>
+<dt><strong><code>rescale_mode</code></strong> :&ensp;<code>string in {"max", "mean", None}</code></dt>
+<dd>Flag for the type of rescaling to be done to the blocks from different
+base transformers. If "max", divide each block by the max std deviation
+of a column within the block. If "mean", divide each block by the mean
+std deviation of a column within the block. If None, do not rescale.</dd>
+<dt><strong><code>drop_features</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to return an empty block if that from the first
+transformer in the list is trivial.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MDIPlusDefaultTransformer(CompositeTransformer, ABC):
+    &#34;&#34;&#34;
+    Default block transformer used in MDI+. For each original feature, this
+    forms a block comprising the local decision stumps, from a single tree
+    model, that split on the feature, and appends the original feature.
+
+    Parameters
+    ----------
+    tree_model: scikit-learn estimator
+        The scikit-learn tree estimator object.
+    rescale_mode: string in {&#34;max&#34;, &#34;mean&#34;, None}
+        Flag for the type of rescaling to be done to the blocks from different
+        base transformers. If &#34;max&#34;, divide each block by the max std deviation
+        of a column within the block. If &#34;mean&#34;, divide each block by the mean
+        std deviation of a column within the block. If None, do not rescale.
+    drop_features: bool
+        Flag for whether to return an empty block if that from the first
+        transformer in the list is trivial.
+    &#34;&#34;&#34;
+    def __init__(self, tree_model, rescale_mode=&#34;max&#34;, drop_features=True):
+        super().__init__([TreeTransformer(tree_model), IdentityTransformer()],
+                         rescale_mode, drop_features)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.block_transformers.CompositeTransformer" href="#imodels.importance.block_transformers.CompositeTransformer">CompositeTransformer</a></li>
+<li><a title="imodels.importance.block_transformers.BlockTransformerBase" href="#imodels.importance.block_transformers.BlockTransformerBase">BlockTransformerBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.block_transformers.CompositeTransformer" href="#imodels.importance.block_transformers.CompositeTransformer">CompositeTransformer</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.block_transformers.CompositeTransformer.check_is_fitted" href="#imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted">check_is_fitted</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.CompositeTransformer.fit" href="#imodels.importance.block_transformers.BlockTransformerBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.CompositeTransformer.fit_transform" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform">fit_transform</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.CompositeTransformer.fit_transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature">fit_transform_one_feature</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.CompositeTransformer.transform" href="#imodels.importance.block_transformers.BlockTransformerBase.transform">transform</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.CompositeTransformer.transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature">transform_one_feature</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.importance.block_transformers.TreeTransformer"><code class="flex name class">
+<span>class <span class="ident">TreeTransformer</span></span>
+<span>(</span><span>estimator, data=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A block transformer that transforms data using a representation built from
+local decision stumps from a tree or tree ensemble. The transformer also
+comes with metadata on the local decision stumps and methods that allow for
+transformations using sub-representations corresponding to each of the
+original features.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>estimator</code></strong> :&ensp;<code>scikit-learn estimator</code></dt>
+<dd>The scikit-learn tree or tree ensemble estimator object.</dd>
+<dt><strong><code>data</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>A data matrix that can be used to update the number of samples in each
+node of the tree(s) in the supplied estimator object. This affects
+the node values of the resulting engineered features.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TreeTransformer(BlockTransformerBase, ABC):
+    &#34;&#34;&#34;
+    A block transformer that transforms data using a representation built from
+    local decision stumps from a tree or tree ensemble. The transformer also
+    comes with metadata on the local decision stumps and methods that allow for
+    transformations using sub-representations corresponding to each of the
+    original features.
+
+    Parameters
+    ----------
+    estimator: scikit-learn estimator
+        The scikit-learn tree or tree ensemble estimator object.
+    data: ndarray
+        A data matrix that can be used to update the number of samples in each
+        node of the tree(s) in the supplied estimator object. This affects
+        the node values of the resulting engineered features.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator, data=None):
+        super().__init__()
+        self.estimator = estimator
+        self.oob_seed = self.estimator.random_state
+        # Check if single tree or tree ensemble
+        if isinstance(estimator, BaseEnsemble):
+            tree_models = estimator.estimators_
+            if data is not None:
+                # If a data matrix is supplied, use it to update the number
+                # of samples in each node
+                for tree_model in tree_models:
+                    _update_n_node_samples(tree_model, data)
+        else:
+            tree_models = [estimator]
+        # Make stumps for each tree
+        all_stumps = []
+        for tree_model in tree_models:
+            tree_stumps = make_stumps(tree_model.tree_)
+            all_stumps += tree_stumps
+        # Identify the stumps that split on feature k, for each k
+        self.stumps = defaultdict(list)
+        for stump in all_stumps:
+            self.stumps[stump.feature].append(stump)
+        self.n_splits = {k: len(stumps) for k, stumps in self.stumps.items()}
+
+    def _fit_one_feature(self, X, k):
+        stump_features = tree_feature_transform(self.stumps[k], X)
+        self._centers[k] = np.mean(stump_features, axis=0)
+        self._scales[k] = np.std(stump_features, axis=0)
+
+    def _transform_one_feature(self, X, k):
+        return tree_feature_transform(self.stumps[k], X)
+
+    def _fit_transform_one_feature(self, X, k):
+        stump_features = tree_feature_transform(self.stumps[k], X)
+        self._centers[k] = np.mean(stump_features, axis=0)
+        self._scales[k] = np.std(stump_features, axis=0)
+        return stump_features</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.block_transformers.BlockTransformerBase" href="#imodels.importance.block_transformers.BlockTransformerBase">BlockTransformerBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.block_transformers.BlockTransformerBase" href="#imodels.importance.block_transformers.BlockTransformerBase">BlockTransformerBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted" href="#imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted">check_is_fitted</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit" href="#imodels.importance.block_transformers.BlockTransformerBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit_transform" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform">fit_transform</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature">fit_transform_one_feature</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.transform" href="#imodels.importance.block_transformers.BlockTransformerBase.transform">transform</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature">transform_one_feature</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index 🔍</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.importance" href="index.html">imodels.importance</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.importance.block_transformers.BlockPartitionedData" href="#imodels.importance.block_transformers.BlockPartitionedData">BlockPartitionedData</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_all_data" href="#imodels.importance.block_transformers.BlockPartitionedData.get_all_data">get_all_data</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_all_except_block" href="#imodels.importance.block_transformers.BlockPartitionedData.get_all_except_block">get_all_except_block</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_all_except_block_indices" href="#imodels.importance.block_transformers.BlockPartitionedData.get_all_except_block_indices">get_all_except_block_indices</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_block" href="#imodels.importance.block_transformers.BlockPartitionedData.get_block">get_block</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_block_indices" href="#imodels.importance.block_transformers.BlockPartitionedData.get_block_indices">get_block_indices</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_modified_data" href="#imodels.importance.block_transformers.BlockPartitionedData.get_modified_data">get_modified_data</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.train_test_split" href="#imodels.importance.block_transformers.BlockPartitionedData.train_test_split">train_test_split</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.importance.block_transformers.BlockTransformerBase" href="#imodels.importance.block_transformers.BlockTransformerBase">BlockTransformerBase</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted" href="#imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted">check_is_fitted</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit" href="#imodels.importance.block_transformers.BlockTransformerBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit_transform" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform">fit_transform</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature">fit_transform_one_feature</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.transform" href="#imodels.importance.block_transformers.BlockTransformerBase.transform">transform</a></code></li>
+<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature">transform_one_feature</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.importance.block_transformers.CompositeTransformer" href="#imodels.importance.block_transformers.CompositeTransformer">CompositeTransformer</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.importance.block_transformers.IdentityTransformer" href="#imodels.importance.block_transformers.IdentityTransformer">IdentityTransformer</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.importance.block_transformers.MDIPlusDefaultTransformer" href="#imodels.importance.block_transformers.MDIPlusDefaultTransformer">MDIPlusDefaultTransformer</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.importance.block_transformers.TreeTransformer" href="#imodels.importance.block_transformers.TreeTransformer">TreeTransformer</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 c122.0,82.7 120.5,78.6 120.5,78.6 c119.2,72.0 123.4,76.3 123.4,76.3 c127.3,80.9 125.5,87.3 125.5,87.3 c122.9,97.6 130.6,101.9 134.4,103.2" fill="currentcolor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">

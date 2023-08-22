@@ -4,7 +4,6 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-import sklearn
 from sklearn.preprocessing import KBinsDiscretizer
 
 from imodels.rule_list.greedy_rule_list import GreedyRuleListClassifier
@@ -259,9 +258,9 @@ class OptimalRuleListClassifier(
     def __str__(self):
         if corels_supported:
             if self.str_print is not None:
-                return "OptimalRuleList:\n\n" + self.str_print
+                return 'OptimalRuleList:\n\n' + self.str_print
             else:
-                return "OptimalRuleList:\n\n" + self.rl_.__str__()
+                return 'OptimalRuleList:\n\n' + self.rl_.__str__()
         else:
             return super().__str__()
 

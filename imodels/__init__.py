@@ -5,6 +5,7 @@
 # Github repo available [here](https://github.com/csinva/imodels)
 
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
+from .algebraic.gam import TreeGAMClassifier
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 from .experimental.bartpy import BART

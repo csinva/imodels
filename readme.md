@@ -83,6 +83,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | TAO rule tree        | [🗂️](https://csinva.io/imodels/tree/tao.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html) | Fits tree using alternating optimization                    |
 | Iterative random<br/>forest | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [🔗](https://github.com/Yu-Group/iterative-Random-Forest), [📄](https://www.pnas.org/content/115/8/1943) | Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected |
 | Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
+| Tree GAM | [🗂️](https://csinva.io/imodels/algebraic/gam.html), [🔗](https://github.com/interpretml/interpret), [📄](https://dl.acm.org/doi/abs/10.1145/2339530.2339556) | Generalized additive model fit with short boosted trees                           |
 | <b>Greedy tree sums</b> | [🗂️](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://arxiv.org/abs/2201.11931) | Sum of small trees with very few total rules (FIGS)                          |
 | <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/tree/hierarchical_shrinkage.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://arxiv.org/abs/2202.00858) | Improve a decision tree, random forest, or<br/>gradient-boosting ensemble with ultra-fast, post-hoc regularization |
 | Distillation<br/>wrapper | [🗂️](https://csinva.io/imodels/util/distillation.html)  | Train a black-box model,<br/>then distill it into an interpretable model |
@@ -254,6 +255,13 @@ Hierarchical shrinkage is an extremely fast post-hoc regularization method which
 <p align="center">	
 	<i><b>HS Example.</b> HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent.</i>
 </p>
+
+### MDI+: A Flexible Random Forest-Based Feature Importance Framework
+
+[📄 Paper](https://arxiv.org/pdf/2307.01932.pdf), [📌 Citation](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C23&q=MDI%2B%3A+A+Flexible+Random+Forest-Based+Feature+Importance+Framework&btnG=#d=gs_cit&t=1690399844081&u=%2Fscholar%3Fq%3Dinfo%3Axc0LcHXE_lUJ%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den)
+
+MDI+ is a novel feature importance framework, which generalizes the popular mean decrease in impurity (MDI) importance score for random forests. At its core, MDI+ expands upon a recently discovered connection between linear regression and decision trees. In doing so, MDI+ enables practitioners to (1) tailor the feature importance computation to the data/problem structure and (2) incorporate additional features or knowledge to mitigate known biases of decision trees. In both real data case studies and extensive real-data-inspired simulations, MDI+ outperforms commonly used feature importance measures (e.g., MDI, permutation-based scores, and TreeSHAP) by substantional margins.
+
 
 ## References
 
