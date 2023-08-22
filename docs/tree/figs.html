@@ -499,7 +499,7 @@ class FIGS(BaseEstimator):
 
         def _predict_tree_single_point(root: Node, x):
             if root.left is None and root.right is None:
-                return root.value
+                return root.value[0, 0]
             left = x[root.feature] &lt;= root.threshold
             if left:
                 if root.left is None:  # we don&#39;t actually have to worry about this case
@@ -1116,7 +1116,7 @@ The number of features to consider when looking for the best split (see <a href=
 
         def _predict_tree_single_point(root: Node, x):
             if root.left is None and root.right is None:
-                return root.value
+                return root.value[0, 0]
             left = x[root.feature] &lt;= root.threshold
             if left:
                 if root.left is None:  # we don&#39;t actually have to worry about this case

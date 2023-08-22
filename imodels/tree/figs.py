@@ -476,7 +476,7 @@ class FIGS(BaseEstimator):
 
         def _predict_tree_single_point(root: Node, x):
             if root.left is None and root.right is None:
-                return root.value
+                return root.value[0, 0]
             left = x[root.feature] <= root.threshold
             if left:
                 if root.left is None:  # we don't actually have to worry about this case
