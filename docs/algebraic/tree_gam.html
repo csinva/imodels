@@ -60,6 +60,8 @@ class TreeGAM(BaseEstimator):
         max_leaf_nodes_marginal=2,
         reg_param_marginal=0.0,
         fit_linear_marginal=None,
+        boosting_strategy=&#34;cyclic&#34;,
+        validation_frac=0.15,
         random_state=None,
     ):
         &#34;&#34;&#34;
@@ -84,7 +86,10 @@ class TreeGAM(BaseEstimator):
             NNLS for non-negative least squares
             ridge for ridge regression
             None for no linear model
-
+        boosting_strategy : str [&#34;cyclic&#34;, &#34;greedy&#34;]
+            Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
+        validation_frac: float
+            Fraction of data to use for early stopping.
         random_state : int
             Random seed.
         &#34;&#34;&#34;
@@ -96,9 +101,11 @@ class TreeGAM(BaseEstimator):
         self.reg_param_marginal = reg_param_marginal
         self.n_boosting_rounds_marginal = n_boosting_rounds_marginal
         self.fit_linear_marginal = fit_linear_marginal
+        self.boosting_strategy = boosting_strategy
+        self.validation_frac = validation_frac
         self.random_state = random_state
 
-    def fit(self, X, y, sample_weight=None, validation_frac=0.15):
+    def fit(self, X, y, sample_weight=None):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
@@ -116,7 +123,7 @@ class TreeGAM(BaseEstimator):
             X,
             y,
             sample_weight,
-            test_size=validation_frac,
+            test_size=self.validation_frac,
             random_state=self.random_state,
         )
 
@@ -194,7 +201,9 @@ class TreeGAM(BaseEstimator):
             np.square(y_val - self.predict_proba(X_val)[:, 1]),
             weights=sample_weight_val,
         )
-        for boosting_round in range(self.n_boosting_rounds):
+        for _ in range(self.n_boosting_rounds):
+            boosting_round_ests = []
+            boosting_round_mses = []
             for feature_num in range(X_train.shape[1]):
                 X_ = np.zeros_like(X_train)
                 X_[:, feature_num] = X_train[:, feature_num]
@@ -211,8 +220,25 @@ class TreeGAM(BaseEstimator):
                 if self.reg_param &gt; 0:
                     est = imodels.HSTreeRegressor(est, reg_param=self.reg_param)
                 self.estimators_.append(est)
-                residuals_train = residuals_train - self.learning_rate * est.predict(
-                    X_train
+                residuals_train_new = (
+                    residuals_train - self.learning_rate * est.predict(X_train)
+                )
+                if self.boosting_strategy == &#34;cyclic&#34;:
+                    residuals_train = residuals_train_new
+                elif self.boosting_strategy == &#34;greedy&#34;:
+                    mse_train_new = np.average(
+                        np.square(residuals_train_new),
+                        weights=sample_weight_train,
+                    )
+                    # don&#39;t add each estimator for greedy
+                    boosting_round_ests.append(deepcopy(self.estimators_.pop()))
+                    boosting_round_mses.append(mse_train_new)
+
+            if self.boosting_strategy == &#34;greedy&#34;:
+                best_est = boosting_round_ests[np.argmin(boosting_round_mses)]
+                self.estimators_.append(best_est)
+                residuals_train = (
+                    residuals_train - self.learning_rate * best_est.predict(X_train)
                 )
 
             # early stopping if validation error does not decrease
@@ -220,11 +246,13 @@ class TreeGAM(BaseEstimator):
                 np.square(y_val - self.predict_proba(X_val)[:, 1]),
                 weights=sample_weight_val,
             )
-            # print(f&#34;mse val: {mse_val:.4f} mse_val_new: {mse_val_new:.4f}&#34;)
             if mse_val_new &gt;= mse_val:
+                self.mse_val = mse_val
                 return
             else:
                 mse_val = mse_val_new
+
+        self.mse_val = mse_val
 
     def predict_proba(self, X):
         X = check_array(X, accept_sparse=False, dtype=None)
@@ -243,30 +271,7 @@ class TreeGAM(BaseEstimator):
         elif isinstance(self, ClassifierMixin):
             return np.argmax(self.predict_proba(X), axis=1)
 
-    def get_shape_function_vals(self, X, max_evals=100):
-        &#34;&#34;&#34;Uses predict_proba to compute shape_function
-        Returns
-        -------
-        feature_vals_list : list of arrays
-            The values of each feature for which the shape function is evaluated.
-        shape_function_vals_list : list of arrays
-            The shape function evaluated at each value of the corresponding feature.
-        &#34;&#34;&#34;
-        p = X.shape[1]
-        dummy_input = np.zeros((1, p))
-        base = self.predict_proba(dummy_input)[:, 1][0]
-        feature_vals_list = []
-        shape_function_vals_list = []
-        for feat_num in range(p):
-            feature_vals = sorted(np.unique(X[:, feat_num]))
-            while len(feature_vals) &gt; max_evals:
-                feature_vals = feature_vals[::2]
-            dummy_input = np.zeros((len(feature_vals), p))
-            dummy_input[:, feat_num] = feature_vals
-            shape_function_vals = self.predict_proba(dummy_input)[:, 1] - base
-            feature_vals_list.append(feature_vals)
-            shape_function_vals_list.append(shape_function_vals.tolist())
-        return feature_vals_list, shape_function_vals_list
+    
 
 
 class TreeGAMRegressor(TreeGAM, RegressorMixin):
@@ -280,21 +285,32 @@ class TreeGAMClassifier(TreeGAM, ClassifierMixin):
 if __name__ == &#34;__main__&#34;:
     X, y, feature_names = imodels.get_clean_dataset(&#34;heart&#34;)
     X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-    gam = TreeGAMClassifier()
+    gam = TreeGAMClassifier(
+        boosting_strategy=&#34;greedy&#34;,
+        random_state=42,
+        learning_rate=0.1,
+        max_leaf_nodes=2,
+        n_boosting_rounds=3,
+    )
     gam.fit(X, y_train)
 
     # check roc auc score
     y_pred = gam.predict_proba(X_test)[:, 1]
-    print(&#34;train roc auc score:&#34;, roc_auc_score(y_train, gam.predict_proba(X)[:, 1]))
-    print(&#34;test roc auc score:&#34;, roc_auc_score(y_test, y_pred))
+    print(
+        &#34;train roc:&#34;,
+        roc_auc_score(y_train, gam.predict_proba(X)[:, 1]).round(3),
+    )
+    print(&#34;test roc:&#34;, roc_auc_score(y_test, y_pred).round(3))
     print(
         &#34;accs&#34;,
-        accuracy_score(y_train, gam.predict(X)),
-        accuracy_score(y_test, gam.predict(X_test)),
+        accuracy_score(y_train, gam.predict(X)).round(3),
+        accuracy_score(y_test, gam.predict(X_test)).round(3),
         &#34;imb&#34;,
-        np.mean(y_train),
-        np.mean(y_test),
-    )</code></pre>
+        np.mean(y_train).round(3),
+        np.mean(y_test).round(3),
+    )
+
+    # print(gam.estimators_)</code></pre>
 </details>
 </section>
 <section>
@@ -308,7 +324,7 @@ if __name__ == &#34;__main__&#34;:
 <dl>
 <dt id="imodels.algebraic.tree_gam.TreeGAM"><code class="flex name class">
 <span>class <span class="ident">TreeGAM</span></span>
-<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, random_state=None)</span>
+<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tree-based GAM classifier.
@@ -335,8 +351,12 @@ fit_linear_marginal : str [None, "None", "ridge", "NNLS"]
 Whether to fit a linear model to the marginal effects.
 NNLS for non-negative least squares
 ridge for ridge regression
-None for no linear model</p>
-<p>random_state : int
+None for no linear model
+boosting_strategy : str ["cyclic", "greedy"]
+Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
+validation_frac: float
+Fraction of data to use for early stopping.
+random_state : int
 Random seed.</p></div>
 <details class="source">
 <summary>
@@ -360,6 +380,8 @@ Random seed.</p></div>
         max_leaf_nodes_marginal=2,
         reg_param_marginal=0.0,
         fit_linear_marginal=None,
+        boosting_strategy=&#34;cyclic&#34;,
+        validation_frac=0.15,
         random_state=None,
     ):
         &#34;&#34;&#34;
@@ -384,7 +406,10 @@ Random seed.</p></div>
             NNLS for non-negative least squares
             ridge for ridge regression
             None for no linear model
-
+        boosting_strategy : str [&#34;cyclic&#34;, &#34;greedy&#34;]
+            Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
+        validation_frac: float
+            Fraction of data to use for early stopping.
         random_state : int
             Random seed.
         &#34;&#34;&#34;
@@ -396,9 +421,11 @@ Random seed.</p></div>
         self.reg_param_marginal = reg_param_marginal
         self.n_boosting_rounds_marginal = n_boosting_rounds_marginal
         self.fit_linear_marginal = fit_linear_marginal
+        self.boosting_strategy = boosting_strategy
+        self.validation_frac = validation_frac
         self.random_state = random_state
 
-    def fit(self, X, y, sample_weight=None, validation_frac=0.15):
+    def fit(self, X, y, sample_weight=None):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
@@ -416,7 +443,7 @@ Random seed.</p></div>
             X,
             y,
             sample_weight,
-            test_size=validation_frac,
+            test_size=self.validation_frac,
             random_state=self.random_state,
         )
 
@@ -494,7 +521,9 @@ Random seed.</p></div>
             np.square(y_val - self.predict_proba(X_val)[:, 1]),
             weights=sample_weight_val,
         )
-        for boosting_round in range(self.n_boosting_rounds):
+        for _ in range(self.n_boosting_rounds):
+            boosting_round_ests = []
+            boosting_round_mses = []
             for feature_num in range(X_train.shape[1]):
                 X_ = np.zeros_like(X_train)
                 X_[:, feature_num] = X_train[:, feature_num]
@@ -511,8 +540,25 @@ Random seed.</p></div>
                 if self.reg_param &gt; 0:
                     est = imodels.HSTreeRegressor(est, reg_param=self.reg_param)
                 self.estimators_.append(est)
-                residuals_train = residuals_train - self.learning_rate * est.predict(
-                    X_train
+                residuals_train_new = (
+                    residuals_train - self.learning_rate * est.predict(X_train)
+                )
+                if self.boosting_strategy == &#34;cyclic&#34;:
+                    residuals_train = residuals_train_new
+                elif self.boosting_strategy == &#34;greedy&#34;:
+                    mse_train_new = np.average(
+                        np.square(residuals_train_new),
+                        weights=sample_weight_train,
+                    )
+                    # don&#39;t add each estimator for greedy
+                    boosting_round_ests.append(deepcopy(self.estimators_.pop()))
+                    boosting_round_mses.append(mse_train_new)
+
+            if self.boosting_strategy == &#34;greedy&#34;:
+                best_est = boosting_round_ests[np.argmin(boosting_round_mses)]
+                self.estimators_.append(best_est)
+                residuals_train = (
+                    residuals_train - self.learning_rate * best_est.predict(X_train)
                 )
 
             # early stopping if validation error does not decrease
@@ -520,11 +566,13 @@ Random seed.</p></div>
                 np.square(y_val - self.predict_proba(X_val)[:, 1]),
                 weights=sample_weight_val,
             )
-            # print(f&#34;mse val: {mse_val:.4f} mse_val_new: {mse_val_new:.4f}&#34;)
             if mse_val_new &gt;= mse_val:
+                self.mse_val = mse_val
                 return
             else:
                 mse_val = mse_val_new
+
+        self.mse_val = mse_val
 
     def predict_proba(self, X):
         X = check_array(X, accept_sparse=False, dtype=None)
@@ -541,32 +589,7 @@ Random seed.</p></div>
         if isinstance(self, RegressorMixin):
             return self.predict_proba(X)[:, 1]
         elif isinstance(self, ClassifierMixin):
-            return np.argmax(self.predict_proba(X), axis=1)
-
-    def get_shape_function_vals(self, X, max_evals=100):
-        &#34;&#34;&#34;Uses predict_proba to compute shape_function
-        Returns
-        -------
-        feature_vals_list : list of arrays
-            The values of each feature for which the shape function is evaluated.
-        shape_function_vals_list : list of arrays
-            The shape function evaluated at each value of the corresponding feature.
-        &#34;&#34;&#34;
-        p = X.shape[1]
-        dummy_input = np.zeros((1, p))
-        base = self.predict_proba(dummy_input)[:, 1][0]
-        feature_vals_list = []
-        shape_function_vals_list = []
-        for feat_num in range(p):
-            feature_vals = sorted(np.unique(X[:, feat_num]))
-            while len(feature_vals) &gt; max_evals:
-                feature_vals = feature_vals[::2]
-            dummy_input = np.zeros((len(feature_vals), p))
-            dummy_input[:, feat_num] = feature_vals
-            shape_function_vals = self.predict_proba(dummy_input)[:, 1] - base
-            feature_vals_list.append(feature_vals)
-            shape_function_vals_list.append(shape_function_vals.tolist())
-        return feature_vals_list, shape_function_vals_list</code></pre>
+            return np.argmax(self.predict_proba(X), axis=1)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -580,7 +603,7 @@ Random seed.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.algebraic.tree_gam.TreeGAM.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, validation_frac=0.15)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -588,7 +611,7 @@ Random seed.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y, sample_weight=None, validation_frac=0.15):
+<pre><code class="python">def fit(self, X, y, sample_weight=None):
     X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
     if isinstance(self, ClassifierMixin):
         check_classification_targets(y)
@@ -606,7 +629,7 @@ Random seed.</p></div>
         X,
         y,
         sample_weight,
-        test_size=validation_frac,
+        test_size=self.validation_frac,
         random_state=self.random_state,
     )
 
@@ -632,49 +655,6 @@ Random seed.</p></div>
         )
 
     return self</code></pre>
-</details>
-</dd>
-<dt id="imodels.algebraic.tree_gam.TreeGAM.get_shape_function_vals"><code class="name flex">
-<span>def <span class="ident">get_shape_function_vals</span></span>(<span>self, X, max_evals=100)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Uses predict_proba to compute shape_function
-Returns</p>
-<hr>
-<dl>
-<dt><strong><code>feature_vals_list</code></strong> :&ensp;<code>list</code> of <code>arrays</code></dt>
-<dd>The values of each feature for which the shape function is evaluated.</dd>
-<dt><strong><code>shape_function_vals_list</code></strong> :&ensp;<code>list</code> of <code>arrays</code></dt>
-<dd>The shape function evaluated at each value of the corresponding feature.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_shape_function_vals(self, X, max_evals=100):
-    &#34;&#34;&#34;Uses predict_proba to compute shape_function
-    Returns
-    -------
-    feature_vals_list : list of arrays
-        The values of each feature for which the shape function is evaluated.
-    shape_function_vals_list : list of arrays
-        The shape function evaluated at each value of the corresponding feature.
-    &#34;&#34;&#34;
-    p = X.shape[1]
-    dummy_input = np.zeros((1, p))
-    base = self.predict_proba(dummy_input)[:, 1][0]
-    feature_vals_list = []
-    shape_function_vals_list = []
-    for feat_num in range(p):
-        feature_vals = sorted(np.unique(X[:, feat_num]))
-        while len(feature_vals) &gt; max_evals:
-            feature_vals = feature_vals[::2]
-        dummy_input = np.zeros((len(feature_vals), p))
-        dummy_input[:, feat_num] = feature_vals
-        shape_function_vals = self.predict_proba(dummy_input)[:, 1] - base
-        feature_vals_list.append(feature_vals)
-        shape_function_vals_list.append(shape_function_vals.tolist())
-    return feature_vals_list, shape_function_vals_list</code></pre>
 </details>
 </dd>
 <dt id="imodels.algebraic.tree_gam.TreeGAM.predict"><code class="name flex">
@@ -718,7 +698,7 @@ Returns</p>
 </dd>
 <dt id="imodels.algebraic.tree_gam.TreeGAMClassifier"><code class="flex name class">
 <span>class <span class="ident">TreeGAMClassifier</span></span>
-<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, random_state=None)</span>
+<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tree-based GAM classifier.
@@ -745,8 +725,12 @@ fit_linear_marginal : str [None, "None", "ridge", "NNLS"]
 Whether to fit a linear model to the marginal effects.
 NNLS for non-negative least squares
 ridge for ridge regression
-None for no linear model</p>
-<p>random_state : int
+None for no linear model
+boosting_strategy : str ["cyclic", "greedy"]
+Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
+validation_frac: float
+Fraction of data to use for early stopping.
+random_state : int
 Random seed.</p></div>
 <details class="source">
 <summary>
@@ -761,18 +745,10 @@ Random seed.</p></div>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></b></code>:
-<ul class="hlist">
-<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.get_shape_function_vals" href="#imodels.algebraic.tree_gam.TreeGAM.get_shape_function_vals">get_shape_function_vals</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="imodels.algebraic.tree_gam.TreeGAMRegressor"><code class="flex name class">
 <span>class <span class="ident">TreeGAMRegressor</span></span>
-<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, random_state=None)</span>
+<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tree-based GAM classifier.
@@ -799,8 +775,12 @@ fit_linear_marginal : str [None, "None", "ridge", "NNLS"]
 Whether to fit a linear model to the marginal effects.
 NNLS for non-negative least squares
 ridge for ridge regression
-None for no linear model</p>
-<p>random_state : int
+None for no linear model
+boosting_strategy : str ["cyclic", "greedy"]
+Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
+validation_frac: float
+Fraction of data to use for early stopping.
+random_state : int
 Random seed.</p></div>
 <details class="source">
 <summary>
@@ -814,14 +794,6 @@ Random seed.</p></div>
 <li><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.base.RegressorMixin</li>
-</ul>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></b></code>:
-<ul class="hlist">
-<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.get_shape_function_vals" href="#imodels.algebraic.tree_gam.TreeGAM.get_shape_function_vals">get_shape_function_vals</a></code></li>
-</ul>
-</li>
 </ul>
 </dd>
 </dl>
@@ -844,7 +816,6 @@ Random seed.</p></div>
 <h4><code><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.fit" href="#imodels.algebraic.tree_gam.TreeGAM.fit">fit</a></code></li>
-<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.get_shape_function_vals" href="#imodels.algebraic.tree_gam.TreeGAM.get_shape_function_vals">get_shape_function_vals</a></code></li>
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.predict" href="#imodels.algebraic.tree_gam.TreeGAM.predict">predict</a></code></li>
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.predict_proba" href="#imodels.algebraic.tree_gam.TreeGAM.predict_proba">predict_proba</a></code></li>
 </ul>

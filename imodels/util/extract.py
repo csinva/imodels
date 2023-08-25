@@ -156,3 +156,40 @@ def extract_skope(X, y, feature_names,
         extracted_rules.append(convert.tree_to_rules(estimator, np.array(feature_names)[features]))
 
     return extracted_rules, estimators_samples_, estimators_features_
+
+def extract_marginal_curves(clf, X, max_evals=100):
+    """Uses predict_proba to compute marginal curves.
+    Assumes clf is a classifier with a predict_proba method and that classifier is additive across features
+    For GAM, this returns the shape functions
+
+    Params
+    ------
+    clf : classifier
+        A classifier with a predict_proba method
+    X : array-like
+        The data to compute the marginal curves on (used to calculate unique feature vals)
+    max_evals : int
+        The maximum number of evaluations to make for each feature
+
+    Returns
+    -------
+    feature_vals_list : list of arrays
+        The values of each feature for which the shape function is evaluated.
+    shape_function_vals_list : list of arrays
+        The shape function evaluated at each value of the corresponding feature.
+    """
+    p = X.shape[1]
+    dummy_input = np.zeros((1, p))
+    base = clf.predict_proba(dummy_input)[:, 1][0]
+    feature_vals_list = []
+    shape_function_vals_list = []
+    for feat_num in range(p):
+        feature_vals = sorted(np.unique(X[:, feat_num]))
+        while len(feature_vals) > max_evals:
+            feature_vals = feature_vals[::2]
+        dummy_input = np.zeros((len(feature_vals), p))
+        dummy_input[:, feat_num] = feature_vals
+        shape_function_vals = clf.predict_proba(dummy_input)[:, 1] - base
+        feature_vals_list.append(feature_vals)
+        shape_function_vals_list.append(shape_function_vals.tolist())
+    return feature_vals_list, shape_function_vals_list

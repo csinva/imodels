@@ -224,9 +224,12 @@ class TreeGAM(BaseEstimator):
                 weights=sample_weight_val,
             )
             if mse_val_new >= mse_val:
+                self.mse_val = mse_val
                 return
             else:
                 mse_val = mse_val_new
+
+        self.mse_val = mse_val
 
     def predict_proba(self, X):
         X = check_array(X, accept_sparse=False, dtype=None)
@@ -245,30 +248,7 @@ class TreeGAM(BaseEstimator):
         elif isinstance(self, ClassifierMixin):
             return np.argmax(self.predict_proba(X), axis=1)
 
-    def get_shape_function_vals(self, X, max_evals=100):
-        """Uses predict_proba to compute shape_function
-        Returns
-        -------
-        feature_vals_list : list of arrays
-            The values of each feature for which the shape function is evaluated.
-        shape_function_vals_list : list of arrays
-            The shape function evaluated at each value of the corresponding feature.
-        """
-        p = X.shape[1]
-        dummy_input = np.zeros((1, p))
-        base = self.predict_proba(dummy_input)[:, 1][0]
-        feature_vals_list = []
-        shape_function_vals_list = []
-        for feat_num in range(p):
-            feature_vals = sorted(np.unique(X[:, feat_num]))
-            while len(feature_vals) > max_evals:
-                feature_vals = feature_vals[::2]
-            dummy_input = np.zeros((len(feature_vals), p))
-            dummy_input[:, feat_num] = feature_vals
-            shape_function_vals = self.predict_proba(dummy_input)[:, 1] - base
-            feature_vals_list.append(feature_vals)
-            shape_function_vals_list.append(shape_function_vals.tolist())
-        return feature_vals_list, shape_function_vals_list
+    
 
 
 class TreeGAMRegressor(TreeGAM, RegressorMixin):
