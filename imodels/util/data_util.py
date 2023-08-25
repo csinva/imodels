@@ -19,6 +19,8 @@ def _define_openml_outcomes(y, data_id: str):
         y = (y == 'g').astype(int)
     if data_id == '183':  # abalone, need to convert strings to floats
         y = y.astype(float)
+    if data_id == '1182': # adult, positive is ">50K"
+        y = (y == '>50K').astype(int)
     return y
 
 
