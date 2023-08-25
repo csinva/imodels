@@ -37,6 +37,8 @@ class TreeGAM(BaseEstimator):
         max_leaf_nodes_marginal=2,
         reg_param_marginal=0.0,
         fit_linear_marginal=None,
+        boosting_strategy="cyclic",
+        validation_frac=0.15,
         random_state=None,
     ):
         """
@@ -61,7 +63,10 @@ class TreeGAM(BaseEstimator):
             NNLS for non-negative least squares
             ridge for ridge regression
             None for no linear model
-
+        boosting_strategy : str ["cyclic", "greedy"]
+            Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
+        validation_frac: float
+            Fraction of data to use for early stopping.
         random_state : int
             Random seed.
         """
@@ -73,9 +78,11 @@ class TreeGAM(BaseEstimator):
         self.reg_param_marginal = reg_param_marginal
         self.n_boosting_rounds_marginal = n_boosting_rounds_marginal
         self.fit_linear_marginal = fit_linear_marginal
+        self.boosting_strategy = boosting_strategy
+        self.validation_frac = validation_frac
         self.random_state = random_state
 
-    def fit(self, X, y, sample_weight=None, validation_frac=0.15):
+    def fit(self, X, y, sample_weight=None):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
@@ -93,7 +100,7 @@ class TreeGAM(BaseEstimator):
             X,
             y,
             sample_weight,
-            test_size=validation_frac,
+            test_size=self.validation_frac,
             random_state=self.random_state,
         )
 
@@ -171,7 +178,9 @@ class TreeGAM(BaseEstimator):
             np.square(y_val - self.predict_proba(X_val)[:, 1]),
             weights=sample_weight_val,
         )
-        for boosting_round in range(self.n_boosting_rounds):
+        for _ in range(self.n_boosting_rounds):
+            boosting_round_ests = []
+            boosting_round_mses = []
             for feature_num in range(X_train.shape[1]):
                 X_ = np.zeros_like(X_train)
                 X_[:, feature_num] = X_train[:, feature_num]
@@ -188,8 +197,25 @@ class TreeGAM(BaseEstimator):
                 if self.reg_param > 0:
                     est = imodels.HSTreeRegressor(est, reg_param=self.reg_param)
                 self.estimators_.append(est)
-                residuals_train = residuals_train - self.learning_rate * est.predict(
-                    X_train
+                residuals_train_new = (
+                    residuals_train - self.learning_rate * est.predict(X_train)
+                )
+                if self.boosting_strategy == "cyclic":
+                    residuals_train = residuals_train_new
+                elif self.boosting_strategy == "greedy":
+                    mse_train_new = np.average(
+                        np.square(residuals_train_new),
+                        weights=sample_weight_train,
+                    )
+                    # don't add each estimator for greedy
+                    boosting_round_ests.append(deepcopy(self.estimators_.pop()))
+                    boosting_round_mses.append(mse_train_new)
+
+            if self.boosting_strategy == "greedy":
+                best_est = boosting_round_ests[np.argmin(boosting_round_mses)]
+                self.estimators_.append(best_est)
+                residuals_train = (
+                    residuals_train - self.learning_rate * best_est.predict(X_train)
                 )
 
             # early stopping if validation error does not decrease
@@ -197,7 +223,6 @@ class TreeGAM(BaseEstimator):
                 np.square(y_val - self.predict_proba(X_val)[:, 1]),
                 weights=sample_weight_val,
             )
-            # print(f"mse val: {mse_val:.4f} mse_val_new: {mse_val_new:.4f}")
             if mse_val_new >= mse_val:
                 return
             else:
@@ -257,18 +282,29 @@ class TreeGAMClassifier(TreeGAM, ClassifierMixin):
 if __name__ == "__main__":
     X, y, feature_names = imodels.get_clean_dataset("heart")
     X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-    gam = TreeGAMClassifier()
+    gam = TreeGAMClassifier(
+        boosting_strategy="greedy",
+        random_state=42,
+        learning_rate=0.1,
+        max_leaf_nodes=2,
+        n_boosting_rounds=3,
+    )
     gam.fit(X, y_train)
 
     # check roc auc score
     y_pred = gam.predict_proba(X_test)[:, 1]
-    print("train roc auc score:", roc_auc_score(y_train, gam.predict_proba(X)[:, 1]))
-    print("test roc auc score:", roc_auc_score(y_test, y_pred))
+    print(
+        "train roc:",
+        roc_auc_score(y_train, gam.predict_proba(X)[:, 1]).round(3),
+    )
+    print("test roc:", roc_auc_score(y_test, y_pred).round(3))
     print(
         "accs",
-        accuracy_score(y_train, gam.predict(X)),
-        accuracy_score(y_test, gam.predict(X_test)),
+        accuracy_score(y_train, gam.predict(X)).round(3),
+        accuracy_score(y_test, gam.predict(X_test)).round(3),
         "imb",
-        np.mean(y_train),
-        np.mean(y_test),
+        np.mean(y_train).round(3),
+        np.mean(y_test).round(3),
     )
+
+    # print(gam.estimators_)
