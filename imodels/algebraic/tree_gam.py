@@ -86,6 +86,8 @@ class TreeGAM(BaseEstimator):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
+            self.classes_, y = np.unique(y, return_inverse=True)
+
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
 
         # split into train and validation for early stopping
