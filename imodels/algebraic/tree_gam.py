@@ -37,6 +37,8 @@ class TreeGAM(BaseEstimator):
         max_leaf_nodes_marginal=2,
         reg_param_marginal=0.0,
         fit_linear_marginal=None,
+        select_linear_marginal=False,
+        decay_rate_towards_marginal=1.0,
         boosting_strategy="cyclic",
         validation_frac=0.15,
         random_state=None,
@@ -63,6 +65,14 @@ class TreeGAM(BaseEstimator):
             NNLS for non-negative least squares
             ridge for ridge regression
             None for no linear model
+        select_linear_marginal: bool
+            Whether to restrict features to those with non-negative coefficients in the linear model.
+            Requires that fit_linear_marginal is NNLS.
+        decay_rate_towards_marginal: float, [0, 1]
+            Decay rate for regularizing each shape function towards the marginal shape function after each step
+            1 means no decay, 0 means only use marginal effects
+            shape = (1 - decay_rate_towards_marginal) * shape + decay_rate_towards_marginal * marginal_shape
+            The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator
         boosting_strategy : str ["cyclic", "greedy"]
             Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
         validation_frac: float
@@ -78,6 +88,8 @@ class TreeGAM(BaseEstimator):
         self.reg_param_marginal = reg_param_marginal
         self.n_boosting_rounds_marginal = n_boosting_rounds_marginal
         self.fit_linear_marginal = fit_linear_marginal
+        self.select_linear_marginal = select_linear_marginal
+        self.decay_rate_towards_marginal = decay_rate_towards_marginal
         self.boosting_strategy = boosting_strategy
         self.validation_frac = validation_frac
         self.random_state = random_state
@@ -160,7 +172,7 @@ class TreeGAM(BaseEstimator):
         ):
             if self.fit_linear_marginal.lower() == "ridge":
                 linear_marginal = RidgeCV(fit_intercept=False)
-            elif self.fit_linear_marginal.lower() == "nnls":
+            elif self.fit_linear_marginal == "NNLS":
                 linear_marginal = LinearRegression(fit_intercept=False, positive=True)
             linear_marginal.fit(
                 np.array([est.predict(X_train) for est in self.estimators_marginal]).T,
@@ -169,6 +181,7 @@ class TreeGAM(BaseEstimator):
             )
             self.marginal_coef_ = linear_marginal.coef_
             self.lin = linear_marginal
+
         else:
             self.marginal_coef_ = np.ones(p) / p
 
@@ -179,10 +192,18 @@ class TreeGAM(BaseEstimator):
 
         residuals_train = y_train - self.predict_proba(X_train)[:, 1]
         mse_val = self._calc_mse(X_val, y_val, sample_weight_val)
+        self.decay_coef_towards_marginal_ = []
         for _ in range(self.n_boosting_rounds):
             boosting_round_ests = []
             boosting_round_mses = []
-            for feature_num in range(X_train.shape[1]):
+            feature_nums = np.arange(X_train.shape[1])
+            if self.select_linear_marginal:
+                assert (
+                    self.fit_linear_marginal == "NNLS"
+                    and self.n_boosting_rounds_marginal > 0
+                ), "select_linear_marginal requires fit_linear_marginal to be NNLS and for n_boosting_rounds_marginal > 0"
+                feature_nums = np.where(self.marginal_coef_ > 0)[0]
+            for feature_num in feature_nums:
                 X_ = np.zeros_like(X_train)
                 X_[:, feature_num] = X_train[:, feature_num]
                 est = DecisionTreeRegressor(
@@ -218,29 +239,61 @@ class TreeGAM(BaseEstimator):
                     residuals_train - self.learning_rate * best_est.predict(X_train)
                 )
 
+            # decay marginal effects
+            if self.decay_rate_towards_marginal < 1.0:
+                new_decay_coefs = [self.decay_rate_towards_marginal] * (
+                    len(self.estimators_) - len(self.decay_coef_towards_marginal_)
+                )
+                # print(self.decay_coef_towards_marginal_)
+                # print('new_decay_coefs', new_decay_coefs)
+                self.decay_coef_towards_marginal_ = [
+                    x * self.decay_rate_towards_marginal
+                    for x in self.decay_coef_towards_marginal_
+                ] + new_decay_coefs
+                # print(self.decay_coef_towards_marginal_)
+
             # early stopping if validation error does not decrease
             mse_val_new = self._calc_mse(X_val, y_val, sample_weight_val)
             if mse_val_new >= mse_val:
+                # print("early stop!")
                 return
             else:
                 mse_val = mse_val_new
 
-    def predict_proba(self, X):
+    def predict_proba(self, X, marginal_only=False):
+        """
+        Params
+        ------
+        marginal_only: bool
+            If True, only use the marginal effects.
+        """
         X = check_array(X, accept_sparse=False, dtype=None)
         check_is_fitted(self)
         probs1 = np.ones(X.shape[0]) * self.bias_
         for i, est in enumerate(self.estimators_marginal):
             probs1 += est.predict(X) * self.marginal_coef_[i]
-        for est in self.estimators_:
-            probs1 += self.learning_rate * est.predict(X)
+        if not marginal_only:
+            if self.decay_rate_towards_marginal < 1.0:
+                for i, est in enumerate(self.estimators_):
+                    if i < len(self.decay_coef_towards_marginal_):
+                        probs1 += (
+                            self.learning_rate
+                            * self.decay_coef_towards_marginal_[i]
+                            * est.predict(X)
+                        )
+                    else:
+                        probs1 += self.learning_rate * est.predict(X)
+            else:
+                for est in self.estimators_:
+                    probs1 += self.learning_rate * est.predict(X)
         probs1 = np.clip(probs1, a_min=0, a_max=1)
         return np.array([1 - probs1, probs1]).T
 
-    def predict(self, X):
+    def predict(self, X, marginal_only=False):
         if isinstance(self, RegressorMixin):
-            return self.predict_proba(X)[:, 1]
+            return self.predict_proba(X, marginal_only=marginal_only)[:, 1]
         elif isinstance(self, ClassifierMixin):
-            return np.argmax(self.predict_proba(X), axis=1)
+            return np.argmax(self.predict_proba(X, marginal_only=marginal_only), axis=1)
 
     def _calc_mse(self, X, y, sample_weight=None):
         return np.average(
@@ -261,11 +314,15 @@ if __name__ == "__main__":
     X, y, feature_names = imodels.get_clean_dataset("heart")
     X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
     gam = TreeGAMClassifier(
-        boosting_strategy="greedy",
+        boosting_strategy="cyclic",
         random_state=42,
         learning_rate=0.1,
         max_leaf_nodes=2,
-        n_boosting_rounds=3,
+        select_linear_marginal=True,
+        fit_linear_marginal="NNLS",
+        n_boosting_rounds_marginal=3,
+        decay_rate_towards_marginal=0,
+        n_boosting_rounds=10,
     )
     gam.fit(X, y_train)
 
