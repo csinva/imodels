@@ -6,6 +6,7 @@
 
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .algebraic.tree_gam import TreeGAMClassifier, TreeGAMRegressor
+from .algebraic.marginal_shrinkage_linear_model import MarginalShrinkageLinearModelRegressor
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 from .experimental.bartpy import BART
