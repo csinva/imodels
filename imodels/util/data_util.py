@@ -13,6 +13,33 @@ from sklearn.preprocessing import OneHotEncoder
 
 from imodels.util.tree_interaction_utils import make_rj, make_vp
 
+DSET_KWARGS = {
+    # classification
+    "sonar": {"dataset_name": "sonar", "data_source": "pmlb"},
+    "heart": {"dataset_name": "heart", "data_source": "imodels"},
+    "diabetes": {"dataset_name": "diabetes", "data_source": "pmlb"},
+    "breast_cancer": {"dataset_name": "breast_cancer", "data_source": "sklearn"},
+    "credit_g": {"dataset_name": "credit_g", "data_source": "imodels"},
+    "juvenile": {"dataset_name": "juvenile_clean", "data_source": "imodels"},
+    "compas": {"dataset_name": "compas_two_year_clean", "data_source": "imodels"},
+    "readmission": {
+        "dataset_name": "readmission_clean",
+        "data_source": "imodels",
+    },  # big, 100k points
+    "adult": {"dataset_name": "1182", "data_source": "openml"},  # big, 1e6 points
+
+    # regression
+    "bike_sharing": {"dataset_name": "42712", "data_source": "openml"},
+    'friedman1': {'dataset_name': 'friedman1', 'data_source': 'synthetic'},
+    'friedman2': {'dataset_name': 'friedman2', 'data_source': 'synthetic'},
+    'friedman3': {'dataset_name': 'friedman3', 'data_source': 'synthetic'},
+    'diabetes_regr': {'dataset_name': 'diabetes', 'data_source': 'sklearn'},
+    'abalone': {'dataset_name': '183', 'data_source': 'openml'},
+    'echo_months': {'dataset_name': '1199_BNG_echoMonths', 'data_source': 'pmlb'},
+    'satellite_image': {'dataset_name': '294_satellite_image', 'data_source': 'pmlb'},
+    'california_housing': {'dataset_name': 'california_housing', 'data_source': 'sklearn'},
+    # 'breast_tumor': {'dataset_name': '1201_BNG_breastTumor', 'data_source': 'pmlb' # v big
+}
 
 def _define_openml_outcomes(y, data_id: str):
     if data_id == '59':  # ionosphere, positive is "good" class
