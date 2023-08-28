@@ -36,12 +36,41 @@ from sklearn.preprocessing import OneHotEncoder
 
 from imodels.util.tree_interaction_utils import make_rj, make_vp
 
+DSET_KWARGS = {
+    # classification
+    &#34;sonar&#34;: {&#34;dataset_name&#34;: &#34;sonar&#34;, &#34;data_source&#34;: &#34;pmlb&#34;},
+    &#34;heart&#34;: {&#34;dataset_name&#34;: &#34;heart&#34;, &#34;data_source&#34;: &#34;imodels&#34;},
+    &#34;diabetes&#34;: {&#34;dataset_name&#34;: &#34;diabetes&#34;, &#34;data_source&#34;: &#34;pmlb&#34;},
+    &#34;breast_cancer&#34;: {&#34;dataset_name&#34;: &#34;breast_cancer&#34;, &#34;data_source&#34;: &#34;sklearn&#34;},
+    &#34;credit_g&#34;: {&#34;dataset_name&#34;: &#34;credit_g&#34;, &#34;data_source&#34;: &#34;imodels&#34;},
+    &#34;juvenile&#34;: {&#34;dataset_name&#34;: &#34;juvenile_clean&#34;, &#34;data_source&#34;: &#34;imodels&#34;},
+    &#34;compas&#34;: {&#34;dataset_name&#34;: &#34;compas_two_year_clean&#34;, &#34;data_source&#34;: &#34;imodels&#34;},
+    &#34;readmission&#34;: {
+        &#34;dataset_name&#34;: &#34;readmission_clean&#34;,
+        &#34;data_source&#34;: &#34;imodels&#34;,
+    },  # big, 100k points
+    &#34;adult&#34;: {&#34;dataset_name&#34;: &#34;1182&#34;, &#34;data_source&#34;: &#34;openml&#34;},  # big, 1e6 points
+
+    # regression
+    &#34;bike_sharing&#34;: {&#34;dataset_name&#34;: &#34;42712&#34;, &#34;data_source&#34;: &#34;openml&#34;},
+    &#39;friedman1&#39;: {&#39;dataset_name&#39;: &#39;friedman1&#39;, &#39;data_source&#39;: &#39;synthetic&#39;},
+    &#39;friedman2&#39;: {&#39;dataset_name&#39;: &#39;friedman2&#39;, &#39;data_source&#39;: &#39;synthetic&#39;},
+    &#39;friedman3&#39;: {&#39;dataset_name&#39;: &#39;friedman3&#39;, &#39;data_source&#39;: &#39;synthetic&#39;},
+    &#39;diabetes_regr&#39;: {&#39;dataset_name&#39;: &#39;diabetes&#39;, &#39;data_source&#39;: &#39;sklearn&#39;},
+    &#39;abalone&#39;: {&#39;dataset_name&#39;: &#39;183&#39;, &#39;data_source&#39;: &#39;openml&#39;},
+    &#39;echo_months&#39;: {&#39;dataset_name&#39;: &#39;1199_BNG_echoMonths&#39;, &#39;data_source&#39;: &#39;pmlb&#39;},
+    &#39;satellite_image&#39;: {&#39;dataset_name&#39;: &#39;294_satellite_image&#39;, &#39;data_source&#39;: &#39;pmlb&#39;},
+    &#39;california_housing&#39;: {&#39;dataset_name&#39;: &#39;california_housing&#39;, &#39;data_source&#39;: &#39;sklearn&#39;},
+    # &#39;breast_tumor&#39;: {&#39;dataset_name&#39;: &#39;1201_BNG_breastTumor&#39;, &#39;data_source&#39;: &#39;pmlb&#39; # v big
+}
 
 def _define_openml_outcomes(y, data_id: str):
     if data_id == &#39;59&#39;:  # ionosphere, positive is &#34;good&#34; class
         y = (y == &#39;g&#39;).astype(int)
     if data_id == &#39;183&#39;:  # abalone, need to convert strings to floats
         y = y.astype(float)
+    if data_id == &#39;1182&#39;: # adult, positive is &#34;&gt;50K&#34;
+        y = (y == &#39;&gt;50K&#39;).astype(int)
     return y
 
 

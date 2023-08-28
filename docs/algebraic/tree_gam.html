@@ -60,6 +60,8 @@ class TreeGAM(BaseEstimator):
         max_leaf_nodes_marginal=2,
         reg_param_marginal=0.0,
         fit_linear_marginal=None,
+        select_linear_marginal=False,
+        decay_rate_towards_marginal=1.0,
         boosting_strategy=&#34;cyclic&#34;,
         validation_frac=0.15,
         random_state=None,
@@ -86,6 +88,14 @@ class TreeGAM(BaseEstimator):
             NNLS for non-negative least squares
             ridge for ridge regression
             None for no linear model
+        select_linear_marginal: bool
+            Whether to restrict features to those with non-negative coefficients in the linear model.
+            Requires that fit_linear_marginal is NNLS.
+        decay_rate_towards_marginal: float, [0, 1]
+            Decay rate for regularizing each shape function towards the marginal shape function after each step
+            1 means no decay, 0 means only use marginal effects
+            shape = (1 - decay_rate_towards_marginal) * shape + decay_rate_towards_marginal * marginal_shape
+            The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator
         boosting_strategy : str [&#34;cyclic&#34;, &#34;greedy&#34;]
             Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
         validation_frac: float
@@ -101,6 +111,8 @@ class TreeGAM(BaseEstimator):
         self.reg_param_marginal = reg_param_marginal
         self.n_boosting_rounds_marginal = n_boosting_rounds_marginal
         self.fit_linear_marginal = fit_linear_marginal
+        self.select_linear_marginal = select_linear_marginal
+        self.decay_rate_towards_marginal = decay_rate_towards_marginal
         self.boosting_strategy = boosting_strategy
         self.validation_frac = validation_frac
         self.random_state = random_state
@@ -109,6 +121,8 @@ class TreeGAM(BaseEstimator):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
+            self.classes_, y = np.unique(y, return_inverse=True)
+
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
 
         # split into train and validation for early stopping
@@ -148,6 +162,8 @@ class TreeGAM(BaseEstimator):
                 sample_weight_val,
             )
 
+        self.mse_val_ = self._calc_mse(X_val, y_val, sample_weight_val)
+
         return self
 
     def _marginal_fit(
@@ -179,7 +195,7 @@ class TreeGAM(BaseEstimator):
         ):
             if self.fit_linear_marginal.lower() == &#34;ridge&#34;:
                 linear_marginal = RidgeCV(fit_intercept=False)
-            elif self.fit_linear_marginal.lower() == &#34;nnls&#34;:
+            elif self.fit_linear_marginal == &#34;NNLS&#34;:
                 linear_marginal = LinearRegression(fit_intercept=False, positive=True)
             linear_marginal.fit(
                 np.array([est.predict(X_train) for est in self.estimators_marginal]).T,
@@ -188,6 +204,7 @@ class TreeGAM(BaseEstimator):
             )
             self.marginal_coef_ = linear_marginal.coef_
             self.lin = linear_marginal
+
         else:
             self.marginal_coef_ = np.ones(p) / p
 
@@ -197,14 +214,19 @@ class TreeGAM(BaseEstimator):
         &#34;&#34;&#34;Apply cyclic boosting, storing trees in self.estimators_&#34;&#34;&#34;
 
         residuals_train = y_train - self.predict_proba(X_train)[:, 1]
-        mse_val = np.average(
-            np.square(y_val - self.predict_proba(X_val)[:, 1]),
-            weights=sample_weight_val,
-        )
+        mse_val = self._calc_mse(X_val, y_val, sample_weight_val)
+        self.decay_coef_towards_marginal_ = []
         for _ in range(self.n_boosting_rounds):
             boosting_round_ests = []
             boosting_round_mses = []
-            for feature_num in range(X_train.shape[1]):
+            feature_nums = np.arange(X_train.shape[1])
+            if self.select_linear_marginal:
+                assert (
+                    self.fit_linear_marginal == &#34;NNLS&#34;
+                    and self.n_boosting_rounds_marginal &gt; 0
+                ), &#34;select_linear_marginal requires fit_linear_marginal to be NNLS and for n_boosting_rounds_marginal &gt; 0&#34;
+                feature_nums = np.where(self.marginal_coef_ &gt; 0)[0]
+            for feature_num in feature_nums:
                 X_ = np.zeros_like(X_train)
                 X_[:, feature_num] = X_train[:, feature_num]
                 est = DecisionTreeRegressor(
@@ -226,9 +248,8 @@ class TreeGAM(BaseEstimator):
                 if self.boosting_strategy == &#34;cyclic&#34;:
                     residuals_train = residuals_train_new
                 elif self.boosting_strategy == &#34;greedy&#34;:
-                    mse_train_new = np.average(
-                        np.square(residuals_train_new),
-                        weights=sample_weight_train,
+                    mse_train_new = self._calc_mse(
+                        X_train, y_train, sample_weight_train
                     )
                     # don&#39;t add each estimator for greedy
                     boosting_round_ests.append(deepcopy(self.estimators_.pop()))
@@ -241,37 +262,67 @@ class TreeGAM(BaseEstimator):
                     residuals_train - self.learning_rate * best_est.predict(X_train)
                 )
 
+            # decay marginal effects
+            if self.decay_rate_towards_marginal &lt; 1.0:
+                new_decay_coefs = [self.decay_rate_towards_marginal] * (
+                    len(self.estimators_) - len(self.decay_coef_towards_marginal_)
+                )
+                # print(self.decay_coef_towards_marginal_)
+                # print(&#39;new_decay_coefs&#39;, new_decay_coefs)
+                self.decay_coef_towards_marginal_ = [
+                    x * self.decay_rate_towards_marginal
+                    for x in self.decay_coef_towards_marginal_
+                ] + new_decay_coefs
+                # print(self.decay_coef_towards_marginal_)
+
             # early stopping if validation error does not decrease
-            mse_val_new = np.average(
-                np.square(y_val - self.predict_proba(X_val)[:, 1]),
-                weights=sample_weight_val,
-            )
+            mse_val_new = self._calc_mse(X_val, y_val, sample_weight_val)
             if mse_val_new &gt;= mse_val:
-                self.mse_val = mse_val
+                # print(&#34;early stop!&#34;)
                 return
             else:
                 mse_val = mse_val_new
 
-        self.mse_val = mse_val
-
-    def predict_proba(self, X):
+    def predict_proba(self, X, marginal_only=False):
+        &#34;&#34;&#34;
+        Params
+        ------
+        marginal_only: bool
+            If True, only use the marginal effects.
+        &#34;&#34;&#34;
         X = check_array(X, accept_sparse=False, dtype=None)
         check_is_fitted(self)
         probs1 = np.ones(X.shape[0]) * self.bias_
         for i, est in enumerate(self.estimators_marginal):
             probs1 += est.predict(X) * self.marginal_coef_[i]
-        for est in self.estimators_:
-            probs1 += self.learning_rate * est.predict(X)
+        if not marginal_only:
+            if self.decay_rate_towards_marginal &lt; 1.0:
+                for i, est in enumerate(self.estimators_):
+                    if i &lt; len(self.decay_coef_towards_marginal_):
+                        probs1 += (
+                            self.learning_rate
+                            * self.decay_coef_towards_marginal_[i]
+                            * est.predict(X)
+                        )
+                    else:
+                        probs1 += self.learning_rate * est.predict(X)
+            else:
+                for est in self.estimators_:
+                    probs1 += self.learning_rate * est.predict(X)
         probs1 = np.clip(probs1, a_min=0, a_max=1)
         return np.array([1 - probs1, probs1]).T
 
-    def predict(self, X):
+    def predict(self, X, marginal_only=False):
         if isinstance(self, RegressorMixin):
-            return self.predict_proba(X)[:, 1]
+            return self.predict_proba(X, marginal_only=marginal_only)[:, 1]
         elif isinstance(self, ClassifierMixin):
-            return np.argmax(self.predict_proba(X), axis=1)
+            return np.argmax(self.predict_proba(X, marginal_only=marginal_only), axis=1)
 
-    
+    def _calc_mse(self, X, y, sample_weight=None):
+        return np.average(
+            np.square(y - self.predict_proba(X)[:, 1]),
+            weights=sample_weight,
+        )
 
 
 class TreeGAMRegressor(TreeGAM, RegressorMixin):
@@ -286,11 +337,15 @@ if __name__ == &#34;__main__&#34;:
     X, y, feature_names = imodels.get_clean_dataset(&#34;heart&#34;)
     X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
     gam = TreeGAMClassifier(
-        boosting_strategy=&#34;greedy&#34;,
+        boosting_strategy=&#34;cyclic&#34;,
         random_state=42,
         learning_rate=0.1,
         max_leaf_nodes=2,
-        n_boosting_rounds=3,
+        select_linear_marginal=True,
+        fit_linear_marginal=&#34;NNLS&#34;,
+        n_boosting_rounds_marginal=3,
+        decay_rate_towards_marginal=0,
+        n_boosting_rounds=10,
     )
     gam.fit(X, y_train)
 
@@ -324,7 +379,7 @@ if __name__ == &#34;__main__&#34;:
 <dl>
 <dt id="imodels.algebraic.tree_gam.TreeGAM"><code class="flex name class">
 <span>class <span class="ident">TreeGAM</span></span>
-<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
+<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, select_linear_marginal=False, decay_rate_towards_marginal=1.0, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tree-based GAM classifier.
@@ -352,6 +407,14 @@ Whether to fit a linear model to the marginal effects.
 NNLS for non-negative least squares
 ridge for ridge regression
 None for no linear model
+select_linear_marginal: bool
+Whether to restrict features to those with non-negative coefficients in the linear model.
+Requires that fit_linear_marginal is NNLS.
+decay_rate_towards_marginal: float, [0, 1]
+Decay rate for regularizing each shape function towards the marginal shape function after each step
+1 means no decay, 0 means only use marginal effects
+shape = (1 - decay_rate_towards_marginal) * shape + decay_rate_towards_marginal * marginal_shape
+The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator
 boosting_strategy : str ["cyclic", "greedy"]
 Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
 validation_frac: float
@@ -380,6 +443,8 @@ Random seed.</p></div>
         max_leaf_nodes_marginal=2,
         reg_param_marginal=0.0,
         fit_linear_marginal=None,
+        select_linear_marginal=False,
+        decay_rate_towards_marginal=1.0,
         boosting_strategy=&#34;cyclic&#34;,
         validation_frac=0.15,
         random_state=None,
@@ -406,6 +471,14 @@ Random seed.</p></div>
             NNLS for non-negative least squares
             ridge for ridge regression
             None for no linear model
+        select_linear_marginal: bool
+            Whether to restrict features to those with non-negative coefficients in the linear model.
+            Requires that fit_linear_marginal is NNLS.
+        decay_rate_towards_marginal: float, [0, 1]
+            Decay rate for regularizing each shape function towards the marginal shape function after each step
+            1 means no decay, 0 means only use marginal effects
+            shape = (1 - decay_rate_towards_marginal) * shape + decay_rate_towards_marginal * marginal_shape
+            The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator
         boosting_strategy : str [&#34;cyclic&#34;, &#34;greedy&#34;]
             Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
         validation_frac: float
@@ -421,6 +494,8 @@ Random seed.</p></div>
         self.reg_param_marginal = reg_param_marginal
         self.n_boosting_rounds_marginal = n_boosting_rounds_marginal
         self.fit_linear_marginal = fit_linear_marginal
+        self.select_linear_marginal = select_linear_marginal
+        self.decay_rate_towards_marginal = decay_rate_towards_marginal
         self.boosting_strategy = boosting_strategy
         self.validation_frac = validation_frac
         self.random_state = random_state
@@ -429,6 +504,8 @@ Random seed.</p></div>
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
+            self.classes_, y = np.unique(y, return_inverse=True)
+
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
 
         # split into train and validation for early stopping
@@ -468,6 +545,8 @@ Random seed.</p></div>
                 sample_weight_val,
             )
 
+        self.mse_val_ = self._calc_mse(X_val, y_val, sample_weight_val)
+
         return self
 
     def _marginal_fit(
@@ -499,7 +578,7 @@ Random seed.</p></div>
         ):
             if self.fit_linear_marginal.lower() == &#34;ridge&#34;:
                 linear_marginal = RidgeCV(fit_intercept=False)
-            elif self.fit_linear_marginal.lower() == &#34;nnls&#34;:
+            elif self.fit_linear_marginal == &#34;NNLS&#34;:
                 linear_marginal = LinearRegression(fit_intercept=False, positive=True)
             linear_marginal.fit(
                 np.array([est.predict(X_train) for est in self.estimators_marginal]).T,
@@ -508,6 +587,7 @@ Random seed.</p></div>
             )
             self.marginal_coef_ = linear_marginal.coef_
             self.lin = linear_marginal
+
         else:
             self.marginal_coef_ = np.ones(p) / p
 
@@ -517,14 +597,19 @@ Random seed.</p></div>
         &#34;&#34;&#34;Apply cyclic boosting, storing trees in self.estimators_&#34;&#34;&#34;
 
         residuals_train = y_train - self.predict_proba(X_train)[:, 1]
-        mse_val = np.average(
-            np.square(y_val - self.predict_proba(X_val)[:, 1]),
-            weights=sample_weight_val,
-        )
+        mse_val = self._calc_mse(X_val, y_val, sample_weight_val)
+        self.decay_coef_towards_marginal_ = []
         for _ in range(self.n_boosting_rounds):
             boosting_round_ests = []
             boosting_round_mses = []
-            for feature_num in range(X_train.shape[1]):
+            feature_nums = np.arange(X_train.shape[1])
+            if self.select_linear_marginal:
+                assert (
+                    self.fit_linear_marginal == &#34;NNLS&#34;
+                    and self.n_boosting_rounds_marginal &gt; 0
+                ), &#34;select_linear_marginal requires fit_linear_marginal to be NNLS and for n_boosting_rounds_marginal &gt; 0&#34;
+                feature_nums = np.where(self.marginal_coef_ &gt; 0)[0]
+            for feature_num in feature_nums:
                 X_ = np.zeros_like(X_train)
                 X_[:, feature_num] = X_train[:, feature_num]
                 est = DecisionTreeRegressor(
@@ -546,9 +631,8 @@ Random seed.</p></div>
                 if self.boosting_strategy == &#34;cyclic&#34;:
                     residuals_train = residuals_train_new
                 elif self.boosting_strategy == &#34;greedy&#34;:
-                    mse_train_new = np.average(
-                        np.square(residuals_train_new),
-                        weights=sample_weight_train,
+                    mse_train_new = self._calc_mse(
+                        X_train, y_train, sample_weight_train
                     )
                     # don&#39;t add each estimator for greedy
                     boosting_round_ests.append(deepcopy(self.estimators_.pop()))
@@ -561,39 +645,72 @@ Random seed.</p></div>
                     residuals_train - self.learning_rate * best_est.predict(X_train)
                 )
 
+            # decay marginal effects
+            if self.decay_rate_towards_marginal &lt; 1.0:
+                new_decay_coefs = [self.decay_rate_towards_marginal] * (
+                    len(self.estimators_) - len(self.decay_coef_towards_marginal_)
+                )
+                # print(self.decay_coef_towards_marginal_)
+                # print(&#39;new_decay_coefs&#39;, new_decay_coefs)
+                self.decay_coef_towards_marginal_ = [
+                    x * self.decay_rate_towards_marginal
+                    for x in self.decay_coef_towards_marginal_
+                ] + new_decay_coefs
+                # print(self.decay_coef_towards_marginal_)
+
             # early stopping if validation error does not decrease
-            mse_val_new = np.average(
-                np.square(y_val - self.predict_proba(X_val)[:, 1]),
-                weights=sample_weight_val,
-            )
+            mse_val_new = self._calc_mse(X_val, y_val, sample_weight_val)
             if mse_val_new &gt;= mse_val:
-                self.mse_val = mse_val
+                # print(&#34;early stop!&#34;)
                 return
             else:
                 mse_val = mse_val_new
 
-        self.mse_val = mse_val
-
-    def predict_proba(self, X):
+    def predict_proba(self, X, marginal_only=False):
+        &#34;&#34;&#34;
+        Params
+        ------
+        marginal_only: bool
+            If True, only use the marginal effects.
+        &#34;&#34;&#34;
         X = check_array(X, accept_sparse=False, dtype=None)
         check_is_fitted(self)
         probs1 = np.ones(X.shape[0]) * self.bias_
         for i, est in enumerate(self.estimators_marginal):
             probs1 += est.predict(X) * self.marginal_coef_[i]
-        for est in self.estimators_:
-            probs1 += self.learning_rate * est.predict(X)
+        if not marginal_only:
+            if self.decay_rate_towards_marginal &lt; 1.0:
+                for i, est in enumerate(self.estimators_):
+                    if i &lt; len(self.decay_coef_towards_marginal_):
+                        probs1 += (
+                            self.learning_rate
+                            * self.decay_coef_towards_marginal_[i]
+                            * est.predict(X)
+                        )
+                    else:
+                        probs1 += self.learning_rate * est.predict(X)
+            else:
+                for est in self.estimators_:
+                    probs1 += self.learning_rate * est.predict(X)
         probs1 = np.clip(probs1, a_min=0, a_max=1)
         return np.array([1 - probs1, probs1]).T
 
-    def predict(self, X):
+    def predict(self, X, marginal_only=False):
         if isinstance(self, RegressorMixin):
-            return self.predict_proba(X)[:, 1]
+            return self.predict_proba(X, marginal_only=marginal_only)[:, 1]
         elif isinstance(self, ClassifierMixin):
-            return np.argmax(self.predict_proba(X), axis=1)</code></pre>
+            return np.argmax(self.predict_proba(X, marginal_only=marginal_only), axis=1)
+
+    def _calc_mse(self, X, y, sample_weight=None):
+        return np.average(
+            np.square(y - self.predict_proba(X)[:, 1]),
+            weights=sample_weight,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -615,6 +732,8 @@ Random seed.</p></div>
     X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
     if isinstance(self, ClassifierMixin):
         check_classification_targets(y)
+        self.classes_, y = np.unique(y, return_inverse=True)
+
     sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
 
     # split into train and validation for early stopping
@@ -654,11 +773,13 @@ Random seed.</p></div>
             sample_weight_val,
         )
 
+    self.mse_val_ = self._calc_mse(X_val, y_val, sample_weight_val)
+
     return self</code></pre>
 </details>
 </dd>
 <dt id="imodels.algebraic.tree_gam.TreeGAM.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+<span>def <span class="ident">predict</span></span>(<span>self, X, marginal_only=False)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -666,39 +787,302 @@ Random seed.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self, X):
+<pre><code class="python">def predict(self, X, marginal_only=False):
     if isinstance(self, RegressorMixin):
-        return self.predict_proba(X)[:, 1]
+        return self.predict_proba(X, marginal_only=marginal_only)[:, 1]
     elif isinstance(self, ClassifierMixin):
-        return np.argmax(self.predict_proba(X), axis=1)</code></pre>
+        return np.argmax(self.predict_proba(X, marginal_only=marginal_only), axis=1)</code></pre>
 </details>
 </dd>
 <dt id="imodels.algebraic.tree_gam.TreeGAM.predict_proba"><code class="name flex">
-<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X, marginal_only=False)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><h2 id="params">Params</h2>
+<p>marginal_only: bool
+If True, only use the marginal effects.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict_proba(self, X):
+<pre><code class="python">def predict_proba(self, X, marginal_only=False):
+    &#34;&#34;&#34;
+    Params
+    ------
+    marginal_only: bool
+        If True, only use the marginal effects.
+    &#34;&#34;&#34;
     X = check_array(X, accept_sparse=False, dtype=None)
     check_is_fitted(self)
     probs1 = np.ones(X.shape[0]) * self.bias_
     for i, est in enumerate(self.estimators_marginal):
         probs1 += est.predict(X) * self.marginal_coef_[i]
-    for est in self.estimators_:
-        probs1 += self.learning_rate * est.predict(X)
+    if not marginal_only:
+        if self.decay_rate_towards_marginal &lt; 1.0:
+            for i, est in enumerate(self.estimators_):
+                if i &lt; len(self.decay_coef_towards_marginal_):
+                    probs1 += (
+                        self.learning_rate
+                        * self.decay_coef_towards_marginal_[i]
+                        * est.predict(X)
+                    )
+                else:
+                    probs1 += self.learning_rate * est.predict(X)
+        else:
+            for est in self.estimators_:
+                probs1 += self.learning_rate * est.predict(X)
     probs1 = np.clip(probs1, a_min=0, a_max=1)
     return np.array([1 - probs1, probs1]).T</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.tree_gam.TreeGAM.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request"><code class="name flex">
+<span>def <span class="ident">set_predict_proba_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a>, *, marginal_only: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>predict_proba</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>predict_proba</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>predict_proba</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>marginal_only</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>marginal_only</code> parameter in <code>predict_proba</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.tree_gam.TreeGAM.set_predict_request"><code class="name flex">
+<span>def <span class="ident">set_predict_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a>, *, marginal_only: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>predict</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>predict</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>predict</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>marginal_only</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>marginal_only</code> parameter in <code>predict</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="imodels.algebraic.tree_gam.TreeGAMClassifier"><code class="flex name class">
 <span>class <span class="ident">TreeGAMClassifier</span></span>
-<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
+<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, select_linear_marginal=False, decay_rate_towards_marginal=1.0, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tree-based GAM classifier.
@@ -726,6 +1110,14 @@ Whether to fit a linear model to the marginal effects.
 NNLS for non-negative least squares
 ridge for ridge regression
 None for no linear model
+select_linear_marginal: bool
+Whether to restrict features to those with non-negative coefficients in the linear model.
+Requires that fit_linear_marginal is NNLS.
+decay_rate_towards_marginal: float, [0, 1]
+Decay rate for regularizing each shape function towards the marginal shape function after each step
+1 means no decay, 0 means only use marginal effects
+shape = (1 - decay_rate_towards_marginal) * shape + decay_rate_towards_marginal * marginal_shape
+The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator
 boosting_strategy : str ["cyclic", "greedy"]
 Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
 validation_frac: float
@@ -743,12 +1135,108 @@ Random seed.</p></div>
 <ul class="hlist">
 <li><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.tree_gam.TreeGAMClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAMClassifier" href="#imodels.algebraic.tree_gam.TreeGAMClassifier">TreeGAMClassifier</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAMClassifier" href="#imodels.algebraic.tree_gam.TreeGAMClassifier">TreeGAMClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.predict_proba" href="#imodels.algebraic.tree_gam.TreeGAM.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_fit_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request">set_predict_proba_request</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_predict_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_predict_request">set_predict_request</a></code></li>
+</ul>
+</li>
 </ul>
 </dd>
 <dt id="imodels.algebraic.tree_gam.TreeGAMRegressor"><code class="flex name class">
 <span>class <span class="ident">TreeGAMRegressor</span></span>
-<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
+<span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, reg_param=0.0, learning_rate: float = 0.01, n_boosting_rounds_marginal=0, max_leaf_nodes_marginal=2, reg_param_marginal=0.0, fit_linear_marginal=None, select_linear_marginal=False, decay_rate_towards_marginal=1.0, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tree-based GAM classifier.
@@ -776,6 +1264,14 @@ Whether to fit a linear model to the marginal effects.
 NNLS for non-negative least squares
 ridge for ridge regression
 None for no linear model
+select_linear_marginal: bool
+Whether to restrict features to those with non-negative coefficients in the linear model.
+Requires that fit_linear_marginal is NNLS.
+decay_rate_towards_marginal: float, [0, 1]
+Decay rate for regularizing each shape function towards the marginal shape function after each step
+1 means no decay, 0 means only use marginal effects
+shape = (1 - decay_rate_towards_marginal) * shape + decay_rate_towards_marginal * marginal_shape
+The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator
 boosting_strategy : str ["cyclic", "greedy"]
 Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
 validation_frac: float
@@ -793,7 +1289,103 @@ Random seed.</p></div>
 <ul class="hlist">
 <li><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.RegressorMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.tree_gam.TreeGAMRegressor.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAMRegressor" href="#imodels.algebraic.tree_gam.TreeGAMRegressor">TreeGAMRegressor</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAMRegressor" href="#imodels.algebraic.tree_gam.TreeGAMRegressor">TreeGAMRegressor</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.predict_proba" href="#imodels.algebraic.tree_gam.TreeGAM.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_fit_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request">set_predict_proba_request</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_predict_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_predict_request">set_predict_request</a></code></li>
+</ul>
+</li>
 </ul>
 </dd>
 </dl>
@@ -818,13 +1410,22 @@ Random seed.</p></div>
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.fit" href="#imodels.algebraic.tree_gam.TreeGAM.fit">fit</a></code></li>
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.predict" href="#imodels.algebraic.tree_gam.TreeGAM.predict">predict</a></code></li>
 <li><code><a title="imodels.algebraic.tree_gam.TreeGAM.predict_proba" href="#imodels.algebraic.tree_gam.TreeGAM.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_fit_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_predict_proba_request">set_predict_proba_request</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAM.set_predict_request" href="#imodels.algebraic.tree_gam.TreeGAM.set_predict_request">set_predict_request</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="imodels.algebraic.tree_gam.TreeGAMClassifier" href="#imodels.algebraic.tree_gam.TreeGAMClassifier">TreeGAMClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAMClassifier.set_score_request" href="#imodels.algebraic.tree_gam.TreeGAMClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="imodels.algebraic.tree_gam.TreeGAMRegressor" href="#imodels.algebraic.tree_gam.TreeGAMRegressor">TreeGAMRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.tree_gam.TreeGAMRegressor.set_score_request" href="#imodels.algebraic.tree_gam.TreeGAMRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

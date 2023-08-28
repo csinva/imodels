@@ -23,6 +23,7 @@ class MarginalShrinkageLinearModel(BaseEstimator):
     def __init__(
         self,
         est_marginal_name="ridge",
+        marginal_divide_by_d=True,
         est_main_name="ridge",
         marginal_only=False,
         alphas=(0.1, 1, 10, 100, 1000, 10000),
@@ -34,6 +35,8 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         est_marginal_name : str
             Name of estimator to use for marginal effects (marginal regression)
             If "None", then assume marginal effects are zero (standard Ridge)
+        marginal_divide_by_d : bool
+            If True, then divide marginal effects by n_features
         est_main_name : str
             Name of estimator to use for main effects
             If "None", then assume marginal effects are zero (standard Ridge)
@@ -44,6 +47,7 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         """
         self.random_state = random_state
         self.est_marginal_name = est_marginal_name
+        self.marginal_divide_by_d = marginal_divide_by_d
         self.est_main_name = est_main_name
         self.marginal_only = marginal_only
         self.alphas = alphas
@@ -78,7 +82,8 @@ class MarginalShrinkageLinearModel(BaseEstimator):
             self.coef_marginal_ = np.vstack(self.coef_marginal_).squeeze()
 
         # evenly divide effects among features
-        self.coef_marginal_ /= X.shape[1]
+        if self.marginal_divide_by_d:
+            self.coef_marginal_ /= X.shape[1]
 
         # fit main estimator
         # predicting residuals is the same as setting a prior over coef_marginal
