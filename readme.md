@@ -257,7 +257,7 @@ Hierarchical shrinkage is an extremely fast post-hoc regularization method which
 	<i><b>HS Example.</b> HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent.</i>
 </p>
 
-### MDI+: A Flexible Random Forest-Based Feature Importance Framework
+### MDI+: Flexible Tree-Based Feature Importance
 
 [📄 Paper](https://arxiv.org/pdf/2307.01932.pdf), [📌 Citation](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C23&q=MDI%2B%3A+A+Flexible+Random+Forest-Based+Feature+Importance+Framework&btnG=#d=gs_cit&t=1690399844081&u=%2Fscholar%3Fq%3Dinfo%3Axc0LcHXE_lUJ%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den)
 

@@ -2,7 +2,7 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
-from sklearn.linear_model import LinearRegression, RidgeCV, Ridge
+from sklearn.linear_model import LinearRegression, RidgeCV, Ridge, ElasticNetCV
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y
@@ -23,9 +23,9 @@ class MarginalShrinkageLinearModel(BaseEstimator):
     def __init__(
         self,
         est_marginal_name="ridge",
-        marginal_divide_by_d=True,
         est_main_name="ridge",
-        marginal_only=False,
+        marginal_divide_by_d=True,
+        marginal_sign_constraint=False,
         alphas=(0.1, 1, 10, 100, 1000, 10000),
         random_state=None,
     ):
@@ -35,11 +35,15 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         est_marginal_name : str
             Name of estimator to use for marginal effects (marginal regression)
             If "None", then assume marginal effects are zero (standard Ridge)
-        marginal_divide_by_d : bool
-            If True, then divide marginal effects by n_features
         est_main_name : str
             Name of estimator to use for main effects
             If "None", then assume marginal effects are zero (standard Ridge)
+            If "ridge", then use RidgeCV with alphas
+            If "NNLS", then use non-negative least squares
+        marginal_divide_by_d : bool
+            If True, then divide marginal effects by n_features
+        marginal_sign_constraint : bool
+            If True, then constrain main effects to be same sign as marginal effects
         alphas: Tuple[float]
             Alphas to try for ridge regression (if using ridge estimators)
         random_state : int
@@ -47,12 +51,14 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         """
         self.random_state = random_state
         self.est_marginal_name = est_marginal_name
-        self.marginal_divide_by_d = marginal_divide_by_d
         self.est_main_name = est_main_name
-        self.marginal_only = marginal_only
+        self.marginal_divide_by_d = marginal_divide_by_d
+        self.marginal_sign_constraint = marginal_sign_constraint
+        if isinstance(alphas, float) or isinstance(alphas, int):
+            alphas = [alphas]
         self.alphas = alphas
 
-    def fit(self, X, y, sample_weight=None, center=True):
+    def fit(self, X, y, sample_weight=None):
         # checks
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
@@ -68,40 +74,54 @@ class MarginalShrinkageLinearModel(BaseEstimator):
             self.scalar_y_ = StandardScaler()
             y = self.scalar_y_.fit_transform(y.reshape(-1, 1)).squeeze()
 
+        # fit marginal
+        self.coef_marginal_ = self._fit_marginal(X, y, sample_weight)
+
+        # constrain main effects to be same sign as marginal effects by flipping sign
+        # of X appropriately and refitting with a non-negative least squares
+        self.est_main_ = self._get_est_from_name(self.est_main_name)
+
+        if self.marginal_sign_constraint:
+            assert self.est_main_name == "NNLS", "must use NNLS for sign constraint"
+            coef_signs = np.sign(self.coef_marginal_)
+            X = X * coef_signs
+            self.est_main_.fit(X, y, sample_weight=sample_weight)
+            self.est_main_.coef_ = self.est_main_.coef_ * coef_signs
+        elif self.est_main_ is None:
+            # fit dummy clf and override coefs
+            self.est_main_ = RidgeCV(fit_intercept=False)
+            self.est_main_.fit(X[:5], y[:5])
+            self.est_main_.coef_ = self.coef_marginal_
+        else:
+            # fit main estimator
+            # predicting residuals is the same as setting a prior over coef_marginal
+            # because we do solve change of variables ridge(prior = coef = coef - coef_marginal)
+            preds_marginal = X @ self.coef_marginal_
+            residuals = y - preds_marginal
+            self.est_main_.fit(X, residuals, sample_weight=sample_weight)
+            self.est_main_.coef_ = self.est_main_.coef_ + self.coef_marginal_
+
+        return self
+
+    def _fit_marginal(self, X, y, sample_weight):
         # initialize marginal estimator
         est_marginal = self._get_est_from_name(self.est_marginal_name)
 
         # fit marginal estimator to each feature
         if est_marginal is None:
-            self.coef_marginal_ = np.zeros(X.shape[1])
+            coef_marginal_ = np.zeros(X.shape[1])
         else:
-            self.coef_marginal_ = []
+            coef_marginal_ = []
             for i in range(X.shape[1]):
                 est_marginal.fit(X[:, i].reshape(-1, 1), y, sample_weight=sample_weight)
-                self.coef_marginal_.append(deepcopy(est_marginal.coef_))
-            self.coef_marginal_ = np.vstack(self.coef_marginal_).squeeze()
+                coef_marginal_.append(deepcopy(est_marginal.coef_))
+            coef_marginal_ = np.vstack(coef_marginal_).squeeze()
 
         # evenly divide effects among features
         if self.marginal_divide_by_d:
-            self.coef_marginal_ /= X.shape[1]
+            coef_marginal_ /= X.shape[1]
 
-        # fit main estimator
-        # predicting residuals is the same as setting a prior over coef_marginal
-        # because we do solve change of variables ridge(prior = coef = coef - coef_marginal)
-        preds_marginal = X @ self.coef_marginal_
-        # print("preds_marginal", preds_marginal)
-        residuals = y - preds_marginal
-        self.est_main_ = self._get_est_from_name(self.est_main_name)
-        if self.est_main_ is None:
-            # fit dummy clf and override coefs
-            self.est_main_ = RidgeCV(fit_intercept=False)
-            self.est_main_.fit(X, residuals, sample_weight=sample_weight)
-            self.est_main_.coef_ = self.coef_marginal_
-        else:
-            self.est_main_.fit(X, residuals, sample_weight=sample_weight)
-            self.est_main_.coef_ = self.est_main_.coef_ + self.coef_marginal_
-
-        return self
+        return coef_marginal_
 
     def _get_est_from_name(self, est_name):
         return {
@@ -111,6 +131,13 @@ class MarginalShrinkageLinearModel(BaseEstimator):
             ),
             "ols": LinearRegression(
                 fit_intercept=False,
+            ),
+            "NNLS": ElasticNetCV(
+                l1_ratio=1e-10,
+                fit_intercept=False,
+                positive=True,
+                alphas=self.alphas,
+                max_iter=10000,
             ),
             None: None,
             "None": None,
@@ -150,8 +177,8 @@ if __name__ == "__main__":
     )
 
     coefs = []
-    # alphas = (0.1, 1, 10, 100, 1000, 10000)  # (0.1, 1, 10, 100, 1000, 10000)
-    alphas = 10000
+    alphas = (0.1, 1, 10, 100, 1000, 10000)  # (0.1, 1, 10, 100, 1000, 10000)
+    # alphas = 10000
     for m in [
         MarginalShrinkageLinearModelRegressor(random_state=42, alphas=alphas),
         MarginalShrinkageLinearModelRegressor(
@@ -160,6 +187,13 @@ if __name__ == "__main__":
         MarginalShrinkageLinearModelRegressor(
             random_state=42, est_main_name=None, alphas=alphas
         ),
+        MarginalShrinkageLinearModelRegressor(
+            random_state=42,
+            est_marginal_name="ridge",
+            est_main_name="NNLS",
+            marginal_sign_constraint=True,
+            alphas=alphas,
+        )
         # RidgeCV(alphas=alphas, fit_intercept=False),
     ]:
         print(m)
