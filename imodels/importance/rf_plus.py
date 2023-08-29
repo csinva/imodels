@@ -264,7 +264,8 @@ class _RandomForestPlus(BaseEstimator):
         return predictions
 
     def get_mdi_plus_scores(self, X=None, y=None,
-                            scoring_fns="auto", sample_split="inherit", mode="keep_k"):
+                            scoring_fns="auto", local_scoring_fns=False,
+                            sample_split="inherit", mode="keep_k"):
         """
         Obtain MDI+ feature importances. Generalized mean decrease in impurity (MDI+)
         is a flexible framework for computing RF feature importances. For more
@@ -280,10 +281,17 @@ class _RandomForestPlus(BaseEstimator):
             The observed responses. Generally should be the same y as that used for
             fitting the RF+ prediction model.
         scoring_fns: a function or dict with functions as value and function name (str) as key or "auto"
-            The scoring functions used for evaluating the partial predictions.
+            The scoring functions used for evaluating the partial predictions (globally).
             If "auto", then a default is chosen as follows:
              - For RandomForestPlusRegressor, then r-squared (_fast_r2_score) is used.
              - For RandomForestPlusClassifier, then the negative log-loss (_neg_log_loss) is used.
+        local_scoring_fns: one of True, False, "auto", function or dict with functions as value and function name (str)
+            as key. The local scoring functions used for evaluating the partial predictions per sample.
+            If False, then local feature importances are not evaluated.
+            If True or "auto", then the (global) scoring functions are used as the local scoring functions.
+            If a function is provided, this function is used as the local scoring function and applied per sample.
+            Otherwise, a dictionary of local scoring functions can be supplied, with one local scoring function per
+            global scoring function (using the same key).
         sample_split: string in {"loo", "oob", "inbag", "inherit"} or None
             The sample splitting strategy to be used when evaluating the partial
             model predictions in MDI+. If "inherit" (default), uses the same sample splitting
@@ -308,6 +316,9 @@ class _RandomForestPlus(BaseEstimator):
         if X is None or y is None:
             if self.mdi_plus_scores_ is None:
                 raise ValueError("Need X and y as inputs.")
+            if local_scoring_fns:
+                if self.mdi_plus_scores_local_ is None:
+                    raise ValueError("Need X and y as inputs.")
         else:
             # convert data frame to array
             if isinstance(X, pd.DataFrame):
@@ -330,8 +341,18 @@ class _RandomForestPlus(BaseEstimator):
                 raise ValueError("Set sample_split=None to fit MDI+ on non-training X and y. "
                                  "To use other sample_split schemes, input the training X and y data.")
             if scoring_fns == "auto":
-                scoring_fns = {"importance": _fast_r2_score} if self._task == "regression" \
-                    else {"importance": _neg_log_loss}
+                scoring_fns = _fast_r2_score if self._task == "regression" \
+                    else _neg_log_loss
+            if local_scoring_fns:
+                if local_scoring_fns == "auto" or local_scoring_fns is True:
+                    local_scoring_fns = scoring_fns
+                else:
+                    if isinstance(local_scoring_fns, dict):
+                        for fn_name in scoring_fns.keys():
+                            if fn_name not in local_scoring_fns.keys():
+                                raise ValueError("Since scoring_fns is a dictionary, local_scoring_fns must also be a dictionary with one local scoring function for each scoring function using the same key.")
+                    elif not callable(local_scoring_fns):
+                        raise ValueError("local_scoring_fns must be a boolean, 'auto', a function, or dictionary of functions.")
             # onehot encode if multi-class for GlmClassiferPPM
             if isinstance(self.prediction_model, GlmClassifierPPM):
                 if self._multi_class:
@@ -340,6 +361,7 @@ class _RandomForestPlus(BaseEstimator):
             mdi_plus_obj = ForestMDIPlus(estimators=self.estimators_,
                                          transformers=self.transformers_,
                                          scoring_fns=scoring_fns,
+                                         local_scoring_fns=local_scoring_fns,
                                          sample_split=sample_split,
                                          tree_random_states=self._tree_random_states,
                                          mode=mode,
@@ -348,11 +370,23 @@ class _RandomForestPlus(BaseEstimator):
                                          normalize=self.normalize)
             self.mdi_plus_ = mdi_plus_obj
             mdi_plus_scores = mdi_plus_obj.get_scores(X_array, y)
+            if local_scoring_fns:
+                mdi_plus_scores_local = mdi_plus_scores["local"]
+                mdi_plus_scores = mdi_plus_scores["global"]
             if self.feature_names_ is not None:
                 mdi_plus_scores["var"] = self.feature_names_
                 self.mdi_plus_.feature_importances_["var"] = self.feature_names_
+                if local_scoring_fns:
+                    mdi_plus_scores_local["var"] = self.feature_names_
+                    self.mdi_plus_.feature_importances_local_["var"] = self.feature_names_
             self.mdi_plus_scores_ = mdi_plus_scores
-        return self.mdi_plus_scores_
+            if local_scoring_fns:
+                self.mdi_plus_scores_local_ = mdi_plus_scores_local
+        if local_scoring_fns:
+            return {"global": self.mdi_plus_scores_,
+                    "local": self.mdi_plus_scores_local_}
+        else:
+            return self.mdi_plus_scores_
 
     def get_mdi_plus_stability_scores(self, B=10, metrics="auto"):
         """

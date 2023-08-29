@@ -29,6 +29,13 @@ class ForestMDIPlus:
         as estimators.
     scoring_fns: a function or dict with functions as value and function name (str) as key
         The scoring functions used for evaluating the partial predictions.
+    local_scoring_fns: one of True, False, function or dict with functions as value and function name (str) as key.
+        The local scoring functions used for evaluating the partial predictions per sample.
+        If False, then local feature importances are not evaluated.
+        If True, then the (global) scoring functions are used as the local scoring functions.
+        If a function is provided, this function is used as the local scoring function and applied per sample.
+        Otherwise, a dictionary of local scoring functions can be supplied, with one local scoring function per
+        global scoring function (using the same key).
     sample_split: string in {"loo", "oob", "inbag"} or None
         The sample splitting strategy to be used when evaluating the partial
         model predictions. The default "loo" (leave-one-out) is strongly
@@ -57,7 +64,7 @@ class ForestMDIPlus:
         variance in the transformers.
     """
 
-    def __init__(self, estimators, transformers, scoring_fns,
+    def __init__(self, estimators, transformers, scoring_fns, local_scoring_fns=False,
                  sample_split="loo", tree_random_states=None, mode="keep_k",
                  task="regression", center=True, normalize=False):
         assert sample_split in ["loo", "oob", "inbag", None]
@@ -66,6 +73,7 @@ class ForestMDIPlus:
         self.estimators = estimators
         self.transformers = transformers
         self.scoring_fns = scoring_fns
+        self.local_scoring_fns = local_scoring_fns
         self.sample_split = sample_split
         self.tree_random_states = tree_random_states
         if self.sample_split in ["oob", "inbag"] and not self.tree_random_states:
@@ -74,10 +82,24 @@ class ForestMDIPlus:
         self.task = task
         self.center = center
         self.normalize = normalize
+        if self.local_scoring_fns and self.mode == "keep_rest":
+            raise ValueError("Local feature importances have not yet been implemented when mode='keep_rest'.")
+        if not isinstance(self.local_scoring_fns, bool):
+            if isinstance(self.scoring_fns, dict):
+                if not isinstance(self.local_scoring_fns, dict):
+                    raise ValueError("Since scoring_fns is a dictionary, local_scoring_fns must also be a dictionary with one local scoring function for each scoring function using the same key.")
+                for fn_name in self.scoring_fns.keys():
+                    if fn_name not in self.local_scoring_fns.keys():
+                        raise ValueError("Since scoring_fns is a dictionary, local_scoring_fns must also be a dictionary with one local scoring function for each scoring function using the same key.")
+            else:
+                if not callable(self.local_scoring_fns):
+                    raise ValueError("local_scoring_fns must be a boolean or a function (given that scoring_fns is not a dictionary).")
         self.is_fitted = False
         self.prediction_score_ = pd.DataFrame({})
         self.feature_importances_ = pd.DataFrame({})
         self.feature_importances_by_tree_ = {}
+        self.feature_importances_local_ = {}
+        self.feature_importances_local_by_tree_ = {}
 
     def get_scores(self, X, y):
         """
@@ -97,7 +119,11 @@ class ForestMDIPlus:
             The MDI+ feature importances.
         """
         self._fit_importance_scores(X, y)
-        return self.feature_importances_
+        if self.local_scoring_fns:
+            return {"global": self.feature_importances_,
+                    "local": self.feature_importances_local_}
+        else:
+            return self.feature_importances_
 
     def get_stability_scores(self, B=10, metrics="auto"):
         """
@@ -162,11 +188,13 @@ class ForestMDIPlus:
     def _fit_importance_scores(self, X, y):
         all_scores = []
         all_full_preds = []
+        all_local_scores = []
         for estimator, transformer, tree_random_state in \
                 zip(self.estimators, self.transformers, self.tree_random_states):
             tree_mdi_plus = TreeMDIPlus(estimator=estimator,
                                         transformer=transformer,
                                         scoring_fns=self.scoring_fns,
+                                        local_scoring_fns=self.local_scoring_fns,
                                         sample_split=self.sample_split,
                                         tree_random_state=tree_random_state,
                                         mode=self.mode,
@@ -175,6 +203,10 @@ class ForestMDIPlus:
                                         normalize=self.normalize)
             scores = tree_mdi_plus.get_scores(X, y)
             if scores is not None:
+                if self.local_scoring_fns:
+                    local_scores = scores["local"]
+                    scores = scores["global"]
+                    all_local_scores.append(local_scores)
                 all_scores.append(scores)
                 all_full_preds.append(tree_mdi_plus._full_preds)
         if len(all_scores) == 0:
@@ -188,9 +220,19 @@ class ForestMDIPlus:
             self.feature_importances_by_tree_[fn_name].columns = np.arange(len(all_scores))
             self.feature_importances_[fn_name] = np.mean(self.feature_importances_by_tree_[fn_name], axis=1)
             self.prediction_score_[fn_name] = [scoring_fn(y[~np.isnan(full_preds)], full_preds[~np.isnan(full_preds)])]
+            if self.local_scoring_fns:
+                self.feature_importances_local_by_tree_[fn_name] = [local_scores[fn_name] for local_scores in all_local_scores]
+                self.feature_importances_local_[fn_name] = pd.DataFrame(
+                    np.mean(self.feature_importances_local_by_tree_[fn_name], axis=0)
+                )
+                if isinstance(X, pd.DataFrame):
+                    self.feature_importances_local_[fn_name].columns = X.columns
         if list(scoring_fns.keys()) == ["importance"]:
             self.prediction_score_ = self.prediction_score_["importance"]
             self.feature_importances_by_tree_ = self.feature_importances_by_tree_["importance"]
+            if self.local_scoring_fns:
+                self.feature_importances_local_by_tree_ = self.feature_importances_local_by_tree_["importance"]
+                self.feature_importances_local_ = self.feature_importances_local_["importance"]
         if isinstance(X, pd.DataFrame):
             self.feature_importances_.index = X.columns
         self.feature_importances_.index.name = 'var'
@@ -218,6 +260,13 @@ class TreeMDIPlus:
         as input into the partial prediction models.
     scoring_fns: a function or dict with functions as value and function name (str) as key
         The scoring functions used for evaluating the partial predictions.
+    local_scoring_fns: one of True, False, function or dict with functions as value and function name (str) as key.
+        The local scoring functions used for evaluating the partial predictions per sample.
+        If False, then local feature importances are not evaluated.
+        If True, then the (global) scoring functions are used as the local scoring functions.
+        If a function is provided, this function is used as the local scoring function and applied per sample.
+        Otherwise, a dictionary of local scoring functions can be supplied, with one local scoring function per
+        global scoring function (using the same key).
     sample_split: string in {"loo", "oob", "inbag"} or None
         The sample splitting strategy to be used when evaluating the partial
         model predictions. The default "loo" (leave-one-out) is strongly
@@ -245,7 +294,7 @@ class TreeMDIPlus:
         variance in the transformers.
     """
 
-    def __init__(self, estimator, transformer, scoring_fns,
+    def __init__(self, estimator, transformer, scoring_fns, local_scoring_fns=False,
                  sample_split="loo", tree_random_state=None, mode="keep_k",
                  task="regression", center=True, normalize=False):
         assert sample_split in ["loo", "oob", "inbag", "auto", None]
@@ -254,6 +303,7 @@ class TreeMDIPlus:
         self.estimator = estimator
         self.transformer = transformer
         self.scoring_fns = scoring_fns
+        self.local_scoring_fns = local_scoring_fns
         self.sample_split = sample_split
         self.tree_random_state = tree_random_state
         _validate_sample_split(self.sample_split, self.estimator, isinstance(self.estimator, PartialPredictionModelBase))
@@ -263,10 +313,23 @@ class TreeMDIPlus:
         self.task = task
         self.center = center
         self.normalize = normalize
+        if self.local_scoring_fns and self.mode == "keep_rest":
+            raise ValueError("Local feature importances have not yet been implemented when mode='keep_rest'.")
+        if not isinstance(self.local_scoring_fns, bool):
+            if isinstance(self.scoring_fns, dict):
+                if not isinstance(self.local_scoring_fns, dict):
+                    raise ValueError("Since scoring_fns is a dictionary, local_scoring_fns must also be a dictionary with one local scoring function for each scoring function using the same key.")
+                for fn_name in self.scoring_fns.keys():
+                    if fn_name not in self.local_scoring_fns.keys():
+                        raise ValueError("Since scoring_fns is a dictionary, local_scoring_fns must also be a dictionary with one local scoring function for each scoring function using the same key.")
+            else:
+                if not callable(self.local_scoring_fns):
+                    raise ValueError("local_scoring_fns must be a boolean or a function (given that scoring_fns is not a dictionary).")
         self.is_fitted = False
         self._full_preds = None
         self.prediction_score_ = None
         self.feature_importances_ = None
+        self.feature_importances_local_ = None
 
     def get_scores(self, X, y):
         """
@@ -286,7 +349,11 @@ class TreeMDIPlus:
             The MDI+ feature importances.
         """
         self._fit_importance_scores(X, y)
-        return self.feature_importances_
+        if self.local_scoring_fns:
+            return {"global": self.feature_importances_,
+                    "local": self.feature_importances_local_}
+        else:
+            return self.feature_importances_
 
     def _fit_importance_scores(self, X, y):
         n_samples = y.shape[0]
@@ -329,9 +396,19 @@ class TreeMDIPlus:
     def _score_partial_predictions(self, y_test, full_preds, partial_preds):
         scoring_fns = self.scoring_fns if isinstance(self.scoring_fns, dict) \
             else {"importance": self.scoring_fns}
+        if self.local_scoring_fns:
+            if isinstance(self.local_scoring_fns, bool):
+                local_scoring_fns = scoring_fns
+            else:
+                local_scoring_fns = self.local_scoring_fns if isinstance(self.local_scoring_fns, dict) \
+                    else {"importance": self.local_scoring_fns}
         all_scores = pd.DataFrame({})
+        all_local_scores = {}
         for fn_name, scoring_fn in scoring_fns.items():
-            scores = _partial_preds_to_scores(partial_preds, y_test, scoring_fn)
+            if self.local_scoring_fns:
+                scores, local_scores = _partial_preds_to_scores(partial_preds, y_test, scoring_fn, local_scoring_fns[fn_name])
+            else:
+                scores = _partial_preds_to_scores(partial_preds, y_test, scoring_fn, self.local_scoring_fns)
             if self.mode == "keep_rest":
                 full_score = scoring_fn(y_test, full_preds)
                 scores = full_score - scores
@@ -343,17 +420,30 @@ class TreeMDIPlus:
                 raise ValueError("Unexpected dimensions. {}".format(msg))
             scores = scores.ravel()
             all_scores[fn_name] = scores
+            if self.local_scoring_fns:
+                all_local_scores[fn_name] = local_scores
         self.feature_importances_ = all_scores
+        if self.local_scoring_fns:
+            self.feature_importances_local_ = all_local_scores
 
 
-def _partial_preds_to_scores(partial_preds, y_test, scoring_fn):
+def _partial_preds_to_scores(partial_preds, y_test, scoring_fn, local_scoring_fn=False):
     scores = []
+    local_scores = []
     for k, y_pred in partial_preds.items():
         if isinstance(y_pred, tuple):  # if constant model
             y_pred = np.ones_like(y_test) * y_pred[1]
         scores.append(scoring_fn(y_test, y_pred))
-    return np.vstack(scores)
-
+        if local_scoring_fn:
+            if local_scoring_fn is True:
+                local_scoring_fn = scoring_fn
+            local_scores.append(
+                [local_scoring_fn(y_test[i:(i+1), ], y_pred[i:(i+1), ]) for i in range(y_test.shape[0])]
+            )
+    if local_scoring_fn:
+        return np.vstack(scores), np.vstack(local_scores).T
+    else:
+        return np.vstack(scores)
 
 def _get_default_sample_split(sample_split, prediction_model, is_ppm):
     if sample_split == "auto":
