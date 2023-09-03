@@ -26,9 +26,12 @@ class AutoInterpretableClassifier(BaseEstimator, ClassifierMixin):
             "est__max_leaf_nodes": [2, 5, 10],
         },
         {
-            "est": [LogisticRegression()],
+            "est": [
+                LogisticRegression(solver="saga", penalty="elasticnet", max_iter=100)
+            ],
             "est__C": [0.1, 1, 10],
-            "est__penalty": ["l1", "l2", "elasticnet"],
+            "est__l1_ratio": [0, 0.5, 1],
+            # "est__penalty": ["l1", "l2", "elasticnet"],
         },
         {
             "est": [RuleFitClassifier()],
@@ -55,9 +58,9 @@ class AutoInterpretableClassifier(BaseEstimator, ClassifierMixin):
         else:
             self.param_grid_ = param_grid
 
-    def fit(self, X, y):
+    def fit(self, X, y, cv=5):
         self.pipe_ = Pipeline([("est", BaseEstimator())])  # Placeholder Estimator
-        self.est_ = GridSearchCV(self.pipe_, self.param_grid_, scoring="roc_auc")
+        self.est_ = GridSearchCV(self.pipe_, self.param_grid_, scoring="roc_auc", cv=cv)
         self.est_.fit(X, y)
         return self
 
