@@ -516,16 +516,24 @@ class FIGS(BaseEstimator):
         )
 
     def __str__(self):
-        s = &#34;&gt; ------------------------------\n&#34;
-        s += &#34;&gt; FIGS-Fast Interpretable Greedy-Tree Sums:\n&#34;
-        s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree.\n&#39;
-        s += &#34;&gt; \tFor classifiers, a sigmoid function is then applied to the sum.\n&#34;
-        s += &#34;&gt; ------------------------------\n&#34;
-        s += &#34;\n\t+\n&#34;.join([self._tree_to_str(t) for t in self.trees_])
-        if hasattr(self, &#34;feature_names_&#34;) and self.feature_names_ is not None:
-            for i in range(len(self.feature_names_))[::-1]:
-                s = s.replace(f&#34;X_{i}&#34;, self.feature_names_[i])
-        return s
+        if not hasattr(self, &#34;trees_&#34;):
+            s = self.__class__.__name__
+            s += &#34;(&#34;
+            s += &#34;max_rules=&#34;
+            s += repr(self.max_rules)
+            s += &#34;)&#34;
+            return s
+        else:
+            s = &#34;&gt; ------------------------------\n&#34;
+            s += &#34;&gt; FIGS-Fast Interpretable Greedy-Tree Sums:\n&#34;
+            s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree.\n&#39;
+            s += &#34;&gt; \tFor classifiers, a sigmoid function is then applied to the sum.\n&#34;
+            s += &#34;&gt; ------------------------------\n&#34;
+            s += &#34;\n\t+\n&#34;.join([self._tree_to_str(t) for t in self.trees_])
+            if hasattr(self, &#34;feature_names_&#34;) and self.feature_names_ is not None:
+                for i in range(len(self.feature_names_))[::-1]:
+                    s = s.replace(f&#34;X_{i}&#34;, self.feature_names_[i])
+            return s
 
     def print_tree(self, X, y, feature_names=None):
         s = &#34;------------\n&#34; + &#34;\n\t+\n&#34;.join(
@@ -1244,16 +1252,24 @@ The number of features to consider when looking for the best split (see <a href=
         )
 
     def __str__(self):
-        s = &#34;&gt; ------------------------------\n&#34;
-        s += &#34;&gt; FIGS-Fast Interpretable Greedy-Tree Sums:\n&#34;
-        s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree.\n&#39;
-        s += &#34;&gt; \tFor classifiers, a sigmoid function is then applied to the sum.\n&#34;
-        s += &#34;&gt; ------------------------------\n&#34;
-        s += &#34;\n\t+\n&#34;.join([self._tree_to_str(t) for t in self.trees_])
-        if hasattr(self, &#34;feature_names_&#34;) and self.feature_names_ is not None:
-            for i in range(len(self.feature_names_))[::-1]:
-                s = s.replace(f&#34;X_{i}&#34;, self.feature_names_[i])
-        return s
+        if not hasattr(self, &#34;trees_&#34;):
+            s = self.__class__.__name__
+            s += &#34;(&#34;
+            s += &#34;max_rules=&#34;
+            s += repr(self.max_rules)
+            s += &#34;)&#34;
+            return s
+        else:
+            s = &#34;&gt; ------------------------------\n&#34;
+            s += &#34;&gt; FIGS-Fast Interpretable Greedy-Tree Sums:\n&#34;
+            s += &#39;&gt; \tPredictions are made by summing the &#34;Val&#34; reached by traversing each tree.\n&#39;
+            s += &#34;&gt; \tFor classifiers, a sigmoid function is then applied to the sum.\n&#34;
+            s += &#34;&gt; ------------------------------\n&#34;
+            s += &#34;\n\t+\n&#34;.join([self._tree_to_str(t) for t in self.trees_])
+            if hasattr(self, &#34;feature_names_&#34;) and self.feature_names_ is not None:
+                for i in range(len(self.feature_names_))[::-1]:
+                    s = s.replace(f&#34;X_{i}&#34;, self.feature_names_[i])
+            return s
 
     def print_tree(self, X, y, feature_names=None):
         s = &#34;------------\n&#34; + &#34;\n\t+\n&#34;.join(

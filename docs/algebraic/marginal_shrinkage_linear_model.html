@@ -34,7 +34,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score
 from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
-
+from collections import defaultdict
 import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
@@ -43,13 +43,22 @@ from sklearn.base import RegressorMixin, ClassifierMixin
 class MarginalShrinkageLinearModel(BaseEstimator):
     &#34;&#34;&#34;Linear model that shrinks towards the marginal effects of each feature.&#34;&#34;&#34;
 
+    def __str__(self):
+        return (
+            repr(self)
+            .replace(&#34;MarginalShrinkageLinearModel&#34;, &#34;MSLM&#34;)
+            .replace(&#34;Regressor&#34;, &#34;Reg&#34;)
+            .replace(&#34;Classifier&#34;, &#34;Clf&#34;)
+        )
+
     def __init__(
         self,
         est_marginal_name=&#34;ridge&#34;,
         est_main_name=&#34;ridge&#34;,
         marginal_divide_by_d=True,
         marginal_sign_constraint=False,
-        alphas=(0.1, 1, 10, 100, 1000, 10000),
+        alphas=np.logspace(-3, 5, num=9).tolist(),
+        elasticnet_ratio=0.5,
         random_state=None,
     ):
         &#34;&#34;&#34;
@@ -61,14 +70,15 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         est_main_name : str
             Name of estimator to use for main effects
             If &#34;None&#34;, then assume marginal effects are zero (standard Ridge)
-            If &#34;ridge&#34;, then use RidgeCV with alphas
-            If &#34;NNLS&#34;, then use non-negative least squares
+            &#34;ridge&#34;, &#34;lasso&#34;, &#34;elasticnet&#34;
         marginal_divide_by_d : bool
             If True, then divide marginal effects by n_features
         marginal_sign_constraint : bool
             If True, then constrain main effects to be same sign as marginal effects
         alphas: Tuple[float]
-            Alphas to try for ridge regression (if using ridge estimators)
+            Alphas to try for regularized regression (only main, not marginal)
+        elasticnet_ratio : float
+            If using elasticnet, Ratio of l1 to l2 penalty for elastic net
         random_state : int
             Random seed
         &#34;&#34;&#34;
@@ -77,7 +87,10 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         self.est_main_name = est_main_name
         self.marginal_divide_by_d = marginal_divide_by_d
         self.marginal_sign_constraint = marginal_sign_constraint
-        if isinstance(alphas, float) or isinstance(alphas, int):
+        self.elasticnet_ratio = elasticnet_ratio
+        if alphas is None:
+            alphas = np.logspace(-3, 5, num=9).tolist()
+        elif isinstance(alphas, float) or isinstance(alphas, int):
             alphas = [alphas]
         self.alphas = alphas
 
@@ -89,7 +102,7 @@ class MarginalShrinkageLinearModel(BaseEstimator):
             check_classification_targets(y)
             self.classes_, y = np.unique(y, return_inverse=True)
 
-        # center X and y
+        # preprocess X and y
         self.scalar_X_ = StandardScaler()
         X = self.scalar_X_.fit_transform(X)
 
@@ -100,35 +113,19 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         # fit marginal
         self.coef_marginal_ = self._fit_marginal(X, y, sample_weight)
 
-        # constrain main effects to be same sign as marginal effects by flipping sign
-        # of X appropriately and refitting with a non-negative least squares
-        self.est_main_ = self._get_est_from_name(self.est_main_name)
-
-        if self.marginal_sign_constraint:
-            assert self.est_main_name == &#34;NNLS&#34;, &#34;must use NNLS for sign constraint&#34;
-            coef_signs = np.sign(self.coef_marginal_)
-            X = X * coef_signs
-            self.est_main_.fit(X, y, sample_weight=sample_weight)
-            self.est_main_.coef_ = self.est_main_.coef_ * coef_signs
-        elif self.est_main_ is None:
-            # fit dummy clf and override coefs
-            self.est_main_ = RidgeCV(fit_intercept=False)
-            self.est_main_.fit(X[:5], y[:5])
-            self.est_main_.coef_ = self.coef_marginal_
-        else:
-            # fit main estimator
-            # predicting residuals is the same as setting a prior over coef_marginal
-            # because we do solve change of variables ridge(prior = coef = coef - coef_marginal)
-            preds_marginal = X @ self.coef_marginal_
-            residuals = y - preds_marginal
-            self.est_main_.fit(X, residuals, sample_weight=sample_weight)
-            self.est_main_.coef_ = self.est_main_.coef_ + self.coef_marginal_
+        # fit main
+        self.est_main_ = self._fit_main(X, y, sample_weight, self.coef_marginal_)
 
         return self
 
     def _fit_marginal(self, X, y, sample_weight):
         # initialize marginal estimator
-        est_marginal = self._get_est_from_name(self.est_marginal_name)
+        ALPHAS_MARGINAL = np.logspace(-1, 3, num=5).tolist()
+        est_marginal = self._get_est_from_name(
+            self.est_marginal_name,
+            alphas=ALPHAS_MARGINAL,
+            marginal_sign_constraint=False,
+        )
 
         # fit marginal estimator to each feature
         if est_marginal is None:
@@ -146,25 +143,63 @@ class MarginalShrinkageLinearModel(BaseEstimator):
 
         return coef_marginal_
 
-    def _get_est_from_name(self, est_name):
-        return {
-            &#34;ridge&#34;: RidgeCV(
-                fit_intercept=False,
-                alphas=self.alphas,
-            ),
-            &#34;ols&#34;: LinearRegression(
-                fit_intercept=False,
-            ),
-            &#34;NNLS&#34;: ElasticNetCV(
-                l1_ratio=1e-10,
-                fit_intercept=False,
-                positive=True,
-                alphas=self.alphas,
+    def _fit_main(self, X, y, sample_weight, coef_marginal_):
+        # constrain main effects to be same sign as marginal effects by flipping sign
+        # of X appropriately and refitting with a non-negative least squares
+        est_main_ = self._get_est_from_name(
+            self.est_main_name,
+            alphas=self.alphas,
+            marginal_sign_constraint=self.marginal_sign_constraint,
+        )
+
+        if self.marginal_sign_constraint:
+            assert self.est_marginal_name is not None, &#34;must have marginal effects&#34;
+            coef_signs = np.sign(coef_marginal_)
+            X = X * coef_signs
+            est_main_.fit(X, y, sample_weight=sample_weight)
+            est_main_.coef_ = est_main_.coef_ * coef_signs
+            # check that signs do not disagree
+            coef_final_signs = np.sign(est_main_.coef_)
+            assert np.all(
+                (coef_final_signs == coef_signs) | (coef_final_signs == 0)
+            ), &#34;signs should agree but&#34; + str(np.sign(est_main_.coef_), coef_signs)
+        elif est_main_ is None:
+            # fit dummy clf and override coefs
+            est_main_ = ElasticNetCV(fit_intercept=False)
+            est_main_.fit(X[:5], y[:5])
+            est_main_.coef_ = coef_marginal_
+        else:
+            # fit main estimator
+            # predicting residuals is the same as setting a prior over coef_marginal
+            # because we do solve change of variables ridge(prior = coef = coef - coef_marginal)
+            preds_marginal = X @ coef_marginal_
+            residuals = y - preds_marginal
+            est_main_.fit(X, residuals, sample_weight=sample_weight)
+            est_main_.coef_ = est_main_.coef_ + coef_marginal_
+        return est_main_
+
+    def _get_est_from_name(self, est_name, alphas, marginal_sign_constraint):
+        L1_RATIOS = {
+            &#34;ridge&#34;: 1e-6,
+            &#34;lasso&#34;: 1,
+            &#34;elasticnet&#34;: self.elasticnet_ratio,
+        }
+        if est_name not in L1_RATIOS:
+            return None
+        else:
+            if est_name == &#34;ridge&#34; and not marginal_sign_constraint:
+                # this implementation is better than ElasticNetCV with l1_ratio close to 0
+                return RidgeCV(
+                    alphas=alphas,
+                    fit_intercept=False,
+                )
+            return ElasticNetCV(
+                l1_ratio=L1_RATIOS[est_name],
+                alphas=alphas,
                 max_iter=10000,
-            ),
-            None: None,
-            &#34;None&#34;: None,
-        }[est_name]
+                fit_intercept=False,
+                positive=bool(marginal_sign_constraint),
+            )
 
     def predict_proba(self, X):
         X = self.scalar_X_.transform(X)
@@ -202,54 +237,54 @@ if __name__ == &#34;__main__&#34;:
     coefs = []
     alphas = (0.1, 1, 10, 100, 1000, 10000)  # (0.1, 1, 10, 100, 1000, 10000)
     # alphas = 10000
+    kwargs = dict(
+        random_state=42,
+        alphas=alphas,
+    )
+    results = defaultdict(list)
     for m in [
-        MarginalShrinkageLinearModelRegressor(random_state=42, alphas=alphas),
+        MarginalShrinkageLinearModelRegressor(**kwargs),
+        MarginalShrinkageLinearModelRegressor(est_marginal_name=None, **kwargs),
         MarginalShrinkageLinearModelRegressor(
-            random_state=42, alphas=alphas, est_marginal_name=None
+            est_main_name=None,
+            **kwargs,
         ),
         MarginalShrinkageLinearModelRegressor(
-            random_state=42, est_main_name=None, alphas=alphas
-        ),
-        MarginalShrinkageLinearModelRegressor(
-            random_state=42,
             est_marginal_name=&#34;ridge&#34;,
-            est_main_name=&#34;NNLS&#34;,
+            est_main_name=&#34;ridge&#34;,
             marginal_sign_constraint=True,
-            alphas=alphas,
-        )
+            **kwargs,
+        ),
+        MarginalShrinkageLinearModelRegressor(
+            est_marginal_name=None, est_main_name=&#34;lasso&#34;, **kwargs
+        ),
+        MarginalShrinkageLinearModelRegressor(
+            est_marginal_name=&#34;ridge&#34;,
+            est_main_name=&#34;lasso&#34;,
+            marginal_sign_constraint=True,
+            **kwargs,
+        ),
         # RidgeCV(alphas=alphas, fit_intercept=False),
     ]:
-        print(m)
+        results[&#34;model_name&#34;].append(str(m))
         m.fit(X_train, y_train)
 
         # check roc auc score
         if isinstance(m, ClassifierMixin):
-            y_pred = m.predict_proba(X_test)[:, 1]
-            print(
-                &#34;\ttrain roc:&#34;,
-                roc_auc_score(y_train, m.predict_proba(X_train)[:, 1]).round(3),
+            results[&#34;train_roc&#34;].append(
+                roc_auc_score(y_train, m.predict_proba(X_train)[:, 1])
             )
-            print(&#34;\t*test roc:&#34;, roc_auc_score(y_test, y_pred).round(3))
-            print(
-                &#34;\taccs&#34;,
-                accuracy_score(y_train, m.predict(X_train)).round(3),
-                accuracy_score(y_test, m.predict(X_test)).round(3),
-                &#34;\timb&#34;,
-                np.mean(y_train).round(3),
-                np.mean(y_test).round(3),
+            results[&#34;test_roc&#34;].append(
+                roc_auc_score(y_test, m.predict_proba(X_test)[:, 1])
             )
+            results[&#34;acc_train&#34;].append(accuracy_score(y_train, m.predict(X_train)))
+            results[&#34;acc_test&#34;].append(accuracy_score(y_test, m.predict(X_test)))
         else:
             y_pred = m.predict(X_test)
-            print(
-                &#34;\ttrain mse:&#34;,
-                np.mean((y_train - m.predict(X_train)) ** 2).round(3),
-            )
-            print(&#34;\t*test mse:&#34;, np.mean((y_test - y_pred) ** 2).round(3))
-            print(&#34;\ttrain r2 :&#34;, m.score(X_train, y_train).round(3))
-            print(
-                &#34;\t*test r2 :&#34;,
-                m.score(X_test, y_test).round(3),
-            )
+            results[&#34;train_mse&#34;].append(np.mean((y_train - m.predict(X_train)) ** 2))
+            results[&#34;test_mse&#34;].append(np.mean((y_test - y_pred) ** 2))
+            results[&#34;train_r2&#34;].append(m.score(X_train, y_train))
+            results[&#34;test_r2&#34;].append(m.score(X_test, y_test))
 
         if isinstance(m, MarginalShrinkageLinearModelRegressor):
             lin = m.est_main_
@@ -262,7 +297,13 @@ if __name__ == &#34;__main__&#34;:
     diffs = pd.DataFrame({str(i): coefs[i] for i in range(len(coefs))})
     diffs[&#34;diff 0 - 1&#34;] = diffs[&#34;0&#34;] - diffs[&#34;1&#34;]
     diffs[&#34;diff 1 - 2&#34;] = diffs[&#34;1&#34;] - diffs[&#34;2&#34;]
-    print(diffs)</code></pre>
+    print(diffs)
+
+    # don&#39;t round strings
+    with pd.option_context(
+        &#34;display.max_rows&#34;, None, &#34;display.max_columns&#34;, None, &#34;display.width&#34;, 1000
+    ):
+        print(pd.DataFrame(results).round(3))</code></pre>
 </details>
 </section>
 <section>
@@ -276,7 +317,7 @@ if __name__ == &#34;__main__&#34;:
 <dl>
 <dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModel"><code class="flex name class">
 <span>class <span class="ident">MarginalShrinkageLinearModel</span></span>
-<span>(</span><span>est_marginal_name='ridge', est_main_name='ridge', marginal_divide_by_d=True, marginal_sign_constraint=False, alphas=(0.1, 1, 10, 100, 1000, 10000), random_state=None)</span>
+<span>(</span><span>est_marginal_name='ridge', est_main_name='ridge', marginal_divide_by_d=True, marginal_sign_constraint=False, alphas=[0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0], elasticnet_ratio=0.5, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Linear model that shrinks towards the marginal effects of each feature.</p>
@@ -287,14 +328,15 @@ If "None", then assume marginal effects are zero (standard Ridge)
 est_main_name : str
 Name of estimator to use for main effects
 If "None", then assume marginal effects are zero (standard Ridge)
-If "ridge", then use RidgeCV with alphas
-If "NNLS", then use non-negative least squares
+"ridge", "lasso", "elasticnet"
 marginal_divide_by_d : bool
 If True, then divide marginal effects by n_features
 marginal_sign_constraint : bool
 If True, then constrain main effects to be same sign as marginal effects
 alphas: Tuple[float]
-Alphas to try for ridge regression (if using ridge estimators)
+Alphas to try for regularized regression (only main, not marginal)
+elasticnet_ratio : float
+If using elasticnet, Ratio of l1 to l2 penalty for elastic net
 random_state : int
 Random seed</p></div>
 <details class="source">
@@ -304,13 +346,22 @@ Random seed</p></div>
 <pre><code class="python">class MarginalShrinkageLinearModel(BaseEstimator):
     &#34;&#34;&#34;Linear model that shrinks towards the marginal effects of each feature.&#34;&#34;&#34;
 
+    def __str__(self):
+        return (
+            repr(self)
+            .replace(&#34;MarginalShrinkageLinearModel&#34;, &#34;MSLM&#34;)
+            .replace(&#34;Regressor&#34;, &#34;Reg&#34;)
+            .replace(&#34;Classifier&#34;, &#34;Clf&#34;)
+        )
+
     def __init__(
         self,
         est_marginal_name=&#34;ridge&#34;,
         est_main_name=&#34;ridge&#34;,
         marginal_divide_by_d=True,
         marginal_sign_constraint=False,
-        alphas=(0.1, 1, 10, 100, 1000, 10000),
+        alphas=np.logspace(-3, 5, num=9).tolist(),
+        elasticnet_ratio=0.5,
         random_state=None,
     ):
         &#34;&#34;&#34;
@@ -322,14 +373,15 @@ Random seed</p></div>
         est_main_name : str
             Name of estimator to use for main effects
             If &#34;None&#34;, then assume marginal effects are zero (standard Ridge)
-            If &#34;ridge&#34;, then use RidgeCV with alphas
-            If &#34;NNLS&#34;, then use non-negative least squares
+            &#34;ridge&#34;, &#34;lasso&#34;, &#34;elasticnet&#34;
         marginal_divide_by_d : bool
             If True, then divide marginal effects by n_features
         marginal_sign_constraint : bool
             If True, then constrain main effects to be same sign as marginal effects
         alphas: Tuple[float]
-            Alphas to try for ridge regression (if using ridge estimators)
+            Alphas to try for regularized regression (only main, not marginal)
+        elasticnet_ratio : float
+            If using elasticnet, Ratio of l1 to l2 penalty for elastic net
         random_state : int
             Random seed
         &#34;&#34;&#34;
@@ -338,7 +390,10 @@ Random seed</p></div>
         self.est_main_name = est_main_name
         self.marginal_divide_by_d = marginal_divide_by_d
         self.marginal_sign_constraint = marginal_sign_constraint
-        if isinstance(alphas, float) or isinstance(alphas, int):
+        self.elasticnet_ratio = elasticnet_ratio
+        if alphas is None:
+            alphas = np.logspace(-3, 5, num=9).tolist()
+        elif isinstance(alphas, float) or isinstance(alphas, int):
             alphas = [alphas]
         self.alphas = alphas
 
@@ -350,7 +405,7 @@ Random seed</p></div>
             check_classification_targets(y)
             self.classes_, y = np.unique(y, return_inverse=True)
 
-        # center X and y
+        # preprocess X and y
         self.scalar_X_ = StandardScaler()
         X = self.scalar_X_.fit_transform(X)
 
@@ -361,35 +416,19 @@ Random seed</p></div>
         # fit marginal
         self.coef_marginal_ = self._fit_marginal(X, y, sample_weight)
 
-        # constrain main effects to be same sign as marginal effects by flipping sign
-        # of X appropriately and refitting with a non-negative least squares
-        self.est_main_ = self._get_est_from_name(self.est_main_name)
-
-        if self.marginal_sign_constraint:
-            assert self.est_main_name == &#34;NNLS&#34;, &#34;must use NNLS for sign constraint&#34;
-            coef_signs = np.sign(self.coef_marginal_)
-            X = X * coef_signs
-            self.est_main_.fit(X, y, sample_weight=sample_weight)
-            self.est_main_.coef_ = self.est_main_.coef_ * coef_signs
-        elif self.est_main_ is None:
-            # fit dummy clf and override coefs
-            self.est_main_ = RidgeCV(fit_intercept=False)
-            self.est_main_.fit(X[:5], y[:5])
-            self.est_main_.coef_ = self.coef_marginal_
-        else:
-            # fit main estimator
-            # predicting residuals is the same as setting a prior over coef_marginal
-            # because we do solve change of variables ridge(prior = coef = coef - coef_marginal)
-            preds_marginal = X @ self.coef_marginal_
-            residuals = y - preds_marginal
-            self.est_main_.fit(X, residuals, sample_weight=sample_weight)
-            self.est_main_.coef_ = self.est_main_.coef_ + self.coef_marginal_
+        # fit main
+        self.est_main_ = self._fit_main(X, y, sample_weight, self.coef_marginal_)
 
         return self
 
     def _fit_marginal(self, X, y, sample_weight):
         # initialize marginal estimator
-        est_marginal = self._get_est_from_name(self.est_marginal_name)
+        ALPHAS_MARGINAL = np.logspace(-1, 3, num=5).tolist()
+        est_marginal = self._get_est_from_name(
+            self.est_marginal_name,
+            alphas=ALPHAS_MARGINAL,
+            marginal_sign_constraint=False,
+        )
 
         # fit marginal estimator to each feature
         if est_marginal is None:
@@ -407,25 +446,63 @@ Random seed</p></div>
 
         return coef_marginal_
 
-    def _get_est_from_name(self, est_name):
-        return {
-            &#34;ridge&#34;: RidgeCV(
-                fit_intercept=False,
-                alphas=self.alphas,
-            ),
-            &#34;ols&#34;: LinearRegression(
-                fit_intercept=False,
-            ),
-            &#34;NNLS&#34;: ElasticNetCV(
-                l1_ratio=1e-10,
-                fit_intercept=False,
-                positive=True,
-                alphas=self.alphas,
+    def _fit_main(self, X, y, sample_weight, coef_marginal_):
+        # constrain main effects to be same sign as marginal effects by flipping sign
+        # of X appropriately and refitting with a non-negative least squares
+        est_main_ = self._get_est_from_name(
+            self.est_main_name,
+            alphas=self.alphas,
+            marginal_sign_constraint=self.marginal_sign_constraint,
+        )
+
+        if self.marginal_sign_constraint:
+            assert self.est_marginal_name is not None, &#34;must have marginal effects&#34;
+            coef_signs = np.sign(coef_marginal_)
+            X = X * coef_signs
+            est_main_.fit(X, y, sample_weight=sample_weight)
+            est_main_.coef_ = est_main_.coef_ * coef_signs
+            # check that signs do not disagree
+            coef_final_signs = np.sign(est_main_.coef_)
+            assert np.all(
+                (coef_final_signs == coef_signs) | (coef_final_signs == 0)
+            ), &#34;signs should agree but&#34; + str(np.sign(est_main_.coef_), coef_signs)
+        elif est_main_ is None:
+            # fit dummy clf and override coefs
+            est_main_ = ElasticNetCV(fit_intercept=False)
+            est_main_.fit(X[:5], y[:5])
+            est_main_.coef_ = coef_marginal_
+        else:
+            # fit main estimator
+            # predicting residuals is the same as setting a prior over coef_marginal
+            # because we do solve change of variables ridge(prior = coef = coef - coef_marginal)
+            preds_marginal = X @ coef_marginal_
+            residuals = y - preds_marginal
+            est_main_.fit(X, residuals, sample_weight=sample_weight)
+            est_main_.coef_ = est_main_.coef_ + coef_marginal_
+        return est_main_
+
+    def _get_est_from_name(self, est_name, alphas, marginal_sign_constraint):
+        L1_RATIOS = {
+            &#34;ridge&#34;: 1e-6,
+            &#34;lasso&#34;: 1,
+            &#34;elasticnet&#34;: self.elasticnet_ratio,
+        }
+        if est_name not in L1_RATIOS:
+            return None
+        else:
+            if est_name == &#34;ridge&#34; and not marginal_sign_constraint:
+                # this implementation is better than ElasticNetCV with l1_ratio close to 0
+                return RidgeCV(
+                    alphas=alphas,
+                    fit_intercept=False,
+                )
+            return ElasticNetCV(
+                l1_ratio=L1_RATIOS[est_name],
+                alphas=alphas,
                 max_iter=10000,
-            ),
-            None: None,
-            &#34;None&#34;: None,
-        }[est_name]
+                fit_intercept=False,
+                positive=bool(marginal_sign_constraint),
+            )
 
     def predict_proba(self, X):
         X = self.scalar_X_.transform(X)
@@ -464,7 +541,7 @@ Random seed</p></div>
         check_classification_targets(y)
         self.classes_, y = np.unique(y, return_inverse=True)
 
-    # center X and y
+    # preprocess X and y
     self.scalar_X_ = StandardScaler()
     X = self.scalar_X_.fit_transform(X)
 
@@ -475,29 +552,8 @@ Random seed</p></div>
     # fit marginal
     self.coef_marginal_ = self._fit_marginal(X, y, sample_weight)
 
-    # constrain main effects to be same sign as marginal effects by flipping sign
-    # of X appropriately and refitting with a non-negative least squares
-    self.est_main_ = self._get_est_from_name(self.est_main_name)
-
-    if self.marginal_sign_constraint:
-        assert self.est_main_name == &#34;NNLS&#34;, &#34;must use NNLS for sign constraint&#34;
-        coef_signs = np.sign(self.coef_marginal_)
-        X = X * coef_signs
-        self.est_main_.fit(X, y, sample_weight=sample_weight)
-        self.est_main_.coef_ = self.est_main_.coef_ * coef_signs
-    elif self.est_main_ is None:
-        # fit dummy clf and override coefs
-        self.est_main_ = RidgeCV(fit_intercept=False)
-        self.est_main_.fit(X[:5], y[:5])
-        self.est_main_.coef_ = self.coef_marginal_
-    else:
-        # fit main estimator
-        # predicting residuals is the same as setting a prior over coef_marginal
-        # because we do solve change of variables ridge(prior = coef = coef - coef_marginal)
-        preds_marginal = X @ self.coef_marginal_
-        residuals = y - preds_marginal
-        self.est_main_.fit(X, residuals, sample_weight=sample_weight)
-        self.est_main_.coef_ = self.est_main_.coef_ + self.coef_marginal_
+    # fit main
+    self.est_main_ = self._fit_main(X, y, sample_weight, self.coef_marginal_)
 
     return self</code></pre>
 </details>
@@ -616,7 +672,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor"><code class="flex name class">
 <span>class <span class="ident">MarginalShrinkageLinearModelRegressor</span></span>
-<span>(</span><span>est_marginal_name='ridge', est_main_name='ridge', marginal_divide_by_d=True, marginal_sign_constraint=False, alphas=(0.1, 1, 10, 100, 1000, 10000), random_state=None)</span>
+<span>(</span><span>est_marginal_name='ridge', est_main_name='ridge', marginal_divide_by_d=True, marginal_sign_constraint=False, alphas=[0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0], elasticnet_ratio=0.5, random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Linear model that shrinks towards the marginal effects of each feature.</p>
@@ -627,14 +683,15 @@ If "None", then assume marginal effects are zero (standard Ridge)
 est_main_name : str
 Name of estimator to use for main effects
 If "None", then assume marginal effects are zero (standard Ridge)
-If "ridge", then use RidgeCV with alphas
-If "NNLS", then use non-negative least squares
+"ridge", "lasso", "elasticnet"
 marginal_divide_by_d : bool
 If True, then divide marginal effects by n_features
 marginal_sign_constraint : bool
 If True, then constrain main effects to be same sign as marginal effects
 alphas: Tuple[float]
-Alphas to try for ridge regression (if using ridge estimators)
+Alphas to try for regularized regression (only main, not marginal)
+elasticnet_ratio : float
+If using elasticnet, Ratio of l1 to l2 penalty for elastic net
 random_state : int
 Random seed</p></div>
 <details class="source">

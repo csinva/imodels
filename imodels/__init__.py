@@ -6,7 +6,9 @@
 
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .algebraic.tree_gam import TreeGAMClassifier, TreeGAMRegressor
-from .algebraic.marginal_shrinkage_linear_model import MarginalShrinkageLinearModelRegressor
+from .algebraic.marginal_shrinkage_linear_model import (
+    MarginalShrinkageLinearModelRegressor,
+)
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 from .experimental.bartpy import BART
@@ -47,6 +49,7 @@ from .tree.hierarchical_shrinkage import (
     HSTreeClassifierCV,
 )
 from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
+from .util.automl import AutoInterpretableClassifier
 from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
@@ -70,11 +73,13 @@ CLASSIFIERS = [
     FIGSClassifier,
     HSTreeClassifier,
     HSTreeClassifierCV,
+    GreedyTreeClassifier,
+    AutoInterpretableClassifier,
 ]  # , IRFClassifier
 REGRESSORS = [
     RuleFitRegressor,
     SLIMRegressor,
-    GreedyTreeClassifier,
+    GreedyTreeRegressor,
     FIGSRegressor,
     TaoTreeRegressor,
     TreeGAMRegressor,

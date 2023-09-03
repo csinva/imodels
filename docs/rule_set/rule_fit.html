@@ -272,11 +272,19 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(decimals)
 
     def __str__(self):
-        s = &#39;&gt; ------------------------------\n&#39;
-        s += &#39;&gt; RuleFit:\n&#39;
-        s += &#39;&gt; \tPredictions are made by summing the coefficients of each rule\n&#39;
-        s += &#39;&gt; ------------------------------\n&#39;
-        return s + self.visualize().to_string(index=False) + &#39;\n&#39;
+        if not hasattr(self, &#39;coef&#39;):
+            s = self.__class__.__name__
+            s += &#34;(&#34;
+            s += &#34;max_rules=&#34;
+            s += repr(self.max_rules)
+            s += &#34;)&#34;
+            return s
+        else:
+            s = &#39;&gt; ------------------------------\n&#39;
+            s += &#39;&gt; RuleFit:\n&#39;
+            s += &#39;&gt; \tPredictions are made by summing the coefficients of each rule\n&#39;
+            s += &#39;&gt; ------------------------------\n&#39;
+            return s + self.visualize().to_string(index=False) + &#39;\n&#39;
 
     def _extract_rules(self, X, y) -&gt; List[str]:
         return extract_rulefit(X, y,
@@ -609,11 +617,19 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
         return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(decimals)
 
     def __str__(self):
-        s = &#39;&gt; ------------------------------\n&#39;
-        s += &#39;&gt; RuleFit:\n&#39;
-        s += &#39;&gt; \tPredictions are made by summing the coefficients of each rule\n&#39;
-        s += &#39;&gt; ------------------------------\n&#39;
-        return s + self.visualize().to_string(index=False) + &#39;\n&#39;
+        if not hasattr(self, &#39;coef&#39;):
+            s = self.__class__.__name__
+            s += &#34;(&#34;
+            s += &#34;max_rules=&#34;
+            s += repr(self.max_rules)
+            s += &#34;)&#34;
+            return s
+        else:
+            s = &#39;&gt; ------------------------------\n&#39;
+            s += &#39;&gt; RuleFit:\n&#39;
+            s += &#39;&gt; \tPredictions are made by summing the coefficients of each rule\n&#39;
+            s += &#39;&gt; ------------------------------\n&#39;
+            return s + self.visualize().to_string(index=False) + &#39;\n&#39;
 
     def _extract_rules(self, X, y) -&gt; List[str]:
         return extract_rulefit(X, y,

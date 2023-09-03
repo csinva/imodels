@@ -961,7 +961,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
+<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<h2 id="notes">Notes</h2>
+<p>All estimators should specify all the parameters that can be set
+at the class level in their <code>__init__</code> as explicit keyword
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
 <p>HSTree (Tree with hierarchical shrinkage applied).
 Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
 It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
@@ -977,7 +981,9 @@ Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</
 Experimental: Used to experiment with different forms of shrinkage. options are:
 (i) node_based shrinks based on number of samples in parent node
 (ii) leaf_based only shrinks leaf nodes based on number of leaf samples
-(iii) constant shrinks every node by a constant lambda</p></div>
+(iii) constant shrinks every node by a constant lambda</p>
+<p>max_leaf_nodes: int
+If estimator is None, then max_leaf_nodes is passed to the default decision tree</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1006,6 +1012,8 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
 <h3>Methods</h3>
@@ -1032,13 +1040,26 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_params" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_fit_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV"><code class="flex name class">
 <span>class <span class="ident">HSDecisionTreeCCPRegressorCV</span></span>
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
+<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<h2 id="notes">Notes</h2>
+<p>All estimators should specify all the parameters that can be set
+at the class level in their <code>__init__</code> as explicit keyword
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
 <p>HSTree (Tree with hierarchical shrinkage applied).
 Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
 It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
@@ -1054,7 +1075,9 @@ Higher is more regularization (can be arbitrarily large, should not be &lt; 0)</
 Experimental: Used to experiment with different forms of shrinkage. options are:
 (i) node_based shrinks based on number of samples in parent node
 (ii) leaf_based only shrinks leaf nodes based on number of leaf samples
-(iii) constant shrinks every node by a constant lambda</p></div>
+(iii) constant shrinks every node by a constant lambda</p>
+<p>max_leaf_nodes: int
+If estimator is None, then max_leaf_nodes is passed to the default decision tree</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1083,6 +1106,8 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>
 <h3>Methods</h3>
@@ -1109,6 +1134,15 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_params" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_fit_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
