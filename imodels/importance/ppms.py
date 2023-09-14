@@ -11,6 +11,8 @@ from sklearn.linear_model import RidgeCV, Ridge, \
 from sklearn.metrics import log_loss, mean_squared_error
 from scipy.special import softmax
 
+from sksurv.linear_model import CoxnetSurvivalAnalysis
+
 
 class PartialPredictionModelBase(ABC):
     """
@@ -166,6 +168,13 @@ class GenericClassifierPPM(_GenericPPM, PartialPredictionModelBase, ABC):
     def predict_partial_k(self, blocked_data, k, mode):
         modified_data = blocked_data.get_modified_data(k, mode)
         return self.predict_proba(modified_data)
+
+
+class GenericSurvivalPPM(_GenericPPM, PartialPredictionModelBase, ABC):
+    """
+    Partial prediction model for arbitrary survival analysis estimators. May be slow.
+    """
+    ...
 
 
 class _GlmPPM(PartialPredictionModelBase, ABC):
@@ -530,6 +539,21 @@ class LassoRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
 
     def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25), **kwargs):
         super().__init__(Lasso(**kwargs), loo, alpha_grid, r_doubledot=None)
+
+
+class CoxnetSurvivalPPM(GenericSurvivalPPM, PartialPredictionModelBase, ABC):
+    """
+    PPM class for survival analysis that uses Cox's PH with elastic net penalty
+    as the estimator.
+
+    Parameters
+    ----------
+    **kwargs
+        Other Parameters are passed on to CoxnetSurvivalAnalysis().
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(CoxnetSurvivalAnalysis(**kwargs))
 
 
 def _trim_values(values, trim=None):

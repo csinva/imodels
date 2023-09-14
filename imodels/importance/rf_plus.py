@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 import pandas as pd
+
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
@@ -8,12 +9,17 @@ from sklearn.metrics import r2_score, roc_auc_score, log_loss
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.preprocessing import OneHotEncoder
 
+from sksurv.base import SurvivalAnalysisMixin
+from sksurv.ensemble import RandomSurvivalForest
+from sksurv.metrics import concordance_index_censored
+
 from imodels.importance.block_transformers import MDIPlusDefaultTransformer, TreeTransformer, \
     CompositeTransformer, IdentityTransformer
-from imodels.importance.ppms import PartialPredictionModelBase, GlmClassifierPPM, \
-    RidgeRegressorPPM, LogisticClassifierPPM
+from imodels.importance.ppms import _GlmPPM, GlmClassifierPPM, \
+    RidgeRegressorPPM, LogisticClassifierPPM, CoxnetSurvivalPPM
 from imodels.importance.mdi_plus import ForestMDIPlus, \
     _get_default_sample_split, _validate_sample_split, _get_sample_split_data
+
 
 
 class _RandomForestPlus(BaseEstimator):
@@ -62,6 +68,8 @@ class _RandomForestPlus(BaseEstimator):
             self._task = "regression"
         elif isinstance(self, ClassifierMixin):
             self._task = "classification"
+        elif isinstance(self, SurvivalAnalysisMixin):
+            self._task = "survival"
         else:
             raise ValueError("Unknown task.")
         if rf_model is None:
@@ -69,11 +77,15 @@ class _RandomForestPlus(BaseEstimator):
                 rf_model = RandomForestRegressor()
             elif self._task == "classification":
                 rf_model = RandomForestClassifier()
+            elif self._task == "survival":
+                rf_model = RandomSurvivalForest()
         if prediction_model is None:
             if self._task == "regression":
                 prediction_model = RidgeRegressorPPM()
             elif self._task == "classification":
                 prediction_model = LogisticClassifierPPM()
+            elif self._task == "survival":
+                prediction_model = CoxnetSurvivalPPM()
         self.rf_model = rf_model
         self.prediction_model = prediction_model
         self.include_raw = include_raw
@@ -81,7 +93,7 @@ class _RandomForestPlus(BaseEstimator):
         self.add_transformers = add_transformers
         self.center = center
         self.normalize = normalize
-        self._is_ppm = isinstance(prediction_model, PartialPredictionModelBase)
+        self._is_ppm = isinstance(prediction_model, _GlmPPM)
         self.sample_split = _get_default_sample_split(sample_split, prediction_model, self._is_ppm)
         _validate_sample_split(self.sample_split, prediction_model, self._is_ppm)
 
@@ -173,15 +185,23 @@ class _RandomForestPlus(BaseEstimator):
         # compute prediction accuracy on internal sample split
         full_preds = np.nanmean(all_full_preds, axis=0)
         if self._task == "regression":
-            pred_score = r2_score(y, full_preds)
-            pred_score_name = "r2"
+            pred_score = {"r2": [r2_score(y, full_preds)]}
         elif self._task == "classification":
             if full_preds.shape[1] == 2:
-                pred_score = roc_auc_score(y, full_preds[:, 1], multi_class="ovr")
+                pred_score_val = roc_auc_score(y, full_preds[:, 1], multi_class="ovr")
             else:
-                pred_score = roc_auc_score(y, full_preds, multi_class="ovr")
-            pred_score_name = "auroc"
-        self.prediction_score_ = pd.DataFrame({pred_score_name: [pred_score]})
+                pred_score_val = roc_auc_score(y, full_preds, multi_class="ovr")
+            pred_score = {"auroc": [pred_score_val]}
+        elif self._task == "survival":
+            name_event, name_time = y.dtype.names
+            pred_score_val = concordance_index_censored(y[name_event], y[name_time], full_preds)
+            pred_score = {"cindex_ipcw": [pred_score_val[0]],
+                          "n_concordant": [pred_score_val[1]],
+                          "n_discordant": [pred_score_val[2]],
+                          "n_tied_risk": [pred_score_val[3]],
+                          "n_tied_time": [pred_score_val[4]]}
+
+        self.prediction_score_ = pd.DataFrame(pred_score)
         self._full_preds = full_preds
 
     def predict(self, X):
@@ -211,7 +231,7 @@ class _RandomForestPlus(BaseEstimator):
         else:
             raise ValueError("Input X must be a pandas DataFrame or numpy array.")
 
-        if self._task == "regression":
+        if self._task in ["regression", "survival"]:
             predictions = 0
             for estimator, transformer in zip(self.estimators_, self.transformers_):
                 blocked_data = transformer.transform(X_array, center=self.center, normalize=self.normalize)
@@ -341,8 +361,12 @@ class _RandomForestPlus(BaseEstimator):
                 raise ValueError("Set sample_split=None to fit MDI+ on non-training X and y. "
                                  "To use other sample_split schemes, input the training X and y data.")
             if scoring_fns == "auto":
-                scoring_fns = _fast_r2_score if self._task == "regression" \
-                    else _neg_log_loss
+                if self._task == "regression":
+                    scoring_fns = _fast_r2_score
+                elif self._task == "classification":
+                    scoring_fns = _neg_log_loss
+                elif self._task == "survival":
+                    scoring_fns = _concordance_index
             if local_scoring_fns:
                 if local_scoring_fns == "auto" or local_scoring_fns is True:
                     local_scoring_fns = scoring_fns
@@ -455,6 +479,15 @@ class RandomForestPlusClassifier(_RandomForestPlus, ClassifierMixin):
     ...
 
 
+class RandomForestPlusSurvival(_RandomForestPlus, SurvivalAnalysisMixin):
+    """
+    The class object for the Random Forest Plus (RF+) survival estimator, which can
+    be used as a prediction model or interpreted via generalized
+    mean decrease in impurity (MDI+). For more details, refer to [paper].
+    """
+    ...
+
+
 def _fast_r2_score(y_true, y_pred, multiclass=False):
     """
     Evaluates the r-squared value between the observed and estimated responses.
@@ -502,3 +535,25 @@ def _neg_log_loss(y_true, y_pred):
     Scalar quantity, measuring the negative log-loss value.
     """
     return -log_loss(y_true, y_pred)
+
+
+def _concordance_index(y_true, y_pred):
+    """
+    Evaluates the concordance index between the observed and
+    predicted responses.
+
+    Parameters
+    ----------
+    y_true: structured array of shape (n_samples,)
+        Survival times. A structured array containing the binary
+        event indicator as first field, and time of event or time
+        of censoring as second field.
+    y_pred: array-like of shape (n_samples,)
+        Predicted risk responses.
+
+    Returns
+    -------
+    Scalar quantity, measuring the concordance index value.
+    """
+    name_event, name_time = y_true.dtype.names
+    return concordance_index_censored(y_true[name_event], y_true[name_time], y_pred)[0]

@@ -3,7 +3,8 @@ import pandas as pd
 from scipy.spatial.distance import pdist
 from functools import partial
 
-from .ppms import PartialPredictionModelBase, GenericRegressorPPM, GenericClassifierPPM
+from .ppms import PartialPredictionModelBase, \
+    GenericRegressorPPM, GenericClassifierPPM, GenericSurvivalPPM
 from .block_transformers import _blocked_train_test_split
 from .ranking_stability import tauAP_b, rbo
 
@@ -53,10 +54,10 @@ class ForestMDIPlus:
         in block k when making a partial model prediction, while "keep_rest"
         imputes the mean of each feature in block k. "keep_k" is strongly
         recommended for computational considerations.
-    task: string in {"regression", "classification"}
+    task: string in {"regression", "classification", "survival"}
         The supervised learning task for the RF model. Used for choosing
-        defaults for the scoring_fns. Currently only regression and
-        classification are supported.
+        defaults for the scoring_fns. Currently only regression,
+        classification, and survival are supported.
     center: bool
         Flag for whether to center the transformed data in the transformers.
     normalize: bool
@@ -69,7 +70,7 @@ class ForestMDIPlus:
                  task="regression", center=True, normalize=False):
         assert sample_split in ["loo", "oob", "inbag", None]
         assert mode in ["keep_k", "keep_rest"]
-        assert task in ["regression", "classification"]
+        assert task in ["regression", "classification", "survival"]
         self.estimators = estimators
         self.transformers = transformers
         self.scoring_fns = scoring_fns
@@ -283,10 +284,10 @@ class TreeMDIPlus:
         in block k when making a partial model prediction, while "keep_rest"
         imputes the mean of each feature in block k. "keep_k" is strongly
         recommended for computational considerations.
-    task: string in {"regression", "classification"}
+    task: string in {"regression", "classification", "survival"}
         The supervised learning task for the RF model. Used for choosing
-        defaults for the scoring_fns. Currently only regression and
-        classification are supported.
+        defaults for the scoring_fns. Currently only regression,
+        classification, and survival are supported.
     center: bool
         Flag for whether to center the transformed data in the transformers.
     normalize: bool
@@ -299,7 +300,7 @@ class TreeMDIPlus:
                  task="regression", center=True, normalize=False):
         assert sample_split in ["loo", "oob", "inbag", "auto", None]
         assert mode in ["keep_k", "keep_rest"]
-        assert task in ["regression", "classification"]
+        assert task in ["regression", "classification", "survival"]
         self.estimator = estimator
         self.transformer = transformer
         self.scoring_fns = scoring_fns
@@ -372,6 +373,8 @@ class TreeMDIPlus:
                     ppm = GenericRegressorPPM(self.estimator)
                 elif self.task == "classification":
                     ppm = GenericClassifierPPM(self.estimator)
+                elif self.task == "survival":
+                    ppm = GenericSurvivalPPM(self.estimator)
                 full_preds = ppm.predict_full(test_blocked_data)
                 partial_preds = ppm.predict_partial(test_blocked_data, mode=self.mode)
             self._score_full_predictions(y_test, full_preds)
