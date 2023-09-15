@@ -62,11 +62,11 @@ class Node:
 
     def __str__(self):
         if self.is_root:
-            return f'X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)'
+            return f"X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)"
         elif self.left is None and self.right is None:
-            return f'Val: {self.value[0][0]:0.3f} (leaf)'
+            return f"Val: {self.value[0][0]:0.3f} (leaf)"
         else:
-            return f'X_{self.feature} <= {self.threshold:0.3f} (split)'
+            return f"X_{self.feature} <= {self.threshold:0.3f} (split)"
 
     def print_root(self, y):
         try:
@@ -82,7 +82,7 @@ class Node:
         elif self.left is None and self.right is None:
             return f"ΔRisk = {self.value[0][0]:0.2f}" + one_proportion
         else:
-            return f'X_{self.feature} <= {self.threshold:0.3f}' + one_proportion
+            return f"X_{self.feature} <= {self.threshold:0.3f}" + one_proportion
 
     def __repr__(self):
         return self.__str__()
@@ -99,7 +99,6 @@ class FIGS(BaseEstimator):
 
     def __init__(
         self,
-        estimator=None,
         max_rules: int = 12,
         max_trees: int = None,
         min_impurity_decrease: float = 0.0,
@@ -495,16 +494,24 @@ class FIGS(BaseEstimator):
         )
 
     def __str__(self):
-        s = '> ------------------------------\n'
-        s += '> FIGS-Fast Interpretable Greedy-Tree Sums:\n'
-        s += '> \tPredictions are made by summing the "Val" reached by traversing each tree.\n'
-        s += '> \tFor classifiers, a sigmoid function is then applied to the sum.\n'
-        s += '> ------------------------------\n'
-        s += '\n\t+\n'.join([self._tree_to_str(t) for t in self.trees_])
-        if hasattr(self, 'feature_names_') and self.feature_names_ is not None:
-            for i in range(len(self.feature_names_))[::-1]:
-                s = s.replace(f'X_{i}', self.feature_names_[i])
-        return s
+        if not hasattr(self, "trees_"):
+            s = self.__class__.__name__
+            s += "("
+            s += "max_rules="
+            s += repr(self.max_rules)
+            s += ")"
+            return s
+        else:
+            s = "> ------------------------------\n"
+            s += "> FIGS-Fast Interpretable Greedy-Tree Sums:\n"
+            s += '> \tPredictions are made by summing the "Val" reached by traversing each tree.\n'
+            s += "> \tFor classifiers, a sigmoid function is then applied to the sum.\n"
+            s += "> ------------------------------\n"
+            s += "\n\t+\n".join([self._tree_to_str(t) for t in self.trees_])
+            if hasattr(self, "feature_names_") and self.feature_names_ is not None:
+                for i in range(len(self.feature_names_))[::-1]:
+                    s = s.replace(f"X_{i}", self.feature_names_[i])
+            return s
 
     def print_tree(self, X, y, feature_names=None):
         s = "------------\n" + "\n\t+\n".join(
@@ -557,7 +564,7 @@ class FIGS(BaseEstimator):
 
         def _predict_tree_single_point(root: Node, x):
             if root.left is None and root.right is None:
-                return root.value
+                return root.value[0, 0]
             left = x[root.feature] <= root.threshold
             if left:
                 if root.left is None:  # we don't actually have to worry about this case

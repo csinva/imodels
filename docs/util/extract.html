@@ -178,7 +178,44 @@ def extract_skope(X, y, feature_names,
     for estimator, features in zip(estimators_, estimators_features_):
         extracted_rules.append(convert.tree_to_rules(estimator, np.array(feature_names)[features]))
 
-    return extracted_rules, estimators_samples_, estimators_features_</code></pre>
+    return extracted_rules, estimators_samples_, estimators_features_
+
+def extract_marginal_curves(clf, X, max_evals=100):
+    &#34;&#34;&#34;Uses predict_proba to compute marginal curves.
+    Assumes clf is a classifier with a predict_proba method and that classifier is additive across features
+    For GAM, this returns the shape functions
+
+    Params
+    ------
+    clf : classifier
+        A classifier with a predict_proba method
+    X : array-like
+        The data to compute the marginal curves on (used to calculate unique feature vals)
+    max_evals : int
+        The maximum number of evaluations to make for each feature
+
+    Returns
+    -------
+    feature_vals_list : list of arrays
+        The values of each feature for which the shape function is evaluated.
+    shape_function_vals_list : list of arrays
+        The shape function evaluated at each value of the corresponding feature.
+    &#34;&#34;&#34;
+    p = X.shape[1]
+    dummy_input = np.zeros((1, p))
+    base = clf.predict_proba(dummy_input)[:, 1][0]
+    feature_vals_list = []
+    shape_function_vals_list = []
+    for feat_num in range(p):
+        feature_vals = sorted(np.unique(X[:, feat_num]))
+        while len(feature_vals) &gt; max_evals:
+            feature_vals = feature_vals[::2]
+        dummy_input = np.zeros((len(feature_vals), p))
+        dummy_input[:, feat_num] = feature_vals
+        shape_function_vals = clf.predict_proba(dummy_input)[:, 1] - base
+        feature_vals_list.append(feature_vals)
+        shape_function_vals_list.append(shape_function_vals.tolist())
+    return feature_vals_list, shape_function_vals_list</code></pre>
 </details>
 </section>
 <section>
@@ -210,6 +247,69 @@ def extract_skope(X, y, feature_names,
         print(len(itemsets), &#39;rules mined&#39;)
 
     return itemsets</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.extract.extract_marginal_curves"><code class="name flex">
+<span>def <span class="ident">extract_marginal_curves</span></span>(<span>clf, X, max_evals=100)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Uses predict_proba to compute marginal curves.
+Assumes clf is a classifier with a predict_proba method and that classifier is additive across features
+For GAM, this returns the shape functions</p>
+<h2 id="params">Params</h2>
+<p>clf : classifier
+A classifier with a predict_proba method
+X : array-like
+The data to compute the marginal curves on (used to calculate unique feature vals)
+max_evals : int
+The maximum number of evaluations to make for each feature</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>feature_vals_list</code></strong> :&ensp;<code>list</code> of <code>arrays</code></dt>
+<dd>The values of each feature for which the shape function is evaluated.</dd>
+<dt><strong><code>shape_function_vals_list</code></strong> :&ensp;<code>list</code> of <code>arrays</code></dt>
+<dd>The shape function evaluated at each value of the corresponding feature.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extract_marginal_curves(clf, X, max_evals=100):
+    &#34;&#34;&#34;Uses predict_proba to compute marginal curves.
+    Assumes clf is a classifier with a predict_proba method and that classifier is additive across features
+    For GAM, this returns the shape functions
+
+    Params
+    ------
+    clf : classifier
+        A classifier with a predict_proba method
+    X : array-like
+        The data to compute the marginal curves on (used to calculate unique feature vals)
+    max_evals : int
+        The maximum number of evaluations to make for each feature
+
+    Returns
+    -------
+    feature_vals_list : list of arrays
+        The values of each feature for which the shape function is evaluated.
+    shape_function_vals_list : list of arrays
+        The shape function evaluated at each value of the corresponding feature.
+    &#34;&#34;&#34;
+    p = X.shape[1]
+    dummy_input = np.zeros((1, p))
+    base = clf.predict_proba(dummy_input)[:, 1][0]
+    feature_vals_list = []
+    shape_function_vals_list = []
+    for feat_num in range(p):
+        feature_vals = sorted(np.unique(X[:, feat_num]))
+        while len(feature_vals) &gt; max_evals:
+            feature_vals = feature_vals[::2]
+        dummy_input = np.zeros((len(feature_vals), p))
+        dummy_input[:, feat_num] = feature_vals
+        shape_function_vals = clf.predict_proba(dummy_input)[:, 1] - base
+        feature_vals_list.append(feature_vals)
+        shape_function_vals_list.append(shape_function_vals.tolist())
+    return feature_vals_list, shape_function_vals_list</code></pre>
 </details>
 </dd>
 <dt id="imodels.util.extract.extract_rulefit"><code class="name flex">
@@ -381,6 +481,7 @@ def extract_skope(X, y, feature_names,
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="imodels.util.extract.extract_fpgrowth" href="#imodels.util.extract.extract_fpgrowth">extract_fpgrowth</a></code></li>
+<li><code><a title="imodels.util.extract.extract_marginal_curves" href="#imodels.util.extract.extract_marginal_curves">extract_marginal_curves</a></code></li>
 <li><code><a title="imodels.util.extract.extract_rulefit" href="#imodels.util.extract.extract_rulefit">extract_rulefit</a></code></li>
 <li><code><a title="imodels.util.extract.extract_skope" href="#imodels.util.extract.extract_skope">extract_skope</a></code></li>
 </ul>

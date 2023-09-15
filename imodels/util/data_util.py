@@ -13,20 +13,67 @@ from sklearn.preprocessing import OneHotEncoder
 
 from imodels.util.tree_interaction_utils import make_rj, make_vp
 
+DSET_CLASSIFICATION_KWARGS = {
+    # classification
+    "pima_diabetes": {"dataset_name": "40715", "data_source": "openml"},
+    "sonar": {"dataset_name": "sonar", "data_source": "pmlb"},
+    "heart": {"dataset_name": "heart", "data_source": "imodels"},
+    "diabetes": {"dataset_name": "diabetes", "data_source": "pmlb"},
+    "breast_cancer_recurrence": {
+        "dataset_name": "breast_cancer",
+        "data_source": "imodels",
+    },
+    "breast_cancer_wisconsin": {
+        "dataset_name": "breast_cancer",
+        "data_source": "sklearn",
+    },
+    "credit_g": {"dataset_name": "credit_g", "data_source": "imodels"},
+    "juvenile": {"dataset_name": "juvenile_clean", "data_source": "imodels"},
+    "compas": {"dataset_name": "compas_two_year_clean", "data_source": "imodels"},
+    "fico": {"dataset_name": "fico", "data_source": "imodels"},
+    "readmission": {
+        "dataset_name": "readmission_clean",
+        "data_source": "imodels",
+    },  # big, 100k points
+    "adult": {"dataset_name": "1182", "data_source": "openml"},  # big, 1e6 points
+    # CDI classification
+    "csi_pecarn": {"dataset_name": "csi_pecarn_pred", "data_source": "imodels"},
+    "iai_pecarn": {"dataset_name": "iai_pecarn_pred", "data_source": "imodels"},
+    "tbi_pecarn": {"dataset_name": "tbi_pecarn_pred", "data_source": "imodels"},
+}
+
+DSET_REGRESSION_KWARGS = {
+    # regression
+    "bike_sharing": {"dataset_name": "42712", "data_source": "openml"},
+    "friedman1": {"dataset_name": "friedman1", "data_source": "synthetic"},
+    "friedman2": {"dataset_name": "friedman2", "data_source": "synthetic"},
+    "friedman3": {"dataset_name": "friedman3", "data_source": "synthetic"},
+    "diabetes_regr": {"dataset_name": "diabetes", "data_source": "sklearn"},
+    "abalone": {"dataset_name": "183", "data_source": "openml"},
+    "echo_months": {"dataset_name": "1199_BNG_echoMonths", "data_source": "pmlb"},
+    "satellite_image": {"dataset_name": "294_satellite_image", "data_source": "pmlb"},
+    "california_housing": {
+        "dataset_name": "california_housing",
+        "data_source": "sklearn",
+    },
+    # 'breast_tumor': {'dataset_name': '1201_BNG_breastTumor', 'data_source': 'pmlb' # v big
+}
+DSET_KWARGS = {**DSET_CLASSIFICATION_KWARGS, **DSET_REGRESSION_KWARGS}
+
 
 def _define_openml_outcomes(y, data_id: str):
-    if data_id == '59':  # ionosphere, positive is "good" class
-        y = (y == 'g').astype(int)
-    if data_id == '183':  # abalone, need to convert strings to floats
+    if data_id == "59":  # ionosphere, positive is "good" class
+        y = (y == "g").astype(int)
+    if data_id == "183":  # abalone, need to convert strings to floats
         y = y.astype(float)
+    if data_id == "1182":  # adult, positive is ">50K"
+        y = (y == ">50K").astype(int)
     return y
 
 
 def _clean_feat_names(feature_names):
     # shouldn't start with a digit
-    return ['X_' + x if x[0].isdigit()
-            else x
-            for x in feature_names]
+    return ["X_" + x if x[0].isdigit() else x for x in feature_names]
 
 
 def _clean_features(X):
@@ -44,9 +91,15 @@ def _clean_features(X):
     return X.astype(float)
 
 
-def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path='data',
-                      convertna: bool = True, test_size: float = None, random_state: int = 42) -> Tuple[
-        np.ndarray, np.ndarray, list]:
+def get_clean_dataset(
+    dataset_name: str,
+    data_source: str = "imodels",
+    data_path="data",
+    convertna: bool = True,
+    test_size: float = None,
+    random_state: int = 42,
+    verbose=True,
+) -> Tuple[np.ndarray, np.ndarray, list]:
     """Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
     If data is not downloaded, will download and cache. Otherwise will load locally.
     Cleans features so that they are type float and features names don't start with a digit.
@@ -54,7 +107,8 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
     Parameters
     ----------
     dataset_name: str
-        dataset_name - unique dataset identifier (see https://github.com/csinva/imodels-data for unique identifiers)
+        Checks for unique identifier in imodels.util.data_util.DSET_KWARGS
+        Otherwise, unique dataset identifier (see https://github.com/csinva/imodels-data for unique identifiers)
     data_source: str
         options: 'imodels', 'pmlb', 'sklearn', 'openml', 'synthetic'
     data_path: str
@@ -87,83 +141,109 @@ def get_clean_dataset(dataset_name: str, data_source: str = 'imodels', data_path
     X, y, feature_names = imodels.get_clean_dataset('california_housing', data_source='sklearn')
     ```
     """
-    assert data_source in ['imodels', 'pmlb', 'sklearn',
-                           'openml', 'synthetic'], data_source + ' not correct'
+    if dataset_name in DSET_KWARGS:
+        if verbose:
+            data_source = DSET_KWARGS[dataset_name]["data_source"]
+            dataset_name = DSET_KWARGS[dataset_name]["dataset_name"]
+            print(f"fetching {dataset_name} from {data_source}")
+    assert data_source in ["imodels", "pmlb", "sklearn", "openml", "synthetic"], (
+        data_source + " not correct"
+    )
     if test_size is not None:
+
         def _split(X, y, feature_names):
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=test_size, random_state=random_state
+            )
             return X_train, X_test, y_train, y_test, feature_names
+
     else:
+
         def _split(X, y, feature_names):
             return X, y, feature_names
 
-    if data_source == 'imodels':
-        if not dataset_name.endswith('csv'):
-            dataset_name = dataset_name + '.csv'
+    if data_source == "imodels":
+        if not dataset_name.endswith("csv"):
+            dataset_name = dataset_name + ".csv"
         if not os.path.isfile(dataset_name):
             _download_imodels_dataset(dataset_name, data_path)
-        df = pd.read_csv(oj(data_path, 'imodels_data', dataset_name))
+        df = pd.read_csv(oj(data_path, "imodels_data", dataset_name))
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
         feature_names = df.columns.values[:-1]
         if convertna:
-            X = np.nan_to_num(X.astype('float32'))
+            X = np.nan_to_num(X.astype("float32"))
         return _split(X, y, _clean_feat_names(feature_names))
-    elif data_source == 'pmlb':
+    elif data_source == "pmlb":
         from pmlb import fetch_data
+
         feature_names = list(
-            fetch_data(dataset_name, return_X_y=False, local_cache_dir=oj(data_path, 'pmlb_data')).columns)
-        feature_names.remove('target')
-        X, y = fetch_data(dataset_name, return_X_y=True,
-                          local_cache_dir=oj(data_path, 'pmlb_data'))
-        if np.unique(y).size == 2:  # if binary classification, ensure that the classes are 0 and 1
+            fetch_data(
+                dataset_name,
+                return_X_y=False,
+                local_cache_dir=oj(data_path, "pmlb_data"),
+            ).columns
+        )
+        feature_names.remove("target")
+        X, y = fetch_data(
+            dataset_name, return_X_y=True, local_cache_dir=oj(data_path, "pmlb_data")
+        )
+        if (
+            np.unique(y).size == 2
+        ):  # if binary classification, ensure that the classes are 0 and 1
             y -= np.min(y)
         return _split(_clean_features(X), y, _clean_feat_names(feature_names))
-    elif data_source == 'sklearn':
-        if dataset_name == 'diabetes':
+    elif data_source == "sklearn":
+        if dataset_name == "diabetes":
             data = sklearn.datasets.load_diabetes()
-        elif dataset_name == 'california_housing':
+        elif dataset_name == "california_housing":
             data = sklearn.datasets.fetch_california_housing(
-                data_home=oj(data_path, 'sklearn_data'))
-        elif dataset_name == 'breast_cancer':
+                data_home=oj(data_path, "sklearn_data")
+            )
+        elif dataset_name == "breast_cancer":
             data = sklearn.datasets.load_breast_cancer()
-        return data['data'], data['target'], _clean_feat_names(data['feature_names'])
-    elif data_source == 'openml':  # note this api might change in newer sklearn - should give dataset-id not name
+        return data["data"], data["target"], _clean_feat_names(data["feature_names"])
+    elif (
+        data_source == "openml"
+    ):  # note this api might change in newer sklearn - should give dataset-id not name
         data = sklearn.datasets.fetch_openml(
-            data_id=dataset_name, data_home=oj(data_path, 'openml_data'), parser='auto')
-        X, y, feature_names = data['data'], data['target'], _clean_feat_names(
-            data['feature_names'])
+            data_id=dataset_name, data_home=oj(data_path, "openml_data"), parser="auto"
+        )
+        X, y, feature_names = (
+            data["data"],
+            data["target"],
+            _clean_feat_names(data["feature_names"]),
+        )
         if isinstance(X, pd.DataFrame):
             X = X.values
         if isinstance(y, pd.Series):
             y = y.values
         y = _define_openml_outcomes(y, dataset_name)
         return _split(_clean_features(X), y, _clean_feat_names(feature_names))
-    elif data_source == 'synthetic':
-        if dataset_name == 'friedman1':
-            X, y = sklearn.datasets.make_friedman1(
-                n_samples=200, n_features=10)
-        elif dataset_name == 'friedman2':
+    elif data_source == "synthetic":
+        if dataset_name == "friedman1":
+            X, y = sklearn.datasets.make_friedman1(n_samples=200, n_features=10)
+        elif dataset_name == "friedman2":
             X, y = sklearn.datasets.make_friedman2(n_samples=200)
-        elif dataset_name == 'friedman3':
+        elif dataset_name == "friedman3":
             X, y = sklearn.datasets.make_friedman3(n_samples=200)
         elif dataset_name == "radchenko_james":
             X, y = make_rj()
         elif dataset_name == "vo_pati":
             X, y = make_vp()
-        return _split(X, y, ['X_' + str(i + 1) for i in range(X.shape[1])])
+        return _split(X, y, ["X_" + str(i + 1) for i in range(X.shape[1])])
 
 
 def _download_imodels_dataset(dataset_fname, data_path: str):
-    dataset_fname = dataset_fname.split(
-        '/')[-1]  # remove anything about the path
-    download_path = f'https://raw.githubusercontent.com/csinva/imodels-data/master/data_cleaned/{dataset_fname}'
+    dataset_fname = dataset_fname.split("/")[-1]  # remove anything about the path
+    download_path = f"https://raw.githubusercontent.com/csinva/imodels-data/master/data_cleaned/{dataset_fname}"
     r = requests.get(download_path)
     if r.status_code == 404:
         raise Exception(
-            f'404 Error for dataset {dataset_fname} (see valid files at https://github.com/csinva/imodels-data/tree/master/data_cleaned)')
+            f"404 Error for dataset {dataset_fname} (see valid files at https://github.com/csinva/imodels-data/tree/master/data_cleaned)"
+        )
 
-    os.makedirs(oj(data_path, 'imodels_data'), exist_ok=True)
-    with open(oj(data_path, 'imodels_data', dataset_fname), 'w') as f:
+    os.makedirs(oj(data_path, "imodels_data"), exist_ok=True)
+    with open(oj(data_path, "imodels_data", dataset_fname), "w") as f:
         f.write(r.text)
 
 
@@ -185,9 +265,11 @@ def encode_categories(X, features, encoder=None):
     return X_encoded, one_hot_encoder
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import imodels
+
     # X, y, feature_names = imodels.get_clean_dataset('compas_two_year_clean', data_source='imodels', test_size=0.5)
     X_train, X_test, y_train, y_test, feature_names = imodels.get_clean_dataset(
-        'compas_two_year_clean', data_source='imodels', test_size=0.5)
+        "compas_two_year_clean", data_source="imodels", test_size=0.5
+    )
     print(X_train.shape, y_train.shape)

@@ -272,11 +272,19 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(decimals)
 
     def __str__(self):
-        s = &#39;&gt; ------------------------------\n&#39;
-        s += &#39;&gt; RuleFit:\n&#39;
-        s += &#39;&gt; \tPredictions are made by summing the coefficients of each rule\n&#39;
-        s += &#39;&gt; ------------------------------\n&#39;
-        return s + self.visualize().to_string(index=False) + &#39;\n&#39;
+        if not hasattr(self, &#39;coef&#39;):
+            s = self.__class__.__name__
+            s += &#34;(&#34;
+            s += &#34;max_rules=&#34;
+            s += repr(self.max_rules)
+            s += &#34;)&#34;
+            return s
+        else:
+            s = &#39;&gt; ------------------------------\n&#39;
+            s += &#39;&gt; RuleFit:\n&#39;
+            s += &#39;&gt; \tPredictions are made by summing the coefficients of each rule\n&#39;
+            s += &#39;&gt; ------------------------------\n&#39;
+            return s + self.visualize().to_string(index=False) + &#39;\n&#39;
 
     def _extract_rules(self, X, y) -&gt; List[str]:
         return extract_rulefit(X, y,
@@ -609,11 +617,19 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
         return rules[[&#39;rule&#39;, &#39;coef&#39;]].round(decimals)
 
     def __str__(self):
-        s = &#39;&gt; ------------------------------\n&#39;
-        s += &#39;&gt; RuleFit:\n&#39;
-        s += &#39;&gt; \tPredictions are made by summing the coefficients of each rule\n&#39;
-        s += &#39;&gt; ------------------------------\n&#39;
-        return s + self.visualize().to_string(index=False) + &#39;\n&#39;
+        if not hasattr(self, &#39;coef&#39;):
+            s = self.__class__.__name__
+            s += &#34;(&#34;
+            s += &#34;max_rules=&#34;
+            s += repr(self.max_rules)
+            s += &#34;)&#34;
+            return s
+        else:
+            s = &#39;&gt; ------------------------------\n&#39;
+            s += &#39;&gt; RuleFit:\n&#39;
+            s += &#39;&gt; \tPredictions are made by summing the coefficients of each rule\n&#39;
+            s += &#39;&gt; ------------------------------\n&#39;
+            return s + self.visualize().to_string(index=False) + &#39;\n&#39;
 
     def _extract_rules(self, X, y) -&gt; List[str]:
         return extract_rulefit(X, y,
@@ -662,6 +678,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
@@ -751,6 +768,168 @@ For classification, returns discrete output.</p></div>
     continuous_output = self._predict_continuous_output(X)
     logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
     return softmax(logits, axis=1)</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_set.rule_fit.RuleFit.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a>, *, feature_names: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>feature_names</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_set.rule_fit.RuleFit.set_transform_request"><code class="name flex">
+<span>def <span class="ident">set_transform_request</span></span>(<span>self: <a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a>, *, rules: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>transform</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>transform</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>transform</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>rules</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>rules</code> parameter in <code>transform</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_set.rule_fit.RuleFit.transform"><code class="name flex">
@@ -873,17 +1052,104 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <ul class="hlist">
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.rule_set.rule_fit.RuleFitClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.rule_fit.RuleFitClassifier" href="#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.rule_set.rule_fit.RuleFitClassifier" href="#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_fit_request" href="#imodels.rule_set.rule_fit.RuleFit.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_transform_request" href="#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
 </ul>
 </li>
@@ -949,17 +1215,104 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <ul class="hlist">
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.rule_set.rule_fit.RuleFitRegressor.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.rule_fit.RuleFitRegressor" href="#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.rule_set.rule_fit.RuleFitRegressor" href="#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_fit_request" href="#imodels.rule_set.rule_fit.RuleFit.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_transform_request" href="#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
 </ul>
 </li>
@@ -987,15 +1340,23 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict_proba" href="#imodels.rule_set.rule_fit.RuleFit.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_fit_request" href="#imodels.rule_set.rule_fit.RuleFit.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_transform_request" href="#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.visualize" href="#imodels.rule_set.rule_fit.RuleFit.visualize">visualize</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="imodels.rule_set.rule_fit.RuleFitClassifier" href="#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.rule_set.rule_fit.RuleFitClassifier.set_score_request" href="#imodels.rule_set.rule_fit.RuleFitClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor" href="#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.rule_set.rule_fit.RuleFitRegressor.set_score_request" href="#imodels.rule_set.rule_fit.RuleFitRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

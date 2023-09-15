@@ -9,19 +9,24 @@ from sklearn.metrics import r2_score, mean_squared_error, log_loss
 from sklearn.model_selection import cross_val_score, KFold
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
-from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor, RandomForestRegressor
+from sklearn.ensemble import (
+    GradientBoostingClassifier,
+    GradientBoostingRegressor,
+    RandomForestRegressor,
+)
 
 from imodels.util import checks
 from imodels.util.arguments import check_fit_arguments
 from imodels.util.tree import compute_tree_complexity
 
 
-class HSTree:
+class HSTree(BaseEstimator):
     def __init__(
         self,
         estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
         reg_param: float = 1,
         shrinkage_scheme_: str = "node_based",
+        max_leaf_nodes: int = None,
     ):
         """HSTree (Tree with hierarchical shrinkage applied).
         Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
@@ -43,6 +48,9 @@ class HSTree:
                 (i) node_based shrinks based on number of samples in parent node
                 (ii) leaf_based only shrinks leaf nodes based on number of leaf samples
                 (iii) constant shrinks every node by a constant lambda
+
+        max_leaf_nodes: int
+            If estimator is None, then max_leaf_nodes is passed to the default decision tree
         """
         super().__init__()
         self.reg_param = reg_param
@@ -50,21 +58,19 @@ class HSTree:
         self.shrinkage_scheme_ = shrinkage_scheme_
         if checks.check_is_fitted(self.estimator_):
             self._shrink()
+        if max_leaf_nodes is not None:
+            self.estimator_.max_leaf_nodes = max_leaf_nodes
 
     def get_params(self, deep=True):
-        if deep:
-            return deepcopy(
-                {
-                    "reg_param": self.reg_param,
-                    "estimator_": self.estimator_,
-                    "shrinkage_scheme_": self.shrinkage_scheme_,
-                }
-            )
-        return {
+        d = {
             "reg_param": self.reg_param,
             "estimator_": self.estimator_,
             "shrinkage_scheme_": self.shrinkage_scheme_,
+            "max_leaf_nodes": self.estimator_.max_leaf_nodes,
         }
+        if deep:
+            return deepcopy(d)
+        return d
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # remove feature_names if it exists (note: only works as keyword-arg)
@@ -184,16 +190,29 @@ class HSTree:
             return NotImplemented
 
     def __str__(self):
-        s = "> ------------------------------\n"
-        s += "> Decision Tree with Hierarchical Shrinkage\n"
-        s += "> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n"
-        s += "> ------------------------------" + "\n"
-        if hasattr(self, "feature_names") and self.feature_names is not None:
-            return s + export_text(
-                self.estimator_, feature_names=self.feature_names, show_weights=True
-            )
+        # check if fitted
+        if not checks.check_is_fitted(self.estimator_):
+            s = self.__class__.__name__
+            s += "("
+            s += "est="
+            s += repr(self.estimator_)
+            s += ", "
+            s += "reg_param="
+            s += str(self.reg_param)
+            s += ")"
+            return s
         else:
-            return s + export_text(self.estimator_, show_weights=True)
+            s = "> ------------------------------\n"
+            s += "> Decision Tree with Hierarchical Shrinkage\n"
+            s += "> \tPrediction is made by looking at the value in the appropriate leaf of the tree\n"
+            s += "> ------------------------------" + "\n"
+
+            if hasattr(self, "feature_names") and self.feature_names is not None:
+                return s + export_text(
+                    self.estimator_, feature_names=self.feature_names, show_weights=True
+                )
+            else:
+                return s + export_text(self.estimator_, show_weights=True)
 
     def __repr__(self):
         # s = self.__class__.__name__
@@ -223,11 +242,13 @@ class HSTreeRegressor(HSTree, RegressorMixin):
         estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
         reg_param: float = 1,
         shrinkage_scheme_: str = "node_based",
+        max_leaf_nodes: int = None,
     ):
         super().__init__(
             estimator_=estimator_,
             reg_param=reg_param,
             shrinkage_scheme_=shrinkage_scheme_,
+            max_leaf_nodes=max_leaf_nodes,
         )
 
 
@@ -237,11 +258,13 @@ class HSTreeClassifier(HSTree, ClassifierMixin):
         estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
         reg_param: float = 1,
         shrinkage_scheme_: str = "node_based",
+        max_leaf_nodes: int = None,
     ):
         super().__init__(
             estimator_=estimator_,
             reg_param=reg_param,
             shrinkage_scheme_=shrinkage_scheme_,
+            max_leaf_nodes=max_leaf_nodes,
         )
 
 
@@ -444,10 +467,11 @@ if __name__ == "__main__":
     m = HSTreeRegressor(m)
     print("score", r2_score(y_test, m.predict(X_test)))
 
-
-
     m = HSTreeRegressor(
-        estimator_=GradientBoostingRegressor(random_state=10, n_estimators=5,),
+        estimator_=GradientBoostingRegressor(
+            random_state=10,
+            n_estimators=5,
+        ),
         reg_param=1,
     )
     m.fit(X_train, y_train)
@@ -455,6 +479,3 @@ if __name__ == "__main__":
     # m.predict_proba(X_train)  # just run this
     # print('score', m.score(X_test, y_test))
     print("score", r2_score(y_test, m.predict(X_test)))
-
-
-    

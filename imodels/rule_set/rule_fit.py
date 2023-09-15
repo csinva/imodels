@@ -253,11 +253,19 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         return rules[["rule", "coef"]].round(decimals)
 
     def __str__(self):
-        s = '> ------------------------------\n'
-        s += '> RuleFit:\n'
-        s += '> \tPredictions are made by summing the coefficients of each rule\n'
-        s += '> ------------------------------\n'
-        return s + self.visualize().to_string(index=False) + '\n'
+        if not hasattr(self, 'coef'):
+            s = self.__class__.__name__
+            s += "("
+            s += "max_rules="
+            s += repr(self.max_rules)
+            s += ")"
+            return s
+        else:
+            s = '> ------------------------------\n'
+            s += '> RuleFit:\n'
+            s += '> \tPredictions are made by summing the coefficients of each rule\n'
+            s += '> ------------------------------\n'
+            return s + self.visualize().to_string(index=False) + '\n'
 
     def _extract_rules(self, X, y) -> List[str]:
         return extract_rulefit(
