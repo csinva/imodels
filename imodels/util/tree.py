@@ -32,20 +32,26 @@ def compute_tree_complexity(tree, complexity_measure='num_rules'):
     return complexity
 
 
+def _validate_feature_costs(feature_costs, n_features):
+    if feature_costs is None:
+        feature_costs = np.ones(n_features, dtype=np.float64)
+    else:
+        assert len(
+            feature_costs) == n_features, f'{len(feature_costs)} != {n_features}'
+        np.min(feature_costs) >= 0
+    return feature_costs
+
+
 def calculate_mean_depth_of_points_in_tree(tree_, feature_costs=None):
     """Calculate the mean depth of each point in the tree.
     This is the average depth of the path from the root to the point.
     """
+    feature_costs = _validate_feature_costs(
+        feature_costs, n_features=tree_.n_features)
+
     n_nodes = tree_.node_count
     children_left = tree_.children_left
     children_right = tree_.children_right
-
-    if feature_costs is None:
-        feature_costs = np.ones(tree_.n_features, dtype=np.float64)
-    else:
-        assert len(
-            feature_costs) == tree_.n_features, f'{len(feature_costs)} != {tree_.n_features}'
-        np.min(feature_costs) >= 0
 
     # things to compute
     _node_depth = np.zeros(shape=n_nodes, dtype=np.int64)
@@ -73,6 +79,36 @@ def calculate_mean_depth_of_points_in_tree(tree_, feature_costs=None):
     leaf_samples = n_samples[_is_leaves].astype(np.float64)
     depths = _cum_costs[_is_leaves] * leaf_samples / np.sum(leaf_samples)
     return np.sum(depths)
+
+
+def calculate_mean_depth_of_points_in_custom_tree(custom_tree_, feature_costs=None):
+    """Calculate the mean depth of each point in the tree.
+    This is the average depth of the path from the root to the point.
+    """
+    feature_costs = _validate_feature_costs(
+        feature_costs, n_features=custom_tree_.n_features)
+
+    node = custom_tree_.root
+    n_samples = []
+    cum_costs = []
+    is_leaves = []
+    stack = [(node, 0)]
+    while len(stack) > 0:
+        node, cost = stack.pop()
+        n_samples.append(node.num_samples)
+        cum_costs.append(cost)
+        is_leaves.append(node.left is None and node.right is None)
+
+        if node.left:
+            stack.append((node.left, cost + feature_costs[node.feature_index]))
+        if node.right:
+            stack.append(
+                (node.right, cost + feature_costs[node.feature_index]))
+    is_leaves = np.array(is_leaves)
+    cum_costs = np.array(cum_costs)[is_leaves]
+    n_samples = np.array(n_samples)[is_leaves]
+    costs = cum_costs * n_samples / np.sum(n_samples)
+    return np.sum(costs)
 
 
 def calculate_mean_unique_calls_in_ensemble(ensemble, X, feature_costs=None):
