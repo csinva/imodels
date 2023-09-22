@@ -33,9 +33,11 @@ class CustomDecisionTreeClassifier(ClassifierMixin):
         self.max_leaf_nodes = max_leaf_nodes
         self.impurity_func = impurity_func
 
-    def fit(self, X, y):
+    def fit(self, X, y, feature_costs=None):
         self.n_classes_ = len(set(y))
         self.n_features = X.shape[1]
+        self.feature_costs_ = imodels.util.tree._validate_feature_costs(
+            feature_costs, self.n_features)
         self.root = self._grow_tree(X, y)
 
     def _grow_tree(self, X, y):
@@ -103,6 +105,7 @@ class CustomDecisionTreeClassifier(ClassifierMixin):
             return None, None, 0
 
         orig_impurity = self._gini(y)
+        impurity_reduction = 0
         best_impurity_reduction = 0
         best_idx, best_thr = None, None
 
@@ -126,6 +129,8 @@ class CustomDecisionTreeClassifier(ClassifierMixin):
                         y_right.size / n * np.log2(y_right.size / n))
                     if ~np.isnan(split_info):
                         impurity_reduction = impurity_reduction / split_info
+                if self.impurity_func == 'cost_information_gain_ratio':
+                    impurity_reduction /= self.feature_costs_[idx]
 
                 if impurity_reduction > best_impurity_reduction:
                     best_impurity_reduction = impurity_reduction
@@ -137,7 +142,7 @@ class CustomDecisionTreeClassifier(ClassifierMixin):
     def _calc_impurity(self, y):
         if self.impurity_func == 'gini':
             return self._gini(y)
-        elif self.impurity_func in ['entropy', 'information_gain_ratio']:
+        elif self.impurity_func in ['entropy', 'information_gain_ratio', 'cost_information_gain_ratio']:
             return self._entropy(y)
 
     def _gini(self, y):
@@ -179,7 +184,7 @@ if __name__ == '__main__':
         X, y, random_state=42, test_size=0.5)
     m = CustomDecisionTreeClassifier(
         # max_leaf_nodes=20,
-        impurity_func='information_gain_ratio')
+        impurity_func='cost_information_gain_ratio')
     m.fit(X_train, y_train)
     y_pred = m.predict(X_test)
     print("Accuracy:", accuracy_score(y_test, y_pred))

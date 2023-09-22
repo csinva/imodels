@@ -1,6 +1,8 @@
 from sklearn import datasets
 from sklearn.tree import DecisionTreeRegressor
 import numpy as np
+from sklearn.tree._tree import Tree
+from imodels.tree.custom_greedy_tree import CustomDecisionTreeClassifier
 
 
 def compute_tree_complexity(tree, complexity_measure='num_rules'):
@@ -42,10 +44,17 @@ def _validate_feature_costs(feature_costs, n_features):
     return feature_costs
 
 
-def calculate_mean_depth_of_points_in_tree(tree_, feature_costs=None):
+def calculate_mean_depth_of_points_in_tree(tree, feature_costs=None):
     """Calculate the mean depth of each point in the tree.
     This is the average depth of the path from the root to the point.
     """
+    if hasattr(tree, 'tree_'):
+        tree_ = tree.tree_
+    elif hasattr(tree, 'estimator_'):
+        tree_ = tree.estimator_.tree_
+    elif isinstance(tree, CustomDecisionTreeClassifier):
+        return calculate_mean_depth_of_points_in_custom_tree(tree, feature_costs)
+
     feature_costs = _validate_feature_costs(
         feature_costs, n_features=tree_.n_features)
 

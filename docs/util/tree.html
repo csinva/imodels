@@ -23,6 +23,9 @@
 </summary>
 <pre><code class="python">from sklearn import datasets
 from sklearn.tree import DecisionTreeRegressor
+import numpy as np
+from sklearn.tree._tree import Tree
+from imodels.tree.custom_greedy_tree import CustomDecisionTreeClassifier
 
 
 def compute_tree_complexity(tree, complexity_measure=&#39;num_rules&#39;):
@@ -54,6 +57,140 @@ def compute_tree_complexity(tree, complexity_measure=&#39;num_rules&#39;):
     return complexity
 
 
+def _validate_feature_costs(feature_costs, n_features):
+    if feature_costs is None:
+        feature_costs = np.ones(n_features, dtype=np.float64)
+    else:
+        assert len(
+            feature_costs) == n_features, f&#39;{len(feature_costs)} != {n_features}&#39;
+        np.min(feature_costs) &gt;= 0
+    return feature_costs
+
+
+def calculate_mean_depth_of_points_in_tree(tree, feature_costs=None):
+    &#34;&#34;&#34;Calculate the mean depth of each point in the tree.
+    This is the average depth of the path from the root to the point.
+    &#34;&#34;&#34;
+    if hasattr(tree, &#39;tree_&#39;):
+        tree_ = tree.tree_
+    elif hasattr(tree, &#39;estimator_&#39;):
+        tree_ = tree.estimator_.tree_
+    elif isinstance(tree, CustomDecisionTreeClassifier):
+        return calculate_mean_depth_of_points_in_custom_tree(tree, feature_costs)
+
+    feature_costs = _validate_feature_costs(
+        feature_costs, n_features=tree_.n_features)
+
+    n_nodes = tree_.node_count
+    children_left = tree_.children_left
+    children_right = tree_.children_right
+
+    # things to compute
+    _node_depth = np.zeros(shape=n_nodes, dtype=np.int64)
+    _is_leaves = np.zeros(shape=n_nodes, dtype=bool)
+    _cum_costs = np.zeros(shape=n_nodes, dtype=np.float64)
+
+    # start with the root node id (0) and its depth (0) and its cost (0)
+    stack = [(0, 0, 0)]
+    while len(stack) &gt; 0:
+        node_id, depth, cost = stack.pop()
+        _node_depth[node_id] = depth
+        _cum_costs[node_id] = cost
+
+        is_split_node = children_left[node_id] != children_right[node_id]
+
+        cost += feature_costs[tree_.feature[node_id]]
+        if is_split_node:
+            stack.append((children_left[node_id], depth + 1, cost))
+            stack.append((children_right[node_id], depth + 1, cost))
+        else:
+            _is_leaves[node_id] = True
+
+    # iterate over leaves and calculate the number of samples in each of them
+    n_samples = tree_.n_node_samples
+    leaf_samples = n_samples[_is_leaves].astype(np.float64)
+    depths = _cum_costs[_is_leaves] * leaf_samples / np.sum(leaf_samples)
+    return np.sum(depths)
+
+
+def calculate_mean_depth_of_points_in_custom_tree(custom_tree_, feature_costs=None):
+    &#34;&#34;&#34;Calculate the mean depth of each point in the tree.
+    This is the average depth of the path from the root to the point.
+    &#34;&#34;&#34;
+    feature_costs = _validate_feature_costs(
+        feature_costs, n_features=custom_tree_.n_features)
+
+    node = custom_tree_.root
+    n_samples = []
+    cum_costs = []
+    is_leaves = []
+    stack = [(node, 0)]
+    while len(stack) &gt; 0:
+        node, cost = stack.pop()
+        n_samples.append(node.num_samples)
+        cum_costs.append(cost)
+        is_leaves.append(node.left is None and node.right is None)
+
+        if node.left:
+            stack.append((node.left, cost + feature_costs[node.feature_index]))
+        if node.right:
+            stack.append(
+                (node.right, cost + feature_costs[node.feature_index]))
+    is_leaves = np.array(is_leaves)
+    cum_costs = np.array(cum_costs)[is_leaves]
+    n_samples = np.array(n_samples)[is_leaves]
+    costs = cum_costs * n_samples / np.sum(n_samples)
+    return np.sum(costs)
+
+
+def calculate_mean_unique_calls_in_ensemble(ensemble, X, feature_costs=None):
+    &#39;&#39;&#39;Calculate the mean number of unique calls in the ensemble.
+    &#39;&#39;&#39;
+    if X is None:
+        # Should pass X, this is just for testing
+        n_features_in = ensemble.n_features_in_
+        X = np.random.randint(2, size=(100, n_features_in))
+
+    if feature_costs is None:
+        feature_costs = np.ones(n_features_in, dtype=np.float64)
+    else:
+        assert len(
+            feature_costs) == n_features_in, f&#39;{len(feature_costs)} != {n_features_in}&#39;
+        np.min(feature_costs) &gt;= 0
+
+    # extract the decision path for each sample
+    ests = ensemble.estimators_.flatten()
+    feats = [set() for _ in range(len(X))]
+    for i in range(len(ests)):
+        est = ests[i]
+        node_index = est.decision_path(X).toarray()
+        feats_est = [
+            set([est.tree_.feature[x] for x in np.nonzero(row)[0]])
+            for row in node_index
+        ]
+        for j in range(len(feats)):
+            feats[j] = feats[j].union(feats_est[j])
+    # -1 for the -2 feature that is always present
+    return np.mean([len(f) - 1 for f in feats])
+
+
+def compute_mean_llm_calls(model_name, num_prompts, model=None, X=None):
+    if model_name == &#34;manual_tree&#34;:
+        return calculate_mean_depth_of_points_in_tree(model.tree_)
+    elif model_name == &#34;manual_hstree&#34;:
+        return calculate_mean_depth_of_points_in_tree(model.estimator_.tree_)
+    elif model_name == &#34;manual_gbdt&#34;:
+        return calculate_mean_unique_calls_in_ensemble(model, X)
+    elif model_name == &#34;manual_tree_cv&#34;:
+        return calculate_mean_depth_of_points_in_tree(model.best_estimator_.tree_)
+    elif model_name in [&#34;manual_single_prompt&#34;]:
+        return 1
+    elif model_name in [&#34;manual_ensemble&#34;, &#34;manual_boosting&#34;]:
+        return num_prompts
+    else:
+        return num_prompts
+
+
 if __name__ == &#39;__main__&#39;:
     X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
     m = DecisionTreeRegressor(random_state=42, max_leaf_nodes=4)
@@ -68,6 +205,168 @@ if __name__ == &#39;__main__&#39;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="imodels.util.tree.calculate_mean_depth_of_points_in_custom_tree"><code class="name flex">
+<span>def <span class="ident">calculate_mean_depth_of_points_in_custom_tree</span></span>(<span>custom_tree_, feature_costs=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculate the mean depth of each point in the tree.
+This is the average depth of the path from the root to the point.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_mean_depth_of_points_in_custom_tree(custom_tree_, feature_costs=None):
+    &#34;&#34;&#34;Calculate the mean depth of each point in the tree.
+    This is the average depth of the path from the root to the point.
+    &#34;&#34;&#34;
+    feature_costs = _validate_feature_costs(
+        feature_costs, n_features=custom_tree_.n_features)
+
+    node = custom_tree_.root
+    n_samples = []
+    cum_costs = []
+    is_leaves = []
+    stack = [(node, 0)]
+    while len(stack) &gt; 0:
+        node, cost = stack.pop()
+        n_samples.append(node.num_samples)
+        cum_costs.append(cost)
+        is_leaves.append(node.left is None and node.right is None)
+
+        if node.left:
+            stack.append((node.left, cost + feature_costs[node.feature_index]))
+        if node.right:
+            stack.append(
+                (node.right, cost + feature_costs[node.feature_index]))
+    is_leaves = np.array(is_leaves)
+    cum_costs = np.array(cum_costs)[is_leaves]
+    n_samples = np.array(n_samples)[is_leaves]
+    costs = cum_costs * n_samples / np.sum(n_samples)
+    return np.sum(costs)</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.tree.calculate_mean_depth_of_points_in_tree"><code class="name flex">
+<span>def <span class="ident">calculate_mean_depth_of_points_in_tree</span></span>(<span>tree, feature_costs=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculate the mean depth of each point in the tree.
+This is the average depth of the path from the root to the point.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_mean_depth_of_points_in_tree(tree, feature_costs=None):
+    &#34;&#34;&#34;Calculate the mean depth of each point in the tree.
+    This is the average depth of the path from the root to the point.
+    &#34;&#34;&#34;
+    if hasattr(tree, &#39;tree_&#39;):
+        tree_ = tree.tree_
+    elif hasattr(tree, &#39;estimator_&#39;):
+        tree_ = tree.estimator_.tree_
+    elif isinstance(tree, CustomDecisionTreeClassifier):
+        return calculate_mean_depth_of_points_in_custom_tree(tree, feature_costs)
+
+    feature_costs = _validate_feature_costs(
+        feature_costs, n_features=tree_.n_features)
+
+    n_nodes = tree_.node_count
+    children_left = tree_.children_left
+    children_right = tree_.children_right
+
+    # things to compute
+    _node_depth = np.zeros(shape=n_nodes, dtype=np.int64)
+    _is_leaves = np.zeros(shape=n_nodes, dtype=bool)
+    _cum_costs = np.zeros(shape=n_nodes, dtype=np.float64)
+
+    # start with the root node id (0) and its depth (0) and its cost (0)
+    stack = [(0, 0, 0)]
+    while len(stack) &gt; 0:
+        node_id, depth, cost = stack.pop()
+        _node_depth[node_id] = depth
+        _cum_costs[node_id] = cost
+
+        is_split_node = children_left[node_id] != children_right[node_id]
+
+        cost += feature_costs[tree_.feature[node_id]]
+        if is_split_node:
+            stack.append((children_left[node_id], depth + 1, cost))
+            stack.append((children_right[node_id], depth + 1, cost))
+        else:
+            _is_leaves[node_id] = True
+
+    # iterate over leaves and calculate the number of samples in each of them
+    n_samples = tree_.n_node_samples
+    leaf_samples = n_samples[_is_leaves].astype(np.float64)
+    depths = _cum_costs[_is_leaves] * leaf_samples / np.sum(leaf_samples)
+    return np.sum(depths)</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.tree.calculate_mean_unique_calls_in_ensemble"><code class="name flex">
+<span>def <span class="ident">calculate_mean_unique_calls_in_ensemble</span></span>(<span>ensemble, X, feature_costs=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculate the mean number of unique calls in the ensemble.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_mean_unique_calls_in_ensemble(ensemble, X, feature_costs=None):
+    &#39;&#39;&#39;Calculate the mean number of unique calls in the ensemble.
+    &#39;&#39;&#39;
+    if X is None:
+        # Should pass X, this is just for testing
+        n_features_in = ensemble.n_features_in_
+        X = np.random.randint(2, size=(100, n_features_in))
+
+    if feature_costs is None:
+        feature_costs = np.ones(n_features_in, dtype=np.float64)
+    else:
+        assert len(
+            feature_costs) == n_features_in, f&#39;{len(feature_costs)} != {n_features_in}&#39;
+        np.min(feature_costs) &gt;= 0
+
+    # extract the decision path for each sample
+    ests = ensemble.estimators_.flatten()
+    feats = [set() for _ in range(len(X))]
+    for i in range(len(ests)):
+        est = ests[i]
+        node_index = est.decision_path(X).toarray()
+        feats_est = [
+            set([est.tree_.feature[x] for x in np.nonzero(row)[0]])
+            for row in node_index
+        ]
+        for j in range(len(feats)):
+            feats[j] = feats[j].union(feats_est[j])
+    # -1 for the -2 feature that is always present
+    return np.mean([len(f) - 1 for f in feats])</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.tree.compute_mean_llm_calls"><code class="name flex">
+<span>def <span class="ident">compute_mean_llm_calls</span></span>(<span>model_name, num_prompts, model=None, X=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_mean_llm_calls(model_name, num_prompts, model=None, X=None):
+    if model_name == &#34;manual_tree&#34;:
+        return calculate_mean_depth_of_points_in_tree(model.tree_)
+    elif model_name == &#34;manual_hstree&#34;:
+        return calculate_mean_depth_of_points_in_tree(model.estimator_.tree_)
+    elif model_name == &#34;manual_gbdt&#34;:
+        return calculate_mean_unique_calls_in_ensemble(model, X)
+    elif model_name == &#34;manual_tree_cv&#34;:
+        return calculate_mean_depth_of_points_in_tree(model.best_estimator_.tree_)
+    elif model_name in [&#34;manual_single_prompt&#34;]:
+        return 1
+    elif model_name in [&#34;manual_ensemble&#34;, &#34;manual_boosting&#34;]:
+        return num_prompts
+    else:
+        return num_prompts</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.tree.compute_tree_complexity"><code class="name flex">
 <span>def <span class="ident">compute_tree_complexity</span></span>(<span>tree, complexity_measure='num_rules')</span>
 </code></dt>
@@ -124,6 +423,10 @@ if __name__ == &#39;__main__&#39;:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="imodels.util.tree.calculate_mean_depth_of_points_in_custom_tree" href="#imodels.util.tree.calculate_mean_depth_of_points_in_custom_tree">calculate_mean_depth_of_points_in_custom_tree</a></code></li>
+<li><code><a title="imodels.util.tree.calculate_mean_depth_of_points_in_tree" href="#imodels.util.tree.calculate_mean_depth_of_points_in_tree">calculate_mean_depth_of_points_in_tree</a></code></li>
+<li><code><a title="imodels.util.tree.calculate_mean_unique_calls_in_ensemble" href="#imodels.util.tree.calculate_mean_unique_calls_in_ensemble">calculate_mean_unique_calls_in_ensemble</a></code></li>
+<li><code><a title="imodels.util.tree.compute_mean_llm_calls" href="#imodels.util.tree.compute_mean_llm_calls">compute_mean_llm_calls</a></code></li>
 <li><code><a title="imodels.util.tree.compute_tree_complexity" href="#imodels.util.tree.compute_tree_complexity">compute_tree_complexity</a></code></li>
 </ul>
 </li>
