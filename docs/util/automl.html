@@ -28,33 +28,78 @@ from imodels import (
     TreeGAMClassifier,
     FIGSClassifier,
     HSTreeClassifier,
+    RuleFitRegressor,
+    TreeGAMRegressor,
+    FIGSRegressor,
+    HSTreeRegressor,
 )
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.linear_model import LogisticRegression, ElasticNet, Ridge
 import imodels
 from sklearn.model_selection import GridSearchCV, train_test_split
 import numpy as np
 from sklearn.pipeline import Pipeline
 
+# PARAM_GRID_LINEAR = [
+#     {
+#         &#34;est&#34;: []
+#     }
+# ]
 
-class AutoInterpretableClassifier(BaseEstimator, ClassifierMixin):
+
+class AutoInterpretableModel(BaseEstimator):
     &#34;&#34;&#34;Automatically fit and select a classifier that is interpretable.
     Note that all preprocessing should be done beforehand.
     This is basically a wrapper around GridSearchCV, with some preselected models.
     &#34;&#34;&#34;
 
-    PARAM_GRID_DEFAULT = [
+    def __init__(self, param_grid=None):
+        if param_grid is None:
+            if isinstance(self, ClassifierMixin):
+                self.param_grid = self.PARAM_GRID_DEFAULT_CLASSIFICATION
+            elif isinstance(self, RegressorMixin):
+                self.param_grid = self.PARAM_GRID_DEFAULT_REGRESSION
+        else:
+            self.param_grid = param_grid
+
+    def fit(self, X, y, cv=5):
+        self.pipe_ = Pipeline([(&#34;est&#34;, BaseEstimator())]
+                              )  # Placeholder Estimator
+        self.est_ = GridSearchCV(
+            self.pipe_, self.param_grid, scoring=&#34;roc_auc&#34;, cv=cv)
+        self.est_.fit(X, y)
+        return self
+
+    def predict(self, X):
+        return self.est_.predict(X)
+
+    def predict_proba(self, X):
+        return self.est_.predict_proba(X)
+
+    def score(self, X, y):
+        return self.est_.score(X, y)
+
+    PARAM_GRID_LINEAR_CLASSIFICATION = [
         {
-            &#34;est&#34;: [DecisionTreeClassifier()],
-            &#34;est__max_leaf_nodes&#34;: [2, 5, 10],
+            &#34;est&#34;: [
+                LogisticRegression(
+                    solver=&#34;saga&#34;, penalty=&#34;elasticnet&#34;, max_iter=100)
+            ],
+            &#34;est__C&#34;: [0.1, 1, 10],
+            &#34;est__l1_ratio&#34;: [0.5, 1],
         },
         {
             &#34;est&#34;: [
-                LogisticRegression(solver=&#34;saga&#34;, penalty=&#34;elasticnet&#34;, max_iter=100)
+                Ridge(max_iter=100)
             ],
-            &#34;est__C&#34;: [0.1, 1, 10],
-            &#34;est__l1_ratio&#34;: [0, 0.5, 1],
-            # &#34;est__penalty&#34;: [&#34;l1&#34;, &#34;l2&#34;, &#34;elasticnet&#34;],
+            &#34;est__alpha&#34;: [0, 0.1, 1, 10],
+        },
+    ]
+
+    PARAM_GRID_DEFAULT_CLASSIFICATION = [
+        {
+            &#34;est&#34;: [DecisionTreeClassifier()],
+            &#34;est__max_leaf_nodes&#34;: [2, 5, 10],
         },
         {
             &#34;est&#34;: [RuleFitClassifier()],
@@ -73,28 +118,50 @@ class AutoInterpretableClassifier(BaseEstimator, ClassifierMixin):
             &#34;est&#34;: [FIGSClassifier()],
             &#34;est__max_rules&#34;: [5, 10],
         },
+    ] + PARAM_GRID_LINEAR_CLASSIFICATION
+
+    PARAM_GRID_LINEAR_REGRESSION = [
+        {
+            &#34;est&#34;: [
+                ElasticNet(max_iter=100)
+            ],
+            &#34;est__alpha&#34;: [0.1, 1, 10],
+            &#34;est__l1_ratio&#34;: [0, 0.5, 1],
+        },
     ]
 
-    def __init__(self, param_grid=None):
-        if param_grid is None:
-            self.param_grid_ = self.PARAM_GRID_DEFAULT
-        else:
-            self.param_grid_ = param_grid
+    PARAM_GRID_DEFAULT_REGRESSION = [
+        {
+            &#34;est&#34;: [DecisionTreeRegressor()],
+            &#34;est__max_leaf_nodes&#34;: [2, 5, 10],
+        },
+        {
+            &#34;est&#34;: [HSTreeRegressor()],
+            &#34;est__max_leaf_nodes&#34;: [5, 10],
+        },
 
-    def fit(self, X, y, cv=5):
-        self.pipe_ = Pipeline([(&#34;est&#34;, BaseEstimator())])  # Placeholder Estimator
-        self.est_ = GridSearchCV(self.pipe_, self.param_grid_, scoring=&#34;roc_auc&#34;, cv=cv)
-        self.est_.fit(X, y)
-        return self
+        {
+            &#34;est&#34;: [RuleFitRegressor()],
+            &#34;est__max_rules&#34;: [10, 100],
+            &#34;est__n_estimators&#34;: [20],
+        },
+        {
+            &#34;est&#34;: [TreeGAMRegressor()],
+            &#34;est__n_boosting_rounds&#34;: [10, 100],
+        },
+        {
+            &#34;est&#34;: [FIGSRegressor()],
+            &#34;est__max_rules&#34;: [5, 10],
+        },
+    ] + PARAM_GRID_LINEAR_REGRESSION
 
-    def predict(self, X):
-        return self.est_.predict(X)
 
-    def predict_proba(self, X):
-        return self.est_.predict_proba(X)
+class AutoInterpretableClassifier(AutoInterpretableModel, ClassifierMixin):
+    ...
 
-    def score(self, X, y):
-        return self.est_.score(X, y)
+
+class AutoInterpretableRegressor(AutoInterpretableModel, RegressorMixin):
+    ...
 
 
 if __name__ == &#34;__main__&#34;:
@@ -106,6 +173,7 @@ if __name__ == &#34;__main__&#34;:
     )
 
     m = AutoInterpretableClassifier()
+    # m = AutoInterpretableRegressor()
     m.fit(X_train, y_train)
 
     print(&#34;best params&#34;, m.est_.best_params_)
@@ -135,24 +203,90 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AutoInterpretableClassifier(BaseEstimator, ClassifierMixin):
+<pre><code class="python">class AutoInterpretableClassifier(AutoInterpretableModel, ClassifierMixin):
+    ...</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li>sklearn.base.ClassifierMixin</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.set_fit_request" href="#imodels.util.automl.AutoInterpretableModel.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.util.automl.AutoInterpretableModel"><code class="flex name class">
+<span>class <span class="ident">AutoInterpretableModel</span></span>
+<span>(</span><span>param_grid=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Automatically fit and select a classifier that is interpretable.
+Note that all preprocessing should be done beforehand.
+This is basically a wrapper around GridSearchCV, with some preselected models.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AutoInterpretableModel(BaseEstimator):
     &#34;&#34;&#34;Automatically fit and select a classifier that is interpretable.
     Note that all preprocessing should be done beforehand.
     This is basically a wrapper around GridSearchCV, with some preselected models.
     &#34;&#34;&#34;
 
-    PARAM_GRID_DEFAULT = [
+    def __init__(self, param_grid=None):
+        if param_grid is None:
+            if isinstance(self, ClassifierMixin):
+                self.param_grid = self.PARAM_GRID_DEFAULT_CLASSIFICATION
+            elif isinstance(self, RegressorMixin):
+                self.param_grid = self.PARAM_GRID_DEFAULT_REGRESSION
+        else:
+            self.param_grid = param_grid
+
+    def fit(self, X, y, cv=5):
+        self.pipe_ = Pipeline([(&#34;est&#34;, BaseEstimator())]
+                              )  # Placeholder Estimator
+        self.est_ = GridSearchCV(
+            self.pipe_, self.param_grid, scoring=&#34;roc_auc&#34;, cv=cv)
+        self.est_.fit(X, y)
+        return self
+
+    def predict(self, X):
+        return self.est_.predict(X)
+
+    def predict_proba(self, X):
+        return self.est_.predict_proba(X)
+
+    def score(self, X, y):
+        return self.est_.score(X, y)
+
+    PARAM_GRID_LINEAR_CLASSIFICATION = [
         {
-            &#34;est&#34;: [DecisionTreeClassifier()],
-            &#34;est__max_leaf_nodes&#34;: [2, 5, 10],
+            &#34;est&#34;: [
+                LogisticRegression(
+                    solver=&#34;saga&#34;, penalty=&#34;elasticnet&#34;, max_iter=100)
+            ],
+            &#34;est__C&#34;: [0.1, 1, 10],
+            &#34;est__l1_ratio&#34;: [0.5, 1],
         },
         {
             &#34;est&#34;: [
-                LogisticRegression(solver=&#34;saga&#34;, penalty=&#34;elasticnet&#34;, max_iter=100)
+                Ridge(max_iter=100)
             ],
-            &#34;est__C&#34;: [0.1, 1, 10],
-            &#34;est__l1_ratio&#34;: [0, 0.5, 1],
-            # &#34;est__penalty&#34;: [&#34;l1&#34;, &#34;l2&#34;, &#34;elasticnet&#34;],
+            &#34;est__alpha&#34;: [0, 0.1, 1, 10],
+        },
+    ]
+
+    PARAM_GRID_DEFAULT_CLASSIFICATION = [
+        {
+            &#34;est&#34;: [DecisionTreeClassifier()],
+            &#34;est__max_leaf_nodes&#34;: [2, 5, 10],
         },
         {
             &#34;est&#34;: [RuleFitClassifier()],
@@ -171,45 +305,75 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
             &#34;est&#34;: [FIGSClassifier()],
             &#34;est__max_rules&#34;: [5, 10],
         },
+    ] + PARAM_GRID_LINEAR_CLASSIFICATION
+
+    PARAM_GRID_LINEAR_REGRESSION = [
+        {
+            &#34;est&#34;: [
+                ElasticNet(max_iter=100)
+            ],
+            &#34;est__alpha&#34;: [0.1, 1, 10],
+            &#34;est__l1_ratio&#34;: [0, 0.5, 1],
+        },
     ]
 
-    def __init__(self, param_grid=None):
-        if param_grid is None:
-            self.param_grid_ = self.PARAM_GRID_DEFAULT
-        else:
-            self.param_grid_ = param_grid
+    PARAM_GRID_DEFAULT_REGRESSION = [
+        {
+            &#34;est&#34;: [DecisionTreeRegressor()],
+            &#34;est__max_leaf_nodes&#34;: [2, 5, 10],
+        },
+        {
+            &#34;est&#34;: [HSTreeRegressor()],
+            &#34;est__max_leaf_nodes&#34;: [5, 10],
+        },
 
-    def fit(self, X, y, cv=5):
-        self.pipe_ = Pipeline([(&#34;est&#34;, BaseEstimator())])  # Placeholder Estimator
-        self.est_ = GridSearchCV(self.pipe_, self.param_grid_, scoring=&#34;roc_auc&#34;, cv=cv)
-        self.est_.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self.est_.predict(X)
-
-    def predict_proba(self, X):
-        return self.est_.predict_proba(X)
-
-    def score(self, X, y):
-        return self.est_.score(X, y)</code></pre>
+        {
+            &#34;est&#34;: [RuleFitRegressor()],
+            &#34;est__max_rules&#34;: [10, 100],
+            &#34;est__n_estimators&#34;: [20],
+        },
+        {
+            &#34;est&#34;: [TreeGAMRegressor()],
+            &#34;est__n_boosting_rounds&#34;: [10, 100],
+        },
+        {
+            &#34;est&#34;: [FIGSRegressor()],
+            &#34;est__max_rules&#34;: [5, 10],
+        },
+    ] + PARAM_GRID_LINEAR_REGRESSION</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
-<li>sklearn.base.ClassifierMixin</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.util.automl.AutoInterpretableClassifier" href="#imodels.util.automl.AutoInterpretableClassifier">AutoInterpretableClassifier</a></li>
+<li><a title="imodels.util.automl.AutoInterpretableRegressor" href="#imodels.util.automl.AutoInterpretableRegressor">AutoInterpretableRegressor</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="imodels.util.automl.AutoInterpretableClassifier.PARAM_GRID_DEFAULT"><code class="name">var <span class="ident">PARAM_GRID_DEFAULT</span></code></dt>
+<dt id="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_DEFAULT_CLASSIFICATION"><code class="name">var <span class="ident">PARAM_GRID_DEFAULT_CLASSIFICATION</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_DEFAULT_REGRESSION"><code class="name">var <span class="ident">PARAM_GRID_DEFAULT_REGRESSION</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_CLASSIFICATION"><code class="name">var <span class="ident">PARAM_GRID_LINEAR_CLASSIFICATION</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_REGRESSION"><code class="name">var <span class="ident">PARAM_GRID_LINEAR_REGRESSION</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.util.automl.AutoInterpretableClassifier.fit"><code class="name flex">
+<dt id="imodels.util.automl.AutoInterpretableModel.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, cv=5)</span>
 </code></dt>
 <dd>
@@ -219,13 +383,15 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fit(self, X, y, cv=5):
-    self.pipe_ = Pipeline([(&#34;est&#34;, BaseEstimator())])  # Placeholder Estimator
-    self.est_ = GridSearchCV(self.pipe_, self.param_grid_, scoring=&#34;roc_auc&#34;, cv=cv)
+    self.pipe_ = Pipeline([(&#34;est&#34;, BaseEstimator())]
+                          )  # Placeholder Estimator
+    self.est_ = GridSearchCV(
+        self.pipe_, self.param_grid, scoring=&#34;roc_auc&#34;, cv=cv)
     self.est_.fit(X, y)
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.automl.AutoInterpretableClassifier.predict"><code class="name flex">
+<dt id="imodels.util.automl.AutoInterpretableModel.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -238,7 +404,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
     return self.est_.predict(X)</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.automl.AutoInterpretableClassifier.predict_proba"><code class="name flex">
+<dt id="imodels.util.automl.AutoInterpretableModel.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -251,28 +417,11 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
     return self.est_.predict_proba(X)</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.automl.AutoInterpretableClassifier.score"><code class="name flex">
+<dt id="imodels.util.automl.AutoInterpretableModel.score"><code class="name flex">
 <span>def <span class="ident">score</span></span>(<span>self, X, y)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return the mean accuracy on the given test data and labels.</p>
-<p>In multi-label classification, this is the subset accuracy
-which is a harsh metric since you require for each sample that
-each label set be correctly predicted.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
-<dd>Test samples.</dd>
-<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code> or <code>(n_samples, n_outputs)</code></dt>
-<dd>True labels for <code>X</code>.</dd>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, default=<code>None</code></dt>
-<dd>Sample weights.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>score</code></strong> :&ensp;<code>float</code></dt>
-<dd>Mean accuracy of <code>self.predict(X)</code> w.r.t. <code>y</code>.</dd>
-</dl></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -281,8 +430,8 @@ each label set be correctly predicted.</p>
     return self.est_.score(X, y)</code></pre>
 </details>
 </dd>
-<dt id="imodels.util.automl.AutoInterpretableClassifier.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.util.automl.AutoInterpretableClassifier" href="#imodels.util.automl.AutoInterpretableClassifier">AutoInterpretableClassifier</a>, *, cv: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.util.automl.AutoInterpretableClassifier" href="#imodels.util.automl.AutoInterpretableClassifier">AutoInterpretableClassifier</a></span>
+<dt id="imodels.util.automl.AutoInterpretableModel.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a>, *, cv: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
@@ -364,6 +513,37 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 </dl>
 </dd>
+<dt id="imodels.util.automl.AutoInterpretableRegressor"><code class="flex name class">
+<span>class <span class="ident">AutoInterpretableRegressor</span></span>
+<span>(</span><span>param_grid=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Automatically fit and select a classifier that is interpretable.
+Note that all preprocessing should be done beforehand.
+This is basically a wrapper around GridSearchCV, with some preselected models.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AutoInterpretableRegressor(AutoInterpretableModel, RegressorMixin):
+    ...</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li>sklearn.base.RegressorMixin</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.set_fit_request" href="#imodels.util.automl.AutoInterpretableModel.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 </dl>
 </section>
 </article>
@@ -382,14 +562,23 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul>
 <li>
 <h4><code><a title="imodels.util.automl.AutoInterpretableClassifier" href="#imodels.util.automl.AutoInterpretableClassifier">AutoInterpretableClassifier</a></code></h4>
-<ul class="two-column">
-<li><code><a title="imodels.util.automl.AutoInterpretableClassifier.PARAM_GRID_DEFAULT" href="#imodels.util.automl.AutoInterpretableClassifier.PARAM_GRID_DEFAULT">PARAM_GRID_DEFAULT</a></code></li>
-<li><code><a title="imodels.util.automl.AutoInterpretableClassifier.fit" href="#imodels.util.automl.AutoInterpretableClassifier.fit">fit</a></code></li>
-<li><code><a title="imodels.util.automl.AutoInterpretableClassifier.predict" href="#imodels.util.automl.AutoInterpretableClassifier.predict">predict</a></code></li>
-<li><code><a title="imodels.util.automl.AutoInterpretableClassifier.predict_proba" href="#imodels.util.automl.AutoInterpretableClassifier.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.util.automl.AutoInterpretableClassifier.score" href="#imodels.util.automl.AutoInterpretableClassifier.score">score</a></code></li>
-<li><code><a title="imodels.util.automl.AutoInterpretableClassifier.set_fit_request" href="#imodels.util.automl.AutoInterpretableClassifier.set_fit_request">set_fit_request</a></code></li>
+</li>
+<li>
+<h4><code><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_DEFAULT_CLASSIFICATION" href="#imodels.util.automl.AutoInterpretableModel.PARAM_GRID_DEFAULT_CLASSIFICATION">PARAM_GRID_DEFAULT_CLASSIFICATION</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_DEFAULT_REGRESSION" href="#imodels.util.automl.AutoInterpretableModel.PARAM_GRID_DEFAULT_REGRESSION">PARAM_GRID_DEFAULT_REGRESSION</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_CLASSIFICATION" href="#imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_CLASSIFICATION">PARAM_GRID_LINEAR_CLASSIFICATION</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_REGRESSION" href="#imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_REGRESSION">PARAM_GRID_LINEAR_REGRESSION</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.fit" href="#imodels.util.automl.AutoInterpretableModel.fit">fit</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.predict" href="#imodels.util.automl.AutoInterpretableModel.predict">predict</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.predict_proba" href="#imodels.util.automl.AutoInterpretableModel.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.score" href="#imodels.util.automl.AutoInterpretableModel.score">score</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.set_fit_request" href="#imodels.util.automl.AutoInterpretableModel.set_fit_request">set_fit_request</a></code></li>
 </ul>
+</li>
+<li>
+<h4><code><a title="imodels.util.automl.AutoInterpretableRegressor" href="#imodels.util.automl.AutoInterpretableRegressor">AutoInterpretableRegressor</a></code></h4>
 </li>
 </ul>
 </li>
