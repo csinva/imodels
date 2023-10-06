@@ -17,12 +17,6 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 import numpy as np
 from sklearn.pipeline import Pipeline
 
-# PARAM_GRID_LINEAR = [
-#     {
-#         "est": []
-#     }
-# ]
-
 
 class AutoInterpretableModel(BaseEstimator):
     """Automatically fit and select a classifier that is interpretable.
@@ -30,7 +24,7 @@ class AutoInterpretableModel(BaseEstimator):
     This is basically a wrapper around GridSearchCV, with some preselected models.
     """
 
-    def __init__(self, param_grid=None):
+    def __init__(self, param_grid=None, refit=True):
         if param_grid is None:
             if isinstance(self, ClassifierMixin):
                 self.param_grid = self.PARAM_GRID_DEFAULT_CLASSIFICATION
@@ -38,12 +32,17 @@ class AutoInterpretableModel(BaseEstimator):
                 self.param_grid = self.PARAM_GRID_DEFAULT_REGRESSION
         else:
             self.param_grid = param_grid
+        self.refit = refit
 
     def fit(self, X, y, cv=5):
         self.pipe_ = Pipeline([("est", BaseEstimator())]
                               )  # Placeholder Estimator
+        if isinstance(self, ClassifierMixin):
+            scoring = "roc_auc"
+        elif isinstance(self, RegressorMixin):
+            scoring = "r2"
         self.est_ = GridSearchCV(
-            self.pipe_, self.param_grid, scoring="roc_auc", cv=cv)
+            self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit)
         self.est_.fit(X, y)
         return self
 
@@ -60,39 +59,33 @@ class AutoInterpretableModel(BaseEstimator):
         {
             "est": [
                 LogisticRegression(
-                    solver="saga", penalty="elasticnet", max_iter=100)
+                    solver="saga", penalty="elasticnet", max_iter=100, random_state=42)
             ],
             "est__C": [0.1, 1, 10],
-            "est__l1_ratio": [0.5, 1],
-        },
-        {
-            "est": [
-                Ridge(max_iter=100)
-            ],
-            "est__alpha": [0, 0.1, 1, 10],
+            "est__l1_ratio": [0, 0.5, 1],
         },
     ]
 
     PARAM_GRID_DEFAULT_CLASSIFICATION = [
         {
-            "est": [DecisionTreeClassifier()],
+            "est": [DecisionTreeClassifier(random_state=42)],
             "est__max_leaf_nodes": [2, 5, 10],
         },
         {
-            "est": [RuleFitClassifier()],
+            "est": [RuleFitClassifier(random_state=42)],
             "est__max_rules": [10, 100],
             "est__n_estimators": [20],
         },
         {
-            "est": [TreeGAMClassifier()],
+            "est": [TreeGAMClassifier(random_state=42)],
             "est__n_boosting_rounds": [10, 100],
         },
         {
-            "est": [HSTreeClassifier()],
+            "est": [HSTreeClassifier(random_state=42)],
             "est__max_leaf_nodes": [5, 10],
         },
         {
-            "est": [FIGSClassifier()],
+            "est": [FIGSClassifier(random_state=42)],
             "est__max_rules": [5, 10],
         },
     ] + PARAM_GRID_LINEAR_CLASSIFICATION
@@ -100,10 +93,16 @@ class AutoInterpretableModel(BaseEstimator):
     PARAM_GRID_LINEAR_REGRESSION = [
         {
             "est": [
-                ElasticNet(max_iter=100)
+                ElasticNet(max_iter=100, random_state=42)
             ],
             "est__alpha": [0.1, 1, 10],
-            "est__l1_ratio": [0, 0.5, 1],
+            "est__l1_ratio": [0.5, 1],
+        },
+        {
+            "est": [
+                Ridge(max_iter=100, random_state=42)
+            ],
+            "est__alpha": [0, 0.1, 1, 10],
         },
     ]
 
