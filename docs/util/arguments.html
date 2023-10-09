@@ -24,9 +24,9 @@
 <pre><code class="python">import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin
-from sklearn.utils.validation import check_X_y
-from sklearn.utils.validation import _check_sample_weight
+from sklearn.utils.validation import check_X_y, check_array
 from sklearn.utils.multiclass import check_classification_targets
+import scipy.sparse
 
 def check_fit_arguments(model, X, y, feature_names):
     &#34;&#34;&#34;Process arguments for fit and predict methods.
@@ -38,17 +38,27 @@ def check_fit_arguments(model, X, y, feature_names):
     if feature_names is None:
         if isinstance(X, pd.DataFrame):
             model.feature_names_ = X.columns
-        else:
+        elif isinstance(X, list):
             model.feature_names_ = [&#39;X&#39; + str(i) for i in range(len(X[0]))]
+        else:
+            model.feature_names_ = [&#39;X&#39; + str(i) for i in range(X.shape[1])]
     else:
         model.feature_names_ = feature_names
+    if scipy.sparse.issparse(X):
+        X = X.toarray()
     X, y = check_X_y(X, y)
     _, model.n_features_in_ = X.shape
     assert len(model.feature_names_) == model.n_features_in_, &#39;feature_names should be same size as X.shape[1]&#39;
     y = y.astype(float)
     return X, y, model.feature_names_
-    # if sample_weight is not None:
-        # sample_weight = _check_sample_weight(sample_weight, X)</code></pre>
+
+def check_fit_X(X):
+    &#34;&#34;&#34;Process X argument for fit and predict methods.
+    &#34;&#34;&#34;
+    if scipy.sparse.issparse(X):
+        X = X.toarray()
+    X = check_array(X)
+    return X</code></pre>
 </details>
 </section>
 <section>
@@ -58,6 +68,24 @@ def check_fit_arguments(model, X, y, feature_names):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="imodels.util.arguments.check_fit_X"><code class="name flex">
+<span>def <span class="ident">check_fit_X</span></span>(<span>X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Process X argument for fit and predict methods.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_fit_X(X):
+    &#34;&#34;&#34;Process X argument for fit and predict methods.
+    &#34;&#34;&#34;
+    if scipy.sparse.issparse(X):
+        X = X.toarray()
+    X = check_array(X)
+    return X</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.arguments.check_fit_arguments"><code class="name flex">
 <span>def <span class="ident">check_fit_arguments</span></span>(<span>model, X, y, feature_names)</span>
 </code></dt>
@@ -77,17 +105,19 @@ def check_fit_arguments(model, X, y, feature_names):
     if feature_names is None:
         if isinstance(X, pd.DataFrame):
             model.feature_names_ = X.columns
-        else:
+        elif isinstance(X, list):
             model.feature_names_ = [&#39;X&#39; + str(i) for i in range(len(X[0]))]
+        else:
+            model.feature_names_ = [&#39;X&#39; + str(i) for i in range(X.shape[1])]
     else:
         model.feature_names_ = feature_names
+    if scipy.sparse.issparse(X):
+        X = X.toarray()
     X, y = check_X_y(X, y)
     _, model.n_features_in_ = X.shape
     assert len(model.feature_names_) == model.n_features_in_, &#39;feature_names should be same size as X.shape[1]&#39;
     y = y.astype(float)
-    return X, y, model.feature_names_
-    # if sample_weight is not None:
-        # sample_weight = _check_sample_weight(sample_weight, X)</code></pre>
+    return X, y, model.feature_names_</code></pre>
 </details>
 </dd>
 </dl>
@@ -108,6 +138,7 @@ def check_fit_arguments(model, X, y, feature_names):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="imodels.util.arguments.check_fit_X" href="#imodels.util.arguments.check_fit_X">check_fit_X</a></code></li>
 <li><code><a title="imodels.util.arguments.check_fit_arguments" href="#imodels.util.arguments.check_fit_arguments">check_fit_arguments</a></code></li>
 </ul>
 </li>

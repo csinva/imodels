@@ -11,5 +11,5 @@ class SlipperClassifier(BoostedRulesClassifier):
         ----------
         n_estimators
         '''
-        super().__init__(estimator=SlipperBaseEstimator, n_estimators=n_estimators, **kwargs)
+        super().__init__(estimator=SlipperBaseEstimator(), n_estimators=n_estimators, **kwargs)
         # super().__init__(n_estimators, SlipperBaseEstimator)

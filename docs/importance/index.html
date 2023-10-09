@@ -26,18 +26,43 @@
 Feature importance methods for black box models
 &#34;&#34;&#34;
 
-from .representation import TreeTransformer
-from .r2f import R2F</code></pre>
+from .rf_plus import RandomForestPlusRegressor, RandomForestPlusClassifier
+from .mdi_plus import ForestMDIPlus, TreeMDIPlus
+from .ppms import GenericRegressorPPM, GenericClassifierPPM, \
+    GlmRegressorPPM, GlmClassifierPPM, RidgeRegressorPPM, RidgeClassifierPPM, \
+    LogisticClassifierPPM, RobustRegressorPPM, LassoRegressorPPM
+from .block_transformers import IdentityTransformer, TreeTransformer, \
+    CompositeTransformer, MDIPlusDefaultTransformer</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="imodels.importance.r2f" href="r2f.html">imodels.importance.r2f</a></code></dt>
+<dt><code class="name"><a title="imodels.importance.block_transformers" href="block_transformers.html">imodels.importance.block_transformers</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt><code class="name"><a title="imodels.importance.representation" href="representation.html">imodels.importance.representation</a></code></dt>
+<dt><code class="name"><a title="imodels.importance.block_transformers_ys" href="block_transformers_ys.html">imodels.importance.block_transformers_ys</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="imodels.importance.local_stumps" href="local_stumps.html">imodels.importance.local_stumps</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="imodels.importance.mdi_plus" href="mdi_plus.html">imodels.importance.mdi_plus</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="imodels.importance.ppms" href="ppms.html">imodels.importance.ppms</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="imodels.importance.ranking_stability" href="ranking_stability.html">imodels.importance.ranking_stability</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="imodels.importance.rf_plus" href="rf_plus.html">imodels.importance.rf_plus</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -69,8 +94,13 @@ from .r2f import R2F</code></pre>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="imodels.importance.r2f" href="r2f.html">imodels.importance.r2f</a></code></li>
-<li><code><a title="imodels.importance.representation" href="representation.html">imodels.importance.representation</a></code></li>
+<li><code><a title="imodels.importance.block_transformers" href="block_transformers.html">imodels.importance.block_transformers</a></code></li>
+<li><code><a title="imodels.importance.block_transformers_ys" href="block_transformers_ys.html">imodels.importance.block_transformers_ys</a></code></li>
+<li><code><a title="imodels.importance.local_stumps" href="local_stumps.html">imodels.importance.local_stumps</a></code></li>
+<li><code><a title="imodels.importance.mdi_plus" href="mdi_plus.html">imodels.importance.mdi_plus</a></code></li>
+<li><code><a title="imodels.importance.ppms" href="ppms.html">imodels.importance.ppms</a></code></li>
+<li><code><a title="imodels.importance.ranking_stability" href="ranking_stability.html">imodels.importance.ranking_stability</a></code></li>
+<li><code><a title="imodels.importance.rf_plus" href="rf_plus.html">imodels.importance.rf_plus</a></code></li>
 </ul>
 </li>
 </ul>

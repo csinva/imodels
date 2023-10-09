@@ -14,7 +14,7 @@ def plot_qq(model: SklearnModel, ax=None) -> None:
     return ax
 
 
-def plot_homoskedasity_diagnostics(model: SklearnModel, ax=None):
+def plot_homoscedasticity_diagnostics(model: SklearnModel, ax=None):
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(5, 5))
     sns.regplot(model.predict(model.data.X.values), model.residuals(model.data.X.values), ax=ax)

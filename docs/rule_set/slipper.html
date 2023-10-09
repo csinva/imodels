@@ -34,7 +34,7 @@ class SlipperClassifier(BoostedRulesClassifier):
         ----------
         n_estimators
         &#39;&#39;&#39;
-        super().__init__(estimator=SlipperBaseEstimator, n_estimators=n_estimators, **kwargs)
+        super().__init__(estimator=SlipperBaseEstimator(), n_estimators=n_estimators, **kwargs)
         # super().__init__(n_estimators, SlipperBaseEstimator)</code></pre>
 </details>
 </section>
@@ -78,7 +78,7 @@ Parameters</p>
         ----------
         n_estimators
         &#39;&#39;&#39;
-        super().__init__(estimator=SlipperBaseEstimator, n_estimators=n_estimators, **kwargs)
+        super().__init__(estimator=SlipperBaseEstimator(), n_estimators=n_estimators, **kwargs)
         # super().__init__(n_estimators, SlipperBaseEstimator)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -90,12 +90,15 @@ Parameters</p>
 <li>sklearn.ensemble._base.BaseEnsemble</li>
 <li>sklearn.base.MetaEstimatorMixin</li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_fit_request" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_score_request" href="boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 </ul>

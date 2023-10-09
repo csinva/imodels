@@ -37,7 +37,7 @@ def plot_qq(model: SklearnModel, ax=None) -&gt; None:
     return ax
 
 
-def plot_homoskedasity_diagnostics(model: SklearnModel, ax=None):
+def plot_homoscedasticity_diagnostics(model: SklearnModel, ax=None):
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(5, 5))
     sns.regplot(model.predict(model.data.X.values), model.residuals(model.data.X.values), ax=ax)
@@ -54,8 +54,8 @@ def plot_homoskedasity_diagnostics(model: SklearnModel, ax=None):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="imodels.experimental.bartpy.diagnostics.residuals.plot_homoskedasity_diagnostics"><code class="name flex">
-<span>def <span class="ident">plot_homoskedasity_diagnostics</span></span>(<span>model: <a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel">SklearnModel</a>, ax=None)</span>
+<dt id="imodels.experimental.bartpy.diagnostics.residuals.plot_homoscedasticity_diagnostics"><code class="name flex">
+<span>def <span class="ident">plot_homoscedasticity_diagnostics</span></span>(<span>model: <a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel" href="../sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel">SklearnModel</a>, ax=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -63,7 +63,7 @@ def plot_homoskedasity_diagnostics(model: SklearnModel, ax=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_homoskedasity_diagnostics(model: SklearnModel, ax=None):
+<pre><code class="python">def plot_homoscedasticity_diagnostics(model: SklearnModel, ax=None):
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(5, 5))
     sns.regplot(model.predict(model.data.X.values), model.residuals(model.data.X.values), ax=ax)
@@ -109,7 +109,7 @@ def plot_homoskedasity_diagnostics(model: SklearnModel, ax=None):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="imodels.experimental.bartpy.diagnostics.residuals.plot_homoskedasity_diagnostics" href="#imodels.experimental.bartpy.diagnostics.residuals.plot_homoskedasity_diagnostics">plot_homoskedasity_diagnostics</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.diagnostics.residuals.plot_homoscedasticity_diagnostics" href="#imodels.experimental.bartpy.diagnostics.residuals.plot_homoscedasticity_diagnostics">plot_homoscedasticity_diagnostics</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.diagnostics.residuals.plot_qq" href="#imodels.experimental.bartpy.diagnostics.residuals.plot_qq">plot_qq</a></code></li>
 </ul>
 </li>

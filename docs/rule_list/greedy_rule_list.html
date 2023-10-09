@@ -34,10 +34,8 @@ Currently only supports binary classification.
 import math
 from copy import deepcopy
 
-import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils import check_X_y
 from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.tree import DecisionTreeClassifier
@@ -87,9 +85,9 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         elif np.all(y == y[0]):
             return [{&#39;val&#39;: y[0], &#39;num_pts&#39;: y.size}]
 
-        # base case 3: max depth reached
-        elif depth &gt;= self.max_depth:
-            return []
+         # base case 3: max depth reached
+        elif depth == self.max_depth:
+            return [{&#39;val&#39;: np.mean(y), &#39;num_pts&#39;: y.size}]
 
         # recursively generate rule list
         else:
@@ -100,7 +98,9 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             col = m.tree_.feature[0]
             cutoff = m.tree_.threshold[0]
             # col, cutoff, criterion_val = self._find_best_split(X, y)
-            
+            if col == -2:
+                return []
+                
             y_left = y[X[:, col] &lt; cutoff]  # left-hand side data
             y_right = y[X[:, col] &gt;= cutoff]  # right-hand side data
 
@@ -126,7 +126,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
                 &#39;col&#39;: self.feature_names_[col],
                 &#39;index_col&#39;: col,
                 &#39;cutoff&#39;: cutoff,
-                &#39;val&#39;: np.mean(y),  # values before splitting
+                &#39;val&#39;: np.mean(y_left),  # will be the values before splitting in the next lower level
                 &#39;flip&#39;: flip,
                 &#39;val_right&#39;: np.mean(y_right),
                 &#39;num_pts&#39;: y.size,
@@ -153,7 +153,11 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             for j, rule in enumerate(self.rules_):
                 if j == len(self.rules_) - 1:
                     probs[i] = rule[&#39;val&#39;]
-                elif x[rule[&#39;index_col&#39;]] &gt;= rule[&#39;cutoff&#39;]:
+                    continue
+                regular_condition = x[rule[&#34;index_col&#34;]] &gt;= rule[&#34;cutoff&#34;]
+                flipped_condition = x[rule[&#34;index_col&#34;]] &lt; rule[&#34;cutoff&#34;]
+                condition = flipped_condition if rule[&#34;flip&#34;] else regular_condition
+                if condition:
                     probs[i] = rule[&#39;val_right&#39;]
                     break
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
@@ -163,24 +167,28 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         X = check_array(X)
         return np.argmax(self.predict_proba(X), axis=1)
 
+    &#34;&#34;&#34;
     def __str__(self):
-        s = &#39;&#39;
-        for rule in self.rules_:
-            s += f&#34;mean {rule[&#39;val&#39;].round(3)} ({rule[&#39;num_pts&#39;]} pts)\n&#34;
-            if &#39;col&#39; in rule:
-                s += f&#34;if {rule[&#39;col&#39;]} &gt;= {rule[&#39;cutoff&#39;]} then {rule[&#39;val_right&#39;].round(3)} ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
-        return s
+        # s = &#39;&#39;
+        # for rule in self.rules_:
+        #     s += f&#34;mean {rule[&#39;val&#39;].round(3)} ({rule[&#39;num_pts&#39;]} pts)\n&#34;
+        #     if &#39;col&#39; in rule:
+        #         s += f&#34;if {rule[&#39;col&#39;]} &gt;= {rule[&#39;cutoff&#39;]} then {rule[&#39;val_right&#39;].round(3)} ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
+        # return s
+    &#34;&#34;&#34;
 
-    def _print_list(self):
+    def __str__(self):
         &#39;&#39;&#39;Print out the list in a nice way
         &#39;&#39;&#39;
-        s = &#39;&#39;
+        s = &#39;&gt; ------------------------------\n&gt; Greedy Rule List\n&gt; ------------------------------\n&#39;
 
         def red(s):
-            return f&#34;\033[91m{s}\033[00m&#34;
+            # return f&#34;\033[91m{s}\033[00m&#34;
+            return s
 
         def cyan(s):
-            return f&#34;\033[96m{s}\033[00m&#34;
+            # return f&#34;\033[96m{s}\033[00m&#34;
+            return s
 
         def rule_name(rule):
             if rule[&#39;flip&#39;]:
@@ -190,16 +198,16 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         # rule = self.rules_[0]
         #     s += f&#34;{red((100 * rule[&#39;val&#39;]).round(3))}% IwI ({rule[&#39;num_pts&#39;]} pts)\n&#34;
         for rule in self.rules_:
-            s += f&#34;\t{&#39;&#39;:&gt;35} =&gt; {cyan((100 * rule[&#39;val&#39;]).round(2)):&gt;6}% risk ({rule[&#39;num_pts&#39;]} pts)\n&#34;
+            s += u&#39;\u2193\n&#39; + f&#34;{cyan((100 * rule[&#39;val&#39;]).round(2))}% risk ({rule[&#39;num_pts&#39;]} pts)\n&#34;
             #         s += f&#34;\t{&#39;Else&#39;:&gt;45} =&gt; {cyan((100 * rule[&#39;val&#39;]).round(2)):&gt;6}% IwI ({rule[&#39;val&#39;] * rule[&#39;num_pts&#39;]:.0f}/{rule[&#39;num_pts&#39;]} pts)\n&#34;
             if &#39;col&#39; in rule:
                 #             prefix = f&#34;if {rule[&#39;col&#39;]} &gt;= {rule[&#39;cutoff&#39;]}&#34;
                 prefix = f&#34;if {rule_name(rule)}&#34;
-                val = f&#34;{100 * rule[&#39;val_right&#39;].round(3):.4}&#34;
-                s += f&#34;{prefix:&gt;43} ===&gt; {red(val)}% risk ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
+                val = f&#34;{100 * rule[&#39;val_right&#39;].round(3)}&#34;
+                s += f&#34;\t{prefix} ==&gt; {red(val)}% risk ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
         # rule = self.rules_[-1]
         #     s += f&#34;{red((100 * rule[&#39;val&#39;]).round(3))}% IwI ({rule[&#39;num_pts&#39;]} pts)\n&#34;
-        print(s)
+        return s
 
     ######## HERE ONWARDS CUSTOM SPLITTING (DEPRECATED IN FAVOR OF SKLEARN STUMP) ########
     ######################################################################################
@@ -428,9 +436,9 @@ Criterion used to split
         elif np.all(y == y[0]):
             return [{&#39;val&#39;: y[0], &#39;num_pts&#39;: y.size}]
 
-        # base case 3: max depth reached
-        elif depth &gt;= self.max_depth:
-            return []
+         # base case 3: max depth reached
+        elif depth == self.max_depth:
+            return [{&#39;val&#39;: np.mean(y), &#39;num_pts&#39;: y.size}]
 
         # recursively generate rule list
         else:
@@ -441,7 +449,9 @@ Criterion used to split
             col = m.tree_.feature[0]
             cutoff = m.tree_.threshold[0]
             # col, cutoff, criterion_val = self._find_best_split(X, y)
-            
+            if col == -2:
+                return []
+                
             y_left = y[X[:, col] &lt; cutoff]  # left-hand side data
             y_right = y[X[:, col] &gt;= cutoff]  # right-hand side data
 
@@ -467,7 +477,7 @@ Criterion used to split
                 &#39;col&#39;: self.feature_names_[col],
                 &#39;index_col&#39;: col,
                 &#39;cutoff&#39;: cutoff,
-                &#39;val&#39;: np.mean(y),  # values before splitting
+                &#39;val&#39;: np.mean(y_left),  # will be the values before splitting in the next lower level
                 &#39;flip&#39;: flip,
                 &#39;val_right&#39;: np.mean(y_right),
                 &#39;num_pts&#39;: y.size,
@@ -494,7 +504,11 @@ Criterion used to split
             for j, rule in enumerate(self.rules_):
                 if j == len(self.rules_) - 1:
                     probs[i] = rule[&#39;val&#39;]
-                elif x[rule[&#39;index_col&#39;]] &gt;= rule[&#39;cutoff&#39;]:
+                    continue
+                regular_condition = x[rule[&#34;index_col&#34;]] &gt;= rule[&#34;cutoff&#34;]
+                flipped_condition = x[rule[&#34;index_col&#34;]] &lt; rule[&#34;cutoff&#34;]
+                condition = flipped_condition if rule[&#34;flip&#34;] else regular_condition
+                if condition:
                     probs[i] = rule[&#39;val_right&#39;]
                     break
         return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)
@@ -504,24 +518,28 @@ Criterion used to split
         X = check_array(X)
         return np.argmax(self.predict_proba(X), axis=1)
 
+    &#34;&#34;&#34;
     def __str__(self):
-        s = &#39;&#39;
-        for rule in self.rules_:
-            s += f&#34;mean {rule[&#39;val&#39;].round(3)} ({rule[&#39;num_pts&#39;]} pts)\n&#34;
-            if &#39;col&#39; in rule:
-                s += f&#34;if {rule[&#39;col&#39;]} &gt;= {rule[&#39;cutoff&#39;]} then {rule[&#39;val_right&#39;].round(3)} ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
-        return s
+        # s = &#39;&#39;
+        # for rule in self.rules_:
+        #     s += f&#34;mean {rule[&#39;val&#39;].round(3)} ({rule[&#39;num_pts&#39;]} pts)\n&#34;
+        #     if &#39;col&#39; in rule:
+        #         s += f&#34;if {rule[&#39;col&#39;]} &gt;= {rule[&#39;cutoff&#39;]} then {rule[&#39;val_right&#39;].round(3)} ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
+        # return s
+    &#34;&#34;&#34;
 
-    def _print_list(self):
+    def __str__(self):
         &#39;&#39;&#39;Print out the list in a nice way
         &#39;&#39;&#39;
-        s = &#39;&#39;
+        s = &#39;&gt; ------------------------------\n&gt; Greedy Rule List\n&gt; ------------------------------\n&#39;
 
         def red(s):
-            return f&#34;\033[91m{s}\033[00m&#34;
+            # return f&#34;\033[91m{s}\033[00m&#34;
+            return s
 
         def cyan(s):
-            return f&#34;\033[96m{s}\033[00m&#34;
+            # return f&#34;\033[96m{s}\033[00m&#34;
+            return s
 
         def rule_name(rule):
             if rule[&#39;flip&#39;]:
@@ -531,16 +549,16 @@ Criterion used to split
         # rule = self.rules_[0]
         #     s += f&#34;{red((100 * rule[&#39;val&#39;]).round(3))}% IwI ({rule[&#39;num_pts&#39;]} pts)\n&#34;
         for rule in self.rules_:
-            s += f&#34;\t{&#39;&#39;:&gt;35} =&gt; {cyan((100 * rule[&#39;val&#39;]).round(2)):&gt;6}% risk ({rule[&#39;num_pts&#39;]} pts)\n&#34;
+            s += u&#39;\u2193\n&#39; + f&#34;{cyan((100 * rule[&#39;val&#39;]).round(2))}% risk ({rule[&#39;num_pts&#39;]} pts)\n&#34;
             #         s += f&#34;\t{&#39;Else&#39;:&gt;45} =&gt; {cyan((100 * rule[&#39;val&#39;]).round(2)):&gt;6}% IwI ({rule[&#39;val&#39;] * rule[&#39;num_pts&#39;]:.0f}/{rule[&#39;num_pts&#39;]} pts)\n&#34;
             if &#39;col&#39; in rule:
                 #             prefix = f&#34;if {rule[&#39;col&#39;]} &gt;= {rule[&#39;cutoff&#39;]}&#34;
                 prefix = f&#34;if {rule_name(rule)}&#34;
-                val = f&#34;{100 * rule[&#39;val_right&#39;].round(3):.4}&#34;
-                s += f&#34;{prefix:&gt;43} ===&gt; {red(val)}% risk ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
+                val = f&#34;{100 * rule[&#39;val_right&#39;].round(3)}&#34;
+                s += f&#34;\t{prefix} ==&gt; {red(val)}% risk ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
         # rule = self.rules_[-1]
         #     s += f&#34;{red((100 * rule[&#39;val&#39;]).round(3))}% IwI ({rule[&#39;num_pts&#39;]} pts)\n&#34;
-        print(s)
+        return s
 
     ######## HERE ONWARDS CUSTOM SPLITTING (DEPRECATED IN FAVOR OF SKLEARN STUMP) ########
     ######################################################################################
@@ -700,6 +718,7 @@ Criterion used to split
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li><a title="imodels.rule_list.rule_list.RuleList" href="rule_list.html#imodels.rule_list.rule_list.RuleList">RuleList</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
@@ -759,9 +778,9 @@ the depth of the current layer (used to recurse)</p></div>
     elif np.all(y == y[0]):
         return [{&#39;val&#39;: y[0], &#39;num_pts&#39;: y.size}]
 
-    # base case 3: max depth reached
-    elif depth &gt;= self.max_depth:
-        return []
+     # base case 3: max depth reached
+    elif depth == self.max_depth:
+        return [{&#39;val&#39;: np.mean(y), &#39;num_pts&#39;: y.size}]
 
     # recursively generate rule list
     else:
@@ -772,7 +791,9 @@ the depth of the current layer (used to recurse)</p></div>
         col = m.tree_.feature[0]
         cutoff = m.tree_.threshold[0]
         # col, cutoff, criterion_val = self._find_best_split(X, y)
-        
+        if col == -2:
+            return []
+            
         y_left = y[X[:, col] &lt; cutoff]  # left-hand side data
         y_right = y[X[:, col] &gt;= cutoff]  # right-hand side data
 
@@ -798,7 +819,7 @@ the depth of the current layer (used to recurse)</p></div>
             &#39;col&#39;: self.feature_names_[col],
             &#39;index_col&#39;: col,
             &#39;cutoff&#39;: cutoff,
-            &#39;val&#39;: np.mean(y),  # values before splitting
+            &#39;val&#39;: np.mean(y_left),  # will be the values before splitting in the next lower level
             &#39;flip&#39;: flip,
             &#39;val_right&#39;: np.mean(y_right),
             &#39;num_pts&#39;: y.size,
@@ -850,10 +871,182 @@ the depth of the current layer (used to recurse)</p></div>
         for j, rule in enumerate(self.rules_):
             if j == len(self.rules_) - 1:
                 probs[i] = rule[&#39;val&#39;]
-            elif x[rule[&#39;index_col&#39;]] &gt;= rule[&#39;cutoff&#39;]:
+                continue
+            regular_condition = x[rule[&#34;index_col&#34;]] &gt;= rule[&#34;cutoff&#34;]
+            flipped_condition = x[rule[&#34;index_col&#34;]] &lt; rule[&#34;cutoff&#34;]
+            condition = flipped_condition if rule[&#34;flip&#34;] else regular_condition
+            if condition:
                 probs[i] = rule[&#39;val_right&#39;]
                 break
     return np.vstack((1 - probs, probs)).transpose()  # probs (n, 2)</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a>, *, depth: Union[bool, ForwardRef(None), str] = '$UNCHANGED$', feature_names: Union[bool, ForwardRef(None), str] = '$UNCHANGED$', verbose: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>depth</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>depth</code> parameter in <code>fit</code>.</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>feature_names</code> parameter in <code>fit</code>.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>verbose</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
 </details>
 </dd>
 </dl>
@@ -876,11 +1069,13 @@ the depth of the current layer (used to recurse)</p></div>
 <ul>
 <li>
 <h4><code><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.fit" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.fit">fit</a></code></li>
 <li><code><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.fit_node_recursive" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.fit_node_recursive">fit_node_recursive</a></code></li>
 <li><code><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.predict" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.predict">predict</a></code></li>
 <li><code><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.predict_proba" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.set_fit_request" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.set_score_request" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 </ul>

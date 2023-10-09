@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import numpy as np
+
+
+class LocalDecisionStump:
+    &#34;&#34;&#34;
+    An object that implements a callable local decision stump function and
+    that also includes some meta-data that allows for an API to interact with
+    other methods in the package.
+
+    A local decision stump is a tri-valued function that is zero outside of a
+    rectangular region, and on that region, takes either a positive or negative
+    value, depending on whether a single designated feature is above or below a
+    threshold. For more information on what a local decision stump is, refer to
+    our paper.
+
+    Parameters
+    ----------
+    feature: int
+        Feature used in the decision stump
+    threshold: float
+        Threshold used in the decision stump
+    left_val: float
+        The value taken when x_k &lt;= threshold
+    right_val: float
+        The value taken when x_k &gt; threshold
+    a_features: list of ints
+        List of ancestor feature indices (ordered from highest ancestor to
+        lowest)
+    a_thresholds: list of floats
+        List of ancestor thresholds (ordered from highest ancestor to lowest)
+    a_signs: list of bools
+        List of signs indicating whether the current node is in the left child
+        (False) or right child (True) of the ancestor nodes (ordered from
+        highest ancestor to lowest)
+    &#34;&#34;&#34;
+
+    def __init__(self, feature, threshold, left_val, right_val, a_features,
+                 a_thresholds, a_signs):
+        self.feature = feature
+        self.threshold = threshold
+        self.left_val = left_val
+        self.right_val = right_val
+        self.a_features = a_features
+        self.a_thresholds = a_thresholds
+        self.a_signs = a_signs
+
+    def __call__(self, data):
+        &#34;&#34;&#34;
+        Return values of the local decision stump function on an input data
+        matrix with samples as rows
+
+        Parameters
+        ----------
+        data: array-like of shape (n_samples, n_features)
+            Data matrix to feed into the local decision stump function
+
+        Returns
+        -------
+        values: array-like of shape (n_samples,)
+            Function values on the data
+        &#34;&#34;&#34;
+
+        root_to_stump_path_indicators = \
+            _compare_all(data, self.a_features, np.array(self.a_thresholds),
+                         np.array(self.a_signs))
+        in_node = np.all(root_to_stump_path_indicators, axis=1).astype(int)
+        is_right = _compare(data, self.feature, self.threshold).astype(int)
+        values = in_node * (is_right * self.right_val +
+                            (1 - is_right) * self.left_val)
+
+        return values
+
+    def __repr__(self):
+        return f&#34;LocalDecisionStump(feature={self.feature}, &#34; \
+               f&#34;threshold={self.threshold}, left_val={self.left_val}, &#34; \
+               f&#34;right_val={self.right_val}, a_features={self.a_features}, &#34; \
+               f&#34;a_thresholds={self.a_thresholds}, &#34; \
+               f&#34;a_signs={self.a_signs})&#34;
+
+    def get_depth(self):
+        &#34;&#34;&#34;
+        Get depth of the local decision stump, i.e. count how many ancenstor
+        nodes it has. The root node has depth 0.
+
+        &#34;&#34;&#34;
+        return len(self.a_features)
+
+
+def make_stump(node_no, tree_struct, parent_stump, is_right_child,
+               normalize=False):
+    &#34;&#34;&#34;
+    Create a single local decision stump corresponding to a node in a
+    scikit-learn tree structure object. The nonzero values of the stump are
+    chosen so that the vector of local decision stump values over the training
+    set (used to fit the tree) is orthogonal to those of all ancestor nodes.
+
+    Parameters
+    ----------
+    node_no: int
+        The index of the node
+    tree_struct: object
+        The scikit-learn tree object
+    parent_stump: LocalDecisionStump object
+        The local decision stump corresponding to the parent of the node in q
+        uestion
+    is_right_child: bool
+        True if the new node is the right child of the parent node, False
+        otherwise
+    normalize: bool
+        Flag. If set to True, then divide the nonzero function values by
+        sqrt(n_samples in node) so that the vector of function values on the
+        training set has unit norm. If False, then do not divide, so that the
+        vector of function values on the training set has norm equal to
+        n_samples in node.
+
+    Returns
+    -------
+
+    &#34;&#34;&#34;
+    # Get features, thresholds and signs for ancestors
+    if parent_stump is None:  # If root node
+        a_features = []
+        a_thresholds = []
+        a_signs = []
+    else:
+        a_features = parent_stump.a_features + [parent_stump.feature]
+        a_thresholds = parent_stump.a_thresholds + [parent_stump.threshold]
+        a_signs = parent_stump.a_signs + [is_right_child]
+    # Get indices for left and right children of the node in question
+    left_child = tree_struct.children_left[node_no]
+    right_child = tree_struct.children_right[node_no]
+    # Get quantities relevant to the node in question
+    feature = tree_struct.feature[node_no]
+    threshold = tree_struct.threshold[node_no]
+    left_size = tree_struct.weighted_n_node_samples[left_child]
+    right_size = tree_struct.weighted_n_node_samples[right_child]
+    parent_size = tree_struct.weighted_n_node_samples[node_no]
+    normalization = parent_size if normalize else 1
+    left_val = - np.sqrt(right_size / (left_size * normalization))
+    right_val = np.sqrt(left_size / (right_size * normalization))
+
+    return LocalDecisionStump(feature, threshold, left_val, right_val,
+                              a_features, a_thresholds, a_signs)
+
+
+def make_stumps(tree_struct, normalize=False):
+    &#34;&#34;&#34;
+    Create a collection of local decision stumps corresponding to all internal
+    nodes in a scikit-learn tree structure object.
+
+    Parameters
+    ----------
+    tree_struct: object
+        The scikit-learn tree object
+    normalize: bool
+        Flag. If set to True, then divide the nonzero function values by
+        sqrt(n_samples in node) so that the vector of function values on the
+        training set has unit norm. If False, then do not divide, so that the
+        vector of function values on the training set has norm equal to
+        n_samples in node.
+
+    Returns
+    -------
+    stumps: list of LocalDecisionStump objects
+        The local decision stumps corresponding to all internal node in the
+        tree structure
+
+    &#34;&#34;&#34;
+    stumps = []
+
+    def make_stump_iter(node_no, tree_struct, parent_stump, is_right_child,
+                        normalize, stumps):
+        &#34;&#34;&#34;
+        Helper function for iteratively making local decision stump objects and
+        appending them to the list stumps.
+        &#34;&#34;&#34;
+        new_stump = make_stump(node_no, tree_struct, parent_stump,
+                               is_right_child, normalize)
+        stumps.append(new_stump)
+        left_child = tree_struct.children_left[node_no]
+        right_child = tree_struct.children_right[node_no]
+        if tree_struct.feature[left_child] != -2:  # is not leaf
+            make_stump_iter(left_child, tree_struct, new_stump, False,
+                            normalize, stumps)
+        if tree_struct.feature[right_child] != -2:  # is not leaf
+            make_stump_iter(right_child, tree_struct, new_stump, True,
+                            normalize, stumps)
+
+    make_stump_iter(0, tree_struct, None, None, normalize, stumps)
+    return stumps
+
+
+def tree_feature_transform(stumps, X):
+    &#34;&#34;&#34;
+    Transform the data matrix X using a mapping derived from a collection of
+    local decision stump functions.
+
+    If the list of stumps is empty, return an array of shape (0, n_samples).
+
+    Parameters
+    ----------
+    stumps: list of LocalDecisionStump objects
+        List of stump functions to use to transform data
+    X: array-like of shape (n_samples, n_features)
+        Original data matrix
+
+    Returns
+    -------
+    X_transformed: array-like of shape (n_samples, n_stumps)
+        Transformed data matrix
+    &#34;&#34;&#34;
+    transformed_feature_vectors = [np.empty((X.shape[0], 0))]
+    for stump in stumps:
+        transformed_feature_vec = stump(X)[:, np.newaxis]
+        transformed_feature_vectors.append(transformed_feature_vec)
+    X_transformed = np.hstack(transformed_feature_vectors)
+
+    return X_transformed
+
+
+def _compare(data, k, threshold, sign=True):
+    &#34;&#34;&#34;
+    Obtain indicator vector for the samples with k-th feature &gt; threshold
+    &#34;&#34;&#34;
+    if sign:
+        return data[:, k] &gt; threshold
+    else:
+        return data[:, k] &lt;= threshold
+
+
+def _compare_all(data, ks, thresholds, signs):
+    &#34;&#34;&#34;
+    Obtain indicator vector for the samples with k-th feature &gt; threshold or
+    &lt;= threshold (depending on sign) for all k in ks
+    &#34;&#34;&#34;
+    return ~np.logical_xor(data[:, ks] &gt; thresholds, signs)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="imodels.importance.local_stumps.make_stump"><code class="name flex">
+<span>def <span class="ident">make_stump</span></span>(<span>node_no, tree_struct, parent_stump, is_right_child, normalize=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a single local decision stump corresponding to a node in a
+scikit-learn tree structure object. The nonzero values of the stump are
+chosen so that the vector of local decision stump values over the training
+set (used to fit the tree) is orthogonal to those of all ancestor nodes.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>node_no</code></strong> :&ensp;<code>int</code></dt>
+<dd>The index of the node</dd>
+<dt><strong><code>tree_struct</code></strong> :&ensp;<code>object</code></dt>
+<dd>The scikit-learn tree object</dd>
+<dt><strong><code>parent_stump</code></strong> :&ensp;<code><a title="imodels.importance.local_stumps.LocalDecisionStump" href="#imodels.importance.local_stumps.LocalDecisionStump">LocalDecisionStump</a> object</code></dt>
+<dd>The local decision stump corresponding to the parent of the node in q
+uestion</dd>
+<dt><strong><code>is_right_child</code></strong> :&ensp;<code>bool</code></dt>
+<dd>True if the new node is the right child of the parent node, False
+otherwise</dd>
+<dt><strong><code>normalize</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag. If set to True, then divide the nonzero function values by
+sqrt(n_samples in node) so that the vector of function values on the
+training set has unit norm. If False, then do not divide, so that the
+vector of function values on the training set has norm equal to
+n_samples in node.</dd>
+</dl>
+<h2 id="returns">Returns</h2></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_stump(node_no, tree_struct, parent_stump, is_right_child,
+               normalize=False):
+    &#34;&#34;&#34;
+    Create a single local decision stump corresponding to a node in a
+    scikit-learn tree structure object. The nonzero values of the stump are
+    chosen so that the vector of local decision stump values over the training
+    set (used to fit the tree) is orthogonal to those of all ancestor nodes.
+
+    Parameters
+    ----------
+    node_no: int
+        The index of the node
+    tree_struct: object
+        The scikit-learn tree object
+    parent_stump: LocalDecisionStump object
+        The local decision stump corresponding to the parent of the node in q
+        uestion
+    is_right_child: bool
+        True if the new node is the right child of the parent node, False
+        otherwise
+    normalize: bool
+        Flag. If set to True, then divide the nonzero function values by
+        sqrt(n_samples in node) so that the vector of function values on the
+        training set has unit norm. If False, then do not divide, so that the
+        vector of function values on the training set has norm equal to
+        n_samples in node.
+
+    Returns
+    -------
+
+    &#34;&#34;&#34;
+    # Get features, thresholds and signs for ancestors
+    if parent_stump is None:  # If root node
+        a_features = []
+        a_thresholds = []
+        a_signs = []
+    else:
+        a_features = parent_stump.a_features + [parent_stump.feature]
+        a_thresholds = parent_stump.a_thresholds + [parent_stump.threshold]
+        a_signs = parent_stump.a_signs + [is_right_child]
+    # Get indices for left and right children of the node in question
+    left_child = tree_struct.children_left[node_no]
+    right_child = tree_struct.children_right[node_no]
+    # Get quantities relevant to the node in question
+    feature = tree_struct.feature[node_no]
+    threshold = tree_struct.threshold[node_no]
+    left_size = tree_struct.weighted_n_node_samples[left_child]
+    right_size = tree_struct.weighted_n_node_samples[right_child]
+    parent_size = tree_struct.weighted_n_node_samples[node_no]
+    normalization = parent_size if normalize else 1
+    left_val = - np.sqrt(right_size / (left_size * normalization))
+    right_val = np.sqrt(left_size / (right_size * normalization))
+
+    return LocalDecisionStump(feature, threshold, left_val, right_val,
+                              a_features, a_thresholds, a_signs)</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.local_stumps.make_stumps"><code class="name flex">
+<span>def <span class="ident">make_stumps</span></span>(<span>tree_struct, normalize=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a collection of local decision stumps corresponding to all internal
+nodes in a scikit-learn tree structure object.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tree_struct</code></strong> :&ensp;<code>object</code></dt>
+<dd>The scikit-learn tree object</dd>
+<dt><strong><code>normalize</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag. If set to True, then divide the nonzero function values by
+sqrt(n_samples in node) so that the vector of function values on the
+training set has unit norm. If False, then do not divide, so that the
+vector of function values on the training set has norm equal to
+n_samples in node.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>stumps</code></strong> :&ensp;<code>list</code> of <code><a title="imodels.importance.local_stumps.LocalDecisionStump" href="#imodels.importance.local_stumps.LocalDecisionStump">LocalDecisionStump</a> objects</code></dt>
+<dd>The local decision stumps corresponding to all internal node in the
+tree structure</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_stumps(tree_struct, normalize=False):
+    &#34;&#34;&#34;
+    Create a collection of local decision stumps corresponding to all internal
+    nodes in a scikit-learn tree structure object.
+
+    Parameters
+    ----------
+    tree_struct: object
+        The scikit-learn tree object
+    normalize: bool
+        Flag. If set to True, then divide the nonzero function values by
+        sqrt(n_samples in node) so that the vector of function values on the
+        training set has unit norm. If False, then do not divide, so that the
+        vector of function values on the training set has norm equal to
+        n_samples in node.
+
+    Returns
+    -------
+    stumps: list of LocalDecisionStump objects
+        The local decision stumps corresponding to all internal node in the
+        tree structure
+
+    &#34;&#34;&#34;
+    stumps = []
+
+    def make_stump_iter(node_no, tree_struct, parent_stump, is_right_child,
+                        normalize, stumps):
+        &#34;&#34;&#34;
+        Helper function for iteratively making local decision stump objects and
+        appending them to the list stumps.
+        &#34;&#34;&#34;
+        new_stump = make_stump(node_no, tree_struct, parent_stump,
+                               is_right_child, normalize)
+        stumps.append(new_stump)
+        left_child = tree_struct.children_left[node_no]
+        right_child = tree_struct.children_right[node_no]
+        if tree_struct.feature[left_child] != -2:  # is not leaf
+            make_stump_iter(left_child, tree_struct, new_stump, False,
+                            normalize, stumps)
+        if tree_struct.feature[right_child] != -2:  # is not leaf
+            make_stump_iter(right_child, tree_struct, new_stump, True,
+                            normalize, stumps)
+
+    make_stump_iter(0, tree_struct, None, None, normalize, stumps)
+    return stumps</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.local_stumps.tree_feature_transform"><code class="name flex">
+<span>def <span class="ident">tree_feature_transform</span></span>(<span>stumps, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Transform the data matrix X using a mapping derived from a collection of
+local decision stump functions.</p>
+<p>If the list of stumps is empty, return an array of shape (0, n_samples).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>stumps</code></strong> :&ensp;<code>list</code> of <code><a title="imodels.importance.local_stumps.LocalDecisionStump" href="#imodels.importance.local_stumps.LocalDecisionStump">LocalDecisionStump</a> objects</code></dt>
+<dd>List of stump functions to use to transform data</dd>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Original data matrix</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>X_transformed</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_stumps)</code></dt>
+<dd>Transformed data matrix</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tree_feature_transform(stumps, X):
+    &#34;&#34;&#34;
+    Transform the data matrix X using a mapping derived from a collection of
+    local decision stump functions.
+
+    If the list of stumps is empty, return an array of shape (0, n_samples).
+
+    Parameters
+    ----------
+    stumps: list of LocalDecisionStump objects
+        List of stump functions to use to transform data
+    X: array-like of shape (n_samples, n_features)
+        Original data matrix
+
+    Returns
+    -------
+    X_transformed: array-like of shape (n_samples, n_stumps)
+        Transformed data matrix
+    &#34;&#34;&#34;
+    transformed_feature_vectors = [np.empty((X.shape[0], 0))]
+    for stump in stumps:
+        transformed_feature_vec = stump(X)[:, np.newaxis]
+        transformed_feature_vectors.append(transformed_feature_vec)
+    X_transformed = np.hstack(transformed_feature_vectors)
+
+    return X_transformed</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.importance.local_stumps.LocalDecisionStump"><code class="flex name class">
+<span>class <span class="ident">LocalDecisionStump</span></span>
+<span>(</span><span>feature, threshold, left_val, right_val, a_features, a_thresholds, a_signs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An object that implements a callable local decision stump function and
+that also includes some meta-data that allows for an API to interact with
+other methods in the package.</p>
+<p>A local decision stump is a tri-valued function that is zero outside of a
+rectangular region, and on that region, takes either a positive or negative
+value, depending on whether a single designated feature is above or below a
+threshold. For more information on what a local decision stump is, refer to
+our paper.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>feature</code></strong> :&ensp;<code>int</code></dt>
+<dd>Feature used in the decision stump</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code></dt>
+<dd>Threshold used in the decision stump</dd>
+<dt><strong><code>left_val</code></strong> :&ensp;<code>float</code></dt>
+<dd>The value taken when x_k &lt;= threshold</dd>
+<dt><strong><code>right_val</code></strong> :&ensp;<code>float</code></dt>
+<dd>The value taken when x_k &gt; threshold</dd>
+<dt><strong><code>a_features</code></strong> :&ensp;<code>list</code> of <code>ints</code></dt>
+<dd>List of ancestor feature indices (ordered from highest ancestor to
+lowest)</dd>
+<dt><strong><code>a_thresholds</code></strong> :&ensp;<code>list</code> of <code>floats</code></dt>
+<dd>List of ancestor thresholds (ordered from highest ancestor to lowest)</dd>
+<dt><strong><code>a_signs</code></strong> :&ensp;<code>list</code> of <code>bools</code></dt>
+<dd>List of signs indicating whether the current node is in the left child
+(False) or right child (True) of the ancestor nodes (ordered from
+highest ancestor to lowest)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LocalDecisionStump:
+    &#34;&#34;&#34;
+    An object that implements a callable local decision stump function and
+    that also includes some meta-data that allows for an API to interact with
+    other methods in the package.
+
+    A local decision stump is a tri-valued function that is zero outside of a
+    rectangular region, and on that region, takes either a positive or negative
+    value, depending on whether a single designated feature is above or below a
+    threshold. For more information on what a local decision stump is, refer to
+    our paper.
+
+    Parameters
+    ----------
+    feature: int
+        Feature used in the decision stump
+    threshold: float
+        Threshold used in the decision stump
+    left_val: float
+        The value taken when x_k &lt;= threshold
+    right_val: float
+        The value taken when x_k &gt; threshold
+    a_features: list of ints
+        List of ancestor feature indices (ordered from highest ancestor to
+        lowest)
+    a_thresholds: list of floats
+        List of ancestor thresholds (ordered from highest ancestor to lowest)
+    a_signs: list of bools
+        List of signs indicating whether the current node is in the left child
+        (False) or right child (True) of the ancestor nodes (ordered from
+        highest ancestor to lowest)
+    &#34;&#34;&#34;
+
+    def __init__(self, feature, threshold, left_val, right_val, a_features,
+                 a_thresholds, a_signs):
+        self.feature = feature
+        self.threshold = threshold
+        self.left_val = left_val
+        self.right_val = right_val
+        self.a_features = a_features
+        self.a_thresholds = a_thresholds
+        self.a_signs = a_signs
+
+    def __call__(self, data):
+        &#34;&#34;&#34;
+        Return values of the local decision stump function on an input data
+        matrix with samples as rows
+
+        Parameters
+        ----------
+        data: array-like of shape (n_samples, n_features)
+            Data matrix to feed into the local decision stump function
+
+        Returns
+        -------
+        values: array-like of shape (n_samples,)
+            Function values on the data
+        &#34;&#34;&#34;
+
+        root_to_stump_path_indicators = \
+            _compare_all(data, self.a_features, np.array(self.a_thresholds),
+                         np.array(self.a_signs))
+        in_node = np.all(root_to_stump_path_indicators, axis=1).astype(int)
+        is_right = _compare(data, self.feature, self.threshold).astype(int)
+        values = in_node * (is_right * self.right_val +
+                            (1 - is_right) * self.left_val)
+
+        return values
+
+    def __repr__(self):
+        return f&#34;LocalDecisionStump(feature={self.feature}, &#34; \
+               f&#34;threshold={self.threshold}, left_val={self.left_val}, &#34; \
+               f&#34;right_val={self.right_val}, a_features={self.a_features}, &#34; \
+               f&#34;a_thresholds={self.a_thresholds}, &#34; \
+               f&#34;a_signs={self.a_signs})&#34;
+
+    def get_depth(self):
+        &#34;&#34;&#34;
+        Get depth of the local decision stump, i.e. count how many ancenstor
+        nodes it has. The root node has depth 0.
+
+        &#34;&#34;&#34;
+        return len(self.a_features)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.importance.local_stumps.LocalDecisionStump.get_depth"><code class="name flex">
+<span>def <span class="ident">get_depth</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get depth of the local decision stump, i.e. count how many ancenstor
+nodes it has. The root node has depth 0.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_depth(self):
+    &#34;&#34;&#34;
+    Get depth of the local decision stump, i.e. count how many ancenstor
+    nodes it has. The root node has depth 0.
+
+    &#34;&#34;&#34;
+    return len(self.a_features)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index 🔍</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.importance" href="index.html">imodels.importance</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.importance.local_stumps.make_stump" href="#imodels.importance.local_stumps.make_stump">make_stump</a></code></li>
+<li><code><a title="imodels.importance.local_stumps.make_stumps" href="#imodels.importance.local_stumps.make_stumps">make_stumps</a></code></li>
+<li><code><a title="imodels.importance.local_stumps.tree_feature_transform" href="#imodels.importance.local_stumps.tree_feature_transform">tree_feature_transform</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.importance.local_stumps.LocalDecisionStump" href="#imodels.importance.local_stumps.LocalDecisionStump">LocalDecisionStump</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.importance.local_stumps.LocalDecisionStump.get_depth" href="#imodels.importance.local_stumps.LocalDecisionStump.get_depth">get_depth</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 c122.0,82.7 120.5,78.6 120.5,78.6 c119.2,72.0 123.4,76.3 123.4,76.3 c127.3,80.9 125.5,87.3 125.5,87.3 c122.9,97.6 130.6,101.9 134.4,103.2" fill="currentcolor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">

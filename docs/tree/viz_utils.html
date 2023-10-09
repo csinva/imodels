@@ -101,6 +101,9 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predicti
     # reshape value_sklearn_array to match the expected shape of (n_nodes,1,2) for values
     value_sklearns = value_sklearn_array.reshape(value_sklearn_array.shape[0], 1, value_sklearn_array.shape[1])
 
+    if n_classes == 1:
+        value_sklearns = np.ascontiguousarray(value_sklearns[:, :, 0:1])
+
     # get the max_depth
     def get_max_depth(node):
         if node is None:
@@ -143,7 +146,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predicti
     # construct sklearn object and __setstate__()
     if isinstance(figs, ClassifierMixin):
         dt = DecisionTreeClassifier(max_depth=max_depth)
-    elif isinstance(self, RegressorMixin):
+    elif isinstance(figs, RegressorMixin):
         dt = DecisionTreeRegressor(max_depth=max_depth)
 
     try:
@@ -204,6 +207,9 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predicti
     # reshape value_sklearn_array to match the expected shape of (n_nodes,1,2) for values
     value_sklearns = value_sklearn_array.reshape(value_sklearn_array.shape[0], 1, value_sklearn_array.shape[1])
 
+    if n_classes == 1:
+        value_sklearns = np.ascontiguousarray(value_sklearns[:, :, 0:1])
+
     # get the max_depth
     def get_max_depth(node):
         if node is None:
@@ -246,7 +252,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predicti
     # construct sklearn object and __setstate__()
     if isinstance(figs, ClassifierMixin):
         dt = DecisionTreeClassifier(max_depth=max_depth)
-    elif isinstance(self, RegressorMixin):
+    elif isinstance(figs, RegressorMixin):
         dt = DecisionTreeRegressor(max_depth=max_depth)
 
     try:

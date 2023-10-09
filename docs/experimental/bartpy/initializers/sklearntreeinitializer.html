@@ -102,14 +102,14 @@ def get_child(node, direction):
     return
 
 
-def enumarate_tree(tree: Node, num_iter=iter(range(int(1e+06)))):
+def enumerate_tree(tree: Node, num_iter=iter(range(int(1e+06)))):
     if tree is None:
         return
     tree.number = next(num_iter)
     # if hasattr(tree, &#39;left&#39;):
-    enumarate_tree(get_child(tree, &#39;left&#39;), num_iter)
+    enumerate_tree(get_child(tree, &#39;left&#39;), num_iter)
     # if hasattr(tree, &#39;right&#39;):
-    enumarate_tree(get_child(tree, &#39;right&#39;), num_iter)
+    enumerate_tree(get_child(tree, &#39;right&#39;), num_iter)
 
 
 def fill_nodes_dict(tree: Node, node_dict: dict):
@@ -125,7 +125,7 @@ def fill_nodes_dict(tree: Node, node_dict: dict):
 class SkTree:
     def __init__(self, tree: Node):
         nodes_dict = {}
-        enumarate_tree(tree, num_iter=iter(range(int(1e+06))))
+        enumerate_tree(tree, num_iter=iter(range(int(1e+06))))
         fill_nodes_dict(tree, nodes_dict)
         self.children_left = []
         self.children_right = []
@@ -231,8 +231,8 @@ def map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.enumarate_tree"><code class="name flex">
-<span>def <span class="ident">enumarate_tree</span></span>(<span>tree: <a title="imodels.tree.figs.Node" href="../../../tree/figs.html#imodels.tree.figs.Node">Node</a>, num_iter=&lt;range_iterator object&gt;)</span>
+<dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.enumerate_tree"><code class="name flex">
+<span>def <span class="ident">enumerate_tree</span></span>(<span>tree: <a title="imodels.tree.figs.Node" href="../../../tree/figs.html#imodels.tree.figs.Node">Node</a>, num_iter=&lt;range_iterator object&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -240,14 +240,14 @@ def map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def enumarate_tree(tree: Node, num_iter=iter(range(int(1e+06)))):
+<pre><code class="python">def enumerate_tree(tree: Node, num_iter=iter(range(int(1e+06)))):
     if tree is None:
         return
     tree.number = next(num_iter)
     # if hasattr(tree, &#39;left&#39;):
-    enumarate_tree(get_child(tree, &#39;left&#39;), num_iter)
+    enumerate_tree(get_child(tree, &#39;left&#39;), num_iter)
     # if hasattr(tree, &#39;right&#39;):
-    enumarate_tree(get_child(tree, &#39;right&#39;), num_iter)</code></pre>
+    enumerate_tree(get_child(tree, &#39;right&#39;), num_iter)</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.initializers.sklearntreeinitializer.fill_nodes_dict"><code class="name flex">
@@ -427,7 +427,7 @@ def map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree):
 <pre><code class="python">class SkTree:
     def __init__(self, tree: Node):
         nodes_dict = {}
-        enumarate_tree(tree, num_iter=iter(range(int(1e+06))))
+        enumerate_tree(tree, num_iter=iter(range(int(1e+06))))
         fill_nodes_dict(tree, nodes_dict)
         self.children_left = []
         self.children_right = []
@@ -580,7 +580,7 @@ def map_sklearn_tree_into_bartpy(bartpy_tree, sklearn_tree):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.enumarate_tree" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.enumarate_tree">enumarate_tree</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.enumerate_tree" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.enumerate_tree">enumerate_tree</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.fill_nodes_dict" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.fill_nodes_dict">fill_nodes_dict</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_bartpy_tree_from_sklearn" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_bartpy_tree_from_sklearn">get_bartpy_tree_from_sklearn</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_child" href="#imodels.experimental.bartpy.initializers.sklearntreeinitializer.get_child">get_child</a></code></li>

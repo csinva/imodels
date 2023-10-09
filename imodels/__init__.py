@@ -5,6 +5,10 @@
 # Github repo available [here](https://github.com/csinva/imodels)
 
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
+from .algebraic.tree_gam import TreeGAMClassifier, TreeGAMRegressor
+from .algebraic.marginal_shrinkage_linear_model import (
+    MarginalShrinkageLinearModelRegressor,
+)
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 from .experimental.bartpy import BART
@@ -22,27 +26,68 @@ from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.slipper import SlipperClassifier
 from .tree.c45_tree.c45_tree import C45TreeClassifier
-from .tree.cart_ccp import DecisionTreeCCPClassifier, DecisionTreeCCPRegressor, HSDecisionTreeCCPClassifierCV, \
-    HSDecisionTreeCCPRegressorCV
+from .tree.cart_ccp import (
+    DecisionTreeCCPClassifier,
+    DecisionTreeCCPRegressor,
+    HSDecisionTreeCCPClassifierCV,
+    HSDecisionTreeCCPRegressorCV,
+)
+
 # from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
 # from .tree.optimal_classification_tree import OptimalTreeModel
 from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
 from .tree.figs import FIGSRegressor, FIGSClassifier, FIGSRegressorCV, FIGSClassifierCV
 from .tree.gosdt.pygosdt import OptimalTreeClassifier
-from .tree.gosdt.pygosdt_shrinkage import HSOptimalTreeClassifier, HSOptimalTreeClassifierCV
-from .tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier, HSTreeRegressorCV, HSTreeClassifierCV
+from .tree.gosdt.pygosdt_shrinkage import (
+    HSOptimalTreeClassifier,
+    HSOptimalTreeClassifierCV,
+)
+from .tree.hierarchical_shrinkage import (
+    HSTreeRegressor,
+    HSTreeClassifier,
+    HSTreeRegressorCV,
+    HSTreeClassifierCV,
+)
 from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
+from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
-from .importance.representation import TreeTransformer
 
-CLASSIFIERS = [BayesianRuleListClassifier, GreedyRuleListClassifier, SkopeRulesClassifier,
-               BoostedRulesClassifier, SLIMClassifier, SlipperClassifier, BayesianRuleSetClassifier,
-               C45TreeClassifier, OptimalTreeClassifier, OptimalRuleListClassifier, OneRClassifier,
-               SlipperClassifier, RuleFitClassifier, TaoTreeClassifier,
-               FIGSClassifier, HSTreeClassifier, HSTreeClassifierCV]  # , IRFClassifier
-REGRESSORS = [RuleFitRegressor, SLIMRegressor, GreedyTreeClassifier, FIGSRegressor,
-              TaoTreeRegressor, HSTreeRegressor, HSTreeRegressorCV, BART]
+CLASSIFIERS = [
+    BayesianRuleListClassifier,
+    GreedyRuleListClassifier,
+    SkopeRulesClassifier,
+    BoostedRulesClassifier,
+    SLIMClassifier,
+    SlipperClassifier,
+    BayesianRuleSetClassifier,
+    C45TreeClassifier,
+    OptimalTreeClassifier,
+    OptimalRuleListClassifier,
+    OneRClassifier,
+    SlipperClassifier,
+    RuleFitClassifier,
+    TaoTreeClassifier,
+    TreeGAMClassifier,
+    FIGSClassifier,
+    HSTreeClassifier,
+    HSTreeClassifierCV,
+    GreedyTreeClassifier,
+    AutoInterpretableClassifier,
+]  # , IRFClassifier
+REGRESSORS = [
+    RuleFitRegressor,
+    SLIMRegressor,
+    GreedyTreeRegressor,
+    FIGSRegressor,
+    TaoTreeRegressor,
+    TreeGAMRegressor,
+    HSTreeRegressor,
+    HSTreeRegressorCV,
+    BART,
+    AutoInterpretableRegressor,
+]
 ESTIMATORS = CLASSIFIERS + REGRESSORS
-DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]
+DISCRETIZERS = [RFDiscretizer, BasicDiscretizer,
+                MDLPDiscretizer, BRLDiscretizer]

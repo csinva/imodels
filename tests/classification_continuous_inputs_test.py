@@ -4,7 +4,7 @@ import numpy as np
 from imodels import *  # noqa: F403
 
 
-class TestClassClassificationBinary:
+class TestClassClassificationContinuousInputs:
     '''Tests simple classification for different models. Note: still doesn't test all the models!
     '''
 
@@ -26,20 +26,24 @@ class TestClassClassificationBinary:
         '''
 
         for model_type in [
+            BoostedRulesClassifier,
             TaoTreeClassifier,
             RuleFitClassifier, GreedyRuleListClassifier,
-            SkopeRulesClassifier, BoostedRulesClassifier,
+            SkopeRulesClassifier,
             OneRClassifier, SlipperClassifier,
             GreedyTreeClassifier, OptimalTreeClassifier,
             C45TreeClassifier, FIGSClassifier,
+            TreeGAMClassifier,
         ]:  # IRFClassifier, SLIMClassifier, BayesianRuleSetClassifier,
 
             init_kwargs = {}
             if model_type == SkopeRulesClassifier or model_type == FPSkopeClassifier:
                 init_kwargs['random_state'] = 0
                 init_kwargs['max_samples_features'] = 1.
-            if model_type == SlipperClassifier:
+            elif model_type == SlipperClassifier:
                 init_kwargs['n_estimators'] = 1
+            elif model_type == TreeGAMClassifier:
+                init_kwargs['n_boosting_rounds'] = 10
             m = model_type(**init_kwargs)
 
             X = self.X_classification_binary
@@ -65,6 +69,6 @@ class TestClassClassificationBinary:
 
 
 if __name__ == '__main__':
-    t = TestClassClassificationBinary()
+    t = TestClassClassificationContinuousInputs()
     t.setup()
     t.test_classification_binary()

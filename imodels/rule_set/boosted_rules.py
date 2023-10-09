@@ -30,7 +30,7 @@ class BoostedRulesClassifier(AdaBoostClassifier):
 
     def __init__(
         self,
-        estimator=partial(DecisionTreeClassifier, max_depth=1),
+        estimator=DecisionTreeClassifier(max_depth=1),
         *,
         n_estimators=15,
         learning_rate=1.0,
@@ -38,14 +38,14 @@ class BoostedRulesClassifier(AdaBoostClassifier):
     ):
         try: # sklearn version >= 1.2
             super().__init__(
-                estimator=estimator(),
+                estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,
             )
         except: # sklearn version < 1.2
             super().__init__(
-                base_estimator=estimator(),
+                base_estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,
@@ -69,7 +69,7 @@ class BoostedRulesRegressor(AdaBoostRegressor):
 
     def __init__(
         self,
-        estimator=partial(DecisionTreeRegressor, max_depth=1),
+        estimator=DecisionTreeRegressor(max_depth=1),
         *,
         n_estimators=15,
         learning_rate=1.0,
@@ -77,14 +77,14 @@ class BoostedRulesRegressor(AdaBoostRegressor):
     ):
         try: # sklearn version >= 1.2
             super().__init__(
-                estimator=estimator(),
+                estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,
             )
         except: # sklearn version < 1.2
             super().__init__(
-                base_estimator=estimator(),
+                base_estimator=estimator,
                 n_estimators=n_estimators,
                 learning_rate=learning_rate,
                 random_state=random_state,

@@ -19,14 +19,14 @@ required_pypi = [
 
 extra_deps = [
     'cvxpy',  # optionally requires cvxpy for slim
-    'corels',  # optinally requires corels for optimalrulelistclassifier
+    'corels',  # optionally requires corels for optimalrulelistclassifier
     'gosdt-deprecated',  # optionally requires gosdt for optimaltreeclassifier
     'irf',  # optionally require irf for iterativeRandomForestClassifier
 ]
 
 setuptools.setup(
     name="imodels",
-    version="1.3.11",
+    version="1.4.1",
     author="Chandan Singh, Keyan Nasseri, Matthew Epland, Yan Shuo Tan, Omer Ronen, Tiffany Tang, Abhineet Agarwal, Theo Saarinen, Bin Yu, and others",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",

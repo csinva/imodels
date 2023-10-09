@@ -1,0 +1,1761 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import copy
+from abc import ABC, abstractmethod
+import warnings
+from functools import partial
+
+import numpy as np
+import scipy as sp
+
+from sklearn.linear_model import RidgeCV, Ridge, \
+    LogisticRegression, HuberRegressor, Lasso
+from sklearn.metrics import log_loss, mean_squared_error
+from scipy.special import softmax
+
+
+class PartialPredictionModelBase(ABC):
+    &#34;&#34;&#34;
+    An interface for partial prediction models, objects that make use of a
+    block partitioned data object, fits a regression or classification model
+    on all the data, and for each block k, applies the model on a modified copy
+    of the data (by either imputing the mean of each feature in block k or
+    imputing the mean of each feature not in block k.)
+
+    Parameters
+    ----------
+    estimator: scikit estimator object
+        The regression or classification model used to obtain predictions.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator):
+        self.estimator = copy.deepcopy(estimator)
+        self.is_fitted = False
+
+    def fit(self, X, y):
+        &#34;&#34;&#34;
+        Fit the partial prediction model.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix.
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
+        &#34;&#34;&#34;
+        self._fit_model(X, y)
+        self.is_fitted = True
+
+    @abstractmethod
+    def _fit_model(self, X, y):
+        &#34;&#34;&#34;
+        Fit the regression or classification model on all the data.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix.
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
+        &#34;&#34;&#34;
+        pass
+
+    @abstractmethod
+    def predict(self, X):
+        &#34;&#34;&#34;
+        Make predictions on new data using the fitted model.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix, for which to make predictions.
+        &#34;&#34;&#34;
+        pass
+
+    @abstractmethod
+    def predict_full(self, blocked_data):
+        &#34;&#34;&#34;
+        Make predictions using all the data based upon the fitted model.
+        Used to make full predictions in MDI+.
+
+        Parameters
+        ----------
+        blocked_data: BlockPartitionedData object
+            The block partitioned covariate data, for which to make predictions.
+        &#34;&#34;&#34;
+        pass
+
+    @abstractmethod
+    def predict_partial_k(self, blocked_data, k, mode):
+        &#34;&#34;&#34;
+        Make predictions on modified copies of the data based on the fitted model,
+        for a particular feature k of interest. Used to get partial predictions
+        for feature k in MDI+.
+
+        Parameters
+        ----------
+        blocked_data: BlockPartitionedData object
+            The block partitioned covariate data, for which to make predictions.
+        k: int
+            Index of feature in X of interest.
+        mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+            Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+            in block k, &#34;keep_rest&#34; imputes the mean of each feature in block k
+        &#34;&#34;&#34;
+        pass
+
+    def predict_partial(self, blocked_data, mode):
+        &#34;&#34;&#34;
+        Make predictions on modified copies of the data based on the fitted model,
+        for each feature under study. Used to get partial predictions in MDI+.
+
+        Parameters
+        ----------
+        blocked_data: BlockPartitionedData object
+            The block partitioned covariate data, for which to make predictions.
+        mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+            Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+            in block k, &#34;keep_rest&#34; imputes the mean of each feature in block k
+
+        Returns
+        -------
+        List of length n_features of partial predictions for each feature.
+        &#34;&#34;&#34;
+        n_blocks = blocked_data.n_blocks
+        partial_preds = {}
+        for k in range(n_blocks):
+            partial_preds[k] = self.predict_partial_k(blocked_data, k, mode)
+        return partial_preds
+
+
+class _GenericPPM(PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    Partial prediction model for arbitrary estimators. May be slow.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator):
+        super().__init__(estimator)
+
+    def _fit_model(self, X, y):
+        self.estimator.fit(X, y)
+
+    def predict(self, X):
+        return self.estimator.predict(X)
+
+    def predict_full(self, blocked_data):
+        return self.predict(blocked_data.get_all_data())
+
+    def predict_partial_k(self, blocked_data, k, mode):
+        modified_data = blocked_data.get_modified_data(k, mode)
+        return self.predict(modified_data)
+
+
+class GenericRegressorPPM(_GenericPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    Partial prediction model for arbitrary regression estimators. May be slow.
+    &#34;&#34;&#34;
+    ...
+
+
+class GenericClassifierPPM(_GenericPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    Partial prediction model for arbitrary classification estimators. May be slow.
+    &#34;&#34;&#34;
+
+    def predict_proba(self, X):
+        return self.estimator.predict_proba(X)
+
+    def predict_partial_k(self, blocked_data, k, mode):
+        modified_data = blocked_data.get_modified_data(k, mode)
+        return self.predict_proba(modified_data)
+
+
+class _GlmPPM(PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for GLM estimator. The GLM estimator is assumed to have a single
+    regularization hyperparameter accessible as a named attribute called either
+    &#34;alpha&#34; or &#34;C&#34;. When fitting, the PPM class will select this hyperparameter
+    using efficient approximate leave-one-out calculations.
+
+    Parameters
+    ----------
+    estimator: scikit estimator object
+        The regression or classification model used to obtain predictions.
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    inv_link_fn: function
+        The inverse of the GLM link function.
+    l_dot: function
+        The first derivative of the log likelihood (with respect to the linear
+        predictor), as a function of the linear predictor and the response y.
+    l_doubledot: function
+        The second derivative of the log likelihood (with respect to the linear
+        predictor), as a function of the linear predictor and the true response
+        y.
+    r_doubledot: function
+        The second derivative of the regularizer with respect to each
+        coefficient. We assume that the regularizer is separable and symmetric
+        with respect to the coefficients.
+    hyperparameter_scorer: function
+        The function used to evaluate different hyperparameter values.
+        Typically, this is the loglikelihood as a function of the linear
+        predictor and the true response y.
+    trim: float
+        The amount by which to trim predicted probabilities away from 0 and 1.
+        This helps to stabilize some loss calculations.
+    gcv_mode: string in {&#34;auto&#34;, &#34;svd&#34;, &#34;eigen&#34;}
+        Flag indicating which strategy to use when performing leave-one-out
+        cross-validation for ridge regression, if applicable.
+        See gcv_mode in sklearn.linear_model.RidgeCV for details.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator, loo=True, alpha_grid=np.logspace(-4, 4, 10),
+                 inv_link_fn=lambda a: a, l_dot=lambda a, b: b - a,
+                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1,
+                 hyperparameter_scorer=mean_squared_error,
+                 trim=None, gcv_mode=&#39;auto&#39;):
+        super().__init__(estimator)
+        self.loo = loo
+        self.alpha_grid = alpha_grid
+        self.inv_link_fn = inv_link_fn
+        self.l_dot = l_dot
+        self.l_doubledot = l_doubledot
+        self.r_doubledot = r_doubledot
+        self.trim = trim
+        self.gcv_mode = gcv_mode
+        self.hyperparameter_scorer = hyperparameter_scorer
+        self.alpha_ = {}
+        self.loo_coefficients_ = {}
+        self.coefficients_ = {}
+        self._intercept_pred = None
+
+    def _fit_model(self, X, y):
+        y_train = copy.deepcopy(y)
+        if y_train.ndim == 1:
+            y_train = y_train.reshape(-1, 1)
+        self._n_outputs = y_train.shape[1]
+        for j in range(self._n_outputs):
+            yj = y_train[:, j]
+            # Compute regularization hyperparameter using approximate LOOCV
+            if isinstance(self.estimator, Ridge):
+                cv = RidgeCV(alphas=self.alpha_grid, gcv_mode=self.gcv_mode)
+                cv.fit(X, yj)
+                self.alpha_[j] = cv.alpha_
+            else:
+                self.alpha_[j] = self._get_aloocv_alpha(X, yj)
+            # Fit the model on the training set and compute the coefficients
+            if self.loo:
+                self.loo_coefficients_[j] = \
+                    self._fit_loo_coefficients(X, yj, self.alpha_[j])
+                self.coefficients_[j] = _extract_coef_and_intercept(self.estimator)
+            else:
+                self.coefficients_[j] = \
+                    self._fit_coefficients(X, yj, self.alpha_[j])
+
+    def predict(self, X):
+        preds_list = []
+        for j in range(self._n_outputs):
+            preds_j = _get_preds(X, self.coefficients_[j], self.inv_link_fn)
+            preds_list.append(preds_j)
+        if self._n_outputs == 1:
+            preds = preds_list[0]
+        else:
+            preds = np.stack(preds_list, axis=1)
+        return _trim_values(preds, self.trim)
+
+    def predict_loo(self, X):
+        preds_list = []
+        for j in range(self._n_outputs):
+            if self.loo:
+                preds_j = _get_preds(X, self.loo_coefficients_[j], self.inv_link_fn)
+            else:
+                preds_j = _get_preds(X, self.coefficients_[j], self.inv_link_fn)
+            preds_list.append(preds_j)
+        if self._n_outputs == 1:
+            preds = preds_list[0]
+        else:
+            preds = np.stack(preds_list, axis=1)
+        return _trim_values(preds, self.trim)
+
+    def predict_full(self, blocked_data):
+        return self.predict_loo(blocked_data.get_all_data())
+
+    def predict_partial_k(self, blocked_data, k, mode):
+        assert mode in [&#34;keep_k&#34;, &#34;keep_rest&#34;]
+        if mode == &#34;keep_k&#34;:
+            block_indices = blocked_data.get_block_indices(k)
+            data_block = blocked_data.get_block(k)
+        elif mode == &#34;keep_rest&#34;:
+            block_indices = blocked_data.get_all_except_block_indices(k)
+            data_block = blocked_data.get_all_except_block(k)
+        if len(block_indices) == 0:  # If empty block
+            return self.intercept_pred
+        else:
+            partial_preds_list = []
+            for j in range(self._n_outputs):
+                if self.loo:
+                    coefs = self.loo_coefficients_[j][:, block_indices]
+                    intercept = self.loo_coefficients_[j][:, -1]
+                else:
+                    coefs = self.coefficients_[j][block_indices]
+                    intercept = self.coefficients_[j][-1]
+                partial_preds_j = _get_preds(
+                    data_block, coefs, self.inv_link_fn, intercept
+                )
+                partial_preds_list.append(partial_preds_j)
+            if self._n_outputs == 1:
+                partial_preds = partial_preds_list[0]
+            else:
+                partial_preds = np.stack(partial_preds_list, axis=1)
+            return _trim_values(partial_preds, self.trim)
+
+    @property
+    def intercept_pred(self):
+        if self._intercept_pred is None:
+            self._intercept_pred = np.array([
+                _trim_values(self.inv_link_fn(self.coefficients_[j][-1]), self.trim) \
+                for j in range(self._n_outputs)
+            ])
+        return (&#34;constant_model&#34;, self._intercept_pred)
+
+    def _fit_coefficients(self, X, y, alpha):
+        _set_alpha(self.estimator, alpha)
+        self.estimator.fit(X, y)
+        return _extract_coef_and_intercept(self.estimator)
+
+    def _fit_loo_coefficients(self, X, y, alpha, max_h=1-1e-4):
+        &#34;&#34;&#34;
+        Get the coefficient (and intercept) for each LOO model. Since we fit
+        one model for each sample, this gives an ndarray of shape (n_samples,
+        n_features + 1)
+        &#34;&#34;&#34;
+        orig_coef_ = self._fit_coefficients(X, y, alpha)
+        X1 = np.hstack([X, np.ones((X.shape[0], 1))])
+        orig_preds = _get_preds(X, orig_coef_, self.inv_link_fn)
+        support_idxs = orig_coef_ != 0
+        if not any(support_idxs):
+            return orig_coef_ * np.ones_like(X1)
+        X1 = X1[:, support_idxs]
+        orig_coef_ = orig_coef_[support_idxs]
+        l_doubledot_vals = self.l_doubledot(y, orig_preds)
+        J = X1.T * l_doubledot_vals @ X1
+        if self.r_doubledot is not None:
+            r_doubledot_vals = self.r_doubledot(orig_coef_) * \
+                               np.ones_like(orig_coef_)
+            r_doubledot_vals[-1] = 0 # Do not penalize constant term
+            reg_curvature = np.diag(r_doubledot_vals)
+            J += alpha * reg_curvature
+        normal_eqn_mat = np.linalg.inv(J) @ X1.T
+        h_vals = np.sum(X1.T * normal_eqn_mat, axis=0) * l_doubledot_vals
+        h_vals[h_vals == 1] = max_h
+        loo_coef_ = orig_coef_[:, np.newaxis] + \
+                    normal_eqn_mat * self.l_dot(y, orig_preds) / (1 - h_vals)
+        if not all(support_idxs):
+            loo_coef_dense_ = np.zeros((X.shape[1] + 1, X.shape[0]))
+            loo_coef_dense_[support_idxs, :] = loo_coef_
+            loo_coef_ = loo_coef_dense_
+        return loo_coef_.T
+
+    def _get_aloocv_alpha(self, X, y):
+        cv_scores = np.zeros_like(self.alpha_grid)
+        for i, alpha in enumerate(self.alpha_grid):
+            loo_coef_ = self._fit_loo_coefficients(X, y, alpha)
+            X1 = np.hstack([X, np.ones((X.shape[0], 1))])
+            sample_scores = np.sum(loo_coef_ * X1, axis=1)
+            preds = _trim_values(self.inv_link_fn(sample_scores), self.trim)
+            cv_scores[i] = self.hyperparameter_scorer(y, preds)
+        return self.alpha_grid[np.argmin(cv_scores)]
+
+
+class GlmRegressorPPM(_GlmPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for GLM regression estimator.
+    &#34;&#34;&#34;
+    ...
+
+
+class GlmClassifierPPM(_GlmPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for GLM classification estimator.
+    &#34;&#34;&#34;
+
+    def predict_proba(self, X):
+        probs = self.predict(X)
+        if probs.ndim == 1:
+            probs = np.stack([1 - probs, probs], axis=1)
+        return probs
+
+    def predict_proba_loo(self, X):
+        probs = self.predict_loo(X)
+        if probs.ndim == 1:
+            probs = np.stack([1 - probs, probs], axis=1)
+        return probs
+
+
+class _RidgePPM(_GlmPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class that uses ridge as the estimator.
+
+    Parameters
+    ----------
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    gcv_mode: string in {&#34;auto&#34;, &#34;svd&#34;, &#34;eigen&#34;}
+        Flag indicating which strategy to use when performing leave-one-out
+        cross-validation for ridge regression.
+        See gcv_mode in sklearn.linear_model.RidgeCV for details.
+    **kwargs
+        Other Parameters are passed on to Ridge().
+    &#34;&#34;&#34;
+
+    def __init__(self, loo=True, alpha_grid=np.logspace(-5, 5, 100),
+                 gcv_mode=&#39;auto&#39;, **kwargs):
+        super().__init__(Ridge(**kwargs), loo, alpha_grid, gcv_mode=gcv_mode)
+
+    def set_alphas(self, alphas=&#34;default&#34;, blocked_data=None, y=None):
+        full_data = blocked_data.get_all_data()
+        if alphas == &#34;default&#34;:
+            alphas = get_alpha_grid(full_data, y)
+        else:
+            alphas = alphas
+        self.alpha_grid = alphas
+
+
+class RidgeRegressorPPM(_RidgePPM, GlmRegressorPPM,
+                        PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for regression that uses ridge as the GLM estimator.
+    &#34;&#34;&#34;
+    ...
+
+
+class RidgeClassifierPPM(_RidgePPM, GlmClassifierPPM,
+                         PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for classification that uses ridge as the GLM estimator.
+    &#34;&#34;&#34;
+
+    def predict_proba(self, X):
+        probs = softmax(self.predict(X))
+        if probs.ndim == 1:
+            probs = np.stack([1 - probs, probs], axis=1)
+        return probs
+
+    def predict_proba_loo(self, X):
+        probs = softmax(self.predict_loo(X))
+        if probs.ndim == 1:
+            probs = np.stack([1 - probs, probs], axis=1)
+        return probs
+
+
+class LogisticClassifierPPM(GlmClassifierPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for classification that uses logistic regression as the estimator.
+
+    Parameters
+    ----------
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    max_iter: int
+        The maximum number of iterations for the LogisticRegression solver.
+    trim: float
+        The amount by which to trim predicted probabilities away from 0 and 1.
+        This helps to stabilize some loss calculations.
+    **kwargs
+        Other Parameters are passed on to LogisticRegression().
+    &#34;&#34;&#34;
+
+    def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25),
+                 penalty=&#39;l2&#39;, max_iter=1000, trim=0.01, **kwargs):
+        assert penalty in [&#39;l2&#39;, &#39;l1&#39;]
+        if penalty == &#39;l2&#39;:
+            r_doubledot = lambda a: 1
+        elif penalty == &#39;l1&#39;:
+            r_doubledot = None
+        super().__init__(LogisticRegression(penalty=penalty, max_iter=max_iter, **kwargs),
+                         loo, alpha_grid,
+                         inv_link_fn=sp.special.expit,
+                         l_doubledot=lambda a, b: b * (1 - b),
+                         r_doubledot=r_doubledot,
+                         hyperparameter_scorer=log_loss,
+                         trim=trim)
+
+
+class RobustRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for regression that uses Huber robust regression as the estimator.
+
+    Parameters
+    ----------
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    epsilon: float
+        The robustness parameter for Huber regression. The smaller the epsilon,
+        the more robust it is to outliers. Epsilon must be in the range
+        [1, inf).
+    **kwargs
+        Other Parameters are passed on to LogisticRegression().
+    &#34;&#34;&#34;
+    def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25),
+                 epsilon=1.35, max_iter=2000, **kwargs):
+        loss_fn = partial(huber_loss, epsilon=epsilon)
+        l_dot = lambda a, b: (b - a) / (1 + ((a - b) / epsilon) ** 2) ** 0.5
+        l_doubledot=lambda a, b: (1 + (((a - b) / epsilon) ** 2)) ** (-1.5)
+        super().__init__(
+            HuberRegressor(max_iter=max_iter, **kwargs), loo, alpha_grid,
+            l_dot=l_dot,
+            l_doubledot=l_doubledot,
+            hyperparameter_scorer=loss_fn)
+
+
+class LassoRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for regression that uses lasso as the estimator.
+
+    Parameters
+    ----------
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    **kwargs
+        Other Parameters are passed on to Lasso().
+    &#34;&#34;&#34;
+
+    def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25), **kwargs):
+        super().__init__(Lasso(**kwargs), loo, alpha_grid, r_doubledot=None)
+
+
+def _trim_values(values, trim=None):
+    if trim is not None:
+        assert 0 &lt; trim &lt; 0.5, &#34;Limit must be between 0 and 0.5&#34;
+        return np.clip(values, trim, 1 - trim)
+    else:
+        return values
+
+
+def _extract_coef_and_intercept(estimator):
+    &#34;&#34;&#34;
+    Get the coefficient vector and intercept from a GLM estimator
+    &#34;&#34;&#34;
+    coef_ = estimator.coef_
+    intercept_ = estimator.intercept_
+    if coef_.ndim &gt; 1:  # For classifer estimators
+        coef_ = coef_.ravel()
+        intercept_ = intercept_[0]
+    augmented_coef_ = np.append(coef_, intercept_)
+    return augmented_coef_
+
+
+def _set_alpha(estimator, alpha):
+    if hasattr(estimator, &#34;alpha&#34;):
+        estimator.set_params(alpha=alpha)
+    elif hasattr(estimator, &#34;C&#34;):
+        estimator.set_params(C=1/alpha)
+    else:
+        warnings.warn(&#34;Estimator has no regularization parameter.&#34;)
+
+
+def _get_preds(data_block, coefs, inv_link_fn, intercept=None):
+    if coefs.ndim &gt; 1: # LOO predictions
+        if coefs.shape[1] == (data_block.shape[1] + 1):
+            intercept = coefs[:, -1]
+            coefs = coefs[:, :-1]
+        lin_preds = np.sum(data_block * coefs, axis=1) + intercept
+    else:
+        if len(coefs) == (data_block.shape[1] + 1):
+            intercept = coefs[-1]
+            coefs = coefs[:-1]
+        lin_preds = data_block @ coefs + intercept
+    return inv_link_fn(lin_preds)
+
+
+def huber_loss(y, preds, epsilon=1.35):
+    &#34;&#34;&#34;
+    Evaluates Huber loss function.
+
+    Parameters
+    ----------
+    y: array-like of shape (n,)
+        Vector of observed responses.
+    preds: array-like of shape (n,)
+        Vector of estimated/predicted responses.
+    epsilon: float
+        Threshold, determining transition between squared
+        and absolute loss in Huber loss function.
+
+    Returns
+    -------
+    Scalar value, quantifying the Huber loss. Lower loss
+    indicates better fit.
+
+    &#34;&#34;&#34;
+    total_loss = 0
+    for i in range(len(y)):
+        sample_absolute_error = np.abs(y[i] - preds[i])
+        if sample_absolute_error &lt; epsilon:
+            total_loss += 0.5 * ((y[i] - preds[i]) ** 2)
+        else:
+            sample_robust_loss = epsilon * sample_absolute_error - 0.5 * \
+                                 epsilon ** 2
+            total_loss += sample_robust_loss
+    return total_loss / len(y)
+
+
+def get_alpha_grid(X, y, start=-5, stop=5, num=100):
+    X = X - X.mean(axis=0)
+    y = y - y.mean(axis=0)
+    sigma_sq_ = np.linalg.norm(y, axis=0) ** 2 / X.shape[0]
+    X_var_ = np.linalg.norm(X, axis=0) ** 2
+    alpha_opts_ = (X_var_[:, np.newaxis] / (X.T @ y)) ** 2 * sigma_sq_
+    base = np.max(alpha_opts_)
+    alphas = np.logspace(start, stop, num=num) * base
+    return alphas</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="imodels.importance.ppms.get_alpha_grid"><code class="name flex">
+<span>def <span class="ident">get_alpha_grid</span></span>(<span>X, y, start=-5, stop=5, num=100)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_alpha_grid(X, y, start=-5, stop=5, num=100):
+    X = X - X.mean(axis=0)
+    y = y - y.mean(axis=0)
+    sigma_sq_ = np.linalg.norm(y, axis=0) ** 2 / X.shape[0]
+    X_var_ = np.linalg.norm(X, axis=0) ** 2
+    alpha_opts_ = (X_var_[:, np.newaxis] / (X.T @ y)) ** 2 * sigma_sq_
+    base = np.max(alpha_opts_)
+    alphas = np.logspace(start, stop, num=num) * base
+    return alphas</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.ppms.huber_loss"><code class="name flex">
+<span>def <span class="ident">huber_loss</span></span>(<span>y, preds, epsilon=1.35)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Evaluates Huber loss function.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n,)</code></dt>
+<dd>Vector of observed responses.</dd>
+<dt><strong><code>preds</code></strong> :&ensp;<code>array-like</code> of <code>shape (n,)</code></dt>
+<dd>Vector of estimated/predicted responses.</dd>
+<dt><strong><code>epsilon</code></strong> :&ensp;<code>float</code></dt>
+<dd>Threshold, determining transition between squared
+and absolute loss in Huber loss function.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Scalar value, quantifying the Huber loss. Lower loss</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<p>indicates better fit.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def huber_loss(y, preds, epsilon=1.35):
+    &#34;&#34;&#34;
+    Evaluates Huber loss function.
+
+    Parameters
+    ----------
+    y: array-like of shape (n,)
+        Vector of observed responses.
+    preds: array-like of shape (n,)
+        Vector of estimated/predicted responses.
+    epsilon: float
+        Threshold, determining transition between squared
+        and absolute loss in Huber loss function.
+
+    Returns
+    -------
+    Scalar value, quantifying the Huber loss. Lower loss
+    indicates better fit.
+
+    &#34;&#34;&#34;
+    total_loss = 0
+    for i in range(len(y)):
+        sample_absolute_error = np.abs(y[i] - preds[i])
+        if sample_absolute_error &lt; epsilon:
+            total_loss += 0.5 * ((y[i] - preds[i]) ** 2)
+        else:
+            sample_robust_loss = epsilon * sample_absolute_error - 0.5 * \
+                                 epsilon ** 2
+            total_loss += sample_robust_loss
+    return total_loss / len(y)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.importance.ppms.GenericClassifierPPM"><code class="flex name class">
+<span>class <span class="ident">GenericClassifierPPM</span></span>
+<span>(</span><span>estimator)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Partial prediction model for arbitrary classification estimators. May be slow.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GenericClassifierPPM(_GenericPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    Partial prediction model for arbitrary classification estimators. May be slow.
+    &#34;&#34;&#34;
+
+    def predict_proba(self, X):
+        return self.estimator.predict_proba(X)
+
+    def predict_partial_k(self, blocked_data, k, mode):
+        modified_data = blocked_data.get_modified_data(k, mode)
+        return self.predict_proba(modified_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>imodels.importance.ppms._GenericPPM</li>
+<li><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.importance.ppms.GenericClassifierPPM.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    return self.estimator.predict_proba(X)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.fit" href="#imodels.importance.ppms.PartialPredictionModelBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict" href="#imodels.importance.ppms.PartialPredictionModelBase.predict">predict</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_full" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_full">predict_full</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_partial" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial">predict_partial</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k">predict_partial_k</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.importance.ppms.GenericRegressorPPM"><code class="flex name class">
+<span>class <span class="ident">GenericRegressorPPM</span></span>
+<span>(</span><span>estimator)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Partial prediction model for arbitrary regression estimators. May be slow.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GenericRegressorPPM(_GenericPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    Partial prediction model for arbitrary regression estimators. May be slow.
+    &#34;&#34;&#34;
+    ...</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>imodels.importance.ppms._GenericPPM</li>
+<li><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.fit" href="#imodels.importance.ppms.PartialPredictionModelBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict" href="#imodels.importance.ppms.PartialPredictionModelBase.predict">predict</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_full" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_full">predict_full</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_partial" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial">predict_partial</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k">predict_partial_k</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.importance.ppms.GlmClassifierPPM"><code class="flex name class">
+<span>class <span class="ident">GlmClassifierPPM</span></span>
+<span>(</span><span>estimator, loo=True, alpha_grid=array([1.00000000e-04, 7.74263683e-04, 5.99484250e-03, 4.64158883e-02,
+3.59381366e-01, 2.78255940e+00, 2.15443469e+01, 1.66810054e+02,
+1.29154967e+03, 1.00000000e+04]), inv_link_fn=&lt;function _GlmPPM.&lt;lambda&gt;&gt;, l_dot=&lt;function _GlmPPM.&lt;lambda&gt;&gt;, l_doubledot=&lt;function _GlmPPM.&lt;lambda&gt;&gt;, r_doubledot=&lt;function _GlmPPM.&lt;lambda&gt;&gt;, hyperparameter_scorer=&lt;function mean_squared_error&gt;, trim=None, gcv_mode='auto')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>PPM class for GLM classification estimator.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GlmClassifierPPM(_GlmPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for GLM classification estimator.
+    &#34;&#34;&#34;
+
+    def predict_proba(self, X):
+        probs = self.predict(X)
+        if probs.ndim == 1:
+            probs = np.stack([1 - probs, probs], axis=1)
+        return probs
+
+    def predict_proba_loo(self, X):
+        probs = self.predict_loo(X)
+        if probs.ndim == 1:
+            probs = np.stack([1 - probs, probs], axis=1)
+        return probs</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>imodels.importance.ppms._GlmPPM</li>
+<li><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.ppms.LogisticClassifierPPM" href="#imodels.importance.ppms.LogisticClassifierPPM">LogisticClassifierPPM</a></li>
+<li><a title="imodels.importance.ppms.RidgeClassifierPPM" href="#imodels.importance.ppms.RidgeClassifierPPM">RidgeClassifierPPM</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.importance.ppms.GlmClassifierPPM.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    probs = self.predict(X)
+    if probs.ndim == 1:
+        probs = np.stack([1 - probs, probs], axis=1)
+    return probs</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.ppms.GlmClassifierPPM.predict_proba_loo"><code class="name flex">
+<span>def <span class="ident">predict_proba_loo</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba_loo(self, X):
+    probs = self.predict_loo(X)
+    if probs.ndim == 1:
+        probs = np.stack([1 - probs, probs], axis=1)
+    return probs</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.fit" href="#imodels.importance.ppms.PartialPredictionModelBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict" href="#imodels.importance.ppms.PartialPredictionModelBase.predict">predict</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_full" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_full">predict_full</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_partial" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial">predict_partial</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k">predict_partial_k</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.importance.ppms.GlmRegressorPPM"><code class="flex name class">
+<span>class <span class="ident">GlmRegressorPPM</span></span>
+<span>(</span><span>estimator, loo=True, alpha_grid=array([1.00000000e-04, 7.74263683e-04, 5.99484250e-03, 4.64158883e-02,
+3.59381366e-01, 2.78255940e+00, 2.15443469e+01, 1.66810054e+02,
+1.29154967e+03, 1.00000000e+04]), inv_link_fn=&lt;function _GlmPPM.&lt;lambda&gt;&gt;, l_dot=&lt;function _GlmPPM.&lt;lambda&gt;&gt;, l_doubledot=&lt;function _GlmPPM.&lt;lambda&gt;&gt;, r_doubledot=&lt;function _GlmPPM.&lt;lambda&gt;&gt;, hyperparameter_scorer=&lt;function mean_squared_error&gt;, trim=None, gcv_mode='auto')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>PPM class for GLM regression estimator.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class GlmRegressorPPM(_GlmPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for GLM regression estimator.
+    &#34;&#34;&#34;
+    ...</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>imodels.importance.ppms._GlmPPM</li>
+<li><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.ppms.LassoRegressorPPM" href="#imodels.importance.ppms.LassoRegressorPPM">LassoRegressorPPM</a></li>
+<li><a title="imodels.importance.ppms.RidgeRegressorPPM" href="#imodels.importance.ppms.RidgeRegressorPPM">RidgeRegressorPPM</a></li>
+<li><a title="imodels.importance.ppms.RobustRegressorPPM" href="#imodels.importance.ppms.RobustRegressorPPM">RobustRegressorPPM</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.fit" href="#imodels.importance.ppms.PartialPredictionModelBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict" href="#imodels.importance.ppms.PartialPredictionModelBase.predict">predict</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_full" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_full">predict_full</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_partial" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial">predict_partial</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k">predict_partial_k</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.importance.ppms.LassoRegressorPPM"><code class="flex name class">
+<span>class <span class="ident">LassoRegressorPPM</span></span>
+<span>(</span><span>loo=True, alpha_grid=array([1.00000000e-02, 1.61559810e-02, 2.61015722e-02, 4.21696503e-02,
+6.81292069e-02, 1.10069417e-01, 1.77827941e-01, 2.87298483e-01,
+4.64158883e-01, 7.49894209e-01, 1.21152766e+00, 1.95734178e+00,
+3.16227766e+00, 5.10896977e+00, 8.25404185e+00, 1.33352143e+01,
+2.15443469e+01, 3.48070059e+01, 5.62341325e+01, 9.08517576e+01,
+1.46779927e+02, 2.37137371e+02, 3.83118685e+02, 6.18965819e+02,
+1.00000000e+03]), **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>PPM class for regression that uses lasso as the estimator.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>loo</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to also use LOO calculations for making predictions.</dd>
+<dt><strong><code>alpha_grid</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_alphas, )</code></dt>
+<dd>The grid of alpha values for hyperparameter optimization.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Other Parameters are passed on to Lasso().</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LassoRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for regression that uses lasso as the estimator.
+
+    Parameters
+    ----------
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    **kwargs
+        Other Parameters are passed on to Lasso().
+    &#34;&#34;&#34;
+
+    def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25), **kwargs):
+        super().__init__(Lasso(**kwargs), loo, alpha_grid, r_doubledot=None)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.ppms.GlmRegressorPPM" href="#imodels.importance.ppms.GlmRegressorPPM">GlmRegressorPPM</a></li>
+<li>imodels.importance.ppms._GlmPPM</li>
+<li><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.ppms.GlmRegressorPPM" href="#imodels.importance.ppms.GlmRegressorPPM">GlmRegressorPPM</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.fit" href="#imodels.importance.ppms.PartialPredictionModelBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict" href="#imodels.importance.ppms.PartialPredictionModelBase.predict">predict</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict_full" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_full">predict_full</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict_partial" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial">predict_partial</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict_partial_k" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k">predict_partial_k</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.importance.ppms.LogisticClassifierPPM"><code class="flex name class">
+<span>class <span class="ident">LogisticClassifierPPM</span></span>
+<span>(</span><span>loo=True, alpha_grid=array([1.00000000e-02, 1.61559810e-02, 2.61015722e-02, 4.21696503e-02,
+6.81292069e-02, 1.10069417e-01, 1.77827941e-01, 2.87298483e-01,
+4.64158883e-01, 7.49894209e-01, 1.21152766e+00, 1.95734178e+00,
+3.16227766e+00, 5.10896977e+00, 8.25404185e+00, 1.33352143e+01,
+2.15443469e+01, 3.48070059e+01, 5.62341325e+01, 9.08517576e+01,
+1.46779927e+02, 2.37137371e+02, 3.83118685e+02, 6.18965819e+02,
+1.00000000e+03]), penalty='l2', max_iter=1000, trim=0.01, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>PPM class for classification that uses logistic regression as the estimator.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>loo</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to also use LOO calculations for making predictions.</dd>
+<dt><strong><code>alpha_grid</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_alphas, )</code></dt>
+<dd>The grid of alpha values for hyperparameter optimization.</dd>
+<dt><strong><code>max_iter</code></strong> :&ensp;<code>int</code></dt>
+<dd>The maximum number of iterations for the LogisticRegression solver.</dd>
+<dt><strong><code>trim</code></strong> :&ensp;<code>float</code></dt>
+<dd>The amount by which to trim predicted probabilities away from 0 and 1.
+This helps to stabilize some loss calculations.</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Other Parameters are passed on to LogisticRegression().</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LogisticClassifierPPM(GlmClassifierPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for classification that uses logistic regression as the estimator.
+
+    Parameters
+    ----------
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    max_iter: int
+        The maximum number of iterations for the LogisticRegression solver.
+    trim: float
+        The amount by which to trim predicted probabilities away from 0 and 1.
+        This helps to stabilize some loss calculations.
+    **kwargs
+        Other Parameters are passed on to LogisticRegression().
+    &#34;&#34;&#34;
+
+    def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25),
+                 penalty=&#39;l2&#39;, max_iter=1000, trim=0.01, **kwargs):
+        assert penalty in [&#39;l2&#39;, &#39;l1&#39;]
+        if penalty == &#39;l2&#39;:
+            r_doubledot = lambda a: 1
+        elif penalty == &#39;l1&#39;:
+            r_doubledot = None
+        super().__init__(LogisticRegression(penalty=penalty, max_iter=max_iter, **kwargs),
+                         loo, alpha_grid,
+                         inv_link_fn=sp.special.expit,
+                         l_doubledot=lambda a, b: b * (1 - b),
+                         r_doubledot=r_doubledot,
+                         hyperparameter_scorer=log_loss,
+                         trim=trim)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.ppms.GlmClassifierPPM" href="#imodels.importance.ppms.GlmClassifierPPM">GlmClassifierPPM</a></li>
+<li>imodels.importance.ppms._GlmPPM</li>
+<li><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.ppms.GlmClassifierPPM" href="#imodels.importance.ppms.GlmClassifierPPM">GlmClassifierPPM</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.fit" href="#imodels.importance.ppms.PartialPredictionModelBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.predict" href="#imodels.importance.ppms.PartialPredictionModelBase.predict">predict</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.predict_full" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_full">predict_full</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.predict_partial" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial">predict_partial</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.predict_partial_k" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k">predict_partial_k</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.importance.ppms.PartialPredictionModelBase"><code class="flex name class">
+<span>class <span class="ident">PartialPredictionModelBase</span></span>
+<span>(</span><span>estimator)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An interface for partial prediction models, objects that make use of a
+block partitioned data object, fits a regression or classification model
+on all the data, and for each block k, applies the model on a modified copy
+of the data (by either imputing the mean of each feature in block k or
+imputing the mean of each feature not in block k.)</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>estimator</code></strong> :&ensp;<code>scikit estimator object</code></dt>
+<dd>The regression or classification model used to obtain predictions.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PartialPredictionModelBase(ABC):
+    &#34;&#34;&#34;
+    An interface for partial prediction models, objects that make use of a
+    block partitioned data object, fits a regression or classification model
+    on all the data, and for each block k, applies the model on a modified copy
+    of the data (by either imputing the mean of each feature in block k or
+    imputing the mean of each feature not in block k.)
+
+    Parameters
+    ----------
+    estimator: scikit estimator object
+        The regression or classification model used to obtain predictions.
+    &#34;&#34;&#34;
+
+    def __init__(self, estimator):
+        self.estimator = copy.deepcopy(estimator)
+        self.is_fitted = False
+
+    def fit(self, X, y):
+        &#34;&#34;&#34;
+        Fit the partial prediction model.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix.
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
+        &#34;&#34;&#34;
+        self._fit_model(X, y)
+        self.is_fitted = True
+
+    @abstractmethod
+    def _fit_model(self, X, y):
+        &#34;&#34;&#34;
+        Fit the regression or classification model on all the data.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix.
+        y: ndarray of shape (n_samples, n_targets)
+            The observed responses.
+        &#34;&#34;&#34;
+        pass
+
+    @abstractmethod
+    def predict(self, X):
+        &#34;&#34;&#34;
+        Make predictions on new data using the fitted model.
+
+        Parameters
+        ----------
+        X: ndarray of shape (n_samples, n_features)
+            The covariate matrix, for which to make predictions.
+        &#34;&#34;&#34;
+        pass
+
+    @abstractmethod
+    def predict_full(self, blocked_data):
+        &#34;&#34;&#34;
+        Make predictions using all the data based upon the fitted model.
+        Used to make full predictions in MDI+.
+
+        Parameters
+        ----------
+        blocked_data: BlockPartitionedData object
+            The block partitioned covariate data, for which to make predictions.
+        &#34;&#34;&#34;
+        pass
+
+    @abstractmethod
+    def predict_partial_k(self, blocked_data, k, mode):
+        &#34;&#34;&#34;
+        Make predictions on modified copies of the data based on the fitted model,
+        for a particular feature k of interest. Used to get partial predictions
+        for feature k in MDI+.
+
+        Parameters
+        ----------
+        blocked_data: BlockPartitionedData object
+            The block partitioned covariate data, for which to make predictions.
+        k: int
+            Index of feature in X of interest.
+        mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+            Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+            in block k, &#34;keep_rest&#34; imputes the mean of each feature in block k
+        &#34;&#34;&#34;
+        pass
+
+    def predict_partial(self, blocked_data, mode):
+        &#34;&#34;&#34;
+        Make predictions on modified copies of the data based on the fitted model,
+        for each feature under study. Used to get partial predictions in MDI+.
+
+        Parameters
+        ----------
+        blocked_data: BlockPartitionedData object
+            The block partitioned covariate data, for which to make predictions.
+        mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+            Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+            in block k, &#34;keep_rest&#34; imputes the mean of each feature in block k
+
+        Returns
+        -------
+        List of length n_features of partial predictions for each feature.
+        &#34;&#34;&#34;
+        n_blocks = blocked_data.n_blocks
+        partial_preds = {}
+        for k in range(n_blocks):
+            partial_preds[k] = self.predict_partial_k(blocked_data, k, mode)
+        return partial_preds</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.ppms.GenericClassifierPPM" href="#imodels.importance.ppms.GenericClassifierPPM">GenericClassifierPPM</a></li>
+<li><a title="imodels.importance.ppms.GenericRegressorPPM" href="#imodels.importance.ppms.GenericRegressorPPM">GenericRegressorPPM</a></li>
+<li><a title="imodels.importance.ppms.GlmClassifierPPM" href="#imodels.importance.ppms.GlmClassifierPPM">GlmClassifierPPM</a></li>
+<li><a title="imodels.importance.ppms.GlmRegressorPPM" href="#imodels.importance.ppms.GlmRegressorPPM">GlmRegressorPPM</a></li>
+<li><a title="imodels.importance.ppms.LassoRegressorPPM" href="#imodels.importance.ppms.LassoRegressorPPM">LassoRegressorPPM</a></li>
+<li><a title="imodels.importance.ppms.LogisticClassifierPPM" href="#imodels.importance.ppms.LogisticClassifierPPM">LogisticClassifierPPM</a></li>
+<li><a title="imodels.importance.ppms.RidgeClassifierPPM" href="#imodels.importance.ppms.RidgeClassifierPPM">RidgeClassifierPPM</a></li>
+<li><a title="imodels.importance.ppms.RidgeRegressorPPM" href="#imodels.importance.ppms.RidgeRegressorPPM">RidgeRegressorPPM</a></li>
+<li><a title="imodels.importance.ppms.RobustRegressorPPM" href="#imodels.importance.ppms.RobustRegressorPPM">RobustRegressorPPM</a></li>
+<li>imodels.importance.ppms._GenericPPM</li>
+<li>imodels.importance.ppms._GlmPPM</li>
+<li>imodels.importance.ppms._RidgePPM</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.importance.ppms.PartialPredictionModelBase.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fit the partial prediction model.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>The covariate matrix.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_targets)</code></dt>
+<dd>The observed responses.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y):
+    &#34;&#34;&#34;
+    Fit the partial prediction model.
+
+    Parameters
+    ----------
+    X: ndarray of shape (n_samples, n_features)
+        The covariate matrix.
+    y: ndarray of shape (n_samples, n_targets)
+        The observed responses.
+    &#34;&#34;&#34;
+    self._fit_model(X, y)
+    self.is_fitted = True</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.ppms.PartialPredictionModelBase.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Make predictions on new data using the fitted model.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>The covariate matrix, for which to make predictions.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def predict(self, X):
+    &#34;&#34;&#34;
+    Make predictions on new data using the fitted model.
+
+    Parameters
+    ----------
+    X: ndarray of shape (n_samples, n_features)
+        The covariate matrix, for which to make predictions.
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.ppms.PartialPredictionModelBase.predict_full"><code class="name flex">
+<span>def <span class="ident">predict_full</span></span>(<span>self, blocked_data)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Make predictions using all the data based upon the fitted model.
+Used to make full predictions in MDI+.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>blocked_data</code></strong> :&ensp;<code>BlockPartitionedData object</code></dt>
+<dd>The block partitioned covariate data, for which to make predictions.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def predict_full(self, blocked_data):
+    &#34;&#34;&#34;
+    Make predictions using all the data based upon the fitted model.
+    Used to make full predictions in MDI+.
+
+    Parameters
+    ----------
+    blocked_data: BlockPartitionedData object
+        The block partitioned covariate data, for which to make predictions.
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.ppms.PartialPredictionModelBase.predict_partial"><code class="name flex">
+<span>def <span class="ident">predict_partial</span></span>(<span>self, blocked_data, mode)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Make predictions on modified copies of the data based on the fitted model,
+for each feature under study. Used to get partial predictions in MDI+.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>blocked_data</code></strong> :&ensp;<code>BlockPartitionedData object</code></dt>
+<dd>The block partitioned covariate data, for which to make predictions.</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>string in {"keep_k", "keep_rest"}</code></dt>
+<dd>Mode for the method. "keep_k" imputes the mean of each feature not
+in block k, "keep_rest" imputes the mean of each feature in block k</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>List of length n_features of partial predictions for each feature.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_partial(self, blocked_data, mode):
+    &#34;&#34;&#34;
+    Make predictions on modified copies of the data based on the fitted model,
+    for each feature under study. Used to get partial predictions in MDI+.
+
+    Parameters
+    ----------
+    blocked_data: BlockPartitionedData object
+        The block partitioned covariate data, for which to make predictions.
+    mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+        Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+        in block k, &#34;keep_rest&#34; imputes the mean of each feature in block k
+
+    Returns
+    -------
+    List of length n_features of partial predictions for each feature.
+    &#34;&#34;&#34;
+    n_blocks = blocked_data.n_blocks
+    partial_preds = {}
+    for k in range(n_blocks):
+        partial_preds[k] = self.predict_partial_k(blocked_data, k, mode)
+    return partial_preds</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k"><code class="name flex">
+<span>def <span class="ident">predict_partial_k</span></span>(<span>self, blocked_data, k, mode)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Make predictions on modified copies of the data based on the fitted model,
+for a particular feature k of interest. Used to get partial predictions
+for feature k in MDI+.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>blocked_data</code></strong> :&ensp;<code>BlockPartitionedData object</code></dt>
+<dd>The block partitioned covariate data, for which to make predictions.</dd>
+<dt><strong><code>k</code></strong> :&ensp;<code>int</code></dt>
+<dd>Index of feature in X of interest.</dd>
+<dt><strong><code>mode</code></strong> :&ensp;<code>string in {"keep_k", "keep_rest"}</code></dt>
+<dd>Mode for the method. "keep_k" imputes the mean of each feature not
+in block k, "keep_rest" imputes the mean of each feature in block k</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def predict_partial_k(self, blocked_data, k, mode):
+    &#34;&#34;&#34;
+    Make predictions on modified copies of the data based on the fitted model,
+    for a particular feature k of interest. Used to get partial predictions
+    for feature k in MDI+.
+
+    Parameters
+    ----------
+    blocked_data: BlockPartitionedData object
+        The block partitioned covariate data, for which to make predictions.
+    k: int
+        Index of feature in X of interest.
+    mode: string in {&#34;keep_k&#34;, &#34;keep_rest&#34;}
+        Mode for the method. &#34;keep_k&#34; imputes the mean of each feature not
+        in block k, &#34;keep_rest&#34; imputes the mean of each feature in block k
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.importance.ppms.RidgeClassifierPPM"><code class="flex name class">
+<span>class <span class="ident">RidgeClassifierPPM</span></span>
+<span>(</span><span>loo=True, alpha_grid=array([1.00000000e-05, 1.26185688e-05, 1.59228279e-05, 2.00923300e-05,
+2.53536449e-05, 3.19926714e-05, 4.03701726e-05, 5.09413801e-05,
+6.42807312e-05, 8.11130831e-05, 1.02353102e-04, 1.29154967e-04,
+1.62975083e-04, 2.05651231e-04, 2.59502421e-04, 3.27454916e-04,
+4.13201240e-04, 5.21400829e-04, 6.57933225e-04, 8.30217568e-04,
+1.04761575e-03, 1.32194115e-03, 1.66810054e-03, 2.10490414e-03,
+2.65608778e-03, 3.35160265e-03, 4.22924287e-03, 5.33669923e-03,
+6.73415066e-03, 8.49753436e-03, 1.07226722e-02, 1.35304777e-02,
+1.70735265e-02, 2.15443469e-02, 2.71858824e-02, 3.43046929e-02,
+4.32876128e-02, 5.46227722e-02, 6.89261210e-02, 8.69749003e-02,
+1.09749877e-01, 1.38488637e-01, 1.74752840e-01, 2.20513074e-01,
+2.78255940e-01, 3.51119173e-01, 4.43062146e-01, 5.59081018e-01,
+7.05480231e-01, 8.90215085e-01, 1.12332403e+00, 1.41747416e+00,
+1.78864953e+00, 2.25701972e+00, 2.84803587e+00, 3.59381366e+00,
+4.53487851e+00, 5.72236766e+00, 7.22080902e+00, 9.11162756e+00,
+1.14975700e+01, 1.45082878e+01, 1.83073828e+01, 2.31012970e+01,
+2.91505306e+01, 3.67837977e+01, 4.64158883e+01, 5.85702082e+01,
+7.39072203e+01, 9.32603347e+01, 1.17681195e+02, 1.48496826e+02,
+1.87381742e+02, 2.36448941e+02, 2.98364724e+02, 3.76493581e+02,
+4.75081016e+02, 5.99484250e+02, 7.56463328e+02, 9.54548457e+02,
+1.20450354e+03, 1.51991108e+03, 1.91791026e+03, 2.42012826e+03,
+3.05385551e+03, 3.85352859e+03, 4.86260158e+03, 6.13590727e+03,
+7.74263683e+03, 9.77009957e+03, 1.23284674e+04, 1.55567614e+04,
+1.96304065e+04, 2.47707636e+04, 3.12571585e+04, 3.94420606e+04,
+4.97702356e+04, 6.28029144e+04, 7.92482898e+04, 1.00000000e+05]), gcv_mode='auto', **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>PPM class for classification that uses ridge as the GLM estimator.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RidgeClassifierPPM(_RidgePPM, GlmClassifierPPM,
+                         PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for classification that uses ridge as the GLM estimator.
+    &#34;&#34;&#34;
+
+    def predict_proba(self, X):
+        probs = softmax(self.predict(X))
+        if probs.ndim == 1:
+            probs = np.stack([1 - probs, probs], axis=1)
+        return probs
+
+    def predict_proba_loo(self, X):
+        probs = softmax(self.predict_loo(X))
+        if probs.ndim == 1:
+            probs = np.stack([1 - probs, probs], axis=1)
+        return probs</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>imodels.importance.ppms._RidgePPM</li>
+<li><a title="imodels.importance.ppms.GlmClassifierPPM" href="#imodels.importance.ppms.GlmClassifierPPM">GlmClassifierPPM</a></li>
+<li>imodels.importance.ppms._GlmPPM</li>
+<li><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.importance.ppms.RidgeClassifierPPM.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    probs = softmax(self.predict(X))
+    if probs.ndim == 1:
+        probs = np.stack([1 - probs, probs], axis=1)
+    return probs</code></pre>
+</details>
+</dd>
+<dt id="imodels.importance.ppms.RidgeClassifierPPM.predict_proba_loo"><code class="name flex">
+<span>def <span class="ident">predict_proba_loo</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba_loo(self, X):
+    probs = softmax(self.predict_loo(X))
+    if probs.ndim == 1:
+        probs = np.stack([1 - probs, probs], axis=1)
+    return probs</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.ppms.GlmClassifierPPM" href="#imodels.importance.ppms.GlmClassifierPPM">GlmClassifierPPM</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.fit" href="#imodels.importance.ppms.PartialPredictionModelBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.predict" href="#imodels.importance.ppms.PartialPredictionModelBase.predict">predict</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.predict_full" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_full">predict_full</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.predict_partial" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial">predict_partial</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.predict_partial_k" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k">predict_partial_k</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.importance.ppms.RidgeRegressorPPM"><code class="flex name class">
+<span>class <span class="ident">RidgeRegressorPPM</span></span>
+<span>(</span><span>loo=True, alpha_grid=array([1.00000000e-05, 1.26185688e-05, 1.59228279e-05, 2.00923300e-05,
+2.53536449e-05, 3.19926714e-05, 4.03701726e-05, 5.09413801e-05,
+6.42807312e-05, 8.11130831e-05, 1.02353102e-04, 1.29154967e-04,
+1.62975083e-04, 2.05651231e-04, 2.59502421e-04, 3.27454916e-04,
+4.13201240e-04, 5.21400829e-04, 6.57933225e-04, 8.30217568e-04,
+1.04761575e-03, 1.32194115e-03, 1.66810054e-03, 2.10490414e-03,
+2.65608778e-03, 3.35160265e-03, 4.22924287e-03, 5.33669923e-03,
+6.73415066e-03, 8.49753436e-03, 1.07226722e-02, 1.35304777e-02,
+1.70735265e-02, 2.15443469e-02, 2.71858824e-02, 3.43046929e-02,
+4.32876128e-02, 5.46227722e-02, 6.89261210e-02, 8.69749003e-02,
+1.09749877e-01, 1.38488637e-01, 1.74752840e-01, 2.20513074e-01,
+2.78255940e-01, 3.51119173e-01, 4.43062146e-01, 5.59081018e-01,
+7.05480231e-01, 8.90215085e-01, 1.12332403e+00, 1.41747416e+00,
+1.78864953e+00, 2.25701972e+00, 2.84803587e+00, 3.59381366e+00,
+4.53487851e+00, 5.72236766e+00, 7.22080902e+00, 9.11162756e+00,
+1.14975700e+01, 1.45082878e+01, 1.83073828e+01, 2.31012970e+01,
+2.91505306e+01, 3.67837977e+01, 4.64158883e+01, 5.85702082e+01,
+7.39072203e+01, 9.32603347e+01, 1.17681195e+02, 1.48496826e+02,
+1.87381742e+02, 2.36448941e+02, 2.98364724e+02, 3.76493581e+02,
+4.75081016e+02, 5.99484250e+02, 7.56463328e+02, 9.54548457e+02,
+1.20450354e+03, 1.51991108e+03, 1.91791026e+03, 2.42012826e+03,
+3.05385551e+03, 3.85352859e+03, 4.86260158e+03, 6.13590727e+03,
+7.74263683e+03, 9.77009957e+03, 1.23284674e+04, 1.55567614e+04,
+1.96304065e+04, 2.47707636e+04, 3.12571585e+04, 3.94420606e+04,
+4.97702356e+04, 6.28029144e+04, 7.92482898e+04, 1.00000000e+05]), gcv_mode='auto', **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>PPM class for regression that uses ridge as the GLM estimator.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RidgeRegressorPPM(_RidgePPM, GlmRegressorPPM,
+                        PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for regression that uses ridge as the GLM estimator.
+    &#34;&#34;&#34;
+    ...</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>imodels.importance.ppms._RidgePPM</li>
+<li><a title="imodels.importance.ppms.GlmRegressorPPM" href="#imodels.importance.ppms.GlmRegressorPPM">GlmRegressorPPM</a></li>
+<li>imodels.importance.ppms._GlmPPM</li>
+<li><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.ppms.GlmRegressorPPM" href="#imodels.importance.ppms.GlmRegressorPPM">GlmRegressorPPM</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.fit" href="#imodels.importance.ppms.PartialPredictionModelBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict" href="#imodels.importance.ppms.PartialPredictionModelBase.predict">predict</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict_full" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_full">predict_full</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict_partial" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial">predict_partial</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict_partial_k" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k">predict_partial_k</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.importance.ppms.RobustRegressorPPM"><code class="flex name class">
+<span>class <span class="ident">RobustRegressorPPM</span></span>
+<span>(</span><span>loo=True, alpha_grid=array([1.00000000e-02, 1.61559810e-02, 2.61015722e-02, 4.21696503e-02,
+6.81292069e-02, 1.10069417e-01, 1.77827941e-01, 2.87298483e-01,
+4.64158883e-01, 7.49894209e-01, 1.21152766e+00, 1.95734178e+00,
+3.16227766e+00, 5.10896977e+00, 8.25404185e+00, 1.33352143e+01,
+2.15443469e+01, 3.48070059e+01, 5.62341325e+01, 9.08517576e+01,
+1.46779927e+02, 2.37137371e+02, 3.83118685e+02, 6.18965819e+02,
+1.00000000e+03]), epsilon=1.35, max_iter=2000, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>PPM class for regression that uses Huber robust regression as the estimator.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>loo</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag for whether to also use LOO calculations for making predictions.</dd>
+<dt><strong><code>alpha_grid</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_alphas, )</code></dt>
+<dd>The grid of alpha values for hyperparameter optimization.</dd>
+<dt><strong><code>epsilon</code></strong> :&ensp;<code>float</code></dt>
+<dd>The robustness parameter for Huber regression. The smaller the epsilon,
+the more robust it is to outliers. Epsilon must be in the range
+[1, inf).</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Other Parameters are passed on to LogisticRegression().</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RobustRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
+    &#34;&#34;&#34;
+    PPM class for regression that uses Huber robust regression as the estimator.
+
+    Parameters
+    ----------
+    loo: bool
+        Flag for whether to also use LOO calculations for making predictions.
+    alpha_grid: ndarray of shape (n_alphas, )
+        The grid of alpha values for hyperparameter optimization.
+    epsilon: float
+        The robustness parameter for Huber regression. The smaller the epsilon,
+        the more robust it is to outliers. Epsilon must be in the range
+        [1, inf).
+    **kwargs
+        Other Parameters are passed on to LogisticRegression().
+    &#34;&#34;&#34;
+    def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25),
+                 epsilon=1.35, max_iter=2000, **kwargs):
+        loss_fn = partial(huber_loss, epsilon=epsilon)
+        l_dot = lambda a, b: (b - a) / (1 + ((a - b) / epsilon) ** 2) ** 0.5
+        l_doubledot=lambda a, b: (1 + (((a - b) / epsilon) ** 2)) ** (-1.5)
+        super().__init__(
+            HuberRegressor(max_iter=max_iter, **kwargs), loo, alpha_grid,
+            l_dot=l_dot,
+            l_doubledot=l_doubledot,
+            hyperparameter_scorer=loss_fn)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.importance.ppms.GlmRegressorPPM" href="#imodels.importance.ppms.GlmRegressorPPM">GlmRegressorPPM</a></li>
+<li>imodels.importance.ppms._GlmPPM</li>
+<li><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.importance.ppms.GlmRegressorPPM" href="#imodels.importance.ppms.GlmRegressorPPM">GlmRegressorPPM</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.fit" href="#imodels.importance.ppms.PartialPredictionModelBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict" href="#imodels.importance.ppms.PartialPredictionModelBase.predict">predict</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict_full" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_full">predict_full</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict_partial" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial">predict_partial</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmRegressorPPM.predict_partial_k" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k">predict_partial_k</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index 🔍</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.importance" href="index.html">imodels.importance</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.importance.ppms.get_alpha_grid" href="#imodels.importance.ppms.get_alpha_grid">get_alpha_grid</a></code></li>
+<li><code><a title="imodels.importance.ppms.huber_loss" href="#imodels.importance.ppms.huber_loss">huber_loss</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.importance.ppms.GenericClassifierPPM" href="#imodels.importance.ppms.GenericClassifierPPM">GenericClassifierPPM</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.importance.ppms.GenericClassifierPPM.predict_proba" href="#imodels.importance.ppms.GenericClassifierPPM.predict_proba">predict_proba</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.importance.ppms.GenericRegressorPPM" href="#imodels.importance.ppms.GenericRegressorPPM">GenericRegressorPPM</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.importance.ppms.GlmClassifierPPM" href="#imodels.importance.ppms.GlmClassifierPPM">GlmClassifierPPM</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.predict_proba" href="#imodels.importance.ppms.GlmClassifierPPM.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.importance.ppms.GlmClassifierPPM.predict_proba_loo" href="#imodels.importance.ppms.GlmClassifierPPM.predict_proba_loo">predict_proba_loo</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.importance.ppms.GlmRegressorPPM" href="#imodels.importance.ppms.GlmRegressorPPM">GlmRegressorPPM</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.importance.ppms.LassoRegressorPPM" href="#imodels.importance.ppms.LassoRegressorPPM">LassoRegressorPPM</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.importance.ppms.LogisticClassifierPPM" href="#imodels.importance.ppms.LogisticClassifierPPM">LogisticClassifierPPM</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.importance.ppms.PartialPredictionModelBase" href="#imodels.importance.ppms.PartialPredictionModelBase">PartialPredictionModelBase</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.fit" href="#imodels.importance.ppms.PartialPredictionModelBase.fit">fit</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict" href="#imodels.importance.ppms.PartialPredictionModelBase.predict">predict</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_full" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_full">predict_full</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_partial" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial">predict_partial</a></code></li>
+<li><code><a title="imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k" href="#imodels.importance.ppms.PartialPredictionModelBase.predict_partial_k">predict_partial_k</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.importance.ppms.RidgeClassifierPPM" href="#imodels.importance.ppms.RidgeClassifierPPM">RidgeClassifierPPM</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.importance.ppms.RidgeClassifierPPM.predict_proba" href="#imodels.importance.ppms.RidgeClassifierPPM.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.importance.ppms.RidgeClassifierPPM.predict_proba_loo" href="#imodels.importance.ppms.RidgeClassifierPPM.predict_proba_loo">predict_proba_loo</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.importance.ppms.RidgeRegressorPPM" href="#imodels.importance.ppms.RidgeRegressorPPM">RidgeRegressorPPM</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.importance.ppms.RobustRegressorPPM" href="#imodels.importance.ppms.RobustRegressorPPM">RobustRegressorPPM</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 c122.0,82.7 120.5,78.6 120.5,78.6 c119.2,72.0 123.4,76.3 123.4,76.3 c127.3,80.9 125.5,87.3 125.5,87.3 c122.9,97.6 130.6,101.9 134.4,103.2" fill="currentcolor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">

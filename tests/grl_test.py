@@ -1,13 +1,14 @@
 import unittest
-import traceback
 
 import numpy as np
-from sklearn.metrics import accuracy_score
 from imodels.rule_list.greedy_rule_list import GreedyRuleListClassifier
 import sklearn
 from sklearn.model_selection import train_test_split
 
 class TestGRL(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.m  = GreedyRuleListClassifier()
 
     def test_integration_stability(self):
         '''Test on synthetic dataset
@@ -22,11 +23,27 @@ class TestGRL(unittest.TestCase):
              [0, 1, 1, 1, 1],
              [1, 0, 1, 1, 1]])
         y = np.array([0, 0, 0, 0, 1, 1, 1, 1])
-        m = GreedyRuleListClassifier()
-        m.fit(X, y)
-        yhat = m.predict(X)
+        self.m.fit(X, y)
+        yhat = self.m.predict(X)
         acc = np.mean(y == yhat) * 100
-        assert acc > 99, 'acc must be 100'
+        assert acc > 99 # acc must be 100
+
+    def test_linear_separability(self):
+        """Test if the model can learn a linearly separable dataset"""
+        x = np.array([0.8, 0.8, 0.3, 0.3, 0.3, 0.3]).reshape(-1, 1)
+        y = np.array([0, 0, 1, 1, 1, 1])
+        self.m.fit(x, y, verbose=True)
+        yhat = self.m.predict(x)
+        acc = np.mean(y == yhat) * 100
+        assert len(self.m.rules_) == 2  
+        assert acc == 100 # acc must be 100
+
+    def test_y_left_conditional_probability(self):
+        """Test conditional probability of y given x in the left node"""
+        x = np.array([0.8, 0.8, 0.3, 0.3, 0.3, 0.3]).reshape(-1, 1)
+        y = np.array([0, 0, 1, 1, 1, 1])
+        self.m.fit(x, y, verbose=True)
+        assert self.m.rules_[1]["val"] == 0
 
 def test_breast_cancer():
     np.random.seed(13)
