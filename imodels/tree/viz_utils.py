@@ -8,7 +8,7 @@ from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree._tree import Tree
 
-TreeData = namedtuple('TreeData', 'left_child right_child feature threshold impurity n_node_samples weighted_n_node_samples')
+TreeData = namedtuple('TreeData', 'left_child right_child feature threshold impurity n_node_samples weighted_n_node_samples missing_go_to_left')
 
 def _extract_arrays_from_figs_tree(figs_tree):
     """Takes in a FIGS tree and recursively converts it to arrays that we can later use to build a sklearn decision tree object
@@ -21,6 +21,7 @@ def _extract_arrays_from_figs_tree(figs_tree):
         impurity=[],
         n_node_samples=[],
         weighted_n_node_samples=[],
+        missing_go_to_left=[],
     )
 
     value_sklearn_array = []
@@ -47,6 +48,7 @@ def _extract_arrays_from_figs_tree(figs_tree):
         tree_data.impurity.append(node.impurity)
         tree_data.n_node_samples.append(np.sum(value_sklearn))
         tree_data.weighted_n_node_samples.append(np.sum(value_sklearn)) # TODO add sample weights
+        tree_data.missing_go_to_left.append(1)
         value_sklearn_array.append(value_sklearn)
 
         if has_children:
@@ -71,7 +73,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predicti
     # manipulate tree_data_namedtuple into the numpy array of tuples that sklearn expects for use with __setstate__()
     df_tree_data = pd.DataFrame(tree_data_namedtuple._asdict())
     tree_data_list_of_tuples = list(df_tree_data.itertuples(index=False, name=None))
-    _dtypes = np.dtype([('left_child', 'i8'), ('right_child', 'i8'), ('feature', 'i8'), ('threshold', 'f8'), ('impurity', 'f8'), ('n_node_samples', 'i8'), ('weighted_n_node_samples', 'f8')])
+    _dtypes = np.dtype([('left_child', 'i8'), ('right_child', 'i8'), ('feature', 'i8'), ('threshold', 'f8'), ('impurity', 'f8'), ('n_node_samples', 'i8'), ('weighted_n_node_samples', 'f8'), ('missing_go_to_left', 'u1')])
 
     tree_data_array = np.array(tree_data_list_of_tuples, dtype=_dtypes)
 
