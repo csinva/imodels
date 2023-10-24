@@ -62,7 +62,7 @@ class HSTree(BaseEstimator):
             self._shrink()
         if max_leaf_nodes is not None:
             self.estimator_.max_leaf_nodes = max_leaf_nodes
-            self.estimator.random_state = random_state
+            self.estimator_.random_state = random_state
 
     def get_params(self, deep=True):
         d = {
