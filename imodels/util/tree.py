@@ -48,16 +48,44 @@ def calculate_mean_depth_of_points_in_tree(tree, feature_costs=None):
     """Calculate the mean depth of each point in the tree.
     This is the average depth of the path from the root to the point.
     """
-    if hasattr(tree, 'tree_'):
-        tree_ = tree.tree_
-    elif hasattr(tree, 'estimator_'):
-        tree_ = tree.estimator_.tree_
-    elif isinstance(tree, CustomDecisionTreeClassifier):
-        return calculate_mean_depth_of_points_in_custom_tree(tree, feature_costs)
-
     feature_costs = _validate_feature_costs(
         feature_costs, n_features=tree_.n_features)
 
+    if isinstance(tree, CustomDecisionTreeClassifier):
+        return _mean_depth_custom_tree(tree, feature_costs)
+    elif hasattr(tree, 'tree_'):
+        return _mean_depth_sklearn_tree(tree.tree_, feature_costs)
+    elif hasattr(tree, 'estimator_'):
+        return _mean_depth_sklearn_tree(tree.estimator_.tree_, feature_costs)
+    else:
+        return _mean_depth_coct_tree(tree, feature_costs)
+
+
+def _mean_depth_custom_tree(custom_tree_, feature_costs):
+    node = custom_tree_.root
+    n_samples = []
+    cum_costs = []
+    is_leaves = []
+    stack = [(node, 0)]
+    while len(stack) > 0:
+        node, cost = stack.pop()
+        n_samples.append(node.num_samples)
+        cum_costs.append(cost)
+        is_leaves.append(node.left is None and node.right is None)
+
+        if node.left:
+            stack.append((node.left, cost + feature_costs[node.feature_index]))
+        if node.right:
+            stack.append(
+                (node.right, cost + feature_costs[node.feature_index]))
+    is_leaves = np.array(is_leaves)
+    cum_costs = np.array(cum_costs)[is_leaves]
+    n_samples = np.array(n_samples)[is_leaves]
+    costs = cum_costs * n_samples / np.sum(n_samples)
+    return np.sum(costs)
+
+
+def _mean_depth_sklearn_tree(tree_, feature_costs):
     n_nodes = tree_.node_count
     children_left = tree_.children_left
     children_right = tree_.children_right
@@ -90,34 +118,8 @@ def calculate_mean_depth_of_points_in_tree(tree, feature_costs=None):
     return np.sum(depths)
 
 
-def calculate_mean_depth_of_points_in_custom_tree(custom_tree_, feature_costs=None):
-    """Calculate the mean depth of each point in the tree.
-    This is the average depth of the path from the root to the point.
-    """
-    feature_costs = _validate_feature_costs(
-        feature_costs, n_features=custom_tree_.n_features)
-
-    node = custom_tree_.root
-    n_samples = []
-    cum_costs = []
-    is_leaves = []
-    stack = [(node, 0)]
-    while len(stack) > 0:
-        node, cost = stack.pop()
-        n_samples.append(node.num_samples)
-        cum_costs.append(cost)
-        is_leaves.append(node.left is None and node.right is None)
-
-        if node.left:
-            stack.append((node.left, cost + feature_costs[node.feature_index]))
-        if node.right:
-            stack.append(
-                (node.right, cost + feature_costs[node.feature_index]))
-    is_leaves = np.array(is_leaves)
-    cum_costs = np.array(cum_costs)[is_leaves]
-    n_samples = np.array(n_samples)[is_leaves]
-    costs = cum_costs * n_samples / np.sum(n_samples)
-    return np.sum(costs)
+def _mean_depth_coct_tree(tree, feature_costs):
+    return 5
 
 
 def calculate_mean_unique_calls_in_ensemble(ensemble, X, feature_costs=None):
