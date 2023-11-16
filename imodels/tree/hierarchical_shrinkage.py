@@ -80,6 +80,8 @@ class HSTree(BaseEstimator):
         # None returned if not passed
         feature_names = kwargs.pop("feature_names", None)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        if feature_names is not None:
+            self.feature_names = feature_names
         self.estimator_ = self.estimator_.fit(
             X, y, *args, sample_weight=sample_weight, **kwargs
         )
@@ -341,7 +343,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
                 est_hs = HSTreeClassifier(base_est, reg_param)
-                est_hs.fit(X_in, y_in)
+                est_hs.fit(X_in, y_in, *args, **kwargs)
                 self.scores_[i].append(
                     scorer(y_out, est_hs.predict_proba(X_out)))
         self.scores_ = [np.mean(s) for s in self.scores_]
