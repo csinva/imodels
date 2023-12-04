@@ -2,7 +2,7 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
-from sklearn.linear_model import LinearRegression, RidgeCV
+from sklearn.linear_model import ElasticNetCV, LinearRegression, RidgeCV
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils import check_array
@@ -39,6 +39,7 @@ class TreeGAM(BaseEstimator):
         fit_linear_marginal=None,
         select_linear_marginal=False,
         decay_rate_towards_marginal=1.0,
+        fit_posthoc_tree_coefs=None,
         boosting_strategy="cyclic",
         validation_frac=0.15,
         random_state=None,
@@ -73,6 +74,8 @@ class TreeGAM(BaseEstimator):
             1 means no decay, 0 means only use marginal effects
             shape = (1 - decay_rate_towards_marginal) * shape + decay_rate_towards_marginal * marginal_shape
             The way this is implemented is by keeping track of how many times to multiply decay_rate_towards_marginal for each cyclic estimator
+        fit_posthoc_tree_coefs: str [None, "ridge"]
+            Whether to fit a linear model to the tree coefficients after fitting the cyclic boosting.
         boosting_strategy : str ["cyclic", "greedy"]
             Whether to use cyclic boosting (cycle over features) or greedy boosting (select best feature at each step)
         validation_frac: float
@@ -90,6 +93,7 @@ class TreeGAM(BaseEstimator):
         self.fit_linear_marginal = fit_linear_marginal
         self.select_linear_marginal = select_linear_marginal
         self.decay_rate_towards_marginal = decay_rate_towards_marginal
+        self.fit_posthoc_tree_coefs = fit_posthoc_tree_coefs
         self.boosting_strategy = boosting_strategy
         self.validation_frac = validation_frac
         self.random_state = random_state
@@ -116,6 +120,7 @@ class TreeGAM(BaseEstimator):
             sample_weight,
             test_size=self.validation_frac,
             random_state=self.random_state,
+            stratify=y if isinstance(self, ClassifierMixin) else None,
         )
 
         self.estimators_marginal = []
@@ -138,6 +143,9 @@ class TreeGAM(BaseEstimator):
                 y_val,
                 sample_weight_val,
             )
+
+        if self.fit_posthoc_tree_coefs is not None:
+            self._fit_posthoc_tree_coefs(X_train, y_train, sample_weight_train)
 
         self.mse_val_ = self._calc_mse(X_val, y_val, sample_weight_val)
 
@@ -163,7 +171,8 @@ class TreeGAM(BaseEstimator):
             )
             est.fit(X_, residuals_train, sample_weight=sample_weight_train)
             if self.reg_param_marginal > 0:
-                est = imodels.HSTreeRegressor(est, reg_param=self.reg_param_marginal)
+                est = imodels.HSTreeRegressor(
+                    est, reg_param=self.reg_param_marginal)
             self.estimators_marginal.append(est)
 
         if (
@@ -173,9 +182,11 @@ class TreeGAM(BaseEstimator):
             if self.fit_linear_marginal.lower() == "ridge":
                 linear_marginal = RidgeCV(fit_intercept=False)
             elif self.fit_linear_marginal == "NNLS":
-                linear_marginal = LinearRegression(fit_intercept=False, positive=True)
+                linear_marginal = LinearRegression(
+                    fit_intercept=False, positive=True)
             linear_marginal.fit(
-                np.array([est.predict(X_train) for est in self.estimators_marginal]).T,
+                np.array([est.predict(X_train)
+                         for est in self.estimators_marginal]).T,
                 residuals_train,
                 sample_weight_train,
             )
@@ -212,12 +223,14 @@ class TreeGAM(BaseEstimator):
                 )
                 est.fit(X_, residuals_train, sample_weight=sample_weight_train)
                 succesfully_split_on_feature = np.all(
-                    (est.tree_.feature[0] == feature_num) | (est.tree_.feature[0] == -2)
+                    (est.tree_.feature[0] == feature_num) | (
+                        est.tree_.feature[0] == -2)
                 )
                 if not succesfully_split_on_feature:
                     continue
                 if self.reg_param > 0:
-                    est = imodels.HSTreeRegressor(est, reg_param=self.reg_param)
+                    est = imodels.HSTreeRegressor(
+                        est, reg_param=self.reg_param)
                 self.estimators_.append(est)
                 residuals_train_new = (
                     residuals_train - self.learning_rate * est.predict(X_train)
@@ -229,20 +242,23 @@ class TreeGAM(BaseEstimator):
                         X_train, y_train, sample_weight_train
                     )
                     # don't add each estimator for greedy
-                    boosting_round_ests.append(deepcopy(self.estimators_.pop()))
+                    boosting_round_ests.append(
+                        deepcopy(self.estimators_.pop()))
                     boosting_round_mses.append(mse_train_new)
 
             if self.boosting_strategy == "greedy":
                 best_est = boosting_round_ests[np.argmin(boosting_round_mses)]
                 self.estimators_.append(best_est)
                 residuals_train = (
-                    residuals_train - self.learning_rate * best_est.predict(X_train)
+                    residuals_train - self.learning_rate *
+                    best_est.predict(X_train)
                 )
 
             # decay marginal effects
             if self.decay_rate_towards_marginal < 1.0:
                 new_decay_coefs = [self.decay_rate_towards_marginal] * (
-                    len(self.estimators_) - len(self.decay_coef_towards_marginal_)
+                    len(self.estimators_) -
+                    len(self.decay_coef_towards_marginal_)
                 )
                 # print(self.decay_coef_towards_marginal_)
                 # print('new_decay_coefs', new_decay_coefs)
@@ -260,6 +276,25 @@ class TreeGAM(BaseEstimator):
             else:
                 mse_val = mse_val_new
 
+    def _fit_posthoc_tree_coefs(self, X, y, sample_weight=None):
+        # extract predictions from each tree
+        X_pred_tree = np.array([est.predict(X) for est in self.estimators_]).T
+        print('shapes', X.shape, X_pred_tree.shape,
+              y.shape, len(self.estimators_))
+
+        coef_prior = np.ones(len(self.estimators_)) * self.learning_rate
+        y = y - self.bias_ - X_pred_tree @ coef_prior
+
+        if self.fit_posthoc_tree_coefs.lower() == "ridge":
+            m = RidgeCV(fit_intercept=False)
+        elif self.fit_posthoc_tree_coefs.lower() == "nnls":
+            m = LinearRegression(fit_intercept=False, positive=True)
+        elif self.fit_posthoc_tree_coefs.lower() == "elasticnet":
+            m = ElasticNetCV(fit_intercept=False, positive=True)
+
+        m.fit(X_pred_tree, y, sample_weight=sample_weight)
+        self.cyclic_coef_ = m.coef_ + coef_prior
+
     def predict_proba(self, X, marginal_only=False):
         """
         Params
@@ -270,22 +305,33 @@ class TreeGAM(BaseEstimator):
         X = check_array(X, accept_sparse=False, dtype=None)
         check_is_fitted(self)
         probs1 = np.ones(X.shape[0]) * self.bias_
+
+        # marginal prediction
         for i, est in enumerate(self.estimators_marginal):
             probs1 += est.predict(X) * self.marginal_coef_[i]
+
+        # cyclic coefs prediction
         if not marginal_only:
+            if not hasattr(self, "cyclic_coef_"):
+                cyclic_coef_ = np.ones(
+                    len(self.estimators_)) * self.learning_rate
+            else:
+                cyclic_coef_ = self.cyclic_coef_
+                # print('coef', cyclic_coef_)
+
             if self.decay_rate_towards_marginal < 1.0:
                 for i, est in enumerate(self.estimators_):
                     if i < len(self.decay_coef_towards_marginal_):
                         probs1 += (
-                            self.learning_rate
+                            cyclic_coef_[i]
                             * self.decay_coef_towards_marginal_[i]
                             * est.predict(X)
                         )
                     else:
-                        probs1 += self.learning_rate * est.predict(X)
+                        probs1 += cyclic_coef_[i] * est.predict(X)
             else:
-                for est in self.estimators_:
-                    probs1 += self.learning_rate * est.predict(X)
+                for i, est in enumerate(self.estimators_):
+                    probs1 += cyclic_coef_[i] * est.predict(X)
         probs1 = np.clip(probs1, a_min=0, a_max=1)
         return np.array([1 - probs1, probs1]).T
 
@@ -317,29 +363,32 @@ if __name__ == "__main__":
         boosting_strategy="cyclic",
         random_state=42,
         learning_rate=0.1,
-        max_leaf_nodes=2,
-        select_linear_marginal=True,
-        fit_linear_marginal="NNLS",
-        n_boosting_rounds_marginal=3,
-        decay_rate_towards_marginal=0,
-        n_boosting_rounds=10,
+        max_leaf_nodes=3,
+        # select_linear_marginal=True,
+        # fit_linear_marginal="NNLS",
+        # n_boosting_rounds_marginal=3,
+        # decay_rate_towards_marginal=0,
+        fit_posthoc_tree_coefs="elasticnet",
+        n_boosting_rounds=100,
     )
     gam.fit(X, y_train)
 
     # check roc auc score
     y_pred = gam.predict_proba(X_test)[:, 1]
-    print(
-        "train roc:",
-        roc_auc_score(y_train, gam.predict_proba(X)[:, 1]).round(3),
-    )
+    # print(
+    #     "train roc:",
+    #     roc_auc_score(y_train, gam.predict_proba(X)[:, 1]).round(3),
+    # )
     print("test roc:", roc_auc_score(y_test, y_pred).round(3))
-    print(
-        "accs",
-        accuracy_score(y_train, gam.predict(X)).round(3),
-        accuracy_score(y_test, gam.predict(X_test)).round(3),
-        "imb",
-        np.mean(y_train).round(3),
-        np.mean(y_test).round(3),
-    )
+    print("test acc:", accuracy_score(y_test, gam.predict(X_test)).round(3))
+    print('\t(imb:', np.mean(y_test).round(3), ')')
+    # print(
+    #     "accs",
+    #     accuracy_score(y_train, gam.predict(X)).round(3),
+    #     accuracy_score(y_test, gam.predict(X_test)).round(3),
+    #     "imb",
+    #     np.mean(y_train).round(3),
+    #     np.mean(y_test).round(3),
+    # )
 
-    # print(gam.estimators_)
+    # # print(gam.estimators_)

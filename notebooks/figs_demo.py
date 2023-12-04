@@ -1,7 +1,6 @@
-# %% [markdown]
 # # Setup
 
-# %%
+# +
 # %load_ext autoreload
 # %autoreload 2
 import numpy as np
@@ -16,16 +15,15 @@ import sys,os
 sys.path.append(os.path.expanduser('~/imodels'))
 
 # installable with: `pip install imodels`
-import imodels
 from imodels import FIGSClassifier
 import demo_helper
 np.random.seed(13)
+# -
 
-# %% [markdown]
 # Let's start by loading some data in...  
 # Note, we need to still load the reg dataset first to get the same splits as in `imodels_demo.ipynb` due to the call to random
 
-# %%
+# +
 # ames housing dataset: https://www.openml.org/search?type=data&status=active&id=43926
 X_train_reg, X_test_reg, y_train_reg, y_test_reg, feat_names_reg = demo_helper.get_ames_data()
 
@@ -38,78 +36,83 @@ X_train, X_test, y_train, y_test, feat_names = demo_helper.get_diabetes_data()
 
 # load some data
 # print('Regression data training', X_train_reg.shape, 'Classification data training', X_train.shape)
+# -
 
-# %% [markdown]
 # ***
 # # FIGS
 
-# %%
-model_figs = FIGSClassifier(max_rules=7)
+model_figs = FIGSClassifier(max_rules=7, max_trees=3)
 
-# %%
-# specify a decision tree with a maximum depth
 model_figs.fit(X_train, y_train, feature_names=feat_names);
 
-# %%
 print(model_figs)
 
-# %%
 print(model_figs.print_tree(X_train, y_train))
 
-# %%
 model_figs.plot(fig_size=7)
 
-# %% [markdown]
+# ## Gini Importance
+
+dfp_importance = pd.DataFrame({'feat_names': feat_names})
+dfp_importance['feature'] = dfp_importance.index
+dfp_importance_gini = pd.DataFrame({'importance_gini': model_figs.feature_importances_})
+dfp_importance_gini['feature'] = dfp_importance_gini.index
+dfp_importance_gini['importance_gini_pct'] = dfp_importance_gini['importance_gini'].rank(pct=True)
+dfp_importance = pd.merge(dfp_importance, dfp_importance_gini, on='feature', how='left')
+dfp_importance = dfp_importance.sort_values(by=['importance_gini', 'feature'], ascending=[False, True]).reset_index(drop=True)
+display(dfp_importance)
+
 # ***
 # # `dtreeviz` Integration
 # One tree at a time only, showing tree 0 here
 
-# %%
-from dtreeviz import trees
-from dtreeviz.models.sklearn_decision_trees import ShadowSKDTree
+# +
+import dtreeviz
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 
 dt = extract_sklearn_tree_from_figs(model_figs, tree_num=0, n_classes=2)
-shadow_dtree = ShadowSKDTree(dt, X_train, y_train, feat_names, 'y', [0, 1])
+viz_model = dtreeviz.model(dt, X_train=X_train, y_train=y_train, feature_names=feat_names, target_name='y', class_names=[0, 1])
+# -
 
-# %%
-trees.dtreeviz(shadow_dtree)
+color_params = {'classes': dtreeviz.colors.mpl_colors, 'hist_bar': 'C0', 'legend_edge': None}
+for _ in ['axis_label', 'title', 'legend_title', 'text', 'arrow', 'node_label', 'tick_label', 'leaf_label', 'wedge', 'text_wedge']:
+    color_params[_] = 'black'
+dtv_params_gen = {'colors': color_params, 'fontname': 'Arial', 'figsize': (4, 3)}
+dtv_params = {'leaftype': 'barh',
+              'label_fontsize': 10,
+              'colors': dtv_params_gen['colors'],
+              'fontname': dtv_params_gen['fontname']
+             }
 
-# %%
+viz_model.view(**dtv_params)
+
 x_example = X_train[13]
+display(pd.DataFrame([{col: value for col,value in zip(feat_names, x_example)}]))
 
-# %%
-list(zip(feat_names,x_example))
+print(viz_model.explain_prediction_path(x=x_example))
 
-# %%
-print(trees.explain_prediction_path(shadow_dtree, x=x_example, explanation_type='plain_english'))
+viz_model.view(**dtv_params, x=x_example)
 
-# %%
-trees.dtreeviz(shadow_dtree, X=x_example)
+viz_model.view(**dtv_params, show_node_labels=True, fancy=False)
 
-# %%
-trees.dtreeviz(shadow_dtree, show_node_labels=True, fancy=False)
+viz_model.ctree_leaf_distributions(**dtv_params_gen)
 
-# %%
-trees.describe_node_sample(shadow_dtree, node_id=8)
+viz_model.leaf_purity(display_type='plot', **dtv_params_gen)
 
-# %%
-trees.ctreeviz_leaf_samples(shadow_dtree)
-
-# %% [markdown]
 # ***
 # # `SKompiler` Integration
 # One tree at a time only, showing tree 0 here
 
-# %%
+# +
 from skompiler import skompile
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 
 dt = extract_sklearn_tree_from_figs(model_figs, tree_num=0, n_classes=2)
 expr = skompile(dt.predict_proba, feat_names)
 
-# %%
-print(expr.to('sqlalchemy/sqlite', component=1, assign_to='tree_0'))
+# +
+# Currently broken, see https://github.com/konstantint/SKompiler/issues/16
+# print(expr.to('sqlalchemy/sqlite', component=1, assign_to='tree_0'))
+# -
 
-# %%
 print(expr.to('python/code'))

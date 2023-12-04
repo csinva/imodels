@@ -180,7 +180,7 @@ Different models support different machine-learning tasks. Current support for d
 | Greedy tree sums (FIGS) | [FIGSClassifier](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier) | [FIGSRegressor](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor) |                                                              |
 | Hierarchical shrinkage | [HSTreeClassifierCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV) | [HSTreeRegressorCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV) | Wraps any sklearn tree-based model |
 | Distillation |  | [DistilledRegressor](https://csinva.io/imodels/util/distillation.html#imodels.util.distillation.DistilledRegressor) | Wraps any sklearn-compatible models |
-| AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | | |
+| AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
 
 
 ### Extras

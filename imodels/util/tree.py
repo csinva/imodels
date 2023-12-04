@@ -1,6 +1,8 @@
 from sklearn import datasets
 from sklearn.tree import DecisionTreeRegressor
 import numpy as np
+from sklearn.tree._tree import Tree
+from imodels.tree.custom_greedy_tree import CustomDecisionTreeClassifier
 
 
 def compute_tree_complexity(tree, complexity_measure='num_rules'):
@@ -42,13 +44,48 @@ def _validate_feature_costs(feature_costs, n_features):
     return feature_costs
 
 
-def calculate_mean_depth_of_points_in_tree(tree_, feature_costs=None):
+def calculate_mean_depth_of_points_in_tree(tree, X, feature_costs=None):
     """Calculate the mean depth of each point in the tree.
     This is the average depth of the path from the root to the point.
     """
     feature_costs = _validate_feature_costs(
-        feature_costs, n_features=tree_.n_features)
+        feature_costs, n_features=X.shape[1])
 
+    if isinstance(tree, CustomDecisionTreeClassifier):
+        return _mean_depth_custom_tree(tree, X, feature_costs)
+    elif hasattr(tree, 'tree_'):
+        return _mean_depth_sklearn_tree(tree.tree_, X, feature_costs)
+    elif hasattr(tree, 'estimator_'):
+        return _mean_depth_sklearn_tree(tree.estimator_.tree_, X, feature_costs)
+    else:
+        return _mean_depth_coct_tree(tree, X, feature_costs)
+
+
+def _mean_depth_custom_tree(custom_tree_, X, feature_costs):
+    node = custom_tree_.root
+    n_samples = []
+    cum_costs = []
+    is_leaves = []
+    stack = [(node, 0)]
+    while len(stack) > 0:
+        node, cost = stack.pop()
+        n_samples.append(node.num_samples)
+        cum_costs.append(cost)
+        is_leaves.append(node.left is None and node.right is None)
+
+        if node.left:
+            stack.append((node.left, cost + feature_costs[node.feature_index]))
+        if node.right:
+            stack.append(
+                (node.right, cost + feature_costs[node.feature_index]))
+    is_leaves = np.array(is_leaves)
+    cum_costs = np.array(cum_costs)[is_leaves]
+    n_samples = np.array(n_samples)[is_leaves]
+    costs = cum_costs * n_samples / np.sum(n_samples)
+    return np.sum(costs)
+
+
+def _mean_depth_sklearn_tree(tree_, X, feature_costs):
     n_nodes = tree_.node_count
     children_left = tree_.children_left
     children_right = tree_.children_right
@@ -81,34 +118,18 @@ def calculate_mean_depth_of_points_in_tree(tree_, feature_costs=None):
     return np.sum(depths)
 
 
-def calculate_mean_depth_of_points_in_custom_tree(custom_tree_, feature_costs=None):
-    """Calculate the mean depth of each point in the tree.
-    This is the average depth of the path from the root to the point.
-    """
-    feature_costs = _validate_feature_costs(
-        feature_costs, n_features=custom_tree_.n_features)
-
-    node = custom_tree_.root
-    n_samples = []
-    cum_costs = []
-    is_leaves = []
-    stack = [(node, 0)]
-    while len(stack) > 0:
-        node, cost = stack.pop()
-        n_samples.append(node.num_samples)
-        cum_costs.append(cost)
-        is_leaves.append(node.left is None and node.right is None)
-
-        if node.left:
-            stack.append((node.left, cost + feature_costs[node.feature_index]))
-        if node.right:
-            stack.append(
-                (node.right, cost + feature_costs[node.feature_index]))
-    is_leaves = np.array(is_leaves)
-    cum_costs = np.array(cum_costs)[is_leaves]
-    n_samples = np.array(n_samples)[is_leaves]
-    costs = cum_costs * n_samples / np.sum(n_samples)
-    return np.sum(costs)
+def _mean_depth_coct_tree(coct_tree, X, feature_costs):
+    indicator = coct_tree.decision_path(X)[:, coct_tree.branch_nodes]
+    feature_use_counts = indicator.sum(axis=0)
+    n_branch_nodes = indicator.shape[1]
+    node_idx_to_feature_cost = {
+        i: feature_costs[coct_tree.feature_[i]] for i in range(n_branch_nodes)
+    }
+    cost = sum(
+        [node_idx_to_feature_cost[i] * feature_use_counts[i]
+         for i in range(n_branch_nodes)]
+    ) / len(X)
+    return cost
 
 
 def calculate_mean_unique_calls_in_ensemble(ensemble, X, feature_costs=None):

@@ -27,6 +27,7 @@ class HSTree(BaseEstimator):
         reg_param: float = 1,
         shrinkage_scheme_: str = "node_based",
         max_leaf_nodes: int = None,
+        random_state: int = None,
     ):
         """HSTree (Tree with hierarchical shrinkage applied).
         Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
@@ -56,10 +57,12 @@ class HSTree(BaseEstimator):
         self.reg_param = reg_param
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
+        self.random_state = random_state
         if checks.check_is_fitted(self.estimator_):
             self._shrink()
         if max_leaf_nodes is not None:
             self.estimator_.max_leaf_nodes = max_leaf_nodes
+            self.estimator_.random_state = random_state
 
     def get_params(self, deep=True):
         d = {
@@ -74,8 +77,11 @@ class HSTree(BaseEstimator):
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # remove feature_names if it exists (note: only works as keyword-arg)
-        feature_names = kwargs.pop("feature_names", None)  # None returned if not passed
+        # None returned if not passed
+        feature_names = kwargs.pop("feature_names", None)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        if feature_names is not None:
+            self.feature_names = feature_names
         self.estimator_ = self.estimator_.fit(
             X, y, *args, sample_weight=sample_weight, **kwargs
         )
@@ -243,12 +249,14 @@ class HSTreeRegressor(HSTree, RegressorMixin):
         reg_param: float = 1,
         shrinkage_scheme_: str = "node_based",
         max_leaf_nodes: int = None,
+        random_state: int = None,
     ):
         super().__init__(
             estimator_=estimator_,
             reg_param=reg_param,
             shrinkage_scheme_=shrinkage_scheme_,
             max_leaf_nodes=max_leaf_nodes,
+            random_state=random_state,
         )
 
 
@@ -259,12 +267,14 @@ class HSTreeClassifier(HSTree, ClassifierMixin):
         reg_param: float = 1,
         shrinkage_scheme_: str = "node_based",
         max_leaf_nodes: int = None,
+        random_state: int = None,
     ):
         super().__init__(
             estimator_=estimator_,
             reg_param=reg_param,
             shrinkage_scheme_=shrinkage_scheme_,
             max_leaf_nodes=max_leaf_nodes,
+            random_state=random_state,
         )
 
 
@@ -333,8 +343,9 @@ class HSTreeClassifierCV(HSTreeClassifier):
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
                 est_hs = HSTreeClassifier(base_est, reg_param)
-                est_hs.fit(X_in, y_in)
-                self.scores_[i].append(scorer(y_out, est_hs.predict_proba(X_out)))
+                est_hs.fit(X_in, y_in, *args, **kwargs)
+                self.scores_[i].append(
+                    scorer(y_out, est_hs.predict_proba(X_out)))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
         self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]

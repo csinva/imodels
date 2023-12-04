@@ -25,11 +25,10 @@
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
-from sklearn.linear_model import LinearRegression, RidgeCV, Ridge, ElasticNetCV
+from sklearn.linear_model import LinearRegression, RidgeCV, Ridge, ElasticNet, ElasticNetCV
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.multiclass import check_classification_targets
-from sklearn.utils.validation import check_X_y
-from sklearn.utils.validation import _check_sample_weight
+from sklearn.utils.validation import check_X_y, check_array, _check_sample_weight
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score
 from tqdm import tqdm
@@ -114,7 +113,8 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         self.coef_marginal_ = self._fit_marginal(X, y, sample_weight)
 
         # fit main
-        self.est_main_ = self._fit_main(X, y, sample_weight, self.coef_marginal_)
+        self.est_main_ = self._fit_main(
+            X, y, sample_weight, self.coef_marginal_)
 
         return self
 
@@ -133,7 +133,8 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         else:
             coef_marginal_ = []
             for i in range(X.shape[1]):
-                est_marginal.fit(X[:, i].reshape(-1, 1), y, sample_weight=sample_weight)
+                est_marginal.fit(X[:, i].reshape(-1, 1), y,
+                                 sample_weight=sample_weight)
                 coef_marginal_.append(deepcopy(est_marginal.coef_))
             coef_marginal_ = np.vstack(coef_marginal_).squeeze()
 
@@ -223,11 +224,81 @@ class MarginalShrinkageLinearModelRegressor(
 #     ...
 
 
+class MarginalLinearModel(BaseEstimator):
+    &#34;&#34;&#34;Linear model that only fits marginal effects of each feature.
+    &#34;&#34;&#34;
+
+    def __init__(self, alpha=1.0, l1_ratio=0.5, max_iter=1000, random_state=None):
+        &#39;&#39;&#39;Arguments are passed to sklearn.linear_model.ElasticNet
+        &#39;&#39;&#39;
+        self.alpha = alpha
+        self.l1_ratio = l1_ratio
+        self.max_iter = max_iter
+        self.random_state = random_state
+
+    def fit(self, X, y, sample_weight=None):
+        # checks
+        X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+        sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+        if isinstance(self, ClassifierMixin):
+            check_classification_targets(y)
+            self.classes_, y = np.unique(y, return_inverse=True)
+
+        # fit marginal estimator to each feature
+        coef_marginal_ = []
+        for i in range(X.shape[1]):
+            est_marginal = ElasticNet(alpha=self.alpha, l1_ratio=self.l1_ratio,
+                                      max_iter=self.max_iter, random_state=self.random_state)
+            est_marginal.fit(X[:, i].reshape(-1, 1), y,
+                             sample_weight=sample_weight)
+            coef_marginal_.append(deepcopy(est_marginal.coef_))
+        coef_marginal_ = np.vstack(coef_marginal_).squeeze()
+
+        self.coef_ = coef_marginal_ / X.shape[1]
+        self.alpha_ = self.alpha
+
+        return self
+
+    def predict_proba(self, X):
+        X = check_array(X, accept_sparse=False, dtype=None)
+        return X @ self.coef_
+
+    def predict(self, X):
+        probs = self.predict_proba(X)
+        if isinstance(self, ClassifierMixin):
+            return np.argmax(probs, axis=1)
+        else:
+            return probs
+
+
+class MarginalLinearRegressor(MarginalLinearModel, RegressorMixin):
+    ...
+
+
+class MarginalLinearClassifier(MarginalLinearModel, ClassifierMixin):
+    ...
+
+
+# if __name__ == &#39;__main__&#39;:
+#     X, y = imodels.get_clean_dataset(&#39;heart&#39;)
+#     X_train, X_test, y_train, y_test = train_test_split(
+#         X, y, random_state=42, test_size=0.2)
+#     m = MarginalLinearModelRegressor()
+
+#     m.fit(X_train, y_train)
+#     print(m.coef_)
+#     print(m.predict(X_test))
+#     print(m.score(X_test, y_test))
+
 if __name__ == &#34;__main__&#34;:
     # X, y, feature_names = imodels.get_clean_dataset(&#34;heart&#34;)
     X, y, feature_names = imodels.get_clean_dataset(
         **imodels.util.data_util.DSET_KWARGS[&#34;california_housing&#34;]
     )
+
+    # scale the data
+    X = StandardScaler().fit_transform(X)
+    y = StandardScaler().fit_transform(y.reshape(-1, 1)).squeeze()
 
     print(&#34;shapes&#34;, X.shape, y.shape, &#34;nunique&#34;, np.unique(y).size)
     X_train, X_test, y_train, y_test = train_test_split(
@@ -243,28 +314,30 @@ if __name__ == &#34;__main__&#34;:
     )
     results = defaultdict(list)
     for m in [
-        MarginalShrinkageLinearModelRegressor(**kwargs),
-        MarginalShrinkageLinearModelRegressor(est_marginal_name=None, **kwargs),
-        MarginalShrinkageLinearModelRegressor(
-            est_main_name=None,
-            **kwargs,
-        ),
-        MarginalShrinkageLinearModelRegressor(
-            est_marginal_name=&#34;ridge&#34;,
-            est_main_name=&#34;ridge&#34;,
-            marginal_sign_constraint=True,
-            **kwargs,
-        ),
-        MarginalShrinkageLinearModelRegressor(
-            est_marginal_name=None, est_main_name=&#34;lasso&#34;, **kwargs
-        ),
-        MarginalShrinkageLinearModelRegressor(
-            est_marginal_name=&#34;ridge&#34;,
-            est_main_name=&#34;lasso&#34;,
-            marginal_sign_constraint=True,
-            **kwargs,
-        ),
-        # RidgeCV(alphas=alphas, fit_intercept=False),
+        # MarginalShrinkageLinearModelRegressor(**kwargs),
+        # MarginalShrinkageLinearModelRegressor(
+        #     est_marginal_name=None, **kwargs),
+        # MarginalShrinkageLinearModelRegressor(
+        #     est_main_name=None,
+        #     **kwargs,
+        # ),
+        # MarginalShrinkageLinearModelRegressor(
+        #     est_marginal_name=&#34;ridge&#34;,
+        #     est_main_name=&#34;ridge&#34;,
+        #     marginal_sign_constraint=True,
+        #     **kwargs,
+        # ),
+        # MarginalShrinkageLinearModelRegressor(
+        #     est_marginal_name=None, est_main_name=&#34;lasso&#34;, **kwargs
+        # ),
+        # MarginalShrinkageLinearModelRegressor(
+        #     est_marginal_name=&#34;ridge&#34;,
+        #     est_main_name=&#34;lasso&#34;,
+        #     marginal_sign_constraint=True,
+        #     **kwargs,
+        # ),
+        MarginalLinearRegressor(alpha=1.0),
+        RidgeCV(alphas=alphas, fit_intercept=False),
     ]:
         results[&#34;model_name&#34;].append(str(m))
         m.fit(X_train, y_train)
@@ -277,11 +350,14 @@ if __name__ == &#34;__main__&#34;:
             results[&#34;test_roc&#34;].append(
                 roc_auc_score(y_test, m.predict_proba(X_test)[:, 1])
             )
-            results[&#34;acc_train&#34;].append(accuracy_score(y_train, m.predict(X_train)))
-            results[&#34;acc_test&#34;].append(accuracy_score(y_test, m.predict(X_test)))
+            results[&#34;acc_train&#34;].append(
+                accuracy_score(y_train, m.predict(X_train)))
+            results[&#34;acc_test&#34;].append(
+                accuracy_score(y_test, m.predict(X_test)))
         else:
             y_pred = m.predict(X_test)
-            results[&#34;train_mse&#34;].append(np.mean((y_train - m.predict(X_train)) ** 2))
+            results[&#34;train_mse&#34;].append(
+                np.mean((y_train - m.predict(X_train)) ** 2))
             results[&#34;test_mse&#34;].append(np.mean((y_test - y_pred) ** 2))
             results[&#34;train_r2&#34;].append(m.score(X_train, y_train))
             results[&#34;test_r2&#34;].append(m.score(X_test, y_test))
@@ -294,10 +370,10 @@ if __name__ == &#34;__main__&#34;:
         coefs.append(deepcopy(lin.coef_))
         print(&#34;alpha best&#34;, lin.alpha_)
 
-    diffs = pd.DataFrame({str(i): coefs[i] for i in range(len(coefs))})
-    diffs[&#34;diff 0 - 1&#34;] = diffs[&#34;0&#34;] - diffs[&#34;1&#34;]
-    diffs[&#34;diff 1 - 2&#34;] = diffs[&#34;1&#34;] - diffs[&#34;2&#34;]
-    print(diffs)
+    # diffs = pd.DataFrame({str(i): coefs[i] for i in range(len(coefs))})
+    # diffs[&#34;diff 0 - 1&#34;] = diffs[&#34;0&#34;] - diffs[&#34;1&#34;]
+    # diffs[&#34;diff 1 - 2&#34;] = diffs[&#34;1&#34;] - diffs[&#34;2&#34;]
+    # print(diffs)
 
     # don&#39;t round strings
     with pd.option_context(
@@ -315,6 +391,450 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier"><code class="flex name class">
+<span>class <span class="ident">MarginalLinearClassifier</span></span>
+<span>(</span><span>alpha=1.0, l1_ratio=0.5, max_iter=1000, random_state=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Linear model that only fits marginal effects of each feature.</p>
+<p>Arguments are passed to sklearn.linear_model.ElasticNet</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MarginalLinearClassifier(MarginalLinearModel, ClassifierMixin):
+    ...</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel">MarginalLinearModel</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li>sklearn.base.ClassifierMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier">MarginalLinearClassifier</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier">MarginalLinearClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel">MarginalLinearModel</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.set_fit_request" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel"><code class="flex name class">
+<span>class <span class="ident">MarginalLinearModel</span></span>
+<span>(</span><span>alpha=1.0, l1_ratio=0.5, max_iter=1000, random_state=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Linear model that only fits marginal effects of each feature.</p>
+<p>Arguments are passed to sklearn.linear_model.ElasticNet</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MarginalLinearModel(BaseEstimator):
+    &#34;&#34;&#34;Linear model that only fits marginal effects of each feature.
+    &#34;&#34;&#34;
+
+    def __init__(self, alpha=1.0, l1_ratio=0.5, max_iter=1000, random_state=None):
+        &#39;&#39;&#39;Arguments are passed to sklearn.linear_model.ElasticNet
+        &#39;&#39;&#39;
+        self.alpha = alpha
+        self.l1_ratio = l1_ratio
+        self.max_iter = max_iter
+        self.random_state = random_state
+
+    def fit(self, X, y, sample_weight=None):
+        # checks
+        X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+        sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+        if isinstance(self, ClassifierMixin):
+            check_classification_targets(y)
+            self.classes_, y = np.unique(y, return_inverse=True)
+
+        # fit marginal estimator to each feature
+        coef_marginal_ = []
+        for i in range(X.shape[1]):
+            est_marginal = ElasticNet(alpha=self.alpha, l1_ratio=self.l1_ratio,
+                                      max_iter=self.max_iter, random_state=self.random_state)
+            est_marginal.fit(X[:, i].reshape(-1, 1), y,
+                             sample_weight=sample_weight)
+            coef_marginal_.append(deepcopy(est_marginal.coef_))
+        coef_marginal_ = np.vstack(coef_marginal_).squeeze()
+
+        self.coef_ = coef_marginal_ / X.shape[1]
+        self.alpha_ = self.alpha
+
+        return self
+
+    def predict_proba(self, X):
+        X = check_array(X, accept_sparse=False, dtype=None)
+        return X @ self.coef_
+
+    def predict(self, X):
+        probs = self.predict_proba(X)
+        if isinstance(self, ClassifierMixin):
+            return np.argmax(probs, axis=1)
+        else:
+            return probs</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier">MarginalLinearClassifier</a></li>
+<li><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor">MarginalLinearRegressor</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, sample_weight=None):
+    # checks
+    X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+    sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+    if isinstance(self, ClassifierMixin):
+        check_classification_targets(y)
+        self.classes_, y = np.unique(y, return_inverse=True)
+
+    # fit marginal estimator to each feature
+    coef_marginal_ = []
+    for i in range(X.shape[1]):
+        est_marginal = ElasticNet(alpha=self.alpha, l1_ratio=self.l1_ratio,
+                                  max_iter=self.max_iter, random_state=self.random_state)
+        est_marginal.fit(X[:, i].reshape(-1, 1), y,
+                         sample_weight=sample_weight)
+        coef_marginal_.append(deepcopy(est_marginal.coef_))
+    coef_marginal_ = np.vstack(coef_marginal_).squeeze()
+
+    self.coef_ = coef_marginal_ / X.shape[1]
+    self.alpha_ = self.alpha
+
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    probs = self.predict_proba(X)
+    if isinstance(self, ClassifierMixin):
+        return np.argmax(probs, axis=1)
+    else:
+        return probs</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    X = check_array(X, accept_sparse=False, dtype=None)
+    return X @ self.coef_</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel">MarginalLinearModel</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel">MarginalLinearModel</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor"><code class="flex name class">
+<span>class <span class="ident">MarginalLinearRegressor</span></span>
+<span>(</span><span>alpha=1.0, l1_ratio=0.5, max_iter=1000, random_state=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Linear model that only fits marginal effects of each feature.</p>
+<p>Arguments are passed to sklearn.linear_model.ElasticNet</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MarginalLinearRegressor(MarginalLinearModel, RegressorMixin):
+    ...</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel">MarginalLinearModel</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li>sklearn.base.RegressorMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor">MarginalLinearRegressor</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor">MarginalLinearRegressor</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(**kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
+            f&#34; are: {set(self.keys)}&#34;
+        )
+
+    requests = instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    instance._metadata_request = requests
+
+    return instance</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel">MarginalLinearModel</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.set_fit_request" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModel"><code class="flex name class">
 <span>class <span class="ident">MarginalShrinkageLinearModel</span></span>
 <span>(</span><span>est_marginal_name='ridge', est_main_name='ridge', marginal_divide_by_d=True, marginal_sign_constraint=False, alphas=[0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0], elasticnet_ratio=0.5, random_state=None)</span>
@@ -417,7 +937,8 @@ Random seed</p></div>
         self.coef_marginal_ = self._fit_marginal(X, y, sample_weight)
 
         # fit main
-        self.est_main_ = self._fit_main(X, y, sample_weight, self.coef_marginal_)
+        self.est_main_ = self._fit_main(
+            X, y, sample_weight, self.coef_marginal_)
 
         return self
 
@@ -436,7 +957,8 @@ Random seed</p></div>
         else:
             coef_marginal_ = []
             for i in range(X.shape[1]):
-                est_marginal.fit(X[:, i].reshape(-1, 1), y, sample_weight=sample_weight)
+                est_marginal.fit(X[:, i].reshape(-1, 1), y,
+                                 sample_weight=sample_weight)
                 coef_marginal_.append(deepcopy(est_marginal.coef_))
             coef_marginal_ = np.vstack(coef_marginal_).squeeze()
 
@@ -553,7 +1075,8 @@ Random seed</p></div>
     self.coef_marginal_ = self._fit_marginal(X, y, sample_weight)
 
     # fit main
-    self.est_main_ = self._fit_main(X, y, sample_weight, self.coef_marginal_)
+    self.est_main_ = self._fit_main(
+        X, y, sample_weight, self.coef_marginal_)
 
     return self</code></pre>
 </details>
@@ -819,6 +1342,27 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier">MarginalLinearClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier.set_score_request" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel">MarginalLinearModel</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.fit" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.fit">fit</a></code></li>
+<li><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.predict" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.predict">predict</a></code></li>
+<li><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.predict_proba" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.set_fit_request" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor">MarginalLinearRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor.set_score_request" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModel" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModel">MarginalShrinkageLinearModel</a></code></h4>
 <ul class="">

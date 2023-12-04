@@ -49,7 +49,7 @@ from .tree.hierarchical_shrinkage import (
     HSTreeClassifierCV,
 )
 from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
-from .util.automl import AutoInterpretableClassifier
+from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
@@ -86,6 +86,8 @@ REGRESSORS = [
     HSTreeRegressor,
     HSTreeRegressorCV,
     BART,
+    AutoInterpretableRegressor,
 ]
 ESTIMATORS = CLASSIFIERS + REGRESSORS
-DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]
+DISCRETIZERS = [RFDiscretizer, BasicDiscretizer,
+                MDLPDiscretizer, BRLDiscretizer]

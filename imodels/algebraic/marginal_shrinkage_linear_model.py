@@ -2,11 +2,10 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
-from sklearn.linear_model import LinearRegression, RidgeCV, Ridge, ElasticNetCV
+from sklearn.linear_model import LinearRegression, RidgeCV, Ridge, ElasticNet, ElasticNetCV
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.multiclass import check_classification_targets
-from sklearn.utils.validation import check_X_y
-from sklearn.utils.validation import _check_sample_weight
+from sklearn.utils.validation import check_X_y, check_array, _check_sample_weight
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score
 from tqdm import tqdm
@@ -91,7 +90,8 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         self.coef_marginal_ = self._fit_marginal(X, y, sample_weight)
 
         # fit main
-        self.est_main_ = self._fit_main(X, y, sample_weight, self.coef_marginal_)
+        self.est_main_ = self._fit_main(
+            X, y, sample_weight, self.coef_marginal_)
 
         return self
 
@@ -110,7 +110,8 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         else:
             coef_marginal_ = []
             for i in range(X.shape[1]):
-                est_marginal.fit(X[:, i].reshape(-1, 1), y, sample_weight=sample_weight)
+                est_marginal.fit(X[:, i].reshape(-1, 1), y,
+                                 sample_weight=sample_weight)
                 coef_marginal_.append(deepcopy(est_marginal.coef_))
             coef_marginal_ = np.vstack(coef_marginal_).squeeze()
 
@@ -200,11 +201,81 @@ class MarginalShrinkageLinearModelRegressor(
 #     ...
 
 
+class MarginalLinearModel(BaseEstimator):
+    """Linear model that only fits marginal effects of each feature.
+    """
+
+    def __init__(self, alpha=1.0, l1_ratio=0.5, max_iter=1000, random_state=None):
+        '''Arguments are passed to sklearn.linear_model.ElasticNet
+        '''
+        self.alpha = alpha
+        self.l1_ratio = l1_ratio
+        self.max_iter = max_iter
+        self.random_state = random_state
+
+    def fit(self, X, y, sample_weight=None):
+        # checks
+        X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+        sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+        if isinstance(self, ClassifierMixin):
+            check_classification_targets(y)
+            self.classes_, y = np.unique(y, return_inverse=True)
+
+        # fit marginal estimator to each feature
+        coef_marginal_ = []
+        for i in range(X.shape[1]):
+            est_marginal = ElasticNet(alpha=self.alpha, l1_ratio=self.l1_ratio,
+                                      max_iter=self.max_iter, random_state=self.random_state)
+            est_marginal.fit(X[:, i].reshape(-1, 1), y,
+                             sample_weight=sample_weight)
+            coef_marginal_.append(deepcopy(est_marginal.coef_))
+        coef_marginal_ = np.vstack(coef_marginal_).squeeze()
+
+        self.coef_ = coef_marginal_ / X.shape[1]
+        self.alpha_ = self.alpha
+
+        return self
+
+    def predict_proba(self, X):
+        X = check_array(X, accept_sparse=False, dtype=None)
+        return X @ self.coef_
+
+    def predict(self, X):
+        probs = self.predict_proba(X)
+        if isinstance(self, ClassifierMixin):
+            return np.argmax(probs, axis=1)
+        else:
+            return probs
+
+
+class MarginalLinearRegressor(MarginalLinearModel, RegressorMixin):
+    ...
+
+
+class MarginalLinearClassifier(MarginalLinearModel, ClassifierMixin):
+    ...
+
+
+# if __name__ == '__main__':
+#     X, y = imodels.get_clean_dataset('heart')
+#     X_train, X_test, y_train, y_test = train_test_split(
+#         X, y, random_state=42, test_size=0.2)
+#     m = MarginalLinearModelRegressor()
+
+#     m.fit(X_train, y_train)
+#     print(m.coef_)
+#     print(m.predict(X_test))
+#     print(m.score(X_test, y_test))
+
 if __name__ == "__main__":
     # X, y, feature_names = imodels.get_clean_dataset("heart")
     X, y, feature_names = imodels.get_clean_dataset(
         **imodels.util.data_util.DSET_KWARGS["california_housing"]
     )
+
+    # scale the data
+    X = StandardScaler().fit_transform(X)
+    y = StandardScaler().fit_transform(y.reshape(-1, 1)).squeeze()
 
     print("shapes", X.shape, y.shape, "nunique", np.unique(y).size)
     X_train, X_test, y_train, y_test = train_test_split(
@@ -220,28 +291,30 @@ if __name__ == "__main__":
     )
     results = defaultdict(list)
     for m in [
-        MarginalShrinkageLinearModelRegressor(**kwargs),
-        MarginalShrinkageLinearModelRegressor(est_marginal_name=None, **kwargs),
-        MarginalShrinkageLinearModelRegressor(
-            est_main_name=None,
-            **kwargs,
-        ),
-        MarginalShrinkageLinearModelRegressor(
-            est_marginal_name="ridge",
-            est_main_name="ridge",
-            marginal_sign_constraint=True,
-            **kwargs,
-        ),
-        MarginalShrinkageLinearModelRegressor(
-            est_marginal_name=None, est_main_name="lasso", **kwargs
-        ),
-        MarginalShrinkageLinearModelRegressor(
-            est_marginal_name="ridge",
-            est_main_name="lasso",
-            marginal_sign_constraint=True,
-            **kwargs,
-        ),
-        # RidgeCV(alphas=alphas, fit_intercept=False),
+        # MarginalShrinkageLinearModelRegressor(**kwargs),
+        # MarginalShrinkageLinearModelRegressor(
+        #     est_marginal_name=None, **kwargs),
+        # MarginalShrinkageLinearModelRegressor(
+        #     est_main_name=None,
+        #     **kwargs,
+        # ),
+        # MarginalShrinkageLinearModelRegressor(
+        #     est_marginal_name="ridge",
+        #     est_main_name="ridge",
+        #     marginal_sign_constraint=True,
+        #     **kwargs,
+        # ),
+        # MarginalShrinkageLinearModelRegressor(
+        #     est_marginal_name=None, est_main_name="lasso", **kwargs
+        # ),
+        # MarginalShrinkageLinearModelRegressor(
+        #     est_marginal_name="ridge",
+        #     est_main_name="lasso",
+        #     marginal_sign_constraint=True,
+        #     **kwargs,
+        # ),
+        MarginalLinearRegressor(alpha=1.0),
+        RidgeCV(alphas=alphas, fit_intercept=False),
     ]:
         results["model_name"].append(str(m))
         m.fit(X_train, y_train)
@@ -254,11 +327,14 @@ if __name__ == "__main__":
             results["test_roc"].append(
                 roc_auc_score(y_test, m.predict_proba(X_test)[:, 1])
             )
-            results["acc_train"].append(accuracy_score(y_train, m.predict(X_train)))
-            results["acc_test"].append(accuracy_score(y_test, m.predict(X_test)))
+            results["acc_train"].append(
+                accuracy_score(y_train, m.predict(X_train)))
+            results["acc_test"].append(
+                accuracy_score(y_test, m.predict(X_test)))
         else:
             y_pred = m.predict(X_test)
-            results["train_mse"].append(np.mean((y_train - m.predict(X_train)) ** 2))
+            results["train_mse"].append(
+                np.mean((y_train - m.predict(X_train)) ** 2))
             results["test_mse"].append(np.mean((y_test - y_pred) ** 2))
             results["train_r2"].append(m.score(X_train, y_train))
             results["test_r2"].append(m.score(X_test, y_test))
@@ -271,10 +347,10 @@ if __name__ == "__main__":
         coefs.append(deepcopy(lin.coef_))
         print("alpha best", lin.alpha_)
 
-    diffs = pd.DataFrame({str(i): coefs[i] for i in range(len(coefs))})
-    diffs["diff 0 - 1"] = diffs["0"] - diffs["1"]
-    diffs["diff 1 - 2"] = diffs["1"] - diffs["2"]
-    print(diffs)
+    # diffs = pd.DataFrame({str(i): coefs[i] for i in range(len(coefs))})
+    # diffs["diff 0 - 1"] = diffs["0"] - diffs["1"]
+    # diffs["diff 1 - 2"] = diffs["1"] - diffs["2"]
+    # print(diffs)
 
     # don't round strings
     with pd.option_context(
