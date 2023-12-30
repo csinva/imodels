@@ -352,6 +352,8 @@ class FIGS(BaseEstimator):
                 y_residuals_per_tree[tree_num_] = deepcopy(y)
 
                 # subtract predictions of all other trees
+                # Since the current tree makes a constant prediction over the node being split,
+                # one may ignore its contributions to the residuals without affecting the impurity decrease.
                 for tree_num_other_ in range(len(self.trees_)):
                     if not tree_num_other_ == tree_num_:
                         y_residuals_per_tree[tree_num_] -= y_predictions_per_tree[
