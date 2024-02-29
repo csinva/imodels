@@ -35,7 +35,8 @@ DSET_CLASSIFICATION_KWARGS = {
         "dataset_name": "readmission_clean",
         "data_source": "imodels",
     },  # big, 100k points
-    "adult": {"dataset_name": "1182", "data_source": "openml"},  # big, 1e6 points
+    # big, 1e6 points
+    "adult": {"dataset_name": "1182", "data_source": "openml"},
     # CDI classification
     "csi_pecarn": {"dataset_name": "csi_pecarn_pred", "data_source": "imodels"},
     "iai_pecarn": {"dataset_name": "iai_pecarn_pred", "data_source": "imodels"},
@@ -221,7 +222,8 @@ def get_clean_dataset(
         return _split(_clean_features(X), y, _clean_feat_names(feature_names))
     elif data_source == "synthetic":
         if dataset_name == "friedman1":
-            X, y = sklearn.datasets.make_friedman1(n_samples=200, n_features=10)
+            X, y = sklearn.datasets.make_friedman1(
+                n_samples=200, n_features=10)
         elif dataset_name == "friedman2":
             X, y = sklearn.datasets.make_friedman2(n_samples=200)
         elif dataset_name == "friedman3":
@@ -234,7 +236,8 @@ def get_clean_dataset(
 
 
 def _download_imodels_dataset(dataset_fname, data_path: str):
-    dataset_fname = dataset_fname.split("/")[-1]  # remove anything about the path
+    dataset_fname = dataset_fname.split(
+        "/")[-1]  # remove anything about the path
     download_path = f"https://raw.githubusercontent.com/csinva/imodels-data/master/data_cleaned/{dataset_fname}"
     r = requests.get(download_path)
     if r.status_code == 404:
@@ -253,7 +256,7 @@ def encode_categories(X, features, encoder=None):
     X_cat = pd.DataFrame({f: X.loc[:, f] for f in features})
 
     if encoder is None:
-        one_hot_encoder = OneHotEncoder(sparse=False, categories="auto")
+        one_hot_encoder = OneHotEncoder(categories="auto")
         X_one_hot = pd.DataFrame(one_hot_encoder.fit_transform(X_cat))
     else:
         one_hot_encoder = encoder
