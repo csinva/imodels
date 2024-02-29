@@ -109,7 +109,7 @@ def extract_skope(X, y, feature_names,
 
     for max_depth in max_depths:
         bagging_clf = BaggingRegressor(
-            base_estimator=DecisionTreeRegressor(
+            estimator=DecisionTreeRegressor(
                 max_depth=max_depth,
                 max_features=max_features,
                 min_samples_split=min_samples_split
