@@ -8,12 +8,12 @@ with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
 
 required_pypi = [
     'matplotlib',
-    'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
+    'mlxtend>=0.18.0',  # some lower versions are missing fpgrowth
     'numpy',
-    'pandas',
+    'pandas<=2.1.4',  # pandas 2.2 introduced some issues with the query function
     'requests',  # used in c4.5
     'scipy',
-    'scikit-learn>=1.2.0',  # recently updates this
+    'scikit-learn>=1.2.0',  # recently updated this
     'tqdm',  # used in BART
 ]
 
