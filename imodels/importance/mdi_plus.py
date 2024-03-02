@@ -3,7 +3,7 @@ import pandas as pd
 from scipy.spatial.distance import pdist
 from functools import partial
 
-from .ppms import PartialPredictionModelBase, GenericRegressorPPM, GenericClassifierPPM
+from .ppms import PartialPredictionModelBase, GenericRegressorPPM, GenericClassifierPPM, _GlmPPM
 from .block_transformers import _blocked_train_test_split
 from .ranking_stability import tauAP_b, rbo
 
@@ -309,6 +309,9 @@ class TreeMDIPlus:
         _validate_sample_split(self.sample_split, self.estimator, isinstance(self.estimator, PartialPredictionModelBase))
         if self.sample_split in ["oob", "inbag"] and not self.tree_random_state:
             raise ValueError("Must specify tree_random_state to use 'oob' or 'inbag' sample_split.")
+        if isinstance(self.estimator, _GlmPPM):
+            if self.estimator.loo and self.sample_split != "loo":
+                self.estimator.loo = False
         self.mode = mode
         self.task = task
         self.center = center
