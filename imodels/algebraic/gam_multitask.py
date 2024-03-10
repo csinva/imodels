@@ -31,7 +31,7 @@ class MultiTaskGAM(BaseEstimator):
 
     def __init__(
         self,
-        ebm_kwargs=None,
+        ebm_kwargs={},
         multitask=True,
         random_state=42,
 
@@ -43,11 +43,13 @@ class MultiTaskGAM(BaseEstimator):
         self.ebm_kwargs = ebm_kwargs
         self.multitask = multitask
         self.random_state = random_state
+        if not 'random_state' in ebm_kwargs:
+            ebm_kwargs['random_state'] = random_state
         self.ebm_ = ExplainableBoostingRegressor(**(ebm_kwargs or {}))
 
         # self.ebm_ = ExplainableBoostingClassifier(**(ebm_kwargs or {}))
 
-    def fit(self, X, y, task_weights=None, sample_weight=None):
+    def fit(self, X, y, sample_weight=None):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
@@ -64,7 +66,7 @@ class MultiTaskGAM(BaseEstimator):
         num_features = X.shape[1]
         for task_num in tqdm(range(num_features)):
             self.ebms_[task_num] = deepcopy(self.ebm_)
-            y_ = X[:, task_num]
+            y_ = np.ascontiguousarray(X[:, task_num])
             X_ = deepcopy(X)
             X_[:, task_num] = 0
             self.ebms_[task_num].fit(X_, y_, sample_weight=sample_weight)
@@ -77,7 +79,7 @@ class MultiTaskGAM(BaseEstimator):
         feats = self.extract_ebm_features(X)
 
         # fit a linear model to the features
-        self.lin_model = RidgeCV()
+        self.lin_model = RidgeCV(alphas=np.logspace(-2, 3, 7))
         self.lin_model.fit(feats, y)
         return self
 
@@ -124,7 +126,8 @@ class MultiTaskGAMClassifier(MultiTaskGAM, ClassifierMixin):
 
 
 if __name__ == "__main__":
-    X, y, feature_names = imodels.get_clean_dataset("heart")
+    # X, y, feature_names = imodels.get_clean_dataset("heart")
+    X, y, feature_names = imodels.get_clean_dataset("bike_sharing")
     # X, y, feature_names = imodels.get_clean_dataset("diabetes")
 
     # remove some features to speed things up
@@ -135,13 +138,14 @@ if __name__ == "__main__":
         random_state=42,
     )
     results = defaultdict(list)
-    for gam in [
-            MultiTaskGAMRegressor(multitask=True),
+    for gam in tqdm([
             MultiTaskGAMRegressor(multitask=False),
-    ]:
+            MultiTaskGAMRegressor(multitask=True),
+    ]):
         np.random.seed(42)
-        gam.fit(X, y_train)
         results["model_name"].append(gam)
+        print('Fitting', results['model_name'][-1])
+        gam.fit(X, y_train)
 
         # check roc auc score
         # y_pred = gam.predict_proba(X_test)[:, 1]

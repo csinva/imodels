@@ -15,7 +15,7 @@ from imodels.util.tree_interaction_utils import make_rj, make_vp
 
 DSET_CLASSIFICATION_KWARGS = {
     # classification
-    "pima_diabetes": {"dataset_name": "40715", "data_source": "openml"},
+    "pima_diabetes": {"dataset_name": 40715, "data_source": "openml"},
     "sonar": {"dataset_name": "sonar", "data_source": "pmlb"},
     "heart": {"dataset_name": "heart", "data_source": "imodels"},
     "diabetes": {"dataset_name": "diabetes", "data_source": "pmlb"},
@@ -36,7 +36,7 @@ DSET_CLASSIFICATION_KWARGS = {
         "data_source": "imodels",
     },  # big, 100k points
     # big, 1e6 points
-    "adult": {"dataset_name": "1182", "data_source": "openml"},
+    "adult": {"dataset_name": 1182, "data_source": "openml"},
     # CDI classification
     "csi_pecarn": {"dataset_name": "csi_pecarn_pred", "data_source": "imodels"},
     "iai_pecarn": {"dataset_name": "iai_pecarn_pred", "data_source": "imodels"},
@@ -45,12 +45,12 @@ DSET_CLASSIFICATION_KWARGS = {
 
 DSET_REGRESSION_KWARGS = {
     # regression
-    "bike_sharing": {"dataset_name": "42712", "data_source": "openml"},
+    "bike_sharing": {"dataset_name": 42712, "data_source": "openml"},
     "friedman1": {"dataset_name": "friedman1", "data_source": "synthetic"},
     "friedman2": {"dataset_name": "friedman2", "data_source": "synthetic"},
     "friedman3": {"dataset_name": "friedman3", "data_source": "synthetic"},
     "diabetes_regr": {"dataset_name": "diabetes", "data_source": "sklearn"},
-    "abalone": {"dataset_name": "183", "data_source": "openml"},
+    "abalone": {"dataset_name": 183, "data_source": "openml"},
     "echo_months": {"dataset_name": "1199_BNG_echoMonths", "data_source": "pmlb"},
     "satellite_image": {"dataset_name": "294_satellite_image", "data_source": "pmlb"},
     "california_housing": {
