@@ -313,7 +313,7 @@ The code here heavily derives from the wonderful work of previous projects. We s
 </details>
 
 
-If it's useful for you, please star/cite the package, and make sure to give authors of original methods / base implementations credit:
+Please cite the package if you use it in an academic work :)
 
 ```r
 @software{
