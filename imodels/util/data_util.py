@@ -59,43 +59,26 @@ DSET_REGRESSION_KWARGS = {
     },
     # 'breast_tumor': {'dataset_name': '1201_BNG_breastTumor', 'data_source': 'pmlb' # v big
 }
-DSET_KWARGS = {**DSET_CLASSIFICATION_KWARGS, **DSET_REGRESSION_KWARGS}
-
-
-def _define_openml_outcomes(y, data_id: str):
-    if data_id == "59":  # ionosphere, positive is "good" class
-        y = (y == "g").astype(int)
-    if data_id == "183":  # abalone, need to convert strings to floats
-        y = y.astype(float)
-    if data_id == "1182":  # adult, positive is ">50K"
-        y = (y == ">50K").astype(int)
-    return y
-
-
-def _clean_feat_names(feature_names):
-    # shouldn't start with a digit
-    return ["X_" + x if x[0].isdigit() else x for x in feature_names]
-
-
-def _clean_features(X):
-    if issparse(X):
-        X = X.toarray()
-    try:
-        return X.astype(float)
-    except:
-        for j in range(X.shape[1]):
-            try:
-                X[:, j].astype(float)
-            except:
-                # non-numeric get replaced with numerical values
-                classes, X[:, j] = np.unique(X[:, j], return_inverse=True)
-    return X.astype(float)
+DSET_MULTITASK_NAMES = ['3s-bbc1000', '3s-guardian1000', '3s-inter3000', '3s-reuters1000',
+                        'birds', 'cal500', 'chd_49', 'corel16k001', 'corel16k002',
+                        'corel16k003', 'corel16k004', 'corel16k005', 'corel16k006',
+                        'corel16k007', 'corel16k008', 'corel16k009', 'corel16k010',
+                        'corel5k', 'emotions', 'flags', 'foodtruck', 'genbase', 'image',
+                        'mediamill', 'scene', 'stackex_chemistry', 'stackex_chess',
+                        'stackex_cooking', 'stackex_cs', 'water-quality', 'yeast', 'yelp']
+DSET_MULTITASK_KWARGS = {
+    name + '_multitask': {"dataset_name": name, "data_source": "imodels-multitask"}
+    for name in DSET_MULTITASK_NAMES
+}
+DSET_KWARGS = {
+    **DSET_CLASSIFICATION_KWARGS, **DSET_REGRESSION_KWARGS,
+    **DSET_MULTITASK_KWARGS}
 
 
 def get_clean_dataset(
     dataset_name: str,
     data_source: str = "imodels",
-    data_path="data",
+    data_path=os.path.expanduser("~/cache_imodels_data"),
     convertna: bool = True,
     test_size: float = None,
     random_state: int = 42,
@@ -147,7 +130,7 @@ def get_clean_dataset(
             data_source = DSET_KWARGS[dataset_name]["data_source"]
             dataset_name = DSET_KWARGS[dataset_name]["dataset_name"]
             print(f"fetching {dataset_name} from {data_source}")
-    assert data_source in ["imodels", "pmlb", "sklearn", "openml", "synthetic"], (
+    assert data_source in ["imodels", "pmlb", "imodels-multitask", "sklearn", "openml", "synthetic"], (
         data_source + " not correct"
     )
     if test_size is not None:
@@ -174,6 +157,19 @@ def get_clean_dataset(
         if convertna:
             X = np.nan_to_num(X.astype("float32"))
         return _split(X, y, _clean_feat_names(feature_names))
+    elif data_source == 'imodels-multitask':
+        if not dataset_name.endswith("csv"):
+            dataset_name = dataset_name + ".csv"
+        if not os.path.isfile(dataset_name):
+            _download_imodels_multitask_dataset(dataset_name, data_path)
+        df = pd.read_csv(oj(data_path, "imodels_multitask_data", dataset_name))
+        target_cols = [col for col in df.columns if col.endswith('__target')]
+        feature_names = [col for col in df.columns if col not in target_cols]
+        X, y = df[feature_names].values, df[target_cols].values
+        if convertna:
+            X = np.nan_to_num(X.astype("float32"))
+        return _split(X, y, _clean_feat_names(feature_names))
+
     elif data_source == "pmlb":
         from pmlb import fetch_data
 
@@ -235,6 +231,36 @@ def get_clean_dataset(
         return _split(X, y, ["X_" + str(i + 1) for i in range(X.shape[1])])
 
 
+def _define_openml_outcomes(y, data_id: str):
+    if data_id == "59":  # ionosphere, positive is "good" class
+        y = (y == "g").astype(int)
+    if data_id == "183":  # abalone, need to convert strings to floats
+        y = y.astype(float)
+    if data_id == "1182":  # adult, positive is ">50K"
+        y = (y == ">50K").astype(int)
+    return y
+
+
+def _clean_feat_names(feature_names):
+    # shouldn't start with a digit
+    return ["X_" + x if x[0].isdigit() else x for x in feature_names]
+
+
+def _clean_features(X):
+    if issparse(X):
+        X = X.toarray()
+    try:
+        return X.astype(float)
+    except:
+        for j in range(X.shape[1]):
+            try:
+                X[:, j].astype(float)
+            except:
+                # non-numeric get replaced with numerical values
+                classes, X[:, j] = np.unique(X[:, j], return_inverse=True)
+    return X.astype(float)
+
+
 def _download_imodels_dataset(dataset_fname, data_path: str):
     dataset_fname = dataset_fname.split(
         "/")[-1]  # remove anything about the path
@@ -247,6 +273,21 @@ def _download_imodels_dataset(dataset_fname, data_path: str):
 
     os.makedirs(oj(data_path, "imodels_data"), exist_ok=True)
     with open(oj(data_path, "imodels_data", dataset_fname), "w") as f:
+        f.write(r.text)
+
+
+def _download_imodels_multitask_dataset(dataset_fname, data_path: str):
+    dataset_fname = dataset_fname.split(
+        "/")[-1]  # remove anything about the path
+    download_path = f"https://huggingface.co/datasets/imodels/multitask-tabular-datasets/raw/main/{dataset_fname}"
+    r = requests.get(download_path)
+    if r.status_code == 404:
+        raise Exception(
+            f"404 Error for dataset {dataset_fname} (see valid files at https://huggingface.co/datasets/imodels/multitask-tabular-datasets)"
+        )
+
+    os.makedirs(oj(data_path, "imodels_multitask_data"), exist_ok=True)
+    with open(oj(data_path, "imodels_multitask_data", dataset_fname), "w") as f:
         f.write(r.text)
 
 

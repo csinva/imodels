@@ -50,6 +50,7 @@ class HSTree(BaseEstimator):
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
+        random_state: int = None,
     ):
         &#34;&#34;&#34;HSTree (Tree with hierarchical shrinkage applied).
         Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
@@ -79,10 +80,12 @@ class HSTree(BaseEstimator):
         self.reg_param = reg_param
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
+        self.random_state = random_state
         if checks.check_is_fitted(self.estimator_):
             self._shrink()
         if max_leaf_nodes is not None:
             self.estimator_.max_leaf_nodes = max_leaf_nodes
+            self.estimator_.random_state = random_state
 
     def get_params(self, deep=True):
         d = {
@@ -97,8 +100,11 @@ class HSTree(BaseEstimator):
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # remove feature_names if it exists (note: only works as keyword-arg)
-        feature_names = kwargs.pop(&#34;feature_names&#34;, None)  # None returned if not passed
+        # None returned if not passed
+        feature_names = kwargs.pop(&#34;feature_names&#34;, None)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        if feature_names is not None:
+            self.feature_names = feature_names
         self.estimator_ = self.estimator_.fit(
             X, y, *args, sample_weight=sample_weight, **kwargs
         )
@@ -266,12 +272,14 @@ class HSTreeRegressor(HSTree, RegressorMixin):
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
+        random_state: int = None,
     ):
         super().__init__(
             estimator_=estimator_,
             reg_param=reg_param,
             shrinkage_scheme_=shrinkage_scheme_,
             max_leaf_nodes=max_leaf_nodes,
+            random_state=random_state,
         )
 
 
@@ -282,12 +290,14 @@ class HSTreeClassifier(HSTree, ClassifierMixin):
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
+        random_state: int = None,
     ):
         super().__init__(
             estimator_=estimator_,
             reg_param=reg_param,
             shrinkage_scheme_=shrinkage_scheme_,
             max_leaf_nodes=max_leaf_nodes,
+            random_state=random_state,
         )
 
 
@@ -356,8 +366,9 @@ class HSTreeClassifierCV(HSTreeClassifier):
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
                 est_hs = HSTreeClassifier(base_est, reg_param)
-                est_hs.fit(X_in, y_in)
-                self.scores_[i].append(scorer(y_out, est_hs.predict_proba(X_out)))
+                est_hs.fit(X_in, y_in, *args, **kwargs)
+                self.scores_[i].append(
+                    scorer(y_out, est_hs.predict_proba(X_out)))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
         self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
@@ -515,14 +526,45 @@ if __name__ == &#34;__main__&#34;:
 <dl>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree"><code class="flex name class">
 <span>class <span class="ident">HSTree</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None, random_state: int = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<p>Inheriting from this class provides default implementations of:</p>
+<ul>
+<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
+<li>textual and HTML representation displayed in terminals and IDEs;</li>
+<li>estimator serialization;</li>
+<li>parameters validation;</li>
+<li>data validation;</li>
+<li>feature names validation.</li>
+</ul>
+<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="notes">Notes</h2>
 <p>All estimators should specify all the parameters that can be set
 at the class level in their <code>__init__</code> as explicit keyword
 arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.base import BaseEstimator
+&gt;&gt;&gt; class MyEstimator(BaseEstimator):
+...     def __init__(self, *, param=1):
+...         self.param = param
+...     def fit(self, X, y=None):
+...         self.is_fitted_ = True
+...         return self
+...     def predict(self, X):
+...         return np.full(shape=X.shape[0], fill_value=self.param)
+&gt;&gt;&gt; estimator = MyEstimator(param=2)
+&gt;&gt;&gt; estimator.get_params()
+{'param': 2}
+&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
+&gt;&gt;&gt; y = np.array([1, 0, 1])
+&gt;&gt;&gt; estimator.fit(X, y).predict(X)
+array([2, 2, 2])
+&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
+array([3, 3, 3])
+</code></pre>
 <p>HSTree (Tree with hierarchical shrinkage applied).
 Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
 It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
@@ -552,6 +594,7 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
+        random_state: int = None,
     ):
         &#34;&#34;&#34;HSTree (Tree with hierarchical shrinkage applied).
         Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
@@ -581,10 +624,12 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
         self.reg_param = reg_param
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
+        self.random_state = random_state
         if checks.check_is_fitted(self.estimator_):
             self._shrink()
         if max_leaf_nodes is not None:
             self.estimator_.max_leaf_nodes = max_leaf_nodes
+            self.estimator_.random_state = random_state
 
     def get_params(self, deep=True):
         d = {
@@ -599,8 +644,11 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         # remove feature_names if it exists (note: only works as keyword-arg)
-        feature_names = kwargs.pop(&#34;feature_names&#34;, None)  # None returned if not passed
+        # None returned if not passed
+        feature_names = kwargs.pop(&#34;feature_names&#34;, None)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        if feature_names is not None:
+            self.feature_names = feature_names
         self.estimator_ = self.estimator_.fit(
             X, y, *args, sample_weight=sample_weight, **kwargs
         )
@@ -763,6 +811,7 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -783,8 +832,11 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
 </summary>
 <pre><code class="python">def fit(self, X, y, sample_weight=None, *args, **kwargs):
     # remove feature_names if it exists (note: only works as keyword-arg)
-    feature_names = kwargs.pop(&#34;feature_names&#34;, None)  # None returned if not passed
+    # None returned if not passed
+    feature_names = kwargs.pop(&#34;feature_names&#34;, None)
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+    if feature_names is not None:
+        self.feature_names = feature_names
     self.estimator_ = self.estimator_.fit(
         X, y, *args, sample_weight=sample_weight, **kwargs
     )
@@ -915,7 +967,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -966,14 +1018,45 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">HSTreeClassifier</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None, random_state: int = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<p>Inheriting from this class provides default implementations of:</p>
+<ul>
+<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
+<li>textual and HTML representation displayed in terminals and IDEs;</li>
+<li>estimator serialization;</li>
+<li>parameters validation;</li>
+<li>data validation;</li>
+<li>feature names validation.</li>
+</ul>
+<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="notes">Notes</h2>
 <p>All estimators should specify all the parameters that can be set
 at the class level in their <code>__init__</code> as explicit keyword
 arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.base import BaseEstimator
+&gt;&gt;&gt; class MyEstimator(BaseEstimator):
+...     def __init__(self, *, param=1):
+...         self.param = param
+...     def fit(self, X, y=None):
+...         self.is_fitted_ = True
+...         return self
+...     def predict(self, X):
+...         return np.full(shape=X.shape[0], fill_value=self.param)
+&gt;&gt;&gt; estimator = MyEstimator(param=2)
+&gt;&gt;&gt; estimator.get_params()
+{'param': 2}
+&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
+&gt;&gt;&gt; y = np.array([1, 0, 1])
+&gt;&gt;&gt; estimator.fit(X, y).predict(X)
+array([2, 2, 2])
+&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
+array([3, 3, 3])
+</code></pre>
 <p>HSTree (Tree with hierarchical shrinkage applied).
 Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
 It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
@@ -1003,18 +1086,21 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
+        random_state: int = None,
     ):
         super().__init__(
             estimator_=estimator_,
             reg_param=reg_param,
             shrinkage_scheme_=shrinkage_scheme_,
             max_leaf_nodes=max_leaf_nodes,
+            random_state=random_state,
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
@@ -1039,10 +1125,41 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<p>Inheriting from this class provides default implementations of:</p>
+<ul>
+<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
+<li>textual and HTML representation displayed in terminals and IDEs;</li>
+<li>estimator serialization;</li>
+<li>parameters validation;</li>
+<li>data validation;</li>
+<li>feature names validation.</li>
+</ul>
+<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="notes">Notes</h2>
 <p>All estimators should specify all the parameters that can be set
 at the class level in their <code>__init__</code> as explicit keyword
 arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.base import BaseEstimator
+&gt;&gt;&gt; class MyEstimator(BaseEstimator):
+...     def __init__(self, *, param=1):
+...         self.param = param
+...     def fit(self, X, y=None):
+...         self.is_fitted_ = True
+...         return self
+...     def predict(self, X):
+...         return np.full(shape=X.shape[0], fill_value=self.param)
+&gt;&gt;&gt; estimator = MyEstimator(param=2)
+&gt;&gt;&gt; estimator.get_params()
+{'param': 2}
+&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
+&gt;&gt;&gt; y = np.array([1, 0, 1])
+&gt;&gt;&gt; estimator.fit(X, y).predict(X)
+array([2, 2, 2])
+&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
+array([3, 3, 3])
+</code></pre>
 <p>Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.</p>
 <h2 id="params">Params</h2>
 <p>estimator_
@@ -1106,8 +1223,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
                 est_hs = HSTreeClassifier(base_est, reg_param)
-                est_hs.fit(X_in, y_in)
-                self.scores_[i].append(scorer(y_out, est_hs.predict_proba(X_out)))
+                est_hs.fit(X_in, y_in, *args, **kwargs)
+                self.scores_[i].append(
+                    scorer(y_out, est_hs.predict_proba(X_out)))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
         self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
@@ -1133,6 +1251,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
@@ -1158,8 +1277,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         base_est.fit(X_in, y_in)
         for i, reg_param in enumerate(self.reg_param_list):
             est_hs = HSTreeClassifier(base_est, reg_param)
-            est_hs.fit(X_in, y_in)
-            self.scores_[i].append(scorer(y_out, est_hs.predict_proba(X_out)))
+            est_hs.fit(X_in, y_in, *args, **kwargs)
+            self.scores_[i].append(
+                scorer(y_out, est_hs.predict_proba(X_out)))
     self.scores_ = [np.mean(s) for s in self.scores_]
     cv_criterion = _get_cv_criterion(scorer)
     self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
@@ -1179,14 +1299,45 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressor"><code class="flex name class">
 <span>class <span class="ident">HSTreeRegressor</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None, random_state: int = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<p>Inheriting from this class provides default implementations of:</p>
+<ul>
+<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
+<li>textual and HTML representation displayed in terminals and IDEs;</li>
+<li>estimator serialization;</li>
+<li>parameters validation;</li>
+<li>data validation;</li>
+<li>feature names validation.</li>
+</ul>
+<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="notes">Notes</h2>
 <p>All estimators should specify all the parameters that can be set
 at the class level in their <code>__init__</code> as explicit keyword
 arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.base import BaseEstimator
+&gt;&gt;&gt; class MyEstimator(BaseEstimator):
+...     def __init__(self, *, param=1):
+...         self.param = param
+...     def fit(self, X, y=None):
+...         self.is_fitted_ = True
+...         return self
+...     def predict(self, X):
+...         return np.full(shape=X.shape[0], fill_value=self.param)
+&gt;&gt;&gt; estimator = MyEstimator(param=2)
+&gt;&gt;&gt; estimator.get_params()
+{'param': 2}
+&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
+&gt;&gt;&gt; y = np.array([1, 0, 1])
+&gt;&gt;&gt; estimator.fit(X, y).predict(X)
+array([2, 2, 2])
+&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
+array([3, 3, 3])
+</code></pre>
 <p>HSTree (Tree with hierarchical shrinkage applied).
 Hierarchical shinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest).
 It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter).
@@ -1216,18 +1367,21 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
+        random_state: int = None,
     ):
         super().__init__(
             estimator_=estimator_,
             reg_param=reg_param,
             shrinkage_scheme_=shrinkage_scheme_,
             max_leaf_nodes=max_leaf_nodes,
+            random_state=random_state,
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>
@@ -1252,10 +1406,41 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<p>Inheriting from this class provides default implementations of:</p>
+<ul>
+<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
+<li>textual and HTML representation displayed in terminals and IDEs;</li>
+<li>estimator serialization;</li>
+<li>parameters validation;</li>
+<li>data validation;</li>
+<li>feature names validation.</li>
+</ul>
+<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="notes">Notes</h2>
 <p>All estimators should specify all the parameters that can be set
 at the class level in their <code>__init__</code> as explicit keyword
 arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.base import BaseEstimator
+&gt;&gt;&gt; class MyEstimator(BaseEstimator):
+...     def __init__(self, *, param=1):
+...         self.param = param
+...     def fit(self, X, y=None):
+...         self.is_fitted_ = True
+...         return self
+...     def predict(self, X):
+...         return np.full(shape=X.shape[0], fill_value=self.param)
+&gt;&gt;&gt; estimator = MyEstimator(param=2)
+&gt;&gt;&gt; estimator.get_params()
+{'param': 2}
+&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
+&gt;&gt;&gt; y = np.array([1, 0, 1])
+&gt;&gt;&gt; estimator.fit(X, y).predict(X)
+array([2, 2, 2])
+&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
+array([3, 3, 3])
+</code></pre>
 <p>Cross-validation is used to select the best regularization parameter for hierarchical shrinkage.</p>
 <h2 id="params">Params</h2>
 <p>estimator_
@@ -1346,6 +1531,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>

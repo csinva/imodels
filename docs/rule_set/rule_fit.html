@@ -143,7 +143,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.feature_names = np.array(list(self.feature_dict_.values()))
 
         extracted_rules = self._extract_rules(X, y)
-        self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(X, y, extracted_rules)
+        self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(
+            X, y, extracted_rules)
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
@@ -190,7 +191,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             X = X.toarray()
         X = check_array(X)
         continuous_output = self._predict_continuous_output(X)
-        logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
+        logits = np.vstack(
+            (1 - continuous_output, continuous_output)).transpose()
         return softmax(logits, axis=1)
 
     def transform(self, X=None, rules=None):
@@ -208,9 +210,15 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             Transformed data set
         &#34;&#34;&#34;
         df = pd.DataFrame(X, columns=self.feature_placeholders)
+        print(&#39;df&#39;, df.dtypes, df.head())
         X_transformed = np.zeros((X.shape[0], len(rules)))
         for i, r in enumerate(rules):
             features_r_uses = [term.split(&#39; &#39;)[0] for term in r.split(&#39; and &#39;)]
+            # print(&#39;r&#39;, r)
+            # print(&#39;feats&#39;, df[features_r_uses])
+            # print(&#39;ans&#39;, df[features_r_uses].query(r))
+            # print(
+            #     &#39;tra&#39;, X_transformed[df[features_r_uses].query(r).index.values, i])
             X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
@@ -246,7 +254,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                 subregion = np.array(subregion)
                 importance = sum(abs(coef) * abs([x[i] for x in self.winsorizer.trim(subregion)] - self.mean[i])) / len(
                     subregion)
-            output_rules += [(self.feature_names[i], &#39;linear&#39;, coef, 1, importance)]
+            output_rules += [(self.feature_names[i],
+                              &#39;linear&#39;, coef, 1, importance)]
 
         # Add rules
         for i in range(0, len(self.rules_)):
@@ -254,13 +263,17 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             coef = self.coef[i + n_features]
 
             if subregion is None:
-                importance = abs(coef) * (rule.support * (1 - rule.support)) ** (1 / 2)
+                importance = abs(coef) * (rule.support *
+                                          (1 - rule.support)) ** (1 / 2)
             else:
                 rkx = self.transform(subregion, [rule])[:, -1]
-                importance = sum(abs(coef) * abs(rkx - rule.support)) / len(subregion)
+                importance = sum(
+                    abs(coef) * abs(rkx - rule.support)) / len(subregion)
 
-            output_rules += [(self.rules_[i].rule, &#39;rule&#39;, coef, rule.support, importance)]
-        rules = pd.DataFrame(output_rules, columns=[&#34;rule&#34;, &#34;type&#34;, &#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
+            output_rules += [(self.rules_[i].rule, &#39;rule&#39;,
+                              coef, rule.support, importance)]
+        rules = pd.DataFrame(output_rules, columns=[
+                             &#34;rule&#34;, &#34;type&#34;, &#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
         if exclude_zero_coef:
             rules = rules.ix[rules.coef != 0]
         return rules
@@ -322,7 +335,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         # no rules fit and self.include_linear == False
         if X_concat.shape[1] == 0:
             return [], [], 0
-        prediction_task = &#39;regression&#39; if isinstance(self, RegressorMixin) else &#39;classification&#39;
+        prediction_task = &#39;regression&#39; if isinstance(
+            self, RegressorMixin) else &#39;classification&#39;
         return score_linear(X_concat, y, rules,
                             prediction_task=prediction_task,
                             max_rules=self.max_rules,
@@ -488,7 +502,8 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
         self.feature_names = np.array(list(self.feature_dict_.values()))
 
         extracted_rules = self._extract_rules(X, y)
-        self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(X, y, extracted_rules)
+        self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(
+            X, y, extracted_rules)
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
@@ -535,7 +550,8 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
             X = X.toarray()
         X = check_array(X)
         continuous_output = self._predict_continuous_output(X)
-        logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
+        logits = np.vstack(
+            (1 - continuous_output, continuous_output)).transpose()
         return softmax(logits, axis=1)
 
     def transform(self, X=None, rules=None):
@@ -553,9 +569,15 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
             Transformed data set
         &#34;&#34;&#34;
         df = pd.DataFrame(X, columns=self.feature_placeholders)
+        print(&#39;df&#39;, df.dtypes, df.head())
         X_transformed = np.zeros((X.shape[0], len(rules)))
         for i, r in enumerate(rules):
             features_r_uses = [term.split(&#39; &#39;)[0] for term in r.split(&#39; and &#39;)]
+            # print(&#39;r&#39;, r)
+            # print(&#39;feats&#39;, df[features_r_uses])
+            # print(&#39;ans&#39;, df[features_r_uses].query(r))
+            # print(
+            #     &#39;tra&#39;, X_transformed[df[features_r_uses].query(r).index.values, i])
             X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
@@ -591,7 +613,8 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
                 subregion = np.array(subregion)
                 importance = sum(abs(coef) * abs([x[i] for x in self.winsorizer.trim(subregion)] - self.mean[i])) / len(
                     subregion)
-            output_rules += [(self.feature_names[i], &#39;linear&#39;, coef, 1, importance)]
+            output_rules += [(self.feature_names[i],
+                              &#39;linear&#39;, coef, 1, importance)]
 
         # Add rules
         for i in range(0, len(self.rules_)):
@@ -599,13 +622,17 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
             coef = self.coef[i + n_features]
 
             if subregion is None:
-                importance = abs(coef) * (rule.support * (1 - rule.support)) ** (1 / 2)
+                importance = abs(coef) * (rule.support *
+                                          (1 - rule.support)) ** (1 / 2)
             else:
                 rkx = self.transform(subregion, [rule])[:, -1]
-                importance = sum(abs(coef) * abs(rkx - rule.support)) / len(subregion)
+                importance = sum(
+                    abs(coef) * abs(rkx - rule.support)) / len(subregion)
 
-            output_rules += [(self.rules_[i].rule, &#39;rule&#39;, coef, rule.support, importance)]
-        rules = pd.DataFrame(output_rules, columns=[&#34;rule&#34;, &#34;type&#34;, &#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
+            output_rules += [(self.rules_[i].rule, &#39;rule&#39;,
+                              coef, rule.support, importance)]
+        rules = pd.DataFrame(output_rules, columns=[
+                             &#34;rule&#34;, &#34;type&#34;, &#34;coef&#34;, &#34;support&#34;, &#34;importance&#34;])
         if exclude_zero_coef:
             rules = rules.ix[rules.coef != 0]
         return rules
@@ -667,7 +694,8 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
         # no rules fit and self.include_linear == False
         if X_concat.shape[1] == 0:
             return [], [], 0
-        prediction_task = &#39;regression&#39; if isinstance(self, RegressorMixin) else &#39;classification&#39;
+        prediction_task = &#39;regression&#39; if isinstance(
+            self, RegressorMixin) else &#39;classification&#39;
         return score_linear(X_concat, y, rules,
                             prediction_task=prediction_task,
                             max_rules=self.max_rules,
@@ -678,6 +706,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
@@ -713,7 +742,8 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
     self.feature_names = np.array(list(self.feature_dict_.values()))
 
     extracted_rules = self._extract_rules(X, y)
-    self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(X, y, extracted_rules)
+    self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(
+        X, y, extracted_rules)
     self.rules_ = [
         replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
     ]
@@ -766,7 +796,8 @@ For classification, returns discrete output.</p></div>
         X = X.toarray()
     X = check_array(X)
     continuous_output = self._predict_continuous_output(X)
-    logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
+    logits = np.vstack(
+        (1 - continuous_output, continuous_output)).transpose()
     return softmax(logits, axis=1)</code></pre>
 </details>
 </dd>
@@ -804,7 +835,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -885,7 +916,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -967,9 +998,15 @@ efficiency.</dd>
         Transformed data set
     &#34;&#34;&#34;
     df = pd.DataFrame(X, columns=self.feature_placeholders)
+    print(&#39;df&#39;, df.dtypes, df.head())
     X_transformed = np.zeros((X.shape[0], len(rules)))
     for i, r in enumerate(rules):
         features_r_uses = [term.split(&#39; &#39;)[0] for term in r.split(&#39; and &#39;)]
+        # print(&#39;r&#39;, r)
+        # print(&#39;feats&#39;, df[features_r_uses])
+        # print(&#39;ans&#39;, df[features_r_uses].query(r))
+        # print(
+        #     &#39;tra&#39;, X_transformed[df[features_r_uses].query(r).index.values, i])
         X_transformed[df[features_r_uses].query(r).index.values, i] = 1
     return X_transformed</code></pre>
 </details>
@@ -1052,6 +1089,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <ul class="hlist">
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
@@ -1094,7 +1132,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -1215,6 +1253,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <ul class="hlist">
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
@@ -1257,7 +1296,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>

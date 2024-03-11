@@ -30,7 +30,7 @@ All sklearn-compatible and easy to use. <br/>
 </p>
 <p align="center">
 <img src="https://img.shields.io/badge/license-mit-blue.svg">
-<img src="https://img.shields.io/badge/python-3.7--3.10-blue">
+<img src="https://img.shields.io/badge/python-3.9--3.11-blue">
 <a href="https://doi.org/10.21105/joss.03192"><img src="https://joss.theoj.org/papers/10.21105/joss.03192/status.svg"></a>
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
 <!--img src="https://img.shields.io/github/checks-status/csinva/imodels/master"-->
@@ -504,7 +504,7 @@ The code here heavily derives from the wonderful work of previous projects. We s
 <li>Contributing: pull requests <a href="https://github.com/csinva/imodels/blob/master/docs/contributing.md">very welcome</a>!</li>
 </ul>
 </details>
-<p>If it's useful for you, please star/cite the package, and make sure to give authors of original methods / base implementations credit:</p>
+<p>Please cite the package if you use it in an academic work :)</p>
 <pre><code class="language-r">@software{
 imodels2021,
 title        = {imodels: a python package for fitting interpretable models},
@@ -575,7 +575,7 @@ from .tree.hierarchical_shrinkage import (
     HSTreeClassifierCV,
 )
 from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
-from .util.automl import AutoInterpretableClassifier
+from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
@@ -612,9 +612,11 @@ REGRESSORS = [
     HSTreeRegressor,
     HSTreeRegressorCV,
     BART,
+    AutoInterpretableRegressor,
 ]
 ESTIMATORS = CLASSIFIERS + REGRESSORS
-DISCRETIZERS = [RFDiscretizer, BasicDiscretizer, MDLPDiscretizer, BRLDiscretizer]</code></pre>
+DISCRETIZERS = [RFDiscretizer, BasicDiscretizer,
+                MDLPDiscretizer, BRLDiscretizer]</code></pre>
 </details>
 </section>
 <section>
