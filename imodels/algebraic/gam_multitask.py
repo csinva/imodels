@@ -13,6 +13,7 @@ from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegress
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score
 from tqdm import tqdm
+from sklearn.multioutput import MultiOutputRegressor
 from collections import defaultdict
 import pandas as pd
 import json
@@ -29,7 +30,9 @@ from sklearn.base import RegressorMixin, ClassifierMixin
 # merge ebms: https://github.com/interpretml/interpret/blob/develop/python/interpret-core/interpret/glassbox/_ebm/_merge_ebms.py#L280
 
 class MultiTaskGAM(BaseEstimator):
-    """Multi-task GAM classifier.
+    """EBM-based GAM that shares curves for predicting different outputs.
+    - If only one target is given, we fit an EBM to predict each covariate
+    - If multiple targets are given, we fit a an EBM to predict each target
     """
 
     def __init__(
@@ -64,30 +67,42 @@ class MultiTaskGAM(BaseEstimator):
         self.ebm_ = ExplainableBoostingRegressor(**(ebm_kwargs or {}))
 
     def fit(self, X, y, sample_weight=None):
-        X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+        X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
             self.classes_, y = np.unique(y, return_inverse=True)
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+        self.n_outputs_ = 1 if len(y.shape) == 1 else y.shape[1]
 
-        # just fit normal ebm
+        # just fit ebm normally
         if not self.multitask:
-            self.ebm_.fit(X, y, sample_weight=sample_weight)
+            if self.n_outputs_ > 1:
+                self.ebm_multioutput_ = MultiOutputRegressor(self.ebm_)
+                self.ebm_multioutput_.fit(X, y, sample_weight=sample_weight)
+            else:
+                self.ebm_.fit(X, y, sample_weight=sample_weight)
             return self
 
         # fit EBM to each column of X
         self.ebms_ = []
         num_features = X.shape[1]
-        for task_num in tqdm(range(num_features)):
-            self.ebms_.append(deepcopy(self.ebm_))
-            y_ = np.ascontiguousarray(X[:, task_num])
-            X_ = deepcopy(X)
-            X_[:, task_num] = 0
-            self.ebms_[task_num].fit(X_, y_, sample_weight=sample_weight)
 
-        # finally, fit EBM to the target
-        self.ebms_.append(deepcopy(self.ebm_))
-        self.ebms_[num_features].fit(X, y, sample_weight=sample_weight)
+        if self.n_outputs_ == 1:
+            for task_num in tqdm(range(num_features)):
+                self.ebms_.append(deepcopy(self.ebm_))
+                y_ = np.ascontiguousarray(X[:, task_num])
+                X_ = deepcopy(X)
+                X_[:, task_num] = 0
+                self.ebms_[task_num].fit(X_, y_, sample_weight=sample_weight)
+
+            # finally, fit EBM to the target
+            self.ebms_.append(deepcopy(self.ebm_))
+            self.ebms_[num_features].fit(X, y, sample_weight=sample_weight)
+        elif self.n_outputs_ > 1:
+            for task_num in tqdm(range(self.n_outputs_)):
+                self.ebms_.append(deepcopy(self.ebm_))
+                y_ = np.ascontiguousarray(y[:, task_num])
+                self.ebms_[task_num].fit(X, y_, sample_weight=sample_weight)
 
         # extract features
         self.term_names_list_ = [
@@ -100,23 +115,21 @@ class MultiTaskGAM(BaseEstimator):
             feats = self.scaler_.fit_transform(feats)
 
         # fit a linear model to the features
-        if self.linear_penalty == 'ridge':
-            self.lin_model = RidgeCV(alphas=np.logspace(-2, 3, 7))
-        elif self.linear_penalty == 'elasticnet':
-            self.lin_model = ElasticNetCV(n_alphas=7)
-        elif self.linear_penalty == 'lasso':
-            self.lin_model = LassoCV(n_alphas=7)
+        self.lin_model = {
+            'ridge': RidgeCV(alphas=np.logspace(-2, 3, 7)),
+            'elasticnet': ElasticNetCV(n_alphas=7),
+            'lasso': LassoCV(n_alphas=7)
+        }[self.linear_penalty]
 
-        if self.onehot_prior:
+        if not self.onehot_prior:
+            self.lin_model.fit(feats, y, sample_weight=sample_weight)
+        else:
             coef_prior_ = np.zeros((feats.shape[1], ))
             coef_prior_[:num_features] = 1
             preds_prior = feats @ coef_prior_
             residuals = y - preds_prior
             self.lin_model.fit(feats, residuals, sample_weight=sample_weight)
             self.lin_model.coef_ = self.lin_model.coef_ + coef_prior_
-
-        else:
-            self.lin_model.fit(feats, y, sample_weight=sample_weight)
 
         return self
 
@@ -143,6 +156,12 @@ class MultiTaskGAM(BaseEstimator):
             if hasattr(self, 'scaler_'):
                 feats = self.scaler_.transform(feats)
             return self.lin_model.predict(feats)
+
+        # multi-output without multitask learning
+        elif hasattr(self, 'ebm_multioutput_'):
+            return self.ebm_multioutput_.predict(X)
+
+        # single-task standard
         else:
             return self.ebm_.predict(X)
 
@@ -160,13 +179,15 @@ class MultiTaskGAMClassifier(MultiTaskGAM, ClassifierMixin):
     ...
 
 
-def test_multitask_extraction():
+def test_single_output_self_supervised():
     X, y, feature_names = imodels.get_clean_dataset("california_housing")
     # X, y, feature_names = imodels.get_clean_dataset("bike_sharing")
 
     # remove some features to speed things up
     X = X[:10, :4]
-    y = y[:10]
+
+    # remove some outcomes to speed things up
+    y = y[:10, :3]
     X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 
     # unit test
@@ -191,8 +212,25 @@ def test_multitask_extraction():
     print('Tests pass successfully')
 
 
-if __name__ == "__main__":
-    # test_multitask_extraction()
+def test_multi_output():
+    X, y, feature_names = imodels.get_clean_dataset("water-quality_multitask")
+
+    # remove some features to speed things up
+    X = X[:10, :4]
+    y = y[:10]
+    X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+    print('shapes', X.shape, y_train.shape, X_test.shape, y_test.shape)
+
+    gam_mt = MultiTaskGAMRegressor(multitask=True)
+    gam_mt.fit(X, y_train)
+    print('multitask r2_test', gam_mt.score(X_test, y_test))
+
+    gam = MultiTaskGAMRegressor(multitask=False)
+    gam.fit(X, y_train)
+    print('single-task r2_test', gam.score(X_test, y_test))
+
+
+def test_compare_models():
     # X, y, feature_names = imodels.get_clean_dataset("heart")
     X, y, feature_names = imodels.get_clean_dataset("bike_sharing")
     # X, y, feature_names = imodels.get_clean_dataset("diabetes")
@@ -229,3 +267,9 @@ if __name__ == "__main__":
         "display.max_rows", None, "display.max_columns", None, "display.width", 1000
     ):
         print(pd.DataFrame(results).round(3))
+
+
+if __name__ == "__main__":
+    # test_single_output_self_supervised()
+    test_multi_output()
+    # test_compare_models()

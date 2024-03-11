@@ -83,6 +83,8 @@ def get_clean_dataset(
     test_size: float = None,
     random_state: int = 42,
     verbose=True,
+    return_target_col_names: bool = False,
+    override_cache: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray, list]:
     """Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
     If data is not downloaded, will download and cache. Otherwise will load locally.
@@ -102,6 +104,10 @@ def get_clean_dataset(
         & change the return signature to `X_train, X_test, y_train, y_test, feature_names`
     random_state: int, optional
         if test_size is not None, will use this random state to split data
+    return_target_col_names: bool, optional
+        if True, will return target columns for multitask datasets as final return value
+    override_cache: bool, False
+        if True, will override the downloaded cache for a dataset
 
 
     Returns
@@ -111,6 +117,8 @@ def get_clean_dataset(
     y: np.ndarray
         outcome
     feature_names: list
+    (if passing test_size, will return more outputs)
+    (if multitask dataset, will return target_col_names as well)
 
     Example
     -------
@@ -149,7 +157,7 @@ def get_clean_dataset(
     if data_source == "imodels":
         if not dataset_name.endswith("csv"):
             dataset_name = dataset_name + ".csv"
-        if not os.path.isfile(dataset_name):
+        if not os.path.isfile(dataset_name) or override_cache:
             _download_imodels_dataset(dataset_name, data_path)
         df = pd.read_csv(oj(data_path, "imodels_data", dataset_name))
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
@@ -160,7 +168,7 @@ def get_clean_dataset(
     elif data_source == 'imodels-multitask':
         if not dataset_name.endswith("csv"):
             dataset_name = dataset_name + ".csv"
-        if not os.path.isfile(dataset_name):
+        if not os.path.isfile(dataset_name) or override_cache:
             _download_imodels_multitask_dataset(dataset_name, data_path)
         df = pd.read_csv(oj(data_path, "imodels_multitask_data", dataset_name))
         target_cols = [col for col in df.columns if col.endswith('__target')]
@@ -168,7 +176,10 @@ def get_clean_dataset(
         X, y = df[feature_names].values, df[target_cols].values
         if convertna:
             X = np.nan_to_num(X.astype("float32"))
-        return _split(X, y, _clean_feat_names(feature_names))
+        if return_target_col_names:
+            return *(_split(X, y, _clean_feat_names(feature_names))), _clean_feat_names(target_cols)
+        else:
+            return _split(X, y, _clean_feat_names(feature_names))
 
     elif data_source == "pmlb":
         from pmlb import fetch_data
@@ -243,7 +254,11 @@ def _define_openml_outcomes(y, data_id: str):
 
 def _clean_feat_names(feature_names):
     # shouldn't start with a digit
-    return ["X_" + x if x[0].isdigit() else x for x in feature_names]
+    feature_names = ["X_" + x if x[0].isdigit() else x for x in feature_names]
+    # shouldn't end with __target
+    feature_names = [x if not x.endswith(
+        "__target") else x[:-8] for x in feature_names]
+    return feature_names
 
 
 def _clean_features(X):
@@ -280,11 +295,14 @@ def _download_imodels_multitask_dataset(dataset_fname, data_path: str):
     dataset_fname = dataset_fname.split(
         "/")[-1]  # remove anything about the path
     download_path = f"https://huggingface.co/datasets/imodels/multitask-tabular-datasets/raw/main/{dataset_fname}"
+    download_path_large = f'https://huggingface.co/datasets/imodels/multitask-tabular-datasets/resolve/main/{dataset_fname}'
     r = requests.get(download_path)
     if r.status_code == 404:
         raise Exception(
             f"404 Error for dataset {dataset_fname} (see valid files at https://huggingface.co/datasets/imodels/multitask-tabular-datasets)"
         )
+    elif 'git-lfs' in r.text:
+        r = requests.get(download_path_large)
 
     os.makedirs(oj(data_path, "imodels_multitask_data"), exist_ok=True)
     with open(oj(data_path, "imodels_multitask_data", dataset_fname), "w") as f:
