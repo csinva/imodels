@@ -37,18 +37,23 @@ class MultiTaskGAM(BaseEstimator):
         multitask=True,
         interactions=0.95,
         linear_penalty='ridge',
+        onehot_prior=True,
         random_state=42,
     ):
         """
         Params
         ------
         Note: args override ebm_kwargs if there are duplicates
+        one_hot_prior: bool
+            If True and multitask, the linear model will be fit with a prior that the ebm
+            features predicting the target should have coef 1
         """
         self.ebm_kwargs = ebm_kwargs
         self.multitask = multitask
         self.linear_penalty = linear_penalty
         self.random_state = random_state
         self.interactions = interactions
+        self.onehot_prior = onehot_prior
 
         # override ebm_kwargs
         ebm_kwargs['random_state'] = random_state
@@ -96,7 +101,17 @@ class MultiTaskGAM(BaseEstimator):
         elif self.linear_penalty == 'lasso':
             self.lin_model = LassoCV(n_alphas=7)
 
-        self.lin_model.fit(feats, y)
+        if self.onehot_prior:
+            coef_prior_ = np.zeros((feats.shape[1], ))
+            coef_prior_[:num_features] = 1
+            preds_prior = feats @ coef_prior_
+            residuals = y - preds_prior
+            self.lin_model.fit(feats, residuals, sample_weight=sample_weight)
+            self.lin_model.coef_ = self.lin_model.coef_ + coef_prior_
+
+        else:
+            self.lin_model.fit(feats, y, sample_weight=sample_weight)
+
         return self
 
     def _extract_ebm_features(self, X):
@@ -148,7 +163,6 @@ def test_multitask_extraction():
     # unit test
     gam = MultiTaskGAMRegressor(multitask=False)
     gam.fit(X, y_train)
-    # ebm = gam.ebm_
     gam2 = MultiTaskGAMRegressor(multitask=True)
     gam2.fit(X, y_train)
     preds_orig = gam.predict(X_test)
@@ -156,8 +170,6 @@ def test_multitask_extraction():
 
     # extracted curves + intercept should sum to original predictions
     feats_extracted = gam2._extract_ebm_features(X_test)
-    num_samples = X_test.shape[0]
-    num_features = X_test.shape[1]
 
     # get features for ebm that predicts target
     feats_extracted_target = feats_extracted[:,
@@ -177,7 +189,7 @@ if __name__ == "__main__":
     # X, y, feature_names = imodels.get_clean_dataset("diabetes")
 
     # remove some features to speed things up
-    X = X[:, :3]
+    X = X[:, :2]
     X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 
     kwargs = dict(
@@ -187,7 +199,8 @@ if __name__ == "__main__":
     for gam in tqdm([
             # AdaBoostRegressor(estimator=MultiTaskGAMRegressor(
         # multitask=True), n_estimators=2),
-        # MultiTaskGAMRegressor(multitask=False),
+        MultiTaskGAMRegressor(multitask=False, onehot_prior=True),
+        MultiTaskGAMRegressor(multitask=False, onehot_prior=False),
         MultiTaskGAMRegressor(multitask=True),
         # ExplainableBoostingRegressor(n_jobs=1, interactions=0)
     ]):
