@@ -44,8 +44,8 @@ class MultiTaskGAM(BaseEstimator):
         linear_penalty='ridge',
         onehot_prior=False,
         renormalize_features=False,
-        random_state=42,
         use_internal_classifiers=False,
+        random_state=42,
     ):
         """
         Params
@@ -54,6 +54,8 @@ class MultiTaskGAM(BaseEstimator):
         one_hot_prior: bool
             If True and multitask, the linear model will be fit with a prior that the ebm
             features predicting the target should have coef 1
+        renormalize_features: bool
+            If True, renormalize the features before fitting the linear model
         use_internal_classifiers: bool
             whether to use internal classifiers (as opposed to regressors)
         """
@@ -176,7 +178,7 @@ class MultiTaskGAM(BaseEstimator):
             lin_model.fit(feats, y, sample_weight=sample_weight)
         else:
             coef_prior_ = np.zeros((feats.shape[1], ))
-            coef_prior_[:-len(self.term_names_list_)] = 1
+            coef_prior_[:-len(self.term_names_list_[-1])] = 1
             preds_prior = feats @ coef_prior_
             residuals = y - preds_prior
             lin_model.fit(feats, residuals, sample_weight=sample_weight)
