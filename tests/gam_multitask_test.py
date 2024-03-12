@@ -20,12 +20,9 @@ import json
 from sklearn.preprocessing import StandardScaler
 
 import imodels
-from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
-
 from sklearn.base import RegressorMixin, ClassifierMixin
 import os
 import os.path
-from imodels.algebraic.gam_multitask import MultiTaskGAMRegressor, MultiTaskGAMClassifier
 
 path_to_tests = os.path.dirname(os.path.realpath(__file__))
 
@@ -192,6 +189,8 @@ def compare_models():
 
 
 if __name__ == '__main__':
+    from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+    from imodels.algebraic.gam_multitask import MultiTaskGAMRegressor, MultiTaskGAMClassifier
     # multi_output_classification()
     # classification()
     # single_output_self_supervised()
