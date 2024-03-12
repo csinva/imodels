@@ -13,8 +13,10 @@ from sklearn.preprocessing import OneHotEncoder
 
 from imodels.util.tree_interaction_utils import make_rj, make_vp
 
+
 DSET_CLASSIFICATION_KWARGS = {
     # classification
+    'iris': {'dataset_name': 61, 'data_source': 'openml'},
     "pima_diabetes": {"dataset_name": 40715, "data_source": "openml"},
     "sonar": {"dataset_name": "sonar", "data_source": "pmlb"},
     "heart": {"dataset_name": "heart", "data_source": "imodels"},
@@ -59,20 +61,21 @@ DSET_REGRESSION_KWARGS = {
     },
     # 'breast_tumor': {'dataset_name': '1201_BNG_breastTumor', 'data_source': 'pmlb' # v big
 }
-DSET_MULTITASK_NAMES = ['3s-bbc1000', '3s-guardian1000', '3s-inter3000', '3s-reuters1000',
-                        'birds', 'cal500', 'chd_49', 'corel16k001', 'corel16k002',
-                        'corel16k003', 'corel16k004', 'corel16k005', 'corel16k006',
-                        'corel16k007', 'corel16k008', 'corel16k009', 'corel16k010',
-                        'corel5k', 'emotions', 'flags', 'foodtruck', 'genbase', 'image',
-                        'mediamill', 'scene', 'stackex_chemistry', 'stackex_chess',
-                        'stackex_cooking', 'stackex_cs', 'water-quality', 'yeast', 'yelp']
-DSET_MULTITASK_KWARGS = {
+DSET_CLASSIFICATION_MULTITASK_NAMES = [
+    '3s-bbc1000', '3s-guardian1000', '3s-inter3000', '3s-reuters1000',
+    'birds', 'cal500', 'chd_49', 'corel16k001', 'corel16k002',
+    'corel16k003', 'corel16k004', 'corel16k005', 'corel16k006',
+    'corel16k007', 'corel16k008', 'corel16k009', 'corel16k010',
+    'corel5k', 'emotions', 'flags', 'foodtruck', 'genbase', 'image',
+    'mediamill', 'scene', 'stackex_chemistry', 'stackex_chess',
+    'stackex_cooking', 'stackex_cs', 'water-quality', 'yeast', 'yelp']
+DSET_CLASSIFICATION_MULTITASK_KWARGS = {
     name + '_multitask': {"dataset_name": name, "data_source": "imodels-multitask"}
-    for name in DSET_MULTITASK_NAMES
+    for name in DSET_CLASSIFICATION_MULTITASK_NAMES
 }
 DSET_KWARGS = {
     **DSET_CLASSIFICATION_KWARGS, **DSET_REGRESSION_KWARGS,
-    **DSET_MULTITASK_KWARGS}
+    **DSET_CLASSIFICATION_MULTITASK_KWARGS}
 
 
 def get_clean_dataset(
