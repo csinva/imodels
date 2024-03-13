@@ -44,7 +44,9 @@ class MultiTaskGAM(BaseEstimator):
         linear_penalty='ridge',
         onehot_prior=False,
         renormalize_features=False,
+        use_normalize_feature_targets=False,
         use_internal_classifiers=False,
+        fit_target_curves=True,
         random_state=42,
     ):
         """
@@ -56,8 +58,14 @@ class MultiTaskGAM(BaseEstimator):
             features predicting the target should have coef 1
         renormalize_features: bool
             If True, renormalize the features before fitting the linear model
+        use_normalize_feature_targets: bool
+            whether to normalize the features used as targets for internal EBMs
+            (does not apply to target columns)
+            If input features are normalized already, this has no effect
         use_internal_classifiers: bool
             whether to use internal classifiers (as opposed to regressors)
+        fit_target_curves: bool
+            whether to fit an EBM to predict the target
         """
         self.ebm_kwargs = ebm_kwargs
         self.multitask = multitask
@@ -65,8 +73,10 @@ class MultiTaskGAM(BaseEstimator):
         self.random_state = random_state
         self.interactions = interactions
         self.onehot_prior = onehot_prior
+        self.use_normalize_feature_targets = use_normalize_feature_targets
         self.renormalize_features = renormalize_features
         self.use_internal_classifiers = use_internal_classifiers
+        self.fit_target_curves = fit_target_curves
 
         # override ebm_kwargs
         ebm_kwargs['random_state'] = random_state
@@ -75,6 +85,9 @@ class MultiTaskGAM(BaseEstimator):
     def fit(self, X, y, sample_weight=None):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
         self.n_outputs_ = 1 if len(y.shape) == 1 else y.shape[1]
+        if self.n_outputs_ > 1 and not self.fit_target_curves:
+            raise ValueError(
+                "fit_target_curves must be True when n_outputs > 1")
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
             if self.n_outputs_ == 1:
@@ -121,11 +134,14 @@ class MultiTaskGAM(BaseEstimator):
                 self.ebms_.append(self._initialize_ebm_internal(y_))
                 if isinstance(self, ClassifierMixin):
                     _, y_ = np.unique(y_, return_inverse=True)
+                elif self.use_normalize_feature_targets:
+                    y_ = StandardScaler().fit_transform(y_.reshape(-1, 1)).ravel()
                 self.ebms_[task_num].fit(X_, y_, sample_weight=sample_weight)
 
             # also fit an EBM to the target
-            self.ebms_.append(self._initialize_ebm_internal(y))
-            self.ebms_[num_features].fit(X, y, sample_weight=sample_weight)
+            if self.fit_target_curves:
+                self.ebms_.append(self._initialize_ebm_internal(y))
+                self.ebms_[num_features].fit(X, y, sample_weight=sample_weight)
         elif self.n_outputs_ > 1:
             # with multiple outputs, we fit an EBM to each output
             for task_num in tqdm(range(self.n_outputs_)):

@@ -162,13 +162,15 @@ def compare_models():
 
     results = defaultdict(list)
     for gam in tqdm([
+        MultiTaskGAMRegressor(),
+        MultiTaskGAMRegressor(fit_target_curves=False),
             # AdaBoostRegressor(estimator=MultiTaskGAMRegressor(
         # multitask=True), n_estimators=2),
         # MultiTaskGAMRegressor(multitask=True, onehot_prior=True),
         # MultiTaskGAMRegressor(multitask=True, onehot_prior=False),
         # MultiTaskGAMRegressor(multitask=True, renormalize_features=True),
-        MultiTaskGAMRegressor(multitask=True, renormalize_features=False),
-        MultiTaskGAMRegressor(multitask=True, use_internal_classifiers=True),
+        # MultiTaskGAMRegressor(multitask=True, renormalize_features=False),
+        # MultiTaskGAMRegressor(multitask=True, use_internal_classifiers=True),
         # ExplainableBoostingRegressor(n_jobs=1, interactions=0)
     ]):
         np.random.seed(42)
