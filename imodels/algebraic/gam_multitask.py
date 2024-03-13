@@ -38,7 +38,7 @@ class MultiTaskGAM(BaseEstimator):
 
     def __init__(
         self,
-        ebm_kwargs={'n_jobs': 1},
+        ebm_kwargs={'n_jobs': 1, 'max_rounds': 5000, },
         multitask=True,
         interactions=0.95,
         linear_penalty='ridge',

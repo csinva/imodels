@@ -151,19 +151,23 @@ def multi_output_classification():
 
 
 def compare_models():
-    X, y, feature_names = imodels.get_clean_dataset("heart")
-    # X, y, feature_names = imodels.get_clean_dataset("bike_sharing")
+    # X, y, feature_names = imodels.get_clean_dataset("heart")
+    X, y, feature_names = imodels.get_clean_dataset("bike_sharing")
     # X, y, feature_names = imodels.get_clean_dataset("water-quality_multitask")
     # X, y, feature_names = imodels.get_clean_dataset("diabetes")
 
     # remove some features to speed things up
-    X = X[:, :2]
+    # X = X[:, :2]
     X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 
     results = defaultdict(list)
     for gam in tqdm([
         MultiTaskGAMRegressor(),
-        MultiTaskGAMRegressor(fit_target_curves=False),
+        # MultiTaskGAMRegressor(fit_target_curves=False),
+        AdaBoostRegressor(
+            estimator=MultiTaskGAMRegressor(
+                ebm_kwargs={'max_rounds': 50}),
+            n_estimators=8),
             # AdaBoostRegressor(estimator=MultiTaskGAMRegressor(
         # multitask=True), n_estimators=2),
         # MultiTaskGAMRegressor(multitask=True, onehot_prior=True),
