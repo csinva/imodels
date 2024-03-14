@@ -18,6 +18,7 @@ from collections import defaultdict
 import pandas as pd
 import json
 from sklearn.preprocessing import StandardScaler
+from imodels.util.transforms import CorrelationScreenTransformer
 
 import imodels
 from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
@@ -47,6 +48,7 @@ class MultiTaskGAM(BaseEstimator):
         use_normalize_feature_targets=False,
         use_internal_classifiers=False,
         fit_target_curves=True,
+        use_correlation_screening_for_features=False,
         random_state=42,
     ):
         """
@@ -66,6 +68,8 @@ class MultiTaskGAM(BaseEstimator):
             whether to use internal classifiers (as opposed to regressors)
         fit_target_curves: bool
             whether to fit an EBM to predict the target
+        use_correlation_screening_for_features: bool
+            whether to use correlation screening for features
         """
         self.ebm_kwargs = ebm_kwargs
         self.multitask = multitask
@@ -77,6 +81,7 @@ class MultiTaskGAM(BaseEstimator):
         self.renormalize_features = renormalize_features
         self.use_internal_classifiers = use_internal_classifiers
         self.fit_target_curves = fit_target_curves
+        self.use_correlation_screening_for_features = use_correlation_screening_for_features
 
         # override ebm_kwargs
         ebm_kwargs['random_state'] = random_state
@@ -158,6 +163,9 @@ class MultiTaskGAM(BaseEstimator):
         if self.renormalize_features:
             self.scaler_ = StandardScaler()
             feats = self.scaler_.fit_transform(feats)
+        if self.use_correlation_screening_for_features:
+            self.correlation_screener_ = CorrelationScreenTransformer()
+            feats = self.correlation_screener_.fit_transform(feats, y)
         feats[np.isinf(feats)] = 0
 
         # fit linear model
@@ -222,6 +230,8 @@ class MultiTaskGAM(BaseEstimator):
             feats = self._extract_ebm_features(X)
             if hasattr(self, 'scaler_'):
                 feats = self.scaler_.transform(feats)
+            if hasattr(self, 'correlation_screener_'):
+                feats = self.correlation_screener_.transform(feats)
             feats[np.isinf(feats)] = 0
             return self.lin_model.predict(feats)
 
@@ -239,6 +249,8 @@ class MultiTaskGAM(BaseEstimator):
             feats = self._extract_ebm_features(X)
             if hasattr(self, 'scaler_'):
                 feats = self.scaler_.transform(feats)
+            if hasattr(self, 'correlation_screener_'):
+                feats = self.correlation_screener_.transform(feats)
             return self.lin_model.predict_proba(feats)
 
         # multi-output without multitask learning
