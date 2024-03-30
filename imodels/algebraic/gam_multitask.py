@@ -35,6 +35,7 @@ class MultiTaskGAM(BaseEstimator):
     """EBM-based GAM that shares curves for predicting different outputs.
     - If only one target is given, we fit an EBM to predict each covariate
     - If multiple targets are given, we fit a an EBM to predict each target
+    - If only one target is given and use_single_task_with_reweighting, we fit an EBM to predict the single target, then apply reweighting
     """
 
     def __init__(
@@ -49,6 +50,7 @@ class MultiTaskGAM(BaseEstimator):
         use_internal_classifiers=False,
         fit_target_curves=True,
         use_correlation_screening_for_features=False,
+        use_single_task_with_reweighting=False,
         random_state=42,
     ):
         """
@@ -68,6 +70,8 @@ class MultiTaskGAM(BaseEstimator):
             whether to use internal classifiers (as opposed to regressors)
         fit_target_curves: bool
             whether to fit an EBM to predict the target
+        use_single_task_with_reweighting: bool
+            fit an EBM to predict the single target, then apply linear reweighting
         use_correlation_screening_for_features: bool
             whether to use correlation screening for features
         """
@@ -81,6 +85,7 @@ class MultiTaskGAM(BaseEstimator):
         self.renormalize_features = renormalize_features
         self.use_internal_classifiers = use_internal_classifiers
         self.fit_target_curves = fit_target_curves
+        self.use_single_task_with_reweighting = use_single_task_with_reweighting
         self.use_correlation_screening_for_features = use_correlation_screening_for_features
 
         # override ebm_kwargs
@@ -107,6 +112,9 @@ class MultiTaskGAM(BaseEstimator):
                     raise ValueError(
                         "MultiTaskGAMClassifier currently only supports binary classification")
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+        if self.use_single_task_with_reweighting:
+            assert self.n_outputs_ == 1, "use_single_task_with_reweighting only works with one output"
+            assert self.multitask, "use_single_task_with_reweighting only works with multitask"
 
         # just fit ebm normally
         if not self.multitask:
@@ -130,7 +138,11 @@ class MultiTaskGAM(BaseEstimator):
         self.ebms_ = []
         num_features = X.shape[1]
 
-        if self.n_outputs_ == 1:
+        if self.use_single_task_with_reweighting:
+            # fit an EBM to predict the single output
+            self.ebms_.append(self._initialize_ebm_internal(y))
+            self.ebms_[-1].fit(X, y, sample_weight=sample_weight)
+        elif self.n_outputs_ == 1:
             # with 1 output, we fit an EBM to each feature
             for task_num in tqdm(range(num_features)):
                 y_ = np.ascontiguousarray(X[:, task_num])
