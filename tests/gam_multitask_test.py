@@ -157,15 +157,18 @@ def compare_models():
     # X, y, feature_names = imodels.get_clean_dataset("diabetes")
 
     # remove some features to speed things up
-    # X = X[:, :2]
+    X = X[:, :5]
     X = X[:50]
     y = y[:50]
     X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 
     results = defaultdict(list)
     for gam in tqdm([
-        MultiTaskGAMRegressor(use_correlation_screening_for_features=True),
+        # MultiTaskGAMRegressor(use_correlation_screening_for_features=True),
+        MultiTaskGAMRegressor(
+            use_single_task_with_reweighting=True, fit_linear_frac=0.5),
         MultiTaskGAMRegressor(),
+        MultiTaskGAMRegressor(fit_linear_frac=0.5),
         # MultiTaskGAMRegressor(fit_target_curves=False),
         # AdaBoostRegressor(
             # estimator=MultiTaskGAMRegressor(
@@ -189,6 +192,7 @@ def compare_models():
         results['test_r2'].append(gam.score(X_test, y_test).round(3))
         if hasattr(gam, 'lin_model'):
             print('lin model coef', gam.lin_model.coef_)
+        print(results)
 
     # don't round strings
     with pd.option_context(

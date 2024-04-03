@@ -51,6 +51,7 @@ class MultiTaskGAM(BaseEstimator):
         fit_target_curves=True,
         use_correlation_screening_for_features=False,
         use_single_task_with_reweighting=False,
+        fit_linear_frac: float = None,
         random_state=42,
     ):
         """
@@ -74,6 +75,8 @@ class MultiTaskGAM(BaseEstimator):
             fit an EBM to predict the single target, then apply linear reweighting
         use_correlation_screening_for_features: bool
             whether to use correlation screening for features
+        fit_linear_frac: float
+            If not None, the fraction of features to use for the linear model (the rest are used for the EBM)
         """
         self.ebm_kwargs = ebm_kwargs
         self.multitask = multitask
@@ -87,6 +90,7 @@ class MultiTaskGAM(BaseEstimator):
         self.fit_target_curves = fit_target_curves
         self.use_single_task_with_reweighting = use_single_task_with_reweighting
         self.use_correlation_screening_for_features = use_correlation_screening_for_features
+        self.fit_linear_frac = fit_linear_frac
 
         # override ebm_kwargs
         ebm_kwargs['random_state'] = random_state
@@ -134,44 +138,49 @@ class MultiTaskGAM(BaseEstimator):
                 self.ebm_.fit(X, y, sample_weight=sample_weight)
             return self
 
-        # fit EBM to each column of X
+        # fit EBM(s)
         self.ebms_ = []
-        num_features = X.shape[1]
+        num_samples, num_features = X.shape
+        idxs_ebm, idxs_lin = self._split_data(num_samples)
 
+        # fit EBM
         if self.use_single_task_with_reweighting:
             # fit an EBM to predict the single output
-            self.ebms_.append(self._initialize_ebm_internal(y))
-            self.ebms_[-1].fit(X, y, sample_weight=sample_weight)
+            self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+            self.ebms_[-1].fit(X[idxs_ebm], y[idxs_ebm],
+                               sample_weight=sample_weight[idxs_ebm])
         elif self.n_outputs_ == 1:
             # with 1 output, we fit an EBM to each feature
             for task_num in tqdm(range(num_features)):
-                y_ = np.ascontiguousarray(X[:, task_num])
-                X_ = deepcopy(X)
+                y_ = np.ascontiguousarray(X[idxs_ebm][:, task_num])
+                X_ = deepcopy(X[idxs_ebm])
                 X_[:, task_num] = 0
                 self.ebms_.append(self._initialize_ebm_internal(y_))
                 if isinstance(self, ClassifierMixin):
                     _, y_ = np.unique(y_, return_inverse=True)
                 elif self.use_normalize_feature_targets:
                     y_ = StandardScaler().fit_transform(y_.reshape(-1, 1)).ravel()
-                self.ebms_[task_num].fit(X_, y_, sample_weight=sample_weight)
+                self.ebms_[task_num].fit(
+                    X_, y_, sample_weight=sample_weight[idxs_ebm])
 
             # also fit an EBM to the target
             if self.fit_target_curves:
-                self.ebms_.append(self._initialize_ebm_internal(y))
-                self.ebms_[num_features].fit(X, y, sample_weight=sample_weight)
+                self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+                self.ebms_[num_features].fit(
+                    X[idxs_ebm], y[idxs_ebm], sample_weight=sample_weight[idxs_ebm])
         elif self.n_outputs_ > 1:
             # with multiple outputs, we fit an EBM to each output
             for task_num in tqdm(range(self.n_outputs_)):
-                self.ebms_.append(self._initialize_ebm_internal(y))
-                y_ = np.ascontiguousarray(y[:, task_num])
-                self.ebms_[task_num].fit(X, y_, sample_weight=sample_weight)
+                self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+                y_ = np.ascontiguousarray(y[idxs_ebm][:, task_num])
+                self.ebms_[task_num].fit(
+                    X[idxs_ebm], y_, sample_weight=sample_weight[idxs_ebm])
 
         # extract features from EBMs
         self.term_names_list_ = [
             ebm_.term_names_ for ebm_ in self.ebms_]
         self.term_names_ = sum(self.term_names_list_, [])
         feats = self._extract_ebm_features(X)
-
         if self.renormalize_features:
             self.scaler_ = StandardScaler()
             feats = self.scaler_.fit_transform(feats)
@@ -181,7 +190,8 @@ class MultiTaskGAM(BaseEstimator):
         feats[np.isinf(feats)] = 0
 
         # fit linear model
-        self.lin_model = self._fit_linear_model(feats, y, sample_weight)
+        self.lin_model = self._fit_linear_model(
+            feats[idxs_lin], y[idxs_lin], sample_weight[idxs_lin])
 
         return self
 
@@ -190,6 +200,23 @@ class MultiTaskGAM(BaseEstimator):
             return ExplainableBoostingClassifier(**self.ebm_kwargs)
         else:
             return ExplainableBoostingRegressor(**self.ebm_kwargs)
+
+    def _split_data(self, num_samples):
+        '''Split data into EBM and linear model data
+        '''
+        if self.fit_linear_frac is not None:
+            rng = np.random.RandomState(self.random_state)
+            idxs_ebm = rng.choice(num_samples, int(
+                num_samples * self.fit_linear_frac), replace=False)
+            idxs_lin = np.array(
+                [i for i in range(num_samples) if i not in idxs_ebm])
+        else:
+            idxs_ebm = np.arange(num_samples)
+            idxs_lin = idxs_ebm
+        assert len(idxs_ebm) > 0, f"No data for EBM! {self.fit_linear_frac=}"
+        assert len(
+            idxs_lin) > 0, f"No data for linear model! {self.fit_linear_frac=}"
+        return idxs_ebm, idxs_lin
 
     def _fit_linear_model(self, feats, y, sample_weight):
         # fit a linear model to the features
