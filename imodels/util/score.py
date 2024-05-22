@@ -3,7 +3,7 @@ from warnings import warn
 
 import pandas as pd
 import numpy as np
-from sklearn.utils import indices_to_mask
+from sklearn.utils._mask import indices_to_mask
 from sklearn.linear_model import Lasso, LogisticRegression
 from sklearn.linear_model._coordinate_descent import _alpha_grid
 from sklearn.model_selection import cross_val_score
@@ -92,7 +92,8 @@ def score_linear(X, y, rules: List[str],
         raise ValueError("Invalid alpha and max_rules passed")
 
     if prediction_task == 'regression':
-        lin_model = Lasso(alpha=final_alpha, random_state=random_state, max_iter=2000)
+        lin_model = Lasso(alpha=final_alpha,
+                          random_state=random_state, max_iter=2000)
     else:
         lin_model = LogisticRegression(
             penalty=penalty, C=(1 / final_alpha), solver='liblinear',
@@ -110,7 +111,7 @@ def score_linear(X, y, rules: List[str],
         if abs(w) > coef_zero_threshold:
             nonzero_rules.append(Rule(r, args=[w], support=s))
             coefs.append(w)
-    
+
     return nonzero_rules, coefs, lin_model.intercept_
 
 
@@ -139,7 +140,7 @@ def get_best_alpha_under_max_rules(X, y, rules: List[str],
             m = LogisticRegression(
                 penalty=penalty, C=(1 / alpha), solver='liblinear', random_state=random_state)
             cv_scoring = 'accuracy'
-        
+
         m.fit(X, y)
         rule_coefs = m.coef_.flatten()
         rule_count = np.sum(np.abs(rule_coefs) > coef_zero_threshold)
@@ -156,5 +157,5 @@ def get_best_alpha_under_max_rules(X, y, rules: List[str],
         final_alpha = alphas[np.argmax(alpha_scores)]
     else:
         final_alpha = alphas[i - 1]
-        
+
     return final_alpha
