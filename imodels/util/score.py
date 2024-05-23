@@ -36,9 +36,10 @@ def score_precision_recall(X,
 
         # XXX todo: idem without dataframe
 
+        curr_features_to_use = np.unique(curr_features)
         X_oob = pd.DataFrame(
-            (X[mask, :])[:, curr_features],
-            columns=np.array(feature_names)[curr_features]
+            (X[mask, :])[:, curr_features_to_use],
+            columns=np.array(feature_names)[curr_features_to_use]
         )
 
         if X_oob.shape[1] <= 1:  # otherwise pandas bug (cf. issue #16363)
