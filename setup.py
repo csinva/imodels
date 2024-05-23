@@ -10,7 +10,7 @@ required_pypi = [
     'matplotlib',
     'mlxtend>=0.18.0',  # some lower versions are missing fpgrowth
     'numpy',
-    'pandas<=2.2.2',  # tested with pandas 2.2.2
+    'pandas',  # tested with pandas 2.2.2
     'requests',  # used in c4.5
     'scipy',
     'scikit-learn>=1.2.0',  # recently updated this
@@ -26,7 +26,7 @@ extra_deps = [
 
 setuptools.setup(
     name="imodels",
-    version="1.4.4",
+    version="1.4.5",
     author="Chandan Singh, Keyan Nasseri, Matthew Epland, Yan Shuo Tan, Omer Ronen, Tiffany Tang, Abhineet Agarwal, Theo Saarinen, Bin Yu, and others",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",
