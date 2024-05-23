@@ -10,7 +10,7 @@ required_pypi = [
     'matplotlib',
     'mlxtend>=0.18.0',  # some lower versions are missing fpgrowth
     'numpy',
-    'pandas<=2.1.4',  # pandas 2.2 introduced some issues with the query function
+    'pandas<=2.2.2',  # tested with pandas 2.2.2
     'requests',  # used in c4.5
     'scipy',
     'scikit-learn>=1.2.0',  # recently updated this

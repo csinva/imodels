@@ -180,10 +180,11 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             Transformed data set
         """
         df = pd.DataFrame(X, columns=self.feature_placeholders)
-        print('df', df.dtypes, df.head())
+        # print('df', df.dtypes, df.head())
         X_transformed = np.zeros((X.shape[0], len(rules)))
+
         for i, r in enumerate(rules):
-            features_r_uses = [term.split(' ')[0] for term in r.split(' and ')]
+            features_r_uses = list(set(term.split(' ')[0] for term in r.split(' and ')))
             # print('r', r)
             # print('feats', df[features_r_uses])
             # print('ans', df[features_r_uses].query(r))
