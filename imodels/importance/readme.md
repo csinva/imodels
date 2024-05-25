@@ -77,6 +77,6 @@ We show in [Agarwal et al. (2023)](https://arxiv.org/abs/2307.01932) that this f
 
 These recommendations are based on extensive simulations across a wide variety of data-generating processes, data sets, noise levels, and misspecifications. 
 
-Nevertheless, different choices may be better for different problems. For examples on how to implement some of these custom options, see the [MDI+ Demo](notebooks/mdi_plus_demo.ipynb) notebook. This demo also includes examples on how to aggregate feature importances from multiple MDI+ configurations in an ensemble as well as how to choose the "best" GLM and metric in a data-driven manner based upon a stability score.
+Nevertheless, different choices may be better for different problems. For examples on how to implement some of these custom options, see the [MDI+ Demo](https://github.com/csinva/imodels/blob/master/notebooks/mdi_plus_demo.ipynb) notebook. This demo also includes examples on how to aggregate feature importances from multiple MDI+ configurations in an ensemble as well as how to choose the "best" GLM and metric in a data-driven manner based upon a stability score.
 
 

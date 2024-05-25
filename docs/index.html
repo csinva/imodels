@@ -173,8 +173,8 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 </tr>
 <tr>
 <td style="text-align: left;">MDI+</td>
-<td><a href="https://csinva.io/imodels/shrinkage.html">🗂️</a>, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ<a href="https://arxiv.org/abs/2202.00858">📄</a></td>
-<td>Improve a decision tree, random forest, or<br/>gradient-boosting ensemble with ultra-fast, post-hoc regularization</td>
+<td><a href="https://csinva.io/imodels/mdi_plus.html">🗂️</a>, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ<a href="https://arxiv.org/pdf/2307.01932">📄</a></td>
+<td>Flexible random forest-based<br/>feature importance</td>
 </tr>
 <tr>
 <td style="text-align: left;">Distillation<br/>wrapper</td>
@@ -467,7 +467,7 @@ The code here contains many useful and customizable functions for rule-based lea
 <i><b>HS Example.</b> HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent.</i>
 </p>
 <h3 id="mdi-flexible-tree-based-feature-importance">MDI+: Flexible Tree-Based Feature Importance</h3>
-<p><a href="https://arxiv.org/pdf/2307.01932.pdf">📄 Paper</a>, <a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C23&amp;q=MDI%2B%3A+A+Flexible+Random+Forest-Based+Feature+Importance+Framework&amp;btnG=#d=gs_cit&amp;t=1690399844081&amp;u=%2Fscholar%3Fq%3Dinfo%3Axc0LcHXE_lUJ%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌 Citation</a></p>
+<p><a href="https://arxiv.org/pdf/2307.01932.pdf">📄 Paper</a>, <a href="https://csinva.io/imodels/mdi_plus.html">🔗 Post</a>, <a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C23&amp;q=MDI%2B%3A+A+Flexible+Random+Forest-Based+Feature+Importance+Framework&amp;btnG=#d=gs_cit&amp;t=1690399844081&amp;u=%2Fscholar%3Fq%3Dinfo%3Axc0LcHXE_lUJ%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌 Citation</a></p>
 <p>MDI+ is a novel feature importance framework, which generalizes the popular mean decrease in impurity (MDI) importance score for random forests. At its core, MDI+ expands upon a recently discovered connection between linear regression and decision trees. In doing so, MDI+ enables practitioners to (1) tailor the feature importance computation to the data/problem structure and (2) incorporate additional features or knowledge to mitigate known biases of decision trees. In both real data case studies and extensive real-data-inspired simulations, MDI+ outperforms commonly used feature importance measures (e.g., MDI, permutation-based scores, and TreeSHAP) by substantional margins.</p>
 <h2 id="references">References</h2>
 <details>
