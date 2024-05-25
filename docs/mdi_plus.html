@@ -542,21 +542,27 @@
 
                     <h2>Regression Example Usage:</h2>
 
-                    <pre><code>from imodels.importance import RandomForestPlusRegressor
-                            
-                            rf_plus_model = RandomForestPlusRegressor()
-                            rf_plus_model.fit(X, y)
-                            mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
-                            </code></pre>
+                    <pre>
+                        <code>
+from imodels.importance import RandomForestPlusRegressor
+
+rf_plus_model = RandomForestPlusRegressor()
+rf_plus_model.fit(X, y)
+mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
+                            </code>
+                        </pre>
 
                     <h2>Classification Example Usage:</h2>
 
-                    <pre><code>from imodels.importance import RandomForestPlusClassifier
-                            
-                            rf_plus_model = RandomForestPlusClassifier()
-                            rf_plus_model.fit(X, y)
-                            mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
-                            </code></pre>
+                    <pre>
+<code>
+from imodels.importance import RandomForestPlusClassifier
+
+rf_plus_model = RandomForestPlusClassifier()
+rf_plus_model.fit(X, y)
+mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
+</code>
+                        </pre>
 
                     <h2>Demo notebooks</h2>
 
