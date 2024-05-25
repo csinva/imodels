@@ -36,8 +36,10 @@ from sklearn.preprocessing import OneHotEncoder
 
 from imodels.util.tree_interaction_utils import make_rj, make_vp
 
+
 DSET_CLASSIFICATION_KWARGS = {
     # classification
+    &#39;iris&#39;: {&#39;dataset_name&#39;: 61, &#39;data_source&#39;: &#39;openml&#39;},
     &#34;pima_diabetes&#34;: {&#34;dataset_name&#34;: 40715, &#34;data_source&#34;: &#34;openml&#34;},
     &#34;sonar&#34;: {&#34;dataset_name&#34;: &#34;sonar&#34;, &#34;data_source&#34;: &#34;pmlb&#34;},
     &#34;heart&#34;: {&#34;dataset_name&#34;: &#34;heart&#34;, &#34;data_source&#34;: &#34;imodels&#34;},
@@ -82,20 +84,21 @@ DSET_REGRESSION_KWARGS = {
     },
     # &#39;breast_tumor&#39;: {&#39;dataset_name&#39;: &#39;1201_BNG_breastTumor&#39;, &#39;data_source&#39;: &#39;pmlb&#39; # v big
 }
-DSET_MULTITASK_NAMES = [&#39;3s-bbc1000&#39;, &#39;3s-guardian1000&#39;, &#39;3s-inter3000&#39;, &#39;3s-reuters1000&#39;,
-                        &#39;birds&#39;, &#39;cal500&#39;, &#39;chd_49&#39;, &#39;corel16k001&#39;, &#39;corel16k002&#39;,
-                        &#39;corel16k003&#39;, &#39;corel16k004&#39;, &#39;corel16k005&#39;, &#39;corel16k006&#39;,
-                        &#39;corel16k007&#39;, &#39;corel16k008&#39;, &#39;corel16k009&#39;, &#39;corel16k010&#39;,
-                        &#39;corel5k&#39;, &#39;emotions&#39;, &#39;flags&#39;, &#39;foodtruck&#39;, &#39;genbase&#39;, &#39;image&#39;,
-                        &#39;mediamill&#39;, &#39;scene&#39;, &#39;stackex_chemistry&#39;, &#39;stackex_chess&#39;,
-                        &#39;stackex_cooking&#39;, &#39;stackex_cs&#39;, &#39;water-quality&#39;, &#39;yeast&#39;, &#39;yelp&#39;]
-DSET_MULTITASK_KWARGS = {
+DSET_CLASSIFICATION_MULTITASK_NAMES = [
+    &#39;3s-bbc1000&#39;, &#39;3s-guardian1000&#39;, &#39;3s-inter3000&#39;, &#39;3s-reuters1000&#39;,
+    &#39;birds&#39;, &#39;cal500&#39;, &#39;chd_49&#39;, &#39;corel16k001&#39;, &#39;corel16k002&#39;,
+    &#39;corel16k003&#39;, &#39;corel16k004&#39;, &#39;corel16k005&#39;, &#39;corel16k006&#39;,
+    &#39;corel16k007&#39;, &#39;corel16k008&#39;, &#39;corel16k009&#39;, &#39;corel16k010&#39;,
+    &#39;corel5k&#39;, &#39;emotions&#39;, &#39;flags&#39;, &#39;foodtruck&#39;, &#39;genbase&#39;, &#39;image&#39;,
+    &#39;mediamill&#39;, &#39;scene&#39;, &#39;stackex_chemistry&#39;, &#39;stackex_chess&#39;,
+    &#39;stackex_cooking&#39;, &#39;stackex_cs&#39;, &#39;water-quality&#39;, &#39;yeast&#39;, &#39;yelp&#39;]
+DSET_CLASSIFICATION_MULTITASK_KWARGS = {
     name + &#39;_multitask&#39;: {&#34;dataset_name&#34;: name, &#34;data_source&#34;: &#34;imodels-multitask&#34;}
-    for name in DSET_MULTITASK_NAMES
+    for name in DSET_CLASSIFICATION_MULTITASK_NAMES
 }
 DSET_KWARGS = {
     **DSET_CLASSIFICATION_KWARGS, **DSET_REGRESSION_KWARGS,
-    **DSET_MULTITASK_KWARGS}
+    **DSET_CLASSIFICATION_MULTITASK_KWARGS}
 
 
 def get_clean_dataset(
@@ -106,6 +109,8 @@ def get_clean_dataset(
     test_size: float = None,
     random_state: int = 42,
     verbose=True,
+    return_target_col_names: bool = False,
+    override_cache: bool = False,
 ) -&gt; Tuple[np.ndarray, np.ndarray, list]:
     &#34;&#34;&#34;Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
     If data is not downloaded, will download and cache. Otherwise will load locally.
@@ -125,6 +130,10 @@ def get_clean_dataset(
         &amp; change the return signature to `X_train, X_test, y_train, y_test, feature_names`
     random_state: int, optional
         if test_size is not None, will use this random state to split data
+    return_target_col_names: bool, optional
+        if True, will return target columns for multitask datasets as final return value
+    override_cache: bool, False
+        if True, will override the downloaded cache for a dataset
 
 
     Returns
@@ -134,6 +143,8 @@ def get_clean_dataset(
     y: np.ndarray
         outcome
     feature_names: list
+    (if passing test_size, will return more outputs)
+    (if multitask dataset, will return target_col_names as well)
 
     Example
     -------
@@ -172,7 +183,7 @@ def get_clean_dataset(
     if data_source == &#34;imodels&#34;:
         if not dataset_name.endswith(&#34;csv&#34;):
             dataset_name = dataset_name + &#34;.csv&#34;
-        if not os.path.isfile(dataset_name):
+        if not os.path.isfile(dataset_name) or override_cache:
             _download_imodels_dataset(dataset_name, data_path)
         df = pd.read_csv(oj(data_path, &#34;imodels_data&#34;, dataset_name))
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
@@ -183,7 +194,7 @@ def get_clean_dataset(
     elif data_source == &#39;imodels-multitask&#39;:
         if not dataset_name.endswith(&#34;csv&#34;):
             dataset_name = dataset_name + &#34;.csv&#34;
-        if not os.path.isfile(dataset_name):
+        if not os.path.isfile(dataset_name) or override_cache:
             _download_imodels_multitask_dataset(dataset_name, data_path)
         df = pd.read_csv(oj(data_path, &#34;imodels_multitask_data&#34;, dataset_name))
         target_cols = [col for col in df.columns if col.endswith(&#39;__target&#39;)]
@@ -191,7 +202,10 @@ def get_clean_dataset(
         X, y = df[feature_names].values, df[target_cols].values
         if convertna:
             X = np.nan_to_num(X.astype(&#34;float32&#34;))
-        return _split(X, y, _clean_feat_names(feature_names))
+        if return_target_col_names:
+            return *(_split(X, y, _clean_feat_names(feature_names))), _clean_feat_names(target_cols)
+        else:
+            return _split(X, y, _clean_feat_names(feature_names))
 
     elif data_source == &#34;pmlb&#34;:
         from pmlb import fetch_data
@@ -266,7 +280,11 @@ def _define_openml_outcomes(y, data_id: str):
 
 def _clean_feat_names(feature_names):
     # shouldn&#39;t start with a digit
-    return [&#34;X_&#34; + x if x[0].isdigit() else x for x in feature_names]
+    feature_names = [&#34;X_&#34; + x if x[0].isdigit() else x for x in feature_names]
+    # shouldn&#39;t end with __target
+    feature_names = [x if not x.endswith(
+        &#34;__target&#34;) else x[:-8] for x in feature_names]
+    return feature_names
 
 
 def _clean_features(X):
@@ -303,11 +321,14 @@ def _download_imodels_multitask_dataset(dataset_fname, data_path: str):
     dataset_fname = dataset_fname.split(
         &#34;/&#34;)[-1]  # remove anything about the path
     download_path = f&#34;https://huggingface.co/datasets/imodels/multitask-tabular-datasets/raw/main/{dataset_fname}&#34;
+    download_path_large = f&#39;https://huggingface.co/datasets/imodels/multitask-tabular-datasets/resolve/main/{dataset_fname}&#39;
     r = requests.get(download_path)
     if r.status_code == 404:
         raise Exception(
             f&#34;404 Error for dataset {dataset_fname} (see valid files at https://huggingface.co/datasets/imodels/multitask-tabular-datasets)&#34;
         )
+    elif &#39;git-lfs&#39; in r.text:
+        r = requests.get(download_path_large)
 
     os.makedirs(oj(data_path, &#34;imodels_multitask_data&#34;), exist_ok=True)
     with open(oj(data_path, &#34;imodels_multitask_data&#34;, dataset_fname), &#34;w&#34;) as f:
@@ -377,7 +398,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="imodels.util.data_util.get_clean_dataset"><code class="name flex">
-<span>def <span class="ident">get_clean_dataset</span></span>(<span>dataset_name: str, data_source: str = 'imodels', data_path='/home/chansingh/cache_imodels_data', convertna: bool = True, test_size: float = None, random_state: int = 42, verbose=True) ‑> Tuple[numpy.ndarray, numpy.ndarray, list]</span>
+<span>def <span class="ident">get_clean_dataset</span></span>(<span>dataset_name: str, data_source: str = 'imodels', data_path='/home/chansingh/cache_imodels_data', convertna: bool = True, test_size: float = None, random_state: int = 42, verbose=True, return_target_col_names: bool = False, override_cache: bool = False) ‑> Tuple[numpy.ndarray, numpy.ndarray, list]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
@@ -397,6 +418,10 @@ Otherwise, unique dataset identifier (see <a href="https://github.com/csinva/imo
 &amp; change the return signature to <code>X_train, X_test, y_train, y_test, feature_names</code></dd>
 <dt><strong><code>random_state</code></strong> :&ensp;<code>int</code>, optional</dt>
 <dd>if test_size is not None, will use this random state to split data</dd>
+<dt><strong><code>return_target_col_names</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>if True, will return target columns for multitask datasets as final return value</dd>
+<dt><strong><code>override_cache</code></strong> :&ensp;<code>bool, False</code></dt>
+<dd>if True, will override the downloaded cache for a dataset</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -407,6 +432,8 @@ Otherwise, unique dataset identifier (see <a href="https://github.com/csinva/imo
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code></dt>
 <dd>&nbsp;</dd>
 </dl>
+<p>(if passing test_size, will return more outputs)
+(if multitask dataset, will return target_col_names as well)</p>
 <h2 id="example">Example</h2>
 <pre><code># download compas dataset from imodels
 X, y, feature_names = imodels.get_clean_dataset('compas_two_year_clean', data_source='imodels')
@@ -429,6 +456,8 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
     test_size: float = None,
     random_state: int = 42,
     verbose=True,
+    return_target_col_names: bool = False,
+    override_cache: bool = False,
 ) -&gt; Tuple[np.ndarray, np.ndarray, list]:
     &#34;&#34;&#34;Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
     If data is not downloaded, will download and cache. Otherwise will load locally.
@@ -448,6 +477,10 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
         &amp; change the return signature to `X_train, X_test, y_train, y_test, feature_names`
     random_state: int, optional
         if test_size is not None, will use this random state to split data
+    return_target_col_names: bool, optional
+        if True, will return target columns for multitask datasets as final return value
+    override_cache: bool, False
+        if True, will override the downloaded cache for a dataset
 
 
     Returns
@@ -457,6 +490,8 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
     y: np.ndarray
         outcome
     feature_names: list
+    (if passing test_size, will return more outputs)
+    (if multitask dataset, will return target_col_names as well)
 
     Example
     -------
@@ -495,7 +530,7 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
     if data_source == &#34;imodels&#34;:
         if not dataset_name.endswith(&#34;csv&#34;):
             dataset_name = dataset_name + &#34;.csv&#34;
-        if not os.path.isfile(dataset_name):
+        if not os.path.isfile(dataset_name) or override_cache:
             _download_imodels_dataset(dataset_name, data_path)
         df = pd.read_csv(oj(data_path, &#34;imodels_data&#34;, dataset_name))
         X, y = df.iloc[:, :-1].values, df.iloc[:, -1].values
@@ -506,7 +541,7 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
     elif data_source == &#39;imodels-multitask&#39;:
         if not dataset_name.endswith(&#34;csv&#34;):
             dataset_name = dataset_name + &#34;.csv&#34;
-        if not os.path.isfile(dataset_name):
+        if not os.path.isfile(dataset_name) or override_cache:
             _download_imodels_multitask_dataset(dataset_name, data_path)
         df = pd.read_csv(oj(data_path, &#34;imodels_multitask_data&#34;, dataset_name))
         target_cols = [col for col in df.columns if col.endswith(&#39;__target&#39;)]
@@ -514,7 +549,10 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
         X, y = df[feature_names].values, df[target_cols].values
         if convertna:
             X = np.nan_to_num(X.astype(&#34;float32&#34;))
-        return _split(X, y, _clean_feat_names(feature_names))
+        if return_target_col_names:
+            return *(_split(X, y, _clean_feat_names(feature_names))), _clean_feat_names(target_cols)
+        else:
+            return _split(X, y, _clean_feat_names(feature_names))
 
     elif data_source == &#34;pmlb&#34;:
         from pmlb import fetch_data

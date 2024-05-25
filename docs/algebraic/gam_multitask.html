@@ -25,7 +25,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
-from sklearn.linear_model import ElasticNetCV, LinearRegression, RidgeCV, LassoCV
+from sklearn.linear_model import ElasticNetCV, LinearRegression, RidgeCV, LassoCV, LogisticRegressionCV
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils import check_array
@@ -36,10 +36,12 @@ from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegress
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score
 from tqdm import tqdm
+from sklearn.multioutput import MultiOutputRegressor, MultiOutputClassifier
 from collections import defaultdict
 import pandas as pd
 import json
 from sklearn.preprocessing import StandardScaler
+from imodels.util.transforms import CorrelationScreenTransformer
 
 import imodels
 from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
@@ -47,22 +49,32 @@ from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostin
 from sklearn.base import RegressorMixin, ClassifierMixin
 
 
-# See notes in this implementation:
-# https://github.com/interpretml/interpret/blob/develop/python/interpret-core/interpret/glassbox/_ebm/_ebm.py
+# See notes on EBM in the docs
+# main file: https://github.com/interpretml/interpret/blob/develop/python/interpret-core/interpret/glassbox/_ebm/_ebm.py
 # merge ebms: https://github.com/interpretml/interpret/blob/develop/python/interpret-core/interpret/glassbox/_ebm/_merge_ebms.py#L280
+# eval_terms: https://interpret.ml/docs/python/api/ExplainableBoostingRegressor.html#interpret.glassbox.ExplainableBoostingRegressor.eval_terms
 
 class MultiTaskGAM(BaseEstimator):
-    &#34;&#34;&#34;Multi-task GAM classifier.
+    &#34;&#34;&#34;EBM-based GAM that shares curves for predicting different outputs.
+    - If only one target is given, we fit an EBM to predict each covariate
+    - If multiple targets are given, we fit a an EBM to predict each target
+    - If only one target is given and use_single_task_with_reweighting, we fit an EBM to predict the single target, then apply reweighting
     &#34;&#34;&#34;
 
     def __init__(
         self,
-        ebm_kwargs={&#39;n_jobs&#39;: 1},
+        ebm_kwargs={&#39;n_jobs&#39;: 1, &#39;max_rounds&#39;: 5000, },
         multitask=True,
         interactions=0.95,
         linear_penalty=&#39;ridge&#39;,
         onehot_prior=False,
         renormalize_features=False,
+        use_normalize_feature_targets=False,
+        use_internal_classifiers=False,
+        fit_target_curves=True,
+        use_correlation_screening_for_features=False,
+        use_single_task_with_reweighting=False,
+        fit_linear_frac: float = None,
         random_state=42,
     ):
         &#34;&#34;&#34;
@@ -72,6 +84,22 @@ class MultiTaskGAM(BaseEstimator):
         one_hot_prior: bool
             If True and multitask, the linear model will be fit with a prior that the ebm
             features predicting the target should have coef 1
+        renormalize_features: bool
+            If True, renormalize the features before fitting the linear model
+        use_normalize_feature_targets: bool
+            whether to normalize the features used as targets for internal EBMs
+            (does not apply to target columns)
+            If input features are normalized already, this has no effect
+        use_internal_classifiers: bool
+            whether to use internal classifiers (as opposed to regressors)
+        fit_target_curves: bool
+            whether to fit an EBM to predict the target
+        use_single_task_with_reweighting: bool
+            fit an EBM to predict the single target, then apply linear reweighting
+        use_correlation_screening_for_features: bool
+            whether to use correlation screening for features
+        fit_linear_frac: float
+            If not None, the fraction of features to use for the linear model (the rest are used for the EBM)
         &#34;&#34;&#34;
         self.ebm_kwargs = ebm_kwargs
         self.multitask = multitask
@@ -79,69 +107,169 @@ class MultiTaskGAM(BaseEstimator):
         self.random_state = random_state
         self.interactions = interactions
         self.onehot_prior = onehot_prior
+        self.use_normalize_feature_targets = use_normalize_feature_targets
         self.renormalize_features = renormalize_features
+        self.use_internal_classifiers = use_internal_classifiers
+        self.fit_target_curves = fit_target_curves
+        self.use_single_task_with_reweighting = use_single_task_with_reweighting
+        self.use_correlation_screening_for_features = use_correlation_screening_for_features
+        self.fit_linear_frac = fit_linear_frac
 
         # override ebm_kwargs
         ebm_kwargs[&#39;random_state&#39;] = random_state
         ebm_kwargs[&#39;interactions&#39;] = interactions
-        self.ebm_ = ExplainableBoostingRegressor(**(ebm_kwargs or {}))
 
     def fit(self, X, y, sample_weight=None):
-        X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+        X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
+        self.n_outputs_ = 1 if len(y.shape) == 1 else y.shape[1]
+        if self.n_outputs_ &gt; 1 and not self.fit_target_curves:
+            raise ValueError(
+                &#34;fit_target_curves must be True when n_outputs &gt; 1&#34;)
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
-            self.classes_, y = np.unique(y, return_inverse=True)
+            if self.n_outputs_ == 1:
+                self.classes_, y = np.unique(y, return_inverse=True)
+                if len(self.classes_) &gt; 2:
+                    raise ValueError(
+                        &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
+            elif self.n_outputs_ &gt; 1:
+                self.classes_ = [np.unique(y[:, i])
+                                 for i in range(self.n_outputs_)]
+                if any(len(c) &gt; 2 for c in self.classes_):
+                    raise ValueError(
+                        &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+        if self.use_single_task_with_reweighting:
+            assert self.n_outputs_ == 1, &#34;use_single_task_with_reweighting only works with one output&#34;
+            assert self.multitask, &#34;use_single_task_with_reweighting only works with multitask&#34;
 
-        # just fit normal ebm
+        # just fit ebm normally
         if not self.multitask:
-            self.ebm_.fit(X, y, sample_weight=sample_weight)
+            if isinstance(self, ClassifierMixin):
+                self.ebm_ = ExplainableBoostingClassifier(**self.ebm_kwargs)
+            else:
+                self.ebm_ = ExplainableBoostingRegressor(**self.ebm_kwargs)
+
+            # fit
+            if self.n_outputs_ &gt; 1:
+                if isinstance(self, ClassifierMixin):
+                    self.ebm_multioutput_ = MultiOutputClassifier(self.ebm_)
+                else:
+                    self.ebm_multioutput_ = MultiOutputRegressor(self.ebm_)
+                self.ebm_multioutput_.fit(X, y, sample_weight=sample_weight)
+            else:
+                self.ebm_.fit(X, y, sample_weight=sample_weight)
             return self
 
-        # fit EBM to each column of X
+        # fit EBM(s)
         self.ebms_ = []
-        num_features = X.shape[1]
-        for task_num in tqdm(range(num_features)):
-            self.ebms_.append(deepcopy(self.ebm_))
-            y_ = np.ascontiguousarray(X[:, task_num])
-            X_ = deepcopy(X)
-            X_[:, task_num] = 0
-            self.ebms_[task_num].fit(X_, y_, sample_weight=sample_weight)
+        num_samples, num_features = X.shape
+        idxs_ebm, idxs_lin = self._split_data(num_samples)
 
-        # finally, fit EBM to the target
-        self.ebms_.append(deepcopy(self.ebm_))
-        self.ebms_[num_features].fit(X, y, sample_weight=sample_weight)
+        # fit EBM
+        if self.use_single_task_with_reweighting:
+            # fit an EBM to predict the single output
+            self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+            self.ebms_[-1].fit(X[idxs_ebm], y[idxs_ebm],
+                               sample_weight=sample_weight[idxs_ebm])
+        elif self.n_outputs_ == 1:
+            # with 1 output, we fit an EBM to each feature
+            for task_num in tqdm(range(num_features)):
+                y_ = np.ascontiguousarray(X[idxs_ebm][:, task_num])
+                X_ = deepcopy(X[idxs_ebm])
+                X_[:, task_num] = 0
+                self.ebms_.append(self._initialize_ebm_internal(y_))
+                if isinstance(self, ClassifierMixin):
+                    _, y_ = np.unique(y_, return_inverse=True)
+                elif self.use_normalize_feature_targets:
+                    y_ = StandardScaler().fit_transform(y_.reshape(-1, 1)).ravel()
+                self.ebms_[task_num].fit(
+                    X_, y_, sample_weight=sample_weight[idxs_ebm])
 
-        # extract features
+            # also fit an EBM to the target
+            if self.fit_target_curves:
+                self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+                self.ebms_[num_features].fit(
+                    X[idxs_ebm], y[idxs_ebm], sample_weight=sample_weight[idxs_ebm])
+        elif self.n_outputs_ &gt; 1:
+            # with multiple outputs, we fit an EBM to each output
+            for task_num in tqdm(range(self.n_outputs_)):
+                self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+                y_ = np.ascontiguousarray(y[idxs_ebm][:, task_num])
+                self.ebms_[task_num].fit(
+                    X[idxs_ebm], y_, sample_weight=sample_weight[idxs_ebm])
+
+        # extract features from EBMs
         self.term_names_list_ = [
             ebm_.term_names_ for ebm_ in self.ebms_]
         self.term_names_ = sum(self.term_names_list_, [])
         feats = self._extract_ebm_features(X)
-
         if self.renormalize_features:
             self.scaler_ = StandardScaler()
             feats = self.scaler_.fit_transform(feats)
+        if self.use_correlation_screening_for_features:
+            self.correlation_screener_ = CorrelationScreenTransformer()
+            feats = self.correlation_screener_.fit_transform(feats, y)
+        feats[np.isinf(feats)] = 0
 
-        # fit a linear model to the features
-        if self.linear_penalty == &#39;ridge&#39;:
-            self.lin_model = RidgeCV(alphas=np.logspace(-2, 3, 7))
-        elif self.linear_penalty == &#39;elasticnet&#39;:
-            self.lin_model = ElasticNetCV(n_alphas=7)
-        elif self.linear_penalty == &#39;lasso&#39;:
-            self.lin_model = LassoCV(n_alphas=7)
-
-        if self.onehot_prior:
-            coef_prior_ = np.zeros((feats.shape[1], ))
-            coef_prior_[:num_features] = 1
-            preds_prior = feats @ coef_prior_
-            residuals = y - preds_prior
-            self.lin_model.fit(feats, residuals, sample_weight=sample_weight)
-            self.lin_model.coef_ = self.lin_model.coef_ + coef_prior_
-
-        else:
-            self.lin_model.fit(feats, y, sample_weight=sample_weight)
+        # fit linear model
+        self.lin_model = self._fit_linear_model(
+            feats[idxs_lin], y[idxs_lin], sample_weight[idxs_lin])
 
         return self
+
+    def _initialize_ebm_internal(self, y):
+        if self.use_internal_classifiers and len(np.unique(y)) == 2:
+            return ExplainableBoostingClassifier(**self.ebm_kwargs)
+        else:
+            return ExplainableBoostingRegressor(**self.ebm_kwargs)
+
+    def _split_data(self, num_samples):
+        &#39;&#39;&#39;Split data into EBM and linear model data
+        &#39;&#39;&#39;
+        if self.fit_linear_frac is not None:
+            rng = np.random.RandomState(self.random_state)
+            idxs_ebm = rng.choice(num_samples, int(
+                num_samples * self.fit_linear_frac), replace=False)
+            idxs_lin = np.array(
+                [i for i in range(num_samples) if i not in idxs_ebm])
+        else:
+            idxs_ebm = np.arange(num_samples)
+            idxs_lin = idxs_ebm
+        assert len(idxs_ebm) &gt; 0, f&#34;No data for EBM! {self.fit_linear_frac=}&#34;
+        assert len(
+            idxs_lin) &gt; 0, f&#34;No data for linear model! {self.fit_linear_frac=}&#34;
+        return idxs_ebm, idxs_lin
+
+    def _fit_linear_model(self, feats, y, sample_weight):
+        # fit a linear model to the features
+        if isinstance(self, ClassifierMixin):
+            lin_model = {
+                &#39;ridge&#39;: LogisticRegressionCV(penalty=&#39;l2&#39;),
+                &#39;elasticnet&#39;: LogisticRegressionCV(penalty=&#39;elasticnet&#39;),
+                &#39;lasso&#39;: LogisticRegressionCV(penalty=&#39;l1&#39;),
+            }[self.linear_penalty]
+            if self.n_outputs_ &gt; 1:
+                lin_model = MultiOutputClassifier(lin_model)
+        else:
+            lin_model = {
+                &#39;ridge&#39;: RidgeCV(alphas=np.logspace(-2, 3, 7)),
+                &#39;elasticnet&#39;: ElasticNetCV(n_alphas=7),
+                &#39;lasso&#39;: LassoCV(n_alphas=7),
+            }[self.linear_penalty]
+
+        # onehot prior is a prior (for regression only) that
+        # the ebm features predicting the target should have coef 1
+        if not self.onehot_prior or isinstance(self, ClassifierMixin):
+            lin_model.fit(feats, y, sample_weight=sample_weight)
+        else:
+            coef_prior_ = np.zeros((feats.shape[1], ))
+            coef_prior_[:-len(self.term_names_list_[-1])] = 1
+            preds_prior = feats @ coef_prior_
+            residuals = y - preds_prior
+            lin_model.fit(feats, residuals, sample_weight=sample_weight)
+            lin_model.coef_ = lin_model.coef_ + coef_prior_
+        return lin_model
 
     def _extract_ebm_features(self, X):
         &#39;&#39;&#39;
@@ -150,7 +278,6 @@ class MultiTaskGAM(BaseEstimator):
         feats = np.empty((X.shape[0], len(self.term_names_)))
         offset = 0
         for ebm_num in range(len(self.ebms_)):
-            # see eval_terms function: https://interpret.ml/docs/python/api/ExplainableBoostingRegressor.html#interpret.glassbox.ExplainableBoostingRegressor.eval_terms
             n_features_ebm_num = len(self.term_names_list_[ebm_num])
             feats[:, offset: offset + n_features_ebm_num] = \
                 self.ebms_[ebm_num].eval_terms(X)
@@ -165,14 +292,36 @@ class MultiTaskGAM(BaseEstimator):
             feats = self._extract_ebm_features(X)
             if hasattr(self, &#39;scaler_&#39;):
                 feats = self.scaler_.transform(feats)
+            if hasattr(self, &#39;correlation_screener_&#39;):
+                feats = self.correlation_screener_.transform(feats)
+            feats[np.isinf(feats)] = 0
             return self.lin_model.predict(feats)
-        else:
+
+        # multi-output without multitask learning
+        elif hasattr(self, &#39;ebm_multioutput_&#39;):
+            return self.ebm_multioutput_.predict(X)
+
+        # single-task standard
+        elif hasattr(self, &#39;ebm_&#39;):
             return self.ebm_.predict(X)
 
-    # def predict_proba(self, X):
-    #     check_is_fitted(self)
-    #     X = check_array(X, accept_sparse=False)
-    #     return self.ebm_.predict_proba(X)
+    def predict_proba(self, X):
+        check_is_fitted(self)
+        if hasattr(self, &#39;ebms_&#39;):
+            feats = self._extract_ebm_features(X)
+            if hasattr(self, &#39;scaler_&#39;):
+                feats = self.scaler_.transform(feats)
+            if hasattr(self, &#39;correlation_screener_&#39;):
+                feats = self.correlation_screener_.transform(feats)
+            return self.lin_model.predict_proba(feats)
+
+        # multi-output without multitask learning
+        elif hasattr(self, &#39;ebm_multioutput_&#39;):
+            return self.ebm_multioutput_.predict_proba(X)
+
+        # single-task standard
+        elif hasattr(self, &#39;ebm_&#39;):
+            return self.ebm_.predict_proba(X)
 
 
 class MultiTaskGAMRegressor(MultiTaskGAM, RegressorMixin):
@@ -180,78 +329,7 @@ class MultiTaskGAMRegressor(MultiTaskGAM, RegressorMixin):
 
 
 class MultiTaskGAMClassifier(MultiTaskGAM, ClassifierMixin):
-    ...
-
-
-def test_multitask_extraction():
-    X, y, feature_names = imodels.get_clean_dataset(&#34;california_housing&#34;)
-    # X, y, feature_names = imodels.get_clean_dataset(&#34;bike_sharing&#34;)
-
-    # remove some features to speed things up
-    X = X[:10, :4]
-    y = y[:10]
-    X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-
-    # unit test
-    gam = MultiTaskGAMRegressor(multitask=False)
-    gam.fit(X, y_train)
-    gam2 = MultiTaskGAMRegressor(multitask=True)
-    gam2.fit(X, y_train)
-    preds_orig = gam.predict(X_test)
-    assert np.allclose(preds_orig, gam2.ebms_[-1].predict(X_test))
-
-    # extracted curves + intercept should sum to original predictions
-    feats_extracted = gam2._extract_ebm_features(X_test)
-
-    # get features for ebm that predicts target
-    feats_extracted_target = feats_extracted[:,
-                                             -len(gam2.term_names_list_[-1]):]
-    # assert feats_extracted_target.shape == (num_samples, num_features)
-    preds_extracted_target = np.sum(feats_extracted_target, axis=1) + \
-        gam2.ebms_[-1].intercept_
-    diff = preds_extracted_target - preds_orig
-    assert np.allclose(preds_extracted_target, preds_orig), diff
-    print(&#39;Tests pass successfully&#39;)
-
-
-if __name__ == &#34;__main__&#34;:
-    # test_multitask_extraction()
-    # X, y, feature_names = imodels.get_clean_dataset(&#34;heart&#34;)
-    X, y, feature_names = imodels.get_clean_dataset(&#34;bike_sharing&#34;)
-    # X, y, feature_names = imodels.get_clean_dataset(&#34;diabetes&#34;)
-
-    # remove some features to speed things up
-    X = X[:, :2]
-    X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-
-    kwargs = dict(
-        random_state=42,
-    )
-    results = defaultdict(list)
-    for gam in tqdm([
-            # AdaBoostRegressor(estimator=MultiTaskGAMRegressor(
-        # multitask=True), n_estimators=2),
-        # MultiTaskGAMRegressor(multitask=True, onehot_prior=True),
-        # MultiTaskGAMRegressor(multitask=True, onehot_prior=False),
-        MultiTaskGAMRegressor(multitask=True, renormalize_features=True),
-        MultiTaskGAMRegressor(multitask=True, renormalize_features=False),
-        # ExplainableBoostingRegressor(n_jobs=1, interactions=0)
-    ]):
-        np.random.seed(42)
-        results[&#34;model_name&#34;].append(gam)
-        print(&#39;Fitting&#39;, results[&#39;model_name&#39;][-1])
-        gam.fit(X, y_train)
-        results[&#39;test_corr&#39;].append(np.corrcoef(
-            y_test, gam.predict(X_test))[0, 1].round(3))
-        results[&#39;test_r2&#39;].append(gam.score(X_test, y_test).round(3))
-        if hasattr(gam, &#39;lin_model&#39;):
-            print(&#39;lin model coef&#39;, gam.lin_model.coef_)
-
-    # don&#39;t round strings
-    with pd.option_context(
-        &#34;display.max_rows&#34;, None, &#34;display.max_columns&#34;, None, &#34;display.width&#34;, 1000
-    ):
-        print(pd.DataFrame(results).round(3))</code></pre>
+    ...</code></pre>
 </details>
 </section>
 <section>
@@ -259,80 +337,65 @@ if __name__ == &#34;__main__&#34;:
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="imodels.algebraic.gam_multitask.test_multitask_extraction"><code class="name flex">
-<span>def <span class="ident">test_multitask_extraction</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def test_multitask_extraction():
-    X, y, feature_names = imodels.get_clean_dataset(&#34;california_housing&#34;)
-    # X, y, feature_names = imodels.get_clean_dataset(&#34;bike_sharing&#34;)
-
-    # remove some features to speed things up
-    X = X[:10, :4]
-    y = y[:10]
-    X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-
-    # unit test
-    gam = MultiTaskGAMRegressor(multitask=False)
-    gam.fit(X, y_train)
-    gam2 = MultiTaskGAMRegressor(multitask=True)
-    gam2.fit(X, y_train)
-    preds_orig = gam.predict(X_test)
-    assert np.allclose(preds_orig, gam2.ebms_[-1].predict(X_test))
-
-    # extracted curves + intercept should sum to original predictions
-    feats_extracted = gam2._extract_ebm_features(X_test)
-
-    # get features for ebm that predicts target
-    feats_extracted_target = feats_extracted[:,
-                                             -len(gam2.term_names_list_[-1]):]
-    # assert feats_extracted_target.shape == (num_samples, num_features)
-    preds_extracted_target = np.sum(feats_extracted_target, axis=1) + \
-        gam2.ebms_[-1].intercept_
-    diff = preds_extracted_target - preds_orig
-    assert np.allclose(preds_extracted_target, preds_orig), diff
-    print(&#39;Tests pass successfully&#39;)</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
 <dt id="imodels.algebraic.gam_multitask.MultiTaskGAM"><code class="flex name class">
 <span>class <span class="ident">MultiTaskGAM</span></span>
-<span>(</span><span>ebm_kwargs={'n_jobs': 1}, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, random_state=42)</span>
+<span>(</span><span>ebm_kwargs={'n_jobs': 1, 'max_rounds': 5000}, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Multi-task GAM classifier.</p>
+<div class="desc"><p>EBM-based GAM that shares curves for predicting different outputs.
+- If only one target is given, we fit an EBM to predict each covariate
+- If multiple targets are given, we fit a an EBM to predict each target
+- If only one target is given and use_single_task_with_reweighting, we fit an EBM to predict the single target, then apply reweighting</p>
 <h2 id="params">Params</h2>
 <p>Note: args override ebm_kwargs if there are duplicates
 one_hot_prior: bool
 If True and multitask, the linear model will be fit with a prior that the ebm
-features predicting the target should have coef 1</p></div>
+features predicting the target should have coef 1
+renormalize_features: bool
+If True, renormalize the features before fitting the linear model
+use_normalize_feature_targets: bool
+whether to normalize the features used as targets for internal EBMs
+(does not apply to target columns)
+If input features are normalized already, this has no effect
+use_internal_classifiers: bool
+whether to use internal classifiers (as opposed to regressors)
+fit_target_curves: bool
+whether to fit an EBM to predict the target
+use_single_task_with_reweighting: bool
+fit an EBM to predict the single target, then apply linear reweighting
+use_correlation_screening_for_features: bool
+whether to use correlation screening for features
+fit_linear_frac: float
+If not None, the fraction of features to use for the linear model (the rest are used for the EBM)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MultiTaskGAM(BaseEstimator):
-    &#34;&#34;&#34;Multi-task GAM classifier.
+    &#34;&#34;&#34;EBM-based GAM that shares curves for predicting different outputs.
+    - If only one target is given, we fit an EBM to predict each covariate
+    - If multiple targets are given, we fit a an EBM to predict each target
+    - If only one target is given and use_single_task_with_reweighting, we fit an EBM to predict the single target, then apply reweighting
     &#34;&#34;&#34;
 
     def __init__(
         self,
-        ebm_kwargs={&#39;n_jobs&#39;: 1},
+        ebm_kwargs={&#39;n_jobs&#39;: 1, &#39;max_rounds&#39;: 5000, },
         multitask=True,
         interactions=0.95,
         linear_penalty=&#39;ridge&#39;,
         onehot_prior=False,
         renormalize_features=False,
+        use_normalize_feature_targets=False,
+        use_internal_classifiers=False,
+        fit_target_curves=True,
+        use_correlation_screening_for_features=False,
+        use_single_task_with_reweighting=False,
+        fit_linear_frac: float = None,
         random_state=42,
     ):
         &#34;&#34;&#34;
@@ -342,6 +405,22 @@ features predicting the target should have coef 1</p></div>
         one_hot_prior: bool
             If True and multitask, the linear model will be fit with a prior that the ebm
             features predicting the target should have coef 1
+        renormalize_features: bool
+            If True, renormalize the features before fitting the linear model
+        use_normalize_feature_targets: bool
+            whether to normalize the features used as targets for internal EBMs
+            (does not apply to target columns)
+            If input features are normalized already, this has no effect
+        use_internal_classifiers: bool
+            whether to use internal classifiers (as opposed to regressors)
+        fit_target_curves: bool
+            whether to fit an EBM to predict the target
+        use_single_task_with_reweighting: bool
+            fit an EBM to predict the single target, then apply linear reweighting
+        use_correlation_screening_for_features: bool
+            whether to use correlation screening for features
+        fit_linear_frac: float
+            If not None, the fraction of features to use for the linear model (the rest are used for the EBM)
         &#34;&#34;&#34;
         self.ebm_kwargs = ebm_kwargs
         self.multitask = multitask
@@ -349,69 +428,169 @@ features predicting the target should have coef 1</p></div>
         self.random_state = random_state
         self.interactions = interactions
         self.onehot_prior = onehot_prior
+        self.use_normalize_feature_targets = use_normalize_feature_targets
         self.renormalize_features = renormalize_features
+        self.use_internal_classifiers = use_internal_classifiers
+        self.fit_target_curves = fit_target_curves
+        self.use_single_task_with_reweighting = use_single_task_with_reweighting
+        self.use_correlation_screening_for_features = use_correlation_screening_for_features
+        self.fit_linear_frac = fit_linear_frac
 
         # override ebm_kwargs
         ebm_kwargs[&#39;random_state&#39;] = random_state
         ebm_kwargs[&#39;interactions&#39;] = interactions
-        self.ebm_ = ExplainableBoostingRegressor(**(ebm_kwargs or {}))
 
     def fit(self, X, y, sample_weight=None):
-        X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+        X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
+        self.n_outputs_ = 1 if len(y.shape) == 1 else y.shape[1]
+        if self.n_outputs_ &gt; 1 and not self.fit_target_curves:
+            raise ValueError(
+                &#34;fit_target_curves must be True when n_outputs &gt; 1&#34;)
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
-            self.classes_, y = np.unique(y, return_inverse=True)
+            if self.n_outputs_ == 1:
+                self.classes_, y = np.unique(y, return_inverse=True)
+                if len(self.classes_) &gt; 2:
+                    raise ValueError(
+                        &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
+            elif self.n_outputs_ &gt; 1:
+                self.classes_ = [np.unique(y[:, i])
+                                 for i in range(self.n_outputs_)]
+                if any(len(c) &gt; 2 for c in self.classes_):
+                    raise ValueError(
+                        &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+        if self.use_single_task_with_reweighting:
+            assert self.n_outputs_ == 1, &#34;use_single_task_with_reweighting only works with one output&#34;
+            assert self.multitask, &#34;use_single_task_with_reweighting only works with multitask&#34;
 
-        # just fit normal ebm
+        # just fit ebm normally
         if not self.multitask:
-            self.ebm_.fit(X, y, sample_weight=sample_weight)
+            if isinstance(self, ClassifierMixin):
+                self.ebm_ = ExplainableBoostingClassifier(**self.ebm_kwargs)
+            else:
+                self.ebm_ = ExplainableBoostingRegressor(**self.ebm_kwargs)
+
+            # fit
+            if self.n_outputs_ &gt; 1:
+                if isinstance(self, ClassifierMixin):
+                    self.ebm_multioutput_ = MultiOutputClassifier(self.ebm_)
+                else:
+                    self.ebm_multioutput_ = MultiOutputRegressor(self.ebm_)
+                self.ebm_multioutput_.fit(X, y, sample_weight=sample_weight)
+            else:
+                self.ebm_.fit(X, y, sample_weight=sample_weight)
             return self
 
-        # fit EBM to each column of X
+        # fit EBM(s)
         self.ebms_ = []
-        num_features = X.shape[1]
-        for task_num in tqdm(range(num_features)):
-            self.ebms_.append(deepcopy(self.ebm_))
-            y_ = np.ascontiguousarray(X[:, task_num])
-            X_ = deepcopy(X)
-            X_[:, task_num] = 0
-            self.ebms_[task_num].fit(X_, y_, sample_weight=sample_weight)
+        num_samples, num_features = X.shape
+        idxs_ebm, idxs_lin = self._split_data(num_samples)
 
-        # finally, fit EBM to the target
-        self.ebms_.append(deepcopy(self.ebm_))
-        self.ebms_[num_features].fit(X, y, sample_weight=sample_weight)
+        # fit EBM
+        if self.use_single_task_with_reweighting:
+            # fit an EBM to predict the single output
+            self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+            self.ebms_[-1].fit(X[idxs_ebm], y[idxs_ebm],
+                               sample_weight=sample_weight[idxs_ebm])
+        elif self.n_outputs_ == 1:
+            # with 1 output, we fit an EBM to each feature
+            for task_num in tqdm(range(num_features)):
+                y_ = np.ascontiguousarray(X[idxs_ebm][:, task_num])
+                X_ = deepcopy(X[idxs_ebm])
+                X_[:, task_num] = 0
+                self.ebms_.append(self._initialize_ebm_internal(y_))
+                if isinstance(self, ClassifierMixin):
+                    _, y_ = np.unique(y_, return_inverse=True)
+                elif self.use_normalize_feature_targets:
+                    y_ = StandardScaler().fit_transform(y_.reshape(-1, 1)).ravel()
+                self.ebms_[task_num].fit(
+                    X_, y_, sample_weight=sample_weight[idxs_ebm])
 
-        # extract features
+            # also fit an EBM to the target
+            if self.fit_target_curves:
+                self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+                self.ebms_[num_features].fit(
+                    X[idxs_ebm], y[idxs_ebm], sample_weight=sample_weight[idxs_ebm])
+        elif self.n_outputs_ &gt; 1:
+            # with multiple outputs, we fit an EBM to each output
+            for task_num in tqdm(range(self.n_outputs_)):
+                self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+                y_ = np.ascontiguousarray(y[idxs_ebm][:, task_num])
+                self.ebms_[task_num].fit(
+                    X[idxs_ebm], y_, sample_weight=sample_weight[idxs_ebm])
+
+        # extract features from EBMs
         self.term_names_list_ = [
             ebm_.term_names_ for ebm_ in self.ebms_]
         self.term_names_ = sum(self.term_names_list_, [])
         feats = self._extract_ebm_features(X)
-
         if self.renormalize_features:
             self.scaler_ = StandardScaler()
             feats = self.scaler_.fit_transform(feats)
+        if self.use_correlation_screening_for_features:
+            self.correlation_screener_ = CorrelationScreenTransformer()
+            feats = self.correlation_screener_.fit_transform(feats, y)
+        feats[np.isinf(feats)] = 0
 
-        # fit a linear model to the features
-        if self.linear_penalty == &#39;ridge&#39;:
-            self.lin_model = RidgeCV(alphas=np.logspace(-2, 3, 7))
-        elif self.linear_penalty == &#39;elasticnet&#39;:
-            self.lin_model = ElasticNetCV(n_alphas=7)
-        elif self.linear_penalty == &#39;lasso&#39;:
-            self.lin_model = LassoCV(n_alphas=7)
-
-        if self.onehot_prior:
-            coef_prior_ = np.zeros((feats.shape[1], ))
-            coef_prior_[:num_features] = 1
-            preds_prior = feats @ coef_prior_
-            residuals = y - preds_prior
-            self.lin_model.fit(feats, residuals, sample_weight=sample_weight)
-            self.lin_model.coef_ = self.lin_model.coef_ + coef_prior_
-
-        else:
-            self.lin_model.fit(feats, y, sample_weight=sample_weight)
+        # fit linear model
+        self.lin_model = self._fit_linear_model(
+            feats[idxs_lin], y[idxs_lin], sample_weight[idxs_lin])
 
         return self
+
+    def _initialize_ebm_internal(self, y):
+        if self.use_internal_classifiers and len(np.unique(y)) == 2:
+            return ExplainableBoostingClassifier(**self.ebm_kwargs)
+        else:
+            return ExplainableBoostingRegressor(**self.ebm_kwargs)
+
+    def _split_data(self, num_samples):
+        &#39;&#39;&#39;Split data into EBM and linear model data
+        &#39;&#39;&#39;
+        if self.fit_linear_frac is not None:
+            rng = np.random.RandomState(self.random_state)
+            idxs_ebm = rng.choice(num_samples, int(
+                num_samples * self.fit_linear_frac), replace=False)
+            idxs_lin = np.array(
+                [i for i in range(num_samples) if i not in idxs_ebm])
+        else:
+            idxs_ebm = np.arange(num_samples)
+            idxs_lin = idxs_ebm
+        assert len(idxs_ebm) &gt; 0, f&#34;No data for EBM! {self.fit_linear_frac=}&#34;
+        assert len(
+            idxs_lin) &gt; 0, f&#34;No data for linear model! {self.fit_linear_frac=}&#34;
+        return idxs_ebm, idxs_lin
+
+    def _fit_linear_model(self, feats, y, sample_weight):
+        # fit a linear model to the features
+        if isinstance(self, ClassifierMixin):
+            lin_model = {
+                &#39;ridge&#39;: LogisticRegressionCV(penalty=&#39;l2&#39;),
+                &#39;elasticnet&#39;: LogisticRegressionCV(penalty=&#39;elasticnet&#39;),
+                &#39;lasso&#39;: LogisticRegressionCV(penalty=&#39;l1&#39;),
+            }[self.linear_penalty]
+            if self.n_outputs_ &gt; 1:
+                lin_model = MultiOutputClassifier(lin_model)
+        else:
+            lin_model = {
+                &#39;ridge&#39;: RidgeCV(alphas=np.logspace(-2, 3, 7)),
+                &#39;elasticnet&#39;: ElasticNetCV(n_alphas=7),
+                &#39;lasso&#39;: LassoCV(n_alphas=7),
+            }[self.linear_penalty]
+
+        # onehot prior is a prior (for regression only) that
+        # the ebm features predicting the target should have coef 1
+        if not self.onehot_prior or isinstance(self, ClassifierMixin):
+            lin_model.fit(feats, y, sample_weight=sample_weight)
+        else:
+            coef_prior_ = np.zeros((feats.shape[1], ))
+            coef_prior_[:-len(self.term_names_list_[-1])] = 1
+            preds_prior = feats @ coef_prior_
+            residuals = y - preds_prior
+            lin_model.fit(feats, residuals, sample_weight=sample_weight)
+            lin_model.coef_ = lin_model.coef_ + coef_prior_
+        return lin_model
 
     def _extract_ebm_features(self, X):
         &#39;&#39;&#39;
@@ -420,7 +599,6 @@ features predicting the target should have coef 1</p></div>
         feats = np.empty((X.shape[0], len(self.term_names_)))
         offset = 0
         for ebm_num in range(len(self.ebms_)):
-            # see eval_terms function: https://interpret.ml/docs/python/api/ExplainableBoostingRegressor.html#interpret.glassbox.ExplainableBoostingRegressor.eval_terms
             n_features_ebm_num = len(self.term_names_list_[ebm_num])
             feats[:, offset: offset + n_features_ebm_num] = \
                 self.ebms_[ebm_num].eval_terms(X)
@@ -435,14 +613,36 @@ features predicting the target should have coef 1</p></div>
             feats = self._extract_ebm_features(X)
             if hasattr(self, &#39;scaler_&#39;):
                 feats = self.scaler_.transform(feats)
+            if hasattr(self, &#39;correlation_screener_&#39;):
+                feats = self.correlation_screener_.transform(feats)
+            feats[np.isinf(feats)] = 0
             return self.lin_model.predict(feats)
-        else:
+
+        # multi-output without multitask learning
+        elif hasattr(self, &#39;ebm_multioutput_&#39;):
+            return self.ebm_multioutput_.predict(X)
+
+        # single-task standard
+        elif hasattr(self, &#39;ebm_&#39;):
             return self.ebm_.predict(X)
 
-    # def predict_proba(self, X):
-    #     check_is_fitted(self)
-    #     X = check_array(X, accept_sparse=False)
-    #     return self.ebm_.predict_proba(X)</code></pre>
+    def predict_proba(self, X):
+        check_is_fitted(self)
+        if hasattr(self, &#39;ebms_&#39;):
+            feats = self._extract_ebm_features(X)
+            if hasattr(self, &#39;scaler_&#39;):
+                feats = self.scaler_.transform(feats)
+            if hasattr(self, &#39;correlation_screener_&#39;):
+                feats = self.correlation_screener_.transform(feats)
+            return self.lin_model.predict_proba(feats)
+
+        # multi-output without multitask learning
+        elif hasattr(self, &#39;ebm_multioutput_&#39;):
+            return self.ebm_multioutput_.predict_proba(X)
+
+        # single-task standard
+        elif hasattr(self, &#39;ebm_&#39;):
+            return self.ebm_.predict_proba(X)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -467,59 +667,101 @@ features predicting the target should have coef 1</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fit(self, X, y, sample_weight=None):
-    X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+    X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
+    self.n_outputs_ = 1 if len(y.shape) == 1 else y.shape[1]
+    if self.n_outputs_ &gt; 1 and not self.fit_target_curves:
+        raise ValueError(
+            &#34;fit_target_curves must be True when n_outputs &gt; 1&#34;)
     if isinstance(self, ClassifierMixin):
         check_classification_targets(y)
-        self.classes_, y = np.unique(y, return_inverse=True)
+        if self.n_outputs_ == 1:
+            self.classes_, y = np.unique(y, return_inverse=True)
+            if len(self.classes_) &gt; 2:
+                raise ValueError(
+                    &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
+        elif self.n_outputs_ &gt; 1:
+            self.classes_ = [np.unique(y[:, i])
+                             for i in range(self.n_outputs_)]
+            if any(len(c) &gt; 2 for c in self.classes_):
+                raise ValueError(
+                    &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
     sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+    if self.use_single_task_with_reweighting:
+        assert self.n_outputs_ == 1, &#34;use_single_task_with_reweighting only works with one output&#34;
+        assert self.multitask, &#34;use_single_task_with_reweighting only works with multitask&#34;
 
-    # just fit normal ebm
+    # just fit ebm normally
     if not self.multitask:
-        self.ebm_.fit(X, y, sample_weight=sample_weight)
+        if isinstance(self, ClassifierMixin):
+            self.ebm_ = ExplainableBoostingClassifier(**self.ebm_kwargs)
+        else:
+            self.ebm_ = ExplainableBoostingRegressor(**self.ebm_kwargs)
+
+        # fit
+        if self.n_outputs_ &gt; 1:
+            if isinstance(self, ClassifierMixin):
+                self.ebm_multioutput_ = MultiOutputClassifier(self.ebm_)
+            else:
+                self.ebm_multioutput_ = MultiOutputRegressor(self.ebm_)
+            self.ebm_multioutput_.fit(X, y, sample_weight=sample_weight)
+        else:
+            self.ebm_.fit(X, y, sample_weight=sample_weight)
         return self
 
-    # fit EBM to each column of X
+    # fit EBM(s)
     self.ebms_ = []
-    num_features = X.shape[1]
-    for task_num in tqdm(range(num_features)):
-        self.ebms_.append(deepcopy(self.ebm_))
-        y_ = np.ascontiguousarray(X[:, task_num])
-        X_ = deepcopy(X)
-        X_[:, task_num] = 0
-        self.ebms_[task_num].fit(X_, y_, sample_weight=sample_weight)
+    num_samples, num_features = X.shape
+    idxs_ebm, idxs_lin = self._split_data(num_samples)
 
-    # finally, fit EBM to the target
-    self.ebms_.append(deepcopy(self.ebm_))
-    self.ebms_[num_features].fit(X, y, sample_weight=sample_weight)
+    # fit EBM
+    if self.use_single_task_with_reweighting:
+        # fit an EBM to predict the single output
+        self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+        self.ebms_[-1].fit(X[idxs_ebm], y[idxs_ebm],
+                           sample_weight=sample_weight[idxs_ebm])
+    elif self.n_outputs_ == 1:
+        # with 1 output, we fit an EBM to each feature
+        for task_num in tqdm(range(num_features)):
+            y_ = np.ascontiguousarray(X[idxs_ebm][:, task_num])
+            X_ = deepcopy(X[idxs_ebm])
+            X_[:, task_num] = 0
+            self.ebms_.append(self._initialize_ebm_internal(y_))
+            if isinstance(self, ClassifierMixin):
+                _, y_ = np.unique(y_, return_inverse=True)
+            elif self.use_normalize_feature_targets:
+                y_ = StandardScaler().fit_transform(y_.reshape(-1, 1)).ravel()
+            self.ebms_[task_num].fit(
+                X_, y_, sample_weight=sample_weight[idxs_ebm])
 
-    # extract features
+        # also fit an EBM to the target
+        if self.fit_target_curves:
+            self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+            self.ebms_[num_features].fit(
+                X[idxs_ebm], y[idxs_ebm], sample_weight=sample_weight[idxs_ebm])
+    elif self.n_outputs_ &gt; 1:
+        # with multiple outputs, we fit an EBM to each output
+        for task_num in tqdm(range(self.n_outputs_)):
+            self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+            y_ = np.ascontiguousarray(y[idxs_ebm][:, task_num])
+            self.ebms_[task_num].fit(
+                X[idxs_ebm], y_, sample_weight=sample_weight[idxs_ebm])
+
+    # extract features from EBMs
     self.term_names_list_ = [
         ebm_.term_names_ for ebm_ in self.ebms_]
     self.term_names_ = sum(self.term_names_list_, [])
     feats = self._extract_ebm_features(X)
-
     if self.renormalize_features:
         self.scaler_ = StandardScaler()
         feats = self.scaler_.fit_transform(feats)
+    if self.use_correlation_screening_for_features:
+        self.correlation_screener_ = CorrelationScreenTransformer()
+        feats = self.correlation_screener_.fit_transform(feats, y)
+    feats[np.isinf(feats)] = 0
 
-    # fit a linear model to the features
-    if self.linear_penalty == &#39;ridge&#39;:
-        self.lin_model = RidgeCV(alphas=np.logspace(-2, 3, 7))
-    elif self.linear_penalty == &#39;elasticnet&#39;:
-        self.lin_model = ElasticNetCV(n_alphas=7)
-    elif self.linear_penalty == &#39;lasso&#39;:
-        self.lin_model = LassoCV(n_alphas=7)
-
-    if self.onehot_prior:
-        coef_prior_ = np.zeros((feats.shape[1], ))
-        coef_prior_[:num_features] = 1
-        preds_prior = feats @ coef_prior_
-        residuals = y - preds_prior
-        self.lin_model.fit(feats, residuals, sample_weight=sample_weight)
-        self.lin_model.coef_ = self.lin_model.coef_ + coef_prior_
-
-    else:
-        self.lin_model.fit(feats, y, sample_weight=sample_weight)
+    # fit linear model
+    self.lin_model = self._fit_linear_model(
+        feats[idxs_lin], y[idxs_lin], sample_weight[idxs_lin])
 
     return self</code></pre>
 </details>
@@ -540,9 +782,46 @@ features predicting the target should have coef 1</p></div>
         feats = self._extract_ebm_features(X)
         if hasattr(self, &#39;scaler_&#39;):
             feats = self.scaler_.transform(feats)
+        if hasattr(self, &#39;correlation_screener_&#39;):
+            feats = self.correlation_screener_.transform(feats)
+        feats[np.isinf(feats)] = 0
         return self.lin_model.predict(feats)
-    else:
+
+    # multi-output without multitask learning
+    elif hasattr(self, &#39;ebm_multioutput_&#39;):
+        return self.ebm_multioutput_.predict(X)
+
+    # single-task standard
+    elif hasattr(self, &#39;ebm_&#39;):
         return self.ebm_.predict(X)</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.gam_multitask.MultiTaskGAM.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    check_is_fitted(self)
+    if hasattr(self, &#39;ebms_&#39;):
+        feats = self._extract_ebm_features(X)
+        if hasattr(self, &#39;scaler_&#39;):
+            feats = self.scaler_.transform(feats)
+        if hasattr(self, &#39;correlation_screener_&#39;):
+            feats = self.correlation_screener_.transform(feats)
+        return self.lin_model.predict_proba(feats)
+
+    # multi-output without multitask learning
+    elif hasattr(self, &#39;ebm_multioutput_&#39;):
+        return self.ebm_multioutput_.predict_proba(X)
+
+    # single-task standard
+    elif hasattr(self, &#39;ebm_&#39;):
+        return self.ebm_.predict_proba(X)</code></pre>
 </details>
 </dd>
 <dt id="imodels.algebraic.gam_multitask.MultiTaskGAM.set_fit_request"><code class="name flex">
@@ -596,7 +875,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -611,34 +890,70 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="imodels.algebraic.gam_multitask.MultiTaskGAMClassifier"><code class="flex name class">
 <span>class <span class="ident">MultiTaskGAMClassifier</span></span>
-<span>(</span><span>ebm_kwargs={'n_jobs': 1}, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, random_state=42)</span>
+<span>(</span><span>ebm_kwargs={'n_jobs': 1, 'max_rounds': 5000}, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Multi-task GAM classifier.</p>
+<div class="desc"><p>EBM-based GAM that shares curves for predicting different outputs.
+- If only one target is given, we fit an EBM to predict each covariate
+- If multiple targets are given, we fit a an EBM to predict each target
+- If only one target is given and use_single_task_with_reweighting, we fit an EBM to predict the single target, then apply reweighting</p>
 <h2 id="params">Params</h2>
 <p>Note: args override ebm_kwargs if there are duplicates
 one_hot_prior: bool
 If True and multitask, the linear model will be fit with a prior that the ebm
-features predicting the target should have coef 1</p></div>
+features predicting the target should have coef 1
+renormalize_features: bool
+If True, renormalize the features before fitting the linear model
+use_normalize_feature_targets: bool
+whether to normalize the features used as targets for internal EBMs
+(does not apply to target columns)
+If input features are normalized already, this has no effect
+use_internal_classifiers: bool
+whether to use internal classifiers (as opposed to regressors)
+fit_target_curves: bool
+whether to fit an EBM to predict the target
+use_single_task_with_reweighting: bool
+fit an EBM to predict the single target, then apply linear reweighting
+use_correlation_screening_for_features: bool
+whether to use correlation screening for features
+fit_linear_frac: float
+If not None, the fraction of features to use for the linear model (the rest are used for the EBM)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -707,7 +1022,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -722,19 +1037,36 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 </dl>
@@ -749,15 +1081,34 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.algebraic.gam_multitask.MultiTaskGAMRegressor"><code class="flex name class">
 <span>class <span class="ident">MultiTaskGAMRegressor</span></span>
-<span>(</span><span>ebm_kwargs={'n_jobs': 1}, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, random_state=42)</span>
+<span>(</span><span>ebm_kwargs={'n_jobs': 1, 'max_rounds': 5000}, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Multi-task GAM classifier.</p>
+<div class="desc"><p>EBM-based GAM that shares curves for predicting different outputs.
+- If only one target is given, we fit an EBM to predict each covariate
+- If multiple targets are given, we fit a an EBM to predict each target
+- If only one target is given and use_single_task_with_reweighting, we fit an EBM to predict the single target, then apply reweighting</p>
 <h2 id="params">Params</h2>
 <p>Note: args override ebm_kwargs if there are duplicates
 one_hot_prior: bool
 If True and multitask, the linear model will be fit with a prior that the ebm
-features predicting the target should have coef 1</p></div>
+features predicting the target should have coef 1
+renormalize_features: bool
+If True, renormalize the features before fitting the linear model
+use_normalize_feature_targets: bool
+whether to normalize the features used as targets for internal EBMs
+(does not apply to target columns)
+If input features are normalized already, this has no effect
+use_internal_classifiers: bool
+whether to use internal classifiers (as opposed to regressors)
+fit_target_curves: bool
+whether to fit an EBM to predict the target
+use_single_task_with_reweighting: bool
+fit an EBM to predict the single target, then apply linear reweighting
+use_correlation_screening_for_features: bool
+whether to use correlation screening for features
+fit_linear_frac: float
+If not None, the fraction of features to use for the linear model (the rest are used for the EBM)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -826,7 +1177,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -841,19 +1192,36 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 </dl>
@@ -880,11 +1248,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.algebraic" href="index.html">imodels.algebraic</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="imodels.algebraic.gam_multitask.test_multitask_extraction" href="#imodels.algebraic.gam_multitask.test_multitask_extraction">test_multitask_extraction</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
@@ -892,6 +1255,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="">
 <li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAM.fit" href="#imodels.algebraic.gam_multitask.MultiTaskGAM.fit">fit</a></code></li>
 <li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAM.predict" href="#imodels.algebraic.gam_multitask.MultiTaskGAM.predict">predict</a></code></li>
+<li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAM.predict_proba" href="#imodels.algebraic.gam_multitask.MultiTaskGAM.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAM.set_fit_request" href="#imodels.algebraic.gam_multitask.MultiTaskGAM.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>

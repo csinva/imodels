@@ -28,7 +28,7 @@ mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
 ## Demo notebooks
 
 <details>
-<summary><a href="notebooks/mdi_plus_demo.ipynb">MDI+ demo</a></summary>
+<summary><a href="https://github.com/csinva/imodels/blob/master/notebooks/mdi_plus_demo.ipynb">MDI+ demo</a></summary>
 <ul>
 <li>Shows how to compute MDI+ importance scores for different tasks (regression and classification) and configurations (with flexible GLMs, scoring metrics, and custom transformations).</li>
 <li>Provides starter code on how to choose the GLM and scoring metric within MDI+ via a stability metric and/or combine these fits in an ensemble</li>
@@ -61,7 +61,7 @@ This gives the MDI+ scores for a single tree. To get the MDI+ scores for the for
 
 ## Practical Considerations
 
-We show in [Agarwal et al. (2023)]() that this framework is indeed a proper generalization of the popular MDI feature importance score. However, as a result of the increased flexibility provided by MDI+, there are several choices that must be made by the analyst to run MDI+ in practice. In particular,
+We show in [Agarwal et al. (2023)](https://arxiv.org/abs/2307.01932) that this framework is indeed a proper generalization of the popular MDI feature importance score. However, as a result of the increased flexibility provided by MDI+, there are several choices that must be made by the analyst to run MDI+ in practice. In particular,
 
 1. In Step 1: What feature engineering/transformations to include?
 	- We recommend including the raw feature (i.e., `X`) in this transformed dataset. This is done by default via `RandomForestPlus*(include_raw=True)`. To include additional transformations, create custom `BlockTransformerBase` object(s) and use the `add_transformers` argument in `RandomForestPlus*()`.

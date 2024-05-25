@@ -2,8 +2,7 @@
 <html lang="en">
 
 <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>
+    <!-- <script src="jquery-3.5.1.min.js"></script>-->
     <script type="text/javascript">window.PlotlyConfig = { MathJaxConfig: 'local' };</script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
@@ -489,6 +488,15 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"
         integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
     <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+
+    <link rel="stylesheet" href="https://demos.csinva.io/figs/style.css">
+    <script type="text/javascript">
+        function drawgif() {
+            var wrapper = document.querySelector('svg')
+            wrapper.classList.add('active')
+        }
+    </script>
+
 </head>
 
 <body>
@@ -502,121 +510,171 @@
 
                 <div class="article" style="padding-right: 2%; padding-left: 2%;">
                     <p align="center">
-                    <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> Hierarchical shrinkage:
-                        improving the accuracy and interpretability
-                        of tree-based methods </h1>
-                    <h3 style="color:gray;padding-top:0px;">Abhineet Agarwal*, Yan Shuo Tan*, Omer Ronen, Chandan Singh,
-                        Bin
-                        Yu </h3>
-                    <hr>
+                    <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> MDI+</h1>
                     </p>
+                    <hr>
+                    <nav class="nav">
+                        <!--  <button class="js-reset butt">Reset</button>-->
+                        <!--    <div class="butt disabled"><span class="js-count">0</span>/<span class="js-total">100</div>-->
+                    </nav>
+                    <div id="p5" class="container">
+                        <p class="overlay">Click and drag for more FIGS</p>
+                    </div>
+                    <!-- partial -->
+                    <script src='https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js'></script>
+                    <script src='https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/addons/p5.dom.min.js'></script>
+                    <script src='https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/addons/p5.sound.min.js'></script>
+                    <script src='https://unpkg.com/matter-js@0.14.2/build/matter.min.js'></script>
+                    <script src="https://demos.csinva.io/figs/script.js"></script>
 
-                    <p><a href="https://arxiv.org/abs/2202.00858">📄 Paper (ICML 2022)</a>, <a
-                            href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html">🗂 Doc</a>, <a
-                            href="https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=hierarchical+shrinkage+singh&btnG=&oq=hierar#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3Azc6gtLx-aL4J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌
+                    <p><a href="https://arxiv.org/abs/2202.00858">📄 Paper</a>, <a
+                            href="https://csinva.io/imodels/tree/figs.html#imodels.tree.figs">🗂 Doc</a>, <a
+                            href="https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=fast+interpretable+greedy-tree+sums&oq=fast#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3ADnPVL74Rop0J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌
                             Citation</a></p>
 
-                    Hierarchical shrinkage is an extremely fast post-hoc regularization method which works on any
-                    decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree
-                    structure, and instead regularizes the tree by shrinking the prediction over each node towards the
-                    sample means of its ancestors (using a single regularization parameter). Experiments over a wide
-                    variety of datasets show that hierarchical shrinkage substantially increases the predictive
-                    performance of individual decision trees and decision-tree ensembles.
+                    <h3 style="color:gray;padding-top:0px;">Yan Shuo Tan*, Chandan Singh*, Keyan Nasseri*, Abhineet
+                        Agarwal, James Duncan, Omer Ronen, Aaron Kornblith, Bin Yu</h3>
 
-                    <h2>How does Hierarchical shrinkage work? </h2>
-
-                    <p align="center">
-                        <img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" width="90%">
+                    <p>
+                        Modern machine learning has achieved impressive prediction performance, but often sacrifices
+                        interpretability, a
+                        critical consideration in many problems.
+                        Here, we propose Fast Interpretable Greedy-Tree Sums (FIGS), an algorithm for fitting concise
+                        rule-based
+                        models.
+                        Specifically, FIGS generalizes the CART algorithm to work on sums of trees, growing a flexible
+                        number of
+                        them simultaneously.
+                        The total number of splits across all the trees is restricted by a pre-specified threshold,
+                        which ensures that
+                        FIGS remains interpretable.
+                        Extensive experiments show that FIGS achieves state-of-the-art performance across a wide array
+                        of real-world
+                        datasets when restricted to very few splits (e.g. less than 20).
+                        Theoretical and simulation results suggest that FIGS overcomes a key weakness of single-tree
+                        models by
+                        disentangling additive components of generative additive models, thereby significantly improving
+                        convergence
+                        rates for l2 generalization error.
+                        We further characterize the success of FIGS by quantifying how it reduces repeated splits, which
+                        can lead to
+                        redundancy in single-tree models such as CART.
+                        All code and models are released in a full-fledged package available on Github.
                     </p>
-                    <p align="center">
-                        <i><b>Fig 1.</b> HS applies post-hoc regularization to any decision tree by shrinking each node
-                            towards its parent. This is done after a tree has been trained. The amount of shrinkage can
-                            be varied using a regularization param
-                            (this works best if the parameter is chosen via cross-validation). </i>
-                    </p>
 
-                    <h2>An example using HS</h2>
+                    <h2>How does FIGS work? </h2>
 
-                    HS can be used in the same way as standard scikit-learn models: simply import a classifier or
-                    regressor and use the <code>fit</code> and <code>predict</code> methods.
-                    Here's a full example of using it on a sample clinical dataset.
-
-                    <pre>
-    <code>
-from imodels import HSTreeClassifierCV, get_clean_dataset
-from sklearn.model_selection import train_test_split
-from sklearn.tree import plot_tree
-
-# prepare data (in this a sample clinical dataset)
-X, y, feat_names = get_clean_dataset('csi_pecarn_pred')
-X_train, X_test, y_train, y_test = train_test_split(
-X, y, test_size=0.33, random_state=42)
-
-# fit the model
-model = HSTreeClassifierCV(max_leaf_nodes=7)  # initialize a model
-model.fit(X_train, y_train)   # fit model
-preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
-preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
-
-# visualize the model
-plot_tree(model.estimator_, feature_names=feat_names)
-        </code>
-</pre>
-
-                    Here we used <code>HSTreeClassifierCV</code>, which selects the amount of regularization to use via
-                    cross-validation, but we can also use <code>HSTreeClassifier</code> if we want to specify a
-                    particular amount of regularization.
-                    For regression, we can use the corresponding classes: <code>HSTreeRegressorCV</code> and
-                    <code>HSTreeRegressor</code>.
+                    Intuitively, FIGS works by extending CART, a typical greedy algorithm for growing a decision tree,
+                    to consider growing a <i>sum</i> of trees <i>simultaneously</i> (see Fig 1). At each iteration, FIGS
+                    may grow any existing tree it has already started or start a new tree; it greedily selects whichever
+                    rule reduces the total unexplained variance (or an alternative splitting criterion) the most. To
+                    keep the trees in sync with one another, each tree is made to predict the <i>residuals</i> remaining
+                    after summing the predictions of all other trees.
+                    <br>
+                    <br>
+                    FIGS is intuitively similar to ensemble approaches such as gradient boosting / random forest, but
+                    importantly since all trees are grown to compete with each other the model can adapt more to the
+                    underlying structure in the data. The number of trees and size/shape of each tree emerge
+                    automatically from the data rather than being manually specified.
 
                     <p style="text-align:center;">
                         <a href="https://github.com/csinva/imodels"><img
-                                src="https://demos.csinva.io/shrinkage/shrinkage_csi_model.svg?sanitize=True"
+                                src="https://demos.csinva.io/figs/figs_fitting.gif?sanitize=True" width="90%"></a>
+                        <br>
+                        <b>Fig 1. </b><i>High-level intuition for how FIGS fits a model.</i>
+                    </p>
+
+
+                    <h2>An example using FIGS</h2>
+
+                    FIGS can be used in the same way as standard scikit-learn models: simply import a classifier or
+                    regressor and use the <code>fit</code> and <code>predict</code> methods. Here's a full example of
+                    using it on a sample clinical dataset.
+
+                    <pre>
+        <code>
+    from imodels import FIGSClassifier, get_clean_dataset
+    from sklearn.model_selection import train_test_split
+
+    # prepare data (in this a sample clinical dataset)
+    X, y, feat_names = get_clean_dataset('csi_pecarn_pred')
+    X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.33, random_state=42)
+
+    # fit the model
+    model = FIGSClassifier(max_rules=4)  # initialize a model
+    model.fit(X_train, y_train)   # fit model
+    preds = model.predict(X_test) # discrete predictions: shape is (n_test, 1)
+    preds_proba = model.predict_proba(X_test) # predicted probabilities: shape is (n_test, n_classes)
+
+    # visualize the model
+    model.plot(feature_names=feat_names, filename='out.svg', dpi=300)
+            </code>
+    </pre>
+
+
+                    This results in a simple model -- it contains only 4 splits (since we specified that the model
+                    should have no more than 4 splits (<code>max_rules=4</code>). Predictions are made by summing the
+                    value obtained from the appropriate leaf of each tree. This model is extremely interpretable, as a
+                    physician can now (i) easily make predictions using the 4 relevant features and (ii) vet the model
+                    to ensure it matches their domain expertise. Note that this model is just for illustration purposes,
+                    and achieves ~84% accuracy.
+
+
+                    <p style="text-align:center;">
+                        <a href="https://github.com/csinva/imodels"><img
+                                src="https://demos.csinva.io/figs/figs_csi_model_small.svg?sanitize=True"
+                                width="85%"></a>
+                        <br>
+                        <i><b>Fig 2.</b> Simple model learned by FIGS for predicting risk of cervical spinal injury.
+                        </i>
+                    </p>
+
+                    If we want a more flexible model, we can also remove the constraint on the number of rules (changing
+                    the code to <code>model = FIGSClassifier()</code>), resulting in a larger model (see Fig 3). Note
+                    that the number of trees and how balanced they are emerges from the structure of the data -- only
+                    the total number of rules may be specified.
+
+                    <p style="text-align:center;">
+                        <a href="https://github.com/csinva/imodels"><img
+                                src="https://demos.csinva.io/figs/figs_csi_model_large.svg?sanitize=True"
                                 width="100%"></a>
                         <br>
-                        <i><b>Fig 2.</b> Simple model learned by HS for predicting risk of cervical spinal injury. </i>
+                        <i><b>Fig 3.</b> Slightly larger model learned by FIGS for predicting risk of cervical spinal
+                            injury. </i>
                     </p>
 
-                    <h2>Examples with HS on synthetic data</h2>
-                    <p>See some examples of how hierarchical shrinkage works on one-dimensional functions which are
-                        fitted with a CART decision tree.</p>
-                    <!--    <div class="justify-content-center" align="center">-->
-                    <!--        <div class="col-lg-8">-->
-                    <!--        <h1> Tree shrinkage visualizations </h1>-->
 
-                    <div id="4db2fbb0-073d-492f-8f30-3e9fe37bf9f2" class="plotly-graph-div"
-                        style="height:60%; width:100%;"></div>
-                    <script type="text/javascript" src="https://demos.csinva.io/shrinkage/shrinkage_steps.js"></script>
+                    <h2>Another example of using FIGS</h2>
+                    <p>
+                        Here, we examine the <a
+                            href="https://www.sciencedirect.com/science/article/pii/S0140673671923038">Diabetes
+                            classification dataset</a>, in which eight risk factors were collected and used to predict
+                        the onset of diabetes
+                        within 5 five years. Fitting, several models we find that with very few rules, the model can
+                        achieve excellent
+                        test performance.
+                    </p>
+
+                    <p>
+                        For example, Fig 2 shows a model fitted using the FIGS algorithm which achieves a test-AUC of
+                        0.820 despite
+                        being extremely simple. In this model, each feature contributes independently of the others, and
+                        the final risks
+                        from each of three key features is summed to get a risk for the onset of diabetes (higher is
+                        higher risk). As
+                        opposed to a black-box model, this model is easy to interpret, fast to compute with, and allows
+                        us to vet the
+                        features being used for decision-making.
+                    </p>
+
                     <p style="text-align:center;">
-                        <i><b>Fig 3.</b> Step function. </i>
+                        <img width=60% src="https://demos.csinva.io/figs/diabetes_figs.svg" title="diabetes FIGS"></img>
+                        <br>
+                        <i><b>Fig 2.</b> Simple model learned by <a href="">FIGS</a> for diabetes risk prediction. </i>
                     </p>
-                    <!--        <link rel="stylesheet"-->
-                    <!--              href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-clean-blog/5.0.10/css/clean-blog.min.css">-->
 
-                    <div id="ae4f9428-3c0a-4f94-a17d-6dbbc72c7d38" class="plotly-graph-div"
-                        style="height:60%; width:100%;"></div>
-                    <script type="text/javascript" src="https://demos.csinva.io/shrinkage/shrinkage_linear.js"></script>
-                    <!--        </div>-->
-                    <p style="text-align:center;">
-                        <i><b>Fig 4.</b> Linear function. </i>
-                    </p>
                 </div>
-
-                <h2>Applying HS to tree ensembles</h2>
-
-                HS can also be used on tree ensembles to regularize each tree in an ensemble (e.g. in a Random Forest).
-                We must simply pass the desired estimator during initialization.
-
-                <pre>
-    <code>
-from sklearn.ensemble import RandomForestClassifier # also works with ExtraTreesClassifier, GradientBoostingClassifier
-from imodels import HSTreeClassifier
-ensemble = RandomForestClassifier()
-model = HSTreeClassifier(estimator_=ensemble)
-model = model.fit(X_train, y_train)
-        </code>
-</pre>
-
 
 
             </section>
@@ -655,7 +713,6 @@ model = model.fit(X_train, y_train)
                         </li>
                         <li><a href="https://csinva.io/imodels/mdi_plus.html">MDI+: Flexible tree-based feature
                                 importance</a></li>
-
                     </ul>
                 </li>
                 <li>

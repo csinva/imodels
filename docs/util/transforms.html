@@ -26,6 +26,8 @@
 &#39;&#39;&#39;
 
 import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
+import pandas as pd
 
 
 class Winsorizer():
@@ -45,7 +47,8 @@ class Winsorizer():
         if self.trim_quantile &gt; 0:
             for i_col in np.arange(X.shape[1]):
                 lower = np.percentile(X[:, i_col], self.trim_quantile * 100)
-                upper = np.percentile(X[:, i_col], 100 - self.trim_quantile * 100)
+                upper = np.percentile(
+                    X[:, i_col], 100 - self.trim_quantile * 100)
                 self.winsor_lims[:, i_col] = [lower, upper]
 
     def trim(self, X):
@@ -77,14 +80,84 @@ class FriedScale():
         for i_col in np.arange(X.shape[1]):
             num_uniq_vals = len(np.unique(X[:, i_col]))
             if num_uniq_vals &gt; 2:  # don&#39;t scale binary variables which are effectively already rules
-                scale_multipliers[i_col] = 0.4 / (1.0e-12 + np.std(X_trimmed[:, i_col]))
+                scale_multipliers[i_col] = 0.4 / \
+                    (1.0e-12 + np.std(X_trimmed[:, i_col]))
         self.scale_multipliers = scale_multipliers
 
     def scale(self, X):
         if self.winsorizer != None:
             return self.winsorizer.trim(X) * self.scale_multipliers
         else:
-            return X * self.scale_multipliers</code></pre>
+            return X * self.scale_multipliers
+
+
+class CorrelationScreenTransformer(BaseEstimator, TransformerMixin):
+    &#39;&#39;&#39;Finds correlated features above a magnitude threshold
+    and zeros out all but the first of them
+    &#39;&#39;&#39;
+
+    def __init__(self, threshold=1.0):
+        # Initialize with a correlation threshold
+        self.threshold = threshold
+        self.correlated_feature_sets = []
+
+    def fit(self, X, y=None):
+        # Check if X is a pandas DataFrame; if not, convert it to DataFrame
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+
+        # Calculate the correlation matrix
+        corr_matrix = X.corr().abs()
+
+        # Identify the features that are correlated based on the threshold
+        for i in range(len(corr_matrix.columns)):
+            for j in range(i):
+                if corr_matrix.iloc[i, j] &gt;= self.threshold or corr_matrix.iloc[i, j] &lt;= -self.threshold:
+                    # Find the set this feature belongs to
+                    found_set = False
+                    for feature_set in self.correlated_feature_sets:
+                        if i in feature_set or j in feature_set:
+                            feature_set.update([i, j])
+                            found_set = True
+                            break
+                    if not found_set:
+                        self.correlated_feature_sets.append(set([i, j]))
+
+        # Convert the sets to list of lists where each sublist has indexes to keep and to remove
+        self.to_keep_remove = []
+        for feature_set in self.correlated_feature_sets:
+            feature_list = list(feature_set)
+            # keep the first, remove the rest
+            self.to_keep_remove.append((feature_list[0], feature_list[1:]))
+
+        return self
+
+    def transform(self, X):
+        # Again, check if X is a pandas DataFrame; if not, convert it
+        input_type = type(X)
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+
+        # Set the identified correlated features (except the first) to 0
+        X_transformed = X.copy()
+        for keep, to_remove in self.to_keep_remove:
+            X_transformed.iloc[:, to_remove] = 0
+
+        if input_type == np.ndarray:
+            X_transformed == X_transformed.values
+
+        return X_transformed
+
+
+if __name__ == &#39;__main__&#39;:
+    X = np.random.randn(5, 5)
+    X[:, 0] = [1, 1, 0, 1, 1]
+    X[:, 1] = X[:, 0]
+
+    transformer = CorrelationScreenTransformer()
+    print(X)
+    X_transformed = transformer.fit_transform(X)
+    print(X_transformed)</code></pre>
 </details>
 </section>
 <section>
@@ -96,6 +169,153 @@ class FriedScale():
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="imodels.util.transforms.CorrelationScreenTransformer"><code class="flex name class">
+<span>class <span class="ident">CorrelationScreenTransformer</span></span>
+<span>(</span><span>threshold=1.0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Finds correlated features above a magnitude threshold
+and zeros out all but the first of them</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CorrelationScreenTransformer(BaseEstimator, TransformerMixin):
+    &#39;&#39;&#39;Finds correlated features above a magnitude threshold
+    and zeros out all but the first of them
+    &#39;&#39;&#39;
+
+    def __init__(self, threshold=1.0):
+        # Initialize with a correlation threshold
+        self.threshold = threshold
+        self.correlated_feature_sets = []
+
+    def fit(self, X, y=None):
+        # Check if X is a pandas DataFrame; if not, convert it to DataFrame
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+
+        # Calculate the correlation matrix
+        corr_matrix = X.corr().abs()
+
+        # Identify the features that are correlated based on the threshold
+        for i in range(len(corr_matrix.columns)):
+            for j in range(i):
+                if corr_matrix.iloc[i, j] &gt;= self.threshold or corr_matrix.iloc[i, j] &lt;= -self.threshold:
+                    # Find the set this feature belongs to
+                    found_set = False
+                    for feature_set in self.correlated_feature_sets:
+                        if i in feature_set or j in feature_set:
+                            feature_set.update([i, j])
+                            found_set = True
+                            break
+                    if not found_set:
+                        self.correlated_feature_sets.append(set([i, j]))
+
+        # Convert the sets to list of lists where each sublist has indexes to keep and to remove
+        self.to_keep_remove = []
+        for feature_set in self.correlated_feature_sets:
+            feature_list = list(feature_set)
+            # keep the first, remove the rest
+            self.to_keep_remove.append((feature_list[0], feature_list[1:]))
+
+        return self
+
+    def transform(self, X):
+        # Again, check if X is a pandas DataFrame; if not, convert it
+        input_type = type(X)
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+
+        # Set the identified correlated features (except the first) to 0
+        X_transformed = X.copy()
+        for keep, to_remove in self.to_keep_remove:
+            X_transformed.iloc[:, to_remove] = 0
+
+        if input_type == np.ndarray:
+            X_transformed == X_transformed.values
+
+        return X_transformed</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li>sklearn.base.TransformerMixin</li>
+<li>sklearn.utils._set_output._SetOutputMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.util.transforms.CorrelationScreenTransformer.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y=None):
+    # Check if X is a pandas DataFrame; if not, convert it to DataFrame
+    if not isinstance(X, pd.DataFrame):
+        X = pd.DataFrame(X)
+
+    # Calculate the correlation matrix
+    corr_matrix = X.corr().abs()
+
+    # Identify the features that are correlated based on the threshold
+    for i in range(len(corr_matrix.columns)):
+        for j in range(i):
+            if corr_matrix.iloc[i, j] &gt;= self.threshold or corr_matrix.iloc[i, j] &lt;= -self.threshold:
+                # Find the set this feature belongs to
+                found_set = False
+                for feature_set in self.correlated_feature_sets:
+                    if i in feature_set or j in feature_set:
+                        feature_set.update([i, j])
+                        found_set = True
+                        break
+                if not found_set:
+                    self.correlated_feature_sets.append(set([i, j]))
+
+    # Convert the sets to list of lists where each sublist has indexes to keep and to remove
+    self.to_keep_remove = []
+    for feature_set in self.correlated_feature_sets:
+        feature_list = list(feature_set)
+        # keep the first, remove the rest
+        self.to_keep_remove.append((feature_list[0], feature_list[1:]))
+
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.transforms.CorrelationScreenTransformer.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, X):
+    # Again, check if X is a pandas DataFrame; if not, convert it
+    input_type = type(X)
+    if not isinstance(X, pd.DataFrame):
+        X = pd.DataFrame(X)
+
+    # Set the identified correlated features (except the first) to 0
+    X_transformed = X.copy()
+    for keep, to_remove in self.to_keep_remove:
+        X_transformed.iloc[:, to_remove] = 0
+
+    if input_type == np.ndarray:
+        X_transformed == X_transformed.values
+
+    return X_transformed</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="imodels.util.transforms.FriedScale"><code class="flex name class">
 <span>class <span class="ident">FriedScale</span></span>
 <span>(</span><span>winsorizer=None)</span>
@@ -130,7 +350,8 @@ Warning: this class should not be used directly.</p></div>
         for i_col in np.arange(X.shape[1]):
             num_uniq_vals = len(np.unique(X[:, i_col]))
             if num_uniq_vals &gt; 2:  # don&#39;t scale binary variables which are effectively already rules
-                scale_multipliers[i_col] = 0.4 / (1.0e-12 + np.std(X_trimmed[:, i_col]))
+                scale_multipliers[i_col] = 0.4 / \
+                    (1.0e-12 + np.std(X_trimmed[:, i_col]))
         self.scale_multipliers = scale_multipliers
 
     def scale(self, X):
@@ -177,7 +398,8 @@ Warning: this class should not be used directly.</p></div>
     for i_col in np.arange(X.shape[1]):
         num_uniq_vals = len(np.unique(X[:, i_col]))
         if num_uniq_vals &gt; 2:  # don&#39;t scale binary variables which are effectively already rules
-            scale_multipliers[i_col] = 0.4 / (1.0e-12 + np.std(X_trimmed[:, i_col]))
+            scale_multipliers[i_col] = 0.4 / \
+                (1.0e-12 + np.std(X_trimmed[:, i_col]))
     self.scale_multipliers = scale_multipliers</code></pre>
 </details>
 </dd>
@@ -211,7 +433,8 @@ Warning: this class should not be used directly.</p></div>
         if self.trim_quantile &gt; 0:
             for i_col in np.arange(X.shape[1]):
                 lower = np.percentile(X[:, i_col], self.trim_quantile * 100)
-                upper = np.percentile(X[:, i_col], 100 - self.trim_quantile * 100)
+                upper = np.percentile(
+                    X[:, i_col], 100 - self.trim_quantile * 100)
                 self.winsor_lims[:, i_col] = [lower, upper]
 
     def trim(self, X):
@@ -238,7 +461,8 @@ Warning: this class should not be used directly.</p></div>
     if self.trim_quantile &gt; 0:
         for i_col in np.arange(X.shape[1]):
             lower = np.percentile(X[:, i_col], self.trim_quantile * 100)
-            upper = np.percentile(X[:, i_col], 100 - self.trim_quantile * 100)
+            upper = np.percentile(
+                X[:, i_col], 100 - self.trim_quantile * 100)
             self.winsor_lims[:, i_col] = [lower, upper]</code></pre>
 </details>
 </dd>
@@ -276,6 +500,13 @@ Warning: this class should not be used directly.</p></div>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="imodels.util.transforms.CorrelationScreenTransformer" href="#imodels.util.transforms.CorrelationScreenTransformer">CorrelationScreenTransformer</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.util.transforms.CorrelationScreenTransformer.fit" href="#imodels.util.transforms.CorrelationScreenTransformer.fit">fit</a></code></li>
+<li><code><a title="imodels.util.transforms.CorrelationScreenTransformer.transform" href="#imodels.util.transforms.CorrelationScreenTransformer.transform">transform</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="imodels.util.transforms.FriedScale" href="#imodels.util.transforms.FriedScale">FriedScale</a></code></h4>
 <ul class="">

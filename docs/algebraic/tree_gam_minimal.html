@@ -23,24 +23,18 @@
 </summary>
 <pre><code class="python">from copy import deepcopy
 import numpy as np
-import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.utils.validation import check_is_fitted
 from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets
-from sklearn.utils.validation import check_X_y
-from sklearn.utils.validation import _check_sample_weight
+from sklearn.utils.validation import check_X_y, check_is_fitted, _check_sample_weight
 from sklearn.model_selection import train_test_split
+from sklearn.base import RegressorMixin, ClassifierMixin
 from sklearn.metrics import accuracy_score, roc_auc_score
-from tqdm import tqdm
-
 import imodels
 
-from sklearn.base import RegressorMixin, ClassifierMixin
 
-
-class TreeGAMSimple(BaseEstimator):
+class TreeGAMMinimal(BaseEstimator):
     &#34;&#34;&#34;Tree-based GAM classifier.
     Uses cyclical boosting to fit a GAM with small trees.
     Simplified version of the explainable boosting machine described in https://github.com/interpretml/interpret
@@ -131,7 +125,8 @@ class TreeGAMSimple(BaseEstimator):
         for _ in range(self.n_boosting_rounds):
             boosting_round_ests = []
             boosting_round_mses = []
-            for feature_num in range(X_train.shape[1]):
+            feature_nums = np.arange(X_train.shape[1])
+            for feature_num in feature_nums:
                 X_ = np.zeros_like(X_train)
                 X_[:, feature_num] = X_train[:, feature_num]
                 est = DecisionTreeRegressor(
@@ -171,6 +166,7 @@ class TreeGAMSimple(BaseEstimator):
             # early stopping if validation error does not decrease
             mse_val_new = self._calc_mse(X_val, y_val, sample_weight_val)
             if mse_val_new &gt;= mse_val:
+                # print(&#34;early stop!&#34;)
                 return
             else:
                 mse_val = mse_val_new
@@ -180,7 +176,7 @@ class TreeGAMSimple(BaseEstimator):
         check_is_fitted(self)
         probs1 = np.ones(X.shape[0]) * self.bias_
         for i, est in enumerate(self.estimators_):
-            probs1 += est.predict(X) * self.learning_rate
+            probs1 += self.learning_rate * est.predict(X)
         probs1 = np.clip(probs1, a_min=0, a_max=1)
         return np.array([1 - probs1, probs1]).T
 
@@ -197,18 +193,18 @@ class TreeGAMSimple(BaseEstimator):
         )
 
 
-class TreeGAMSimpleRegressor(TreeGAMSimple, RegressorMixin):
+class TreeGAMMinimalRegressor(TreeGAMMinimal, RegressorMixin):
     ...
 
 
-class TreeGAMSimpleClassifier(TreeGAMSimple, ClassifierMixin):
+class TreeGAMMinimalClassifier(TreeGAMMinimal, ClassifierMixin):
     ...
 
 
 if __name__ == &#34;__main__&#34;:
     X, y, feature_names = imodels.get_clean_dataset(&#34;heart&#34;)
     X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-    gam = TreeGAMSimpleClassifier(
+    gam = TreeGAMMinimalClassifier(
         boosting_strategy=&#34;cyclic&#34;,
         random_state=42,
         learning_rate=0.1,
@@ -219,13 +215,23 @@ if __name__ == &#34;__main__&#34;:
 
     # check roc auc score
     y_pred = gam.predict_proba(X_test)[:, 1]
-    print(
-        &#34;train roc:&#34;,
-        roc_auc_score(y_train, gam.predict_proba(X)[:, 1]).round(3),
-    )
-    print(&#34;test roc:&#34;, roc_auc_score(y_test, y_pred).round(3))
-    print(&#34;test acc:&#34;, accuracy_score(y_test, gam.predict(X_test)).round(3))
-    print(&#39;\t(imb:&#39;, np.mean(y_test).round(3), &#39;)&#39;)</code></pre>
+    # print(
+    #     &#34;train roc:&#34;,
+    #     roc_auc_score(y_train, gam.predict_proba(X)[:, 1]).round(3),
+    # )
+    print(f&#34;test roc: {roc_auc_score(y_test, y_pred):.3f}&#34;)
+    print(f&#34;test acc {accuracy_score(y_test, gam.predict(X_test)):.3f}&#34;)
+    print(&#39;\t(imb:&#39;, np.mean(y_test).round(3), &#39;)&#39;)
+    # print(
+    #     &#34;accs&#34;,
+    #     accuracy_score(y_train, gam.predict(X)).round(3),
+    #     accuracy_score(y_test, gam.predict(X_test)).round(3),
+    #     &#34;imb&#34;,
+    #     np.mean(y_train).round(3),
+    #     np.mean(y_test).round(3),
+    # )
+
+    # # print(gam.estimators_)</code></pre>
 </details>
 </section>
 <section>
@@ -237,8 +243,8 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="imodels.experimental.tree_gam_simple.TreeGAMSimple"><code class="flex name class">
-<span>class <span class="ident">TreeGAMSimple</span></span>
+<dt id="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal"><code class="flex name class">
+<span>class <span class="ident">TreeGAMMinimal</span></span>
 <span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, learning_rate: float = 0.01, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
 </code></dt>
 <dd>
@@ -264,7 +270,7 @@ Random seed.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TreeGAMSimple(BaseEstimator):
+<pre><code class="python">class TreeGAMMinimal(BaseEstimator):
     &#34;&#34;&#34;Tree-based GAM classifier.
     Uses cyclical boosting to fit a GAM with small trees.
     Simplified version of the explainable boosting machine described in https://github.com/interpretml/interpret
@@ -355,7 +361,8 @@ Random seed.</p></div>
         for _ in range(self.n_boosting_rounds):
             boosting_round_ests = []
             boosting_round_mses = []
-            for feature_num in range(X_train.shape[1]):
+            feature_nums = np.arange(X_train.shape[1])
+            for feature_num in feature_nums:
                 X_ = np.zeros_like(X_train)
                 X_[:, feature_num] = X_train[:, feature_num]
                 est = DecisionTreeRegressor(
@@ -395,6 +402,7 @@ Random seed.</p></div>
             # early stopping if validation error does not decrease
             mse_val_new = self._calc_mse(X_val, y_val, sample_weight_val)
             if mse_val_new &gt;= mse_val:
+                # print(&#34;early stop!&#34;)
                 return
             else:
                 mse_val = mse_val_new
@@ -404,7 +412,7 @@ Random seed.</p></div>
         check_is_fitted(self)
         probs1 = np.ones(X.shape[0]) * self.bias_
         for i, est in enumerate(self.estimators_):
-            probs1 += est.predict(X) * self.learning_rate
+            probs1 += self.learning_rate * est.predict(X)
         probs1 = np.clip(probs1, a_min=0, a_max=1)
         return np.array([1 - probs1, probs1]).T
 
@@ -428,12 +436,12 @@ Random seed.</p></div>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier" href="#imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier">TreeGAMSimpleClassifier</a></li>
-<li><a title="imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor" href="#imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor">TreeGAMSimpleRegressor</a></li>
+<li><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier">TreeGAMMinimalClassifier</a></li>
+<li><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor">TreeGAMMinimalRegressor</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.experimental.tree_gam_simple.TreeGAMSimple.fit"><code class="name flex">
+<dt id="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
 </code></dt>
 <dd>
@@ -484,7 +492,7 @@ Random seed.</p></div>
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.experimental.tree_gam_simple.TreeGAMSimple.predict"><code class="name flex">
+<dt id="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -500,7 +508,7 @@ Random seed.</p></div>
         return np.argmax(self.predict_proba(X), axis=1)</code></pre>
 </details>
 </dd>
-<dt id="imodels.experimental.tree_gam_simple.TreeGAMSimple.predict_proba"><code class="name flex">
+<dt id="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.predict_proba"><code class="name flex">
 <span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
@@ -514,13 +522,13 @@ Random seed.</p></div>
     check_is_fitted(self)
     probs1 = np.ones(X.shape[0]) * self.bias_
     for i, est in enumerate(self.estimators_):
-        probs1 += est.predict(X) * self.learning_rate
+        probs1 += self.learning_rate * est.predict(X)
     probs1 = np.clip(probs1, a_min=0, a_max=1)
     return np.array([1 - probs1, probs1]).T</code></pre>
 </details>
 </dd>
-<dt id="imodels.experimental.tree_gam_simple.TreeGAMSimple.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.experimental.tree_gam_simple.TreeGAMSimple" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple">TreeGAMSimple</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.experimental.tree_gam_simple.TreeGAMSimple" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple">TreeGAMSimple</a></span>
+<dt id="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal">TreeGAMMinimal</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal">TreeGAMMinimal</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
@@ -619,8 +627,8 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 </dl>
 </dd>
-<dt id="imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier"><code class="flex name class">
-<span>class <span class="ident">TreeGAMSimpleClassifier</span></span>
+<dt id="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier"><code class="flex name class">
+<span>class <span class="ident">TreeGAMMinimalClassifier</span></span>
 <span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, learning_rate: float = 0.01, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
 </code></dt>
 <dd>
@@ -646,12 +654,12 @@ Random seed.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TreeGAMSimpleClassifier(TreeGAMSimple, ClassifierMixin):
+<pre><code class="python">class TreeGAMMinimalClassifier(TreeGAMMinimal, ClassifierMixin):
     ...</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.experimental.tree_gam_simple.TreeGAMSimple" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple">TreeGAMSimple</a></li>
+<li><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal">TreeGAMMinimal</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
@@ -659,8 +667,8 @@ Random seed.</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier" href="#imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier">TreeGAMSimpleClassifier</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier" href="#imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier">TreeGAMSimpleClassifier</a></span>
+<dt id="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier">TreeGAMMinimalClassifier</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier">TreeGAMMinimalClassifier</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
@@ -760,15 +768,15 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="imodels.experimental.tree_gam_simple.TreeGAMSimple" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple">TreeGAMSimple</a></b></code>:
+<li><code><b><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal">TreeGAMMinimal</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.experimental.tree_gam_simple.TreeGAMSimple.set_fit_request" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.set_fit_request" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor"><code class="flex name class">
-<span>class <span class="ident">TreeGAMSimpleRegressor</span></span>
+<dt id="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor"><code class="flex name class">
+<span>class <span class="ident">TreeGAMMinimalRegressor</span></span>
 <span>(</span><span>n_boosting_rounds=100, max_leaf_nodes=3, learning_rate: float = 0.01, boosting_strategy='cyclic', validation_frac=0.15, random_state=None)</span>
 </code></dt>
 <dd>
@@ -794,12 +802,12 @@ Random seed.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TreeGAMSimpleRegressor(TreeGAMSimple, RegressorMixin):
+<pre><code class="python">class TreeGAMMinimalRegressor(TreeGAMMinimal, RegressorMixin):
     ...</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="imodels.experimental.tree_gam_simple.TreeGAMSimple" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple">TreeGAMSimple</a></li>
+<li><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal">TreeGAMMinimal</a></li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
@@ -807,8 +815,8 @@ Random seed.</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor" href="#imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor">TreeGAMSimpleRegressor</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor" href="#imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor">TreeGAMSimpleRegressor</a></span>
+<dt id="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor">TreeGAMMinimalRegressor</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor">TreeGAMMinimalRegressor</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
@@ -908,9 +916,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="imodels.experimental.tree_gam_simple.TreeGAMSimple" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple">TreeGAMSimple</a></b></code>:
+<li><code><b><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal">TreeGAMMinimal</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.experimental.tree_gam_simple.TreeGAMSimple.set_fit_request" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.set_fit_request" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -926,30 +934,30 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.experimental" href="index.html">imodels.experimental</a></code></li>
+<li><code><a title="imodels.algebraic" href="index.html">imodels.algebraic</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="imodels.experimental.tree_gam_simple.TreeGAMSimple" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple">TreeGAMSimple</a></code></h4>
+<h4><code><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal">TreeGAMMinimal</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.experimental.tree_gam_simple.TreeGAMSimple.fit" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple.fit">fit</a></code></li>
-<li><code><a title="imodels.experimental.tree_gam_simple.TreeGAMSimple.predict" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple.predict">predict</a></code></li>
-<li><code><a title="imodels.experimental.tree_gam_simple.TreeGAMSimple.predict_proba" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.experimental.tree_gam_simple.TreeGAMSimple.set_fit_request" href="#imodels.experimental.tree_gam_simple.TreeGAMSimple.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.fit" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.fit">fit</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.predict" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.predict">predict</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.predict_proba" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.set_fit_request" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimal.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier" href="#imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier">TreeGAMSimpleClassifier</a></code></h4>
+<h4><code><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier">TreeGAMMinimalClassifier</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier.set_score_request" href="#imodels.experimental.tree_gam_simple.TreeGAMSimpleClassifier.set_score_request">set_score_request</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier.set_score_request" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimalClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor" href="#imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor">TreeGAMSimpleRegressor</a></code></h4>
+<h4><code><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor">TreeGAMMinimalRegressor</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor.set_score_request" href="#imodels.experimental.tree_gam_simple.TreeGAMSimpleRegressor.set_score_request">set_score_request</a></code></li>
+<li><code><a title="imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor.set_score_request" href="#imodels.algebraic.tree_gam_minimal.TreeGAMMinimalRegressor.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
 </ul>
