@@ -92,7 +92,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | More models                 | ⌛                                                            | (Coming soon!) Lightweight Rule Induction, MLRules, ... |
 
 <p align="center">
-Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementation 🔗, Research paper 📄
+<a href="https://csinva.io/imodels/">🗂️</a> Docs &emsp; 🔗 Reference code implementation &emsp;  📄 Research paper
 </br>
 </p>
 
