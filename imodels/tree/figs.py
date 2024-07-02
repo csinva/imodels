@@ -160,7 +160,8 @@ class FIGS(BaseEstimator):
         RIGHT = 2
 
         # fit stump
-        stump = tree.DecisionTreeRegressor(max_depth=1, max_features=max_features)
+        stump = tree.DecisionTreeRegressor(
+            max_depth=1, max_features=max_features)
         sweight = None
         if sample_weight is not None:
             sweight = sample_weight[idxs]
@@ -286,7 +287,8 @@ class FIGS(BaseEstimator):
         potential_splits = [node_init]
         for node in potential_splits:
             node.setattrs(is_root=True)
-        potential_splits = sorted(potential_splits, key=lambda x: x.impurity_reduction)
+        potential_splits = sorted(
+            potential_splits, key=lambda x: x.impurity_reduction)
 
         # start the greedy fitting algorithm
         finished = False
@@ -332,7 +334,8 @@ class FIGS(BaseEstimator):
             # add children to potential splits
             # assign left_temp, right_temp to be proper children
             # (basically adds them to tree in predict method)
-            split_node.setattrs(left=split_node.left_temp, right=split_node.right_temp)
+            split_node.setattrs(left=split_node.left_temp,
+                                right=split_node.right_temp)
 
             # add children to potential_splits
             potential_splits.append(split_node.left)
@@ -423,7 +426,8 @@ class FIGS(BaseEstimator):
 
                 value_sklearn = np.array([neg_count, pos_count], dtype=float)
 
-                node.setattrs(node_id=next(node_counter), value_sklearn=value_sklearn)
+                node.setattrs(node_id=next(node_counter),
+                              value_sklearn=value_sklearn)
 
                 idxs_left = X[:, node.feature] <= node.threshold
                 _annotate_node(node.left, X[idxs_left], y[idxs_left])
@@ -491,7 +495,8 @@ class FIGS(BaseEstimator):
             + root.print_root(y)
             + "\n"
             + self._tree_to_str_with_data(X[left], y[left], root.left, pprefix)
-            + self._tree_to_str_with_data(X[~left], y[~left], root.right, pprefix)
+            + self._tree_to_str_with_data(X[~left],
+                                          y[~left], root.right, pprefix)
         )
 
     def __str__(self):
@@ -528,7 +533,8 @@ class FIGS(BaseEstimator):
 
     def predict(self, X, categorical_features=None):
         if hasattr(self, "_encoder"):
-            X = self._encode_categories(X, categorical_features=categorical_features)
+            X = self._encode_categories(
+                X, categorical_features=categorical_features)
         X = check_array(X)
         preds = np.zeros(X.shape[0])
         for tree in self.trees_:
@@ -536,7 +542,8 @@ class FIGS(BaseEstimator):
         if isinstance(self, RegressorMixin):
             return preds
         elif isinstance(self, ClassifierMixin):
-            return (preds > 0.5).astype(int)
+            class_preds = (preds > 0.5).astype(int)
+            return np.array([self.classes_[i] for i in class_preds])
 
     def predict_proba(self, X, categorical_features=None, use_clipped_prediction=False):
         """Predict probability for classifiers:
@@ -544,7 +551,8 @@ class FIGS(BaseEstimator):
         Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.
         """
         if hasattr(self, "_encoder"):
-            X = self._encode_categories(X, categorical_features=categorical_features)
+            X = self._encode_categories(
+                X, categorical_features=categorical_features)
         X = check_array(X)
         if isinstance(self, RegressorMixin):
             return NotImplemented
@@ -684,8 +692,10 @@ class FIGSCV:
     def fit(self, X, y):
         self.scores_ = []
         for _i, n_rules in enumerate(self.n_rules_list):
-            est = self._figs_class(max_rules=n_rules, max_trees=self.n_trees_list[_i])
-            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            est = self._figs_class(
+                max_rules=n_rules, max_trees=self.n_trees_list[_i])
+            cv_scores = cross_val_score(
+                est, X, y, cv=self.cv, scoring=self.scoring)
             mean_score = np.mean(cv_scores)
             if len(self.scores_) == 0:
                 self.figs = est

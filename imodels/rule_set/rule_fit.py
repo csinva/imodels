@@ -106,6 +106,9 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
         """
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        if isinstance(self, ClassifierMixin) and len(np.unique(y)) > 2:
+            raise ValueError(
+                "RuleFit does not yet support multiclass classification")
 
         self.n_features_ = X.shape[1]
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
@@ -153,7 +156,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         if isinstance(self, RegressorMixin):
             return self._predict_continuous_output(X)
         else:
-            return np.argmax(self.predict_proba(X), axis=1)
+            class_preds = np.argmax(self.predict_proba(X), axis=1)
+            return np.array([self.classes_[i] for i in class_preds])
 
     def predict_proba(self, X):
         check_is_fitted(self)
@@ -184,7 +188,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         X_transformed = np.zeros((X.shape[0], len(rules)))
 
         for i, r in enumerate(rules):
-            features_r_uses = list(set(term.split(' ')[0] for term in r.split(' and ')))
+            features_r_uses = list(
+                set(term.split(' ')[0] for term in r.split(' and ')))
             # print('r', r)
             # print('feats', df[features_r_uses])
             # print('ans', df[features_r_uses].query(r))
