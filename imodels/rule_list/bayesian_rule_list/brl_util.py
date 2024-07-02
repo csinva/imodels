@@ -1,6 +1,6 @@
-#######Supplement for "Interpretable classifiers using rules and Bayesian analysis: Building a better stroke prediction model."
+# Supplement for "Interpretable classifiers using rules and Bayesian analysis: Building a better stroke prediction model."
 
-###LICENSE
+# LICENSE
 #
 # This software is released under the MIT license.
 #
@@ -26,7 +26,7 @@
 #
 # The author/copyright holder can be contacted at bletham@mit.edu
 
-####README
+# README
 # It is specific to binary classification with binary features (although could
 # easily be extended to multiclass).
 #
@@ -60,6 +60,7 @@ import time
 from collections import defaultdict
 
 from numpy import *
+import numpy
 from scipy.special import gammaln
 from scipy.stats import poisson, beta
 
@@ -69,7 +70,7 @@ except:
     pass
 
 
-###############BRL
+# BRL
 
 
 def default_permsdic():
@@ -111,7 +112,7 @@ def run_bdl_multichain_serial(numiters, thinning, alpha, lbda, eta, X, Y, nrules
 
     if verbose:
         print('Rhat for convergence:', Rhat)
-    ##plot?
+    # plot?
     # plot_chains(res)
     return res, Rhat
 
@@ -124,7 +125,8 @@ def mcmcchain(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, ma
     permsdic, res['perms'] = bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs,
                                           permsdic, burnin, None, d_init)
     # Store the permsdic results
-    res['permsdic'] = {perm: list(vals) for perm, vals in permsdic.items() if vals[1] > 0}
+    res['permsdic'] = {perm: list(vals)
+                       for perm, vals in permsdic.items() if vals[1] > 0}
     # Reset the permsdic
     permsdic = reset_permsdic(permsdic)
     return res
@@ -142,7 +144,8 @@ def gelmanrubin(res):
             phi_bar_j[chain] += val[1] * val[0]  # numsamples*log posterior
             n += val[1]
     # And _normalize
-    n = n // m  # Number of samples per chain (assuming all m chains have same number of samples)
+    # Number of samples per chain (assuming all m chains have same number of samples)
+    n = n // m
     # Normalize, and compute phi_bar
     phi_bar = 0.
     for chain in phi_bar_j:
@@ -209,7 +212,8 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
         d_t = Pickle.loads(perm)  # , encoding='bytes')
 
         listlens.extend([len(d_t)] * int(permsdic[perm][1]))
-        rulesizes.extend([lhs_len[j] for j in d_t[:-1]] * int(permsdic[perm][1]))
+        rulesizes.extend([lhs_len[j]
+                         for j in d_t[:-1]] * int(permsdic[perm][1]))
 
     # Now compute average
     avglistlen = average(listlens)
@@ -256,7 +260,7 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
     return d_star
 
 
-#################COMPUTING RESULTS
+# COMPUTING RESULTS
 def get_rule_rhs(Xtrain, Ytrain, d_t, alpha, intervals):
     '''Compute the posterior consequent distributions
     (Basically compute points in each part of rule)
@@ -272,7 +276,8 @@ def get_rule_rhs(Xtrain, Ytrain, d_t, alpha, intervals):
         theta.append((N_t[i, 1] + alpha[1]) / float(sum(N_t[i, :] + alpha)))
         # And now the 95% interval, for Beta(n_rules[j,1] + alpha[1], n_rules[j,0] + alpha[0])
         if intervals:
-            ci_theta.append(beta.interval(0.95, N_t[i, 1] + alpha[1], N_t[i, 0] + alpha[0]))
+            ci_theta.append(beta.interval(
+                0.95, N_t[i, 1] + alpha[1], N_t[i, 0] + alpha[0]))
     return theta, ci_theta
 
 
@@ -283,7 +288,8 @@ def preds_d_t(X, Y, d_t, theta):
     unused = set(range(Y.shape[0]))
     preds = -1 * ones(Y.shape[0])
     for i, j in enumerate(d_t):
-        usedj = unused.intersection(X[j])  # these are the observations in X that make it to rule j
+        # these are the observations in X that make it to rule j
+        usedj = unused.intersection(X[j])
         preds[list(usedj)] = theta[i]
         unused = unused.difference(set(usedj))
     if preds.min() < 0:
@@ -291,7 +297,7 @@ def preds_d_t(X, Y, d_t, theta):
     return preds
 
 
-##############MCMC core 
+# MCMC core
 def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, rseed,
                  d_init):
     '''Run Metropolis-Hastings algorithm
@@ -302,8 +308,10 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
         random.seed(rseed)
 
     # Do some pre-computation for the prior
-    beta_Z, logalpha_pmf, logbeta_pmf = prior_calculations(lbda, len(X), eta, maxlhs)
-    if d_init:  # If we want to begin our chain at a specific place (e.g. to continue a chain)
+    beta_Z, logalpha_pmf, logbeta_pmf = prior_calculations(
+        lbda, len(X), eta, maxlhs)
+    # If we want to begin our chain at a specific place (e.g. to continue a chain)
+    if d_init:
         d_t = Pickle.loads(d_init)
         d_t.extend([i for i in range(len(X)) if i not in d_t])
         R_t = d_t.index(0)
@@ -340,7 +348,7 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
             a_t = a_star
             # else: pass
         if itr > burnin and itr % thinning == 0:
-            ##store
+            # store
             permsdic[a_t][1] += 1
             perms.append(a_t)
     return permsdic, perms
@@ -349,9 +357,10 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
 def initialize_d(X, Y, lbda, eta, lhs_len, maxlhs, nruleslen):
     '''Samples a list from the prior
     '''
-    m = Inf
+    m = numpy.Inf
     while m >= len(X):
-        m = poisson.rvs(lbda)  # sample the length of the list from Poisson(lbda), truncated at len(X)
+        # sample the length of the list from Poisson(lbda), truncated at len(X)
+        m = poisson.rvs(lbda)
     # prepare the list
     d_t = []
     empty_rulelens = [r for r in range(1, maxlhs + 1) if r not in nruleslen]
@@ -363,7 +372,8 @@ def initialize_d(X, Y, lbda, eta, lhs_len, maxlhs, nruleslen):
             r = poisson.rvs(
                 eta)  # Sample the rule size from Poisson(eta), truncated at 0 and maxlhs and not using empty rule lens
         # Now sample a rule of that size uniformly at random
-        rule_cands = [j for j, lhslen in enumerate(lhs_len) if lhslen == r and j not in used_rules]
+        rule_cands = [j for j, lhslen in enumerate(
+            lhs_len) if lhslen == r and j not in used_rules]
         random.shuffle(rule_cands)
         j = rule_cands[0]
         # And add it in
@@ -395,7 +405,8 @@ def proposal(d_t, R_t, X, Y, alpha):
         move_probs = array([0., 1., 0.])
         # This is an add transition. The probability of the reverse cut move is the prob of a list of len 1 having
         # a cut (other option for list of len 1 is an add).
-        Jratios = array([0., move_probs_default[2] / float(move_probs_default[1] + move_probs_default[2]), 0.])
+        Jratios = array([0., move_probs_default[2] /
+                        float(move_probs_default[1] + move_probs_default[2]), 0.])
     elif R_t == 1:
         # List has one rule on it. We cannot move, must add or cut.
         move_probs = array(move_probs_default)  # copy
@@ -405,7 +416,8 @@ def proposal(d_t, R_t, X, Y, alpha):
         # If cut, probability of the reverse add is 1.
         inv_move_probs = array([0., move_probs_default[2], 1.])
         Jratios = zeros_like(move_probs)
-        Jratios[1:] = inv_move_probs[1:] / move_probs[1:]  # array elementwise division
+        Jratios[1:] = inv_move_probs[1:] / \
+            move_probs[1:]  # array elementwise division
     elif R_t == len(d_t) - 1:
         # List has all rules on it. We cannot add, must move or cut.
         move_probs = array(move_probs_default)  # copy
@@ -425,13 +437,15 @@ def proposal(d_t, R_t, X, Y, alpha):
             move_probs_default[1]), move_probs_default[1] / float(move_probs_default[2])])
     else:
         move_probs = array(move_probs_default)
-        Jratios = array([1., move_probs[2] / float(move_probs[1]), move_probs[1] / float(move_probs[2])])
+        Jratios = array([1., move_probs[2] / float(move_probs[1]),
+                        move_probs[1] / float(move_probs[2])])
     u = random.random()
     # First we will find the indices for the insertion-deletion. indx1 is the item to be moved, indx2 is the new location
     if u < sum(move_probs[:1]):
         # This is an on-list move.
         step = 'move'
-        [indx1, indx2] = random.permutation(range(len(d_t[:R_t])))[:2]  # value error if there are no on list entries
+        # value error if there are no on list entries
+        [indx1, indx2] = random.permutation(range(len(d_t[:R_t])))[:2]
         # print 'move',indx1,indx2
         Jratio = Jratios[0]  # ratio of move/move probabilities is 1.
     elif u < sum(move_probs[:2]):
@@ -439,7 +453,8 @@ def proposal(d_t, R_t, X, Y, alpha):
         step = 'add'
         indx1 = R_t + 1 + random.randint(0, len(
             d_t[R_t + 1:]))  # this will throw ValueError if there are no off list entries
-        indx2 = random.randint(0, len(d_t[:R_t + 1]))  # this one will always work
+        # this one will always work
+        indx2 = random.randint(0, len(d_t[:R_t + 1]))
         # print 'add',indx1,indx2
         # the probability of going from d_star back to d_t is the probability of the corresponding cut.
         # p(d*->d|cut) = 1/|d*| = 1/(|d|+1) = 1./float(R_t+1)
@@ -449,8 +464,10 @@ def proposal(d_t, R_t, X, Y, alpha):
     elif u < sum(move_probs[:3]):
         # this is a cut
         step = 'cut'
-        indx1 = random.randint(0, len(d_t[:R_t]))  # this will throw ValueError if there are no on list entries
-        indx2 = R_t + random.randint(0, len(d_t[R_t:]))  # this one will always work
+        # this will throw ValueError if there are no on list entries
+        indx1 = random.randint(0, len(d_t[:R_t]))
+        # this one will always work
+        indx2 = R_t + random.randint(0, len(d_t[R_t:]))
         # print 'cut',indx1,indx2
         # the probability of going from d_star back to d_t is the probability of the corresponding add.
         # p(d*->d|add) = 1/((|a|-|d*|)(|d*|+1)) = 1/((|a|-|d|+1)(|d|))
@@ -487,7 +504,8 @@ def fn_logposterior(d_t, R_t, N_t, alpha, logalpha_pmf, logbeta_pmf, maxlhs, bet
     '''# Compute log posterior
     '''
     loglikelihood = fn_loglikelihood(d_t, N_t, R_t, alpha)
-    logprior = fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len)
+    logprior = fn_logprior(d_t, R_t, logalpha_pmf,
+                           logbeta_pmf, maxlhs, beta_Z, nruleslen, lhs_len)
     return loglikelihood + logprior
 
 
