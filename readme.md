@@ -11,15 +11,13 @@
 <p align="center">
   <img src="https://img.shields.io/badge/license-mit-blue.svg">
   <img src="https://img.shields.io/badge/python-3.9--3.11-blue">
+  <img src="https://img.shields.io/badge/numpy-<2.0-blue">
   <a href="https://doi.org/10.21105/joss.03192"><img src="https://joss.theoj.org/papers/10.21105/joss.03192/status.svg"></a>
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
   <!--img src="https://img.shields.io/github/checks-status/csinva/imodels/master"-->
   <img src="https://img.shields.io/pypi/v/imodels?color=orange">
   <img src="https://static.pepy.tech/personalized-badge/imodels?period=total&units=none&left_color=gray&right_color=orange&left_text=downloads&kill_cache=12">
 </p>  
-
-
-
 
 
 <img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img>

@@ -9,7 +9,7 @@ with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
 required_pypi = [
     'matplotlib',
     'mlxtend>=0.18.0',  # some lower versions are missing fpgrowth
-    'numpy',
+    'numpy<2.0.0',
     'pandas',  # tested with pandas 2.2.2
     'requests',  # used in c4.5
     'scipy',
