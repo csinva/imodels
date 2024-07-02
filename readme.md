@@ -86,13 +86,13 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | Tree GAM | [🗂️](https://csinva.io/imodels/algebraic/tree_gam.html), [🔗](https://github.com/interpretml/interpret), [📄](https://dl.acm.org/doi/abs/10.1145/2339530.2339556) | Generalized additive model fit with short boosted trees                           |
 | <b>Greedy tree</br>sums (FIGS)</b> | [🗂️](https://csinva.io/imodels/figs.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://arxiv.org/abs/2201.11931) | Sum of small trees with very few total rules (FIGS)                          |
 | <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/shrinkage.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://arxiv.org/abs/2202.00858) | Improve a decision tree, random forest, or<br/>gradient-boosting ensemble with ultra-fast, post-hoc regularization |
-| <b>MDI+</b> | [🗂️](https://csinva.io/imodels/mdi_plus.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://arxiv.org/pdf/2307.01932) | Flexible random forest-based<br/>feature importance |
+| <b>RF+ (MDI+)</b> | [🗂️](https://csinva.io/imodels/mdi_plus.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://arxiv.org/pdf/2307.01932) | Flexible random forest-based feature importance |
 | Distillation<br/>wrapper | [🗂️](https://csinva.io/imodels/util/distillation.html)  | Train a black-box model,<br/>then distill it into an interpretable model |
 | AutoML wrapper | [🗂️](https://csinva.io/imodels/util/automl.html)  | Automatically fit and select an interpretable model |
 | More models                 | ⌛                                                            | (Coming soon!) Lightweight Rule Induction, MLRules, ... |
 
 <p align="center">
-Docs <a href="https://csinva.io/imodels/">🗂️</a>, Reference code implementation 🔗, Research paper 📄
+<a href="https://csinva.io/imodels/">🗂️</a> Docs &emsp; 🔗 Reference code implementation &emsp;  📄 Research paper
 </br>
 </p>
 
