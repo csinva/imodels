@@ -3,7 +3,10 @@ from warnings import warn
 
 import pandas as pd
 import numpy as np
-from sklearn.utils._mask import indices_to_mask
+try:
+    from sklearn.utils._mask import indices_to_mask
+except:
+    from sklearn.utils import indices_to_mask
 from sklearn.linear_model import Lasso, LogisticRegression
 from sklearn.linear_model._coordinate_descent import _alpha_grid
 from sklearn.model_selection import cross_val_score
