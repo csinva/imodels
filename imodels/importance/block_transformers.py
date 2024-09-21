@@ -61,48 +61,63 @@ class BlockPartitionedData:
             stop_index = start_index + self._common_block.shape[1]
             self._common_block_indices = list(range(start_index, stop_index))
 
-    def get_block_indices(self, k):
+    def get_block_indices(self, k, keep_idxs=None):
         """
 
         Parameters
         ----------
         k: int
             The index of the feature block desired
+        keep_idxs: list of int or None
+            The indices of the features to keep in the block. If None, all
+            features in the block are returned.
 
         Returns
         -------
         block_indices: list of int
             The indices of the features in the desired block
         """
-        block_indices = self._common_block_indices + self._block_indices_dict[k]
+        if keep_idxs is None:
+            block_indices = self._block_indices_dict[k]
+        else:
+            block_indices = [self._block_indices_dict[k][idx] for idx in keep_idxs[k]]
+        block_indices = self._common_block_indices + block_indices
         return block_indices
 
-    def get_block(self, k):
+    def get_block(self, k, keep_idxs=None):
         """
 
         Parameters
         ----------
         k: int
             The index of the feature block desired
+        keep_idxs: list of int or None
+            The indices of the features to keep in the block. If None, all
+            features in the block are returned.
 
         Returns
         -------
         block: ndarray
             The feature block desired
         """
-        if self._common_block is None:
+        if keep_idxs is None:
             block = self._data_blocks[k]
         else:
-            block = np.hstack([self._common_block, self._data_blocks[k]])
+            block = self._data_blocks[k][:, keep_idxs[k]]
+        if self._common_block is not None:
+            block = np.hstack([self._common_block, block])
         return block
 
-    def get_all_except_block_indices(self, k):
+    def get_all_except_block_indices(self, k, keep_idxs=None):
         """
 
         Parameters
         ----------
         k: int
             The index of the feature block not desired
+        keep_idxs: list of int or None
+            The indices of the features to keep in the block. If None, all
+            features in the block are returned.
 
         Returns
         -------
@@ -115,16 +130,23 @@ class BlockPartitionedData:
         for block_no, block_indices in self._block_indices_dict.items():
             if block_no != k:
                 all_except_block_indices += block_indices
+            else:
+                if keep_idxs is not None:
+                    rm_idxs = [block_indices[idx] for idx in range(len(block_indices)) if idx not in keep_idxs[k]]
+                    all_except_block_indices += rm_idxs
         all_except_block_indices += self._common_block_indices
         return all_except_block_indices
 
-    def get_all_except_block(self, k):
+    def get_all_except_block(self, k, keep_idxs=None):
         """
 
         Parameters
         ----------
         k: int
             The index of the feature block not desired
+        keep_idxs: list of int or None
+            The indices of the features to keep in the block. If None, all
+            features in the block are returned.
 
         Returns
         -------
@@ -132,11 +154,11 @@ class BlockPartitionedData:
             The features not in the desired block
         """
         all_data = self.get_all_data()
-        all_except_block_indices = self.get_all_except_block_indices(k)
+        all_except_block_indices = self.get_all_except_block_indices(k, keep_idxs)
         all_except_block = all_data[:, all_except_block_indices]
         return all_except_block
 
-    def get_modified_data(self, k, mode="keep_k"):
+    def get_modified_data(self, k, mode="keep_k", keep_idxs=None):
         """
         Modify the data by either imputing the mean of each feature in block k
         (keep_rest) or imputing the mean of each feature not in block k
@@ -149,6 +171,9 @@ class BlockPartitionedData:
         mode: string in {"keep_k", "keep_rest"}
             Mode for the method. "keep_k" imputes the mean of each feature not
             in block k, "keep_rest" imputes the mean of each feature in block k
+        keep_idxs: list of int or None
+            The indices of the features to keep in the block. If None, all
+            features in the block are returned.
 
         Returns
         -------
@@ -159,13 +184,43 @@ class BlockPartitionedData:
         modified_blocks = [np.outer(np.ones(self.n_samples), self._means[i])
                            for i in range(self.n_blocks)]
         if mode == "keep_k":
-            data_blocks = \
-                [self._data_blocks[i] if i == k else modified_blocks[i] for
-                 i in range(self.n_blocks)]
+            data_blocks = []
+            for i in range(self.n_blocks):
+                if i == k:
+                    if keep_idxs is None:
+                        data_blocks.append(self._data_blocks[i])
+                    else:
+                        data_block = np.hstack(
+                            [self._data_blocks[i][:, keep_idxs[k]],
+                             np.delete(modified_blocks[i], keep_idxs[k], 1)]
+                        )
+                        data_blocks_idxs = np.hstack([
+                            keep_idxs[k],
+                            [idx for idx in range(self._data_blocks[i].shape[1]) \
+                             if idx not in keep_idxs[k]]
+                        ])
+                        data_blocks.append(data_block[:, np.argsort(data_blocks_idxs)])
+                else:
+                    data_blocks.append(modified_blocks[i])
         elif mode == "keep_rest":
-            data_blocks = \
-                [modified_blocks[i] if i == k else self._data_blocks[i] for
-                 i in range(self.n_blocks)]
+            data_blocks = []
+            for i in range(self.n_blocks):
+                if i == k:
+                    if keep_idxs is None:
+                        data_blocks.append(modified_blocks[i])
+                    else:
+                        data_block = np.hstack(
+                            [modified_blocks[i][:, keep_idxs[k]],
+                             np.delete(self._data_blocks[i], keep_idxs[k], 1)]
+                        )
+                        data_blocks_idxs = np.hstack([
+                            keep_idxs[k],
+                            [idx for idx in range(self._data_blocks[i].shape[1]) \
+                             if idx not in keep_idxs[k]]
+                        ])
+                        data_blocks.append(data_block[:, np.argsort(data_blocks_idxs)])
+                else:
+                    data_blocks.append(self._data_blocks[i])
         else:
             raise ValueError("Unsupported mode.")
         if self._common_block is None:
@@ -478,6 +533,7 @@ class CompositeTransformer(BlockTransformerBase, ABC):
         self.drop_features = drop_features
         self._rescale_factors = {}
         self._trivial_block_indices = {}
+        self._transformer_ids = {}
 
     def _fit_one_feature(self, X, k):
         data_blocks = []
@@ -490,11 +546,16 @@ class CompositeTransformer(BlockTransformerBase, ABC):
         self._trivial_block_indices[k] = \
             [idx for idx, data_block in enumerate(data_blocks) if
              _empty_or_constant(data_block)]
+        self._transformer_ids[k] = np.hstack([
+            idx * np.ones(data_block.shape[1]) for idx, data_block in enumerate(data_blocks) \
+            if not _empty_or_constant(data_block)
+        ])
         if (0 in self._trivial_block_indices[k] and self.drop_features) or \
                 (len(self._trivial_block_indices[k]) == len(data_blocks)):
             # If first block is trivial and self.drop_features is True,
             self._centers[k] = np.array([0])
             self._scales[k] = np.array([1])
+            self._transformer_ids[k] = []
             return
         else:
             # Remove trivial blocks
@@ -540,12 +601,17 @@ class CompositeTransformer(BlockTransformerBase, ABC):
         self._trivial_block_indices[k] = \
             [idx for idx, data_block in enumerate(data_blocks) if
              _empty_or_constant(data_block)]
+        self._transformer_ids[k] = np.hstack([
+            idx * np.ones(data_block.shape[1]) for idx, data_block in enumerate(data_blocks) \
+            if not _empty_or_constant(data_block)
+        ])
         if (0 in self._trivial_block_indices[k] and self.drop_features) or \
                 (len(self._trivial_block_indices[k]) == len(data_blocks)):
             # If first block is trivial and self.drop_features is True,
             # return empty block
             self._centers[k] = np.array([0])
             self._scales[k] = np.array([1])
+            self._transformer_ids[k] = []
             return np.empty((X.shape[0], 0))
         else:
             # Remove trivial blocks

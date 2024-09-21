@@ -264,7 +264,8 @@ class _RandomForestPlus(BaseEstimator):
         return predictions
 
     def get_mdi_plus_scores(self, X=None, y=None,
-                            scoring_fns="auto", sample_split="inherit", mode="keep_k"):
+                            scoring_fns="auto", sample_split="inherit", mode="keep_k",
+                            by_transformer=False):
         """
         Obtain MDI+ feature importances. Generalized mean decrease in impurity (MDI+)
         is a flexible framework for computing RF feature importances. For more
@@ -299,6 +300,8 @@ class _RandomForestPlus(BaseEstimator):
             in block k when making a partial model prediction, while "keep_rest"
             imputes the mean of each feature in block k. "keep_k" is strongly
             recommended for computational considerations.
+        by_transformer: bool
+            Flag for whether to compute the feature importances by transformer block.
 
         Returns
         -------
@@ -343,6 +346,7 @@ class _RandomForestPlus(BaseEstimator):
                                          sample_split=sample_split,
                                          tree_random_states=self._tree_random_states,
                                          mode=mode,
+                                         by_transformer=by_transformer,
                                          task=self._task,
                                          center=self.center,
                                          normalize=self.normalize)

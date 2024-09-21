@@ -3,7 +3,7 @@ import pandas as pd
 from scipy.spatial.distance import pdist
 from functools import partial
 
-from .ppms import PartialPredictionModelBase, GenericRegressorPPM, GenericClassifierPPM
+from .ppms import PartialPredictionModelBase, GenericRegressorPPM, GenericClassifierPPM, _GlmPPM
 from .block_transformers import _blocked_train_test_split
 from .ranking_stability import tauAP_b, rbo
 
@@ -46,6 +46,8 @@ class ForestMDIPlus:
         in block k when making a partial model prediction, while "keep_rest"
         imputes the mean of each feature in block k. "keep_k" is strongly
         recommended for computational considerations.
+    by_transformer: bool
+        Flag for whether to compute the feature importances by transformer block.
     task: string in {"regression", "classification"}
         The supervised learning task for the RF model. Used for choosing
         defaults for the scoring_fns. Currently only regression and
@@ -59,6 +61,7 @@ class ForestMDIPlus:
 
     def __init__(self, estimators, transformers, scoring_fns,
                  sample_split="loo", tree_random_states=None, mode="keep_k",
+                 by_transformer=False,
                  task="regression", center=True, normalize=False):
         assert sample_split in ["loo", "oob", "inbag", None]
         assert mode in ["keep_k", "keep_rest"]
@@ -71,6 +74,7 @@ class ForestMDIPlus:
         if self.sample_split in ["oob", "inbag"] and not self.tree_random_states:
             raise ValueError("Must specify tree_random_states to use 'oob' or 'inbag' sample_split.")
         self.mode = mode
+        self.by_transformer = by_transformer
         self.task = task
         self.center = center
         self.normalize = normalize
@@ -170,6 +174,7 @@ class ForestMDIPlus:
                                         sample_split=self.sample_split,
                                         tree_random_state=tree_random_state,
                                         mode=self.mode,
+                                        by_transformer=self.by_transformer,
                                         task=self.task,
                                         center=self.center,
                                         normalize=self.normalize)
@@ -183,12 +188,13 @@ class ForestMDIPlus:
         self._full_preds = full_preds
         scoring_fns = self.scoring_fns if isinstance(self.scoring_fns, dict) \
             else {"importance": self.scoring_fns}
-        for fn_name, scoring_fn in scoring_fns.items():
-            self.feature_importances_by_tree_[fn_name] = pd.concat([scores[fn_name] for scores in all_scores], axis=1)
-            self.feature_importances_by_tree_[fn_name].columns = np.arange(len(all_scores))
-            self.feature_importances_[fn_name] = np.mean(self.feature_importances_by_tree_[fn_name], axis=1)
-            self.prediction_score_[fn_name] = [scoring_fn(y[~np.isnan(full_preds)], full_preds[~np.isnan(full_preds)])]
-        if list(scoring_fns.keys()) == ["importance"]:
+        for key in scores.columns:
+            self.feature_importances_by_tree_[key] = pd.concat([scores[key] for scores in all_scores], axis=1)
+            self.feature_importances_by_tree_[key].columns = np.arange(len(all_scores))
+            self.feature_importances_[key] = np.mean(self.feature_importances_by_tree_[key], axis=1)
+            scoring_fn = scoring_fns[''.join([i for i in key if not i.isdigit()])]
+            self.prediction_score_[key] = [scoring_fn(y[~np.isnan(full_preds)], full_preds[~np.isnan(full_preds)])]
+        if self.feature_importances_.columns.values.tolist() == ["importance"]:
             self.prediction_score_ = self.prediction_score_["importance"]
             self.feature_importances_by_tree_ = self.feature_importances_by_tree_["importance"]
         if isinstance(X, pd.DataFrame):
@@ -234,6 +240,8 @@ class TreeMDIPlus:
         in block k when making a partial model prediction, while "keep_rest"
         imputes the mean of each feature in block k. "keep_k" is strongly
         recommended for computational considerations.
+    by_transformer: bool
+        Flag for whether to compute the feature importances by transformer block.
     task: string in {"regression", "classification"}
         The supervised learning task for the RF model. Used for choosing
         defaults for the scoring_fns. Currently only regression and
@@ -247,6 +255,7 @@ class TreeMDIPlus:
 
     def __init__(self, estimator, transformer, scoring_fns,
                  sample_split="loo", tree_random_state=None, mode="keep_k",
+                 by_transformer=False,
                  task="regression", center=True, normalize=False):
         assert sample_split in ["loo", "oob", "inbag", "auto", None]
         assert mode in ["keep_k", "keep_rest"]
@@ -259,7 +268,11 @@ class TreeMDIPlus:
         _validate_sample_split(self.sample_split, self.estimator, isinstance(self.estimator, PartialPredictionModelBase))
         if self.sample_split in ["oob", "inbag"] and not self.tree_random_state:
             raise ValueError("Must specify tree_random_state to use 'oob' or 'inbag' sample_split.")
+        if isinstance(self.estimator, _GlmPPM):
+            if self.estimator.loo and self.sample_split != "loo":
+                self.estimator.loo = False
         self.mode = mode
+        self.by_transformer = by_transformer
         self.task = task
         self.center = center
         self.normalize = normalize
@@ -300,6 +313,20 @@ class TreeMDIPlus:
                     hasattr(self.estimator, "predict_partial"):
                 full_preds = self.estimator.predict_full(test_blocked_data)
                 partial_preds = self.estimator.predict_partial(test_blocked_data, mode=self.mode)
+                if self.by_transformer and self.transformer._transformer_ids is not None:
+                    transformer_idxs = np.hstack(
+                        [val for val in self.transformer._transformer_ids.values()]
+                    )
+                    transformer_partial_preds = {}
+                    for transformer_idx in np.unique(transformer_idxs):
+                        keep_idxs = {
+                            key: np.where(val == transformer_idx)[0] \
+                            for key, val in self.transformer._transformer_ids.items()
+                        }
+                        transformer_partial_preds[transformer_idx] =\
+                            self.estimator.predict_partial(
+                                test_blocked_data, mode=self.mode, keep_idxs=keep_idxs
+                            )
             else:
                 if self.task == "regression":
                     ppm = GenericRegressorPPM(self.estimator)
@@ -307,8 +334,26 @@ class TreeMDIPlus:
                     ppm = GenericClassifierPPM(self.estimator)
                 full_preds = ppm.predict_full(test_blocked_data)
                 partial_preds = ppm.predict_partial(test_blocked_data, mode=self.mode)
+                if self.by_transformer and self.transformer._transformer_ids is not None:
+                    transformer_idxs = np.hstack(
+                        [val for val in self.transformer._transformer_ids.values()]
+                    )
+                    transformer_partial_preds = {}
+                    for transformer_idx in np.unique(transformer_idxs):
+                        keep_idxs = {
+                            key: np.where(val == transformer_idx)[0] \
+                            for key, val in self.transformer._transformer_ids.items()
+                        }
+                        transformer_partial_preds[transformer_idx] = \
+                            ppm.predict_partial(
+                                test_blocked_data, mode=self.mode, keep_idxs=keep_idxs
+                            )
             self._score_full_predictions(y_test, full_preds)
             self._score_partial_predictions(y_test, full_preds, partial_preds)
+            if self.by_transformer:
+                self._score_partial_predictions(
+                    y_test, full_preds, transformer_partial_preds, is_by_transformer=True
+                )
 
             full_preds_n = np.empty(n_samples) if full_preds.ndim == 1 \
                 else np.empty((n_samples, full_preds.shape[1]))
@@ -326,24 +371,31 @@ class TreeMDIPlus:
             all_prediction_scores[fn_name] = [scores]
         self.prediction_score_ = all_prediction_scores
 
-    def _score_partial_predictions(self, y_test, full_preds, partial_preds):
+    def _score_partial_predictions(self, y_test, full_preds, partial_preds, is_by_transformer=False):
         scoring_fns = self.scoring_fns if isinstance(self.scoring_fns, dict) \
             else {"importance": self.scoring_fns}
-        all_scores = pd.DataFrame({})
-        for fn_name, scoring_fn in scoring_fns.items():
-            scores = _partial_preds_to_scores(partial_preds, y_test, scoring_fn)
-            if self.mode == "keep_rest":
-                full_score = scoring_fn(y_test, full_preds)
-                scores = full_score - scores
-            if len(partial_preds) != scores.size:
-                if len(scoring_fns) > 1:
-                    msg = "scoring_fn={} should return one value for each feature.".format(fn_name)
-                else:
-                    msg = "scoring_fns should return one value for each feature.".format(fn_name)
-                raise ValueError("Unexpected dimensions. {}".format(msg))
-            scores = scores.ravel()
-            all_scores[fn_name] = scores
-        self.feature_importances_ = all_scores
+        if not is_by_transformer:
+            partial_preds_dict = {"all": partial_preds}
+        else:
+            partial_preds_dict = partial_preds
+        for key, preds in partial_preds_dict.items():
+            all_scores = pd.DataFrame({})
+            for fn_name, scoring_fn in scoring_fns.items():
+                scores_key = fn_name if key == "all" else fn_name + str(int(key))
+                scores = _partial_preds_to_scores(preds, y_test, scoring_fn)
+                if self.mode == "keep_rest":
+                    full_score = scoring_fn(y_test, full_preds)
+                    scores = full_score - scores
+                if len(preds) != scores.size:
+                    if len(scoring_fns) > 1:
+                        msg = "scoring_fn={} should return one value for each feature.".format(fn_name)
+                    else:
+                        msg = "scoring_fns should return one value for each feature.".format(fn_name)
+                    raise ValueError("Unexpected dimensions. {}".format(msg))
+                scores = pd.DataFrame.from_dict({scores_key: scores.ravel()})
+                self.feature_importances_ = pd.concat(
+                    [self.feature_importances_, scores], axis=1
+                )
 
 
 def _partial_preds_to_scores(partial_preds, y_test, scoring_fn):

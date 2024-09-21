@@ -84,7 +84,7 @@ class PartialPredictionModelBase(ABC):
         pass
 
     @abstractmethod
-    def predict_partial_k(self, blocked_data, k, mode):
+    def predict_partial_k(self, blocked_data, k, mode, keep_idxs=None):
         """
         Make predictions on modified copies of the data based on the fitted model,
         for a particular feature k of interest. Used to get partial predictions
@@ -99,10 +99,13 @@ class PartialPredictionModelBase(ABC):
         mode: string in {"keep_k", "keep_rest"}
             Mode for the method. "keep_k" imputes the mean of each feature not
             in block k, "keep_rest" imputes the mean of each feature in block k
+        keep_idxs: list of int or None
+            The indices of the features to keep in the block. If None, all
+            features in the block are returned.
         """
         pass
 
-    def predict_partial(self, blocked_data, mode):
+    def predict_partial(self, blocked_data, mode, keep_idxs=None):
         """
         Make predictions on modified copies of the data based on the fitted model,
         for each feature under study. Used to get partial predictions in MDI+.
@@ -114,6 +117,9 @@ class PartialPredictionModelBase(ABC):
         mode: string in {"keep_k", "keep_rest"}
             Mode for the method. "keep_k" imputes the mean of each feature not
             in block k, "keep_rest" imputes the mean of each feature in block k
+        keep_idxs: list of int or None
+            The indices of the features to keep in the block. If None, all
+            features in the block are returned.
 
         Returns
         -------
@@ -122,7 +128,7 @@ class PartialPredictionModelBase(ABC):
         n_blocks = blocked_data.n_blocks
         partial_preds = {}
         for k in range(n_blocks):
-            partial_preds[k] = self.predict_partial_k(blocked_data, k, mode)
+            partial_preds[k] = self.predict_partial_k(blocked_data, k, mode, keep_idxs)
         return partial_preds
 
 
@@ -143,8 +149,8 @@ class _GenericPPM(PartialPredictionModelBase, ABC):
     def predict_full(self, blocked_data):
         return self.predict(blocked_data.get_all_data())
 
-    def predict_partial_k(self, blocked_data, k, mode):
-        modified_data = blocked_data.get_modified_data(k, mode)
+    def predict_partial_k(self, blocked_data, k, mode, keep_idxs=None):
+        modified_data = blocked_data.get_modified_data(k, mode, keep_idxs)
         return self.predict(modified_data)
 
 
@@ -163,8 +169,8 @@ class GenericClassifierPPM(_GenericPPM, PartialPredictionModelBase, ABC):
     def predict_proba(self, X):
         return self.estimator.predict_proba(X)
 
-    def predict_partial_k(self, blocked_data, k, mode):
-        modified_data = blocked_data.get_modified_data(k, mode)
+    def predict_partial_k(self, blocked_data, k, mode, keep_idxs=None):
+        modified_data = blocked_data.get_modified_data(k, mode, keep_idxs)
         return self.predict_proba(modified_data)
 
 
@@ -210,16 +216,23 @@ class _GlmPPM(PartialPredictionModelBase, ABC):
     """
 
     def __init__(self, estimator, loo=True, alpha_grid=np.logspace(-4, 4, 10),
-                 inv_link_fn=lambda a: a, l_dot=lambda a, b: b - a,
-                 l_doubledot=lambda a, b: 1, r_doubledot=lambda a: 1,
+                 inv_link_fn="auto", l_dot="auto", l_doubledot="auto", r_doubledot="auto",
                  hyperparameter_scorer=mean_squared_error,
                  trim=None, gcv_mode='auto'):
         super().__init__(estimator)
         self.loo = loo
         self.alpha_grid = alpha_grid
+        if inv_link_fn == "auto":
+            inv_link_fn = identity_fn
         self.inv_link_fn = inv_link_fn
+        if l_dot == "auto":
+            l_dot = diff_fn
         self.l_dot = l_dot
+        if l_doubledot == "auto":
+            l_doubledot = constant_one_fn
         self.l_doubledot = l_doubledot
+        if r_doubledot == "auto":
+            r_doubledot = constant_one_fn
         self.r_doubledot = r_doubledot
         self.trim = trim
         self.gcv_mode = gcv_mode
@@ -280,14 +293,14 @@ class _GlmPPM(PartialPredictionModelBase, ABC):
     def predict_full(self, blocked_data):
         return self.predict_loo(blocked_data.get_all_data())
 
-    def predict_partial_k(self, blocked_data, k, mode):
+    def predict_partial_k(self, blocked_data, k, mode, keep_idxs=None):
         assert mode in ["keep_k", "keep_rest"]
         if mode == "keep_k":
-            block_indices = blocked_data.get_block_indices(k)
-            data_block = blocked_data.get_block(k)
+            block_indices = blocked_data.get_block_indices(k, keep_idxs)
+            data_block = blocked_data.get_block(k, keep_idxs)
         elif mode == "keep_rest":
-            block_indices = blocked_data.get_all_except_block_indices(k)
-            data_block = blocked_data.get_all_except_block(k)
+            block_indices = blocked_data.get_all_except_block_indices(k, keep_idxs)
+            data_block = blocked_data.get_all_except_block(k, keep_idxs)
         if len(block_indices) == 0:  # If empty block
             return self.intercept_pred
         else:
@@ -472,14 +485,14 @@ class LogisticClassifierPPM(GlmClassifierPPM, PartialPredictionModelBase, ABC):
     def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25),
                  penalty='l2', max_iter=1000, trim=0.01, **kwargs):
         assert penalty in ['l2', 'l1']
-        if penalty == 'l2':
-            r_doubledot = lambda a: 1
-        elif penalty == 'l1':
+        if penalty == "l2":
+            r_doubledot = constant_one_fn
+        elif penalty == "l1":
             r_doubledot = None
         super().__init__(LogisticRegression(penalty=penalty, max_iter=max_iter, **kwargs),
                          loo, alpha_grid,
                          inv_link_fn=sp.special.expit,
-                         l_doubledot=lambda a, b: b * (1 - b),
+                         l_doubledot=logistic_l_doubledot_fn,
                          r_doubledot=r_doubledot,
                          hyperparameter_scorer=log_loss,
                          trim=trim)
@@ -505,8 +518,8 @@ class RobustRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
     def __init__(self, loo=True, alpha_grid=np.logspace(-2, 3, 25),
                  epsilon=1.35, max_iter=2000, **kwargs):
         loss_fn = partial(huber_loss, epsilon=epsilon)
-        l_dot = lambda a, b: (b - a) / (1 + ((a - b) / epsilon) ** 2) ** 0.5
-        l_doubledot=lambda a, b: (1 + (((a - b) / epsilon) ** 2)) ** (-1.5)
+        l_dot = partial(robust_l_dot_fn, epsilon=epsilon)
+        l_doubledot = partial(robust_l_doubledot_fn, epsilon=epsilon)
         super().__init__(
             HuberRegressor(max_iter=max_iter, **kwargs), loo, alpha_grid,
             l_dot=l_dot,
@@ -617,3 +630,28 @@ def get_alpha_grid(X, y, start=-5, stop=5, num=100):
     base = np.max(alpha_opts_)
     alphas = np.logspace(start, stop, num=num) * base
     return alphas
+
+
+def identity_fn(a):
+    return a
+
+
+def constant_one_fn(a, b=None):
+    return 1
+
+
+def diff_fn(a, b):
+    return b - a
+
+
+def logistic_l_doubledot_fn(a, b):
+    return b * (1 - b)
+
+
+def robust_l_dot_fn(a, b, epsilon=1.35):
+    return (b - a) / (1 + ((a - b) / epsilon) ** 2) ** 0.5
+
+
+def robust_l_doubledot_fn(a, b, epsilon=1.35):
+    return (1 + (((a - b) / epsilon) ** 2)) ** (-1.5)
+
