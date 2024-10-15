@@ -60,7 +60,7 @@ import time
 from collections import defaultdict
 
 from numpy import *
-import numpy
+import numpy as np
 from scipy.special import gammaln
 from scipy.stats import poisson, beta
 
@@ -357,7 +357,10 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
 def initialize_d(X, Y, lbda, eta, lhs_len, maxlhs, nruleslen):
     '''Samples a list from the prior
     '''
-    m = numpy.Inf
+    try:
+        m = np.inf
+    except:
+        m = np.Inf
     while m >= len(X):
         # sample the length of the list from Poisson(lbda), truncated at len(X)
         m = poisson.rvs(lbda)
@@ -493,7 +496,7 @@ def prior_calculations(lbda, maxlen, eta, maxlhs):
         try:
             logalpha_pmf[i] = poisson.logpmf(i, lbda)
         except RuntimeWarning:
-            logalpha_pmf[i] = -inf
+            logalpha_pmf[i] = -np.inf
     logbeta_pmf = {}
     for i in range(1, maxlhs + 1):
         logbeta_pmf[i] = poisson.logpmf(i, eta)
