@@ -64,35 +64,35 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 
 ### Supported models
 
+<p align="left">
+<a href="https://csinva.io/imodels/">🗂️</a> Docs &emsp; 📄 Research paper &emsp;  🔗 Reference code implementation
+</br>
+</p>
+
 | Model                       | Reference                                                    | Description                                                  |
 | :-------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Rulefit rule set            | [🗂️](https://csinva.io/imodels/rule_set/rule_fit.html), [🔗](https://github.com/christophM/rulefit), [📄](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf) | Fits a sparse linear model on rules extracted from decision trees |
+| Rulefit rule set            | [🗂️](https://csinva.io/imodels/rule_set/rule_fit.html), [📄](http://statweb.stanford.edu/~jhf/ftp/RuleFit.pdf), [🔗](https://github.com/christophM/rulefit) | Fits a sparse linear model on rules extracted from decision trees |
 | Skope rule set              | [🗂️](https://csinva.io/imodels/rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier), [🔗](https://github.com/scikit-learn-contrib/skope-rules) | Extracts rules from gradient-boosted trees, deduplicates them,<br/>then linearly combines them based on their OOB precision |
-| Boosted rule set            | [🗂️](https://csinva.io/imodels/rule_set/boosted_rules.html), [🔗](https://github.com/jaimeps/adaboost-implementation), [📄](https://www.sciencedirect.com/science/article/pii/S002200009791504X) | Sequentially fits a set of rules with Adaboost           |
-| Slipper rule set            | [🗂️](https://csinva.io/imodels/rule_set/slipper.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf) | Sequentially learns a set of rules with SLIPPER            |
-| Bayesian rule set           | [🗂️](https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier), [🔗](https://github.com/wangtongada/BOA), [📄](https://www.jmlr.org/papers/volume18/16-003/16-003.pdf) | Finds concise rule set with Bayesian sampling (slow)  |
-| Optimal rule list           | [🗂️](https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier), [🔗](https://github.com/corels/pycorels), [📄](https://www.jmlr.org/papers/volume18/17-716/17-716.pdf) | Fits rule list using global optimization for sparsity (CORELS) |
-| Bayesian rule list          | [🗂️](https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier), [🔗](https://github.com/tmadl/sklearn-expertsys), [📄](https://arxiv.org/abs/1602.08610) | Fits compact rule list distribution with Bayesian sampling (slow) |
+| Boosted rule set            | [🗂️](https://csinva.io/imodels/rule_set/boosted_rules.html), [📄](https://www.sciencedirect.com/science/article/pii/S002200009791504X), [🔗](https://github.com/jaimeps/adaboost-implementation) | Sequentially fits a set of rules with Adaboost           |
+| Slipper rule set            | [🗂️](https://csinva.io/imodels/rule_set/slipper.html), [📄](https://www.aaai.org/Papers/AAAI/1999/AAAI99-049.pdf) | Sequentially learns a set of rules with SLIPPER            |
+| Bayesian rule set           | [🗂️](https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier), [📄](https://www.jmlr.org/papers/volume18/16-003/16-003.pdf), [🔗](https://github.com/wangtongada/BOA) | Finds concise rule set with Bayesian sampling (slow)  |
+| Optimal rule list           | [🗂️](https://csinva.io/imodels/rule_list/corels_wrapper.html#imodels.rule_list.corels_wrapper.OptimalRuleListClassifier), [📄](https://www.jmlr.org/papers/volume18/17-716/17-716.pdf), [🔗](https://github.com/corels/pycorels) | Fits rule list using global optimization for sparsity (CORELS) |
+| Bayesian rule list          | [🗂️](https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier), [📄](https://arxiv.org/abs/1602.08610), [🔗](https://github.com/tmadl/sklearn-expertsys) | Fits compact rule list distribution with Bayesian sampling (slow) |
 | Greedy rule list            | [🗂️](https://csinva.io/imodels/rule_list/greedy_rule_list.html), [🔗](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea) | Uses CART to fit a list (only a single path), rather than a tree |
-| OneR rule list              | [🗂️](https://csinva.io/imodels/rule_list/one_r.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, [📄](https://link.springer.com/article/10.1023/A:1022631118932) | Fits rule list restricted to only one feature              |
-| Optimal rule tree           | [🗂️](https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier), [🔗](https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees), [📄](https://arxiv.org/abs/2006.08690) | Fits succinct tree using global optimization for sparsity (GOSDT) |
-| Greedy rule tree            | [🗂️](https://csinva.io/imodels/tree/cart_wrapper.html), [🔗](https://scikit-learn.org/stable/modules/tree.html), [📄](https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone) | Greedily fits tree using CART                              |
-| C4.5 rule tree        | [🗂️](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier), [🔗](https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier), [📄](https://link.springer.com/article/10.1007/BF00993309) | Greedily fits tree using C4.5                           |
-| TAO rule tree        | [🗂️](https://csinva.io/imodels/tree/tao.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html) | Fits tree using alternating optimization                    |
-| Iterative random<br/>forest | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [🔗](https://github.com/Yu-Group/iterative-Random-Forest), [📄](https://www.pnas.org/content/115/8/1943) | Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected |
-| Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
-| Tree GAM | [🗂️](https://csinva.io/imodels/algebraic/tree_gam.html), [🔗](https://github.com/interpretml/interpret), [📄](https://dl.acm.org/doi/abs/10.1145/2339530.2339556) | Generalized additive model fit with short boosted trees                           |
-| <b>Greedy tree</br>sums (FIGS)</b> | [🗂️](https://csinva.io/imodels/figs.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://arxiv.org/abs/2201.11931) | Sum of small trees with very few total rules (FIGS)                          |
-| <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/shrinkage.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://arxiv.org/abs/2202.00858) | Improve a decision tree, random forest, or<br/>gradient-boosting ensemble with ultra-fast, post-hoc regularization |
-| <b>RF+ (MDI+)</b> | [🗂️](https://csinva.io/imodels/mdi_plus.html), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;, ㅤㅤ[📄](https://arxiv.org/pdf/2307.01932) | Flexible random forest-based feature importance |
+| OneR rule list              | [🗂️](https://csinva.io/imodels/rule_list/one_r.html), [📄](https://link.springer.com/article/10.1023/A:1022631118932) | Fits rule list restricted to only one feature              |
+| Optimal rule tree           | [🗂️](https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier), [📄](https://arxiv.org/abs/2006.08690), [🔗](https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees) | Fits succinct tree using global optimization for sparsity (GOSDT) |
+| Greedy rule tree            | [🗂️](https://csinva.io/imodels/tree/cart_wrapper.html), [📄](https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone), [🔗](https://scikit-learn.org/stable/modules/tree.html)  | Greedily fits tree using CART                              |
+| C4.5 rule tree        | [🗂️](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier), [📄](https://link.springer.com/article/10.1007/BF00993309), [🔗](https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier) | Greedily fits tree using C4.5                           |
+| TAO rule tree        | [🗂️](https://csinva.io/imodels/tree/tao.html), [📄](https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html) | Fits tree using alternating optimization                    |
+| Iterative random<br/>forest | [🗂️](https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html), [📄](https://www.pnas.org/content/115/8/1943), [🔗](https://github.com/Yu-Group/iterative-Random-Forest) | Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected |
+| Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
+| Tree GAM | [🗂️](https://csinva.io/imodels/algebraic/tree_gam.html), [📄](https://dl.acm.org/doi/abs/10.1145/2339530.2339556), [🔗](https://github.com/interpretml/interpret) | Generalized additive model fit with short boosted trees                           |
+| <b>Greedy tree</br>sums (FIGS)</b> | [🗂️](https://csinva.io/imodels/figs.html),ㅤ[📄](https://arxiv.org/abs/2201.11931) | Sum of small trees with very few total rules (FIGS)                          |
+| <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/shrinkage.html), [📄](https://arxiv.org/abs/2202.00858) | Improve a decision tree, random forest, or<br/>gradient-boosting ensemble with ultra-fast, post-hoc regularization |
+| <b>RF+ (MDI+)</b> | [🗂️](https://csinva.io/imodels/mdi_plus.html), [📄](https://arxiv.org/pdf/2307.01932) | Flexible random forest-based feature importance |
 | Distillation<br/>wrapper | [🗂️](https://csinva.io/imodels/util/distillation.html)  | Train a black-box model,<br/>then distill it into an interpretable model |
 | AutoML wrapper | [🗂️](https://csinva.io/imodels/util/automl.html)  | Automatically fit and select an interpretable model |
 | More models                 | ⌛                                                            | (Coming soon!) Lightweight Rule Induction, MLRules, ... |
-
-<p align="center">
-<a href="https://csinva.io/imodels/">🗂️</a> Docs &emsp; 🔗 Reference code implementation &emsp;  📄 Research paper
-</br>
-</p>
 
 ## Demo notebooks
 
@@ -316,17 +316,17 @@ Please cite the package if you use it in an academic work :)
 
 ```r
 @software{
-imodels2021,
-title        = {imodels: a python package for fitting interpretable models},
-journal      = {Journal of Open Source Software},
-publisher    = {The Open Journal},
-year         = {2021},
-author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
-volume       = {6},
-number       = {61},
-pages        = {3192},
-doi          = {10.21105/joss.03192},
-url          = {https://doi.org/10.21105/joss.03192},
+	imodels2021,
+	title        = {imodels: a python package for fitting interpretable models},
+	journal      = {Journal of Open Source Software},
+	publisher    = {The Open Journal},
+	year         = {2021},
+	author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
+	volume       = {6},
+	number       = {61},
+	pages        = {3192},
+	doi          = {10.21105/joss.03192},
+	url          = {https://doi.org/10.21105/joss.03192},
 }
 
 ```
