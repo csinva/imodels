@@ -1,14 +1,13 @@
 '''Original code by Alex Huth and Huth lab for predicting fMRI responses
 (see https://github.com/HuthLab/deep-fMRI-dataset/blob/master/encoding/ridge_utils/ridge.py)
+
+These functions help to predict many outputs using ridge regression efficiently.
 '''
 
-
-from sklearn.linear_model import Ridge
 import time
 import numpy as np
 from tqdm import tqdm
 import logging
-import random
 import joblib
 import itertools as itools
 from imodels.algebraic.ridge_multi_utils import mult_diag, _z_score, ridge_logger, _counter
@@ -537,15 +536,16 @@ def boostrap_ridge_with_lowrank(
     # pred_test = X_test @ wt_ridge
     # corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
     #    for ii in range(y_test.shape[1])])
-    # print('mean test corrs', corrs_test.mean())
+    logger.debug(f'mean test corrs ridge {corrs_test.mean():.5f}')
 
     wt_lowrank, meanbootcorrs = bootstrap_low_rank_ridge(
         X_train, y_train, alphas=alphas_lowrank, ranks=ranks,
         nboots=nboots, chunklen=chunklen, nchunks=nchunks, logger=logger)
-    # pred_test = X_test @ wt_lowrank
-    # corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
-    #    for ii in range(y_test.shape[1])])
+    pred_test = X_test @ wt_lowrank
+    corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
+                           for ii in range(y_test.shape[1])])
     # print('mean test corrs', corrs_test.mean())
+    logger.debug(f'mean test corrs lowrank {corrs_test.mean():.5f}')
 
     # select best weights based on bootstrap results
     mean_boot_corrs_ridge = corrs_tune.mean(2).max(axis=0)
@@ -560,9 +560,11 @@ def boostrap_ridge_with_lowrank(
     pred_test = X_test @ wt_hybrid
     corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
                            for ii in range(y_test.shape[1])])
+    logger.debug(f'mean test corrs hybrid {corrs_test.mean():.5f}')
     corrs_tune = np.maximum(mean_boot_corrs_ridge, mean_boot_corrs_lowrank)
 
     return wt_hybrid, corrs_test, corrs_tune, valinds
+
 
     ###########################################################
 if __name__ == '__main__':
@@ -582,13 +584,20 @@ if __name__ == '__main__':
     y_test = params['resp_test']
     alphas = params['alphas']
     # nboots=params['nboots'],
-    nboots = 2
+    nboots = 10
     chunklen = params['chunklen']
     nchunks = params['nchunks']
     singcutoff = params['singcutoff']
     single_alpha = params['single_alpha']
 
-    # call 1
+    wt_hybrid, corrs_test, corrs_tune, valinds = boostrap_ridge_with_lowrank(
+        X_train, y_train, X_test, y_test,
+        alphas_ridge=alphas,
+        alphas_lowrank=alphas,
+        ranks=[100],
+        nboots=nboots, chunklen=chunklen, nchunks=nchunks)
+
+    # baseline call
     # t0 = time.time()
     # wt_ridge, corrs_test, alphas_best, corrs_tune, valinds = bootstrap_ridge(
     #     X_train, y_train, X_test, y_test,
@@ -597,13 +606,6 @@ if __name__ == '__main__':
     #     chunklen=params['chunklen'], nchunks=params['nchunks'],
     #     singcutoff=params['singcutoff'], single_alpha=params['single_alpha'])
     # print('time elapsed', time.time()-t0)
-
-    wt_hybrid, corrs_test, corrs_tune, valinds = boostrap_ridge_with_lowrank(
-        X_train, y_train, X_test, y_test,
-        alphas_ridge=alphas,
-        alphas_lowrank=alphas[::2],
-        ranks=[25, 100],
-        nboots=nboots, chunklen=chunklen, nchunks=nchunks)
 
     # pred_test = X_test @ wt_ridge
     # corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
