@@ -1,3 +1,8 @@
+'''Original code by Alex Huth and Huth lab for predicting fMRI responses
+(see https://github.com/HuthLab/deep-fMRI-dataset/blob/master/encoding/ridge_utils/ridge.py)
+'''
+
+
 from sklearn.linear_model import Ridge
 import time
 import numpy as np
@@ -6,13 +11,13 @@ import logging
 import random
 import joblib
 import itertools as itools
-# from imodels.algebraic.ridge_low_rank_boosting import low_rank_ridge_regression
-
-ridge_logger = logging.getLogger("ridge_corr")
-def _z_score(v): return (v-v.mean(0))/v.std(0)  # z-score function
+from imodels.algebraic.ridge_multi_utils import mult_diag, _z_score, ridge_logger, _counter
+from sklearn.utils.extmath import randomized_svd
 
 
 def _gen_temporal_chunk_splits(num_splits: int, num_examples: int, chunk_len: int, num_chunks: int, seed=42):
+    '''Make a list of splits for cross-validation, where splits are temporal chunks of data.
+    '''
     rng = np.random.RandomState(seed)
     all_indexes = range(num_examples)
     index_chunks = list(zip(*[iter(all_indexes)] * chunk_len))
@@ -45,6 +50,10 @@ def _ridge(X, y, alpha, singcutoff=1e-10, logger=ridge_logger):
     wt : array_like, shape (N, M)
         Linear regression weights.
     """
+    # ridge = Ridge(alpha=alpha**2, fit_intercept=False)
+    # ridge.fit(X_train, y_train)
+    # return ridge.coef_.T
+
     U, S, Vh = np.linalg.svd(X, full_matrices=False)
     UR = np.dot(U.T, np.nan_to_num(y))
 
@@ -65,11 +74,6 @@ def _ridge(X, y, alpha, singcutoff=1e-10, logger=ridge_logger):
         wt[:, selvox] = awt
 
     return wt
-
-# def _ridge_sklearn(X_train, y_train, alpha):
-#     ridge = Ridge(alpha=alpha**2, fit_intercept=False)
-#     ridge.fit(X_train, y_train)
-#     return ridge.coef_.T
 
 
 def _ridge_correlations_per_voxel(X_train, X_test, y_train, y_test, valphas,
@@ -345,7 +349,6 @@ def bootstrap_ridge(
         y_tune_ = y_train[tune_indexes_, :]
 
         # Run ridge regression using this test set
-        t0 = time.time()
         correlation_matrix_ = _ridge_correlations_per_voxel_per_alpha(
             X_train_, X_tune_, y_train_, y_tune_, alphas,
             corrmin=corrmin, singcutoff=singcutoff,
@@ -429,69 +432,139 @@ def bootstrap_ridge(
         return [], corrs_test, valphas, all_correlation_matrices, valinds
 
 
-def _counter(iterable, countevery=100, total=None, logger=logging.getLogger("counter")):
-    """Logs a status and timing update to [logger] every [countevery] draws from [iterable].
-    If [total] is given, log messages will include the estimated time remaining.
+def lowrank_ridge(X, Y, alpha, r):
     """
-    start_time = time.time()
+    Perform ridge regression with many inputs and outputs using a rank-r approximation.
 
-    # Check if the iterable has a __len__ function, use it if no total length is supplied
-    if total is None:
-        if hasattr(iterable, "__len__"):
-            total = len(iterable)
+    Parameters:
+    X : numpy.ndarray
+        Input features matrix of shape (n_samples, n_features).
+    Y : numpy.ndarray
+        Output targets matrix of shape (n_samples, n_outputs).
+    alpha : float
+        Regularization parameter (alphaa).
+    r : int
+        Rank for the truncated SVD.
 
-    for count, thing in enumerate(iterable):
-        yield thing
-
-        if not count % countevery:
-            current_time = time.time()
-            rate = float(count+1)/(current_time-start_time)
-
-            if rate > 1:  # more than 1 item/second
-                ratestr = "%0.2f items/second" % rate
-            else:  # less than 1 item/second
-                ratestr = "%0.2f seconds/item" % (rate**-1)
-
-            if total is not None:
-                remitems = total-(count+1)
-                remtime = remitems/rate
-                timestr = ", %s remaining" % time.strftime(
-                    '%H:%M:%S', time.gmtime(remtime))
-                itemstr = "%d/%d" % (count+1, total)
-            else:
-                timestr = ""
-                itemstr = "%d" % (count+1)
-
-            formatted_str = "%s items complete (%s%s)" % (
-                itemstr, ratestr, timestr)
-            if logger is None:
-                print(formatted_str)
-            else:
-                logger.info(formatted_str)
-
-
-def mult_diag(d, mtx, left=True):
-    """Multiply a full matrix by a diagonal matrix.
-    This function should always be faster than dot.
-
-    Input:
-      d -- 1D (N,) array (contains the diagonal elements)
-      mtx -- 2D (N,N) array
-
-    Output:
-      mult_diag(d, mts, left=True) == dot(diag(d), mtx)
-      mult_diag(d, mts, left=False) == dot(mtx, diag(d))
-
-    By Pietro Berkes
-    From http://mail.scipy.org/pipermail/numpy-discussion/2007-March/026807.html
+    Returns:
+    B : numpy.ndarray
+        Coefficient matrix of shape (n_features, n_outputs).
     """
-    if left:
-        return (d*mtx.T).T
-    else:
-        return d*mtx
+    # Step 1: Compute truncated SVD of X
+    U_r, Sigma_r, V_r_T = randomized_svd(X, n_components=r)
+
+    # Step 2: Compute T = U_r^T Y
+    T = U_r.T @ Y  # Shape: (r, n_outputs)
+
+    # Step 3: Compute D = (Σ_r^2 + λ I_r)^{-1} Σ_r
+    denom = Sigma_r ** 2 + alpha
+    D = Sigma_r / denom  # Shape: (r,)
+
+    # Step 4: Compute B ≈ V_r D T
+    DT = D[:, np.newaxis] * T  # Element-wise multiplication
+    B = V_r_T.T @ DT  # Shape: (n_features, n_outputs)
+
+    return B
 
 
-###########################################################
+def bootstrap_low_rank_ridge(
+        X_train, y_train, alphas, ranks, nboots, chunklen, nchunks,
+        logger=ridge_logger):
+
+    n_train, n_targets = y_train.shape
+    splits = _gen_temporal_chunk_splits(
+        nboots, n_train, chunklen, nchunks)
+    valinds = [splits[1] for splits in splits]
+
+    correlation_matrices = []
+    for idx_bootstrap in _counter(range(nboots), countevery=1, total=nboots):
+        logger.debug("Selecting held-out test set..")
+
+        # get indices for training / testing
+        train_indexes_, tune_indexes_ = splits[idx_bootstrap]
+
+        # Select data
+        X_train_ = X_train[train_indexes_, :]
+        X_tune_ = X_train[tune_indexes_, :]
+        y_train_ = y_train[train_indexes_, :]
+        y_tune_ = y_train[tune_indexes_, :]
+
+        # Run ridge regression using this test set
+        t0 = time.time()
+        correlation_matrix = np.zeros((len(ranks), len(alphas), n_targets))
+        for i, rank in enumerate(ranks):
+            for j, alpha in enumerate(tqdm(alphas)):
+                wt = lowrank_ridge(X_train_, y_train_, alpha, rank)
+                pred_tune = X_tune_ @ wt
+                correlation_matrix[i, j] = np.array([np.corrcoef(y_tune_[:, ii], pred_tune[:, ii].ravel())[0, 1]
+                                                     for ii in range(y_tune_.shape[1])])
+
+        correlation_matrices.append(correlation_matrix.reshape(-1, n_targets))
+
+    # Find best settings for each voxel
+    all_correlation_matrices = np.dstack(correlation_matrices)
+    meanbootcorrs = all_correlation_matrices.mean(2)
+    best_indexes = np.argmax(meanbootcorrs, 0)
+
+    # Fit full model for everything
+    wts_full = []
+    for i, rank in enumerate(ranks):
+        for j, alpha in enumerate(tqdm(alphas)):
+            wts_full.append(lowrank_ridge(
+                X_train, y_train, alpha, rank))
+
+    # select best weight per voxel
+    wts_final = np.zeros_like(wts_full[0])
+    for i in tqdm(range(n_targets)):
+        wts_final[:, i] = wts_full[best_indexes[i]][:, i]
+    logger.debug(f"\ttime elapsed: {time.time()-t0}")
+
+    return wts_final, meanbootcorrs
+
+
+def boostrap_ridge_with_lowrank(
+        X_train, y_train, X_test, y_test, alphas_ridge, alphas_lowrank,
+        ranks, nboots, chunklen, nchunks,
+        singcutoff=1e-10, single_alpha=False, logger=ridge_logger
+):
+    wt_ridge, corrs_test, alphas_best, corrs_tune, valinds = bootstrap_ridge(
+        X_train, y_train, X_test, y_test,
+        alphas=alphas_ridge,
+        nboots=nboots,
+        chunklen=chunklen, nchunks=nchunks,
+        singcutoff=singcutoff, single_alpha=single_alpha, logger=logger)
+
+    # pred_test = X_test @ wt_ridge
+    # corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
+    #    for ii in range(y_test.shape[1])])
+    # print('mean test corrs', corrs_test.mean())
+
+    wt_lowrank, meanbootcorrs = bootstrap_low_rank_ridge(
+        X_train, y_train, alphas=alphas_lowrank, ranks=ranks,
+        nboots=nboots, chunklen=chunklen, nchunks=nchunks, logger=logger)
+    # pred_test = X_test @ wt_lowrank
+    # corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
+    #    for ii in range(y_test.shape[1])])
+    # print('mean test corrs', corrs_test.mean())
+
+    # select best weights based on bootstrap results
+    mean_boot_corrs_ridge = corrs_tune.mean(2).max(axis=0)
+    mean_boot_corrs_lowrank = meanbootcorrs.max(axis=0)
+    wt_hybrid = np.zeros_like(wt_ridge)
+    for i in range(y_train.shape[1]):
+        if mean_boot_corrs_ridge[i] > mean_boot_corrs_lowrank[i]:
+            wt_hybrid[:, i] = wt_ridge[:, i]
+        else:
+            wt_hybrid[:, i] = wt_lowrank[:, i]
+
+    pred_test = X_test @ wt_hybrid
+    corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
+                           for ii in range(y_test.shape[1])])
+    corrs_tune = np.maximum(mean_boot_corrs_ridge, mean_boot_corrs_lowrank)
+
+    return wt_hybrid, corrs_test, corrs_tune, valinds
+
+    ###########################################################
 if __name__ == '__main__':
     # sample data for ridge regression
     np.random.seed(0)
@@ -499,34 +572,83 @@ if __name__ == '__main__':
     # set logging to debug
     logging.basicConfig(level=logging.DEBUG)
 
-    params = joblib.load('example_params.joblib')
+    # params = joblib.load('example_params.joblib')
+    params = joblib.load('example_params_full.joblib')
     print(params.keys())
 
-    wt, corrs_test, alphas_best, corrs_tune, valinds = bootstrap_ridge(
-        params['features_train_delayed'], params['resp_train'],
-        params['features_test_delayed'], params['resp_test'],
-        alphas=params['alphas'],
-        # nboots=params['nboots'],
-        nboots=5,
-        chunklen=params['chunklen'], nchunks=params['nchunks'],
-        singcutoff=params['singcutoff'], single_alpha=params['single_alpha'])
+    X_train = params['features_train_delayed']
+    y_train = params['resp_train']
+    X_test = params['features_test_delayed']
+    y_test = params['resp_test']
+    alphas = params['alphas']
+    # nboots=params['nboots'],
+    nboots = 2
+    chunklen = params['chunklen']
+    nchunks = params['nchunks']
+    singcutoff = params['singcutoff']
+    single_alpha = params['single_alpha']
 
-    print('mean test corrs', corrs_test.mean())
-
-    # print('\tRunning', algo)
-
+    # call 1
     # t0 = time.time()
-    # wt = _ridge_sklearn(params['features_train_delayed'],
-    #                     params['resp_train'], alpha)
-    # print('\ttime elapsed', time.time()-t0)
+    # wt_ridge, corrs_test, alphas_best, corrs_tune, valinds = bootstrap_ridge(
+    #     X_train, y_train, X_test, y_test,
+    #     alphas=alphas,
+    #     nboots=nboots,
+    #     chunklen=params['chunklen'], nchunks=params['nchunks'],
+    #     singcutoff=params['singcutoff'], single_alpha=params['single_alpha'])
+    # print('time elapsed', time.time()-t0)
 
-    # pred_test = np.dot(params['features_test_delayed'], wt)
-    # corrs_test = np.array([np.corrcoef(params['resp_test'][:, ii], pred_test[:, ii].ravel())[0, 1]
-    #                        for ii in range(params['resp_test'].shape[1])])
+    wt_hybrid, corrs_test, corrs_tune, valinds = boostrap_ridge_with_lowrank(
+        X_train, y_train, X_test, y_test,
+        alphas_ridge=alphas,
+        alphas_lowrank=alphas[::2],
+        ranks=[25, 100],
+        nboots=nboots, chunklen=chunklen, nchunks=nchunks)
 
-    # print('\tmean test corr', corrs_test.mean())
+    # pred_test = X_test @ wt_ridge
+    # corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
+    #                        for ii in range(y_test.shape[1])])
+    # print('mean test corrs', corrs_test.mean())
+    # pred_train = X_train @ wt_ridge
+    # corrs_train = np.array([np.corrcoef(y_train[:, ii], pred_train[:, ii].ravel())[0, 1]
+    #                         for ii in range(y_train.shape[1])])
+    # print('mean train corrs', corrs_train.mean())
 
-    # pred_train = np.dot(params['features_train_delayed'], wt)
-    # corrs_train = np.array([np.corrcoef(params['resp_train'][:, ii], pred_train[:, ii].ravel())[0, 1]
-    #                         for ii in range(params['resp_train'].shape[1])])
-    # print('\tmean train corr', corrs_train.mean())
+    # # call 2
+    # t0 = time.time()
+    # wt_lowrank, meanbootcorrs = bootstrap_low_rank_ridge(
+    #     X_train, y_train, alphas=alphas[::2], ranks=[25, 100], nboots=nboots, chunklen=chunklen, nchunks=nchunks)
+    # print('time elapsed', time.time()-t0)
+    # pred_train = X_train @ wt_lowrank
+
+    # pred_test = X_test @ wt_lowrank
+    # corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
+    #                        for ii in range(y_test.shape[1])])
+    # print('mean test corrs', corrs_test.mean())
+    # pred_train = X_train @ wt_lowrank
+    # corrs_train = np.array([np.corrcoef(y_train[:, ii], pred_train[:, ii].ravel())[0, 1]
+    #                         for ii in range(y_train.shape[1])])
+    # print('mean train corrs', corrs_train.mean())
+
+    # # select weights between wt and wt_lowrank based on bootstrap results
+    # try:
+    #     meanbootcorrs_ridge = corrs_tune.mean(2).max(axis=0)
+    #     meanbootcorrs_lowrank = meanbootcorrs.max(axis=0)
+    #     wt_hybrid = np.zeros_like(wt_ridge)
+    #     for i in range(y_train.shape[1]):
+    #         if meanbootcorrs_ridge[i] > meanbootcorrs_lowrank[i]:
+    #             wt_hybrid[:, i] = wt_ridge[:, i]
+    #         else:
+    #             wt_hybrid[:, i] = wt_lowrank[:, i]
+
+    #     pred_test = X_test @ wt_hybrid
+    #     corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
+    #                            for ii in range(y_test.shape[1])])
+    #     print('mean test corrs', corrs_test.mean())
+    #     pred_train = X_train @ wt_hybrid
+    #     corrs_train = np.array([np.corrcoef(y_train[:, ii], pred_train[:, ii].ravel())[0, 1]
+    #                             for ii in range(y_train.shape[1])])
+    #     print('mean train corrs', corrs_train.mean())
+    # except Exception as e:
+    #     print(e)
+    #     breakpoint()
