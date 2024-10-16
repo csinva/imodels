@@ -1,3 +1,5 @@
+from sklearn.linear_model import Ridge
+import time
 import numpy as np
 import logging
 from neuro.data.utils import mult_diag, counter
@@ -462,6 +464,12 @@ def bootstrap_ridge(
         return [], corrs, valphas, all_correlation_matrices, valinds
 
 
+def _ridge_sklearn(X_train, y_train, alpha):
+    ridge = Ridge(alpha=alpha**2, fit_intercept=False)
+    ridge.fit(X_train, y_train)
+    return ridge.coef_.T
+
+
 if __name__ == '__main__':
     # sample data for ridge regression
     np.random.seed(0)
@@ -471,9 +479,29 @@ if __name__ == '__main__':
 
     params = joblib.load('example_params.joblib')
     print(params.keys())
-    wt, corrs_test, alphas_best, corrs_tune, valinds = bootstrap_ridge(
-        X_train=params['features_train_delayed'], y_train=params['y_train'],
-        X_test=params['features_test_delayed'], y_test=params['y_test'],
-        alphas=params['alphas'], nboots=params['nboots'],
-        chunklen=params['chunklen'], nchunks=params['nchunks'],
-        singcutoff=params['singcutoff'], single_alpha=params['single_alpha'])
+    # wt, corrs_test, alphas_best, corrs_tune, valinds = bootstrap_ridge(
+    #     X_train=params['features_train_delayed'], resp_train=params['resp_train'],
+    #     X_test=params['features_test_delayed'], resp_test=params['resp_test'],
+    #     alphas=params['alphas'], nboots=params['nboots'],
+    #     chunklen=params['chunklen'], nchunks=params['nchunks'],
+    #     singcutoff=params['singcutoff'], single_alpha=params['single_alpha'])
+
+    for alpha in params['alphas']:
+        for algo in [_ridge, _ridge_sklearn]:
+            print('\tRunning', algo)
+
+            t0 = time.time()
+            wt = algo(params['features_train_delayed'],
+                      params['resp_train'], alpha)
+            print('\ttime elapsed', time.time()-t0)
+
+            pred_test = np.dot(params['features_test_delayed'], wt)
+            corrs_test = np.array([np.corrcoef(params['resp_test'][:, ii], pred_test[:, ii].ravel())[0, 1]
+                                   for ii in range(params['resp_test'].shape[1])])
+
+            print('\tmean test corr', corrs_test.mean())
+
+            pred_train = np.dot(params['features_train_delayed'], wt)
+            corrs_train = np.array([np.corrcoef(params['resp_train'][:, ii], pred_train[:, ii].ravel())[0, 1]
+                                    for ii in range(params['resp_train'].shape[1])])
+            print('\tmean train corr', corrs_train.mean())
