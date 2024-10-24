@@ -256,7 +256,7 @@ def _ridge_correlations_per_voxel_per_alpha(
 def bootstrap_ridge(
         X_train, y_train, X_test, y_test, alphas, nboots, chunklen, nchunks,
         corrmin=0.2, joined=None, singcutoff=1e-10, single_alpha=False,
-        use_corr=True, return_wt=True, logger=ridge_logger):
+        use_corr=True, return_wt=True, logger=ridge_logger, decrease_alpha: int = 0):
     """Uses ridge regression with a bootstrapped held-out set to get optimal alpha values for each response.
 
     First, [nchunks] random chunks of length [chunklen] will be taken from [X_train] and [y_train] for each regression
@@ -371,7 +371,15 @@ def bootstrap_ridge(
             # Find best alpha for each voxel
             meanbootcorrs = all_correlation_matrices.mean(2)
             bestalphainds = np.argmax(meanbootcorrs, 0)
+
+            # decrease inds by one clipped at max index
+            if decrease_alpha > 0:
+                print('decrease alpha mean', np.mean(bestalphainds))
+                bestalphainds = np.clip(
+                    bestalphainds - decrease_alpha, 0, len(alphas)-1)
+                print('decrease alpha mean', np.mean(bestalphainds))
             valphas = alphas[bestalphainds]
+
         else:
             # Find best alpha for each group of voxels
             valphas = np.zeros((n_targets,))
@@ -575,7 +583,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
     # params = joblib.load('example_params.joblib')
-    params = joblib.load('example_params_full.joblib')
+    params = joblib.load('/home/chansingh/fmri/example_params_full.joblib')
     print(params.keys())
 
     X_train = params['features_train_delayed']
@@ -590,31 +598,35 @@ if __name__ == '__main__':
     singcutoff = params['singcutoff']
     single_alpha = params['single_alpha']
 
-    wt_hybrid, corrs_test, corrs_tune, valinds = boostrap_ridge_with_lowrank(
-        X_train, y_train, X_test, y_test,
-        alphas_ridge=alphas,
-        alphas_lowrank=alphas,
-        ranks=[100],
-        nboots=nboots, chunklen=chunklen, nchunks=nchunks)
-
-    # baseline call
-    # t0 = time.time()
-    # wt_ridge, corrs_test, alphas_best, corrs_tune, valinds = bootstrap_ridge(
+    # wt_hybrid, corrs_test, corrs_tune, valinds = boostrap_ridge_with_lowrank(
     #     X_train, y_train, X_test, y_test,
-    #     alphas=alphas,
-    #     nboots=nboots,
-    #     chunklen=params['chunklen'], nchunks=params['nchunks'],
-    #     singcutoff=params['singcutoff'], single_alpha=params['single_alpha'])
-    # print('time elapsed', time.time()-t0)
+    #     alphas_ridge=alphas,
+    #     alphas_lowrank=alphas,
+    #     ranks=[100],
+    #     nboots=nboots, chunklen=chunklen, nchunks=nchunks)
 
-    # pred_test = X_test @ wt_ridge
-    # corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
-    #                        for ii in range(y_test.shape[1])])
-    # print('mean test corrs', corrs_test.mean())
-    # pred_train = X_train @ wt_ridge
-    # corrs_train = np.array([np.corrcoef(y_train[:, ii], pred_train[:, ii].ravel())[0, 1]
-    #                         for ii in range(y_train.shape[1])])
-    # print('mean train corrs', corrs_train.mean())
+    print('alphas', alphas)
+
+    # baseline call (with decrease_alpha=1)
+    t0 = time.time()
+    wt_ridge, corrs_test, alphas_best, corrs_tune, valinds = bootstrap_ridge(
+        X_train, y_train, X_test, y_test,
+        alphas=alphas,
+        nboots=nboots,
+        chunklen=params['chunklen'], nchunks=params['nchunks'],
+        singcutoff=params['singcutoff'], single_alpha=params['single_alpha'],
+        decrease_alpha=1
+    )
+    print('time elapsed', time.time()-t0)
+
+    pred_test = X_test @ wt_ridge
+    corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
+                           for ii in range(y_test.shape[1])])
+    print('mean test corrs', corrs_test.mean())
+    pred_train = X_train @ wt_ridge
+    corrs_train = np.array([np.corrcoef(y_train[:, ii], pred_train[:, ii].ravel())[0, 1]
+                            for ii in range(y_train.shape[1])])
+    print('mean train corrs', corrs_train.mean())
 
     # # call 2
     # t0 = time.time()
