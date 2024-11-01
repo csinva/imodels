@@ -53,6 +53,7 @@ from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
+from .clustering.stableclustering import StableClustering
 
 CLASSIFIERS = [
     BayesianRuleListClassifier,
