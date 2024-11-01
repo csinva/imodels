@@ -18,7 +18,7 @@ class StableClustering(BaseEstimator, ClusterMixin):
         self.random_state = random_state
         self.scores_ = {}
 
-    def fit(self, X, y=None):
+    def fit(self, X):
         best_k = None
         best_score = -1
         best_model = None
@@ -28,7 +28,7 @@ class StableClustering(BaseEstimator, ClusterMixin):
             for i_rep in tqdm(range(self.n_repetitions), desc='Repetitions', leave=False):
                 if self.algorithm == "k-means":
                     model = KMeans(
-                        n_clusters=k, random_state=self.random_state + i_rep)
+                        n_clusters=k, random_state=self.random_state + i_rep, init='random')
                     labels = model.fit_predict(X)
                 # elif self.algorithm == "nmf":
                 #     model = NMF(n_components=k, init='random',
@@ -66,7 +66,7 @@ class StableClustering(BaseEstimator, ClusterMixin):
         return self
 
     def predict(self, X):
-        check_is_fitted(self, ["best_model"])
+        check_is_fitted(self, ["best_model_", "best_k_"])
         if self.algorithm == "k-means":
             return self.best_model_.predict(X)
         # elif self.algorithm == "nmf":
