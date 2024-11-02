@@ -1,3 +1,4 @@
+from copy import deepcopy
 import numpy as np
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster import KMeans
@@ -71,6 +72,25 @@ class StableClustering(BaseEstimator, ClusterMixin):
             return self.best_model_.predict(X)
         # elif self.algorithm == "nmf":
         #     return np.argmax(self.best_model.transform(X), axis=1)
+
+    def predict_closest_points_to_centroids(self, X, n_closest=1):
+        '''
+        Returns predicted cluster index for each point in X.
+        For the n_closest points of each cluster to each centroid, returns the cluster index.
+        Returns -1 for all other points.
+        '''
+        check_is_fitted(self, ["best_model_", "best_k_"])
+        distances = self.best_model_.transform(
+            X)  # Shape: (n_samples, n_clusters)
+        cluster_assignments = self.predict(X)
+
+        preds = np.full(X.shape[0], -1)
+        for i in range(self.best_k_):
+            distances_ = deepcopy(distances[:, i])
+            distances_[cluster_assignments != i] = np.inf
+            closest_points = np.argsort(distances_)[:n_closest]
+            preds[closest_points] = i
+        return preds
 
 
 if __name__ == '__main__':
