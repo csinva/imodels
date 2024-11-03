@@ -22,14 +22,14 @@ class StableClustering(BaseEstimator, ClusterMixin):
     def fit(self, X):
         best_k = None
         best_score = -1
-        best_model = None
+        self.models_ = []
 
         for k in tqdm(self.k_values, desc="k"):
             clusters = []
             for i_rep in tqdm(range(self.n_repetitions), desc='Repetitions', leave=False):
                 if self.algorithm == "k-means":
                     model = KMeans(
-                        n_clusters=k, random_state=self.random_state + i_rep, init='random')
+                        n_clusters=k, random_state=self.random_state + i_rep)  # , init='random')
                     labels = model.fit_predict(X)
                 # elif self.algorithm == "nmf":
                 #     model = NMF(n_components=k, init='random',
@@ -53,6 +53,8 @@ class StableClustering(BaseEstimator, ClusterMixin):
                             "Invalid metric: choose 'rand' or 'adjusted_rand'")
                     scores.append(score)
 
+            self.models_.append(deepcopy(model))
+
             avg_score = np.mean(scores)
             # Store the average score for this k
             self.scores_[k] = float(avg_score)
@@ -63,7 +65,7 @@ class StableClustering(BaseEstimator, ClusterMixin):
 
         # Fit the final model on the whole data
         self.best_k_ = best_k
-        self.best_model_ = best_model.fit(X)
+        self.best_model_ = best_model
         return self
 
     def predict(self, X):
