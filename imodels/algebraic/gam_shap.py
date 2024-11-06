@@ -5,7 +5,7 @@ import numpy as np
 
 
 class ShapGAMClassifier(BaseEstimator, ClassifierMixin):
-    def __init__(self, n_estimators=10, feature_fraction=0.7, random_state=None):
+    def __init__(self, n_estimators=10, feature_fraction=0.7, random_state=None, ebm_kwargs: dict = {}):
         """
         Initialize the ensemble EBM classifier.
 
@@ -19,6 +19,7 @@ class ShapGAMClassifier(BaseEstimator, ClassifierMixin):
         self.random_state = random_state
         self.models = []
         self.feature_subsets = []
+        self.ebm_kwargs = ebm_kwargs
 
     def fit(self, X, y):
         """
@@ -37,7 +38,8 @@ class ShapGAMClassifier(BaseEstimator, ClassifierMixin):
             self.feature_subsets.append(feature_subset)
 
             # Create an EBM with the selected feature subset
-            ebm = ExplainableBoostingClassifier(random_state=self.random_state)
+            ebm = ExplainableBoostingClassifier(
+                random_state=self.random_state, **self.ebm_kwargs)
             X_subset = X[:, feature_subset]
             ebm.fit(X_subset, y)
             self.models.append(ebm)
