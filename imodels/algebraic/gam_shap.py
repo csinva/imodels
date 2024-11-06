@@ -30,9 +30,13 @@ class ShapGAMClassifier(BaseEstimator, ClassifierMixin):
 
         for _ in range(self.n_estimators):
             # Randomly select a subset of features
+            if isinstance(self.feature_fraction, float):
+                n_features = max(1, int(self.feature_fraction * n_features))
+            elif self.feature_fraction == 'uniform':
+                n_features = rng.integers(1, n_features + 1)
             feature_subset = rng.choice(
                 n_features,
-                size=int(self.feature_fraction * n_features),
+                size=n_features,
                 replace=False
             )
             self.feature_subsets.append(feature_subset)
