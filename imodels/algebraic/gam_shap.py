@@ -1,10 +1,15 @@
-from interpret.glassbox import ExplainableBoostingClassifier
-from sklearn.base import BaseEstimator, ClassifierMixin
+from copy import deepcopy
+from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, defaultdict
+from sklearn.datasets import load_diabetes
 from sklearn.utils import resample
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, r2_score
 import numpy as np
 
 
-class ShapGAMClassifier(BaseEstimator, ClassifierMixin):
+class ShapGAM(BaseEstimator):
     def __init__(self, n_estimators=10, feature_fraction=0.7, random_state=None, ebm_kwargs: dict = {}):
         """
         Initialize the ensemble EBM classifier.
@@ -42,7 +47,9 @@ class ShapGAMClassifier(BaseEstimator, ClassifierMixin):
             self.feature_subsets.append(feature_subset)
 
             # Create an EBM with the selected feature subset
-            ebm = ExplainableBoostingClassifier(
+            cls = ExplainableBoostingClassifier if isinstance(
+                self, ShapGAMClassifier) else ExplainableBoostingRegressor
+            ebm = cls(
                 random_state=self.random_state, **self.ebm_kwargs)
             X_subset = X[:, feature_subset]
             ebm.fit(X_subset, y)
@@ -52,24 +59,73 @@ class ShapGAMClassifier(BaseEstimator, ClassifierMixin):
 
     def predict_proba(self, X):
         """
-        Predict probabilities by averaging the predictions of all models.
+        Predict probabilities by averaging the shaping functions for each feature across models then predicting
         """
+        if isinstance(self, ShapGAMRegressor):
+            raise NotImplementedError(
+                "This method is not implemented for regression tasks.")
         # Aggregate predictions from all models
         probs = np.zeros((X.shape[0], 2))
 
-        for ebm, feature_subset in zip(self.models, self.feature_subsets):
-            probs_ = ebm.predict_proba(X[:, feature_subset])
-            probs += probs_
+        for feat_num in range(X.shape[1]):
+            X_ = np.zeros_like(X)
+            X_[:, feat_num] = X[:, feat_num]
+            feat_num_counts = 0
+            probs_feat = np.zeros((X.shape[0], 2))
+            for ebm, feature_subset in zip(self.models, self.feature_subsets):
+                if feat_num in feature_subset:
+                    # todo: there is an error here -- aggregating probas is not the same as aggregating logits!
+                    raise NotImplementedError(
+                        "This is not the same as aggregating logits Look at the predict function for smth more accurate!")
+                    probs_ = ebm.predict_proba(X[:, feature_subset])
+                    probs_feat += probs_
+                    feat_num_counts += 1
+            if feat_num_counts > 0:
+                probs_feat /= feat_num_counts
+                probs += probs_feat
 
-        # Average the probabilities across all models
-        probs /= self.n_estimators
+                # for ebm, feature_subset in zip(self.models, self.feature_subsets):
+                # probs_ = ebm.predict_proba(X[:, feature_subset])
+                # probs += probs_
+
+                # Average the probabilities across all models
+                # probs /= self.n_estimators
         return probs
 
     def predict(self, X):
         """
         Predict class labels by averaging the shape function outputs and taking the argmax.
         """
-        return np.argmax(self.predict_proba(X), axis=1)
+        if isinstance(self, ShapGAMClassifier):
+            return np.argmax(self.predict_proba(X), axis=1)
+        else:
+            # naively averaging the predictions across all models
+            # preds = np.zeros(X.shape[0])
+            # for ebm, feature_subset in zip(self.models, self.feature_subsets):
+            #     preds += ebm.predict(X[:, feature_subset])
+            # preds /= self.n_estimators
+            # return preds
+
+            # averaging the predictions across all models for each feature
+            preds = np.zeros(len(X_test))
+            for ex_num in range(len(X_test)):
+                for feat_num in range(X_train.shape[1]):
+                    feat_count = 0
+                    pred_feat = 0
+                    for ebm, feature_subset in zip(self.models, self.feature_subsets):
+                        if feat_num in feature_subset:
+                            expl_local = ebm.explain_local(
+                                X_test[ex_num, feature_subset])
+                            feat_num_in_subset = np.where(
+                                feature_subset == feat_num)[0][0]
+                            pred_feat += expl_local.data(
+                                0)['scores'][feat_num_in_subset]
+                            feat_count += 1
+                    if feat_count > 0:
+                        pred_feat /= feat_count
+                    preds[ex_num] += pred_feat
+
+            return preds
 
     def get_params(self, deep=True):
         return {
@@ -84,27 +140,47 @@ class ShapGAMClassifier(BaseEstimator, ClassifierMixin):
         return self
 
 
+class ShapGAMRegressor(ShapGAM, RegressorMixin):
+    ...
+
+
+class ShapGAMClassifier(ShapGAM, ClassifierMixin):
+    ...
+
+
 if __name__ == '__main__':
-    from sklearn.datasets import load_iris
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import accuracy_score
 
     # Load data
-    X, y = load_iris(return_X_y=True)
+    # X, y = load_iris(return_X_y=True)
+    # X, y =
 
     # make binary classification
-    X = X[y < 2]
-    y = y[y < 2]
+    # X = X[y < 2]
+    # y = y[y < 2]
+
+    # load regression data
+    X, y = load_diabetes(return_X_y=True)
+
+    # normalize y
+    y = (y - y.mean()) / y.std()
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42)
 
     # Create and fit ensemble EBM
-    ebm_ensemble = ShapGAMClassifier(
-        n_estimators=5, feature_fraction=0.8, random_state=42)
+    # ebm_ensemble = ExplainableBoostingRegressor(
+    # interactions=0, random_state=42)
+    ebm_ensemble = ShapGAMRegressor(
+        n_estimators=20,
+        # feature_fraction=0.9,
+        feature_fraction='uniform',
+        random_state=42, ebm_kwargs={'interactions': 0})
     ebm_ensemble.fit(X_train, y_train)
 
     # Evaluate
     y_pred = ebm_ensemble.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    print(f"Ensemble EBM Accuracy: {accuracy}")
+    # accuracy = accuracy_score(y_test, y_pred)
+    # print(f"Ensemble EBM Accuracy: {accuracy}")
+
+    r2 = r2_score(y_test, y_pred)
+    print(f"Ensemble EBM R^2: {r2}")
