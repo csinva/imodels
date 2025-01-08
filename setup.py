@@ -14,7 +14,7 @@ required_pypi = [
     'pandas',
     'requests',  # used in c4.5
     'scipy',
-    'scikit-learn>=1.2.0',  # recently updated this
+    'scikit-learn<1.6.0',  # 1.6.0 has issue with ensemble models
     'tqdm',  # used in BART
 ]
 
