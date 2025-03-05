@@ -11,7 +11,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/license-mit-blue.svg">
   <img src="https://img.shields.io/badge/python-3.9--3.11-blue">
-  <img src="https://img.shields.io/badge/numpy-<2.0-blue">
+  <img src="https://img.shields.io/badge/numpy->=2.0-blue">
   <a href="https://doi.org/10.21105/joss.03192"><img src="https://joss.theoj.org/papers/10.21105/joss.03192/status.svg"></a>
   <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
   <!--img src="https://img.shields.io/github/checks-status/csinva/imodels/master"-->
