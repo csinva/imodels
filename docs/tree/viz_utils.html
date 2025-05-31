@@ -31,7 +31,7 @@ from sklearn.base import ClassifierMixin, RegressorMixin
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree._tree import Tree
 
-TreeData = namedtuple(&#39;TreeData&#39;, &#39;left_child right_child feature threshold impurity n_node_samples weighted_n_node_samples&#39;)
+TreeData = namedtuple(&#39;TreeData&#39;, &#39;left_child right_child feature threshold impurity n_node_samples weighted_n_node_samples missing_go_to_left&#39;)
 
 def _extract_arrays_from_figs_tree(figs_tree):
     &#34;&#34;&#34;Takes in a FIGS tree and recursively converts it to arrays that we can later use to build a sklearn decision tree object
@@ -44,6 +44,7 @@ def _extract_arrays_from_figs_tree(figs_tree):
         impurity=[],
         n_node_samples=[],
         weighted_n_node_samples=[],
+        missing_go_to_left=[],
     )
 
     value_sklearn_array = []
@@ -70,6 +71,7 @@ def _extract_arrays_from_figs_tree(figs_tree):
         tree_data.impurity.append(node.impurity)
         tree_data.n_node_samples.append(np.sum(value_sklearn))
         tree_data.weighted_n_node_samples.append(np.sum(value_sklearn)) # TODO add sample weights
+        tree_data.missing_go_to_left.append(1)
         value_sklearn_array.append(value_sklearn)
 
         if has_children:
@@ -94,7 +96,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predicti
     # manipulate tree_data_namedtuple into the numpy array of tuples that sklearn expects for use with __setstate__()
     df_tree_data = pd.DataFrame(tree_data_namedtuple._asdict())
     tree_data_list_of_tuples = list(df_tree_data.itertuples(index=False, name=None))
-    _dtypes = np.dtype([(&#39;left_child&#39;, &#39;i8&#39;), (&#39;right_child&#39;, &#39;i8&#39;), (&#39;feature&#39;, &#39;i8&#39;), (&#39;threshold&#39;, &#39;f8&#39;), (&#39;impurity&#39;, &#39;f8&#39;), (&#39;n_node_samples&#39;, &#39;i8&#39;), (&#39;weighted_n_node_samples&#39;, &#39;f8&#39;)])
+    _dtypes = np.dtype([(&#39;left_child&#39;, &#39;i8&#39;), (&#39;right_child&#39;, &#39;i8&#39;), (&#39;feature&#39;, &#39;i8&#39;), (&#39;threshold&#39;, &#39;f8&#39;), (&#39;impurity&#39;, &#39;f8&#39;), (&#39;n_node_samples&#39;, &#39;i8&#39;), (&#39;weighted_n_node_samples&#39;, &#39;f8&#39;), (&#39;missing_go_to_left&#39;, &#39;u1&#39;)])
 
     tree_data_array = np.array(tree_data_list_of_tuples, dtype=_dtypes)
 
@@ -200,7 +202,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predicti
     # manipulate tree_data_namedtuple into the numpy array of tuples that sklearn expects for use with __setstate__()
     df_tree_data = pd.DataFrame(tree_data_namedtuple._asdict())
     tree_data_list_of_tuples = list(df_tree_data.itertuples(index=False, name=None))
-    _dtypes = np.dtype([(&#39;left_child&#39;, &#39;i8&#39;), (&#39;right_child&#39;, &#39;i8&#39;), (&#39;feature&#39;, &#39;i8&#39;), (&#39;threshold&#39;, &#39;f8&#39;), (&#39;impurity&#39;, &#39;f8&#39;), (&#39;n_node_samples&#39;, &#39;i8&#39;), (&#39;weighted_n_node_samples&#39;, &#39;f8&#39;)])
+    _dtypes = np.dtype([(&#39;left_child&#39;, &#39;i8&#39;), (&#39;right_child&#39;, &#39;i8&#39;), (&#39;feature&#39;, &#39;i8&#39;), (&#39;threshold&#39;, &#39;f8&#39;), (&#39;impurity&#39;, &#39;f8&#39;), (&#39;n_node_samples&#39;, &#39;i8&#39;), (&#39;weighted_n_node_samples&#39;, &#39;f8&#39;), (&#39;missing_go_to_left&#39;, &#39;u1&#39;)])
 
     tree_data_array = np.array(tree_data_list_of_tuples, dtype=_dtypes)
 
@@ -283,10 +285,10 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predicti
 <dl>
 <dt id="imodels.tree.viz_utils.TreeData"><code class="flex name class">
 <span>class <span class="ident">TreeData</span></span>
-<span>(</span><span>left_child, right_child, feature, threshold, impurity, n_node_samples, weighted_n_node_samples)</span>
+<span>(</span><span>left_child, right_child, feature, threshold, impurity, n_node_samples, weighted_n_node_samples, missing_go_to_left)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>TreeData(left_child, right_child, feature, threshold, impurity, n_node_samples, weighted_n_node_samples)</p></div>
+<div class="desc"><p>TreeData(left_child, right_child, feature, threshold, impurity, n_node_samples, weighted_n_node_samples, missing_go_to_left)</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>builtins.tuple</li>
@@ -304,6 +306,10 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predicti
 <dt id="imodels.tree.viz_utils.TreeData.left_child"><code class="name">var <span class="ident">left_child</span></code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 0</p></div>
+</dd>
+<dt id="imodels.tree.viz_utils.TreeData.missing_go_to_left"><code class="name">var <span class="ident">missing_go_to_left</span></code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 7</p></div>
 </dd>
 <dt id="imodels.tree.viz_utils.TreeData.n_node_samples"><code class="name">var <span class="ident">n_node_samples</span></code></dt>
 <dd>
@@ -350,6 +356,7 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predicti
 <li><code><a title="imodels.tree.viz_utils.TreeData.feature" href="#imodels.tree.viz_utils.TreeData.feature">feature</a></code></li>
 <li><code><a title="imodels.tree.viz_utils.TreeData.impurity" href="#imodels.tree.viz_utils.TreeData.impurity">impurity</a></code></li>
 <li><code><a title="imodels.tree.viz_utils.TreeData.left_child" href="#imodels.tree.viz_utils.TreeData.left_child">left_child</a></code></li>
+<li><code><a title="imodels.tree.viz_utils.TreeData.missing_go_to_left" href="#imodels.tree.viz_utils.TreeData.missing_go_to_left">missing_go_to_left</a></code></li>
 <li><code><a title="imodels.tree.viz_utils.TreeData.n_node_samples" href="#imodels.tree.viz_utils.TreeData.n_node_samples">n_node_samples</a></code></li>
 <li><code><a title="imodels.tree.viz_utils.TreeData.right_child" href="#imodels.tree.viz_utils.TreeData.right_child">right_child</a></code></li>
 <li><code><a title="imodels.tree.viz_utils.TreeData.threshold" href="#imodels.tree.viz_utils.TreeData.threshold">threshold</a></code></li>

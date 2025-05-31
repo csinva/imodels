@@ -106,6 +106,9 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
         """
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        if isinstance(self, ClassifierMixin) and len(np.unique(y)) > 2:
+            raise ValueError(
+                "RuleFit does not yet support multiclass classification")
 
         self.n_features_ = X.shape[1]
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
@@ -113,7 +116,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.feature_names = np.array(list(self.feature_dict_.values()))
 
         extracted_rules = self._extract_rules(X, y)
-        self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(X, y, extracted_rules)
+        self.rules_without_feature_names_, self.coef, self.intercept = self._score_rules(
+            X, y, extracted_rules)
         self.rules_ = [
             replace_feature_name(rule, self.feature_dict_) for rule in self.rules_without_feature_names_
         ]
@@ -152,7 +156,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         if isinstance(self, RegressorMixin):
             return self._predict_continuous_output(X)
         else:
-            return np.argmax(self.predict_proba(X), axis=1)
+            class_preds = np.argmax(self.predict_proba(X), axis=1)
+            return np.array([self.classes_[i] for i in class_preds])
 
     def predict_proba(self, X):
         check_is_fitted(self)
@@ -160,7 +165,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             X = X.toarray()
         X = check_array(X)
         continuous_output = self._predict_continuous_output(X)
-        logits = np.vstack((1 - continuous_output, continuous_output)).transpose()
+        logits = np.vstack(
+            (1 - continuous_output, continuous_output)).transpose()
         return softmax(logits, axis=1)
 
     def transform(self, X=None, rules=None):
@@ -178,9 +184,17 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             Transformed data set
         """
         df = pd.DataFrame(X, columns=self.feature_placeholders)
+        # print('df', df.dtypes, df.head())
         X_transformed = np.zeros((X.shape[0], len(rules)))
+
         for i, r in enumerate(rules):
-            features_r_uses = [term.split(' ')[0] for term in r.split(' and ')]
+            features_r_uses = list(
+                set(term.split(' ')[0] for term in r.split(' and ')))
+            # print('r', r)
+            # print('feats', df[features_r_uses])
+            # print('ans', df[features_r_uses].query(r))
+            # print(
+            #     'tra', X_transformed[df[features_r_uses].query(r).index.values, i])
             X_transformed[df[features_r_uses].query(r).index.values, i] = 1
         return X_transformed
 
@@ -216,7 +230,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                 subregion = np.array(subregion)
                 importance = sum(abs(coef) * abs([x[i] for x in self.winsorizer.trim(subregion)] - self.mean[i])) / len(
                     subregion)
-            output_rules += [(self.feature_names[i], 'linear', coef, 1, importance)]
+            output_rules += [(self.feature_names[i],
+                              'linear', coef, 1, importance)]
 
         # Add rules
         for i in range(0, len(self.rules_)):
@@ -224,13 +239,17 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
             coef = self.coef[i + n_features]
 
             if subregion is None:
-                importance = abs(coef) * (rule.support * (1 - rule.support)) ** (1 / 2)
+                importance = abs(coef) * (rule.support *
+                                          (1 - rule.support)) ** (1 / 2)
             else:
                 rkx = self.transform(subregion, [rule])[:, -1]
-                importance = sum(abs(coef) * abs(rkx - rule.support)) / len(subregion)
+                importance = sum(
+                    abs(coef) * abs(rkx - rule.support)) / len(subregion)
 
-            output_rules += [(self.rules_[i].rule, 'rule', coef, rule.support, importance)]
-        rules = pd.DataFrame(output_rules, columns=["rule", "type", "coef", "support", "importance"])
+            output_rules += [(self.rules_[i].rule, 'rule',
+                              coef, rule.support, importance)]
+        rules = pd.DataFrame(output_rules, columns=[
+                             "rule", "type", "coef", "support", "importance"])
         if exclude_zero_coef:
             rules = rules.ix[rules.coef != 0]
         return rules
@@ -292,7 +311,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         # no rules fit and self.include_linear == False
         if X_concat.shape[1] == 0:
             return [], [], 0
-        prediction_task = 'regression' if isinstance(self, RegressorMixin) else 'classification'
+        prediction_task = 'regression' if isinstance(
+            self, RegressorMixin) else 'classification'
         return score_linear(X_concat, y, rules,
                             prediction_task=prediction_task,
                             max_rules=self.max_rules,

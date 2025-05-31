@@ -1,0 +1,1288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from copy import deepcopy
+import numpy as np
+import pandas as pd
+from sklearn.base import BaseEstimator
+from sklearn.linear_model import ElasticNetCV, LinearRegression, RidgeCV, LassoCV, LogisticRegressionCV
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.utils.validation import check_is_fitted
+from sklearn.utils import check_array
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.utils.validation import check_X_y
+from sklearn.utils.validation import _check_sample_weight
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor, AdaBoostClassifier, AdaBoostRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, roc_auc_score
+from tqdm import tqdm
+from sklearn.multioutput import MultiOutputRegressor, MultiOutputClassifier
+from collections import defaultdict
+import pandas as pd
+import json
+from sklearn.preprocessing import StandardScaler
+from imodels.util.transforms import CorrelationScreenTransformer
+
+import imodels
+from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+
+from sklearn.base import RegressorMixin, ClassifierMixin
+
+
+# See notes on EBM in the docs
+# main file: https://github.com/interpretml/interpret/blob/develop/python/interpret-core/interpret/glassbox/_ebm/_ebm.py
+# merge ebms: https://github.com/interpretml/interpret/blob/develop/python/interpret-core/interpret/glassbox/_ebm/_merge_ebms.py#L280
+# eval_terms: https://interpret.ml/docs/python/api/ExplainableBoostingRegressor.html#interpret.glassbox.ExplainableBoostingRegressor.eval_terms
+
+class MultiTaskGAM(BaseEstimator):
+    &#34;&#34;&#34;EBM-based GAM that shares curves for predicting different outputs.
+    - If only one target is given, we fit an EBM to predict each covariate
+    - If multiple targets are given, we fit a an EBM to predict each target
+    - If only one target is given and use_single_task_with_reweighting, we fit an EBM to predict the single target, then apply reweighting
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        ebm_kwargs={&#39;n_jobs&#39;: 1, &#39;max_rounds&#39;: 5000, },
+        multitask=True,
+        interactions=0.95,
+        linear_penalty=&#39;ridge&#39;,
+        onehot_prior=False,
+        renormalize_features=False,
+        use_normalize_feature_targets=False,
+        use_internal_classifiers=False,
+        fit_target_curves=True,
+        use_correlation_screening_for_features=False,
+        use_single_task_with_reweighting=False,
+        fit_linear_frac: float = None,
+        random_state=42,
+    ):
+        &#34;&#34;&#34;
+        Params
+        ------
+        Note: args override ebm_kwargs if there are duplicates
+        one_hot_prior: bool
+            If True and multitask, the linear model will be fit with a prior that the ebm
+            features predicting the target should have coef 1
+        renormalize_features: bool
+            If True, renormalize the features before fitting the linear model
+        use_normalize_feature_targets: bool
+            whether to normalize the features used as targets for internal EBMs
+            (does not apply to target columns)
+            If input features are normalized already, this has no effect
+        use_internal_classifiers: bool
+            whether to use internal classifiers (as opposed to regressors)
+        fit_target_curves: bool
+            whether to fit an EBM to predict the target
+        use_single_task_with_reweighting: bool
+            fit an EBM to predict the single target, then apply linear reweighting
+        use_correlation_screening_for_features: bool
+            whether to use correlation screening for features
+        fit_linear_frac: float
+            If not None, the fraction of features to use for the linear model (the rest are used for the EBM)
+        &#34;&#34;&#34;
+        self.ebm_kwargs = ebm_kwargs
+        self.multitask = multitask
+        self.linear_penalty = linear_penalty
+        self.random_state = random_state
+        self.interactions = interactions
+        self.onehot_prior = onehot_prior
+        self.use_normalize_feature_targets = use_normalize_feature_targets
+        self.renormalize_features = renormalize_features
+        self.use_internal_classifiers = use_internal_classifiers
+        self.fit_target_curves = fit_target_curves
+        self.use_single_task_with_reweighting = use_single_task_with_reweighting
+        self.use_correlation_screening_for_features = use_correlation_screening_for_features
+        self.fit_linear_frac = fit_linear_frac
+
+        # override ebm_kwargs
+        ebm_kwargs[&#39;random_state&#39;] = random_state
+        ebm_kwargs[&#39;interactions&#39;] = interactions
+
+    def fit(self, X, y, sample_weight=None):
+        X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
+        self.n_outputs_ = 1 if len(y.shape) == 1 else y.shape[1]
+        if self.n_outputs_ &gt; 1 and not self.fit_target_curves:
+            raise ValueError(
+                &#34;fit_target_curves must be True when n_outputs &gt; 1&#34;)
+        if isinstance(self, ClassifierMixin):
+            check_classification_targets(y)
+            if self.n_outputs_ == 1:
+                self.classes_, y = np.unique(y, return_inverse=True)
+                if len(self.classes_) &gt; 2:
+                    raise ValueError(
+                        &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
+            elif self.n_outputs_ &gt; 1:
+                self.classes_ = [np.unique(y[:, i])
+                                 for i in range(self.n_outputs_)]
+                if any(len(c) &gt; 2 for c in self.classes_):
+                    raise ValueError(
+                        &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
+        sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+        if self.use_single_task_with_reweighting:
+            assert self.n_outputs_ == 1, &#34;use_single_task_with_reweighting only works with one output&#34;
+            assert self.multitask, &#34;use_single_task_with_reweighting only works with multitask&#34;
+
+        # just fit ebm normally
+        if not self.multitask:
+            if isinstance(self, ClassifierMixin):
+                self.ebm_ = ExplainableBoostingClassifier(**self.ebm_kwargs)
+            else:
+                self.ebm_ = ExplainableBoostingRegressor(**self.ebm_kwargs)
+
+            # fit
+            if self.n_outputs_ &gt; 1:
+                if isinstance(self, ClassifierMixin):
+                    self.ebm_multioutput_ = MultiOutputClassifier(self.ebm_)
+                else:
+                    self.ebm_multioutput_ = MultiOutputRegressor(self.ebm_)
+                self.ebm_multioutput_.fit(X, y, sample_weight=sample_weight)
+            else:
+                self.ebm_.fit(X, y, sample_weight=sample_weight)
+            return self
+
+        # fit EBM(s)
+        self.ebms_ = []
+        num_samples, num_features = X.shape
+        idxs_ebm, idxs_lin = self._split_data(num_samples)
+
+        # fit EBM
+        if self.use_single_task_with_reweighting:
+            # fit an EBM to predict the single output
+            self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+            self.ebms_[-1].fit(X[idxs_ebm], y[idxs_ebm],
+                               sample_weight=sample_weight[idxs_ebm])
+        elif self.n_outputs_ == 1:
+            # with 1 output, we fit an EBM to each feature
+            for task_num in tqdm(range(num_features)):
+                y_ = np.ascontiguousarray(X[idxs_ebm][:, task_num])
+                X_ = deepcopy(X[idxs_ebm])
+                X_[:, task_num] = 0
+                self.ebms_.append(self._initialize_ebm_internal(y_))
+                if isinstance(self, ClassifierMixin):
+                    _, y_ = np.unique(y_, return_inverse=True)
+                elif self.use_normalize_feature_targets:
+                    y_ = StandardScaler().fit_transform(y_.reshape(-1, 1)).ravel()
+                self.ebms_[task_num].fit(
+                    X_, y_, sample_weight=sample_weight[idxs_ebm])
+
+            # also fit an EBM to the target
+            if self.fit_target_curves:
+                self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+                self.ebms_[num_features].fit(
+                    X[idxs_ebm], y[idxs_ebm], sample_weight=sample_weight[idxs_ebm])
+        elif self.n_outputs_ &gt; 1:
+            # with multiple outputs, we fit an EBM to each output
+            for task_num in tqdm(range(self.n_outputs_)):
+                self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+                y_ = np.ascontiguousarray(y[idxs_ebm][:, task_num])
+                self.ebms_[task_num].fit(
+                    X[idxs_ebm], y_, sample_weight=sample_weight[idxs_ebm])
+
+        # extract features from EBMs
+        self.term_names_list_ = [
+            ebm_.term_names_ for ebm_ in self.ebms_]
+        self.term_names_ = sum(self.term_names_list_, [])
+        feats = self._extract_ebm_features(X)
+        if self.renormalize_features:
+            self.scaler_ = StandardScaler()
+            feats = self.scaler_.fit_transform(feats)
+        if self.use_correlation_screening_for_features:
+            self.correlation_screener_ = CorrelationScreenTransformer()
+            feats = self.correlation_screener_.fit_transform(feats, y)
+        feats[np.isinf(feats)] = 0
+
+        # fit linear model
+        self.lin_model = self._fit_linear_model(
+            feats[idxs_lin], y[idxs_lin], sample_weight[idxs_lin])
+
+        return self
+
+    def _initialize_ebm_internal(self, y):
+        if self.use_internal_classifiers and len(np.unique(y)) == 2:
+            return ExplainableBoostingClassifier(**self.ebm_kwargs)
+        else:
+            return ExplainableBoostingRegressor(**self.ebm_kwargs)
+
+    def _split_data(self, num_samples):
+        &#39;&#39;&#39;Split data into EBM and linear model data
+        &#39;&#39;&#39;
+        if self.fit_linear_frac is not None:
+            rng = np.random.RandomState(self.random_state)
+            idxs_ebm = rng.choice(num_samples, int(
+                num_samples * self.fit_linear_frac), replace=False)
+            idxs_lin = np.array(
+                [i for i in range(num_samples) if i not in idxs_ebm])
+        else:
+            idxs_ebm = np.arange(num_samples)
+            idxs_lin = idxs_ebm
+        assert len(idxs_ebm) &gt; 0, f&#34;No data for EBM! {self.fit_linear_frac=}&#34;
+        assert len(
+            idxs_lin) &gt; 0, f&#34;No data for linear model! {self.fit_linear_frac=}&#34;
+        return idxs_ebm, idxs_lin
+
+    def _fit_linear_model(self, feats, y, sample_weight):
+        # fit a linear model to the features
+        if isinstance(self, ClassifierMixin):
+            lin_model = {
+                &#39;ridge&#39;: LogisticRegressionCV(penalty=&#39;l2&#39;),
+                &#39;elasticnet&#39;: LogisticRegressionCV(penalty=&#39;elasticnet&#39;),
+                &#39;lasso&#39;: LogisticRegressionCV(penalty=&#39;l1&#39;),
+            }[self.linear_penalty]
+            if self.n_outputs_ &gt; 1:
+                lin_model = MultiOutputClassifier(lin_model)
+        else:
+            lin_model = {
+                &#39;ridge&#39;: RidgeCV(alphas=np.logspace(-2, 3, 7)),
+                &#39;elasticnet&#39;: ElasticNetCV(n_alphas=7),
+                &#39;lasso&#39;: LassoCV(n_alphas=7),
+            }[self.linear_penalty]
+
+        # onehot prior is a prior (for regression only) that
+        # the ebm features predicting the target should have coef 1
+        if not self.onehot_prior or isinstance(self, ClassifierMixin):
+            lin_model.fit(feats, y, sample_weight=sample_weight)
+        else:
+            coef_prior_ = np.zeros((feats.shape[1], ))
+            coef_prior_[:-len(self.term_names_list_[-1])] = 1
+            preds_prior = feats @ coef_prior_
+            residuals = y - preds_prior
+            lin_model.fit(feats, residuals, sample_weight=sample_weight)
+            lin_model.coef_ = lin_model.coef_ + coef_prior_
+        return lin_model
+
+    def _extract_ebm_features(self, X):
+        &#39;&#39;&#39;
+        Extract features by extracting all terms with EBM
+        &#39;&#39;&#39;
+        feats = np.empty((X.shape[0], len(self.term_names_)))
+        offset = 0
+        for ebm_num in range(len(self.ebms_)):
+            n_features_ebm_num = len(self.term_names_list_[ebm_num])
+            feats[:, offset: offset + n_features_ebm_num] = \
+                self.ebms_[ebm_num].eval_terms(X)
+            offset += n_features_ebm_num
+
+        return feats
+
+    def predict(self, X):
+        check_is_fitted(self)
+        X = check_array(X, accept_sparse=False)
+        if hasattr(self, &#39;ebms_&#39;):
+            feats = self._extract_ebm_features(X)
+            if hasattr(self, &#39;scaler_&#39;):
+                feats = self.scaler_.transform(feats)
+            if hasattr(self, &#39;correlation_screener_&#39;):
+                feats = self.correlation_screener_.transform(feats)
+            feats[np.isinf(feats)] = 0
+            return self.lin_model.predict(feats)
+
+        # multi-output without multitask learning
+        elif hasattr(self, &#39;ebm_multioutput_&#39;):
+            return self.ebm_multioutput_.predict(X)
+
+        # single-task standard
+        elif hasattr(self, &#39;ebm_&#39;):
+            return self.ebm_.predict(X)
+
+    def predict_proba(self, X):
+        check_is_fitted(self)
+        if hasattr(self, &#39;ebms_&#39;):
+            feats = self._extract_ebm_features(X)
+            if hasattr(self, &#39;scaler_&#39;):
+                feats = self.scaler_.transform(feats)
+            if hasattr(self, &#39;correlation_screener_&#39;):
+                feats = self.correlation_screener_.transform(feats)
+            return self.lin_model.predict_proba(feats)
+
+        # multi-output without multitask learning
+        elif hasattr(self, &#39;ebm_multioutput_&#39;):
+            return self.ebm_multioutput_.predict_proba(X)
+
+        # single-task standard
+        elif hasattr(self, &#39;ebm_&#39;):
+            return self.ebm_.predict_proba(X)
+
+
+class MultiTaskGAMRegressor(MultiTaskGAM, RegressorMixin):
+    ...
+
+
+class MultiTaskGAMClassifier(MultiTaskGAM, ClassifierMixin):
+    ...</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.algebraic.gam_multitask.MultiTaskGAM"><code class="flex name class">
+<span>class <span class="ident">MultiTaskGAM</span></span>
+<span>(</span><span>ebm_kwargs={'n_jobs': 1, 'max_rounds': 5000}, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>EBM-based GAM that shares curves for predicting different outputs.
+- If only one target is given, we fit an EBM to predict each covariate
+- If multiple targets are given, we fit a an EBM to predict each target
+- If only one target is given and use_single_task_with_reweighting, we fit an EBM to predict the single target, then apply reweighting</p>
+<h2 id="params">Params</h2>
+<p>Note: args override ebm_kwargs if there are duplicates
+one_hot_prior: bool
+If True and multitask, the linear model will be fit with a prior that the ebm
+features predicting the target should have coef 1
+renormalize_features: bool
+If True, renormalize the features before fitting the linear model
+use_normalize_feature_targets: bool
+whether to normalize the features used as targets for internal EBMs
+(does not apply to target columns)
+If input features are normalized already, this has no effect
+use_internal_classifiers: bool
+whether to use internal classifiers (as opposed to regressors)
+fit_target_curves: bool
+whether to fit an EBM to predict the target
+use_single_task_with_reweighting: bool
+fit an EBM to predict the single target, then apply linear reweighting
+use_correlation_screening_for_features: bool
+whether to use correlation screening for features
+fit_linear_frac: float
+If not None, the fraction of features to use for the linear model (the rest are used for the EBM)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiTaskGAM(BaseEstimator):
+    &#34;&#34;&#34;EBM-based GAM that shares curves for predicting different outputs.
+    - If only one target is given, we fit an EBM to predict each covariate
+    - If multiple targets are given, we fit a an EBM to predict each target
+    - If only one target is given and use_single_task_with_reweighting, we fit an EBM to predict the single target, then apply reweighting
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        ebm_kwargs={&#39;n_jobs&#39;: 1, &#39;max_rounds&#39;: 5000, },
+        multitask=True,
+        interactions=0.95,
+        linear_penalty=&#39;ridge&#39;,
+        onehot_prior=False,
+        renormalize_features=False,
+        use_normalize_feature_targets=False,
+        use_internal_classifiers=False,
+        fit_target_curves=True,
+        use_correlation_screening_for_features=False,
+        use_single_task_with_reweighting=False,
+        fit_linear_frac: float = None,
+        random_state=42,
+    ):
+        &#34;&#34;&#34;
+        Params
+        ------
+        Note: args override ebm_kwargs if there are duplicates
+        one_hot_prior: bool
+            If True and multitask, the linear model will be fit with a prior that the ebm
+            features predicting the target should have coef 1
+        renormalize_features: bool
+            If True, renormalize the features before fitting the linear model
+        use_normalize_feature_targets: bool
+            whether to normalize the features used as targets for internal EBMs
+            (does not apply to target columns)
+            If input features are normalized already, this has no effect
+        use_internal_classifiers: bool
+            whether to use internal classifiers (as opposed to regressors)
+        fit_target_curves: bool
+            whether to fit an EBM to predict the target
+        use_single_task_with_reweighting: bool
+            fit an EBM to predict the single target, then apply linear reweighting
+        use_correlation_screening_for_features: bool
+            whether to use correlation screening for features
+        fit_linear_frac: float
+            If not None, the fraction of features to use for the linear model (the rest are used for the EBM)
+        &#34;&#34;&#34;
+        self.ebm_kwargs = ebm_kwargs
+        self.multitask = multitask
+        self.linear_penalty = linear_penalty
+        self.random_state = random_state
+        self.interactions = interactions
+        self.onehot_prior = onehot_prior
+        self.use_normalize_feature_targets = use_normalize_feature_targets
+        self.renormalize_features = renormalize_features
+        self.use_internal_classifiers = use_internal_classifiers
+        self.fit_target_curves = fit_target_curves
+        self.use_single_task_with_reweighting = use_single_task_with_reweighting
+        self.use_correlation_screening_for_features = use_correlation_screening_for_features
+        self.fit_linear_frac = fit_linear_frac
+
+        # override ebm_kwargs
+        ebm_kwargs[&#39;random_state&#39;] = random_state
+        ebm_kwargs[&#39;interactions&#39;] = interactions
+
+    def fit(self, X, y, sample_weight=None):
+        X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
+        self.n_outputs_ = 1 if len(y.shape) == 1 else y.shape[1]
+        if self.n_outputs_ &gt; 1 and not self.fit_target_curves:
+            raise ValueError(
+                &#34;fit_target_curves must be True when n_outputs &gt; 1&#34;)
+        if isinstance(self, ClassifierMixin):
+            check_classification_targets(y)
+            if self.n_outputs_ == 1:
+                self.classes_, y = np.unique(y, return_inverse=True)
+                if len(self.classes_) &gt; 2:
+                    raise ValueError(
+                        &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
+            elif self.n_outputs_ &gt; 1:
+                self.classes_ = [np.unique(y[:, i])
+                                 for i in range(self.n_outputs_)]
+                if any(len(c) &gt; 2 for c in self.classes_):
+                    raise ValueError(
+                        &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
+        sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+        if self.use_single_task_with_reweighting:
+            assert self.n_outputs_ == 1, &#34;use_single_task_with_reweighting only works with one output&#34;
+            assert self.multitask, &#34;use_single_task_with_reweighting only works with multitask&#34;
+
+        # just fit ebm normally
+        if not self.multitask:
+            if isinstance(self, ClassifierMixin):
+                self.ebm_ = ExplainableBoostingClassifier(**self.ebm_kwargs)
+            else:
+                self.ebm_ = ExplainableBoostingRegressor(**self.ebm_kwargs)
+
+            # fit
+            if self.n_outputs_ &gt; 1:
+                if isinstance(self, ClassifierMixin):
+                    self.ebm_multioutput_ = MultiOutputClassifier(self.ebm_)
+                else:
+                    self.ebm_multioutput_ = MultiOutputRegressor(self.ebm_)
+                self.ebm_multioutput_.fit(X, y, sample_weight=sample_weight)
+            else:
+                self.ebm_.fit(X, y, sample_weight=sample_weight)
+            return self
+
+        # fit EBM(s)
+        self.ebms_ = []
+        num_samples, num_features = X.shape
+        idxs_ebm, idxs_lin = self._split_data(num_samples)
+
+        # fit EBM
+        if self.use_single_task_with_reweighting:
+            # fit an EBM to predict the single output
+            self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+            self.ebms_[-1].fit(X[idxs_ebm], y[idxs_ebm],
+                               sample_weight=sample_weight[idxs_ebm])
+        elif self.n_outputs_ == 1:
+            # with 1 output, we fit an EBM to each feature
+            for task_num in tqdm(range(num_features)):
+                y_ = np.ascontiguousarray(X[idxs_ebm][:, task_num])
+                X_ = deepcopy(X[idxs_ebm])
+                X_[:, task_num] = 0
+                self.ebms_.append(self._initialize_ebm_internal(y_))
+                if isinstance(self, ClassifierMixin):
+                    _, y_ = np.unique(y_, return_inverse=True)
+                elif self.use_normalize_feature_targets:
+                    y_ = StandardScaler().fit_transform(y_.reshape(-1, 1)).ravel()
+                self.ebms_[task_num].fit(
+                    X_, y_, sample_weight=sample_weight[idxs_ebm])
+
+            # also fit an EBM to the target
+            if self.fit_target_curves:
+                self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+                self.ebms_[num_features].fit(
+                    X[idxs_ebm], y[idxs_ebm], sample_weight=sample_weight[idxs_ebm])
+        elif self.n_outputs_ &gt; 1:
+            # with multiple outputs, we fit an EBM to each output
+            for task_num in tqdm(range(self.n_outputs_)):
+                self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+                y_ = np.ascontiguousarray(y[idxs_ebm][:, task_num])
+                self.ebms_[task_num].fit(
+                    X[idxs_ebm], y_, sample_weight=sample_weight[idxs_ebm])
+
+        # extract features from EBMs
+        self.term_names_list_ = [
+            ebm_.term_names_ for ebm_ in self.ebms_]
+        self.term_names_ = sum(self.term_names_list_, [])
+        feats = self._extract_ebm_features(X)
+        if self.renormalize_features:
+            self.scaler_ = StandardScaler()
+            feats = self.scaler_.fit_transform(feats)
+        if self.use_correlation_screening_for_features:
+            self.correlation_screener_ = CorrelationScreenTransformer()
+            feats = self.correlation_screener_.fit_transform(feats, y)
+        feats[np.isinf(feats)] = 0
+
+        # fit linear model
+        self.lin_model = self._fit_linear_model(
+            feats[idxs_lin], y[idxs_lin], sample_weight[idxs_lin])
+
+        return self
+
+    def _initialize_ebm_internal(self, y):
+        if self.use_internal_classifiers and len(np.unique(y)) == 2:
+            return ExplainableBoostingClassifier(**self.ebm_kwargs)
+        else:
+            return ExplainableBoostingRegressor(**self.ebm_kwargs)
+
+    def _split_data(self, num_samples):
+        &#39;&#39;&#39;Split data into EBM and linear model data
+        &#39;&#39;&#39;
+        if self.fit_linear_frac is not None:
+            rng = np.random.RandomState(self.random_state)
+            idxs_ebm = rng.choice(num_samples, int(
+                num_samples * self.fit_linear_frac), replace=False)
+            idxs_lin = np.array(
+                [i for i in range(num_samples) if i not in idxs_ebm])
+        else:
+            idxs_ebm = np.arange(num_samples)
+            idxs_lin = idxs_ebm
+        assert len(idxs_ebm) &gt; 0, f&#34;No data for EBM! {self.fit_linear_frac=}&#34;
+        assert len(
+            idxs_lin) &gt; 0, f&#34;No data for linear model! {self.fit_linear_frac=}&#34;
+        return idxs_ebm, idxs_lin
+
+    def _fit_linear_model(self, feats, y, sample_weight):
+        # fit a linear model to the features
+        if isinstance(self, ClassifierMixin):
+            lin_model = {
+                &#39;ridge&#39;: LogisticRegressionCV(penalty=&#39;l2&#39;),
+                &#39;elasticnet&#39;: LogisticRegressionCV(penalty=&#39;elasticnet&#39;),
+                &#39;lasso&#39;: LogisticRegressionCV(penalty=&#39;l1&#39;),
+            }[self.linear_penalty]
+            if self.n_outputs_ &gt; 1:
+                lin_model = MultiOutputClassifier(lin_model)
+        else:
+            lin_model = {
+                &#39;ridge&#39;: RidgeCV(alphas=np.logspace(-2, 3, 7)),
+                &#39;elasticnet&#39;: ElasticNetCV(n_alphas=7),
+                &#39;lasso&#39;: LassoCV(n_alphas=7),
+            }[self.linear_penalty]
+
+        # onehot prior is a prior (for regression only) that
+        # the ebm features predicting the target should have coef 1
+        if not self.onehot_prior or isinstance(self, ClassifierMixin):
+            lin_model.fit(feats, y, sample_weight=sample_weight)
+        else:
+            coef_prior_ = np.zeros((feats.shape[1], ))
+            coef_prior_[:-len(self.term_names_list_[-1])] = 1
+            preds_prior = feats @ coef_prior_
+            residuals = y - preds_prior
+            lin_model.fit(feats, residuals, sample_weight=sample_weight)
+            lin_model.coef_ = lin_model.coef_ + coef_prior_
+        return lin_model
+
+    def _extract_ebm_features(self, X):
+        &#39;&#39;&#39;
+        Extract features by extracting all terms with EBM
+        &#39;&#39;&#39;
+        feats = np.empty((X.shape[0], len(self.term_names_)))
+        offset = 0
+        for ebm_num in range(len(self.ebms_)):
+            n_features_ebm_num = len(self.term_names_list_[ebm_num])
+            feats[:, offset: offset + n_features_ebm_num] = \
+                self.ebms_[ebm_num].eval_terms(X)
+            offset += n_features_ebm_num
+
+        return feats
+
+    def predict(self, X):
+        check_is_fitted(self)
+        X = check_array(X, accept_sparse=False)
+        if hasattr(self, &#39;ebms_&#39;):
+            feats = self._extract_ebm_features(X)
+            if hasattr(self, &#39;scaler_&#39;):
+                feats = self.scaler_.transform(feats)
+            if hasattr(self, &#39;correlation_screener_&#39;):
+                feats = self.correlation_screener_.transform(feats)
+            feats[np.isinf(feats)] = 0
+            return self.lin_model.predict(feats)
+
+        # multi-output without multitask learning
+        elif hasattr(self, &#39;ebm_multioutput_&#39;):
+            return self.ebm_multioutput_.predict(X)
+
+        # single-task standard
+        elif hasattr(self, &#39;ebm_&#39;):
+            return self.ebm_.predict(X)
+
+    def predict_proba(self, X):
+        check_is_fitted(self)
+        if hasattr(self, &#39;ebms_&#39;):
+            feats = self._extract_ebm_features(X)
+            if hasattr(self, &#39;scaler_&#39;):
+                feats = self.scaler_.transform(feats)
+            if hasattr(self, &#39;correlation_screener_&#39;):
+                feats = self.correlation_screener_.transform(feats)
+            return self.lin_model.predict_proba(feats)
+
+        # multi-output without multitask learning
+        elif hasattr(self, &#39;ebm_multioutput_&#39;):
+            return self.ebm_multioutput_.predict_proba(X)
+
+        # single-task standard
+        elif hasattr(self, &#39;ebm_&#39;):
+            return self.ebm_.predict_proba(X)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.algebraic.gam_multitask.MultiTaskGAMClassifier" href="#imodels.algebraic.gam_multitask.MultiTaskGAMClassifier">MultiTaskGAMClassifier</a></li>
+<li><a title="imodels.algebraic.gam_multitask.MultiTaskGAMRegressor" href="#imodels.algebraic.gam_multitask.MultiTaskGAMRegressor">MultiTaskGAMRegressor</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.gam_multitask.MultiTaskGAM.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, sample_weight=None):
+    X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
+    self.n_outputs_ = 1 if len(y.shape) == 1 else y.shape[1]
+    if self.n_outputs_ &gt; 1 and not self.fit_target_curves:
+        raise ValueError(
+            &#34;fit_target_curves must be True when n_outputs &gt; 1&#34;)
+    if isinstance(self, ClassifierMixin):
+        check_classification_targets(y)
+        if self.n_outputs_ == 1:
+            self.classes_, y = np.unique(y, return_inverse=True)
+            if len(self.classes_) &gt; 2:
+                raise ValueError(
+                    &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
+        elif self.n_outputs_ &gt; 1:
+            self.classes_ = [np.unique(y[:, i])
+                             for i in range(self.n_outputs_)]
+            if any(len(c) &gt; 2 for c in self.classes_):
+                raise ValueError(
+                    &#34;MultiTaskGAMClassifier currently only supports binary classification&#34;)
+    sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
+    if self.use_single_task_with_reweighting:
+        assert self.n_outputs_ == 1, &#34;use_single_task_with_reweighting only works with one output&#34;
+        assert self.multitask, &#34;use_single_task_with_reweighting only works with multitask&#34;
+
+    # just fit ebm normally
+    if not self.multitask:
+        if isinstance(self, ClassifierMixin):
+            self.ebm_ = ExplainableBoostingClassifier(**self.ebm_kwargs)
+        else:
+            self.ebm_ = ExplainableBoostingRegressor(**self.ebm_kwargs)
+
+        # fit
+        if self.n_outputs_ &gt; 1:
+            if isinstance(self, ClassifierMixin):
+                self.ebm_multioutput_ = MultiOutputClassifier(self.ebm_)
+            else:
+                self.ebm_multioutput_ = MultiOutputRegressor(self.ebm_)
+            self.ebm_multioutput_.fit(X, y, sample_weight=sample_weight)
+        else:
+            self.ebm_.fit(X, y, sample_weight=sample_weight)
+        return self
+
+    # fit EBM(s)
+    self.ebms_ = []
+    num_samples, num_features = X.shape
+    idxs_ebm, idxs_lin = self._split_data(num_samples)
+
+    # fit EBM
+    if self.use_single_task_with_reweighting:
+        # fit an EBM to predict the single output
+        self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+        self.ebms_[-1].fit(X[idxs_ebm], y[idxs_ebm],
+                           sample_weight=sample_weight[idxs_ebm])
+    elif self.n_outputs_ == 1:
+        # with 1 output, we fit an EBM to each feature
+        for task_num in tqdm(range(num_features)):
+            y_ = np.ascontiguousarray(X[idxs_ebm][:, task_num])
+            X_ = deepcopy(X[idxs_ebm])
+            X_[:, task_num] = 0
+            self.ebms_.append(self._initialize_ebm_internal(y_))
+            if isinstance(self, ClassifierMixin):
+                _, y_ = np.unique(y_, return_inverse=True)
+            elif self.use_normalize_feature_targets:
+                y_ = StandardScaler().fit_transform(y_.reshape(-1, 1)).ravel()
+            self.ebms_[task_num].fit(
+                X_, y_, sample_weight=sample_weight[idxs_ebm])
+
+        # also fit an EBM to the target
+        if self.fit_target_curves:
+            self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+            self.ebms_[num_features].fit(
+                X[idxs_ebm], y[idxs_ebm], sample_weight=sample_weight[idxs_ebm])
+    elif self.n_outputs_ &gt; 1:
+        # with multiple outputs, we fit an EBM to each output
+        for task_num in tqdm(range(self.n_outputs_)):
+            self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
+            y_ = np.ascontiguousarray(y[idxs_ebm][:, task_num])
+            self.ebms_[task_num].fit(
+                X[idxs_ebm], y_, sample_weight=sample_weight[idxs_ebm])
+
+    # extract features from EBMs
+    self.term_names_list_ = [
+        ebm_.term_names_ for ebm_ in self.ebms_]
+    self.term_names_ = sum(self.term_names_list_, [])
+    feats = self._extract_ebm_features(X)
+    if self.renormalize_features:
+        self.scaler_ = StandardScaler()
+        feats = self.scaler_.fit_transform(feats)
+    if self.use_correlation_screening_for_features:
+        self.correlation_screener_ = CorrelationScreenTransformer()
+        feats = self.correlation_screener_.fit_transform(feats, y)
+    feats[np.isinf(feats)] = 0
+
+    # fit linear model
+    self.lin_model = self._fit_linear_model(
+        feats[idxs_lin], y[idxs_lin], sample_weight[idxs_lin])
+
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.gam_multitask.MultiTaskGAM.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    check_is_fitted(self)
+    X = check_array(X, accept_sparse=False)
+    if hasattr(self, &#39;ebms_&#39;):
+        feats = self._extract_ebm_features(X)
+        if hasattr(self, &#39;scaler_&#39;):
+            feats = self.scaler_.transform(feats)
+        if hasattr(self, &#39;correlation_screener_&#39;):
+            feats = self.correlation_screener_.transform(feats)
+        feats[np.isinf(feats)] = 0
+        return self.lin_model.predict(feats)
+
+    # multi-output without multitask learning
+    elif hasattr(self, &#39;ebm_multioutput_&#39;):
+        return self.ebm_multioutput_.predict(X)
+
+    # single-task standard
+    elif hasattr(self, &#39;ebm_&#39;):
+        return self.ebm_.predict(X)</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.gam_multitask.MultiTaskGAM.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    check_is_fitted(self)
+    if hasattr(self, &#39;ebms_&#39;):
+        feats = self._extract_ebm_features(X)
+        if hasattr(self, &#39;scaler_&#39;):
+            feats = self.scaler_.transform(feats)
+        if hasattr(self, &#39;correlation_screener_&#39;):
+            feats = self.correlation_screener_.transform(feats)
+        return self.lin_model.predict_proba(feats)
+
+    # multi-output without multitask learning
+    elif hasattr(self, &#39;ebm_multioutput_&#39;):
+        return self.ebm_multioutput_.predict_proba(X)
+
+    # single-task standard
+    elif hasattr(self, &#39;ebm_&#39;):
+        return self.ebm_.predict_proba(X)</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.gam_multitask.MultiTaskGAM.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.algebraic.gam_multitask.MultiTaskGAM" href="#imodels.algebraic.gam_multitask.MultiTaskGAM">MultiTaskGAM</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.gam_multitask.MultiTaskGAM" href="#imodels.algebraic.gam_multitask.MultiTaskGAM">MultiTaskGAM</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.algebraic.gam_multitask.MultiTaskGAMClassifier"><code class="flex name class">
+<span>class <span class="ident">MultiTaskGAMClassifier</span></span>
+<span>(</span><span>ebm_kwargs={'n_jobs': 1, 'max_rounds': 5000}, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>EBM-based GAM that shares curves for predicting different outputs.
+- If only one target is given, we fit an EBM to predict each covariate
+- If multiple targets are given, we fit a an EBM to predict each target
+- If only one target is given and use_single_task_with_reweighting, we fit an EBM to predict the single target, then apply reweighting</p>
+<h2 id="params">Params</h2>
+<p>Note: args override ebm_kwargs if there are duplicates
+one_hot_prior: bool
+If True and multitask, the linear model will be fit with a prior that the ebm
+features predicting the target should have coef 1
+renormalize_features: bool
+If True, renormalize the features before fitting the linear model
+use_normalize_feature_targets: bool
+whether to normalize the features used as targets for internal EBMs
+(does not apply to target columns)
+If input features are normalized already, this has no effect
+use_internal_classifiers: bool
+whether to use internal classifiers (as opposed to regressors)
+fit_target_curves: bool
+whether to fit an EBM to predict the target
+use_single_task_with_reweighting: bool
+fit an EBM to predict the single target, then apply linear reweighting
+use_correlation_screening_for_features: bool
+whether to use correlation screening for features
+fit_linear_frac: float
+If not None, the fraction of features to use for the linear model (the rest are used for the EBM)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiTaskGAMClassifier(MultiTaskGAM, ClassifierMixin):
+    ...</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.algebraic.gam_multitask.MultiTaskGAM" href="#imodels.algebraic.gam_multitask.MultiTaskGAM">MultiTaskGAM</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li>sklearn.base.ClassifierMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.gam_multitask.MultiTaskGAMClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.gam_multitask.MultiTaskGAMClassifier" href="#imodels.algebraic.gam_multitask.MultiTaskGAMClassifier">MultiTaskGAMClassifier</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.gam_multitask.MultiTaskGAMClassifier" href="#imodels.algebraic.gam_multitask.MultiTaskGAMClassifier">MultiTaskGAMClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.algebraic.gam_multitask.MultiTaskGAM" href="#imodels.algebraic.gam_multitask.MultiTaskGAM">MultiTaskGAM</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAM.set_fit_request" href="#imodels.algebraic.gam_multitask.MultiTaskGAM.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.algebraic.gam_multitask.MultiTaskGAMRegressor"><code class="flex name class">
+<span>class <span class="ident">MultiTaskGAMRegressor</span></span>
+<span>(</span><span>ebm_kwargs={'n_jobs': 1, 'max_rounds': 5000}, multitask=True, interactions=0.95, linear_penalty='ridge', onehot_prior=False, renormalize_features=False, use_normalize_feature_targets=False, use_internal_classifiers=False, fit_target_curves=True, use_correlation_screening_for_features=False, use_single_task_with_reweighting=False, fit_linear_frac: float = None, random_state=42)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>EBM-based GAM that shares curves for predicting different outputs.
+- If only one target is given, we fit an EBM to predict each covariate
+- If multiple targets are given, we fit a an EBM to predict each target
+- If only one target is given and use_single_task_with_reweighting, we fit an EBM to predict the single target, then apply reweighting</p>
+<h2 id="params">Params</h2>
+<p>Note: args override ebm_kwargs if there are duplicates
+one_hot_prior: bool
+If True and multitask, the linear model will be fit with a prior that the ebm
+features predicting the target should have coef 1
+renormalize_features: bool
+If True, renormalize the features before fitting the linear model
+use_normalize_feature_targets: bool
+whether to normalize the features used as targets for internal EBMs
+(does not apply to target columns)
+If input features are normalized already, this has no effect
+use_internal_classifiers: bool
+whether to use internal classifiers (as opposed to regressors)
+fit_target_curves: bool
+whether to fit an EBM to predict the target
+use_single_task_with_reweighting: bool
+fit an EBM to predict the single target, then apply linear reweighting
+use_correlation_screening_for_features: bool
+whether to use correlation screening for features
+fit_linear_frac: float
+If not None, the fraction of features to use for the linear model (the rest are used for the EBM)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiTaskGAMRegressor(MultiTaskGAM, RegressorMixin):
+    ...</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.algebraic.gam_multitask.MultiTaskGAM" href="#imodels.algebraic.gam_multitask.MultiTaskGAM">MultiTaskGAM</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li>sklearn.base.RegressorMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.gam_multitask.MultiTaskGAMRegressor.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.gam_multitask.MultiTaskGAMRegressor" href="#imodels.algebraic.gam_multitask.MultiTaskGAMRegressor">MultiTaskGAMRegressor</a>, *, sample_weight: Union[bool, ForwardRef(None), str] = '$UNCHANGED$') ‑> <a title="imodels.algebraic.gam_multitask.MultiTaskGAMRegressor" href="#imodels.algebraic.gam_multitask.MultiTaskGAMRegressor">MultiTaskGAMRegressor</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.algebraic.gam_multitask.MultiTaskGAM" href="#imodels.algebraic.gam_multitask.MultiTaskGAM">MultiTaskGAM</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAM.set_fit_request" href="#imodels.algebraic.gam_multitask.MultiTaskGAM.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index 🔍</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.algebraic" href="index.html">imodels.algebraic</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAM" href="#imodels.algebraic.gam_multitask.MultiTaskGAM">MultiTaskGAM</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAM.fit" href="#imodels.algebraic.gam_multitask.MultiTaskGAM.fit">fit</a></code></li>
+<li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAM.predict" href="#imodels.algebraic.gam_multitask.MultiTaskGAM.predict">predict</a></code></li>
+<li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAM.predict_proba" href="#imodels.algebraic.gam_multitask.MultiTaskGAM.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAM.set_fit_request" href="#imodels.algebraic.gam_multitask.MultiTaskGAM.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAMClassifier" href="#imodels.algebraic.gam_multitask.MultiTaskGAMClassifier">MultiTaskGAMClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAMClassifier.set_score_request" href="#imodels.algebraic.gam_multitask.MultiTaskGAMClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAMRegressor" href="#imodels.algebraic.gam_multitask.MultiTaskGAMRegressor">MultiTaskGAMRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.gam_multitask.MultiTaskGAMRegressor.set_score_request" href="#imodels.algebraic.gam_multitask.MultiTaskGAMRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 c122.0,82.7 120.5,78.6 120.5,78.6 c119.2,72.0 123.4,76.3 123.4,76.3 c127.3,80.9 125.5,87.3 125.5,87.3 c122.9,97.6 130.6,101.9 134.4,103.2" fill="currentcolor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">

@@ -138,7 +138,7 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
 <dl>
 <dt id="imodels.tree.cart_wrapper.GreedyTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">GreedyTreeClassifier</span></span>
-<span>(</span><span>*, criterion='gini', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, class_weight=None, ccp_alpha=0.0)</span>
+<span>(</span><span>*, criterion='gini', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, class_weight=None, ccp_alpha=0.0, monotonic_cst=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Wrapper around sklearn greedy tree classifier</p></div>
@@ -203,6 +203,7 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
 <li>sklearn.tree._classes.BaseDecisionTree</li>
 <li>sklearn.base.MultiOutputMixin</li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -312,7 +313,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -335,7 +336,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -350,19 +351,36 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_wrapper.GreedyTreeClassifier.set_predict_proba_request"><code class="name flex">
@@ -399,7 +417,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -416,7 +434,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -431,19 +449,36 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_wrapper.GreedyTreeClassifier.set_predict_request"><code class="name flex">
@@ -480,7 +515,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -497,7 +532,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -512,19 +547,36 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_wrapper.GreedyTreeClassifier.set_score_request"><code class="name flex">
@@ -561,7 +613,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -578,7 +630,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -593,26 +645,43 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="imodels.tree.cart_wrapper.GreedyTreeRegressor"><code class="flex name class">
 <span>class <span class="ident">GreedyTreeRegressor</span></span>
-<span>(</span><span>*, criterion='squared_error', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, ccp_alpha=0.0)</span>
+<span>(</span><span>*, criterion='squared_error', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, ccp_alpha=0.0, monotonic_cst=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Wrapper around sklearn greedy tree regressor</p></div>
@@ -672,6 +741,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li>sklearn.tree._classes.BaseDecisionTree</li>
 <li>sklearn.base.MultiOutputMixin</li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -773,7 +843,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -796,7 +866,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -811,19 +881,36 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_wrapper.GreedyTreeRegressor.set_predict_request"><code class="name flex">
@@ -860,7 +947,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -877,7 +964,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -892,19 +979,36 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_wrapper.GreedyTreeRegressor.set_score_request"><code class="name flex">
@@ -941,7 +1045,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -958,7 +1062,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -973,19 +1077,36 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 </dl>

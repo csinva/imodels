@@ -40,12 +40,6 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 import numpy as np
 from sklearn.pipeline import Pipeline
 
-# PARAM_GRID_LINEAR = [
-#     {
-#         &#34;est&#34;: []
-#     }
-# ]
-
 
 class AutoInterpretableModel(BaseEstimator):
     &#34;&#34;&#34;Automatically fit and select a classifier that is interpretable.
@@ -53,7 +47,7 @@ class AutoInterpretableModel(BaseEstimator):
     This is basically a wrapper around GridSearchCV, with some preselected models.
     &#34;&#34;&#34;
 
-    def __init__(self, param_grid=None):
+    def __init__(self, param_grid=None, refit=True):
         if param_grid is None:
             if isinstance(self, ClassifierMixin):
                 self.param_grid = self.PARAM_GRID_DEFAULT_CLASSIFICATION
@@ -61,12 +55,17 @@ class AutoInterpretableModel(BaseEstimator):
                 self.param_grid = self.PARAM_GRID_DEFAULT_REGRESSION
         else:
             self.param_grid = param_grid
+        self.refit = refit
 
     def fit(self, X, y, cv=5):
         self.pipe_ = Pipeline([(&#34;est&#34;, BaseEstimator())]
                               )  # Placeholder Estimator
+        if isinstance(self, ClassifierMixin):
+            scoring = &#34;roc_auc&#34;
+        elif isinstance(self, RegressorMixin):
+            scoring = &#34;r2&#34;
         self.est_ = GridSearchCV(
-            self.pipe_, self.param_grid, scoring=&#34;roc_auc&#34;, cv=cv)
+            self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit)
         self.est_.fit(X, y)
         return self
 
@@ -83,39 +82,33 @@ class AutoInterpretableModel(BaseEstimator):
         {
             &#34;est&#34;: [
                 LogisticRegression(
-                    solver=&#34;saga&#34;, penalty=&#34;elasticnet&#34;, max_iter=100)
+                    solver=&#34;saga&#34;, penalty=&#34;elasticnet&#34;, max_iter=100, random_state=42)
             ],
             &#34;est__C&#34;: [0.1, 1, 10],
-            &#34;est__l1_ratio&#34;: [0.5, 1],
-        },
-        {
-            &#34;est&#34;: [
-                Ridge(max_iter=100)
-            ],
-            &#34;est__alpha&#34;: [0, 0.1, 1, 10],
+            &#34;est__l1_ratio&#34;: [0, 0.5, 1],
         },
     ]
 
     PARAM_GRID_DEFAULT_CLASSIFICATION = [
         {
-            &#34;est&#34;: [DecisionTreeClassifier()],
+            &#34;est&#34;: [DecisionTreeClassifier(random_state=42)],
             &#34;est__max_leaf_nodes&#34;: [2, 5, 10],
         },
         {
-            &#34;est&#34;: [RuleFitClassifier()],
+            &#34;est&#34;: [RuleFitClassifier(random_state=42)],
             &#34;est__max_rules&#34;: [10, 100],
             &#34;est__n_estimators&#34;: [20],
         },
         {
-            &#34;est&#34;: [TreeGAMClassifier()],
+            &#34;est&#34;: [TreeGAMClassifier(random_state=42)],
             &#34;est__n_boosting_rounds&#34;: [10, 100],
         },
         {
-            &#34;est&#34;: [HSTreeClassifier()],
+            &#34;est&#34;: [HSTreeClassifier(random_state=42)],
             &#34;est__max_leaf_nodes&#34;: [5, 10],
         },
         {
-            &#34;est&#34;: [FIGSClassifier()],
+            &#34;est&#34;: [FIGSClassifier(random_state=42)],
             &#34;est__max_rules&#34;: [5, 10],
         },
     ] + PARAM_GRID_LINEAR_CLASSIFICATION
@@ -123,10 +116,16 @@ class AutoInterpretableModel(BaseEstimator):
     PARAM_GRID_LINEAR_REGRESSION = [
         {
             &#34;est&#34;: [
-                ElasticNet(max_iter=100)
+                ElasticNet(max_iter=100, random_state=42)
             ],
             &#34;est__alpha&#34;: [0.1, 1, 10],
-            &#34;est__l1_ratio&#34;: [0, 0.5, 1],
+            &#34;est__l1_ratio&#34;: [0.5, 1],
+        },
+        {
+            &#34;est&#34;: [
+                Ridge(max_iter=100, random_state=42)
+            ],
+            &#34;est__alpha&#34;: [0, 0.1, 1, 10],
         },
     ]
 
@@ -193,7 +192,7 @@ if __name__ == &#34;__main__&#34;:
 <dl>
 <dt id="imodels.util.automl.AutoInterpretableClassifier"><code class="flex name class">
 <span>class <span class="ident">AutoInterpretableClassifier</span></span>
-<span>(</span><span>param_grid=None)</span>
+<span>(</span><span>param_grid=None, refit=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Automatically fit and select a classifier that is interpretable.
@@ -210,6 +209,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <ul class="hlist">
 <li><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
@@ -224,7 +224,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 </dd>
 <dt id="imodels.util.automl.AutoInterpretableModel"><code class="flex name class">
 <span>class <span class="ident">AutoInterpretableModel</span></span>
-<span>(</span><span>param_grid=None)</span>
+<span>(</span><span>param_grid=None, refit=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Automatically fit and select a classifier that is interpretable.
@@ -240,7 +240,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
     This is basically a wrapper around GridSearchCV, with some preselected models.
     &#34;&#34;&#34;
 
-    def __init__(self, param_grid=None):
+    def __init__(self, param_grid=None, refit=True):
         if param_grid is None:
             if isinstance(self, ClassifierMixin):
                 self.param_grid = self.PARAM_GRID_DEFAULT_CLASSIFICATION
@@ -248,12 +248,17 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
                 self.param_grid = self.PARAM_GRID_DEFAULT_REGRESSION
         else:
             self.param_grid = param_grid
+        self.refit = refit
 
     def fit(self, X, y, cv=5):
         self.pipe_ = Pipeline([(&#34;est&#34;, BaseEstimator())]
                               )  # Placeholder Estimator
+        if isinstance(self, ClassifierMixin):
+            scoring = &#34;roc_auc&#34;
+        elif isinstance(self, RegressorMixin):
+            scoring = &#34;r2&#34;
         self.est_ = GridSearchCV(
-            self.pipe_, self.param_grid, scoring=&#34;roc_auc&#34;, cv=cv)
+            self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit)
         self.est_.fit(X, y)
         return self
 
@@ -270,39 +275,33 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
         {
             &#34;est&#34;: [
                 LogisticRegression(
-                    solver=&#34;saga&#34;, penalty=&#34;elasticnet&#34;, max_iter=100)
+                    solver=&#34;saga&#34;, penalty=&#34;elasticnet&#34;, max_iter=100, random_state=42)
             ],
             &#34;est__C&#34;: [0.1, 1, 10],
-            &#34;est__l1_ratio&#34;: [0.5, 1],
-        },
-        {
-            &#34;est&#34;: [
-                Ridge(max_iter=100)
-            ],
-            &#34;est__alpha&#34;: [0, 0.1, 1, 10],
+            &#34;est__l1_ratio&#34;: [0, 0.5, 1],
         },
     ]
 
     PARAM_GRID_DEFAULT_CLASSIFICATION = [
         {
-            &#34;est&#34;: [DecisionTreeClassifier()],
+            &#34;est&#34;: [DecisionTreeClassifier(random_state=42)],
             &#34;est__max_leaf_nodes&#34;: [2, 5, 10],
         },
         {
-            &#34;est&#34;: [RuleFitClassifier()],
+            &#34;est&#34;: [RuleFitClassifier(random_state=42)],
             &#34;est__max_rules&#34;: [10, 100],
             &#34;est__n_estimators&#34;: [20],
         },
         {
-            &#34;est&#34;: [TreeGAMClassifier()],
+            &#34;est&#34;: [TreeGAMClassifier(random_state=42)],
             &#34;est__n_boosting_rounds&#34;: [10, 100],
         },
         {
-            &#34;est&#34;: [HSTreeClassifier()],
+            &#34;est&#34;: [HSTreeClassifier(random_state=42)],
             &#34;est__max_leaf_nodes&#34;: [5, 10],
         },
         {
-            &#34;est&#34;: [FIGSClassifier()],
+            &#34;est&#34;: [FIGSClassifier(random_state=42)],
             &#34;est__max_rules&#34;: [5, 10],
         },
     ] + PARAM_GRID_LINEAR_CLASSIFICATION
@@ -310,10 +309,16 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
     PARAM_GRID_LINEAR_REGRESSION = [
         {
             &#34;est&#34;: [
-                ElasticNet(max_iter=100)
+                ElasticNet(max_iter=100, random_state=42)
             ],
             &#34;est__alpha&#34;: [0.1, 1, 10],
-            &#34;est__l1_ratio&#34;: [0, 0.5, 1],
+            &#34;est__l1_ratio&#34;: [0.5, 1],
+        },
+        {
+            &#34;est&#34;: [
+                Ridge(max_iter=100, random_state=42)
+            ],
+            &#34;est__alpha&#34;: [0, 0.1, 1, 10],
         },
     ]
 
@@ -345,6 +350,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -385,8 +391,12 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <pre><code class="python">def fit(self, X, y, cv=5):
     self.pipe_ = Pipeline([(&#34;est&#34;, BaseEstimator())]
                           )  # Placeholder Estimator
+    if isinstance(self, ClassifierMixin):
+        scoring = &#34;roc_auc&#34;
+    elif isinstance(self, RegressorMixin):
+        scoring = &#34;r2&#34;
     self.est_ = GridSearchCV(
-        self.pipe_, self.param_grid, scoring=&#34;roc_auc&#34;, cv=cv)
+        self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit)
     self.est_.fit(X, y)
     return self</code></pre>
 </details>
@@ -464,7 +474,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -481,7 +491,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -496,26 +506,43 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="imodels.util.automl.AutoInterpretableRegressor"><code class="flex name class">
 <span>class <span class="ident">AutoInterpretableRegressor</span></span>
-<span>(</span><span>param_grid=None)</span>
+<span>(</span><span>param_grid=None, refit=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Automatically fit and select a classifier that is interpretable.
@@ -532,6 +559,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <ul class="hlist">
 <li><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>

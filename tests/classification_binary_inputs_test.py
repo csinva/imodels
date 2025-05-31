@@ -14,12 +14,13 @@ from imodels import (
 class TestClassClassificationBinary:
     """Tests simple classification for different models. Note: still doesn't test all the models!"""
 
-    def setup(self):
+    def setup_method(self):
         np.random.seed(13)
         random.seed(13)
         self.n = 40
         self.p = 2
-        self.X_classification_binary = (np.random.randn(self.n, self.p) > 0).astype(int)
+        self.X_classification_binary = (
+            np.random.randn(self.n, self.p) > 0).astype(int)
 
         # y = x0 > 0
         self.y_classification_binary = (self.X_classification_binary[:, 0] > 0).astype(
@@ -27,7 +28,8 @@ class TestClassClassificationBinary:
         )
 
         # flip labels for last few
-        self.y_classification_binary[-2:] = 1 - self.y_classification_binary[-2:]
+        self.y_classification_binary[-2:] = 1 - \
+            self.y_classification_binary[-2:]
 
     def test_classification_binary(self):
         """Test imodels on basic binary classification task"""
@@ -57,7 +59,8 @@ class TestClassClassificationBinary:
                 preds_proba = m.predict_proba(X)
                 assert len(preds_proba.shape) == 2, "preds_proba has 2 columns"
                 assert preds_proba.shape[1] == 2, "preds_proba has 2 columns"
-                assert np.max(preds_proba) < 1.1, "preds_proba has no values over 1"
+                assert np.max(
+                    preds_proba) < 1.1, "preds_proba has no values over 1"
                 assert (np.argmax(preds_proba, axis=1) == preds).all(), (
                     "predict_proba and " "predict correspond"
                 )

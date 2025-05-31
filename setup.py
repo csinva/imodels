@@ -8,12 +8,13 @@ with open(path.join(path_to_repo, 'readme.md'), encoding='utf-8') as f:
 
 required_pypi = [
     'matplotlib',
-    'mlxtend>=0.18.0',  # some lower version are missing fpgrowth
+    'mlxtend>=0.18.0',  # some lower versions are missing fpgrowth
     'numpy',
+    # tested with pandas 2.2.2 (but installing this pandas version will try to use newer np versions)
     'pandas',
     'requests',  # used in c4.5
     'scipy',
-    'scikit-learn',  # 0.23+ only works on py3.6+
+    'scikit-learn<1.6.0',  # 1.6.0 has issue with ensemble models
     'tqdm',  # used in BART
 ]
 
@@ -26,7 +27,7 @@ extra_deps = [
 
 setuptools.setup(
     name="imodels",
-    version="1.4.1",
+    version="2.0.0",
     author="Chandan Singh, Keyan Nasseri, Matthew Epland, Yan Shuo Tan, Omer Ronen, Tiffany Tang, Abhineet Agarwal, Theo Saarinen, Bin Yu, and others",
     author_email="chandan_singh@berkeley.edu",
     description="Implementations of various interpretable models",
@@ -56,7 +57,7 @@ setuptools.setup(
             'pmlb',
         ]
     },
-    python_requires='>=3.6',
+    python_requires='>=3.9.0',
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

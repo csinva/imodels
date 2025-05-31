@@ -271,6 +271,7 @@ estimator.</dd>
 <ul class="hlist">
 <li><a title="imodels.rule_set.skope_rules.SkopeRulesClassifier" href="skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></li>
 <li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 <li>sklearn.base.ClassifierMixin</li>
@@ -311,7 +312,7 @@ parameters and not others.</p>
 <p class="admonition-title">Note</p>
 <p>This method is only relevant if this estimator is used as a
 sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -334,7 +335,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def func(**kw):
+<pre><code class="python">def func(*args, **kw):
     &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
@@ -349,19 +350,36 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 
     if self.validate_keys and (set(kw) - set(self.keys)):
         raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)}. Accepted arguments&#34;
-            f&#34; are: {set(self.keys)}&#34;
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
         )
 
-    requests = instance._get_metadata_request()
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
     method_metadata_request = getattr(requests, self.name)
 
     for prop, alias in kw.items():
         if alias is not UNCHANGED:
             method_metadata_request.add_request(param=prop, alias=alias)
-    instance._metadata_request = requests
+    _instance._metadata_request = requests
 
-    return instance</code></pre>
+    return _instance</code></pre>
 </details>
 </dd>
 </dl>

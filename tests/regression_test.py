@@ -21,12 +21,13 @@ from imodels import (
 
 
 class TestClassRegression:
-    def setup(self):
+    def setup_method(self):
         np.random.seed(13)
         self.n = 10
         self.p = 10
         self.X_regression = np.random.randn(self.n, self.p)
-        self.y_regression = self.X_regression[:, 0] + np.random.randn(self.n) * 0.01
+        self.y_regression = self.X_regression[:,
+                                              0] + np.random.randn(self.n) * 0.01
 
     @pytest.mark.filterwarnings("ignore::UserWarning")
     def test_regression(self):

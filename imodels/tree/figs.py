@@ -1,5 +1,6 @@
 from copy import deepcopy
 from typing import List
+import itertools
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,9 +14,16 @@ from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
 from sklearn.utils.validation import _check_sample_weight, check_is_fitted
 
+from scipy.special import softmax
+
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 from imodels.util.arguments import check_fit_arguments
 from imodels.util.data_util import encode_categories
+
+import scipy.sparse
+from sklearn.utils.validation import check_X_y, check_array
+from sklearn.utils.multiclass import check_classification_targets, type_of_target
+from sklearn.preprocessing import OneHotEncoder
 
 
 class Node:
@@ -33,6 +41,7 @@ class Node:
         tree_num: int = None,
         node_id: int = None,
         right=None,
+        depth=None,
     ):
         """Node class for splitting"""
 
@@ -47,7 +56,9 @@ class Node:
         self.value_sklearn = value_sklearn
 
         # different meanings
-        self.value = value  # for split this is mean, for linear this is weight
+        self.value = value # for split this is mean, for linear thifs is weight
+        if isinstance(self.value, np.ndarray):
+            self.value = self.value.reshape(-1, )
 
         # split-specific
         self.threshold = threshold
@@ -55,6 +66,8 @@ class Node:
         self.right = right
         self.left_temp = None
         self.right_temp = None
+        #root node has depth 0
+        self.depth = depth
 
     def setattrs(self, **kwargs):
         for k, v in kwargs.items():
@@ -64,25 +77,29 @@ class Node:
         if self.is_root:
             return f"X_{self.feature} <= {self.threshold:0.3f} (Tree #{self.tree_num} root)"
         elif self.left is None and self.right is None:
-            return f"Val: {self.value[0][0]:0.3f} (leaf)"
+            return f"Val: {' '.join([str(np.round(i, 3)) for i in self.value])} (leaf)"
         else:
             return f"X_{self.feature} <= {self.threshold:0.3f} (split)"
 
-    def print_root(self, y):
-        try:
-            one_count = pd.Series(y).value_counts()[1.0]
-        except KeyError:
-            one_count = 0
-        one_proportion = (
-            f" {one_count}/{y.shape[0]} ({round(100 * one_count / y.shape[0], 2)}%)"
-        )
+    def print_root(self, y, is_classmixin, n_outputs):
+        if is_classmixin:
+            unique, counts = np.unique(y, return_counts=True)
+            class_counts = np.zeros(n_outputs, dtype=int)
+            class_counts[unique] = counts
+        else:
+            class_counts = np.zeros(n_outputs, dtype=int) 
 
+        class_counts_str = ", ".join(map(str, class_counts))
+        proportions_str = ", ".join(f"{p:.2f}" for p in np.round(100 * class_counts / y.shape[0], 2))
+
+        one_proportion = f" [{class_counts_str}]/{y.shape[0]} ({proportions_str}%)"
         if self.is_root:
             return f"X_{self.feature} <= {self.threshold:0.3f}" + one_proportion
         elif self.left is None and self.right is None:
-            return f"ΔRisk = {self.value[0][0]:0.2f}" + one_proportion
+            return f"ΔRisk = [" + ", ".join(f"{v:.2f}" for v in self.value) + "]" + one_proportion
         else:
             return f"X_{self.feature} <= {self.threshold:0.3f}" + one_proportion
+
 
     def __repr__(self):
         return self.__str__()
@@ -104,6 +121,7 @@ class FIGS(BaseEstimator):
         min_impurity_decrease: float = 0.0,
         random_state=None,
         max_features: str = None,
+        max_depth: int = None,
     ):
         """
         Params
@@ -123,7 +141,10 @@ class FIGS(BaseEstimator):
         self.min_impurity_decrease = min_impurity_decrease
         self.random_state = random_state
         self.max_features = max_features
+        self.max_depth = max_depth
         self._init_decision_function()
+        self.n_outputs = None
+        self.need_to_reshape = False
 
     def _init_decision_function(self):
         """Sets decision function based on _estimator_type"""
@@ -145,6 +166,7 @@ class FIGS(BaseEstimator):
         sample_weight=None,
         compare_nodes_with_sample_weight=True,
         max_features=None,
+        depth=None,
     ):
         """
         Params
@@ -160,7 +182,8 @@ class FIGS(BaseEstimator):
         RIGHT = 2
 
         # fit stump
-        stump = tree.DecisionTreeRegressor(max_depth=1, max_features=max_features)
+        stump = tree.DecisionTreeRegressor(
+            max_depth=1, max_features=max_features)
         sweight = None
         if sample_weight is not None:
             sweight = sample_weight[idxs]
@@ -186,6 +209,7 @@ class FIGS(BaseEstimator):
                 threshold=threshold[SPLIT],
                 impurity=impurity[SPLIT],
                 impurity_reduction=None,
+                depth=depth,
             )
 
         # manage sample weights
@@ -215,6 +239,7 @@ class FIGS(BaseEstimator):
             threshold=threshold[SPLIT],
             impurity=impurity[SPLIT],
             impurity_reduction=impurity_reduction,
+            depth=depth,
         )
         # print('\t>>>', node_split, 'impurity', impurity, 'num_pts', idxs.sum(), 'imp_reduc', impurity_reduction)
 
@@ -224,12 +249,14 @@ class FIGS(BaseEstimator):
             value=value[LEFT],
             impurity=impurity[LEFT],
             tree_num=tree_num,
+            depth=depth+1,
         )
         node_right = Node(
             idxs=idxs_right,
             value=value[RIGHT],
             impurity=impurity[RIGHT],
             tree_num=tree_num,
+            depth=depth+1,
         )
         node_split.setattrs(
             left_temp=node_left,
@@ -237,9 +264,9 @@ class FIGS(BaseEstimator):
         )
         return node_split
 
-    def _encode_categories(self, X, categorical_features):
+    def _encode_categories(self, X, categorical_features, encoder_name):
         encoder = None
-        if hasattr(self, "_encoder"):
+        if hasattr(self, encoder_name):
             encoder = self._encoder
         return encode_categories(X, categorical_features, encoder)
 
@@ -261,11 +288,36 @@ class FIGS(BaseEstimator):
             are ignored while searching for a split in each node.
         """
         if categorical_features is not None:
-            X, self._encoder = self._encode_categories(X, categorical_features)
-        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+            X, self._encoder = self._encode_categories(X, categorical_features, "_encoder")
+            
+        if hasattr(y, 'values'):
+            y = y.values
+        if len(y.shape) == 1:
+            y = y.reshape(-1, 1)
+        
+        if isinstance(self, ClassifierMixin):
+            assert y.shape[1] == 1, "FIGSClassifier requires a 1-dimensional input"
+            if hasattr(y, 'name'):
+                class_name = y.name
+            elif hasattr(y, 'columns'):
+                class_name = y.columns[0]
+            else:
+                class_name = 'class'
+
+            #self.classes_, y = np.unique(y, return_inverse=True)
+            self.classes_ = np.unique(y)
+            y, self._class_encoder = self._encode_categories(pd.DataFrame(y, columns = [class_name]), [class_name], "_class_encoder")
+            self.Y = y
+            self._class_map = {i:c for i, c in zip(np.arange(0, y.shape[1]), self._class_encoder.inverse_transform(np.eye(y.shape[1])).reshape(-1, ))}
+            
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names, True, False)
+        self.Y = y
+        self.n_outputs = y.shape[1]
+        self.n_features = X.shape[1]
+        
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X)
-
+            
         self.trees_ = []  # list of the root nodes of added trees
         self.complexity_ = 0  # tracks the number of rules in the model
         y_predictions_per_tree = {}  # predictions for each tree
@@ -282,11 +334,13 @@ class FIGS(BaseEstimator):
             tree_num=-1,
             sample_weight=sample_weight,
             max_features=self.max_features,
+            depth=0,
         )
         potential_splits = [node_init]
         for node in potential_splits:
             node.setattrs(is_root=True)
-        potential_splits = sorted(potential_splits, key=lambda x: x.impurity_reduction)
+        potential_splits = sorted(
+            potential_splits, key=lambda x: x.impurity_reduction)
 
         # start the greedy fitting algorithm
         finished = False
@@ -307,6 +361,13 @@ class FIGS(BaseEstimator):
                 # If the node is the root of a new tree and we have reached self.max_trees,
                 # don't split on it, but allow later splits to continue growing existing trees
                 continue
+            elif (
+                self.max_depth is not None
+                and split_node.depth > self.max_depth
+            ):
+                # If the node is deeper than self.max_depth,
+                # don't split on it, but allow algorithm to continue
+                continue
 
             # split on node
             if verbose:
@@ -325,14 +386,15 @@ class FIGS(BaseEstimator):
 
                 # add new root potential node
                 node_new_root = Node(
-                    is_root=True, idxs=np.ones(X.shape[0], dtype=bool), tree_num=-1
+                    is_root=True, idxs=np.ones(X.shape[0], dtype=bool), tree_num=-1, depth=0,
                 )
                 potential_splits.append(node_new_root)
 
             # add children to potential splits
             # assign left_temp, right_temp to be proper children
             # (basically adds them to tree in predict method)
-            split_node.setattrs(left=split_node.left_temp, right=split_node.right_temp)
+            split_node.setattrs(left=split_node.left_temp,
+                                right=split_node.right_temp)
 
             # add children to potential_splits
             potential_splits.append(split_node.left)
@@ -344,7 +406,7 @@ class FIGS(BaseEstimator):
                     self.trees_[tree_num_], X
                 )
             # dummy 0 preds for possible new trees
-            y_predictions_per_tree[-1] = np.zeros(X.shape[0])
+            y_predictions_per_tree[-1] = np.zeros((X.shape[0], self.n_outputs))
 
             # update residuals for each tree
             # -1 is key for potential new tree
@@ -373,6 +435,7 @@ class FIGS(BaseEstimator):
                     tree_num=potential_split.tree_num,
                     sample_weight=sample_weight,
                     max_features=self.max_features,
+                    depth=potential_split.depth+1,
                 )
 
                 # need to preserve certain attributes from before (value at this split + is_root)
@@ -405,34 +468,34 @@ class FIGS(BaseEstimator):
         for tree_ in self.trees_:
             node_counter = iter(range(0, int(1e06)))
 
-            def _annotate_node(node: Node, X, y):
+            def _annotate_node(node: Node, X, y, is_classmixin=False):
+                #TODO: impurity decrease is correct
                 if node is None:
                     return
 
                 # TODO does not incorporate sample weights
-                value_counts = pd.Series(y).value_counts()
-                try:
-                    neg_count = value_counts[0.0]
-                except KeyError:
-                    neg_count = 0
+                #TODO: how to handdle for n_outputs> 1?
+                if is_classmixin:
+                    unique, counts = np.unique(np.argmax(y, axis = 1), return_counts=True)
+                    
+                    value_sklearn = np.zeros(self.n_outputs)
+                    value_sklearn[unique] = counts
+                    value_sklearn = value_sklearn.astype(float)
+                
+                else:
+                    value_sklearn = np.array([X.shape[0]], dtype=float)
 
-                try:
-                    pos_count = value_counts[1.0]
-                except KeyError:
-                    pos_count = 0
-
-                value_sklearn = np.array([neg_count, pos_count], dtype=float)
-
-                node.setattrs(node_id=next(node_counter), value_sklearn=value_sklearn)
+                node.setattrs(node_id=next(node_counter),
+                              value_sklearn=value_sklearn)
 
                 idxs_left = X[:, node.feature] <= node.threshold
-                _annotate_node(node.left, X[idxs_left], y[idxs_left])
-                _annotate_node(node.right, X[~idxs_left], y[~idxs_left])
-
-            _annotate_node(tree_, X, y)
+                _annotate_node(node.left, X[idxs_left], y[idxs_left], is_classmixin)
+                _annotate_node(node.right, X[~idxs_left], y[~idxs_left], is_classmixin)
+            
+            _annotate_node(tree_, X, y, isinstance(self, ClassifierMixin))
 
             # now that the samples per node are known, we can start to compute the importances
-            importance_data_tree = np.zeros(len(self.feature_names_))
+            importance_data_tree = np.zeros(self.n_features)
 
             def _importances(node: Node):
                 if node is None or node.left is None:
@@ -462,7 +525,7 @@ class FIGS(BaseEstimator):
             importance_data.append(importance_data_tree)
 
         self.importance_data_ = importance_data
-
+        
         return self
 
     def _tree_to_str(self, root: Node, prefix=""):
@@ -488,10 +551,11 @@ class FIGS(BaseEstimator):
         left = X[:, root.feature] <= root.threshold
         return (
             prefix
-            + root.print_root(y)
+            + root.print_root(y, isinstance(self, ClassifierMixin), self.n_outputs)
             + "\n"
             + self._tree_to_str_with_data(X[left], y[left], root.left, pprefix)
-            + self._tree_to_str_with_data(X[~left], y[~left], root.right, pprefix)
+            + self._tree_to_str_with_data(X[~left],
+                                          y[~left], root.right, pprefix)
         )
 
     def __str__(self):
@@ -500,13 +564,19 @@ class FIGS(BaseEstimator):
             s += "("
             s += "max_rules="
             s += repr(self.max_rules)
+            s += ", "
+            s += "max_trees="
+            s += repr(self.max_trees)
+            s += ", "
+            s += "max_depth="
+            s += repr(self.max_depth)
             s += ")"
             return s
         else:
             s = "> ------------------------------\n"
             s += "> FIGS-Fast Interpretable Greedy-Tree Sums:\n"
             s += '> \tPredictions are made by summing the "Val" reached by traversing each tree.\n'
-            s += "> \tFor classifiers, a sigmoid function is then applied to the sum.\n"
+            s += "> \tFor classifiers, a softmax function is then applied to the sum.\n"
             s += "> ------------------------------\n"
             s += "\n\t+\n".join([self._tree_to_str(t) for t in self.trees_])
             if hasattr(self, "feature_names_") and self.feature_names_ is not None:
@@ -526,17 +596,34 @@ class FIGS(BaseEstimator):
                 s = s.replace(f"X_{i}", feature_names[i])
         return s
 
-    def predict(self, X, categorical_features=None):
+    def predict(self, X, categorical_features=None, by_tree=False):
         if hasattr(self, "_encoder"):
-            X = self._encode_categories(X, categorical_features=categorical_features)
+            X = self._encode_categories(
+                X, categorical_features=categorical_features, encoder_name="_encoder")
         X = check_array(X)
-        preds = np.zeros(X.shape[0])
-        for tree in self.trees_:
-            preds += self._predict_tree(tree, X)
+        preds = np.zeros((X.shape[0], self.n_outputs, len(self.trees_)))
+        for i, tree in enumerate(self.trees_):
+            preds[:, :, i] += self._predict_tree(tree, X)
+        
         if isinstance(self, RegressorMixin):
-            return preds
+            if by_tree:
+                return preds
+            else:
+                if self.n_outputs==1:
+                    return np.sum(preds, axis = -1).reshape(-1, )
+                return np.sum(preds, axis = -1)
         elif isinstance(self, ClassifierMixin):
-            return (preds > 0.5).astype(int)
+            if by_tree:
+                return preds
+            else:
+                preds = np.sum(preds, axis = -1)
+                max_indices = np.argmax(preds, axis = 1)
+
+                return np.vectorize(self._class_map.get)(max_indices)
+
+            #TODO: account for non integer classes, FYI self.classes_ comes from check_arguments
+#             class_preds = (preds > 0.5).astype(int)
+#             return np.array([self.classes_[i] for i in class_preds])
 
     def predict_proba(self, X, categorical_features=None, use_clipped_prediction=False):
         """Predict probability for classifiers:
@@ -544,28 +631,29 @@ class FIGS(BaseEstimator):
         Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.
         """
         if hasattr(self, "_encoder"):
-            X = self._encode_categories(X, categorical_features=categorical_features)
+            X = self._encode_categories(
+                X, categorical_features=categorical_features, encoder_name="_encoder")
         X = check_array(X)
         if isinstance(self, RegressorMixin):
             return NotImplemented
-        preds = np.zeros(X.shape[0])
+        preds = np.zeros((X.shape[0], self.n_outputs))
         for tree in self.trees_:
             preds += self._predict_tree(tree, X)
         if use_clipped_prediction:
             # old behavior, pre v1.3.9
             # constrain to range of probabilities by clipping
-            preds = np.clip(preds, a_min=0.0, a_max=1.0)
+            return np.clip(preds, a_min=0.0, a_max=1.0)
         else:
-            # constrain to range of probabilities with a sigmoid function
-            preds = expit(preds)
-        return np.vstack((1 - preds, preds)).transpose()
+            # constrain to range of probabilities with a softmax (multi-class) or a sigmoid (binary) function
+            return softmax(preds, axis = 1)
+
 
     def _predict_tree(self, root: Node, X):
         """Predict for a single tree"""
 
         def _predict_tree_single_point(root: Node, x):
             if root.left is None and root.right is None:
-                return root.value[0, 0]
+                return root.value
             left = x[root.feature] <= root.threshold
             if left:
                 if root.left is None:  # we don't actually have to worry about this case
@@ -580,7 +668,7 @@ class FIGS(BaseEstimator):
                 else:
                     return _predict_tree_single_point(root.right, x)
 
-        preds = np.zeros(X.shape[0])
+        preds = np.zeros((X.shape[0], self.n_outputs))
         for i in range(X.shape[0]):
             preds[i] = _predict_tree_single_point(root, X[i])
         return preds
@@ -620,7 +708,7 @@ class FIGS(BaseEstimator):
         if fig_size is not None:
             fig.set_size_inches(fig_size, fig_size)
 
-        n_classes = 1 if isinstance(self, RegressorMixin) else 2
+        n_classes = 1 if isinstance(self, RegressorMixin) else self.n_outputs
         ax_size = int(len(self.trees_))
         for i in range(n_plots):
             r = i // n_cols
@@ -656,7 +744,10 @@ class FIGSRegressor(FIGS, RegressorMixin):
 
 
 class FIGSClassifier(FIGS, ClassifierMixin):
-    ...
+    
+    @property
+    def class_map(self):
+        return self._class_map
 
 
 class FIGSCV:
@@ -664,27 +755,27 @@ class FIGSCV:
         self,
         figs,
         n_rules_list: List[int] = [6, 12, 24, 30, 50],
-        n_trees_list: List[int] = [5, 5, 5, 5, 5],
+        n_trees_list: List[int] = [5, 10, 15],
+        depth_list: List[int] = [3, 4],
+        min_impurity_decrease_list: List[float] = [0],
         cv: int = 3,
         scoring=None,
         *args,
         **kwargs,
     ):
-        if len(n_rules_list) != len(n_trees_list):
-            raise ValueError(
-                f"len(n_rules_list) = {len(n_rules_list)} != len(n_trees_list) = {len(n_trees_list)}"
-            )
 
         self._figs_class = figs
         self.n_rules_list = np.array(n_rules_list)
         self.n_trees_list = np.array(n_trees_list)
+        self.depth_list = np.array(depth_list)
+        self.min_impurity_decrease_list = np.array(min_impurity_decrease_list)
         self.cv = cv
         self.scoring = scoring
 
     def fit(self, X, y):
         self.scores_ = []
-        for _i, n_rules in enumerate(self.n_rules_list):
-            est = self._figs_class(max_rules=n_rules, max_trees=self.n_trees_list[_i])
+        for _i, (n_rules, n_trees, depth, min_impurity_decrease) in enumerate(itertools.product(*[self.n_rules_list, self.n_trees_list, self.depth_list, self.min_impurity_decrease_list])):
+            est = self._figs_class(max_rules=n_rules, max_trees=n_trees, max_depth=depth, min_impurity_decrease=min_impurity_decrease)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             mean_score = np.mean(cv_scores)
             if len(self.scores_) == 0:
@@ -698,8 +789,8 @@ class FIGSCV:
     def predict_proba(self, X):
         return self.figs.predict_proba(X)
 
-    def predict(self, X):
-        return self.figs.predict(X)
+    def predict(self, X, by_tree = False):
+        return self.figs.predict(X, by_tree = by_tree)
 
     @property
     def max_rules(self):
@@ -708,13 +799,27 @@ class FIGSCV:
     @property
     def max_trees(self):
         return self.figs.max_trees
+    
+    @property
+    def max_depth(self):
+        return self.figs.max_depth
+    
+    @property
+    def min_impurity_decrease(self):
+        return self.figs.min_impurity_decrease
+    
+    @property
+    def trees_(self):
+        return self.figs.trees_
 
 
 class FIGSRegressorCV(FIGSCV):
     def __init__(
         self,
         n_rules_list: List[int] = [6, 12, 24, 30, 50],
-        n_trees_list: List[int] = [5, 5, 5, 5, 5],
+        n_trees_list: List[int] = [5, 10, 15],
+        depth_list: List[int] = [3, 4],
+        min_impurity_decrease_list: List[float] = [0],
         cv: int = 3,
         scoring="r2",
         *args,
@@ -724,6 +829,8 @@ class FIGSRegressorCV(FIGSCV):
             figs=FIGSRegressor,
             n_rules_list=n_rules_list,
             n_trees_list=n_trees_list,
+            depth_list=depth_list,
+            min_impurity_decrease_list=min_impurity_decrease_list,
             cv=cv,
             scoring=scoring,
             *args,
@@ -731,11 +838,14 @@ class FIGSRegressorCV(FIGSCV):
         )
 
 
+#TODO: handle annoying CV errors
 class FIGSClassifierCV(FIGSCV):
     def __init__(
         self,
         n_rules_list: List[int] = [6, 12, 24, 30, 50],
-        n_trees_list: List[int] = [5, 5, 5, 5, 5],
+        n_trees_list: List[int] = [5, 10, 15],
+        depth_list: List[int] = [3, 4],
+        min_impurity_decrease_list: List[float] = [0],
         cv: int = 3,
         scoring="accuracy",
         *args,
@@ -745,11 +855,48 @@ class FIGSClassifierCV(FIGSCV):
             figs=FIGSClassifier,
             n_rules_list=n_rules_list,
             n_trees_list=n_trees_list,
+            depth_list=depth_list,
+            min_impurity_decrease_list=min_impurity_decrease_list,
             cv=cv,
             scoring=scoring,
             *args,
             **kwargs,
         )
+        
+
+        
+# class FIGSHydraRegressor():
+#     def __init__(
+#         self,
+#         max_rules: int = 12,
+#         max_trees: int = None,
+#         min_impurity_decrease: float = 0.0,
+#         random_state=None,
+#         max_features: str = None,
+#         max_depth: int = None
+#     ):
+        
+#         self.max_rules = max_rules
+#         self.max_trees = max_trees
+#         self.min_impurity_decrease = min_impurity_decrease
+#         self.random_state = random_state
+#         self.max_features = max_features
+#         self.max_depth = max_depth
+#         self.estimators = []
+        
+#     def fit(self, X, y):
+#         if isinstance(y, pd.DataFrame):
+#             y = y.to_numpy()
+#         for i in range(y.shape[1]):
+#             est = FIGSRegressor(max_rules=self.max_rules, max_trees=self.max_trees, max_depth=self.max_depth)
+#             est.fit(X, y[:, i].reshape(-1, 1))
+#             self.estimators.append(est)
+    
+#     def predict(self, X):
+#         return np.array([est.predict(X) for est in self.estimators]).T.squeeze(0)
+
+        
+
 
 
 if __name__ == "__main__":

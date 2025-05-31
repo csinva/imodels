@@ -7,7 +7,7 @@ from sklearn.ensemble import BaggingRegressor, GradientBoostingRegressor, Random
     GradientBoostingClassifier, RandomForestClassifier
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_array
-
+import inspect
 from imodels.util import rule, convert
 
 
@@ -15,8 +15,9 @@ def extract_fpgrowth(X,
                      minsupport=0.1,
                      maxcardinality=2,
                      verbose=False) -> List[Tuple]:
-    
-    itemsets_df = mlx.fpgrowth(X, min_support=minsupport, max_len=maxcardinality)
+
+    itemsets_df = mlx.fpgrowth(
+        X, min_support=minsupport, max_len=maxcardinality)
     itemsets_indices = [tuple(s[1]) for s in itemsets_df.values]
     itemsets = [np.array(X.columns)[list(inds)] for inds in itemsets_indices]
     itemsets = list(map(tuple, itemsets))
@@ -49,13 +50,15 @@ def extract_rulefit(X, y, feature_names,
             "RuleFit only works with GradientBoostingClassifier(), GradientBoostingRegressor(), "
             "RandomForestRegressor() or RandomForestClassifier()")
 
-    ## fit tree generator
+    # fit tree generator
     if not exp_rand_tree_size:  # simply fit with constant tree size
         tree_generator.fit(X, y)
     else:  # randomise tree size as per Friedman 2005 Sec 3.3
         np.random.seed(random_state)
-        tree_sizes = np.random.exponential(scale=tree_size - 2, size=n_estimators)
-        tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_]) for i_ in np.arange(len(tree_sizes))], dtype=int)
+        tree_sizes = np.random.exponential(
+            scale=tree_size - 2, size=n_estimators)
+        tree_sizes = np.asarray([2 + np.floor(tree_sizes[i_])
+                                for i_ in np.arange(len(tree_sizes))], dtype=int)
         tree_generator.set_params(warm_start=True)
         curr_est_ = 0
         for i_size in np.arange(len(tree_sizes)):
@@ -76,7 +79,7 @@ def extract_rulefit(X, y, feature_names,
 
     seen_rules = set()
     extracted_rules = []
-    for estimator in estimators_: 
+    for estimator in estimators_:
         for rule_value_pair in convert.tree_to_rules(estimator[0], np.array(feature_names), prediction_values=True):
 
             rule_obj = rule.Rule(rule_value_pair[0])
@@ -108,12 +111,21 @@ def extract_skope(X, y, feature_names,
         max_depths = [max_depths]
 
     for max_depth in max_depths:
+
+        # pass different key based on sklearn version
+        estimator = DecisionTreeRegressor(
+            max_depth=max_depth,
+            max_features=max_features,
+            min_samples_split=min_samples_split,
+
+        )
+        init_signature = inspect.signature(BaggingRegressor.__init__)
+        estimator_key = 'estimator' if 'estimator' in init_signature.parameters.keys(
+        ) else 'base_estimator'
+        kwargs = {
+            estimator_key: estimator,
+        }
         bagging_clf = BaggingRegressor(
-            base_estimator=DecisionTreeRegressor(
-                max_depth=max_depth,
-                max_features=max_features,
-                min_samples_split=min_samples_split
-            ),
             n_estimators=n_estimators,
             max_samples=max_samples,
             max_features=max_samples_features,
@@ -124,7 +136,8 @@ def extract_skope(X, y, feature_names,
             # warm_start=... XXX may be added to increase computation perf.
             n_jobs=n_jobs,
             random_state=random_state,
-            verbose=verbose
+            verbose=verbose,
+            **kwargs
         )
         ensembles.append(bagging_clf)
 
@@ -134,8 +147,8 @@ def extract_skope(X, y, feature_names,
         weights = sample_weight - sample_weight.min()
         contamination = float(sum(y)) / len(y)
         y_reg = (
-                pow(weights, 0.5) * 0.5 / contamination * (y > 0) -
-                pow((weights).mean(), 0.5) * (y == 0)
+            pow(weights, 0.5) * 0.5 / contamination * (y > 0) -
+            pow((weights).mean(), 0.5) * (y == 0)
         )
         y_reg = 1. / (1 + np.exp(-y_reg))  # sigmoid
 
@@ -153,9 +166,11 @@ def extract_skope(X, y, feature_names,
 
     extracted_rules = []
     for estimator, features in zip(estimators_, estimators_features_):
-        extracted_rules.append(convert.tree_to_rules(estimator, np.array(feature_names)[features]))
+        extracted_rules.append(convert.tree_to_rules(
+            estimator, np.array(feature_names)[features]))
 
     return extracted_rules, estimators_samples_, estimators_features_
+
 
 def extract_marginal_curves(clf, X, max_evals=100):
     """Uses predict_proba to compute marginal curves.
@@ -193,3 +208,8 @@ def extract_marginal_curves(clf, X, max_evals=100):
         feature_vals_list.append(feature_vals)
         shape_function_vals_list.append(shape_function_vals.tolist())
     return feature_vals_list, shape_function_vals_list
+
+
+if __name__ == '__main__':
+    init_signature = inspect.signature(BaggingRegressor.__init__)
+    print('estimator' in init_signature.parameters.keys())
