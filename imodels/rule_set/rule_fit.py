@@ -251,7 +251,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         rules = pd.DataFrame(output_rules, columns=[
                              "rule", "type", "coef", "support", "importance"])
         if exclude_zero_coef:
-            rules = rules.ix[rules.coef != 0]
+            rules = rules[rules.coef != 0]
         return rules
 
     def visualize(self, decimals=2):
