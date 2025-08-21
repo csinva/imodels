@@ -16,7 +16,7 @@ from sklearn.linear_model import LinearRegression, Lasso, LogisticRegression
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
-class SLIMRegressor(BaseEstimator, RegressorMixin):
+class SLIMRegressor(RegressorMixin, BaseEstimator):
     '''Sparse integer linear model
     Params
     ------
@@ -85,10 +85,14 @@ class SLIMRegressor(BaseEstimator, RegressorMixin):
     def predict(self, X):
         check_is_fitted(self)
         X = check_array(X)
+        # ensure input feature count matches training
+        if hasattr(self, 'n_features_in_') and X.shape[1] != self.n_features_in_:
+            raise ValueError("X has %d features, but %s is expecting %d features as input" %
+                             (X.shape[1], self.__class__.__name__, self.n_features_in_))
         return self.model_.predict(X)
 
 
-class SLIMClassifier(BaseEstimator, ClassifierMixin):
+class SLIMClassifier(ClassifierMixin, BaseEstimator):
 
     def __init__(self, alpha=1):
         '''Model is initialized during fitting
@@ -161,9 +165,17 @@ class SLIMClassifier(BaseEstimator, ClassifierMixin):
     def predict(self, X):
         check_is_fitted(self)
         X = check_array(X)
+        # ensure input feature count matches training
+        if hasattr(self, 'n_features_in_') and X.shape[1] != self.n_features_in_:
+            raise ValueError("X has %d features, but %s is expecting %d features as input" %
+                             (X.shape[1], self.__class__.__name__, self.n_features_in_))
         return self.model_.predict(X)
 
     def predict_proba(self, X):
         check_is_fitted(self)
         X = check_array(X)
+        # ensure input feature count matches training
+        if hasattr(self, 'n_features_in_') and X.shape[1] != self.n_features_in_:
+            raise ValueError("X has %d features, but %s is expecting %d features as input" %
+                             (X.shape[1], self.__class__.__name__, self.n_features_in_))
         return self.model_.predict_proba(X)

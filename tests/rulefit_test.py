@@ -25,7 +25,7 @@ def test_fried_scale():
 '''
 
 
-@ignore_warnings(category=ConvergenceWarning)
+# @ignore_warnings(category=ConvergenceWarning)
 def test_integration():
     X = np.array([[1, 99, 43, 34],
                   [1, 76, 22, 10],

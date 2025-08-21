@@ -110,5 +110,6 @@ class TestFIGS:
 if __name__ == '__main__':
     t = TestFIGS()
     t.setup_method()
-    t.test_fitting()
-    t.test_categorical()
+    t.test_recognized_by_sklearn()
+    # t.test_fitting()
+    # t.test_categorical()
