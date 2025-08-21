@@ -240,7 +240,7 @@ class HSTree(BaseEstimator):
         return s
 
 
-class HSTreeRegressor(HSTree, RegressorMixin):
+class HSTreeRegressor(RegressorMixin, HSTree):
     def __init__(
         self,
         estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
@@ -258,7 +258,7 @@ class HSTreeRegressor(HSTree, RegressorMixin):
         )
 
 
-class HSTreeClassifier(HSTree, ClassifierMixin):
+class HSTreeClassifier(ClassifierMixin, HSTree):
     def __init__(
         self,
         estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),

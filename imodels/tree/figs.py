@@ -739,11 +739,11 @@ class FIGS(BaseEstimator):
         plt.show()
 
 
-class FIGSRegressor(FIGS, RegressorMixin):
+class FIGSRegressor(RegressorMixin, FIGS):
     ...
 
 
-class FIGSClassifier(FIGS, ClassifierMixin):
+class FIGSClassifier(ClassifierMixin, FIGS):
     
     @property
     def class_map(self):
@@ -813,7 +813,7 @@ class FIGSCV:
         return self.figs.trees_
 
 
-class FIGSRegressorCV(FIGSCV):
+class FIGSRegressorCV(RegressorMixin, FIGSCV):
     def __init__(
         self,
         n_rules_list: List[int] = [6, 12, 24, 30, 50],
@@ -839,7 +839,7 @@ class FIGSRegressorCV(FIGSCV):
 
 
 #TODO: handle annoying CV errors
-class FIGSClassifierCV(FIGSCV):
+class FIGSClassifierCV(ClassifierMixin, FIGSCV):
     def __init__(
         self,
         n_rules_list: List[int] = [6, 12, 24, 30, 50],
