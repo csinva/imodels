@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "imodels"
+version = "2.0.0"
+description = "Implementations of various interpretable models"
+readme = "readme.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+  { name = "Chandan Singh", email = "csinva23@gmail.com" },
+  { name = "Keyan Nasseri" },
+  { name = "Matthew Epland" },
+  { name = "Yan Shuo Tan" },
+  { name = "Omer Ronen" },
+  { name = "Tiffany Tang" },
+  { name = "Abhineet Agarwal" },
+  { name = "Theo Saarinen" },
+  { name = "Bin Yu", email = "binyu@berkeley.edu" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "matplotlib",
+  "mlxtend",        # some lower versions are missing fpgrowth
+  "numpy",
+  "pandas",
+  "requests",               # used in c4.5
+  "scipy",
+  "scikit-learn",     # 1.6.0 has issue with ensemble models
+  "tqdm"                    # used in BART
+]
+[project.urls]
+Homepage = "https://github.com/csinva/imodels"
+Repository = "https://github.com/csinva/imodels"
+
+
+[tool.setuptools.packages.find]
+include = ["imodels*"]
+exclude = ["notebooks*", "tests*", "docs*"]
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+    "jupytext",
+    "matplotlib",
+    "pytest",
+    "pytest-cov",
+    "slurmpy",
+    "tqdm",
+    "pmlb",
+    "dvu",
+    "gdown",
+]
+
+# Optional algorithm deps mentioned in setup.py comments
+[project.optional-dependencies]
+optional = [
+  "cvxpy", # for OptimalRuleListClassifier
+  "gosdt-deprecated", # for OptimalTreeClassifier
+  "irf", # for IterativeRandomForestClassifier
+]
