@@ -11,15 +11,8 @@ Before contributing, it would be good to read the sklearn estimator [contributin
 
 The model is on [pypi](https://pypi.org/project/imodels/). Packaged following [this tutorial](https://realpython.com/pypi-publish-python-package/). Relevant commands:
 ```bash
-pip install twine wheel
-
-rm -rf build dist
-
-python setup.py sdist bdist_wheel
-
-twine check dist/*
-
-twine upload dist/*
+uv build
+uv publish
 ```
 
 

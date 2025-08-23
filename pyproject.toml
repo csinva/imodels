@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "imodels"
-version = "2.0.0"
+version = "2.0.1"
 description = "Implementations of various interpretable models"
 readme = "readme.md"
 requires-python = ">=3.9"
@@ -49,6 +49,7 @@ dev = [
     "jupyter>=1.1.1",
     "jupytext",
     "matplotlib",
+    "pdoc3",
     "pytest",
     "pytest-cov",
     "slurmpy",
@@ -64,4 +65,8 @@ optional = [
   "cvxpy", # for OptimalRuleListClassifier
   "gosdt-deprecated", # for OptimalTreeClassifier
   "irf", # for IterativeRandomForestClassifier
+  "statsmodels", # for bartpy
+  "torch", # for imodels.util.neural_nets
+  "interpret", # for imodels.algebraic.gam_multitask
+  "glmnet", # for imodels.tree.rf_plus.rf_plus; this is deprecated - should remove
 ]
