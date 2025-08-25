@@ -3,7 +3,6 @@ import random
 import numpy as np
 
 from imodels import (
-    OptimalRuleListClassifier,
     OptimalTreeClassifier,
     FPLassoClassifier,
     FPSkopeClassifier,
@@ -34,7 +33,6 @@ class TestClassClassificationBinary:
     def test_classification_binary(self):
         """Test imodels on basic binary classification task"""
         for model_type in [
-            OptimalRuleListClassifier,
             OptimalTreeClassifier,
             FPLassoClassifier,
             FPSkopeClassifier,
@@ -55,7 +53,7 @@ class TestClassClassificationBinary:
             assert preds.size == self.n, "predict() yields right size"
 
             # test preds_proba()
-            if model_type not in {OptimalRuleListClassifier, OptimalTreeClassifier}:
+            if model_type not in {OptimalTreeClassifier}:
                 preds_proba = m.predict_proba(X)
                 assert len(preds_proba.shape) == 2, "preds_proba has 2 columns"
                 assert preds_proba.shape[1] == 2, "preds_proba has 2 columns"
