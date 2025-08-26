@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.11.6" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from copy import deepcopy
+from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, defaultdict
+from sklearn.datasets import load_diabetes
+from sklearn.utils import resample
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, r2_score
+import numpy as np
+
+
+class ShapGAM(BaseEstimator):
+    def __init__(self, n_estimators=10, feature_fraction=0.7, random_state=None, ebm_kwargs: dict = {}):
+        &#34;&#34;&#34;
+        Initialize the ensemble EBM classifier.
+
+        Parameters:
+        - n_estimators: Number of EBM classifiers to create with different random subsets of features.
+        - feature_fraction: Fraction of features to use for each EBM classifier.
+        - random_state: Seed for random number generator to ensure reproducibility.
+        &#34;&#34;&#34;
+        self.n_estimators = n_estimators
+        self.feature_fraction = feature_fraction
+        self.random_state = random_state
+        self.models = []
+        self.feature_subsets = []
+        self.ebm_kwargs = ebm_kwargs
+
+    def fit(self, X, y):
+        &#34;&#34;&#34;
+        Fit the ensemble of EBM classifiers on random feature subsets.
+        &#34;&#34;&#34;
+        rng = np.random.default_rng(self.random_state)
+        n_features = X.shape[1]
+
+        for _ in range(self.n_estimators):
+            # Randomly select a subset of features
+            if isinstance(self.feature_fraction, float):
+                n_features = max(1, int(self.feature_fraction * n_features))
+            elif self.feature_fraction == &#39;uniform&#39;:
+                n_features = rng.integers(1, n_features + 1)
+            feature_subset = rng.choice(
+                n_features,
+                size=n_features,
+                replace=False
+            )
+            self.feature_subsets.append(feature_subset)
+
+            # Create an EBM with the selected feature subset
+            cls = ExplainableBoostingClassifier if isinstance(
+                self, ShapGAMClassifier) else ExplainableBoostingRegressor
+            ebm = cls(
+                random_state=self.random_state, **self.ebm_kwargs)
+            X_subset = X[:, feature_subset]
+            ebm.fit(X_subset, y)
+            self.models.append(ebm)
+
+        return self
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;
+        Predict probabilities by averaging the shaping functions for each feature across models then predicting
+        &#34;&#34;&#34;
+        if isinstance(self, ShapGAMRegressor):
+            raise NotImplementedError(
+                &#34;This method is not implemented for regression tasks.&#34;)
+        # Aggregate predictions from all models
+        probs = np.zeros((X.shape[0], 2))
+
+        for feat_num in range(X.shape[1]):
+            X_ = np.zeros_like(X)
+            X_[:, feat_num] = X[:, feat_num]
+            feat_num_counts = 0
+            probs_feat = np.zeros((X.shape[0], 2))
+            for ebm, feature_subset in zip(self.models, self.feature_subsets):
+                if feat_num in feature_subset:
+                    # todo: there is an error here -- aggregating probas is not the same as aggregating logits!
+                    raise NotImplementedError(
+                        &#34;This is not the same as aggregating logits Look at the predict function for smth more accurate!&#34;)
+                    probs_ = ebm.predict_proba(X[:, feature_subset])
+                    probs_feat += probs_
+                    feat_num_counts += 1
+            if feat_num_counts &gt; 0:
+                probs_feat /= feat_num_counts
+                probs += probs_feat
+
+                # for ebm, feature_subset in zip(self.models, self.feature_subsets):
+                # probs_ = ebm.predict_proba(X[:, feature_subset])
+                # probs += probs_
+
+                # Average the probabilities across all models
+                # probs /= self.n_estimators
+        return probs
+
+    def predict(self, X):
+        &#34;&#34;&#34;
+        Predict class labels by averaging the shape function outputs and taking the argmax.
+        &#34;&#34;&#34;
+        if isinstance(self, ShapGAMClassifier):
+            return np.argmax(self.predict_proba(X), axis=1)
+        else:
+            # naively averaging the predictions across all models
+            # preds = np.zeros(X.shape[0])
+            # for ebm, feature_subset in zip(self.models, self.feature_subsets):
+            #     preds += ebm.predict(X[:, feature_subset])
+            # preds /= self.n_estimators
+            # return preds
+
+            # averaging the predictions across all models for each feature
+            preds = np.zeros(len(X_test))
+            for ex_num in range(len(X_test)):
+                for feat_num in range(X_train.shape[1]):
+                    feat_count = 0
+                    pred_feat = 0
+                    for ebm, feature_subset in zip(self.models, self.feature_subsets):
+                        if feat_num in feature_subset:
+                            expl_local = ebm.explain_local(
+                                X_test[ex_num, feature_subset])
+                            feat_num_in_subset = np.where(
+                                feature_subset == feat_num)[0][0]
+                            pred_feat += expl_local.data(
+                                0)[&#39;scores&#39;][feat_num_in_subset]
+                            feat_count += 1
+                    if feat_count &gt; 0:
+                        pred_feat /= feat_count
+                    preds[ex_num] += pred_feat
+
+            return preds
+
+    def get_params(self, deep=True):
+        return {
+            &#34;n_estimators&#34;: self.n_estimators,
+            &#34;feature_fraction&#34;: self.feature_fraction,
+            &#34;random_state&#34;: self.random_state
+        }
+
+    def set_params(self, **params):
+        for param, value in params.items():
+            setattr(self, param, value)
+        return self
+
+
+class ShapGAMRegressor(ShapGAM, RegressorMixin):
+    ...
+
+
+class ShapGAMClassifier(ShapGAM, ClassifierMixin):
+    ...
+
+
+if __name__ == &#39;__main__&#39;:
+
+    # Load data
+    # X, y = load_iris(return_X_y=True)
+    # X, y =
+
+    # make binary classification
+    # X = X[y &lt; 2]
+    # y = y[y &lt; 2]
+
+    # load regression data
+    X, y = load_diabetes(return_X_y=True)
+
+    # normalize y
+    y = (y - y.mean()) / y.std()
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42)
+
+    # Create and fit ensemble EBM
+    # ebm_ensemble = ExplainableBoostingRegressor(
+    # interactions=0, random_state=42)
+    ebm_ensemble = ShapGAMRegressor(
+        n_estimators=20,
+        # feature_fraction=0.9,
+        feature_fraction=&#39;uniform&#39;,
+        random_state=42, ebm_kwargs={&#39;interactions&#39;: 0})
+    ebm_ensemble.fit(X_train, y_train)
+
+    # Evaluate
+    y_pred = ebm_ensemble.predict(X_test)
+    # accuracy = accuracy_score(y_test, y_pred)
+    # print(f&#34;Ensemble EBM Accuracy: {accuracy}&#34;)
+
+    r2 = r2_score(y_test, y_pred)
+    print(f&#34;Ensemble EBM R^2: {r2}&#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.algebraic.gam_shap.ShapGAM"><code class="flex name class">
+<span>class <span class="ident">ShapGAM</span></span>
+<span>(</span><span>n_estimators=10, feature_fraction=0.7, random_state=None, ebm_kwargs: dict = {})</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<p>Inheriting from this class provides default implementations of:</p>
+<ul>
+<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
+<li>textual and HTML representation displayed in terminals and IDEs;</li>
+<li>estimator serialization;</li>
+<li>parameters validation;</li>
+<li>data validation;</li>
+<li>feature names validation.</li>
+</ul>
+<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
+<h2 id="notes">Notes</h2>
+<p>All estimators should specify all the parameters that can be set
+at the class level in their <code>__init__</code> as explicit keyword
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.base import BaseEstimator
+&gt;&gt;&gt; class MyEstimator(BaseEstimator):
+...     def __init__(self, *, param=1):
+...         self.param = param
+...     def fit(self, X, y=None):
+...         self.is_fitted_ = True
+...         return self
+...     def predict(self, X):
+...         return np.full(shape=X.shape[0], fill_value=self.param)
+&gt;&gt;&gt; estimator = MyEstimator(param=2)
+&gt;&gt;&gt; estimator.get_params()
+{'param': 2}
+&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
+&gt;&gt;&gt; y = np.array([1, 0, 1])
+&gt;&gt;&gt; estimator.fit(X, y).predict(X)
+array([2, 2, 2])
+&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
+array([3, 3, 3])
+</code></pre>
+<p>Initialize the ensemble EBM classifier.</p>
+<p>Parameters:
+- n_estimators: Number of EBM classifiers to create with different random subsets of features.
+- feature_fraction: Fraction of features to use for each EBM classifier.
+- random_state: Seed for random number generator to ensure reproducibility.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShapGAM(BaseEstimator):
+    def __init__(self, n_estimators=10, feature_fraction=0.7, random_state=None, ebm_kwargs: dict = {}):
+        &#34;&#34;&#34;
+        Initialize the ensemble EBM classifier.
+
+        Parameters:
+        - n_estimators: Number of EBM classifiers to create with different random subsets of features.
+        - feature_fraction: Fraction of features to use for each EBM classifier.
+        - random_state: Seed for random number generator to ensure reproducibility.
+        &#34;&#34;&#34;
+        self.n_estimators = n_estimators
+        self.feature_fraction = feature_fraction
+        self.random_state = random_state
+        self.models = []
+        self.feature_subsets = []
+        self.ebm_kwargs = ebm_kwargs
+
+    def fit(self, X, y):
+        &#34;&#34;&#34;
+        Fit the ensemble of EBM classifiers on random feature subsets.
+        &#34;&#34;&#34;
+        rng = np.random.default_rng(self.random_state)
+        n_features = X.shape[1]
+
+        for _ in range(self.n_estimators):
+            # Randomly select a subset of features
+            if isinstance(self.feature_fraction, float):
+                n_features = max(1, int(self.feature_fraction * n_features))
+            elif self.feature_fraction == &#39;uniform&#39;:
+                n_features = rng.integers(1, n_features + 1)
+            feature_subset = rng.choice(
+                n_features,
+                size=n_features,
+                replace=False
+            )
+            self.feature_subsets.append(feature_subset)
+
+            # Create an EBM with the selected feature subset
+            cls = ExplainableBoostingClassifier if isinstance(
+                self, ShapGAMClassifier) else ExplainableBoostingRegressor
+            ebm = cls(
+                random_state=self.random_state, **self.ebm_kwargs)
+            X_subset = X[:, feature_subset]
+            ebm.fit(X_subset, y)
+            self.models.append(ebm)
+
+        return self
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;
+        Predict probabilities by averaging the shaping functions for each feature across models then predicting
+        &#34;&#34;&#34;
+        if isinstance(self, ShapGAMRegressor):
+            raise NotImplementedError(
+                &#34;This method is not implemented for regression tasks.&#34;)
+        # Aggregate predictions from all models
+        probs = np.zeros((X.shape[0], 2))
+
+        for feat_num in range(X.shape[1]):
+            X_ = np.zeros_like(X)
+            X_[:, feat_num] = X[:, feat_num]
+            feat_num_counts = 0
+            probs_feat = np.zeros((X.shape[0], 2))
+            for ebm, feature_subset in zip(self.models, self.feature_subsets):
+                if feat_num in feature_subset:
+                    # todo: there is an error here -- aggregating probas is not the same as aggregating logits!
+                    raise NotImplementedError(
+                        &#34;This is not the same as aggregating logits Look at the predict function for smth more accurate!&#34;)
+                    probs_ = ebm.predict_proba(X[:, feature_subset])
+                    probs_feat += probs_
+                    feat_num_counts += 1
+            if feat_num_counts &gt; 0:
+                probs_feat /= feat_num_counts
+                probs += probs_feat
+
+                # for ebm, feature_subset in zip(self.models, self.feature_subsets):
+                # probs_ = ebm.predict_proba(X[:, feature_subset])
+                # probs += probs_
+
+                # Average the probabilities across all models
+                # probs /= self.n_estimators
+        return probs
+
+    def predict(self, X):
+        &#34;&#34;&#34;
+        Predict class labels by averaging the shape function outputs and taking the argmax.
+        &#34;&#34;&#34;
+        if isinstance(self, ShapGAMClassifier):
+            return np.argmax(self.predict_proba(X), axis=1)
+        else:
+            # naively averaging the predictions across all models
+            # preds = np.zeros(X.shape[0])
+            # for ebm, feature_subset in zip(self.models, self.feature_subsets):
+            #     preds += ebm.predict(X[:, feature_subset])
+            # preds /= self.n_estimators
+            # return preds
+
+            # averaging the predictions across all models for each feature
+            preds = np.zeros(len(X_test))
+            for ex_num in range(len(X_test)):
+                for feat_num in range(X_train.shape[1]):
+                    feat_count = 0
+                    pred_feat = 0
+                    for ebm, feature_subset in zip(self.models, self.feature_subsets):
+                        if feat_num in feature_subset:
+                            expl_local = ebm.explain_local(
+                                X_test[ex_num, feature_subset])
+                            feat_num_in_subset = np.where(
+                                feature_subset == feat_num)[0][0]
+                            pred_feat += expl_local.data(
+                                0)[&#39;scores&#39;][feat_num_in_subset]
+                            feat_count += 1
+                    if feat_count &gt; 0:
+                        pred_feat /= feat_count
+                    preds[ex_num] += pred_feat
+
+            return preds
+
+    def get_params(self, deep=True):
+        return {
+            &#34;n_estimators&#34;: self.n_estimators,
+            &#34;feature_fraction&#34;: self.feature_fraction,
+            &#34;random_state&#34;: self.random_state
+        }
+
+    def set_params(self, **params):
+        for param, value in params.items():
+            setattr(self, param, value)
+        return self</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.algebraic.gam_shap.ShapGAMClassifier" href="#imodels.algebraic.gam_shap.ShapGAMClassifier">ShapGAMClassifier</a></li>
+<li><a title="imodels.algebraic.gam_shap.ShapGAMRegressor" href="#imodels.algebraic.gam_shap.ShapGAMRegressor">ShapGAMRegressor</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.gam_shap.ShapGAM.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fit the ensemble of EBM classifiers on random feature subsets.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y):
+    &#34;&#34;&#34;
+    Fit the ensemble of EBM classifiers on random feature subsets.
+    &#34;&#34;&#34;
+    rng = np.random.default_rng(self.random_state)
+    n_features = X.shape[1]
+
+    for _ in range(self.n_estimators):
+        # Randomly select a subset of features
+        if isinstance(self.feature_fraction, float):
+            n_features = max(1, int(self.feature_fraction * n_features))
+        elif self.feature_fraction == &#39;uniform&#39;:
+            n_features = rng.integers(1, n_features + 1)
+        feature_subset = rng.choice(
+            n_features,
+            size=n_features,
+            replace=False
+        )
+        self.feature_subsets.append(feature_subset)
+
+        # Create an EBM with the selected feature subset
+        cls = ExplainableBoostingClassifier if isinstance(
+            self, ShapGAMClassifier) else ExplainableBoostingRegressor
+        ebm = cls(
+            random_state=self.random_state, **self.ebm_kwargs)
+        X_subset = X[:, feature_subset]
+        ebm.fit(X_subset, y)
+        self.models.append(ebm)
+
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.gam_shap.ShapGAM.get_params"><code class="name flex">
+<span>def <span class="ident">get_params</span></span>(<span>self, deep=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get parameters for this estimator.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>deep</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Parameter names mapped to their values.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_params(self, deep=True):
+    return {
+        &#34;n_estimators&#34;: self.n_estimators,
+        &#34;feature_fraction&#34;: self.feature_fraction,
+        &#34;random_state&#34;: self.random_state
+    }</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.gam_shap.ShapGAM.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Predict class labels by averaging the shape function outputs and taking the argmax.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    &#34;&#34;&#34;
+    Predict class labels by averaging the shape function outputs and taking the argmax.
+    &#34;&#34;&#34;
+    if isinstance(self, ShapGAMClassifier):
+        return np.argmax(self.predict_proba(X), axis=1)
+    else:
+        # naively averaging the predictions across all models
+        # preds = np.zeros(X.shape[0])
+        # for ebm, feature_subset in zip(self.models, self.feature_subsets):
+        #     preds += ebm.predict(X[:, feature_subset])
+        # preds /= self.n_estimators
+        # return preds
+
+        # averaging the predictions across all models for each feature
+        preds = np.zeros(len(X_test))
+        for ex_num in range(len(X_test)):
+            for feat_num in range(X_train.shape[1]):
+                feat_count = 0
+                pred_feat = 0
+                for ebm, feature_subset in zip(self.models, self.feature_subsets):
+                    if feat_num in feature_subset:
+                        expl_local = ebm.explain_local(
+                            X_test[ex_num, feature_subset])
+                        feat_num_in_subset = np.where(
+                            feature_subset == feat_num)[0][0]
+                        pred_feat += expl_local.data(
+                            0)[&#39;scores&#39;][feat_num_in_subset]
+                        feat_count += 1
+                if feat_count &gt; 0:
+                    pred_feat /= feat_count
+                preds[ex_num] += pred_feat
+
+        return preds</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.gam_shap.ShapGAM.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Predict probabilities by averaging the shaping functions for each feature across models then predicting</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    &#34;&#34;&#34;
+    Predict probabilities by averaging the shaping functions for each feature across models then predicting
+    &#34;&#34;&#34;
+    if isinstance(self, ShapGAMRegressor):
+        raise NotImplementedError(
+            &#34;This method is not implemented for regression tasks.&#34;)
+    # Aggregate predictions from all models
+    probs = np.zeros((X.shape[0], 2))
+
+    for feat_num in range(X.shape[1]):
+        X_ = np.zeros_like(X)
+        X_[:, feat_num] = X[:, feat_num]
+        feat_num_counts = 0
+        probs_feat = np.zeros((X.shape[0], 2))
+        for ebm, feature_subset in zip(self.models, self.feature_subsets):
+            if feat_num in feature_subset:
+                # todo: there is an error here -- aggregating probas is not the same as aggregating logits!
+                raise NotImplementedError(
+                    &#34;This is not the same as aggregating logits Look at the predict function for smth more accurate!&#34;)
+                probs_ = ebm.predict_proba(X[:, feature_subset])
+                probs_feat += probs_
+                feat_num_counts += 1
+        if feat_num_counts &gt; 0:
+            probs_feat /= feat_num_counts
+            probs += probs_feat
+
+            # for ebm, feature_subset in zip(self.models, self.feature_subsets):
+            # probs_ = ebm.predict_proba(X[:, feature_subset])
+            # probs += probs_
+
+            # Average the probabilities across all models
+            # probs /= self.n_estimators
+    return probs</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.gam_shap.ShapGAM.set_params"><code class="name flex">
+<span>def <span class="ident">set_params</span></span>(<span>self, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as :class:<code>~sklearn.pipeline.Pipeline</code>). The latter have
+parameters of the form <code>&lt;component&gt;__&lt;parameter&gt;</code> so that it's
+possible to update each component of a nested object.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>**params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Estimator parameters.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>estimator instance</code></dt>
+<dd>Estimator instance.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_params(self, **params):
+    for param, value in params.items():
+        setattr(self, param, value)
+    return self</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.algebraic.gam_shap.ShapGAMClassifier"><code class="flex name class">
+<span>class <span class="ident">ShapGAMClassifier</span></span>
+<span>(</span><span>n_estimators=10, feature_fraction=0.7, random_state=None, ebm_kwargs: dict = {})</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<p>Inheriting from this class provides default implementations of:</p>
+<ul>
+<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
+<li>textual and HTML representation displayed in terminals and IDEs;</li>
+<li>estimator serialization;</li>
+<li>parameters validation;</li>
+<li>data validation;</li>
+<li>feature names validation.</li>
+</ul>
+<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
+<h2 id="notes">Notes</h2>
+<p>All estimators should specify all the parameters that can be set
+at the class level in their <code>__init__</code> as explicit keyword
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.base import BaseEstimator
+&gt;&gt;&gt; class MyEstimator(BaseEstimator):
+...     def __init__(self, *, param=1):
+...         self.param = param
+...     def fit(self, X, y=None):
+...         self.is_fitted_ = True
+...         return self
+...     def predict(self, X):
+...         return np.full(shape=X.shape[0], fill_value=self.param)
+&gt;&gt;&gt; estimator = MyEstimator(param=2)
+&gt;&gt;&gt; estimator.get_params()
+{'param': 2}
+&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
+&gt;&gt;&gt; y = np.array([1, 0, 1])
+&gt;&gt;&gt; estimator.fit(X, y).predict(X)
+array([2, 2, 2])
+&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
+array([3, 3, 3])
+</code></pre>
+<p>Initialize the ensemble EBM classifier.</p>
+<p>Parameters:
+- n_estimators: Number of EBM classifiers to create with different random subsets of features.
+- feature_fraction: Fraction of features to use for each EBM classifier.
+- random_state: Seed for random number generator to ensure reproducibility.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShapGAMClassifier(ShapGAM, ClassifierMixin):
+    ...</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.algebraic.gam_shap.ShapGAM" href="#imodels.algebraic.gam_shap.ShapGAM">ShapGAM</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li>sklearn.base.ClassifierMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.gam_shap.ShapGAMClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.gam_shap.ShapGAMClassifier" href="#imodels.algebraic.gam_shap.ShapGAMClassifier">ShapGAMClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.gam_shap.ShapGAMClassifier" href="#imodels.algebraic.gam_shap.ShapGAMClassifier">ShapGAMClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.algebraic.gam_shap.ShapGAM" href="#imodels.algebraic.gam_shap.ShapGAM">ShapGAM</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.fit" href="#imodels.algebraic.gam_shap.ShapGAM.fit">fit</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.get_params" href="#imodels.algebraic.gam_shap.ShapGAM.get_params">get_params</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.predict" href="#imodels.algebraic.gam_shap.ShapGAM.predict">predict</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.predict_proba" href="#imodels.algebraic.gam_shap.ShapGAM.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.set_params" href="#imodels.algebraic.gam_shap.ShapGAM.set_params">set_params</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.algebraic.gam_shap.ShapGAMRegressor"><code class="flex name class">
+<span>class <span class="ident">ShapGAMRegressor</span></span>
+<span>(</span><span>n_estimators=10, feature_fraction=0.7, random_state=None, ebm_kwargs: dict = {})</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<p>Inheriting from this class provides default implementations of:</p>
+<ul>
+<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
+<li>textual and HTML representation displayed in terminals and IDEs;</li>
+<li>estimator serialization;</li>
+<li>parameters validation;</li>
+<li>data validation;</li>
+<li>feature names validation.</li>
+</ul>
+<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
+<h2 id="notes">Notes</h2>
+<p>All estimators should specify all the parameters that can be set
+at the class level in their <code>__init__</code> as explicit keyword
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.base import BaseEstimator
+&gt;&gt;&gt; class MyEstimator(BaseEstimator):
+...     def __init__(self, *, param=1):
+...         self.param = param
+...     def fit(self, X, y=None):
+...         self.is_fitted_ = True
+...         return self
+...     def predict(self, X):
+...         return np.full(shape=X.shape[0], fill_value=self.param)
+&gt;&gt;&gt; estimator = MyEstimator(param=2)
+&gt;&gt;&gt; estimator.get_params()
+{'param': 2}
+&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
+&gt;&gt;&gt; y = np.array([1, 0, 1])
+&gt;&gt;&gt; estimator.fit(X, y).predict(X)
+array([2, 2, 2])
+&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
+array([3, 3, 3])
+</code></pre>
+<p>Initialize the ensemble EBM classifier.</p>
+<p>Parameters:
+- n_estimators: Number of EBM classifiers to create with different random subsets of features.
+- feature_fraction: Fraction of features to use for each EBM classifier.
+- random_state: Seed for random number generator to ensure reproducibility.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShapGAMRegressor(ShapGAM, RegressorMixin):
+    ...</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.algebraic.gam_shap.ShapGAM" href="#imodels.algebraic.gam_shap.ShapGAM">ShapGAM</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li>sklearn.base.RegressorMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.gam_shap.ShapGAMRegressor.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.gam_shap.ShapGAMRegressor" href="#imodels.algebraic.gam_shap.ShapGAMRegressor">ShapGAMRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.gam_shap.ShapGAMRegressor" href="#imodels.algebraic.gam_shap.ShapGAMRegressor">ShapGAMRegressor</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.algebraic.gam_shap.ShapGAM" href="#imodels.algebraic.gam_shap.ShapGAM">ShapGAM</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.fit" href="#imodels.algebraic.gam_shap.ShapGAM.fit">fit</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.get_params" href="#imodels.algebraic.gam_shap.ShapGAM.get_params">get_params</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.predict" href="#imodels.algebraic.gam_shap.ShapGAM.predict">predict</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.predict_proba" href="#imodels.algebraic.gam_shap.ShapGAM.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.set_params" href="#imodels.algebraic.gam_shap.ShapGAM.set_params">set_params</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index 🔍</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.algebraic" href="index.html">imodels.algebraic</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.algebraic.gam_shap.ShapGAM" href="#imodels.algebraic.gam_shap.ShapGAM">ShapGAM</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.fit" href="#imodels.algebraic.gam_shap.ShapGAM.fit">fit</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.get_params" href="#imodels.algebraic.gam_shap.ShapGAM.get_params">get_params</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.predict" href="#imodels.algebraic.gam_shap.ShapGAM.predict">predict</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.predict_proba" href="#imodels.algebraic.gam_shap.ShapGAM.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAM.set_params" href="#imodels.algebraic.gam_shap.ShapGAM.set_params">set_params</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.algebraic.gam_shap.ShapGAMClassifier" href="#imodels.algebraic.gam_shap.ShapGAMClassifier">ShapGAMClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAMClassifier.set_score_request" href="#imodels.algebraic.gam_shap.ShapGAMClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.algebraic.gam_shap.ShapGAMRegressor" href="#imodels.algebraic.gam_shap.ShapGAMRegressor">ShapGAMRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.algebraic.gam_shap.ShapGAMRegressor.set_score_request" href="#imodels.algebraic.gam_shap.ShapGAMRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 c122.0,82.7 120.5,78.6 120.5,78.6 c119.2,72.0 123.4,76.3 123.4,76.3 c127.3,80.9 125.5,87.3 125.5,87.3 c122.9,97.6 130.6,101.9 134.4,103.2" fill="currentcolor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">

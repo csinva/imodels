@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "imodels"
-version = "2.0.2"
+version = "2.0.3"
 description = "Implementations of various interpretable models"
 readme = "readme.md"
 requires-python = ">=3.9"

@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.11.6" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># This is just a simple wrapper around pycorels: https://github.com/corels/pycorels
+import warnings
+from typing import List
+
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import KBinsDiscretizer
+
+from imodels.rule_list.greedy_rule_list import GreedyRuleListClassifier
+
+corels_supported = False
+try:
+    from corels import CorelsClassifier
+
+    corels_supported = True
+except:
+    pass
+
+
+class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported else CorelsClassifier):
+    &#34;&#34;&#34;Certifiably Optimal RulE ListS classifier.
+    This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
+    rulelists for binary feature data and binary classification. As an alternative to other
+    tree based algorithms such as CART, CORELS provides a certificate of optimality for its
+    rulelist given a training set, leveraging multiple algorithmic bounds to do so.
+    In order to use run the algorithm, create an instance of the `CorelsClassifier` class,
+    providing any necessary parameters in its constructor, and then call `fit` to generate
+    a rulelist. `printrl` prints the generated rulelist, while `predict` provides
+    classification predictions for a separate test dataset with the same features. To determine
+    the algorithm&#39;s accuracy, run `score` on an evaluation dataset with labels.
+    To save a generated rulelist to a file, call `save`. To load it back from the file, call `load`.
+    Attributes
+    ----------
+    c : float, optional (default=0.01)
+        Regularization parameter. Higher values penalize longer rulelists.
+    n_iter : int, optional (default=10000)
+        Maximum number of nodes (rulelists) to search before exiting.
+    map_type : str, optional (default=&#34;prefix&#34;)
+        The type of prefix map to use. Supported maps are &#34;none&#34; for no map,
+        &#34;prefix&#34; for a map that uses rule prefixes for keys, &#34;captured&#34; for
+        a map with a prefix&#39;s captured vector as keys.
+    policy : str, optional (default=&#34;lower_bound&#34;)
+        The search policy for traversing the tree (i.e. the criterion with which
+        to order nodes in the queue). Supported criteria are &#34;bfs&#34;, for breadth-first
+        search; &#34;curious&#34;, which attempts to find the most promising node;
+        &#34;lower_bound&#34; which is the objective function evaluated with that rulelist
+        minus the default prediction error; &#34;objective&#34; for the objective function
+        evaluated at that rulelist; and &#34;dfs&#34; for depth-first search.
+    verbosity : list, optional (default=[&#34;rulelist&#34;])
+        The verbosity levels required. A list of strings, it can contain any
+        subset of [&#34;rulelist&#34;, &#34;rule&#34;, &#34;label&#34;, &#34;minor&#34;, &#34;samples&#34;, &#34;progress&#34;, &#34;mine&#34;, &#34;loud&#34;].
+        An empty list ([]) indicates &#39;silent&#39; mode.
+        - &#34;rulelist&#34; prints the generated rulelist at the end.
+        - &#34;rule&#34; prints a summary of each rule generated.
+        - &#34;label&#34; prints a summary of the class labels.
+        - &#34;minor&#34; prints a summary of the minority bound.
+        - &#34;samples&#34; produces a complete dump of the rules, label, and/or minor data. You must also provide at least one of &#34;rule&#34;, &#34;label&#34;, or &#34;minor&#34; to specify which data you want to dump, or &#34;loud&#34; for all data. The &#34;samples&#34; option often spits out a lot of output.
+        - &#34;progress&#34; prints periodic messages as corels runs.
+        - &#34;mine&#34; prints debug information while mining rules, including each rule as it is generated.
+        - &#34;loud&#34; is the equivalent of [&#34;progress&#34;, &#34;label&#34;, &#34;rule&#34;, &#34;mine&#34;, &#34;minor&#34;].
+    ablation : int, optional (default=0)
+        Specifies addition parameters for the bounds used while searching. Accepted
+        values are 0 (all bounds), 1 (no antecedent support bound), and 2 (no
+        lookahead bound).
+    max_card : int, optional (default=2)
+        Maximum cardinality allowed when mining rules. Can be any value greater than
+        or equal to 1. For instance, a value of 2 would only allow rules that combine
+        at most two features in their antecedents.
+    min_support : float, optional (default=0.01)
+        The fraction of samples that a rule must capture in order to be used. 1 minus
+        this value is also the maximum fraction of samples a rule can capture.
+        Can be any value between 0.0 and 0.5.
+    References
+    ----------
+    Elaine Angelino, Nicholas Larus-Stone, Daniel Alabi, Margo Seltzer, and Cynthia Rudin.
+    Learning Certifiably Optimal Rule Lists for Categorical Data. KDD 2017.
+    Journal of Machine Learning Research, 2018; 19: 1-77. arXiv:1704.01701, 2017
+    Examples
+    --------
+    &#34;&#34;&#34;
+
+    def __init__(self, c=0.01, n_iter=10000, map_type=&#34;prefix&#34;, policy=&#34;lower_bound&#34;,
+                 verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0):
+        if corels_supported:
+            super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
+        else:
+            warnings.warn(&#34;Should install corels with pip install corels. Using GreedyRuleList instead.&#34;)
+            super().__init__()
+            self.fit = super().fit
+            self.predict = super().predict
+            self.predict_proba = super().predict_proba
+            self.__str__ = super().__str__
+
+        self.random_state = random_state
+        self.discretizer = None
+        self.str_print = None
+        self._estimator_type = &#39;classifier&#39;
+
+    def fit(self, X, y, feature_names=None, prediction_name=&#34;prediction&#34;):
+        &#34;&#34;&#34;
+        Build a CORELS classifier from the training set (X, y).
+        Parameters
+        ----------
+        X : array-like, shape = [n_samples, n_features]
+            The training input samples. All features must be binary, and the matrix
+            is internally converted to dtype=np.uint8.
+        y : array-line, shape = [n_samples]
+            The target values for the training input. Must be binary.
+
+        feature_names : list, optional(default=None)
+            A list of strings of length n_features. Specifies the names of each
+            of the features. If an empty list is provided, the feature names
+            are set to the default of [&#34;feature1&#34;, &#34;feature2&#34;... ].
+        prediction_name : string, optional(default=&#34;prediction&#34;)
+            The name of the feature that is being predicted.
+        Returns
+        -------
+        self : obj
+        &#34;&#34;&#34;
+        if isinstance(X, pd.DataFrame):
+            if feature_names is None:
+                feature_names = X.columns.tolist()
+            X = X.values
+        elif feature_names is None:
+            feature_names = [&#39;X_&#39; + str(i) for i in range(X.shape[1])]
+
+        # check if any non-binary values
+        if not np.isin(X, [0, 1]).all().all():
+            self.discretizer = KBinsDiscretizer(encode=&#39;onehot-dense&#39;)
+            self.discretizer.fit(X, y)
+            &#34;&#34;&#34;
+            feature_names = [f&#39;{col}_{b}&#39;
+                         for col, bins in zip(feature_names, self.discretizer.n_bins_)
+                         for b in range(bins)]
+            &#34;&#34;&#34;
+            feature_names = self.discretizer.get_feature_names_out()
+            X = self.discretizer.transform(X)
+
+        np.random.seed(self.random_state)
+        # feature_names = feature_names.tolist()
+
+        super().fit(X, y, features=feature_names, prediction_name=prediction_name)
+        # try:
+        self._traverse_rule(X, y, feature_names)
+        # except:
+        #     self.str_print = None
+        self.complexity_ = self._get_complexity()
+        return self
+
+    def predict(self, X):
+        &#34;&#34;&#34;
+        Predict classifications of the input samples X.
+        Arguments
+        ---------
+        X : array-like, shape = [n_samples, n_features]
+            The training input samples. All features must be binary, and the matrix
+            is internally converted to dtype=np.uint8. The features must be the same
+            as those of the data used to train the model.
+        Returns
+        -------
+        p : array[int] of shape = [n_samples].
+            The classifications of the input samples.
+        &#34;&#34;&#34;
+        if self.discretizer is not None:
+            X = self.discretizer.transform(X)
+        return super().predict(X).astype(int)
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;
+        Predict probabilities of the input samples X.
+        todo: actually calculate these from training set
+        Arguments
+        ---------
+        X : array-like, shape = [n_samples, n_features]
+            The training input samples. All features must be binary, and the matrix
+            is internally converted to dtype=np.uint8. The features must be the same
+            as those of the data used to train the model.
+        Returns
+        -------
+        p : array[float] of shape = [n_samples, 2].
+            The probabilities of the input samples.
+        &#34;&#34;&#34;
+        preds = self.predict(X)
+        return np.vstack((1 - preds, preds)).transpose()
+
+    def _traverse_rule(self, X: np.ndarray, y: np.ndarray, feature_names: List[str], print_colors=False):
+        &#34;&#34;&#34;Traverse rule and build up string representation
+
+        Parameters
+        ----------
+        df_features
+
+        Returns
+        -------
+
+        &#34;&#34;&#34;
+        str_print = f&#39;&#39;
+        df = pd.DataFrame(X, columns=feature_names)
+        df.loc[:, &#39;y&#39;] = y
+        o = &#39;y&#39;
+        str_print += f&#39;   {df[o].sum()} / {df.shape[0]} (positive class / total)\n&#39;
+        if print_colors:
+            color_start = &#39;\033[96m&#39;
+            color_end = &#39;\033[00m&#39;
+        else:
+            color_start = &#39;&#39;
+            color_end = &#39;&#39;
+        if len(self.rl_.rules) &gt; 1:
+            str_print += f&#39;\t\u2193 \n&#39;
+        else:
+            str_print += &#39;   No rules learned\n&#39;
+        for j, rule in enumerate(self.rl_.rules[:-1]):
+            antecedents = rule[&#39;antecedents&#39;]
+            query = &#39;&#39;
+            for i, feat_idx in enumerate(antecedents):
+                if i &gt; 0:
+                    query += &#39; &amp; &#39;
+                if feat_idx &lt; 0:
+                    query += f&#39;(`{feature_names[-feat_idx - 1]}` == 0)&#39;
+                else:
+                    query += f&#39;(`{feature_names[feat_idx - 1]}` == 1)&#39;
+                df_rhs = df.query(query)
+                idxs_satisfying_rule = df_rhs.index
+                df.drop(index=idxs_satisfying_rule, inplace=True)
+                computed_prob = 100 * df_rhs[o].sum() / (df_rhs.shape[0] + 1e-10)
+
+                # add to str_print
+                query_print = query.replace(&#39;== 1&#39;, &#39;&#39;).replace(&#39;(&#39;, &#39;&#39;).replace(&#39;)&#39;, &#39;&#39;).replace(&#39;`&#39;, &#39;&#39;)
+                str_print += f&#39;{color_start}If {query_print:&lt;35}{color_end} \u2192 {df_rhs[o].sum():&gt;3} / {df_rhs.shape[0]:&gt;4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():&gt;3} / {df.shape[0]:&gt;5}\t \n&#39;
+                if not (j == len(self.rl_.rules) - 2 and i == len(antecedents) - 1):
+                    str_print += &#39;\t\u2193 \n&#39;
+
+        self.str_print = str_print
+
+    def __str__(self):
+        if corels_supported:
+            if self.str_print is not None:
+                return &#39;OptimalRuleList:\n\n&#39; + self.str_print
+            else:
+                return &#39;OptimalRuleList:\n\n&#39; + self.rl_.__str__()
+        else:
+            return super().__str__()
+
+    def _get_complexity(self):
+        return sum([len(corule[&#39;antecedents&#39;]) for corule in self.rl_.rules])
+
+
+if __name__ == &#39;__main__&#39;:
+    X = (np.random.randn(40, 2) &gt; 0).astype(int)
+    y = (X[:, 0] &gt; 0).astype(int)
+    y[-2:] = 1 - y[-2:]
+    m = OptimalRuleListClassifier()
+    m.fit(X, y)
+    print(str(m))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.experimental.corels_wrapper.OptimalRuleListClassifier"><code class="flex name class">
+<span>class <span class="ident">OptimalRuleListClassifier</span></span>
+<span>(</span><span>c=0.01, n_iter=10000, map_type='prefix', policy='lower_bound', verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Certifiably Optimal RulE ListS classifier.
+This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
+rulelists for binary feature data and binary classification. As an alternative to other
+tree based algorithms such as CART, CORELS provides a certificate of optimality for its
+rulelist given a training set, leveraging multiple algorithmic bounds to do so.
+In order to use run the algorithm, create an instance of the <code>CorelsClassifier</code> class,
+providing any necessary parameters in its constructor, and then call <code>fit</code> to generate
+a rulelist. <code>printrl</code> prints the generated rulelist, while <code>predict</code> provides
+classification predictions for a separate test dataset with the same features. To determine
+the algorithm's accuracy, run <code>score</code> on an evaluation dataset with labels.
+To save a generated rulelist to a file, call <code>save</code>. To load it back from the file, call <code>load</code>.
+Attributes</p>
+<hr>
+<dl>
+<dt><strong><code>c</code></strong> :&ensp;<code>float</code>, optional <code>(default=0.01)</code></dt>
+<dd>Regularization parameter. Higher values penalize longer rulelists.</dd>
+<dt><strong><code>n_iter</code></strong> :&ensp;<code>int</code>, optional <code>(default=10000)</code></dt>
+<dd>Maximum number of nodes (rulelists) to search before exiting.</dd>
+<dt><strong><code>map_type</code></strong> :&ensp;<code>str</code>, optional <code>(default="prefix")</code></dt>
+<dd>The type of prefix map to use. Supported maps are "none" for no map,
+"prefix" for a map that uses rule prefixes for keys, "captured" for
+a map with a prefix's captured vector as keys.</dd>
+<dt><strong><code>policy</code></strong> :&ensp;<code>str</code>, optional <code>(default="lower_bound")</code></dt>
+<dd>The search policy for traversing the tree (i.e. the criterion with which
+to order nodes in the queue). Supported criteria are "bfs", for breadth-first
+search; "curious", which attempts to find the most promising node;
+"lower_bound" which is the objective function evaluated with that rulelist
+minus the default prediction error; "objective" for the objective function
+evaluated at that rulelist; and "dfs" for depth-first search.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>list</code>, optional <code>(default=["rulelist"])</code></dt>
+<dd>The verbosity levels required. A list of strings, it can contain any
+subset of ["rulelist", "rule", "label", "minor", "samples", "progress", "mine", "loud"].
+An empty list ([]) indicates 'silent' mode.
+- "rulelist" prints the generated rulelist at the end.
+- "rule" prints a summary of each rule generated.
+- "label" prints a summary of the class labels.
+- "minor" prints a summary of the minority bound.
+- "samples" produces a complete dump of the rules, label, and/or minor data. You must also provide at least one of "rule", "label", or "minor" to specify which data you want to dump, or "loud" for all data. The "samples" option often spits out a lot of output.
+- "progress" prints periodic messages as corels runs.
+- "mine" prints debug information while mining rules, including each rule as it is generated.
+- "loud" is the equivalent of ["progress", "label", "rule", "mine", "minor"].</dd>
+<dt><strong><code>ablation</code></strong> :&ensp;<code>int</code>, optional <code>(default=0)</code></dt>
+<dd>Specifies addition parameters for the bounds used while searching. Accepted
+values are 0 (all bounds), 1 (no antecedent support bound), and 2 (no
+lookahead bound).</dd>
+<dt><strong><code>max_card</code></strong> :&ensp;<code>int</code>, optional <code>(default=2)</code></dt>
+<dd>Maximum cardinality allowed when mining rules. Can be any value greater than
+or equal to 1. For instance, a value of 2 would only allow rules that combine
+at most two features in their antecedents.</dd>
+<dt><strong><code>min_support</code></strong> :&ensp;<code>float</code>, optional <code>(default=0.01)</code></dt>
+<dd>The fraction of samples that a rule must capture in order to be used. 1 minus
+this value is also the maximum fraction of samples a rule can capture.
+Can be any value between 0.0 and 0.5.</dd>
+</dl>
+<h2 id="references">References</h2>
+<p>Elaine Angelino, Nicholas Larus-Stone, Daniel Alabi, Margo Seltzer, and Cynthia Rudin.
+Learning Certifiably Optimal Rule Lists for Categorical Data. KDD 2017.
+Journal of Machine Learning Research, 2018; 19: 1-77. arXiv:1704.01701, 2017
+Examples</p>
+<hr>
+<h2 id="params">Params</h2>
+<p>max_depth
+Maximum depth the list can achieve
+criterion: str
+Criterion used to split
+'gini', 'entropy', or 'log_loss'</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class OptimalRuleListClassifier(GreedyRuleListClassifier if not corels_supported else CorelsClassifier):
+    &#34;&#34;&#34;Certifiably Optimal RulE ListS classifier.
+    This class implements the CORELS algorithm, designed to produce human-interpretable, optimal
+    rulelists for binary feature data and binary classification. As an alternative to other
+    tree based algorithms such as CART, CORELS provides a certificate of optimality for its
+    rulelist given a training set, leveraging multiple algorithmic bounds to do so.
+    In order to use run the algorithm, create an instance of the `CorelsClassifier` class,
+    providing any necessary parameters in its constructor, and then call `fit` to generate
+    a rulelist. `printrl` prints the generated rulelist, while `predict` provides
+    classification predictions for a separate test dataset with the same features. To determine
+    the algorithm&#39;s accuracy, run `score` on an evaluation dataset with labels.
+    To save a generated rulelist to a file, call `save`. To load it back from the file, call `load`.
+    Attributes
+    ----------
+    c : float, optional (default=0.01)
+        Regularization parameter. Higher values penalize longer rulelists.
+    n_iter : int, optional (default=10000)
+        Maximum number of nodes (rulelists) to search before exiting.
+    map_type : str, optional (default=&#34;prefix&#34;)
+        The type of prefix map to use. Supported maps are &#34;none&#34; for no map,
+        &#34;prefix&#34; for a map that uses rule prefixes for keys, &#34;captured&#34; for
+        a map with a prefix&#39;s captured vector as keys.
+    policy : str, optional (default=&#34;lower_bound&#34;)
+        The search policy for traversing the tree (i.e. the criterion with which
+        to order nodes in the queue). Supported criteria are &#34;bfs&#34;, for breadth-first
+        search; &#34;curious&#34;, which attempts to find the most promising node;
+        &#34;lower_bound&#34; which is the objective function evaluated with that rulelist
+        minus the default prediction error; &#34;objective&#34; for the objective function
+        evaluated at that rulelist; and &#34;dfs&#34; for depth-first search.
+    verbosity : list, optional (default=[&#34;rulelist&#34;])
+        The verbosity levels required. A list of strings, it can contain any
+        subset of [&#34;rulelist&#34;, &#34;rule&#34;, &#34;label&#34;, &#34;minor&#34;, &#34;samples&#34;, &#34;progress&#34;, &#34;mine&#34;, &#34;loud&#34;].
+        An empty list ([]) indicates &#39;silent&#39; mode.
+        - &#34;rulelist&#34; prints the generated rulelist at the end.
+        - &#34;rule&#34; prints a summary of each rule generated.
+        - &#34;label&#34; prints a summary of the class labels.
+        - &#34;minor&#34; prints a summary of the minority bound.
+        - &#34;samples&#34; produces a complete dump of the rules, label, and/or minor data. You must also provide at least one of &#34;rule&#34;, &#34;label&#34;, or &#34;minor&#34; to specify which data you want to dump, or &#34;loud&#34; for all data. The &#34;samples&#34; option often spits out a lot of output.
+        - &#34;progress&#34; prints periodic messages as corels runs.
+        - &#34;mine&#34; prints debug information while mining rules, including each rule as it is generated.
+        - &#34;loud&#34; is the equivalent of [&#34;progress&#34;, &#34;label&#34;, &#34;rule&#34;, &#34;mine&#34;, &#34;minor&#34;].
+    ablation : int, optional (default=0)
+        Specifies addition parameters for the bounds used while searching. Accepted
+        values are 0 (all bounds), 1 (no antecedent support bound), and 2 (no
+        lookahead bound).
+    max_card : int, optional (default=2)
+        Maximum cardinality allowed when mining rules. Can be any value greater than
+        or equal to 1. For instance, a value of 2 would only allow rules that combine
+        at most two features in their antecedents.
+    min_support : float, optional (default=0.01)
+        The fraction of samples that a rule must capture in order to be used. 1 minus
+        this value is also the maximum fraction of samples a rule can capture.
+        Can be any value between 0.0 and 0.5.
+    References
+    ----------
+    Elaine Angelino, Nicholas Larus-Stone, Daniel Alabi, Margo Seltzer, and Cynthia Rudin.
+    Learning Certifiably Optimal Rule Lists for Categorical Data. KDD 2017.
+    Journal of Machine Learning Research, 2018; 19: 1-77. arXiv:1704.01701, 2017
+    Examples
+    --------
+    &#34;&#34;&#34;
+
+    def __init__(self, c=0.01, n_iter=10000, map_type=&#34;prefix&#34;, policy=&#34;lower_bound&#34;,
+                 verbosity=[], ablation=0, max_card=2, min_support=0.01, random_state=0):
+        if corels_supported:
+            super().__init__(c, n_iter, map_type, policy, verbosity, ablation, max_card, min_support)
+        else:
+            warnings.warn(&#34;Should install corels with pip install corels. Using GreedyRuleList instead.&#34;)
+            super().__init__()
+            self.fit = super().fit
+            self.predict = super().predict
+            self.predict_proba = super().predict_proba
+            self.__str__ = super().__str__
+
+        self.random_state = random_state
+        self.discretizer = None
+        self.str_print = None
+        self._estimator_type = &#39;classifier&#39;
+
+    def fit(self, X, y, feature_names=None, prediction_name=&#34;prediction&#34;):
+        &#34;&#34;&#34;
+        Build a CORELS classifier from the training set (X, y).
+        Parameters
+        ----------
+        X : array-like, shape = [n_samples, n_features]
+            The training input samples. All features must be binary, and the matrix
+            is internally converted to dtype=np.uint8.
+        y : array-line, shape = [n_samples]
+            The target values for the training input. Must be binary.
+
+        feature_names : list, optional(default=None)
+            A list of strings of length n_features. Specifies the names of each
+            of the features. If an empty list is provided, the feature names
+            are set to the default of [&#34;feature1&#34;, &#34;feature2&#34;... ].
+        prediction_name : string, optional(default=&#34;prediction&#34;)
+            The name of the feature that is being predicted.
+        Returns
+        -------
+        self : obj
+        &#34;&#34;&#34;
+        if isinstance(X, pd.DataFrame):
+            if feature_names is None:
+                feature_names = X.columns.tolist()
+            X = X.values
+        elif feature_names is None:
+            feature_names = [&#39;X_&#39; + str(i) for i in range(X.shape[1])]
+
+        # check if any non-binary values
+        if not np.isin(X, [0, 1]).all().all():
+            self.discretizer = KBinsDiscretizer(encode=&#39;onehot-dense&#39;)
+            self.discretizer.fit(X, y)
+            &#34;&#34;&#34;
+            feature_names = [f&#39;{col}_{b}&#39;
+                         for col, bins in zip(feature_names, self.discretizer.n_bins_)
+                         for b in range(bins)]
+            &#34;&#34;&#34;
+            feature_names = self.discretizer.get_feature_names_out()
+            X = self.discretizer.transform(X)
+
+        np.random.seed(self.random_state)
+        # feature_names = feature_names.tolist()
+
+        super().fit(X, y, features=feature_names, prediction_name=prediction_name)
+        # try:
+        self._traverse_rule(X, y, feature_names)
+        # except:
+        #     self.str_print = None
+        self.complexity_ = self._get_complexity()
+        return self
+
+    def predict(self, X):
+        &#34;&#34;&#34;
+        Predict classifications of the input samples X.
+        Arguments
+        ---------
+        X : array-like, shape = [n_samples, n_features]
+            The training input samples. All features must be binary, and the matrix
+            is internally converted to dtype=np.uint8. The features must be the same
+            as those of the data used to train the model.
+        Returns
+        -------
+        p : array[int] of shape = [n_samples].
+            The classifications of the input samples.
+        &#34;&#34;&#34;
+        if self.discretizer is not None:
+            X = self.discretizer.transform(X)
+        return super().predict(X).astype(int)
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;
+        Predict probabilities of the input samples X.
+        todo: actually calculate these from training set
+        Arguments
+        ---------
+        X : array-like, shape = [n_samples, n_features]
+            The training input samples. All features must be binary, and the matrix
+            is internally converted to dtype=np.uint8. The features must be the same
+            as those of the data used to train the model.
+        Returns
+        -------
+        p : array[float] of shape = [n_samples, 2].
+            The probabilities of the input samples.
+        &#34;&#34;&#34;
+        preds = self.predict(X)
+        return np.vstack((1 - preds, preds)).transpose()
+
+    def _traverse_rule(self, X: np.ndarray, y: np.ndarray, feature_names: List[str], print_colors=False):
+        &#34;&#34;&#34;Traverse rule and build up string representation
+
+        Parameters
+        ----------
+        df_features
+
+        Returns
+        -------
+
+        &#34;&#34;&#34;
+        str_print = f&#39;&#39;
+        df = pd.DataFrame(X, columns=feature_names)
+        df.loc[:, &#39;y&#39;] = y
+        o = &#39;y&#39;
+        str_print += f&#39;   {df[o].sum()} / {df.shape[0]} (positive class / total)\n&#39;
+        if print_colors:
+            color_start = &#39;\033[96m&#39;
+            color_end = &#39;\033[00m&#39;
+        else:
+            color_start = &#39;&#39;
+            color_end = &#39;&#39;
+        if len(self.rl_.rules) &gt; 1:
+            str_print += f&#39;\t\u2193 \n&#39;
+        else:
+            str_print += &#39;   No rules learned\n&#39;
+        for j, rule in enumerate(self.rl_.rules[:-1]):
+            antecedents = rule[&#39;antecedents&#39;]
+            query = &#39;&#39;
+            for i, feat_idx in enumerate(antecedents):
+                if i &gt; 0:
+                    query += &#39; &amp; &#39;
+                if feat_idx &lt; 0:
+                    query += f&#39;(`{feature_names[-feat_idx - 1]}` == 0)&#39;
+                else:
+                    query += f&#39;(`{feature_names[feat_idx - 1]}` == 1)&#39;
+                df_rhs = df.query(query)
+                idxs_satisfying_rule = df_rhs.index
+                df.drop(index=idxs_satisfying_rule, inplace=True)
+                computed_prob = 100 * df_rhs[o].sum() / (df_rhs.shape[0] + 1e-10)
+
+                # add to str_print
+                query_print = query.replace(&#39;== 1&#39;, &#39;&#39;).replace(&#39;(&#39;, &#39;&#39;).replace(&#39;)&#39;, &#39;&#39;).replace(&#39;`&#39;, &#39;&#39;)
+                str_print += f&#39;{color_start}If {query_print:&lt;35}{color_end} \u2192 {df_rhs[o].sum():&gt;3} / {df_rhs.shape[0]:&gt;4} ({computed_prob:0.1f}%)\n\t\u2193 \n   {df[o].sum():&gt;3} / {df.shape[0]:&gt;5}\t \n&#39;
+                if not (j == len(self.rl_.rules) - 2 and i == len(antecedents) - 1):
+                    str_print += &#39;\t\u2193 \n&#39;
+
+        self.str_print = str_print
+
+    def __str__(self):
+        if corels_supported:
+            if self.str_print is not None:
+                return &#39;OptimalRuleList:\n\n&#39; + self.str_print
+            else:
+                return &#39;OptimalRuleList:\n\n&#39; + self.rl_.__str__()
+        else:
+            return super().__str__()
+
+    def _get_complexity(self):
+        return sum([len(corule[&#39;antecedents&#39;]) for corule in self.rl_.rules])</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="../rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li><a title="imodels.rule_list.rule_list.RuleList" href="../rule_list/rule_list.html#imodels.rule_list.rule_list.RuleList">RuleList</a></li>
+<li>sklearn.base.ClassifierMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.experimental.corels_wrapper.OptimalRuleListClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, prediction_name='prediction')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Build a CORELS classifier from the training set (X, y).
+Parameters</p>
+<hr>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like, shape = [n_samples, n_features]</code></dt>
+<dd>The training input samples. All features must be binary, and the matrix
+is internally converted to dtype=np.uint8.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-line, shape = [n_samples]</code></dt>
+<dd>The target values for the training input. Must be binary.</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code>, optional<code>(default=None)</code></dt>
+<dd>A list of strings of length n_features. Specifies the names of each
+of the features. If an empty list is provided, the feature names
+are set to the default of ["feature1", "feature2"&hellip; ].</dd>
+<dt><strong><code>prediction_name</code></strong> :&ensp;<code>string</code>, optional<code>(default="prediction")</code></dt>
+<dd>The name of the feature that is being predicted.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>obj</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, feature_names=None, prediction_name=&#34;prediction&#34;):
+    &#34;&#34;&#34;
+    Build a CORELS classifier from the training set (X, y).
+    Parameters
+    ----------
+    X : array-like, shape = [n_samples, n_features]
+        The training input samples. All features must be binary, and the matrix
+        is internally converted to dtype=np.uint8.
+    y : array-line, shape = [n_samples]
+        The target values for the training input. Must be binary.
+
+    feature_names : list, optional(default=None)
+        A list of strings of length n_features. Specifies the names of each
+        of the features. If an empty list is provided, the feature names
+        are set to the default of [&#34;feature1&#34;, &#34;feature2&#34;... ].
+    prediction_name : string, optional(default=&#34;prediction&#34;)
+        The name of the feature that is being predicted.
+    Returns
+    -------
+    self : obj
+    &#34;&#34;&#34;
+    if isinstance(X, pd.DataFrame):
+        if feature_names is None:
+            feature_names = X.columns.tolist()
+        X = X.values
+    elif feature_names is None:
+        feature_names = [&#39;X_&#39; + str(i) for i in range(X.shape[1])]
+
+    # check if any non-binary values
+    if not np.isin(X, [0, 1]).all().all():
+        self.discretizer = KBinsDiscretizer(encode=&#39;onehot-dense&#39;)
+        self.discretizer.fit(X, y)
+        &#34;&#34;&#34;
+        feature_names = [f&#39;{col}_{b}&#39;
+                     for col, bins in zip(feature_names, self.discretizer.n_bins_)
+                     for b in range(bins)]
+        &#34;&#34;&#34;
+        feature_names = self.discretizer.get_feature_names_out()
+        X = self.discretizer.transform(X)
+
+    np.random.seed(self.random_state)
+    # feature_names = feature_names.tolist()
+
+    super().fit(X, y, features=feature_names, prediction_name=prediction_name)
+    # try:
+    self._traverse_rule(X, y, feature_names)
+    # except:
+    #     self.str_print = None
+    self.complexity_ = self._get_complexity()
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.corels_wrapper.OptimalRuleListClassifier.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Predict classifications of the input samples X.
+Arguments</p>
+<hr>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like, shape = [n_samples, n_features]</code></dt>
+<dd>The training input samples. All features must be binary, and the matrix
+is internally converted to dtype=np.uint8. The features must be the same
+as those of the data used to train the model.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>p : array[int] of shape = [n_samples].
+The classifications of the input samples.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    &#34;&#34;&#34;
+    Predict classifications of the input samples X.
+    Arguments
+    ---------
+    X : array-like, shape = [n_samples, n_features]
+        The training input samples. All features must be binary, and the matrix
+        is internally converted to dtype=np.uint8. The features must be the same
+        as those of the data used to train the model.
+    Returns
+    -------
+    p : array[int] of shape = [n_samples].
+        The classifications of the input samples.
+    &#34;&#34;&#34;
+    if self.discretizer is not None:
+        X = self.discretizer.transform(X)
+    return super().predict(X).astype(int)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.corels_wrapper.OptimalRuleListClassifier.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Predict probabilities of the input samples X.
+todo: actually calculate these from training set
+Arguments</p>
+<hr>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like, shape = [n_samples, n_features]</code></dt>
+<dd>The training input samples. All features must be binary, and the matrix
+is internally converted to dtype=np.uint8. The features must be the same
+as those of the data used to train the model.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>p : array[float] of shape = [n_samples, 2].
+The probabilities of the input samples.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    &#34;&#34;&#34;
+    Predict probabilities of the input samples X.
+    todo: actually calculate these from training set
+    Arguments
+    ---------
+    X : array-like, shape = [n_samples, n_features]
+        The training input samples. All features must be binary, and the matrix
+        is internally converted to dtype=np.uint8. The features must be the same
+        as those of the data used to train the model.
+    Returns
+    -------
+    p : array[float] of shape = [n_samples, 2].
+        The probabilities of the input samples.
+    &#34;&#34;&#34;
+    preds = self.predict(X)
+    return np.vstack((1 - preds, preds)).transpose()</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.corels_wrapper.OptimalRuleListClassifier.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.experimental.corels_wrapper.OptimalRuleListClassifier" href="#imodels.experimental.corels_wrapper.OptimalRuleListClassifier">OptimalRuleListClassifier</a>, *, feature_names: bool | str | None = '$UNCHANGED$', prediction_name: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.experimental.corels_wrapper.OptimalRuleListClassifier" href="#imodels.experimental.corels_wrapper.OptimalRuleListClassifier">OptimalRuleListClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>feature_names</code> parameter in <code>fit</code>.</dd>
+<dt><strong><code>prediction_name</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>prediction_name</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="../rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.set_score_request" href="../rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index 🔍</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.experimental" href="index.html">imodels.experimental</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.experimental.corels_wrapper.OptimalRuleListClassifier" href="#imodels.experimental.corels_wrapper.OptimalRuleListClassifier">OptimalRuleListClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.experimental.corels_wrapper.OptimalRuleListClassifier.fit" href="#imodels.experimental.corels_wrapper.OptimalRuleListClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.experimental.corels_wrapper.OptimalRuleListClassifier.predict" href="#imodels.experimental.corels_wrapper.OptimalRuleListClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.experimental.corels_wrapper.OptimalRuleListClassifier.predict_proba" href="#imodels.experimental.corels_wrapper.OptimalRuleListClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.experimental.corels_wrapper.OptimalRuleListClassifier.set_fit_request" href="#imodels.experimental.corels_wrapper.OptimalRuleListClassifier.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 c122.0,82.7 120.5,78.6 120.5,78.6 c119.2,72.0 123.4,76.3 123.4,76.3 c127.3,80.9 125.5,87.3 125.5,87.3 c122.9,97.6 130.6,101.9 134.4,103.2" fill="currentcolor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">
