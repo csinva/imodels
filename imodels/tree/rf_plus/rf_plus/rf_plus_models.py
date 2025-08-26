@@ -13,8 +13,6 @@ from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifi
 from sklearn.ensemble._forest import _generate_unsampled_indices, _generate_sample_indices
 
 # rf+ prediction imports
-from imodels.tree.rf_plus.rf_plus_prediction_models.aloocv_regression import AloElasticNetRegressorCV
-from imodels.tree.rf_plus.rf_plus_prediction_models.aloocv_classification import AloLogisticElasticNetClassifierCV
 from imodels.tree.rf_plus.rf_plus.rf_plus_utils import _check_X, _check_Xy
 from imodels.tree.rf_plus.data_transformations.block_transformers import MDIPlusDefaultTransformer, TreeTransformer, CompositeTransformer, IdentityTransformer
 
@@ -354,14 +352,15 @@ class RandomForestPlusRegressor(_RandomForestPlus, RegressorMixin):
     be used as a prediction model or interpreted via generalized
     mean decrease in impurity (MDI+). For more details, refer to [paper].
     """
-    def __init__(self, rf_model=None, prediction_model=None, include_raw=True, drop_features=True, 
+    def __init__(self, prediction_model, rf_model=None, include_raw=True, drop_features=True, 
                  add_transformers=None, center=True, normalize=False, fit_on="all", 
                  verbose=True, warm_start=False):
         
         if rf_model is None:
             rf_model = RandomForestRegressor(max_features=0.33,min_samples_leaf=5) #R package default values 
-        if prediction_model is None:
-            prediction_model = AloElasticNetRegressorCV()
+        # if prediction_model is None:
+            
+            # prediction_model = AloElasticNetRegressorCV()
         self._task = "regression"
         super().__init__(rf_model, prediction_model, include_raw, drop_features, add_transformers, 
                          center, normalize, fit_on, verbose, warm_start)
@@ -373,14 +372,14 @@ class RandomForestPlusClassifier(_RandomForestPlus, ClassifierMixin):
     be used as a prediction model or interpreted via generalized
     mean decrease in impurity (MDI+). For more details, refer to [paper].
     """
-    def __init__(self, rf_model=None, prediction_model=None, include_raw=True, drop_features=True, 
+    def __init__(self, prediction_model, rf_model=None, include_raw=True, drop_features=True, 
                  add_transformers=None, center=True, normalize=False, fit_on="all", 
                  verbose=True, warm_start=False):
         
         if rf_model is None:
             rf_model = RandomForestClassifier(max_features="sqrt",min_samples_leaf=2) #R package default values 
-        if prediction_model is None:
-            prediction_model = AloLogisticElasticNetClassifierCV()
+        # if prediction_model is None:
+            # prediction_model = AloLogisticElasticNetClassifierCV()
         self._task = "classification"
         super().__init__(rf_model, prediction_model, include_raw, drop_features, add_transformers, 
                          center, normalize, fit_on, verbose, warm_start)

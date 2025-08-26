@@ -5,10 +5,6 @@ import numpy as np
 from scipy.special import expit
 from joblib import Parallel, delayed
 
-# imodels imports
-from imodels.tree.rf_plus.rf_plus_prediction_models.aloocv_regression import AloGLMRegressor
-from imodels.tree.rf_plus.rf_plus_prediction_models.aloocv_classification import AloGLMClassifier
-
 class MDIPlusGenericRegressorPPM(ABC):
     """
     Partial prediction model for arbitrary estimators. Parallelized for speedup.
