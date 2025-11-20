@@ -322,8 +322,14 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
 
 class RuleFitRegressor(RuleFit, RegressorMixin):
-    ...
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.estimator_type = "regressor"
+        return tags
 
 
 class RuleFitClassifier(RuleFit, ClassifierMixin):
-    ...
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.estimator_type = "classifier"
+        return tags
