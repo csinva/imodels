@@ -48,6 +48,16 @@ from .tree.hierarchical_shrinkage import (
     HSTreeRegressorCV,
     HSTreeClassifierCV,
 )
+from .tree.sparse_pruning.sparse_hierarchical_shrinkage import (
+    SHSTreeRegressor,
+    SHSTreeClassifier,
+    SHSTreeRegressorCV,
+    SHSTreeClassifierCV,
+    SPTreeRegressor,
+    SPTreeClassifier,
+    SPTreeRegressorCV,
+    SPTreeClassifierCV,
+)
 from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
 from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
@@ -73,6 +83,10 @@ CLASSIFIERS = [
     FIGSClassifier,
     HSTreeClassifier,
     HSTreeClassifierCV,
+    SHSTreeClassifier,
+    SHSTreeClassifierCV,
+    SPTreeClassifier,
+    SPTreeClassifierCV,
     GreedyTreeClassifier,
     AutoInterpretableClassifier,
 ]  # , IRFClassifier
@@ -85,6 +99,10 @@ REGRESSORS = [
     TreeGAMRegressor,
     HSTreeRegressor,
     HSTreeRegressorCV,
+    SHSTreeRegressor,
+    SHSTreeRegressorCV,
+    SPTreeRegressor,
+    SPTreeRegressorCV,
     BART,
     AutoInterpretableRegressor,
 ]
