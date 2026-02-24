@@ -96,6 +96,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
             # save info
             par_node = [{
+                'depth': depth,
                 'col': self.feature_names_[col],
                 'index_col': col,
                 'cutoff': cutoff,
@@ -140,46 +141,25 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         X = check_array(X)
         return np.argmax(self.predict_proba(X), axis=1)
 
-    """
-    def __str__(self):
-        # s = ''
-        # for rule in self.rules_:
-        #     s += f"mean {rule['val'].round(3)} ({rule['num_pts']} pts)\n"
-        #     if 'col' in rule:
-        #         s += f"if {rule['col']} >= {rule['cutoff']} then {rule['val_right'].round(3)} ({rule['num_pts_right']} pts)\n"
-        # return s
-    """
 
     def __str__(self):
         '''Print out the list in a nice way
         '''
+
         s = '> ------------------------------\n> Greedy Rule List\n> ------------------------------\n'
-
-        def red(s):
-            # return f"\033[91m{s}\033[00m"
-            return s
-
-        def cyan(s):
-            # return f"\033[96m{s}\033[00m"
-            return s
-
-        def rule_name(rule):
-            if rule['flip']:
-                return '~' + rule['col']
-            return rule['col']
-
-        # rule = self.rules_[0]
-        #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
+        precision = 2
         for rule in self.rules_:
-            s += u'\u2193\n' + f"{cyan((100 * rule['val']).round(2))}% risk ({rule['num_pts']} pts)\n"
-            #         s += f"\t{'Else':>45} => {cyan((100 * rule['val']).round(2)):>6}% IwI ({rule['val'] * rule['num_pts']:.0f}/{rule['num_pts']} pts)\n"
             if 'col' in rule:
-                #             prefix = f"if {rule['col']} >= {rule['cutoff']}"
-                prefix = f"if {rule_name(rule)}"
-                val = f"{100 * rule['val_right'].round(3)}"
-                s += f"\t{prefix} ==> {red(val)}% risk ({rule['num_pts_right']} pts)\n"
-        # rule = self.rules_[-1]
-        #     s += f"{red((100 * rule['val']).round(3))}% IwI ({rule['num_pts']} pts)\n"
+                prefix = "if" if rule['depth'] == 0 else "else if"
+                sign = '<=' if rule['flip'] else '>'
+                threshold = rule['cutoff'].round(precision)
+                condition = f"{prefix} {rule['col']} {sign} {threshold}"
+                pred_prob = (100 * rule['val_right']).round(precision)
+                num_pts = rule['num_pts_right']
+                s += f"> {condition} | {pred_prob}% pred prob ({num_pts} obs)\n"
+            else:
+                s += f"> else | {(100 * rule['val']).round(precision)}% pred prob ({rule['num_pts']} obs)\n"
+        s += '> ------------------------------\n'
         return s
 
     ######## HERE ONWARDS CUSTOM SPLITTING (DEPRECATED IN FAVOR OF SKLEARN STUMP) ########
