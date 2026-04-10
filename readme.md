@@ -2,7 +2,7 @@
 	<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"> </img>	 <br/>
 	Python package for concise, transparent, and accurate predictive modeling. <br/>
 	All sklearn-compatible and easy to use. <br/>
-	<i> For interpretability in NLP, check out our new package: <a href="https://github.com/csinva/imodelsX">imodelsX</a> </i>
+	<i> For interpretability in text, check out our new package: <a href="https://github.com/csinva/imodelsX">imodelsX</a> </i>
 </p>
 <p align="center">
   <a href="https://csinva.github.io/imodels/">📚 docs</a> •
@@ -25,8 +25,8 @@
 Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the `fit` and `predict` methods, same as standard scikit-learn models.
 
 ```python
-from sklearn.model_selection import train_test_split
 from imodels import get_clean_dataset, HSTreeClassifierCV # import any imodels model here
+from sklearn.model_selection import train_test_split
 
 # prepare data (a sample clinical dataset)
 X, y, feature_names = get_clean_dataset('csi_pecarn_pred')
