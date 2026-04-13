@@ -38,6 +38,9 @@ def hiCAP_regression(
 ) -> np.ndarray:
     n, d = X.shape
     K = len(groups)
+    if K == 0:
+        # No penalized groups (e.g., tree with no internal nodes).
+        return np.zeros(d) if beta_init is None else beta_init.copy()
     alphas = [1 / K] * K + [0.0]
     groups = groups + [np.array(0)]
 
@@ -97,6 +100,9 @@ def hiCAP_classification(
 ) -> np.ndarray:
     n, d = X.shape
     K = len(groups)
+    if K == 0:
+        # No penalized groups (e.g., tree with no internal nodes).
+        return np.zeros(d) if beta_init is None else beta_init.copy()
     alphas = [1 / K] * K + [0.0]
     groups = groups + [np.array(0)]
 

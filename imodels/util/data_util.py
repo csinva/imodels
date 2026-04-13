@@ -20,7 +20,7 @@ DSET_CLASSIFICATION_KWARGS = {
     "pima_diabetes": {"dataset_name": 40715, "data_source": "openml"},
     "sonar": {"dataset_name": "sonar", "data_source": "pmlb"},
     "heart": {"dataset_name": "heart", "data_source": "imodels"},
-    "diabetes": {"dataset_name": "diabetes", "data_source": "pmlb"},
+    "diabetes": {"dataset_name": 37, "data_source": "openml"},
     "breast_cancer_recurrence": {
         "dataset_name": "breast_cancer",
         "data_source": "imodels",
@@ -248,10 +248,16 @@ def get_clean_dataset(
 def _define_openml_outcomes(y, data_id: str):
     if data_id == "59":  # ionosphere, positive is "good" class
         y = (y == "g").astype(int)
-    if data_id == "183":  # abalone, need to convert strings to floats
+    if data_id in {"183", 183}:  # abalone, need to convert strings to floats
         y = y.astype(float)
+    if data_id in {"31", 31}:  # german credit: map labels to ints
+        y = pd.Series(y).astype("category").cat.codes.values
+    if data_id in {"37", 37}:  # diabetes categorical labels -> ints
+        y = pd.Series(y).astype("category").cat.codes.values
     if data_id == "1182":  # adult, positive is ">50K"
         y = (y == ">50K").astype(int)
+    if not np.issubdtype(np.asarray(y).dtype, np.number):
+        y = pd.Series(y).astype("category").cat.codes.values
     return y
 
 
@@ -283,7 +289,17 @@ def _download_imodels_dataset(dataset_fname, data_path: str):
     dataset_fname = dataset_fname.split(
         "/")[-1]  # remove anything about the path
     download_path = f"https://raw.githubusercontent.com/csinva/imodels-data/master/data_cleaned/{dataset_fname}"
-    r = requests.get(download_path)
+    r = None
+    for _ in range(3):
+        try:
+            r = requests.get(download_path, timeout=30)
+            if r.status_code == 200:
+                break
+        except requests.exceptions.RequestException:
+            r = None
+            continue
+    if r is None:
+        raise Exception(f"Failed to download dataset {dataset_fname} after retries")
     if r.status_code == 404:
         raise Exception(
             f"404 Error for dataset {dataset_fname} (see valid files at https://github.com/csinva/imodels-data/tree/master/data_cleaned)"

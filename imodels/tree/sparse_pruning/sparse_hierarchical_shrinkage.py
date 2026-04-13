@@ -9,7 +9,8 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.metrics import log_loss, mean_squared_error
-from sklearn.model_selection import KFold
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree._tree import TREE_LEAF
 
@@ -160,8 +161,13 @@ class SHSTree(BaseEstimator):
         if sp_alpha is None or sp_alpha <= 0:
             return tree
 
-        tree_stumps = make_stumps(tree)
         ids = _collect_internal_node_ids(tree)
+        if ids.size == 0:
+            # Degenerate tree with a single leaf: nothing to prune.
+            self.beta_stars_.append(np.array([0.0]))
+            return tree
+
+        tree_stumps = make_stumps(tree)
         X_tree = tree_feature_transform(tree_stumps, X)
         X_opt = np.concatenate((np.ones(len(y)).reshape(-1, 1), X_tree), axis=1)
 
@@ -201,25 +207,31 @@ class SHSTree(BaseEstimator):
         if hasattr(self.estimator_, "tree_"):
             self._prune_tree(self.estimator_.tree_, X, y, self.sp_alpha, decimals=decimals, beta_init=beta_init, verbose=verbose)
         elif hasattr(self.estimator_, "estimators_"):
-            if _get_n_samples_bootstrap is None:
-                raise ImportError("sklearn >= 1.3 is required for sparse forestry pruning")
-            n_samples = len(X)
-            n_samples_bootstrap = _get_n_samples_bootstrap(n_samples, self.estimator_.max_samples)
-            rng = check_random_state(self.random_state)
             for est in self.estimator_.estimators_:
                 t = est
                 if isinstance(t, np.ndarray):
                     assert t.size == 1
                     t = t[0]
-                rs = getattr(t, "random_state", rng)
-                X_prune, y_prune = get_reg_set(
-                    self.prune_set,
-                    X,
-                    y,
-                    rs,
-                    n_samples,
-                    n_samples_bootstrap,
-                )
+
+                # Forest estimators can support ib/oob/full pruning splits.
+                if hasattr(self.estimator_, "max_samples"):
+                    if _get_n_samples_bootstrap is None:
+                        raise ImportError("sklearn >= 1.3 is required for sparse forestry pruning")
+                    n_samples = len(X)
+                    n_samples_bootstrap = _get_n_samples_bootstrap(n_samples, self.estimator_.max_samples)
+                    rng = check_random_state(self.random_state)
+                    rs = getattr(t, "random_state", rng)
+                    X_prune, y_prune = get_reg_set(
+                        self.prune_set,
+                        X,
+                        y,
+                        rs,
+                        n_samples,
+                        n_samples_bootstrap,
+                    )
+                else:
+                    # Generic ensembles (e.g., gradient boosting): no bootstrap metadata.
+                    X_prune, y_prune = X, y
                 self._prune_tree(t.tree_, X_prune, y_prune, self.sp_alpha, decimals=decimals, beta_init=beta_init, verbose=verbose)
 
     def _shrink_tree(self, tree, reg_param, i: int = 0, parent_val=None, parent_num=None, cum_sum=0):
@@ -281,29 +293,32 @@ class SHSTree(BaseEstimator):
                 self.reg_param = get_gcv_reg_param(self.estimator_.tree_, X, y)
             self._shrink_tree(self.estimator_.tree_, self.reg_param)
         elif hasattr(self.estimator_, "estimators_"):
-            if _get_n_samples_bootstrap is None:
-                raise ImportError("sklearn >= 1.3 is required for sparse forestry shrinkage")
-            n_samples = len(X)
-            n_samples_bootstrap = _get_n_samples_bootstrap(n_samples, self.estimator_.max_samples)
             if self.reg_param is None:
                 self.reg_params = []
-            rng = check_random_state(self.random_state)
             for est in self.estimator_.estimators_:
                 t = est
                 if isinstance(t, np.ndarray):
                     assert t.size == 1
                     t = t[0]
-                rs = getattr(t, "random_state", rng)
                 if self.reg_param is None:
-                    X_shrink, y_shrink = get_reg_set(
-                        self.prune_set,
-                        X,
-                        y,
-                        rs,
-                        n_samples,
-                        n_samples_bootstrap,
-                    )
-                    reg_param = get_gcv_reg_param(t, X_shrink, y_shrink)
+                    if hasattr(self.estimator_, "max_samples"):
+                        if _get_n_samples_bootstrap is None:
+                            raise ImportError("sklearn >= 1.3 is required for sparse forestry shrinkage")
+                        n_samples = len(X)
+                        n_samples_bootstrap = _get_n_samples_bootstrap(n_samples, self.estimator_.max_samples)
+                        rng = check_random_state(self.random_state)
+                        rs = getattr(t, "random_state", rng)
+                        X_shrink, y_shrink = get_reg_set(
+                            self.prune_set,
+                            X,
+                            y,
+                            rs,
+                            n_samples,
+                            n_samples_bootstrap,
+                        )
+                    else:
+                        X_shrink, y_shrink = X, y
+                    reg_param = get_gcv_reg_param(t.tree_, X_shrink, y_shrink)
                     self.reg_params.append(reg_param)
                     self._shrink_tree(t.tree_, reg_param)
                 else:
@@ -412,15 +427,10 @@ class SHSTreeClassifier(SHSTree, ClassifierMixin):
 
 
 def _get_cv_criterion(scorer):
-    y_true = np.random.binomial(n=1, p=0.5, size=100)
-    y_pred_good = y_true
-    y_pred_bad = np.random.uniform(0, 1, 100)
-
-    score_good = scorer(y_true, y_pred_good)
-    score_bad = scorer(y_true, y_pred_bad)
-    if score_good > score_bad:
+    # Explicitly map known scorers; avoids invalid probing for metrics like accuracy.
+    if scorer is accuracy_score:
         return np.argmax
-    if score_good < score_bad:
+    if scorer in {log_loss, mean_squared_error}:
         return np.argmin
     return np.argmin
 
@@ -464,14 +474,17 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
     def fit(self, X, y, decimals: int = 0, *args, **kwargs):
         param_list = list(itertools.product(self.sp_alpha_list, self.reg_param_list))
         self.scores_ = [[] for _ in param_list]
-        scorer = kwargs.get("scoring", log_loss)
-        kf = KFold(n_splits=self.cv)
-        for train_index, test_index in kf.split(X):
+        scorer = kwargs.pop("scoring", self.scoring)
+        if scorer is None:
+            scorer = accuracy_score
+        kf = StratifiedKFold(
+            n_splits=self.cv, shuffle=True, random_state=self.random_state
+        )
+        for train_index, test_index in kf.split(X, y):
             X_out, y_out = X[test_index, :], y[test_index]
             X_in, y_in = X[train_index, :], y[train_index]
             base_est = deepcopy(self.estimator_)
             base_est = base_est.fit(X_in, y_in, *args, **kwargs)
-            beta_init = None
             for i, (sp_alpha, reg_param) in enumerate(param_list):
                 est_shs = SHSTreeClassifier(
                     estimator_=deepcopy(base_est),
@@ -485,10 +498,15 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
                     tol=self.tol,
                     ord=self.ord,
                 )
-                est_shs._prune(X=X_in, y=y_in, decimals=decimals, beta_init=beta_init, *args, **kwargs)
+                est_shs._prune(
+                    X=X_in, y=y_in, decimals=decimals, beta_init=None, *args, **kwargs
+                )
                 est_shs._shrink(X=X_in, y=y_in)
-                beta_init = est_shs.beta_stars_[-1] if est_shs.beta_stars_ else None
-                self.scores_[i].append(scorer(y_out, est_shs.predict_proba(X_out)))
+                if scorer is log_loss:
+                    pred = est_shs.predict_proba(X_out)
+                else:
+                    pred = est_shs.predict(X_out)
+                self.scores_[i].append(scorer(y_out, pred))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
         self.sp_alpha, self.reg_param = param_list[cv_criterion(self.scores_)]
@@ -546,14 +564,15 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
     def fit(self, X, y, decimals: int = 0, *args, **kwargs):
         param_list = list(itertools.product(self.sp_alpha_list, self.reg_param_list))
         self.scores_ = [[] for _ in param_list]
-        scorer = kwargs.get("scoring", mean_squared_error)
-        kf = KFold(n_splits=self.cv)
+        scorer = kwargs.pop("scoring", self.scoring)
+        if scorer is None:
+            scorer = mean_squared_error
+        kf = KFold(n_splits=self.cv, shuffle=True, random_state=self.random_state)
         for train_index, test_index in kf.split(X):
             X_out, y_out = X[test_index, :], y[test_index]
             X_in, y_in = X[train_index, :], y[train_index]
             base_est = deepcopy(self.estimator_)
             base_est = base_est.fit(X_in, y_in, *args, **kwargs)
-            beta_init = None
             for i, (sp_alpha, reg_param) in enumerate(param_list):
                 est_shs = SHSTreeRegressor(
                     estimator_=deepcopy(base_est),
@@ -567,9 +586,10 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
                     tol=self.tol,
                     ord=self.ord,
                 )
-                est_shs._prune(X=X_in, y=y_in, decimals=decimals, beta_init=beta_init, *args, **kwargs)
+                est_shs._prune(
+                    X=X_in, y=y_in, decimals=decimals, beta_init=None, *args, **kwargs
+                )
                 est_shs._shrink(X=X_in, y=y_in)
-                beta_init = est_shs.beta_stars_[-1] if est_shs.beta_stars_ else None
                 self.scores_[i].append(scorer(y_out, est_shs.predict(X_out)))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
