@@ -2,8 +2,11 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist
 from functools import partial
+from scipy import stats
+from sklearn.metrics import log_loss
 
-from .ppms import PartialPredictionModelBase, GenericRegressorPPM, GenericClassifierPPM, _GlmPPM
+from .ppms import PartialPredictionModelBase, GenericRegressorPPM, GenericClassifierPPM, _GlmPPM,\
+    _RidgePPM, RidgeRegressorPPM, LogisticClassifierPPM
 from .block_transformers import _blocked_train_test_split
 from .ranking_stability import tauAP_b, rbo
 
@@ -82,8 +85,9 @@ class ForestMDIPlus:
         self.prediction_score_ = pd.DataFrame({})
         self.feature_importances_ = pd.DataFrame({})
         self.feature_importances_by_tree_ = {}
+        self.pvalues_ = []
 
-    def get_scores(self, X, y):
+    def get_scores(self, X, y, pval=False):
         """
         Obtain the MDI+ feature importances for a forest.
 
@@ -94,13 +98,15 @@ class ForestMDIPlus:
             the column names are used in the output
         y: ndarray of shape (n_samples, n_targets)
             The observed responses.
+        pval: bool, default=False
+            Whether to compute p-values for the feature importances.
 
         Returns
         -------
         scores: pd.DataFrame of shape (n_features, n_scoring_fns)
             The MDI+ feature importances.
         """
-        self._fit_importance_scores(X, y)
+        self._fit_importance_scores(X, y, pval=pval)
         return self.feature_importances_
 
     def get_stability_scores(self, B=10, metrics="auto"):
@@ -163,7 +169,7 @@ class ForestMDIPlus:
             stability_df = stability_df.drop(columns=["scorer"])
         return stability_df
 
-    def _fit_importance_scores(self, X, y):
+    def _fit_importance_scores(self, X, y, pval=False):
         all_scores = []
         all_full_preds = []
         for estimator, transformer, tree_random_state in \
@@ -178,10 +184,11 @@ class ForestMDIPlus:
                                         task=self.task,
                                         center=self.center,
                                         normalize=self.normalize)
-            scores = tree_mdi_plus.get_scores(X, y)
+            scores = tree_mdi_plus.get_scores(X, y, pval=pval)
             if scores is not None:
                 all_scores.append(scores)
                 all_full_preds.append(tree_mdi_plus._full_preds)
+                self.pvalues_.append(tree_mdi_plus.pvalues_)
         if len(all_scores) == 0:
             raise ValueError("Transformer representation was empty for all trees.")
         full_preds = np.nanmean(all_full_preds, axis=0)
@@ -280,8 +287,9 @@ class TreeMDIPlus:
         self._full_preds = None
         self.prediction_score_ = None
         self.feature_importances_ = None
+        self.pvalues_ = None
 
-    def get_scores(self, X, y):
+    def get_scores(self, X, y, pval=False):
         """
         Obtain the MDI+ feature importances for a single tree.
 
@@ -292,16 +300,17 @@ class TreeMDIPlus:
             the column names are used in the output
         y: ndarray of shape (n_samples, n_targets)
             The observed responses.
-
+        pval: bool, default=False
+            Whether to compute p-values for the feature importances.
         Returns
         -------
         scores: pd.DataFrame of shape (n_features, n_scoring_fns)
             The MDI+ feature importances.
         """
-        self._fit_importance_scores(X, y)
+        self._fit_importance_scores(X, y, pval=pval)
         return self.feature_importances_
 
-    def _fit_importance_scores(self, X, y):
+    def _fit_importance_scores(self, X, y, pval=False):
         n_samples = y.shape[0]
         blocked_data = self.transformer.transform(X, center=self.center,
                                                   normalize=self.normalize)
@@ -313,6 +322,57 @@ class TreeMDIPlus:
                     hasattr(self.estimator, "predict_partial"):
                 full_preds = self.estimator.predict_full(test_blocked_data)
                 partial_preds = self.estimator.predict_partial(test_blocked_data, mode=self.mode)
+                if pval and self.sample_split == "oob" and\
+                    (isinstance(self.estimator, RidgeRegressorPPM) or isinstance(self.estimator, LogisticClassifierPPM)):
+                    cpartial_preds = self.estimator.predict_partial(test_blocked_data, mode="keep_rest")
+                    if isinstance(self.estimator, RidgeRegressorPPM):
+                        SSEr = {k: np.sum((y_test - cpartial_preds[k]) ** 2) for k in cpartial_preds.keys()}
+                        SSEc = np.sum((y_test - full_preds) ** 2)
+                        Xc_ds = np.linalg.svd(train_blocked_data.get_all_data(), compute_uv=False)
+                        dfc = np.sum(Xc_ds ** 2 / (Xc_ds ** 2 + self.estimator.alpha_[0]))
+                        # Xc = train_blocked_data.get_all_data()
+                        # Hc = Xc @ np.linalg.inv(Xc.T @ Xc + self.estimator.alpha_ * np.eye(Xc.shape[1])) @ Xc.T
+                        # dfc = np.trace(Hc)
+                        n_blocks = train_blocked_data.n_blocks
+                        n_train = y_train.shape[0]
+                        self.pvalues_ = {}
+                        for k in range(n_blocks):
+                            Xr_ds = np.linalg.svd(train_blocked_data.get_all_except_block(k), compute_uv=False)
+                            dfr = np.sum(Xr_ds ** 2 / (Xr_ds ** 2 + self.estimator.alpha_[0]))
+                            with np.errstate(divide='ignore', invalid='ignore'):
+                                Fstat = ((SSEr[k] - SSEc) / (dfc - dfr)) / (SSEc / (n_train - dfc))
+                            Fstat = np.nan_to_num(Fstat, nan=0.0, posinf=0.0, neginf=0.0)
+                            # TODO: Do we need to add 1 to df values to account for the intercept?
+                            Fpval = stats.f.sf(Fstat, dfc - dfr, n_train - (dfc + 1))
+                            Fpval = np.nan_to_num(Fpval, nan=1.0, posinf=1.0, neginf=1.0)
+                            self.pvalues_[k] = {"F": Fstat, "p": Fpval}
+                            # Xr = train_blocked_data.get_all_except_block(k)
+                            # Hr = Xr @ np.linalg.inv(Xr.T @ Xr + self.estimator.alpha_ * np.eye(Xr.shape[1])) @ Xr.T
+                            # dfr = np.trace(Hr)
+                    elif isinstance(self.estimator, LogisticClassifierPPM):
+                        if self.estimator.penalty == "l2":
+                            Devr = {k: log_loss(y_test, cpartial_preds[k], normalize=False) for k in cpartial_preds.keys()}
+                            Devc = log_loss(y_test, full_preds, normalize=False)
+                            probc = self.estimator.predict_full(train_blocked_data)
+                            weightc = probc * (1 - probc)
+                            Wc_sqrt = np.sqrt(weightc).reshape(-1, 1)
+                            Xc_weighted = Wc_sqrt * train_blocked_data.get_all_data()
+                            Xc_ds = np.linalg.svd(Xc_weighted, compute_uv=False)
+                            # TODO: check if scale of alpha is correct here
+                            dfc = np.sum(Xc_ds ** 2 / (Xc_ds ** 2 + self.estimator.alpha_[0]))
+                            n_blocks = train_blocked_data.n_blocks
+                            self.pvalues_ = {}
+                            probr = self.estimator.predict_partial(train_blocked_data, mode="keep_rest")
+                            for k in range(n_blocks):
+                                weightr = probr[k] * (1 - probr[k])
+                                Wr_sqrt = np.sqrt(weightr).reshape(-1, 1)
+                                Xr_weighted = Wr_sqrt * train_blocked_data.get_all_except_block(k)
+                                Xr_ds = np.linalg.svd(Xr_weighted, compute_uv=False)
+                                dfr = np.sum(Xr_ds ** 2 / (Xr_ds ** 2 + self.estimator.alpha_[0]))
+                                chi2stat = 2 * (Devr[k] - Devc)
+                                chi2pval = stats.chi2.sf(chi2stat, dfc - dfr)
+                                chi2pval = np.nan_to_num(chi2pval, nan=1.0, posinf=1.0, neginf=1.0)
+                                self.pvalues_[k] = {"chi2": chi2stat, "p": chi2pval}
                 if self.by_transformer and self.transformer._transformer_ids is not None:
                     transformer_idxs = np.hstack(
                         [val for val in self.transformer._transformer_ids.values()]

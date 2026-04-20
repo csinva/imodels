@@ -264,7 +264,8 @@ class _RandomForestPlus(BaseEstimator):
         return predictions
 
     def get_mdi_plus_scores(self, X=None, y=None,
-                            scoring_fns="auto", sample_split="inherit", mode="keep_k",
+                            scoring_fns="auto", pval=False,
+                            sample_split="inherit", mode="keep_k",
                             by_transformer=False):
         """
         Obtain MDI+ feature importances. Generalized mean decrease in impurity (MDI+)
@@ -285,6 +286,8 @@ class _RandomForestPlus(BaseEstimator):
             If "auto", then a default is chosen as follows:
              - For RandomForestPlusRegressor, then r-squared (_fast_r2_score) is used.
              - For RandomForestPlusClassifier, then the negative log-loss (_neg_log_loss) is used.
+        pval: bool, default=False
+            Whether to compute p-values for the feature importances.
         sample_split: string in {"loo", "oob", "inbag", "inherit"} or None
             The sample splitting strategy to be used when evaluating the partial
             model predictions in MDI+. If "inherit" (default), uses the same sample splitting
@@ -351,7 +354,7 @@ class _RandomForestPlus(BaseEstimator):
                                          center=self.center,
                                          normalize=self.normalize)
             self.mdi_plus_ = mdi_plus_obj
-            mdi_plus_scores = mdi_plus_obj.get_scores(X_array, y)
+            mdi_plus_scores = mdi_plus_obj.get_scores(X_array, y, pval=pval)
             if self.feature_names_ is not None:
                 mdi_plus_scores["var"] = self.feature_names_
                 self.mdi_plus_.feature_importances_["var"] = self.feature_names_

@@ -496,6 +496,7 @@ class LogisticClassifierPPM(GlmClassifierPPM, PartialPredictionModelBase, ABC):
                          r_doubledot=r_doubledot,
                          hyperparameter_scorer=log_loss,
                          trim=trim)
+        self.penalty = penalty
 
 
 class RobustRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
