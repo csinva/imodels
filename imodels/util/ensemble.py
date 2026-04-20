@@ -6,7 +6,6 @@ from sklearn.metrics import mean_squared_error
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.linear_model import LinearRegression
 import imodels
-import imodels.algebraic.gam_multitask
 
 
 class ResidualBoostingRegressor(BaseEstimator, RegressorMixin):
@@ -108,6 +107,7 @@ class SimpleBaggingRegressor:
 
 
 if __name__ == '__main__':
+    import imodels.algebraic.gam_multitask
     X, y, feature_names = imodels.get_clean_dataset('california_housing')
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42)

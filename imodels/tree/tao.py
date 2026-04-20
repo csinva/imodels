@@ -130,7 +130,8 @@ class TaoTree(BaseEstimator):
             # plt.show()
 
         if self.randomize_tree:
-            np.random.shuffle(self.model.tree_.feature)  # shuffle CART features
+            # shuffle CART features
+            np.random.shuffle(self.model.tree_.feature)
             # np.random.shuffle(self.model.tree_.threshold)
             for i in range(self.model.tree_.node_count):  # split on feature medians
                 self.model.tree_.threshold[i] = np.median(
@@ -138,7 +139,8 @@ class TaoTree(BaseEstimator):
         if self.verbose:
             print('starting score', self.model.score(X, y))
         for i in range(self.n_iters):
-            num_updates = self._tao_iter_cart(X, y, self.model.tree_, sample_weight=sample_weight)
+            num_updates = self._tao_iter_cart(
+                X, y, self.model.tree_, sample_weight=sample_weight)
             if num_updates == 0:
                 break
 
@@ -164,7 +166,8 @@ class TaoTree(BaseEstimator):
         value = tree.value
 
         # For each node, store the path to that node #######################################################
-        indexes_with_prefix_paths = []  # data structure with (index, path_to_node_index)
+        # data structure with (index, path_to_node_index)
+        indexes_with_prefix_paths = []
         # e.g. if if node 3 is the left child of node 1 which is the right child of node 0
         # then we get (3, [(0, R), (1, L)])
 
@@ -177,8 +180,10 @@ class TaoTree(BaseEstimator):
 
             # If a split node, append left and right children and depth to queue
             if children_left[node_id] != children_right[node_id]:
-                queue.append((children_left[node_id], path_to_node_index + [(node_id, 'L')]))
-                queue.append((children_right[node_id], path_to_node_index + [(node_id, 'R')]))
+                queue.append(
+                    (children_left[node_id], path_to_node_index + [(node_id, 'L')]))
+                queue.append(
+                    (children_right[node_id], path_to_node_index + [(node_id, 'R')]))
         # print(indexes_with_prefix_paths)
 
         num_updates = 0
@@ -203,7 +208,8 @@ class TaoTree(BaseEstimator):
             X_node, y_node = filter_points_by_path(X, y, path_to_node_index)
 
             if sample_weight is not None:
-                sample_weight_node = filter_points_by_path(X, sample_weight, path_to_node_index)[1]
+                sample_weight_node = filter_points_by_path(
+                    X, sample_weight, path_to_node_index)[1]
             else:
                 sample_weight_node = np.ones(y_node.size)
 
@@ -237,7 +243,8 @@ class TaoTree(BaseEstimator):
                         if isinstance(self, RegressorMixin):
                             return value[node_id]
                         if isinstance(self, ClassifierMixin):
-                            return np.argmax(value[node_id])  # note value stores counts for each class
+                            # note value stores counts for each class
+                            return np.argmax(value[node_id])
                     if x[feature[node_id]] <= threshold[node_id]:
                         return predict_from_node(x, children_left[node_id])
                     else:
@@ -262,7 +269,8 @@ class TaoTree(BaseEstimator):
                                                        y_node - y_node_right))).T
 
             # screen out indexes where going left/right has no effect
-            idxs_relevant = y_node_absolute_errors[:, 0] != y_node_absolute_errors[:, 1]
+            idxs_relevant = y_node_absolute_errors[:,
+                                                   0] != y_node_absolute_errors[:, 1]
             if idxs_relevant.sum() <= 1:  # nothing to change
                 if self.verbose:
                     print('no errors to change')
@@ -276,7 +284,8 @@ class TaoTree(BaseEstimator):
             # if self.prediction_task == 'regression':
             # weight by the difference in error ###############################################################
             if self.weight_errors:
-                sample_weight_node *= np.abs(y_node_absolute_errors[:, 1] - y_node_absolute_errors[:, 0])
+                sample_weight_node *= np.abs(
+                    y_node_absolute_errors[:, 1] - y_node_absolute_errors[:, 0])
             sample_weight_node_target = sample_weight_node[idxs_relevant]
             X_node = X_node[idxs_relevant]
 
@@ -289,21 +298,26 @@ class TaoTree(BaseEstimator):
                     if self.node_model == 'linear':
                         m = LogisticRegression(**self.node_model_args)
                     elif self.node_model == 'stump':
-                        m = DecisionTreeClassifier(max_depth=1, **self.node_model_args)
+                        m = DecisionTreeClassifier(
+                            max_depth=1, **self.node_model_args)
                 if isinstance(self, RegressorMixin):
                     if self.node_model == 'linear':
                         m = LinearRegression(**self.node_model_args)
                     elif self.node_model == 'stump':
-                        m = DecisionTreeRegressor(max_depth=1, **self.node_model_args)
+                        m = DecisionTreeRegressor(
+                            max_depth=1, **self.node_model_args)
                 X_node_single_feat = X_node[:, feat_num: feat_num + 1]
-                m.fit(X_node_single_feat, y_node_target, sample_weight=sample_weight_node_target)
-                score = m.score(X_node_single_feat, y_node_target, sample_weight=sample_weight_node_target)
+                m.fit(X_node_single_feat, y_node_target,
+                      sample_weight=sample_weight_node_target)
+                score = m.score(X_node_single_feat, y_node_target,
+                                sample_weight=sample_weight_node_target)
                 if score > best_score:
                     best_score = score
                     best_feat_num = feat_num
                     best_model = deepcopy(m)
                     if self.node_model == 'linear':
-                        best_threshold = -best_model.intercept_ / best_model.coef_[0]
+                        best_threshold = -best_model.intercept_ / \
+                            best_model.coef_[0]
                     elif self.node_model == 'stump':
                         best_threshold = best_model.tree_.threshold[0]
             # print((feature[node_id], threshold[node_id]), '\n->',
@@ -339,7 +353,8 @@ class TaoTree(BaseEstimator):
                 # (Track if any updates were necessary)
                 num_updates += 1
                 if self.verbose > 0:
-                    print(f'Improved score from {old_score:0.4f} to {new_score:0.4f}')
+                    print(
+                        f'Improved score from {old_score:0.4f} to {new_score:0.4f}')
 
             # debugging snippet (if score_m_new > score_m_old, then new_score should be > old_score, but it isn't!!!!)
             if self.verbose > 1:
@@ -356,20 +371,27 @@ class TaoTree(BaseEstimator):
         return num_updates
 
     def predict(self, X):
-        return self.model.predict(X)
+        preds = self.model.predict(X)
+        if hasattr(self, "classes_"):
+            print("classes_", self.classes_, 'preds', preds)
+            return np.array([self.classes_[int(i)] for i in preds])
+        else:
+            return preds
 
     def predict_proba(self, X):
         return self.model.predict_proba(X)
 
-    def score(self, X, y):
-        return self.model.score(X, y)
+    # def score(self, X, y):
+        # return self.model.score(X, y)
 
 
 class TaoTreeRegressor(TaoTree, RegressorMixin):
     pass
 
+
 class TaoTreeClassifier(TaoTree, ClassifierMixin):
     pass
+
 
 if __name__ == '__main__':
     np.random.seed(13)

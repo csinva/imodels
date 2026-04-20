@@ -316,9 +316,9 @@ def encode_categories(X, features, encoder=None):
     columns_to_keep = list(set(X.columns).difference(features))
     X_encoded = X.loc[:, columns_to_keep]
     X_cat = pd.DataFrame({f: X.loc[:, f] for f in features})
-
+    
     if encoder is None:
-        one_hot_encoder = OneHotEncoder(categories="auto")
+        one_hot_encoder = OneHotEncoder(categories="auto", sparse_output=False)
         X_one_hot = pd.DataFrame(one_hot_encoder.fit_transform(X_cat))
     else:
         one_hot_encoder = encoder

@@ -181,17 +181,15 @@ class HSTree(BaseEstimator):
                 self._shrink_tree(t.tree_, self.reg_param)
 
     def predict(self, X, *args, **kwargs):
-        return self.estimator_.predict(X, *args, **kwargs)
+        preds = self.estimator_.predict(X, *args, **kwargs)
+        if hasattr(self.estimator_, "classes_"):
+            return np.array([self.classes_[int(i)] for i in preds])
+        else:
+            return preds
 
     def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, "predict_proba"):
             return self.estimator_.predict_proba(X, *args, **kwargs)
-        else:
-            return NotImplemented
-
-    def score(self, X, y, *args, **kwargs):
-        if hasattr(self.estimator_, "score"):
-            return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented
 
@@ -242,7 +240,7 @@ class HSTree(BaseEstimator):
         return s
 
 
-class HSTreeRegressor(HSTree, RegressorMixin):
+class HSTreeRegressor(RegressorMixin, HSTree):
     def __init__(
         self,
         estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
@@ -260,7 +258,7 @@ class HSTreeRegressor(HSTree, RegressorMixin):
         )
 
 
-class HSTreeClassifier(HSTree, ClassifierMixin):
+class HSTreeClassifier(ClassifierMixin, HSTree):
     def __init__(
         self,
         estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),

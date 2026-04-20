@@ -13,7 +13,7 @@ from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 from .experimental.bartpy import BART
 from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
-from .rule_list.corels_wrapper import OptimalRuleListClassifier
+# from .experimental.corels_wrapper import OptimalRuleListClassifier
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
 from .rule_set import boosted_rules
@@ -53,6 +53,7 @@ from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
+from .clustering.stableclustering import StableClustering
 
 CLASSIFIERS = [
     BayesianRuleListClassifier,
@@ -64,7 +65,6 @@ CLASSIFIERS = [
     BayesianRuleSetClassifier,
     C45TreeClassifier,
     OptimalTreeClassifier,
-    OptimalRuleListClassifier,
     OneRClassifier,
     SlipperClassifier,
     RuleFitClassifier,

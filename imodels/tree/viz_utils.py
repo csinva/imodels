@@ -54,7 +54,6 @@ def _extract_arrays_from_figs_tree(figs_tree):
         if has_children:
             _update_node(node.left)
             _update_node(node.right)
-
     _update_node(figs_tree)
 
     return tree_data, np.array(value_sklearn_array)
