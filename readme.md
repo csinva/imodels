@@ -296,6 +296,7 @@ The code here heavily derives from the wonderful work of previous projects. We s
   <li><a href="https://github.com/interpretml/interpret">interpretml</a>: boosting-based gam</li>
   <li><a href="https://github.com/h2oai/h2o-3">h20 ai</a>: gams + glms (and more)</li>
   <li><a href="https://github.com/guillermo-navas-palencia/optbinning">optbinning</a>: data discretization / scoring models</li>	
+  <li><a href="https://github.com/gialmisi/desdeo-brb">desdeo-brb</a>: distributional rule-based models</li>
 </ul>
 </details>
 
