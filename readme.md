@@ -313,18 +313,13 @@ The code here heavily derives from the wonderful work of previous projects. We s
 Please cite the package if you use it in an academic work :)
 
 ```r
-@software{
-	imodels2021,
-	title        = {imodels: a python package for fitting interpretable models},
-	journal      = {Journal of Open Source Software},
-	publisher    = {The Open Journal},
-	year         = {2021},
-	author       = {Singh, Chandan and Nasseri, Keyan and Tan, Yan Shuo and Tang, Tiffany and Yu, Bin},
-	volume       = {6},
-	number       = {61},
-	pages        = {3192},
-	doi          = {10.21105/joss.03192},
-	url          = {https://doi.org/10.21105/joss.03192},
+@misc{singh2026agenticimodels,
+      title={Agentic-imodels: Evolving agentic interpretability tools via autoresearch}, 
+      author={Chandan Singh and Yan Shuo Tan and Weijia Xu and Zelalem Gero and Weiwei Yang and Michel Galley and Jianfeng Gao},
+      year={2026},
+      eprint={2605.03808},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2605.03808}, 
 }
-
 ```
