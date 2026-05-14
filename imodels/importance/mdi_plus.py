@@ -32,14 +32,16 @@ class ForestMDIPlus:
         as estimators.
     scoring_fns: a function or dict with functions as value and function name (str) as key
         The scoring functions used for evaluating the partial predictions.
-    sample_split: string in {"loo", "oob", "inbag"} or None
+    sample_split: string in {"loo", "oob", "inbag", "oob_only} or None
         The sample splitting strategy to be used when evaluating the partial
         model predictions. The default "loo" (leave-one-out) is strongly
         recommended for performance and in particular, for overcoming the known
         correlation and entropy biases suffered by MDI. "oob" (out-of-bag) can
         also be used to overcome these biases. "inbag" is the sample splitting
-        strategy used by MDI. If None, no sample splitting is performed and the
-        full data set is used to evaluate the partial model predictions.
+        strategy used by MDI. "oob_only" uses only the out-of-bag samples for 
+        training the GLM and for evaluation. If None, no sample splitting is 
+        performed and the full data set is used to evaluate the partial model 
+        predictions. 
     tree_random_states: list of int or None
         Random states from each tree in the fitted random forest; used in
         sample splitting and only required if sample_split = "oob" or "inbag".
@@ -66,7 +68,7 @@ class ForestMDIPlus:
                  sample_split="loo", tree_random_states=None, mode="keep_k",
                  by_transformer=False,
                  task="regression", center=True, normalize=False):
-        assert sample_split in ["loo", "oob", "inbag", None]
+        assert sample_split in ["loo", "oob", "inbag", "oob_only", None]
         assert mode in ["keep_k", "keep_rest"]
         assert task in ["regression", "classification"]
         self.estimators = estimators
@@ -74,8 +76,8 @@ class ForestMDIPlus:
         self.scoring_fns = scoring_fns
         self.sample_split = sample_split
         self.tree_random_states = tree_random_states
-        if self.sample_split in ["oob", "inbag"] and not self.tree_random_states:
-            raise ValueError("Must specify tree_random_states to use 'oob' or 'inbag' sample_split.")
+        if self.sample_split in ["oob", "inbag", "oob_only"] and not self.tree_random_states:
+            raise ValueError("Must specify tree_random_states to use 'oob', 'inbag' or 'oob_only' sample_split.")
         self.mode = mode
         self.by_transformer = by_transformer
         self.task = task
@@ -87,7 +89,7 @@ class ForestMDIPlus:
         self.feature_importances_by_tree_ = {}
         self.pvalues_ = []
 
-    def get_scores(self, X, y, pval=False):
+    def get_scores(self, X, y, pval="none"):
         """
         Obtain the MDI+ feature importances for a forest.
 
@@ -169,7 +171,7 @@ class ForestMDIPlus:
             stability_df = stability_df.drop(columns=["scorer"])
         return stability_df
 
-    def _fit_importance_scores(self, X, y, pval=False):
+    def _fit_importance_scores(self, X, y, pval="none"):
         all_scores = []
         all_full_preds = []
         for estimator, transformer, tree_random_state in \
@@ -264,7 +266,7 @@ class TreeMDIPlus:
                  sample_split="loo", tree_random_state=None, mode="keep_k",
                  by_transformer=False,
                  task="regression", center=True, normalize=False):
-        assert sample_split in ["loo", "oob", "inbag", "auto", None]
+        assert sample_split in ["loo", "oob", "inbag", "oob_only", "auto", None]
         assert mode in ["keep_k", "keep_rest"]
         assert task in ["regression", "classification"]
         self.estimator = estimator
@@ -273,8 +275,8 @@ class TreeMDIPlus:
         self.sample_split = sample_split
         self.tree_random_state = tree_random_state
         _validate_sample_split(self.sample_split, self.estimator, isinstance(self.estimator, PartialPredictionModelBase))
-        if self.sample_split in ["oob", "inbag"] and not self.tree_random_state:
-            raise ValueError("Must specify tree_random_state to use 'oob' or 'inbag' sample_split.")
+        if self.sample_split in ["oob", "inbag", "oob_only"] and not self.tree_random_state:
+            raise ValueError("Must specify tree_random_state to use 'oob', 'inbag' or 'oob_only' sample_split.")
         if isinstance(self.estimator, _GlmPPM):
             if self.estimator.loo and self.sample_split != "loo":
                 self.estimator.loo = False
@@ -289,7 +291,7 @@ class TreeMDIPlus:
         self.feature_importances_ = None
         self.pvalues_ = None
 
-    def get_scores(self, X, y, pval=False):
+    def get_scores(self, X, y, pval="none"):
         """
         Obtain the MDI+ feature importances for a single tree.
 
@@ -310,7 +312,8 @@ class TreeMDIPlus:
         self._fit_importance_scores(X, y, pval=pval)
         return self.feature_importances_
 
-    def _fit_importance_scores(self, X, y, pval=False):
+    def _fit_importance_scores(self, X, y, pval="none"):
+        assert pval in ["none", "permute", "f"]
         n_samples = y.shape[0]
         blocked_data = self.transformer.transform(X, center=self.center,
                                                   normalize=self.normalize)
@@ -322,7 +325,23 @@ class TreeMDIPlus:
                     hasattr(self.estimator, "predict_partial"):
                 full_preds = self.estimator.predict_full(test_blocked_data)
                 partial_preds = self.estimator.predict_partial(test_blocked_data, mode=self.mode)
-                if pval and self.sample_split == "oob" and\
+                if pval == "permute" and self.sample_split == "oob":
+                    self.pvalues_ = {}
+                    for k in partial_preds.keys():
+                        pvalues_k = {}
+                        y_pred = partial_preds[k]
+                        for scoring_fn_name, scoring_fn in self.scoring_fns.items():
+                            if isinstance(y_pred, tuple):  # if constant model
+                                y_pred = np.ones_like(y_test) * y_pred[1]
+                            obs_score = scoring_fn(y_test, y_pred)
+                            permuted_scores = []
+                            for _ in range(1000):
+                                y_test_permuted = np.random.permutation(y_test)
+                                permuted_score = scoring_fn(y_test_permuted, y_pred)
+                                permuted_scores.append(permuted_score)
+                            pvalues_k[scoring_fn_name] = np.mean(np.array(permuted_scores) >= obs_score)
+                        self.pvalues_[k] = pvalues_k
+                elif pval == "f" and self.sample_split == "oob_only" and\
                     (isinstance(self.estimator, RidgeRegressorPPM) or isinstance(self.estimator, LogisticClassifierPPM)):
                     cpartial_preds = self.estimator.predict_partial(test_blocked_data, mode="keep_rest")
                     if isinstance(self.estimator, RidgeRegressorPPM):
@@ -394,6 +413,7 @@ class TreeMDIPlus:
                     ppm = GenericClassifierPPM(self.estimator)
                 full_preds = ppm.predict_full(test_blocked_data)
                 partial_preds = ppm.predict_partial(test_blocked_data, mode=self.mode)
+                # TODO: code up permutation p-value for generic PPMs
                 if self.by_transformer and self.transformer._transformer_ids is not None:
                     transformer_idxs = np.hstack(
                         [val for val in self.transformer._transformer_ids.values()]
@@ -488,6 +508,11 @@ def _get_sample_split_data(blocked_data, y, random_state, sample_split):
             _blocked_train_test_split(blocked_data, y, random_state)
     elif sample_split == "inbag":
         train_blocked_data, _, y_train, _, test_indices, _ = \
+            _blocked_train_test_split(blocked_data, y, random_state)
+        test_blocked_data = train_blocked_data
+        y_test = y_train
+    elif sample_split == "oob_only":
+        _, train_blocked_data, _, y_train, _, test_indices = \
             _blocked_train_test_split(blocked_data, y, random_state)
         test_blocked_data = train_blocked_data
         y_test = y_train

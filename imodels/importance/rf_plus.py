@@ -33,10 +33,13 @@ class _RandomForestPlus(BaseEstimator):
         If value is set to "auto", then a default is chosen as follows:
          - For RandomForestPlusRegressor, RidgeRegressorPPM is used.
          - For RandomForestPlusClassifier, LogisticClassifierPPM is used.
-    sample_split: string in {"loo", "oob", "inbag"} or None
+    sample_split: string in {"loo", "oob", "inbag", "oob_only", "auto", None}
         The sample splitting strategy to be used for fitting RF+. If "oob",
         RF+ is trained on the out-of-bag data. If "inbag", RF+ is trained on the
-        in-bag data. Otherwise, RF+ is trained on the full training data.
+        in-bag data. Otherwise, RF+ is trained on the full training data. If 
+        "oob_only", RF+ is trained only on the out-of-bag data. If "auto", then 
+        the default sample splitting strategy is "loo" if the prediction_model 
+        is a PPM with loo=True, and None otherwise.
     include_raw: bool
         Flag for whether to augment the local decision stump features extracted
         from the RF model with the original features.
@@ -56,7 +59,7 @@ class _RandomForestPlus(BaseEstimator):
     def __init__(self, rf_model=None, prediction_model=None, sample_split="auto",
                  include_raw=True, drop_features=True, add_transformers=None,
                  center=True, normalize=False):
-        assert sample_split in ["loo", "oob", "inbag", "auto", None]
+        assert sample_split in ["loo", "oob", "inbag", "oob_only", "auto", None]
         super().__init__()
         if isinstance(self, RegressorMixin):
             self._task = "regression"
@@ -264,7 +267,7 @@ class _RandomForestPlus(BaseEstimator):
         return predictions
 
     def get_mdi_plus_scores(self, X=None, y=None,
-                            scoring_fns="auto", pval=False,
+                            scoring_fns="auto", pval="none",
                             sample_split="inherit", mode="keep_k",
                             by_transformer=False):
         """
@@ -288,7 +291,7 @@ class _RandomForestPlus(BaseEstimator):
              - For RandomForestPlusClassifier, then the negative log-loss (_neg_log_loss) is used.
         pval: bool, default=False
             Whether to compute p-values for the feature importances.
-        sample_split: string in {"loo", "oob", "inbag", "inherit"} or None
+        sample_split: string in {"loo", "oob", "inbag", "oob_only", "inherit"} or None
             The sample splitting strategy to be used when evaluating the partial
             model predictions in MDI+. If "inherit" (default), uses the same sample splitting
             strategy as used when fitting the RF+ prediction model. Assuming None or "loo" were used
@@ -296,7 +299,8 @@ class _RandomForestPlus(BaseEstimator):
             "loo" (leave-one-out) is strongly recommended here in MDI+ as it overcomes
             the known correlation and entropy biases suffered by MDI. "oob" (out-of-bag) can
             also be used to overcome these biases. "inbag" is the sample splitting
-            strategy used by MDI. If None, no sample splitting is performed and the
+            strategy used by MDI. "oob_only" uses only the out-of-bag samples to 
+            traing the RF+ prediction model. If None, no sample splitting is performed and the
             full data set is used to evaluate the partial model predictions.
         mode: string in {"keep_k", "keep_rest"}
             Mode for the method. "keep_k" imputes the mean of each feature not
@@ -458,6 +462,39 @@ def _fast_r2_score(y_true, y_pred, multiclass=False):
         return 1 - numerator / denominator
 
 
+def _fast_log_loss(y_true, y_pred):
+    """
+    Evaluates the log-loss between the observed and predicted responses.
+
+    Parameters
+    ----------
+    y_true: array-like of shape (n_samples, n_targets)
+        Observed responses.
+    y_pred: array-like of shape (n_samples, n_targets)
+        Predicted probabilies.
+
+    Returns
+    -------
+    Scalar quantity, measuring the log-loss value.
+    """
+    eps = 1e-15
+    y_pred = np.clip(y_pred, eps, 1.0 - eps)
+
+    # Binary probability vector (n_samples,)
+    if y_pred.ndim == 1:
+        y_true = y_true.ravel()
+        return -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
+
+    # Multi-class probabilities (n_samples, n_classes)
+    if y_true.ndim == 1:
+        # y_true are integer class labels
+        idx = np.arange(y_pred.shape[0])
+        return -np.mean(np.log(y_pred[idx, y_true.astype(int)]))
+    else:
+        # y_true is one-hot encoded
+        return -np.sum(y_true * np.log(y_pred), axis=1).mean()
+
+
 def _neg_log_loss(y_true, y_pred):
     """
     Evaluates the negative log-loss between the observed and
@@ -474,7 +511,7 @@ def _neg_log_loss(y_true, y_pred):
     -------
     Scalar quantity, measuring the negative log-loss value.
     """
-    return -log_loss(y_true, y_pred)
+    return -_fast_log_loss(y_true, y_pred)
 
 
 if __name__ == "__main__":
