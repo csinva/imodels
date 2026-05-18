@@ -87,7 +87,8 @@ class ForestMDIPlus:
         self.prediction_score_ = pd.DataFrame({})
         self.feature_importances_ = pd.DataFrame({})
         self.feature_importances_by_tree_ = {}
-        self.pvalues_ = []
+        self.pvalues_by_tree_ = {}
+        self.pvalues_ = pd.DataFrame({})
 
     def get_scores(self, X, y, pval="none"):
         """
@@ -174,6 +175,7 @@ class ForestMDIPlus:
     def _fit_importance_scores(self, X, y, pval="none"):
         all_scores = []
         all_full_preds = []
+        all_pvalues = []
         for estimator, transformer, tree_random_state in \
                 zip(self.estimators, self.transformers, self.tree_random_states):
             tree_mdi_plus = TreeMDIPlus(estimator=estimator,
@@ -190,7 +192,7 @@ class ForestMDIPlus:
             if scores is not None:
                 all_scores.append(scores)
                 all_full_preds.append(tree_mdi_plus._full_preds)
-                self.pvalues_.append(tree_mdi_plus.pvalues_)
+                all_pvalues.append(tree_mdi_plus.pvalues_)
         if len(all_scores) == 0:
             raise ValueError("Transformer representation was empty for all trees.")
         full_preds = np.nanmean(all_full_preds, axis=0)
@@ -210,6 +212,30 @@ class ForestMDIPlus:
             self.feature_importances_.index = X.columns
         self.feature_importances_.index.name = 'var'
         self.feature_importances_.reset_index(inplace=True)
+        if pval != "none":
+            for key in tree_mdi_plus.pvalues_.keys():
+                self.pvalues_by_tree_[key] = pd.DataFrame({
+                    i: pd.Series(pvalue_ls[key]) for i, pvalue_ls in enumerate(all_pvalues)
+                })
+                if key == "p" or "permute" in key:
+                    self.pvalues_[key + "_na"] = np.minimum(
+                        1, 2 * np.nanmedian(self.pvalues_by_tree_[key], axis=1)
+                    )
+                    self.pvalues_[key] = np.minimum(
+                        1, 2 * np.median(np.nan_to_num(self.pvalues_by_tree_[key], nan=1.0), axis=1)
+                    )
+                else:
+                    self.pvalues_["mean_" + key + "_na"] = np.nanmean(self.pvalues_by_tree_[key], axis=1)
+                    self.pvalues_["mean_" + key] = np.mean(np.nan_to_num(self.pvalues_by_tree_[key], nan=0.0), axis=1)
+                    self.pvalues_["median_" + key + "_na"] = np.nanmedian(self.pvalues_by_tree_[key], axis=1)
+                    self.pvalues_["median_" + key] = np.median(np.nan_to_num(self.pvalues_by_tree_[key], nan=0.0), axis=1)
+            if isinstance(X, pd.DataFrame):
+                self.pvalues_.index = X.columns
+            self.pvalues_.index.name = 'var'
+            self.pvalues_.reset_index(inplace=True)
+            self.feature_importances_ = pd.merge(
+                self.feature_importances_, self.pvalues_, on="var", how="left"
+            )
         self.is_fitted = True
 
 
@@ -289,7 +315,7 @@ class TreeMDIPlus:
         self._full_preds = None
         self.prediction_score_ = None
         self.feature_importances_ = None
-        self.pvalues_ = None
+        self.pvalues_ = {}
 
     def get_scores(self, X, y, pval="none"):
         """
@@ -325,73 +351,71 @@ class TreeMDIPlus:
                     hasattr(self.estimator, "predict_partial"):
                 full_preds = self.estimator.predict_full(test_blocked_data)
                 partial_preds = self.estimator.predict_partial(test_blocked_data, mode=self.mode)
-                if pval == "permute" and self.sample_split == "oob":
-                    self.pvalues_ = {}
-                    for k in partial_preds.keys():
-                        pvalues_k = {}
-                        y_pred = partial_preds[k]
-                        for scoring_fn_name, scoring_fn in self.scoring_fns.items():
-                            if isinstance(y_pred, tuple):  # if constant model
-                                y_pred = np.ones_like(y_test) * y_pred[1]
-                            obs_score = scoring_fn(y_test, y_pred)
-                            permuted_scores = []
-                            for _ in range(1000):
-                                y_test_permuted = np.random.permutation(y_test)
-                                permuted_score = scoring_fn(y_test_permuted, y_pred)
-                                permuted_scores.append(permuted_score)
-                            pvalues_k[scoring_fn_name] = np.mean(np.array(permuted_scores) >= obs_score)
-                        self.pvalues_[k] = pvalues_k
-                elif pval == "f" and self.sample_split == "oob_only" and\
+                if pval == "f" and self.sample_split == "oob_only" and\
                     (isinstance(self.estimator, RidgeRegressorPPM) or isinstance(self.estimator, LogisticClassifierPPM)):
                     cpartial_preds = self.estimator.predict_partial(test_blocked_data, mode="keep_rest")
+                    pval_dict = {}
                     if isinstance(self.estimator, RidgeRegressorPPM):
-                        SSEr = {k: np.sum((y_test - cpartial_preds[k]) ** 2) for k in cpartial_preds.keys()}
                         SSEc = np.sum((y_test - full_preds) ** 2)
-                        Xc_ds = np.linalg.svd(train_blocked_data.get_all_data(), compute_uv=False)
+                        Xc = train_blocked_data.get_all_data()
+                        Xc_ds = np.linalg.svd(Xc, compute_uv=False)
                         dfc = np.sum(Xc_ds ** 2 / (Xc_ds ** 2 + self.estimator.alpha_[0]))
-                        # Xc = train_blocked_data.get_all_data()
-                        # Hc = Xc @ np.linalg.inv(Xc.T @ Xc + self.estimator.alpha_ * np.eye(Xc.shape[1])) @ Xc.T
-                        # dfc = np.trace(Hc)
-                        n_blocks = train_blocked_data.n_blocks
                         n_train = y_train.shape[0]
-                        self.pvalues_ = {}
-                        for k in range(n_blocks):
-                            Xr_ds = np.linalg.svd(train_blocked_data.get_all_except_block(k), compute_uv=False)
-                            dfr = np.sum(Xr_ds ** 2 / (Xr_ds ** 2 + self.estimator.alpha_[0]))
-                            with np.errstate(divide='ignore', invalid='ignore'):
-                                Fstat = ((SSEr[k] - SSEc) / (dfc - dfr)) / (SSEc / (n_train - dfc))
-                            Fstat = np.nan_to_num(Fstat, nan=0.0, posinf=0.0, neginf=0.0)
-                            # TODO: Do we need to add 1 to df values to account for the intercept?
-                            Fpval = stats.f.sf(Fstat, dfc - dfr, n_train - (dfc + 1))
-                            Fpval = np.nan_to_num(Fpval, nan=1.0, posinf=1.0, neginf=1.0)
-                            self.pvalues_[k] = {"F": Fstat, "p": Fpval}
-                            # Xr = train_blocked_data.get_all_except_block(k)
-                            # Hr = Xr @ np.linalg.inv(Xr.T @ Xr + self.estimator.alpha_ * np.eye(Xr.shape[1])) @ Xr.T
-                            # dfr = np.trace(Hr)
+                        for k in cpartial_preds.keys():
+                            X_kc = train_blocked_data.get_all_except_block(k)
+                            if X_kc.shape[1] == Xc.shape[1]:  # if block k is empty
+                                Fstat = np.nan
+                                Fpval = np.nan
+                            else:
+                                Xr_ds = np.linalg.svd(X_kc, compute_uv=False)
+                                dfr = np.sum(Xr_ds ** 2 / (Xr_ds ** 2 + self.estimator.alpha_[0]))
+                                if isinstance(cpartial_preds[k], tuple):  # if constant model
+                                    SSEr = np.sum((y_test - cpartial_preds[k][1]) ** 2)
+                                else:
+                                    SSEr = np.sum((y_test - cpartial_preds[k]) ** 2)
+                                with np.errstate(divide='ignore', invalid='ignore'):
+                                    Fstat = ((SSEr - SSEc) / (dfc - dfr)) / (SSEc / (n_train - dfc))
+                                Fstat = np.nan_to_num(Fstat, nan=0.0, posinf=0.0, neginf=0.0)
+                                Fpval = stats.f.sf(Fstat, dfc - dfr, n_train - (dfc + 1))
+                                Fpval = np.nan_to_num(Fpval, nan=1.0, posinf=1.0, neginf=1.0)
+                            pval_dict[k] = {"F": Fstat, "p": Fpval}
+                        for key in ["F", "p"]:
+                            self.pvalues_[key] = {k: pval_dict[k][key] for k in pval_dict.keys()}
                     elif isinstance(self.estimator, LogisticClassifierPPM):
                         if self.estimator.penalty == "l2":
-                            Devr = {k: log_loss(y_test, cpartial_preds[k], normalize=False) for k in cpartial_preds.keys()}
                             Devc = log_loss(y_test, full_preds, normalize=False)
                             probc = self.estimator.predict_full(train_blocked_data)
                             weightc = probc * (1 - probc)
                             Wc_sqrt = np.sqrt(weightc).reshape(-1, 1)
-                            Xc_weighted = Wc_sqrt * train_blocked_data.get_all_data()
+                            Xc = train_blocked_data.get_all_data()
+                            Xc_weighted = Wc_sqrt * Xc
                             Xc_ds = np.linalg.svd(Xc_weighted, compute_uv=False)
-                            # TODO: check if scale of alpha is correct here
                             dfc = np.sum(Xc_ds ** 2 / (Xc_ds ** 2 + self.estimator.alpha_[0]))
-                            n_blocks = train_blocked_data.n_blocks
-                            self.pvalues_ = {}
                             probr = self.estimator.predict_partial(train_blocked_data, mode="keep_rest")
-                            for k in range(n_blocks):
-                                weightr = probr[k] * (1 - probr[k])
+                            for k in cpartial_preds.keys():
+                                if isinstance(probr[k], tuple):  # if constant model
+                                    weightr = probr[k][1] * (1 - probr[k][1])
+                                else:
+                                    weightr = probr[k] * (1 - probr[k])
                                 Wr_sqrt = np.sqrt(weightr).reshape(-1, 1)
-                                Xr_weighted = Wr_sqrt * train_blocked_data.get_all_except_block(k)
-                                Xr_ds = np.linalg.svd(Xr_weighted, compute_uv=False)
-                                dfr = np.sum(Xr_ds ** 2 / (Xr_ds ** 2 + self.estimator.alpha_[0]))
-                                chi2stat = 2 * (Devr[k] - Devc)
-                                chi2pval = stats.chi2.sf(chi2stat, dfc - dfr)
-                                chi2pval = np.nan_to_num(chi2pval, nan=1.0, posinf=1.0, neginf=1.0)
-                                self.pvalues_[k] = {"chi2": chi2stat, "p": chi2pval}
+                                X_kc = train_blocked_data.get_all_except_block(k)
+                                if X_kc.shape[1] == Xc.shape[1]:  # if block k is empty
+                                    chi2stat = np.nan
+                                    chi2pval = np.nan
+                                else:
+                                    Xr_weighted = Wr_sqrt * X_kc
+                                    Xr_ds = np.linalg.svd(Xr_weighted, compute_uv=False)
+                                    dfr = np.sum(Xr_ds ** 2 / (Xr_ds ** 2 + self.estimator.alpha_[0]))
+                                    if isinstance(cpartial_preds[k], tuple):  # if constant model
+                                        Devr = log_loss(y_test, np.ones(len(y_test)) * cpartial_preds[k][1], normalize=False)
+                                    else:
+                                        Devr = log_loss(y_test, cpartial_preds[k], normalize=False)
+                                    chi2stat = 2 * (Devr - Devc)
+                                    chi2pval = stats.chi2.sf(chi2stat, dfc - dfr)
+                                    chi2pval = np.nan_to_num(chi2pval, nan=1.0, posinf=1.0, neginf=1.0)
+                                pval_dict[k] = {"chi2": chi2stat, "p": chi2pval}
+                            for key in ["chi2", "p"]:
+                                self.pvalues_[key] = {k: pval_dict[k][key] for k in pval_dict.keys()}
                 if self.by_transformer and self.transformer._transformer_ids is not None:
                     transformer_idxs = np.hstack(
                         [val for val in self.transformer._transformer_ids.values()]
@@ -413,7 +437,6 @@ class TreeMDIPlus:
                     ppm = GenericClassifierPPM(self.estimator)
                 full_preds = ppm.predict_full(test_blocked_data)
                 partial_preds = ppm.predict_partial(test_blocked_data, mode=self.mode)
-                # TODO: code up permutation p-value for generic PPMs
                 if self.by_transformer and self.transformer._transformer_ids is not None:
                     transformer_idxs = np.hstack(
                         [val for val in self.transformer._transformer_ids.values()]
@@ -428,6 +451,33 @@ class TreeMDIPlus:
                             ppm.predict_partial(
                                 test_blocked_data, mode=self.mode, keep_idxs=keep_idxs
                             )
+            
+            if pval == "permute" and self.sample_split == "oob":
+                pval_dict = {}
+                for k in partial_preds.keys():
+                    pval_dict[k] = {}
+                    X_k = train_blocked_data.get_block(k)
+                    if X_k.shape[1] == 0:  # if block k is empty
+                        pval_dict[k] = {scoring_fn_name: np.nan for scoring_fn_name in self.scoring_fns.keys()}
+                        continue
+                    y_pred = partial_preds[k]
+                    for scoring_fn_name, scoring_fn in self.scoring_fns.items():
+                        if isinstance(y_pred, tuple):  # if constant model
+                            y_pred = np.ones_like(y_test) * y_pred[1]
+                        obs_score = scoring_fn(y_test, y_pred)
+                        permuted_scores = []
+                        for _ in range(1000):
+                            y_test_permuted = np.random.permutation(y_test)
+                            permuted_score = scoring_fn(y_test_permuted, y_pred)
+                            permuted_scores.append(permuted_score)
+                        pval_dict[k][scoring_fn_name] = np.mean(np.array(permuted_scores) >= obs_score)
+                for key in self.scoring_fns.keys():
+                    if scoring_fn_name == "importance":
+                        key_name = "permute"
+                    else:
+                        key_name = "permute_" + scoring_fn_name
+                    self.pvalues_[key_name] = {k: pval_dict[k][key] for k in pval_dict.keys()}
+
             self._score_full_predictions(y_test, full_preds)
             self._score_partial_predictions(y_test, full_preds, partial_preds)
             if self.by_transformer:
