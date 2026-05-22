@@ -546,10 +546,10 @@ class CompositeTransformer(BlockTransformerBase, ABC):
         self._trivial_block_indices[k] = \
             [idx for idx, data_block in enumerate(data_blocks) if
              _empty_or_constant(data_block)]
-        self._transformer_ids[k] = np.hstack([
+        nontrivial_transformer_ids = [
             idx * np.ones(data_block.shape[1]) for idx, data_block in enumerate(data_blocks) \
             if not _empty_or_constant(data_block)
-        ])
+        ]
         if (0 in self._trivial_block_indices[k] and self.drop_features) or \
                 (len(self._trivial_block_indices[k]) == len(data_blocks)):
             # If first block is trivial and self.drop_features is True,
@@ -558,6 +558,7 @@ class CompositeTransformer(BlockTransformerBase, ABC):
             self._transformer_ids[k] = []
             return
         else:
+            self._transformer_ids[k] = np.hstack(nontrivial_transformer_ids)
             # Remove trivial blocks
             for idx in reversed(self._trivial_block_indices[k]):
                 data_blocks.pop(idx)
@@ -601,10 +602,10 @@ class CompositeTransformer(BlockTransformerBase, ABC):
         self._trivial_block_indices[k] = \
             [idx for idx, data_block in enumerate(data_blocks) if
              _empty_or_constant(data_block)]
-        self._transformer_ids[k] = np.hstack([
+        nontrivial_transformer_ids = [
             idx * np.ones(data_block.shape[1]) for idx, data_block in enumerate(data_blocks) \
             if not _empty_or_constant(data_block)
-        ])
+        ]
         if (0 in self._trivial_block_indices[k] and self.drop_features) or \
                 (len(self._trivial_block_indices[k]) == len(data_blocks)):
             # If first block is trivial and self.drop_features is True,
@@ -614,6 +615,7 @@ class CompositeTransformer(BlockTransformerBase, ABC):
             self._transformer_ids[k] = []
             return np.empty((X.shape[0], 0))
         else:
+            self._transformer_ids[k] = np.hstack(nontrivial_transformer_ids)
             # Remove trivial blocks
             for idx in reversed(self._trivial_block_indices[k]):
                 data_blocks.pop(idx)
