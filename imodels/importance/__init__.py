@@ -6,6 +6,6 @@ from .rf_plus import RandomForestPlusRegressor, RandomForestPlusClassifier
 from .mdi_plus import ForestMDIPlus, TreeMDIPlus
 from .ppms import GenericRegressorPPM, GenericClassifierPPM, \
     GlmRegressorPPM, GlmClassifierPPM, RidgeRegressorPPM, RidgeClassifierPPM, \
-    LogisticClassifierPPM, RobustRegressorPPM, LassoRegressorPPM
+    LogisticClassifierPPM, RobustRegressorPPM, LassoRegressorPPM, OLSRegressorPPM, OLSClassifierPPM
 from .block_transformers import IdentityTransformer, TreeTransformer, \
     CompositeTransformer, MDIPlusDefaultTransformer

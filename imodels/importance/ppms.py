@@ -465,6 +465,15 @@ class RidgeClassifierPPM(_RidgePPM, GlmClassifierPPM,
         return probs
 
 
+class OLSRegressorPPM(_RidgePPM, GlmRegressorPPM,
+                      PartialPredictionModelBase, ABC):
+    """
+    PPM class for regression that uses OLS as the GLM estimator.
+    """
+    def __init__(self):
+        super().__init__(loo=False, alpha_grid=1e-6, gcv_mode='eigen')
+
+
 class LogisticClassifierPPM(GlmClassifierPPM, PartialPredictionModelBase, ABC):
     """
     PPM class for classification that uses logistic regression as the estimator.
@@ -489,9 +498,11 @@ class LogisticClassifierPPM(GlmClassifierPPM, PartialPredictionModelBase, ABC):
         assert penalty in ['l2', 'l1']
         if penalty == "l2":
             r_doubledot = constant_one_fn
+            l1_ratio = 0
         elif penalty == "l1":
             r_doubledot = None
-        super().__init__(LogisticRegression(penalty=penalty, max_iter=max_iter, **kwargs),
+            l1_ratio = 1
+        super().__init__(LogisticRegression(l1_ratio=l1_ratio, max_iter=max_iter, **kwargs),
                          loo, alpha_grid,
                          inv_link_fn=sp.special.expit,
                          l_doubledot=logistic_l_doubledot_fn,
@@ -499,6 +510,15 @@ class LogisticClassifierPPM(GlmClassifierPPM, PartialPredictionModelBase, ABC):
                          hyperparameter_scorer=log_loss,
                          trim=trim)
         self.penalty = penalty
+
+
+class OLSClassifierPPM(LogisticClassifierPPM, GlmRegressorPPM,
+                       PartialPredictionModelBase, ABC):
+    """
+    PPM class for regression that uses OLS as the GLM estimator.
+    """
+    def __init__(self):
+        super().__init__(loo=False, alpha_grid=1e-6)
 
 
 class RobustRegressorPPM(GlmRegressorPPM, PartialPredictionModelBase, ABC):
