@@ -18,6 +18,7 @@ from sklearn.ensemble import (
 )
 from sklearn.exceptions import ConvergenceWarning, NotFittedError
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.utils.validation import check_is_fitted
 
@@ -79,6 +80,8 @@ def test_defaults_match_normalized_alpha_scale_and_iteration_budget():
 
     assert model.max_iter == 2000
     assert {0.3, 3, 30}.issubset(model.sp_alpha_list)
+    assert model.selection_rule == "one_se"
+    assert model.reg_param_mode == "normalized"
 
 
 def test_repeated_fit_rebuilds_tree_from_new_data():
@@ -307,6 +310,8 @@ def test_cv_repr_uses_constructor_parameters():
         sp_alpha_list=(0,),
         reg_param_list=(0,),
         cv=2,
+        selection_rule="best",
+        reg_param_mode="raw",
     )
 
     representation = repr(model)
@@ -317,6 +322,264 @@ def test_cv_repr_uses_constructor_parameters():
     assert reconstructed.sp_alpha_list == (0,)
     assert reconstructed.reg_param_list == (0,)
     assert reconstructed.cv == 2
+    assert reconstructed.selection_rule == "best"
+    assert reconstructed.reg_param_mode == "raw"
+
+
+def test_cv_normalizes_fold_shrinkage_and_refits_full_parameter():
+    X, y = _regression_tree_data()
+    sample_weight = np.arange(1, len(y) + 1, dtype=float)
+    observed_reg_params = []
+
+    def record_reg_param(estimator, X, y):
+        observed_reg_params.append(estimator.reg_param)
+        return 0.0
+
+    model = SHSTreeRegressorCV(
+        estimator_=DecisionTreeRegressor(max_depth=2, random_state=0),
+        sp_alpha_list=(0,),
+        reg_param_list=(8,),
+        cv=2,
+        scoring=record_reg_param,
+        random_state=0,
+    ).fit(X, y, sample_weight=sample_weight)
+
+    splits = KFold(
+        n_splits=2, shuffle=True, random_state=0
+    ).split(X)
+    expected_fractions = np.array(
+        [
+            sample_weight[train].sum() / sample_weight.sum()
+            for train, _ in splits
+        ]
+    )
+    assert_allclose(model.cv_weight_fractions_, expected_fractions)
+    assert_allclose(observed_reg_params, 8 * expected_fractions)
+    assert_allclose(model.cv_reg_params_[0], 8 * expected_fractions)
+    assert model.reg_param_ == model.reg_param == 8
+
+    direct = SHSTreeRegressor(
+        estimator_=DecisionTreeRegressor(max_depth=2, random_state=0),
+        sp_alpha=0,
+        reg_param=8,
+        random_state=0,
+    ).fit(X, y, sample_weight=sample_weight)
+    assert_allclose(model.predict(X), direct.predict(X))
+
+
+def test_classifier_cv_normalization_uses_folded_class_weights():
+    X, y = _classification_data()
+    sample_weight = np.arange(1, len(y) + 1, dtype=float)
+    class_weight = {0: 1, 1: 3}
+    effective_weight = sample_weight * np.where(y == 0, 1, 3)
+    observed_reg_params = []
+
+    def record_reg_param(estimator, X, y):
+        observed_reg_params.append(estimator.reg_param)
+        return 0.0
+
+    model = SHSTreeClassifierCV(
+        estimator_=DecisionTreeClassifier(
+            max_depth=2,
+            class_weight=class_weight,
+            random_state=0,
+        ),
+        sp_alpha_list=(0,),
+        reg_param_list=(8,),
+        cv=2,
+        scoring=record_reg_param,
+        random_state=0,
+    ).fit(X, y, sample_weight=sample_weight)
+
+    splits = StratifiedKFold(
+        n_splits=2, shuffle=True, random_state=0
+    ).split(X, y)
+    expected_fractions = np.array(
+        [
+            effective_weight[train].sum() / effective_weight.sum()
+            for train, _ in splits
+        ]
+    )
+    assert_allclose(model.cv_weight_fractions_, expected_fractions)
+    assert_allclose(observed_reg_params, 8 * expected_fractions)
+
+
+def test_cv_raw_and_constant_shrinkage_are_not_fold_scaled():
+    X, y = _regression_tree_data()
+    sample_weight = np.arange(1, len(y) + 1, dtype=float)
+
+    for mode, scheme in (("raw", "node_based"), ("normalized", "constant")):
+        observed_reg_params = []
+
+        def record_reg_param(estimator, X, y):
+            observed_reg_params.append(estimator.reg_param)
+            return 0.0
+
+        model = SHSTreeRegressorCV(
+            sp_alpha_list=(0,),
+            reg_param_list=(8,),
+            cv=2,
+            scoring=record_reg_param,
+            reg_param_mode=mode,
+            random_state=0,
+        )
+        model.shrinkage_scheme_ = scheme
+        model.fit(X, y, sample_weight=sample_weight)
+
+        assert_allclose(observed_reg_params, [8, 8])
+        assert model.shrinkage_scheme_ == scheme
+
+
+@pytest.mark.parametrize("task", ["regression", "classification"])
+def test_cv_default_one_se_selects_simplest_competitive_tree(task):
+    if task == "regression":
+        X, y = _regression_tree_data()
+        estimator = DecisionTreeRegressor(max_depth=2, random_state=0)
+        cv_class = SPTreeRegressorCV
+    else:
+        X, y = _classification_data()
+        estimator = DecisionTreeClassifier(max_depth=2, random_state=0)
+        cv_class = SPTreeClassifierCV
+
+    def zero_solver(**kwargs):
+        return np.zeros(kwargs["X"].shape[1])
+
+    def competitive_score(estimator, X, y):
+        if estimator.sp_alpha == 0:
+            return 1.2 if np.mean(X) > 3.5 else 0.8
+        return 0.9
+
+    common = {
+        "estimator_": estimator,
+        "sp_alpha_list": (0, 1),
+        "reg_param_list": (0,),
+        "cv": 2,
+        "scoring": competitive_score,
+        "random_state": 0,
+    }
+    one_se = cv_class(**common)
+    one_se.hiCAP = zero_solver
+    one_se.fit(X, y)
+
+    assert one_se.best_index_ == 0
+    assert one_se.selected_index_ == 1
+    assert one_se.sp_alpha_ == 1
+    assert one_se.mean_complexity_[1] == 0
+    assert one_se.mean_complexity_[0] > 0
+    assert_allclose(one_se.cv_score_se_[0], 0.2)
+    assert_allclose(one_se.selection_threshold_, 0.8)
+    assert_array_equal(one_se.one_se_candidate_mask_, [True, True])
+    assert one_se.complexity_ == 0
+
+    best = cv_class(**common, selection_rule="best")
+    best.hiCAP = zero_solver
+    best.fit(X, y)
+
+    assert best.selected_index_ == best.best_index_ == 0
+    assert best.sp_alpha_ == 0
+    assert best.complexity_ > 0
+
+
+def test_cv_one_se_tie_prefers_stronger_shrinkage():
+    X, y = _regression_tree_data()
+
+    def tied_score(estimator, X, y):
+        return 0.0
+
+    model = SHSTreeRegressorCV(
+        sp_alpha_list=(0,),
+        reg_param_list=(0, 1, 10),
+        cv=2,
+        scoring=tied_score,
+        random_state=0,
+    ).fit(X, y)
+
+    assert model.reg_param_ == 10
+    assert model.selected_index_ == 2
+
+
+def test_cv_excludes_candidates_with_nonfinite_aggregate_scores():
+    X, y = _regression_tree_data()
+
+    def zero_solver(**kwargs):
+        return np.zeros(kwargs["X"].shape[1])
+
+    def overflowing_score(estimator, X, y):
+        if estimator.sp_alpha == 0:
+            return np.finfo(float).max
+        return 0.0
+
+    model = SPTreeRegressorCV(
+        sp_alpha_list=(0, 1),
+        reg_param_list=(0,),
+        cv=2,
+        scoring=overflowing_score,
+        selection_rule="best",
+        random_state=0,
+    )
+    model.hiCAP = zero_solver
+    model.fit(X, y)
+
+    assert np.isinf(model.scores_[0])
+    assert model.best_index_ == model.selected_index_ == 1
+    assert model.sp_alpha_ == 1
+
+
+def test_cv_caches_pruning_and_retains_candidate_fold_results():
+    X, y = _regression_tree_data()
+    solver_calls = []
+
+    def active_solver(**kwargs):
+        solver_calls.append((len(kwargs["y"]), kwargs["lam"]))
+        return np.ones(kwargs["X"].shape[1])
+
+    def prefer_alpha_one_reg_ten(estimator, X, y):
+        return -abs(estimator.sp_alpha - 1) - abs(
+            estimator.reg_param - 10
+        )
+
+    model = SPTreeRegressorCV(
+        estimator_=DecisionTreeRegressor(max_depth=2, random_state=0),
+        sp_alpha_list=(1, 2),
+        reg_param_list=(0, 1, 10),
+        cv=2,
+        scoring=prefer_alpha_one_reg_ten,
+        selection_rule="best",
+        reg_param_mode="raw",
+        random_state=0,
+    )
+    model.hiCAP = active_solver
+    model.fit(X, y)
+
+    assert sorted(solver_calls) == [
+        (4, 1),
+        (4, 1),
+        (4, 2),
+        (4, 2),
+        (8, 1),
+    ]
+    assert model.cv_scores_.shape == (6, 2)
+    assert model.cv_complexities_.shape == (6, 2)
+    assert model.cv_reg_params_.shape == (6, 2)
+    assert_allclose(model.scores_, model.cv_scores_.mean(axis=1))
+    assert model.cv_params_ == [
+        {"sp_alpha": 1, "reg_param": 0},
+        {"sp_alpha": 1, "reg_param": 1},
+        {"sp_alpha": 1, "reg_param": 10},
+        {"sp_alpha": 2, "reg_param": 0},
+        {"sp_alpha": 2, "reg_param": 1},
+        {"sp_alpha": 2, "reg_param": 10},
+    ]
+    assert_allclose(
+        model.cv_reg_params_,
+        [[0, 0], [1, 1], [10, 10], [0, 0], [1, 1], [10, 10]],
+    )
+    assert all(
+        len(candidate_results) == 2
+        for candidate_results in model.cv_optimization_results_
+    )
+    assert model.sp_alpha_ == 1
+    assert model.reg_param_ == 10
 
 
 def test_cv_uses_sklearn_higher_is_better_scorer_convention():
@@ -814,6 +1077,26 @@ def test_cv_rejects_invalid_parameter_grids(grid_name, grid):
 
     with pytest.raises(ValueError, match=grid_name):
         SPTreeRegressorCV(**kwargs).fit(X, y)
+
+
+@pytest.mark.parametrize(
+    ("parameter", "value"),
+    [
+        ("selection_rule", "smallest"),
+        ("reg_param_mode", "relative"),
+    ],
+)
+def test_cv_rejects_invalid_selection_policy(parameter, value):
+    X, y = _regression_tree_data()
+    model = SPTreeRegressorCV(
+        sp_alpha_list=(0,),
+        reg_param_list=(0,),
+        cv=2,
+        **{parameter: value},
+    )
+
+    with pytest.raises(ValueError, match=parameter):
+        model.fit(X, y)
 
 
 def test_cv_rejects_zero_total_weight_fold_clearly():

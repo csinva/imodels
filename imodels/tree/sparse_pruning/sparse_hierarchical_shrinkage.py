@@ -441,20 +441,36 @@ class SHSTree(BaseEstimator):
             "beta_stars_",
             "classes_",
             "complexity_",
+            "cv_complexities_",
             "cv_optimization_certified_",
             "cv_optimization_results_",
             "cv_optimization_stable_",
+            "cv_params_",
+            "cv_reg_params_",
+            "cv_score_se_",
+            "cv_score_std_",
+            "cv_scores_",
+            "cv_weight_fractions_",
             "feature_names_in_",
             "feature_names_",
+            "best_index_",
+            "best_score_",
+            "best_sp_alpha_",
+            "best_reg_param_",
+            "mean_complexity_",
             "n_features_in_",
             "n_iter_",
             "oob_attributes_invalidated_",
+            "one_se_candidate_mask_",
             "optimization_certified_",
             "optimization_results_",
             "optimization_stable_",
             "prune_set_",
             "reg_param_",
             "scores_",
+            "selected_index_",
+            "selection_rule_",
+            "selection_threshold_",
             "sp_alpha_",
             "support_thresholds_",
         ):
@@ -1449,7 +1465,251 @@ def _prepare_cv_data(X, y, feature_names=None):
     return X, y, feature_names
 
 
+def _validate_cv_policy(selection_rule, reg_param_mode) -> None:
+    if selection_rule not in {"one_se", "best"}:
+        raise ValueError("selection_rule must be one of {'one_se', 'best'}")
+    if reg_param_mode not in {"normalized", "raw"}:
+        raise ValueError(
+            "reg_param_mode must be one of {'normalized', 'raw'}"
+        )
+
+
+def _effective_weight_sum(sample_weight, n_samples) -> float:
+    if sample_weight is None:
+        return float(n_samples)
+    return float(np.sum(sample_weight))
+
+
+def _fold_reg_param(
+    estimator,
+    reg_param: float,
+    fold_weight_fraction: float,
+) -> float:
+    """Return the shrinkage parameter used inside one CV training fold.
+
+    In normalized mode, grid values are full-data reference values. Scaling
+    them by the training-fold fraction keeps count-based HST shrinkage at
+    approximately the same relative strength when tree root masses scale with
+    total training mass. This is dataset-mass normalization, not per-tree root
+    normalization; notably, a forest with fixed integer ``max_samples`` need
+    not have scaling root masses. Constant shrinkage is already independent of
+    node sample counts.
+    """
+    if (
+        estimator.reg_param_mode == "normalized"
+        and estimator.shrinkage_scheme_ != "constant"
+    ):
+        return float(reg_param) * fold_weight_fraction
+    return float(reg_param)
+
+
+def _initialize_cv_tracking(estimator, param_list) -> None:
+    n_candidates = len(param_list)
+    estimator.cv_params_ = [
+        {"sp_alpha": sp_alpha, "reg_param": reg_param}
+        for sp_alpha, reg_param in param_list
+    ]
+    estimator.cv_scores_ = [[] for _ in param_list]
+    estimator.cv_complexities_ = [[] for _ in param_list]
+    estimator.cv_reg_params_ = [[] for _ in param_list]
+    # Indexed as [candidate][fold][tree]. Cached pruning diagnostics are
+    # duplicated across shrinkage values to preserve the public indexing.
+    estimator.cv_optimization_results_ = [
+        [] for _ in range(n_candidates)
+    ]
+    estimator.cv_weight_fractions_ = []
+
+
+def _evaluate_cached_cv_fold(
+    estimator,
+    wrapper_class,
+    base_estimator,
+    X_in,
+    y_prune,
+    y_shrink,
+    X_out,
+    y_out,
+    weight_in,
+    weight_out,
+    sp_alpha_list,
+    reg_param_list,
+    scorer,
+    fold_weight_fraction,
+    decimals,
+    classes=None,
+) -> None:
+    """Prune once per alpha, then score fresh shrinkage copies."""
+    n_reg_params = len(reg_param_list)
+    for alpha_index, sp_alpha in enumerate(sp_alpha_list):
+        pruned = wrapper_class(
+            estimator_=deepcopy(base_estimator),
+            sp_alpha=sp_alpha,
+            reg_param=0,
+            prune_set=estimator.prune_set,
+            random_state=estimator.random_state,
+            gamma1=estimator.gamma1,
+            a=estimator.a,
+            max_iter=estimator.max_iter,
+            tol=estimator.tol,
+            ord=estimator.ord,
+            support_tol=estimator.support_tol,
+            prefit=True,
+        )
+        pruned.hiCAP = estimator.hiCAP
+        pruned.shrinkage_scheme_ = estimator.shrinkage_scheme_
+        if classes is not None:
+            pruned.classes_ = classes
+        pruned.n_features_in_ = X_in.shape[1]
+        pruned._prune(
+            X=X_in,
+            y=y_prune,
+            sample_weight=weight_in,
+            decimals=decimals,
+            beta_init=None,
+        )
+        pruned.prune_set_ = pruned._resolved_prune_set()
+        pruned._update_optimization_diagnostics(warn=False)
+        pruned._update_estimator_metadata()
+        pruning_results = deepcopy(pruned.optimization_results_)
+
+        for reg_index, reg_param in enumerate(reg_param_list):
+            candidate_index = alpha_index * n_reg_params + reg_index
+            effective_reg_param = _fold_reg_param(
+                estimator, reg_param, fold_weight_fraction
+            )
+            candidate = deepcopy(pruned)
+            candidate.reg_param = effective_reg_param
+            candidate._shrink(X=X_in, y=y_shrink)
+            candidate._update_estimator_metadata()
+
+            score = _score_with_optional_sample_weight(
+                scorer, candidate, X_out, y_out, weight_out
+            )
+            estimator.cv_scores_[candidate_index].append(float(score))
+            estimator.cv_complexities_[candidate_index].append(
+                float(candidate.complexity_)
+            )
+            estimator.cv_reg_params_[candidate_index].append(
+                effective_reg_param
+            )
+            estimator.cv_optimization_results_[candidate_index].append(
+                deepcopy(pruning_results)
+            )
+
+
+def _finalize_cv_selection(estimator, param_list) -> None:
+    estimator.cv_scores_ = np.asarray(estimator.cv_scores_, dtype=float)
+    estimator.cv_complexities_ = np.asarray(
+        estimator.cv_complexities_, dtype=float
+    )
+    estimator.cv_reg_params_ = np.asarray(
+        estimator.cv_reg_params_, dtype=float
+    )
+    estimator.cv_weight_fractions_ = np.asarray(
+        estimator.cv_weight_fractions_, dtype=float
+    )
+
+    with np.errstate(over="ignore", invalid="ignore"):
+        estimator.scores_ = np.mean(estimator.cv_scores_, axis=1)
+        estimator.cv_score_std_ = np.std(
+            estimator.cv_scores_, axis=1, ddof=1
+        )
+        estimator.cv_score_se_ = estimator.cv_score_std_ / np.sqrt(
+            estimator.cv_scores_.shape[1]
+        )
+        estimator.mean_complexity_ = np.mean(
+            estimator.cv_complexities_, axis=1
+        )
+
+    finite_candidates = np.all(
+        np.isfinite(estimator.cv_scores_), axis=1
+    ) & np.isfinite(
+        estimator.scores_
+    ) & np.isfinite(
+        estimator.cv_score_se_
+    ) & np.isfinite(
+        estimator.mean_complexity_
+    )
+    if not np.any(finite_candidates):
+        raise ValueError("Cross-validation produced no finite scores")
+    finite_indices = np.flatnonzero(finite_candidates)
+    estimator.best_index_ = int(
+        finite_indices[
+            np.argmax(estimator.scores_[finite_candidates])
+        ]
+    )
+    estimator.best_score_ = float(
+        estimator.scores_[estimator.best_index_]
+    )
+    estimator.best_sp_alpha_, estimator.best_reg_param_ = param_list[
+        estimator.best_index_
+    ]
+    estimator.selection_threshold_ = (
+        estimator.best_score_
+        - estimator.cv_score_se_[estimator.best_index_]
+    )
+    estimator.one_se_candidate_mask_ = (
+        finite_candidates
+        & np.isfinite(estimator.mean_complexity_)
+        & (estimator.scores_ >= estimator.selection_threshold_)
+    )
+
+    if estimator.selection_rule == "best":
+        selected_index = estimator.best_index_
+    else:
+        eligible = np.flatnonzero(estimator.one_se_candidate_mask_)
+        minimum_complexity = np.min(
+            estimator.mean_complexity_[eligible]
+        )
+        simplest = eligible[
+            np.isclose(
+                estimator.mean_complexity_[eligible],
+                minimum_complexity,
+                rtol=0,
+                atol=1e-12,
+            )
+        ]
+        simplest_best_score = np.max(estimator.scores_[simplest])
+        score_tied = simplest[
+            np.isclose(
+                estimator.scores_[simplest],
+                simplest_best_score,
+                rtol=0,
+                atol=1e-12,
+            )
+        ]
+        # Split count cannot distinguish shrinkage values on the same
+        # topology. When their CV scores are numerically tied, prefer the
+        # stronger shrinkage and then the stronger sparse penalty.
+        selected_index = int(
+            max(
+                score_tied,
+                key=lambda index: (
+                    param_list[index][1],
+                    param_list[index][0],
+                    -index,
+                ),
+            )
+        )
+
+    estimator.selected_index_ = selected_index
+    estimator.selection_rule_ = estimator.selection_rule
+    estimator.sp_alpha_, estimator.reg_param_ = param_list[selected_index]
+
+
 class SHSTreeClassifierCV(SHSTreeClassifier):
+    """Joint CV for sparse pruning and hierarchical shrinkage.
+
+    The default one-standard-error rule chooses the lowest observed mean split
+    complexity whose score is within one standard error of the best candidate.
+    Score and complexity ties prefer stronger shrinkage and sparse penalties.
+    In normalized reg-parameter mode, grid values are full-data reference
+    values and count-based shrinkage is scaled by each fold's effective
+    training-weight fraction. This is dataset-mass, not per-tree root-mass,
+    normalization. Set ``selection_rule='best'`` and
+    ``reg_param_mode='raw'`` for the historical joint-argmax behavior.
+    """
+
     def __init__(
         self,
         estimator_: BaseEstimator | None = None,
@@ -1458,6 +1718,8 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
+        selection_rule: str = "one_se",
+        reg_param_mode: str = "normalized",
         prune_set: str = "auto",
         random_state: int | None = None,
         gamma1: float = 1.0,
@@ -1487,6 +1749,8 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
         self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
+        self.selection_rule = selection_rule
+        self.reg_param_mode = reg_param_mode
 
     def fit(
         self,
@@ -1503,6 +1767,7 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
                 "prefit=True is incompatible with cross-validation tuning"
             )
         self._validate_hyperparameters(allow_unset=True)
+        _validate_cv_policy(self.selection_rule, self.reg_param_mode)
         self._fresh_estimator()
         feature_names = kwargs.pop("feature_names", None)
         X, y, feature_names = _prepare_cv_data(X, y, feature_names)
@@ -1535,10 +1800,24 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
             self.reg_param_list, "reg_param_list"
         )
         param_list = list(itertools.product(sp_alpha_list, reg_param_list))
-        self.scores_ = [[] for _ in param_list]
-        # Indexed as [candidate][fold][tree]. This retains diagnostics for
-        # every candidate, including candidates not selected for the final fit.
-        self.cv_optimization_results_ = [[] for _ in param_list]
+        _initialize_cv_tracking(self, param_list)
+        sparse_pruning_requested = any(
+            sp_alpha > 0 for sp_alpha in sp_alpha_list
+        )
+        normalization_estimator = clone(self._base_estimator_template())
+        (
+            normalization_estimator,
+            full_effective_weight,
+        ) = self._fold_class_weight_into_sample_weight(
+            normalization_estimator,
+            y,
+            sample_weight,
+            sparse_pruning_requested=sparse_pruning_requested,
+        )
+        del normalization_estimator
+        full_weight_sum = _effective_weight_sum(
+            full_effective_weight, len(y)
+        )
         scorer = _resolve_cv_scorer(
             kwargs.pop("scoring", self.scoring), classification=True
         )
@@ -1604,9 +1883,7 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
                 base_est,
                 y_in,
                 weight_in,
-                sparse_pruning_requested=any(
-                    sp_alpha > 0 for sp_alpha in sp_alpha_list
-                ),
+                sparse_pruning_requested=sparse_pruning_requested,
             )
             if (
                 weight_in is not None
@@ -1631,43 +1908,29 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
                 **kwargs,
             )
             self._validate_fitted_tree_estimator(base_est)
-            for i, (sp_alpha, reg_param) in enumerate(param_list):
-                est_shs = SHSTreeClassifier(
-                    estimator_=deepcopy(base_est),
-                    sp_alpha=sp_alpha,
-                    reg_param=reg_param,
-                    prune_set=self.prune_set,
-                    random_state=self.random_state,
-                    gamma1=self.gamma1,
-                    a=self.a,
-                    max_iter=self.max_iter,
-                    tol=self.tol,
-                    ord=self.ord,
-                    support_tol=self.support_tol,
-                    prefit=True,
-                )
-                est_shs.hiCAP = self.hiCAP
-                est_shs.classes_ = classes
-                est_shs.n_features_in_ = X.shape[1]
-                est_shs._prune(
-                    X=X_in,
-                    y=y_in_encoded,
-                    sample_weight=weight_in,
-                    decimals=decimals,
-                    beta_init=None,
-                )
-                est_shs.prune_set_ = est_shs._resolved_prune_set()
-                est_shs._update_optimization_diagnostics(warn=False)
-                est_shs._shrink(X=X_in, y=y_in)
-                est_shs._update_estimator_metadata()
-                self.cv_optimization_results_[i].append(
-                    deepcopy(est_shs.optimization_results_)
-                )
-                self.scores_[i].append(
-                    _score_with_optional_sample_weight(
-                        scorer, est_shs, X_out, y_out, weight_out
-                    )
-                )
+            fold_weight_fraction = (
+                _effective_weight_sum(weight_in, len(y_in))
+                / full_weight_sum
+            )
+            self.cv_weight_fractions_.append(fold_weight_fraction)
+            _evaluate_cached_cv_fold(
+                estimator=self,
+                wrapper_class=SHSTreeClassifier,
+                base_estimator=base_est,
+                X_in=X_in,
+                y_prune=y_in_encoded,
+                y_shrink=y_in,
+                X_out=X_out,
+                y_out=y_out,
+                weight_in=weight_in,
+                weight_out=weight_out,
+                sp_alpha_list=sp_alpha_list,
+                reg_param_list=reg_param_list,
+                scorer=scorer,
+                fold_weight_fraction=fold_weight_fraction,
+                decimals=decimals,
+                classes=classes,
+            )
         flat_cv_optimization_results = [
             result
             for candidate_results in self.cv_optimization_results_
@@ -1695,12 +1958,7 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
                 ConvergenceWarning,
                 stacklevel=2,
             )
-        self.scores_ = np.asarray([np.mean(s) for s in self.scores_])
-        if not np.any(np.isfinite(self.scores_)):
-            raise ValueError("Cross-validation produced no finite scores")
-        self.sp_alpha_, self.reg_param_ = param_list[
-            int(np.nanargmax(self.scores_))
-        ]
+        _finalize_cv_selection(self, param_list)
         # Operational values used by the final parent fit. They are selected
         # results, not constructor parameters for the CV estimator.
         self.sp_alpha = self.sp_alpha_
@@ -1725,12 +1983,26 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
                 "reg_param_list": self.reg_param_list,
                 "cv": self.cv,
                 "scoring": self.scoring,
+                "selection_rule": self.selection_rule,
+                "reg_param_mode": self.reg_param_mode,
             }
         )
         return params
 
 
 class SHSTreeRegressorCV(SHSTreeRegressor):
+    """Joint CV for sparse pruning and hierarchical shrinkage.
+
+    The default one-standard-error rule chooses the lowest observed mean split
+    complexity whose score is within one standard error of the best candidate.
+    Score and complexity ties prefer stronger shrinkage and sparse penalties.
+    In normalized reg-parameter mode, grid values are full-data reference
+    values and count-based shrinkage is scaled by each fold's effective
+    training-weight fraction. This is dataset-mass, not per-tree root-mass,
+    normalization. Set ``selection_rule='best'`` and
+    ``reg_param_mode='raw'`` for the historical joint-argmax behavior.
+    """
+
     def __init__(
         self,
         estimator_: BaseEstimator | None = None,
@@ -1747,6 +2019,8 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
+        selection_rule: str = "one_se",
+        reg_param_mode: str = "normalized",
         prune_set: str = "auto",
         random_state: int | None = None,
         gamma1: float = 1.0,
@@ -1776,6 +2050,8 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
         self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
+        self.selection_rule = selection_rule
+        self.reg_param_mode = reg_param_mode
 
     def fit(
         self,
@@ -1792,6 +2068,7 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
                 "prefit=True is incompatible with cross-validation tuning"
             )
         self._validate_hyperparameters(allow_unset=True)
+        _validate_cv_policy(self.selection_rule, self.reg_param_mode)
         self._fresh_estimator()
         feature_names = kwargs.pop("feature_names", None)
         X, y, feature_names = _prepare_cv_data(X, y, feature_names)
@@ -1804,10 +2081,8 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
             self.reg_param_list, "reg_param_list"
         )
         param_list = list(itertools.product(sp_alpha_list, reg_param_list))
-        self.scores_ = [[] for _ in param_list]
-        # Indexed as [candidate][fold][tree]. This retains diagnostics for
-        # every candidate, including candidates not selected for the final fit.
-        self.cv_optimization_results_ = [[] for _ in param_list]
+        _initialize_cv_tracking(self, param_list)
+        full_weight_sum = _effective_weight_sum(sample_weight, len(y))
         scorer = _resolve_cv_scorer(
             kwargs.pop("scoring", self.scoring), classification=False
         )
@@ -1867,42 +2142,28 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
                 **kwargs,
             )
             self._validate_fitted_tree_estimator(base_est)
-            for i, (sp_alpha, reg_param) in enumerate(param_list):
-                est_shs = SHSTreeRegressor(
-                    estimator_=deepcopy(base_est),
-                    sp_alpha=sp_alpha,
-                    reg_param=reg_param,
-                    prune_set=self.prune_set,
-                    random_state=self.random_state,
-                    gamma1=self.gamma1,
-                    a=self.a,
-                    max_iter=self.max_iter,
-                    tol=self.tol,
-                    ord=self.ord,
-                    support_tol=self.support_tol,
-                    prefit=True,
-                )
-                est_shs.hiCAP = self.hiCAP
-                est_shs.n_features_in_ = X.shape[1]
-                est_shs._prune(
-                    X=X_in,
-                    y=y_in,
-                    sample_weight=weight_in,
-                    decimals=decimals,
-                    beta_init=None,
-                )
-                est_shs.prune_set_ = est_shs._resolved_prune_set()
-                est_shs._update_optimization_diagnostics(warn=False)
-                est_shs._shrink(X=X_in, y=y_in)
-                est_shs._update_estimator_metadata()
-                self.cv_optimization_results_[i].append(
-                    deepcopy(est_shs.optimization_results_)
-                )
-                self.scores_[i].append(
-                    _score_with_optional_sample_weight(
-                        scorer, est_shs, X_out, y_out, weight_out
-                    )
-                )
+            fold_weight_fraction = (
+                _effective_weight_sum(weight_in, len(y_in))
+                / full_weight_sum
+            )
+            self.cv_weight_fractions_.append(fold_weight_fraction)
+            _evaluate_cached_cv_fold(
+                estimator=self,
+                wrapper_class=SHSTreeRegressor,
+                base_estimator=base_est,
+                X_in=X_in,
+                y_prune=y_in,
+                y_shrink=y_in,
+                X_out=X_out,
+                y_out=y_out,
+                weight_in=weight_in,
+                weight_out=weight_out,
+                sp_alpha_list=sp_alpha_list,
+                reg_param_list=reg_param_list,
+                scorer=scorer,
+                fold_weight_fraction=fold_weight_fraction,
+                decimals=decimals,
+            )
         flat_cv_optimization_results = [
             result
             for candidate_results in self.cv_optimization_results_
@@ -1930,12 +2191,7 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
                 ConvergenceWarning,
                 stacklevel=2,
             )
-        self.scores_ = np.asarray([np.mean(s) for s in self.scores_])
-        if not np.any(np.isfinite(self.scores_)):
-            raise ValueError("Cross-validation produced no finite scores")
-        self.sp_alpha_, self.reg_param_ = param_list[
-            int(np.nanargmax(self.scores_))
-        ]
+        _finalize_cv_selection(self, param_list)
         self.sp_alpha = self.sp_alpha_
         self.reg_param = self.reg_param_
         return super().fit(
@@ -1958,6 +2214,8 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
                 "reg_param_list": self.reg_param_list,
                 "cv": self.cv,
                 "scoring": self.scoring,
+                "selection_rule": self.selection_rule,
+                "reg_param_mode": self.reg_param_mode,
             }
         )
         return params
@@ -2040,6 +2298,8 @@ class SPTreeRegressorCV(SHSTreeRegressorCV):
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
+        selection_rule: str = "one_se",
+        reg_param_mode: str = "normalized",
         prune_set: str = "auto",
         random_state: int | None = None,
         gamma1: float = 1.0,
@@ -2057,6 +2317,8 @@ class SPTreeRegressorCV(SHSTreeRegressorCV):
             max_leaf_nodes=max_leaf_nodes,
             cv=cv,
             scoring=scoring,
+            selection_rule=selection_rule,
+            reg_param_mode=reg_param_mode,
             prune_set=prune_set,
             random_state=random_state,
             gamma1=gamma1,
@@ -2078,6 +2340,8 @@ class SPTreeClassifierCV(SHSTreeClassifierCV):
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
+        selection_rule: str = "one_se",
+        reg_param_mode: str = "normalized",
         prune_set: str = "auto",
         random_state: int | None = None,
         gamma1: float = 1.0,
@@ -2095,6 +2359,8 @@ class SPTreeClassifierCV(SHSTreeClassifierCV):
             max_leaf_nodes=max_leaf_nodes,
             cv=cv,
             scoring=scoring,
+            selection_rule=selection_rule,
+            reg_param_mode=reg_param_mode,
             prune_set=prune_set,
             random_state=random_state,
             gamma1=gamma1,
