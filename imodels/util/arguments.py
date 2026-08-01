@@ -47,6 +47,23 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
     return X, y, model.feature_names_
 
 
+def check_binary_target(model, y):
+    """Raise if y has more than two classes, for models that only handle binary.
+
+    Without this a multiclass target is silently collapsed: the model fits, and
+    predict_proba returns two columns rather than one per class
+    (see https://github.com/csinva/imodels/issues/93).
+    """
+    n_classes = len(np.unique(y))
+    if n_classes > 2:
+        raise ValueError(
+            f"{type(model).__name__} only supports binary classification, but y "
+            f"has {n_classes} classes. Models in imodels that do support "
+            "multiclass include FIGSClassifier, GreedyTreeClassifier, "
+            "HSTreeClassifier, TaoTreeClassifier and BoostedRulesClassifier."
+        )
+
+
 def _finite_check_kwarg(allow_nan):
     """Spell the "allow NaN" option the way the installed sklearn expects.
 

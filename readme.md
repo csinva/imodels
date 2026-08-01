@@ -184,6 +184,13 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
 
 
+**Multiclass.** These classifiers handle more than two classes: `FIGSClassifier`,
+`GreedyTreeClassifier`, `HSTreeClassifier`, `TaoTreeClassifier`,
+`BoostedRulesClassifier`, `SLIMClassifier`, `DecisionTreeCCPClassifier` and the
+`CV` variants. The rule-set and rule-list models are binary-only and raise a
+clear error if given a multiclass target, rather than silently treating it as
+binary.
+
 **Categorical features.** `FIGS` takes them directly — pass the column names and
 it one-hot encodes them internally, remembering them for `predict`:
 
