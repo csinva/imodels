@@ -9,9 +9,6 @@ Note that some models (e.g. the ones below) require extra dependencies:
 ```python
 extra_deps = [
     'cvxpy',  # optionally requires cvxpy for slim
-    'corels',  # optionally requires corels for optimalrulelistclassifier
-    'gosdt',  # optionally requires gosdt for optimaltreeclassifier
-    'irf',  # optionally require irf for iterativeRandomForestClassifier
 ]
 ```
 

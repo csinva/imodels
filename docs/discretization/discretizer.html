@@ -24,6 +24,7 @@
 <pre><code class="python">import numbers
 
 import numpy as np
+import scipy.sparse
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -247,6 +248,8 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
             numeric_cols = [
                 col for col in X.columns if is_numeric_dtype(X[col].dtype)]
             self.dcols_ = numeric_cols
+        else:
+            self.dcols_ = list(self.dcols)
 
         # error checking
         self._validate_n_bins()
@@ -286,6 +289,10 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
                 onehot_col_names = self.onehot_.get_feature_names(
                     colnames)  # older versions of sklearn
             discretized_df = self.onehot_.transform(discretized_df.astype(str))
+            if scipy.sparse.issparse(discretized_df):
+                # OneHotEncoder returns a sparse matrix by default, which pandas
+                # would otherwise store as a single column of sparse rows
+                discretized_df = discretized_df.toarray()
             discretized_df = pd.DataFrame(discretized_df,
                                           columns=onehot_col_names,
                                           index=X.index).astype(int)
@@ -411,14 +418,21 @@ class ExtraBasicDiscretizer(TransformerMixin):
 
         # One-hot encode the ordinal DF
         disc_onehot_np = self.encoder_.transform(disc_ordinal_df_str)
+        if scipy.sparse.issparse(disc_onehot_np):
+            # OneHotEncoder returns a sparse matrix by default, which pandas
+            # would otherwise store as a single column of sparse rows
+            disc_onehot_np = disc_onehot_np.toarray()
         disc_onehot = pd.DataFrame(
-            disc_onehot_np, columns=self.encoder_.get_feature_names_out())
+            disc_onehot_np, columns=self.encoder_.get_feature_names_out(),
+            index=X.index)
 
         # Name columns after the interval they represent (e.g. 0.1_to_0.5)
         for col, bin_edges in zip(self.dcols, self.discretizer_.bin_edges_):
             bin_edges = bin_edges.astype(str)
 
-            for ordinal_value in disc_ordinal_df_str[col].unique():
+            # every bin learned during fit, not just the ones present in X, so
+            # that transform gives the same columns whatever data it is given
+            for ordinal_value in range(len(bin_edges) - 1):
                 bin_lb = bin_edges[int(ordinal_value)]
                 bin_ub = bin_edges[int(ordinal_value) + 1]
                 interval_string = f&#39;{bin_lb}_to_{bin_ub}&#39;
@@ -878,7 +892,8 @@ class RFDiscretizer(AbstractDiscretizer):
         self.bin_edges_ = dict()
         for col in self.dcols_:
             if col in self.rf_splits.keys():
-                b = self.n_bins[np.array(self.dcols_) == col]
+                # .item(): numpy no longer converts a size-1 array to a scalar
+                b = self.n_bins[np.array(self.dcols_) == col].item()
                 if self.strategy == &#34;quantile&#34;:
                     q_values = np.linspace(0, 1, int(b) + 1)
                     bin_edges = np.quantile(self.rf_splits[col], q_values)
@@ -1199,6 +1214,8 @@ per feature when encode = "onehot".</p>
             numeric_cols = [
                 col for col in X.columns if is_numeric_dtype(X[col].dtype)]
             self.dcols_ = numeric_cols
+        else:
+            self.dcols_ = list(self.dcols)
 
         # error checking
         self._validate_n_bins()
@@ -1238,6 +1255,10 @@ per feature when encode = "onehot".</p>
                 onehot_col_names = self.onehot_.get_feature_names(
                     colnames)  # older versions of sklearn
             discretized_df = self.onehot_.transform(discretized_df.astype(str))
+            if scipy.sparse.issparse(discretized_df):
+                # OneHotEncoder returns a sparse matrix by default, which pandas
+                # would otherwise store as a single column of sparse rows
+                discretized_df = discretized_df.toarray()
             discretized_df = pd.DataFrame(discretized_df,
                                           columns=onehot_col_names,
                                           index=X.index).astype(int)
@@ -1801,14 +1822,21 @@ per feature when encode = "onehot".</p>
 
         # One-hot encode the ordinal DF
         disc_onehot_np = self.encoder_.transform(disc_ordinal_df_str)
+        if scipy.sparse.issparse(disc_onehot_np):
+            # OneHotEncoder returns a sparse matrix by default, which pandas
+            # would otherwise store as a single column of sparse rows
+            disc_onehot_np = disc_onehot_np.toarray()
         disc_onehot = pd.DataFrame(
-            disc_onehot_np, columns=self.encoder_.get_feature_names_out())
+            disc_onehot_np, columns=self.encoder_.get_feature_names_out(),
+            index=X.index)
 
         # Name columns after the interval they represent (e.g. 0.1_to_0.5)
         for col, bin_edges in zip(self.dcols, self.discretizer_.bin_edges_):
             bin_edges = bin_edges.astype(str)
 
-            for ordinal_value in disc_ordinal_df_str[col].unique():
+            # every bin learned during fit, not just the ones present in X, so
+            # that transform gives the same columns whatever data it is given
+            for ordinal_value in range(len(bin_edges) - 1):
                 bin_lb = bin_edges[int(ordinal_value)]
                 bin_ub = bin_edges[int(ordinal_value) + 1]
                 interval_string = f&#39;{bin_lb}_to_{bin_ub}&#39;
@@ -1928,14 +1956,21 @@ binned space. All other features remain unchanged.</dd>
 
     # One-hot encode the ordinal DF
     disc_onehot_np = self.encoder_.transform(disc_ordinal_df_str)
+    if scipy.sparse.issparse(disc_onehot_np):
+        # OneHotEncoder returns a sparse matrix by default, which pandas
+        # would otherwise store as a single column of sparse rows
+        disc_onehot_np = disc_onehot_np.toarray()
     disc_onehot = pd.DataFrame(
-        disc_onehot_np, columns=self.encoder_.get_feature_names_out())
+        disc_onehot_np, columns=self.encoder_.get_feature_names_out(),
+        index=X.index)
 
     # Name columns after the interval they represent (e.g. 0.1_to_0.5)
     for col, bin_edges in zip(self.dcols, self.discretizer_.bin_edges_):
         bin_edges = bin_edges.astype(str)
 
-        for ordinal_value in disc_ordinal_df_str[col].unique():
+        # every bin learned during fit, not just the ones present in X, so
+        # that transform gives the same columns whatever data it is given
+        for ordinal_value in range(len(bin_edges) - 1):
             bin_lb = bin_edges[int(ordinal_value)]
             bin_ub = bin_edges[int(ordinal_value) + 1]
             interval_string = f&#39;{bin_lb}_to_{bin_ub}&#39;
@@ -2306,7 +2341,8 @@ in missing_rf_cols_</dd>
         self.bin_edges_ = dict()
         for col in self.dcols_:
             if col in self.rf_splits.keys():
-                b = self.n_bins[np.array(self.dcols_) == col]
+                # .item(): numpy no longer converts a size-1 array to a scalar
+                b = self.n_bins[np.array(self.dcols_) == col].item()
                 if self.strategy == &#34;quantile&#34;:
                     q_values = np.linspace(0, 1, int(b) + 1)
                     bin_edges = np.quantile(self.rf_splits[col], q_values)
@@ -2453,7 +2489,8 @@ rf_model = None or rf_model has not yet been fitted</dd>
     self.bin_edges_ = dict()
     for col in self.dcols_:
         if col in self.rf_splits.keys():
-            b = self.n_bins[np.array(self.dcols_) == col]
+            # .item(): numpy no longer converts a size-1 array to a scalar
+            b = self.n_bins[np.array(self.dcols_) == col].item()
             if self.strategy == &#34;quantile&#34;:
                 q_values = np.linspace(0, 1, int(b) + 1)
                 bin_edges = np.quantile(self.rf_splits[col], q_values)

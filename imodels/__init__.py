@@ -13,7 +13,6 @@ from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 from .experimental.bartpy import BART
 from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
-# from .experimental.corels_wrapper import OptimalRuleListClassifier
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
 from .rule_set import boosted_rules
@@ -33,15 +32,8 @@ from .tree.cart_ccp import (
     HSDecisionTreeCCPRegressorCV,
 )
 
-# from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
-# from .tree.optimal_classification_tree import OptimalTreeModel
 from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
 from .tree.figs import FIGSRegressor, FIGSClassifier, FIGSRegressorCV, FIGSClassifierCV
-from .tree.gosdt.pygosdt import OptimalTreeClassifier
-from .tree.gosdt.pygosdt_shrinkage import (
-    HSOptimalTreeClassifier,
-    HSOptimalTreeClassifierCV,
-)
 from .tree.hierarchical_shrinkage import (
     HSTreeRegressor,
     HSTreeClassifier,
@@ -65,7 +57,6 @@ CLASSIFIERS = [
     SlipperClassifier,
     BayesianRuleSetClassifier,
     C45TreeClassifier,
-    OptimalTreeClassifier,
     OneRClassifier,
     RuleFitClassifier,
     FPLassoClassifier,
@@ -79,7 +70,7 @@ CLASSIFIERS = [
     GreedyTreeClassifier,
     DecisionTreeCCPClassifier,
     AutoInterpretableClassifier,
-]  # , IRFClassifier
+]
 REGRESSORS = [
     RuleFitRegressor,
     FPLassoRegressor,

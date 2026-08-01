@@ -167,7 +167,11 @@ least regularization possible is used.</dd>
 Integer to initialise random objects and provide repeatability.</dt>
 <dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
 <dd>This will override almost all the other properties above.
-Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()</dd>
+Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
+A copy is fitted on the training data, so the object passed in is left
+untouched (and any previous fit of it is not reused). Note that
+n_estimators, max_leaf_nodes and random_state are set on that copy while
+the trees are grown, so tuning them on the generator has no effect.</dd>
 </dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
@@ -277,6 +281,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="../rule_set/rule_set.html#imodels.rule_set.rule_set.RuleSet.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_fit_request" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_transform_request" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>
@@ -325,7 +330,11 @@ least regularization possible is used.</dd>
 Integer to initialise random objects and provide repeatability.</dt>
 <dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
 <dd>This will override almost all the other properties above.
-Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()</dd>
+Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
+A copy is fitted on the training data, so the object passed in is left
+untouched (and any previous fit of it is not reused). Note that
+n_estimators, max_leaf_nodes and random_state are set on that copy while
+the trees are grown, so tuning them on the generator has no effect.</dd>
 </dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
@@ -457,6 +466,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><b><a title="imodels.experimental.stablelinear.StableLinear" href="#imodels.experimental.stablelinear.StableLinear">StableLinear</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.experimental.stablelinear.StableLinear.fit" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
+<li><code><a title="imodels.experimental.stablelinear.StableLinear.get_rules" href="../rule_set/rule_set.html#imodels.rule_set.rule_set.RuleSet.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.experimental.stablelinear.StableLinear.predict" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
 <li><code><a title="imodels.experimental.stablelinear.StableLinear.set_fit_request" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.experimental.stablelinear.StableLinear.set_transform_request" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>
@@ -505,7 +515,11 @@ least regularization possible is used.</dd>
 Integer to initialise random objects and provide repeatability.</dt>
 <dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
 <dd>This will override almost all the other properties above.
-Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()</dd>
+Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
+A copy is fitted on the training data, so the object passed in is left
+untouched (and any previous fit of it is not reused). Note that
+n_estimators, max_leaf_nodes and random_state are set on that copy while
+the trees are grown, so tuning them on the generator has no effect.</dd>
 </dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
@@ -637,6 +651,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><b><a title="imodels.experimental.stablelinear.StableLinear" href="#imodels.experimental.stablelinear.StableLinear">StableLinear</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.experimental.stablelinear.StableLinear.fit" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
+<li><code><a title="imodels.experimental.stablelinear.StableLinear.get_rules" href="../rule_set/rule_set.html#imodels.rule_set.rule_set.RuleSet.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.experimental.stablelinear.StableLinear.predict" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
 <li><code><a title="imodels.experimental.stablelinear.StableLinear.set_fit_request" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.experimental.stablelinear.StableLinear.set_transform_request" href="../rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>

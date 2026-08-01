@@ -76,6 +76,17 @@ class BoostedRulesClassifier(AdaBoostClassifier):
             self.estimator = estimator
 
 
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         classes = self.classes_  # super().fit overwrites this with the encoded labels
@@ -120,6 +131,17 @@ class BoostedRulesRegressor(AdaBoostRegressor):
                 random_state=random_state,
             )
             self.estimator = estimator
+
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
@@ -201,6 +223,17 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
             self.estimator = estimator
 
 
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         classes = self.classes_  # super().fit overwrites this with the encoded labels
@@ -231,6 +264,21 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, X):
+    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+    from imodels.util.apply import apply_leaves
+    return apply_leaves(self, X)</code></pre>
+</details>
+</dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, **kwargs)</span>
 </code></dt>
@@ -266,6 +314,21 @@ DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
         self.feature_names_in_ = names_in
     self.complexity_ = len(self.estimators_)
     return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.get_rules"><code class="name flex">
+<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rules(self, feature_names=None):
+    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+    from imodels.util.get_rules import get_rules
+    return get_rules(self, feature_names=feature_names)</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_fit_request"><code class="name flex">
@@ -504,6 +567,17 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
             )
             self.estimator = estimator
 
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         names_in = getattr(self, &#39;feature_names_in_&#39;, None)
@@ -528,6 +602,21 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, X):
+    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+    from imodels.util.apply import apply_leaves
+    return apply_leaves(self, X)</code></pre>
+</details>
+</dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, **kwargs)</span>
 </code></dt>
@@ -561,6 +650,21 @@ DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
         self.feature_names_in_ = names_in
     self.complexity_ = len(self.estimators_)
     return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor.get_rules"><code class="name flex">
+<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rules(self, feature_names=None):
+    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+    from imodels.util.get_rules import get_rules
+    return get_rules(self, feature_names=feature_names)</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor.set_fit_request"><code class="name flex">
@@ -772,7 +876,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li>
 <h4><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></code></h4>
 <ul class="">
+<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.apply" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.apply">apply</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.get_rules" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_fit_request" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_score_request" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
@@ -780,7 +886,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li>
 <h4><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a></code></h4>
 <ul class="">
+<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor.apply" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor.apply">apply</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor.fit" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor.get_rules" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor.set_fit_request" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor.set_score_request" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor.set_score_request">set_score_request</a></code></li>
 </ul>

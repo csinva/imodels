@@ -58,7 +58,7 @@ def _values_are_normalized(tree):
 class HSTree(BaseEstimator):
     def __init__(
         self,
-        estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+        estimator_: BaseEstimator = None,
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
@@ -90,6 +90,10 @@ class HSTree(BaseEstimator):
         &#34;&#34;&#34;
         super().__init__()
         self.reg_param = reg_param
+        # constructed here rather than defaulted in the signature, so that
+        # separate models don&#39;t share (and refit) one estimator object
+        if estimator_ is None:
+            estimator_ = DecisionTreeClassifier(max_leaf_nodes=20)
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
         self.random_state = random_state
@@ -98,6 +102,17 @@ class HSTree(BaseEstimator):
         if max_leaf_nodes is not None:
             self.estimator_.max_leaf_nodes = max_leaf_nodes
             self.estimator_.random_state = random_state
+
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
 
     def get_params(self, deep=True):
         d = {
@@ -114,7 +129,10 @@ class HSTree(BaseEstimator):
         # remove feature_names if it exists (note: only works as keyword-arg)
         # None returned if not passed
         feature_names = kwargs.pop(&#34;feature_names&#34;, None)
-        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        # missing values are left to the wrapped estimator, which handles them for
+        # sklearn decision trees and forests and raises for those that cannot
+        X, y, feature_names = check_fit_arguments(
+            self, X, y, feature_names, allow_nan=True)
         if feature_names is not None:
             self.feature_names = feature_names
         self.estimator_ = self.estimator_.fit(
@@ -221,15 +239,44 @@ class HSTree(BaseEstimator):
 
         return tree
 
+    def _unwrap_tree(self, estimator):
+        &#34;&#34;&#34;Get the underlying sklearn tree, or None if there isn&#39;t one.&#34;&#34;&#34;
+        if isinstance(estimator, np.ndarray):
+            assert estimator.size == 1, &#34;multiple trees stored under tree_?&#34;
+            estimator = estimator[0]
+        return getattr(estimator, &#34;tree_&#34;, None)
+
+    def _check_estimator_supported(self):
+        &#34;&#34;&#34;Reject estimators that shrinkage cannot be applied to.
+
+        Shrinkage rewrites the node values of sklearn decision trees, so it needs
+        either a fitted tree (tree_) or an ensemble of them (estimators_).
+        Without this check an unsupported model is returned unchanged, which
+        looks like it worked -- see https://github.com/csinva/imodels/issues/199
+        &#34;&#34;&#34;
+        if hasattr(self.estimator_, &#34;tree_&#34;):
+            return
+        subestimators = getattr(self.estimator_, &#34;estimators_&#34;, None)
+        if subestimators is not None and len(subestimators) &gt; 0:
+            if self._unwrap_tree(subestimators[0]) is not None:
+                return
+
+        raise ValueError(
+            f&#34;{type(self.estimator_).__name__} is not supported by hierarchical &#34;
+            &#34;shrinkage, which needs an estimator built from scikit-learn decision &#34;
+            &#34;trees (exposing tree_, or estimators_ of trees) -- for example &#34;
+            &#34;DecisionTreeClassifier, RandomForestRegressor or &#34;
+            &#34;GradientBoostingClassifier. Applying shrinkage to it would leave the &#34;
+            &#34;model unchanged.&#34;
+        )
+
     def _shrink(self):
+        self._check_estimator_supported()
         if hasattr(self.estimator_, &#34;tree_&#34;):
             self._shrink_tree(self.estimator_.tree_, self.reg_param)
-        elif hasattr(self.estimator_, &#34;estimators_&#34;):
+        else:
             for t in self.estimator_.estimators_:
-                if isinstance(t, np.ndarray):
-                    assert t.size == 1, &#34;multiple trees stored under tree_?&#34;
-                    t = t[0]
-                self._shrink_tree(t.tree_, self.reg_param)
+                self._shrink_tree(self._unwrap_tree(t), self.reg_param)
 
     def predict(self, X, *args, **kwargs):
         preds = self.estimator_.predict(X, *args, **kwargs)
@@ -240,7 +287,14 @@ class HSTree(BaseEstimator):
 
     def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, &#34;predict_proba&#34;):
-            return self.estimator_.predict_proba(X, *args, **kwargs)
+            probs = self.estimator_.predict_proba(X, *args, **kwargs)
+            # the shrinkage arithmetic can leave values a hair outside [0, 1]
+            # (e.g. -1e-17), which newer versions of sklearn&#39;s log_loss reject
+            probs = np.clip(probs, 0, 1)
+            totals = probs.sum(axis=1, keepdims=True)
+            with np.errstate(invalid=&#34;ignore&#34;, divide=&#34;ignore&#34;):
+                normalized = probs / totals
+            return np.where(totals &gt; 0, normalized, 1 / probs.shape[1])
         else:
             return NotImplemented
 
@@ -255,6 +309,18 @@ class HSTree(BaseEstimator):
             s += &#34;reg_param=&#34;
             s += str(self.reg_param)
             s += &#34;)&#34;
+            return s
+        elif not hasattr(self.estimator_, &#34;tree_&#34;):
+            # an ensemble: export_text only renders a single tree, so summarize
+            n_trees = len(getattr(self.estimator_, &#34;estimators_&#34;, []))
+            s = &#34;&gt; ------------------------------\n&#34;
+            s += &#34;&gt; Tree ensemble with Hierarchical Shrinkage\n&#34;
+            s += &#34;&gt; \tPrediction is made by combining the predictions of each shrunk tree\n&#34;
+            s += &#34;&gt; ------------------------------&#34; + &#34;\n&#34;
+            s += f&#34;&gt; {type(self.estimator_).__name__} of {n_trees} trees, &#34;
+            s += f&#34;reg_param={self.reg_param}\n&#34;
+            if hasattr(self, &#34;complexity_&#34;):
+                s += f&#34;&gt; {self.complexity_} total non-leaf nodes\n&#34;
             return s
         else:
             s = &#34;&gt; ------------------------------\n&#34;
@@ -294,12 +360,16 @@ class HSTree(BaseEstimator):
 class HSTreeRegressor(RegressorMixin, HSTree):
     def __init__(
         self,
-        estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
+        estimator_: BaseEstimator = None,
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
         random_state: int = None,
     ):
+        if estimator_ is None:
+            estimator_ = DecisionTreeRegressor(max_leaf_nodes=20)
+        if estimator_ is None:
+            estimator_ = DecisionTreeClassifier(max_leaf_nodes=20)
         super().__init__(
             estimator_=estimator_,
             reg_param=reg_param,
@@ -312,7 +382,7 @@ class HSTreeRegressor(RegressorMixin, HSTree):
 class HSTreeClassifier(ClassifierMixin, HSTree):
     def __init__(
         self,
-        estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+        estimator_: BaseEstimator = None,
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
@@ -406,8 +476,9 @@ class HSTreeClassifierCV(HSTreeClassifier):
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
-                est_hs = HSTreeClassifier(base_est, reg_param)
-                est_hs.fit(X_in, y_in, *args, **kwargs)
+                # shrinkage is post-hoc, so shrink a copy of the tree fitted
+                # above rather than refitting it for every reg_param
+                est_hs = HSTreeClassifier(deepcopy(base_est), reg_param)
                 self.scores_[i].append(
                     scorer(y_out, est_hs.predict_proba(X_out)))
         self.scores_ = [np.mean(s) for s in self.scores_]
@@ -495,8 +566,9 @@ class HSTreeRegressorCV(HSTreeRegressor):
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
-                est_hs = HSTreeRegressor(base_est, reg_param)
-                est_hs.fit(X_in, y_in)
+                # shrinkage is post-hoc, so shrink a copy of the tree fitted
+                # above rather than refitting it for every reg_param
+                est_hs = HSTreeRegressor(deepcopy(base_est), reg_param)
                 self.scores_[i].append(scorer(est_hs.predict(X_out), y_out))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
@@ -582,7 +654,7 @@ if __name__ == &#34;__main__&#34;:
 <dl>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree"><code class="flex name class">
 <span>class <span class="ident">HSTree</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None, random_state: int = None)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None, random_state: int = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -646,7 +718,7 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
 <pre><code class="python">class HSTree(BaseEstimator):
     def __init__(
         self,
-        estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+        estimator_: BaseEstimator = None,
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
@@ -678,6 +750,10 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
         &#34;&#34;&#34;
         super().__init__()
         self.reg_param = reg_param
+        # constructed here rather than defaulted in the signature, so that
+        # separate models don&#39;t share (and refit) one estimator object
+        if estimator_ is None:
+            estimator_ = DecisionTreeClassifier(max_leaf_nodes=20)
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
         self.random_state = random_state
@@ -686,6 +762,17 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
         if max_leaf_nodes is not None:
             self.estimator_.max_leaf_nodes = max_leaf_nodes
             self.estimator_.random_state = random_state
+
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
 
     def get_params(self, deep=True):
         d = {
@@ -702,7 +789,10 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
         # remove feature_names if it exists (note: only works as keyword-arg)
         # None returned if not passed
         feature_names = kwargs.pop(&#34;feature_names&#34;, None)
-        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        # missing values are left to the wrapped estimator, which handles them for
+        # sklearn decision trees and forests and raises for those that cannot
+        X, y, feature_names = check_fit_arguments(
+            self, X, y, feature_names, allow_nan=True)
         if feature_names is not None:
             self.feature_names = feature_names
         self.estimator_ = self.estimator_.fit(
@@ -809,15 +899,44 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
 
         return tree
 
+    def _unwrap_tree(self, estimator):
+        &#34;&#34;&#34;Get the underlying sklearn tree, or None if there isn&#39;t one.&#34;&#34;&#34;
+        if isinstance(estimator, np.ndarray):
+            assert estimator.size == 1, &#34;multiple trees stored under tree_?&#34;
+            estimator = estimator[0]
+        return getattr(estimator, &#34;tree_&#34;, None)
+
+    def _check_estimator_supported(self):
+        &#34;&#34;&#34;Reject estimators that shrinkage cannot be applied to.
+
+        Shrinkage rewrites the node values of sklearn decision trees, so it needs
+        either a fitted tree (tree_) or an ensemble of them (estimators_).
+        Without this check an unsupported model is returned unchanged, which
+        looks like it worked -- see https://github.com/csinva/imodels/issues/199
+        &#34;&#34;&#34;
+        if hasattr(self.estimator_, &#34;tree_&#34;):
+            return
+        subestimators = getattr(self.estimator_, &#34;estimators_&#34;, None)
+        if subestimators is not None and len(subestimators) &gt; 0:
+            if self._unwrap_tree(subestimators[0]) is not None:
+                return
+
+        raise ValueError(
+            f&#34;{type(self.estimator_).__name__} is not supported by hierarchical &#34;
+            &#34;shrinkage, which needs an estimator built from scikit-learn decision &#34;
+            &#34;trees (exposing tree_, or estimators_ of trees) -- for example &#34;
+            &#34;DecisionTreeClassifier, RandomForestRegressor or &#34;
+            &#34;GradientBoostingClassifier. Applying shrinkage to it would leave the &#34;
+            &#34;model unchanged.&#34;
+        )
+
     def _shrink(self):
+        self._check_estimator_supported()
         if hasattr(self.estimator_, &#34;tree_&#34;):
             self._shrink_tree(self.estimator_.tree_, self.reg_param)
-        elif hasattr(self.estimator_, &#34;estimators_&#34;):
+        else:
             for t in self.estimator_.estimators_:
-                if isinstance(t, np.ndarray):
-                    assert t.size == 1, &#34;multiple trees stored under tree_?&#34;
-                    t = t[0]
-                self._shrink_tree(t.tree_, self.reg_param)
+                self._shrink_tree(self._unwrap_tree(t), self.reg_param)
 
     def predict(self, X, *args, **kwargs):
         preds = self.estimator_.predict(X, *args, **kwargs)
@@ -828,7 +947,14 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
 
     def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, &#34;predict_proba&#34;):
-            return self.estimator_.predict_proba(X, *args, **kwargs)
+            probs = self.estimator_.predict_proba(X, *args, **kwargs)
+            # the shrinkage arithmetic can leave values a hair outside [0, 1]
+            # (e.g. -1e-17), which newer versions of sklearn&#39;s log_loss reject
+            probs = np.clip(probs, 0, 1)
+            totals = probs.sum(axis=1, keepdims=True)
+            with np.errstate(invalid=&#34;ignore&#34;, divide=&#34;ignore&#34;):
+                normalized = probs / totals
+            return np.where(totals &gt; 0, normalized, 1 / probs.shape[1])
         else:
             return NotImplemented
 
@@ -843,6 +969,18 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
             s += &#34;reg_param=&#34;
             s += str(self.reg_param)
             s += &#34;)&#34;
+            return s
+        elif not hasattr(self.estimator_, &#34;tree_&#34;):
+            # an ensemble: export_text only renders a single tree, so summarize
+            n_trees = len(getattr(self.estimator_, &#34;estimators_&#34;, []))
+            s = &#34;&gt; ------------------------------\n&#34;
+            s += &#34;&gt; Tree ensemble with Hierarchical Shrinkage\n&#34;
+            s += &#34;&gt; \tPrediction is made by combining the predictions of each shrunk tree\n&#34;
+            s += &#34;&gt; ------------------------------&#34; + &#34;\n&#34;
+            s += f&#34;&gt; {type(self.estimator_).__name__} of {n_trees} trees, &#34;
+            s += f&#34;reg_param={self.reg_param}\n&#34;
+            if hasattr(self, &#34;complexity_&#34;):
+                s += f&#34;&gt; {self.complexity_} total non-leaf nodes\n&#34;
             return s
         else:
             s = &#34;&gt; ------------------------------\n&#34;
@@ -892,6 +1030,21 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="imodels.tree.hierarchical_shrinkage.HSTree.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, X):
+    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+    from imodels.util.apply import apply_leaves
+    return apply_leaves(self, X)</code></pre>
+</details>
+</dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, *args, **kwargs)</span>
 </code></dt>
@@ -905,7 +1058,10 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
     # remove feature_names if it exists (note: only works as keyword-arg)
     # None returned if not passed
     feature_names = kwargs.pop(&#34;feature_names&#34;, None)
-    X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+    # missing values are left to the wrapped estimator, which handles them for
+    # sklearn decision trees and forests and raises for those that cannot
+    X, y, feature_names = check_fit_arguments(
+        self, X, y, feature_names, allow_nan=True)
     if feature_names is not None:
         self.feature_names = feature_names
     self.estimator_ = self.estimator_.fit(
@@ -959,6 +1115,21 @@ contained subobjects that are estimators.</dd>
     return d</code></pre>
 </details>
 </dd>
+<dt id="imodels.tree.hierarchical_shrinkage.HSTree.get_rules"><code class="name flex">
+<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rules(self, feature_names=None):
+    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+    from imodels.util.get_rules import get_rules
+    return get_rules(self, feature_names=feature_names)</code></pre>
+</details>
+</dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTree.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X, *args, **kwargs)</span>
 </code></dt>
@@ -987,7 +1158,14 @@ contained subobjects that are estimators.</dd>
 </summary>
 <pre><code class="python">def predict_proba(self, X, *args, **kwargs):
     if hasattr(self.estimator_, &#34;predict_proba&#34;):
-        return self.estimator_.predict_proba(X, *args, **kwargs)
+        probs = self.estimator_.predict_proba(X, *args, **kwargs)
+        # the shrinkage arithmetic can leave values a hair outside [0, 1]
+        # (e.g. -1e-17), which newer versions of sklearn&#39;s log_loss reject
+        probs = np.clip(probs, 0, 1)
+        totals = probs.sum(axis=1, keepdims=True)
+        with np.errstate(invalid=&#34;ignore&#34;, divide=&#34;ignore&#34;):
+            normalized = probs / totals
+        return np.where(totals &gt; 0, normalized, 1 / probs.shape[1])
     else:
         return NotImplemented</code></pre>
 </details>
@@ -1090,7 +1268,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">HSTreeClassifier</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None, random_state: int = None)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None, random_state: int = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
@@ -1129,7 +1307,7 @@ array([1, 1, 1])
 <pre><code class="python">class HSTreeClassifier(ClassifierMixin, HSTree):
     def __init__(
         self,
-        estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+        estimator_: BaseEstimator = None,
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
@@ -1258,7 +1436,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.apply" href="#imodels.tree.hierarchical_shrinkage.HSTree.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_rules" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
@@ -1375,8 +1555,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
-                est_hs = HSTreeClassifier(base_est, reg_param)
-                est_hs.fit(X_in, y_in, *args, **kwargs)
+                # shrinkage is post-hoc, so shrink a copy of the tree fitted
+                # above rather than refitting it for every reg_param
+                est_hs = HSTreeClassifier(deepcopy(base_est), reg_param)
                 self.scores_[i].append(
                     scorer(y_out, est_hs.predict_proba(X_out)))
         self.scores_ = [np.mean(s) for s in self.scores_]
@@ -1431,8 +1612,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         base_est = deepcopy(self.estimator_)
         base_est.fit(X_in, y_in)
         for i, reg_param in enumerate(self.reg_param_list):
-            est_hs = HSTreeClassifier(base_est, reg_param)
-            est_hs.fit(X_in, y_in, *args, **kwargs)
+            # shrinkage is post-hoc, so shrink a copy of the tree fitted
+            # above rather than refitting it for every reg_param
+            est_hs = HSTreeClassifier(deepcopy(base_est), reg_param)
             self.scores_[i].append(
                 scorer(y_out, est_hs.predict_proba(X_out)))
     self.scores_ = [np.mean(s) for s in self.scores_]
@@ -1509,7 +1691,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.apply" href="#imodels.tree.hierarchical_shrinkage.HSTree.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_rules" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
@@ -1517,7 +1701,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressor"><code class="flex name class">
 <span>class <span class="ident">HSTreeRegressor</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20), reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None, random_state: int = None)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, reg_param: float = 1, shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = None, random_state: int = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
@@ -1556,12 +1740,16 @@ array([0, 0, 0])
 <pre><code class="python">class HSTreeRegressor(RegressorMixin, HSTree):
     def __init__(
         self,
-        estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
+        estimator_: BaseEstimator = None,
         reg_param: float = 1,
         shrinkage_scheme_: str = &#34;node_based&#34;,
         max_leaf_nodes: int = None,
         random_state: int = None,
     ):
+        if estimator_ is None:
+            estimator_ = DecisionTreeRegressor(max_leaf_nodes=20)
+        if estimator_ is None:
+            estimator_ = DecisionTreeClassifier(max_leaf_nodes=20)
         super().__init__(
             estimator_=estimator_,
             reg_param=reg_param,
@@ -1685,7 +1873,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.apply" href="#imodels.tree.hierarchical_shrinkage.HSTree.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_rules" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
@@ -1802,8 +1992,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
-                est_hs = HSTreeRegressor(base_est, reg_param)
-                est_hs.fit(X_in, y_in)
+                # shrinkage is post-hoc, so shrink a copy of the tree fitted
+                # above rather than refitting it for every reg_param
+                est_hs = HSTreeRegressor(deepcopy(base_est), reg_param)
                 self.scores_[i].append(scorer(est_hs.predict(X_out), y_out))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
@@ -1857,8 +2048,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         base_est = deepcopy(self.estimator_)
         base_est.fit(X_in, y_in)
         for i, reg_param in enumerate(self.reg_param_list):
-            est_hs = HSTreeRegressor(base_est, reg_param)
-            est_hs.fit(X_in, y_in)
+            # shrinkage is post-hoc, so shrink a copy of the tree fitted
+            # above rather than refitting it for every reg_param
+            est_hs = HSTreeRegressor(deepcopy(base_est), reg_param)
             self.scores_[i].append(scorer(est_hs.predict(X_out), y_out))
     self.scores_ = [np.mean(s) for s in self.scores_]
     cv_criterion = _get_cv_criterion(scorer)
@@ -1934,7 +2126,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.apply" href="#imodels.tree.hierarchical_shrinkage.HSTree.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_rules" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
@@ -1958,9 +2152,11 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <ul>
 <li>
 <h4><code><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.apply" href="#imodels.tree.hierarchical_shrinkage.HSTree.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.fit" href="#imodels.tree.hierarchical_shrinkage.HSTree.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.get_rules" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.predict" href="#imodels.tree.hierarchical_shrinkage.HSTree.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.predict_proba" href="#imodels.tree.hierarchical_shrinkage.HSTree.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>

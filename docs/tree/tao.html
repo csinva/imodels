@@ -393,6 +393,16 @@ class TaoTree(BaseEstimator):
 
         return num_updates
 
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def predict(self, X):
         preds = self.model.predict(X)
         if hasattr(self, &#34;classes_&#34;):
@@ -891,6 +901,16 @@ Note: this implementation learns single-feature splits rather than oblique trees
 
         return num_updates
 
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def predict(self, X):
         preds = self.model.predict(X)
         if hasattr(self, &#34;classes_&#34;):
@@ -918,6 +938,21 @@ Note: this implementation learns single-feature splits rather than oblique trees
 </ul>
 <h3>Methods</h3>
 <dl>
+<dt id="imodels.tree.tao.TaoTree.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, X):
+    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+    from imodels.util.apply import apply_leaves
+    return apply_leaves(self, X)</code></pre>
+</details>
+</dd>
 <dt id="imodels.tree.tao.TaoTree.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, sample_weight=None)</span>
 </code></dt>
@@ -975,6 +1010,21 @@ are ignored while searching for a split in each node.</p></div>
             break
 
     return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.tao.TaoTree.get_rules"><code class="name flex">
+<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rules(self, feature_names=None):
+    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+    from imodels.util.get_rules import get_rules
+    return get_rules(self, feature_names=feature_names)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.tao.TaoTree.predict"><code class="name flex">
@@ -1304,7 +1354,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.tao.TaoTree.apply" href="#imodels.tree.tao.TaoTree.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.get_rules" href="#imodels.tree.tao.TaoTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.set_fit_request" href="#imodels.tree.tao.TaoTree.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
@@ -1505,7 +1557,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.tao.TaoTree.apply" href="#imodels.tree.tao.TaoTree.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.get_rules" href="#imodels.tree.tao.TaoTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.set_fit_request" href="#imodels.tree.tao.TaoTree.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
@@ -1529,8 +1583,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul>
 <li>
 <h4><code><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="imodels.tree.tao.TaoTree.apply" href="#imodels.tree.tao.TaoTree.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.get_rules" href="#imodels.tree.tao.TaoTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.predict" href="#imodels.tree.tao.TaoTree.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.predict_proba" href="#imodels.tree.tao.TaoTree.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.set_fit_request" href="#imodels.tree.tao.TaoTree.set_fit_request">set_fit_request</a></code></li>

@@ -63,8 +63,6 @@ dev = [
 [project.optional-dependencies]
 optional = [
   "cvxpy", # for slim
-  "gosdt-deprecated", # for OptimalTreeClassifier
-  "irf", # for IterativeRandomForestClassifier
   "statsmodels", # for bartpy
   "torch", # for imodels.util.neural_nets
   "interpret", # for imodels.algebraic.gam_multitask

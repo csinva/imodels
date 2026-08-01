@@ -87,6 +87,10 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     tree_generator: Optional: this object will be used as provided to generate the rules. 
                     This will override almost all the other properties above. 
                     Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
+                    A copy is fitted on the training data, so the object passed in is left
+                    untouched (and any previous fit of it is not reused). Note that
+                    n_estimators, max_leaf_nodes and random_state are set on that copy while
+                    the trees are grown, so tuning them on the generator has no effect.
 
     Attributes
     ----------
@@ -126,8 +130,6 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.cv = cv
         self.random_state = random_state
 
-        self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
-        self.friedscale = FriedScale(self.winsorizer)
         self.stddev = None
         self.mean = None
 
@@ -135,6 +137,11 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         &#34;&#34;&#34;Fit and estimate linear combination of rule ensemble
 
         &#34;&#34;&#34;
+        # built here rather than in __init__ so that changing lin_trim_quantile
+        # with set_params after construction still takes effect
+        self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
+        self.friedscale = FriedScale(self.winsorizer)
+
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if isinstance(self, ClassifierMixin) and len(np.unique(y)) &gt; 2:
             raise ValueError(
@@ -313,6 +320,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                                memory_par=self.memory_par,
                                tree_generator=self.tree_generator,
                                exp_rand_tree_size=self.exp_rand_tree_size,
+                               sample_fract=self.sample_fract,
                                random_state=self.random_state)
 
     def _score_rules(self, X, y, rules) -&gt; Tuple[List[Rule], List[float], float]:
@@ -414,7 +422,11 @@ least regularization possible is used.</dd>
 Integer to initialise random objects and provide repeatability.</dt>
 <dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
 <dd>This will override almost all the other properties above.
-Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()</dd>
+Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
+A copy is fitted on the training data, so the object passed in is left
+untouched (and any previous fit of it is not reused). Note that
+n_estimators, max_leaf_nodes and random_state are set on that copy while
+the trees are grown, so tuning them on the generator has no effect.</dd>
 </dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
@@ -458,6 +470,10 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
     tree_generator: Optional: this object will be used as provided to generate the rules. 
                     This will override almost all the other properties above. 
                     Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
+                    A copy is fitted on the training data, so the object passed in is left
+                    untouched (and any previous fit of it is not reused). Note that
+                    n_estimators, max_leaf_nodes and random_state are set on that copy while
+                    the trees are grown, so tuning them on the generator has no effect.
 
     Attributes
     ----------
@@ -497,8 +513,6 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
         self.cv = cv
         self.random_state = random_state
 
-        self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
-        self.friedscale = FriedScale(self.winsorizer)
         self.stddev = None
         self.mean = None
 
@@ -506,6 +520,11 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
         &#34;&#34;&#34;Fit and estimate linear combination of rule ensemble
 
         &#34;&#34;&#34;
+        # built here rather than in __init__ so that changing lin_trim_quantile
+        # with set_params after construction still takes effect
+        self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
+        self.friedscale = FriedScale(self.winsorizer)
+
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if isinstance(self, ClassifierMixin) and len(np.unique(y)) &gt; 2:
             raise ValueError(
@@ -684,6 +703,7 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
                                memory_par=self.memory_par,
                                tree_generator=self.tree_generator,
                                exp_rand_tree_size=self.exp_rand_tree_size,
+                               sample_fract=self.sample_fract,
                                random_state=self.random_state)
 
     def _score_rules(self, X, y, rules) -&gt; Tuple[List[Rule], List[float], float]:
@@ -753,6 +773,11 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
     &#34;&#34;&#34;Fit and estimate linear combination of rule ensemble
 
     &#34;&#34;&#34;
+    # built here rather than in __init__ so that changing lin_trim_quantile
+    # with set_params after construction still takes effect
+    self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
+    self.friedscale = FriedScale(self.winsorizer)
+
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
     if isinstance(self, ClassifierMixin) and len(np.unique(y)) &gt; 2:
         raise ValueError(
@@ -1079,6 +1104,14 @@ efficiency.</dd>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.rule_set.rule_set.RuleSet.get_rules" href="rule_set.html#imodels.rule_set.rule_set.RuleSet.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="imodels.rule_set.rule_fit.RuleFitClassifier"><code class="flex name class">
 <span>class <span class="ident">RuleFitClassifier</span></span>
@@ -1120,7 +1153,11 @@ least regularization possible is used.</dd>
 Integer to initialise random objects and provide repeatability.</dt>
 <dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
 <dd>This will override almost all the other properties above.
-Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()</dd>
+Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
+A copy is fitted on the training data, so the object passed in is left
+untouched (and any previous fit of it is not reused). Note that
+n_estimators, max_leaf_nodes and random_state are set on that copy while
+the trees are grown, so tuning them on the generator has no effect.</dd>
 </dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
@@ -1253,6 +1290,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="rule_set.html#imodels.rule_set.rule_set.RuleSet.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_fit_request" href="#imodels.rule_set.rule_fit.RuleFit.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_transform_request" href="#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>
@@ -1301,7 +1339,11 @@ least regularization possible is used.</dd>
 Integer to initialise random objects and provide repeatability.</dt>
 <dt><strong><code>tree_generator</code></strong> :&ensp;<code>Optional: this object will be used as provided to generate the rules.</code></dt>
 <dd>This will override almost all the other properties above.
-Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()</dd>
+Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
+A copy is fitted on the training data, so the object passed in is left
+untouched (and any previous fit of it is not reused). Note that
+n_estimators, max_leaf_nodes and random_state are set on that copy while
+the trees are grown, so tuning them on the generator has no effect.</dd>
 </dl>
 <h2 id="attributes">Attributes</h2>
 <dl>
@@ -1434,6 +1476,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="rule_set.html#imodels.rule_set.rule_set.RuleSet.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_fit_request" href="#imodels.rule_set.rule_fit.RuleFit.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_transform_request" href="#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>
