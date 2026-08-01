@@ -57,6 +57,10 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
     tree_generator: Optional: this object will be used as provided to generate the rules. 
                     This will override almost all the other properties above. 
                     Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomForestRegressor()
+                    A copy is fitted on the training data, so the object passed in is left
+                    untouched (and any previous fit of it is not reused). Note that
+                    n_estimators, max_leaf_nodes and random_state are set on that copy while
+                    the trees are grown, so tuning them on the generator has no effect.
 
     Attributes
     ----------
