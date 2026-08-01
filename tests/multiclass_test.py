@@ -21,7 +21,7 @@ BINARY_ONLY_MODELS = [
     'BayesianRuleListClassifier', 'RuleFitClassifier', 'FPLassoClassifier',
     'GreedyRuleListClassifier', 'SkopeRulesClassifier', 'C45TreeClassifier',
     'OneRClassifier', 'FPSkopeClassifier', 'TreeGAMClassifier',
-    'SlipperClassifier',
+    'SlipperClassifier', 'FastFrugalTreeClassifier',
 ]
 
 
