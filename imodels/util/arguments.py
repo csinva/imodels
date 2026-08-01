@@ -1,3 +1,5 @@
+from inspect import signature
+
 import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin
@@ -6,13 +8,18 @@ from sklearn.utils.multiclass import check_classification_targets
 import scipy.sparse
 
 
-def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_classmixin=True):
+def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_classmixin=True,
+                        allow_nan=False):
     """Process arguments for fit and predict methods.
 
     For classifiers, sets ``model.classes_`` and encodes y as integers 0..n_classes-1
     (use `decode_labels` to map predictions back onto the original labels).
     Always sets ``model.feature_names_`` and ``model.n_features_in_``, and sets the
     sklearn-standard ``model.feature_names_in_`` when X carries column names.
+
+    allow_nan: pass missing values in X through instead of rejecting them, for models
+        that delegate to an estimator able to handle them (e.g. an sklearn decision
+        tree). That estimator still raises if it cannot.
     """
     if isinstance(model, ClassifierMixin) and is_classmixin:
         model.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
@@ -32,11 +39,25 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
 
     if scipy.sparse.issparse(X):
         X = X.toarray()
-    X, y = check_X_y(X=X, y=y, multi_output=multi_output)
+    X, y = check_X_y(X=X, y=y, multi_output=multi_output,
+                     **_finite_check_kwarg(allow_nan))
     _, model.n_features_in_ = X.shape
     assert len(model.feature_names_) == model.n_features_in_, 'feature_names should be same size as X.shape[1]'
     y = y.astype(float)
     return X, y, model.feature_names_
+
+
+def _finite_check_kwarg(allow_nan):
+    """Spell the "allow NaN" option the way the installed sklearn expects.
+
+    force_all_finite was renamed to ensure_all_finite in sklearn 1.6.
+    """
+    if not allow_nan:
+        return {}
+    name = ("ensure_all_finite"
+            if "ensure_all_finite" in signature(check_X_y).parameters
+            else "force_all_finite")
+    return {name: "allow-nan"}
 
 
 def set_feature_names_in(model, X):
