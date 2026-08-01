@@ -373,7 +373,6 @@ class TaoTree(BaseEstimator):
     def predict(self, X):
         preds = self.model.predict(X)
         if hasattr(self, "classes_"):
-            print("classes_", self.classes_, 'preds', preds)
             return np.array([self.classes_[int(i)] for i in preds])
         else:
             return preds

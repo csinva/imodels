@@ -486,7 +486,9 @@ class FIGSExt(BaseEstimator):
 
         preds = np.zeros(X.shape[0])
         for i in range(X.shape[0]):
-            preds[i] = _predict_tree_single_point(root, X[i])
+            # node values are stored as length-1 arrays; numpy >= 2 no longer
+            # unwraps those implicitly when assigning into a scalar slot
+            preds[i] = np.ravel(_predict_tree_single_point(root, X[i]))[0]
         return preds
 
     def plot(self, cols=2, feature_names=None, filename=None, label="all",

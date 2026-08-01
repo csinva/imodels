@@ -21,26 +21,38 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import time
-from copy import deepcopy
+<pre><code class="python">from copy import deepcopy
 from typing import List
 
 import numpy as np
 from sklearn import datasets
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics import r2_score, mean_squared_error, log_loss
-from sklearn.model_selection import cross_val_score, KFold
+from sklearn.model_selection import KFold
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
 from sklearn.ensemble import (
     GradientBoostingClassifier,
     GradientBoostingRegressor,
-    RandomForestRegressor,
 )
 
 from imodels.util import checks
 from imodels.util.arguments import check_fit_arguments
 from imodels.util.tree import compute_tree_complexity
+
+
+def _as_arrays(X, y):
+    &#34;&#34;&#34;Convert X, y to numpy arrays so that they can be indexed by CV folds.&#34;&#34;&#34;
+    return np.asarray(X), np.asarray(y)
+
+
+def _values_are_normalized(tree):
+    &#34;&#34;&#34;Whether a fitted tree stores per-node values as probabilities rather than counts.
+
+    sklearn switched classification trees from storing class counts to storing
+    normalized class fractions in version 1.3.
+    &#34;&#34;&#34;
+    return bool(np.allclose(tree.value.sum(axis=(1, 2)), 1))
 
 
 class HSTree(BaseEstimator):
@@ -124,20 +136,34 @@ class HSTree(BaseEstimator):
         return self
 
     def _shrink_tree(
-        self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0
+        self,
+        tree,
+        reg_param,
+        i=0,
+        parent_val=None,
+        parent_num=None,
+        cum_sum=0,
+        values_normalized=None,
     ):
         &#34;&#34;&#34;Shrink the tree&#34;&#34;&#34;
         if reg_param is None:
             reg_param = 1.0
+        if values_normalized is None:
+            # sklearn &gt;= 1.3 stores classification tree values as probabilities
+            # rather than counts, in which case they must not be renormalized.
+            # Computed once at the root, since shrinking rewrites tree.value.
+            values_normalized = _values_are_normalized(tree)
         left = tree.children_left[i]
         right = tree.children_right[i]
         is_leaf = left == right
         n_samples = tree.weighted_n_node_samples[i]
-        if isinstance(self, RegressorMixin) or isinstance(
-            self.estimator_, GradientBoostingClassifier
+        if (
+            isinstance(self, RegressorMixin)
+            or isinstance(self.estimator_, GradientBoostingClassifier)
+            or values_normalized
         ):
             val = deepcopy(tree.value[i, :, :])
-        else:  # If classification, normalize to probability vector
+        else:  # If classification, counts need normalizing into a probability vector
             val = tree.value[i, :, :] / n_samples
 
         # Step 1: Update cum_sum
@@ -179,6 +205,7 @@ class HSTree(BaseEstimator):
                 parent_val=val,
                 parent_num=n_samples,
                 cum_sum=deepcopy(cum_sum),
+                values_normalized=values_normalized,
             )
             self._shrink_tree(
                 tree,
@@ -187,6 +214,7 @@ class HSTree(BaseEstimator):
                 parent_val=val,
                 parent_num=n_samples,
                 cum_sum=deepcopy(cum_sum),
+                values_normalized=values_normalized,
             )
 
             # edit the non-leaf nodes for later visualization (doesn&#39;t effect predictions)
@@ -343,7 +371,8 @@ class HSTreeClassifierCV(HSTreeClassifier):
         if estimator_ is None:
             estimator_ = DecisionTreeClassifier(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
-        self.reg_param_list = np.array(reg_param_list)
+        # stored unmodified so that the estimator stays sklearn-cloneable
+        self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
         self.shrinkage_scheme_ = shrinkage_scheme_
@@ -353,13 +382,27 @@ class HSTreeClassifierCV(HSTreeClassifier):
         #     raise Warning(&#39;Passed an already fitted estimator,&#39;
         #                   &#39;but shrinking not applied until fit method is called.&#39;)
 
+    def get_params(self, deep=True):
+        d = {
+            &#34;estimator_&#34;: self.estimator_,
+            &#34;reg_param_list&#34;: self.reg_param_list,
+            &#34;shrinkage_scheme_&#34;: self.shrinkage_scheme_,
+            &#34;max_leaf_nodes&#34;: self.estimator_.max_leaf_nodes,
+            &#34;cv&#34;: self.cv,
+            &#34;scoring&#34;: self.scoring,
+        }
+        if deep:
+            return deepcopy(d)
+        return d
+
     def fit(self, X, y, *args, **kwargs):
+        X_arr, y_arr = _as_arrays(X, y)
         self.scores_ = [[] for _ in self.reg_param_list]
         scorer = kwargs.get(&#34;scoring&#34;, log_loss)
         kf = KFold(n_splits=self.cv)
-        for train_index, test_index in kf.split(X):
-            X_out, y_out = X[test_index, :], y[test_index]
-            X_in, y_in = X[train_index, :], y[train_index]
+        for train_index, test_index in kf.split(X_arr):
+            X_out, y_out = X_arr[test_index, :], y_arr[test_index]
+            X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
@@ -369,8 +412,8 @@ class HSTreeClassifierCV(HSTreeClassifier):
                     scorer(y_out, est_hs.predict_proba(X_out)))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
-        self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
-        super().fit(X=X, y=y, *args, **kwargs)
+        self.reg_param = np.asarray(self.reg_param_list)[cv_criterion(self.scores_)]
+        return super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
         attr_list = [
@@ -417,7 +460,8 @@ class HSTreeRegressorCV(HSTreeRegressor):
         if estimator_ is None:
             estimator_ = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
-        self.reg_param_list = np.array(reg_param_list)
+        # stored unmodified so that the estimator stays sklearn-cloneable
+        self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
         self.shrinkage_scheme_ = shrinkage_scheme_
@@ -427,13 +471,27 @@ class HSTreeRegressorCV(HSTreeRegressor):
         #     raise Warning(&#39;Passed an already fitted estimator,&#39;
         #                   &#39;but shrinking not applied until fit method is called.&#39;)
 
+    def get_params(self, deep=True):
+        d = {
+            &#34;estimator_&#34;: self.estimator_,
+            &#34;reg_param_list&#34;: self.reg_param_list,
+            &#34;shrinkage_scheme_&#34;: self.shrinkage_scheme_,
+            &#34;max_leaf_nodes&#34;: self.estimator_.max_leaf_nodes,
+            &#34;cv&#34;: self.cv,
+            &#34;scoring&#34;: self.scoring,
+        }
+        if deep:
+            return deepcopy(d)
+        return d
+
     def fit(self, X, y, *args, **kwargs):
+        X_arr, y_arr = _as_arrays(X, y)
         self.scores_ = [[] for _ in self.reg_param_list]
         kf = KFold(n_splits=self.cv)
         scorer = kwargs.get(&#34;scoring&#34;, mean_squared_error)
-        for train_index, test_index in kf.split(X):
-            X_out, y_out = X[test_index, :], y[test_index]
-            X_in, y_in = X[train_index, :], y[train_index]
+        for train_index, test_index in kf.split(X_arr):
+            X_out, y_out = X_arr[test_index, :], y_arr[test_index]
+            X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
@@ -442,8 +500,8 @@ class HSTreeRegressorCV(HSTreeRegressor):
                 self.scores_[i].append(scorer(est_hs.predict(X_out), y_out))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
-        self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
-        super().fit(X=X, y=y, *args, **kwargs)
+        self.reg_param = np.asarray(self.reg_param_list)[cv_criterion(self.scores_)]
+        return super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
         attr_list = [
@@ -666,20 +724,34 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
         return self
 
     def _shrink_tree(
-        self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0
+        self,
+        tree,
+        reg_param,
+        i=0,
+        parent_val=None,
+        parent_num=None,
+        cum_sum=0,
+        values_normalized=None,
     ):
         &#34;&#34;&#34;Shrink the tree&#34;&#34;&#34;
         if reg_param is None:
             reg_param = 1.0
+        if values_normalized is None:
+            # sklearn &gt;= 1.3 stores classification tree values as probabilities
+            # rather than counts, in which case they must not be renormalized.
+            # Computed once at the root, since shrinking rewrites tree.value.
+            values_normalized = _values_are_normalized(tree)
         left = tree.children_left[i]
         right = tree.children_right[i]
         is_leaf = left == right
         n_samples = tree.weighted_n_node_samples[i]
-        if isinstance(self, RegressorMixin) or isinstance(
-            self.estimator_, GradientBoostingClassifier
+        if (
+            isinstance(self, RegressorMixin)
+            or isinstance(self.estimator_, GradientBoostingClassifier)
+            or values_normalized
         ):
             val = deepcopy(tree.value[i, :, :])
-        else:  # If classification, normalize to probability vector
+        else:  # If classification, counts need normalizing into a probability vector
             val = tree.value[i, :, :] / n_samples
 
         # Step 1: Update cum_sum
@@ -721,6 +793,7 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
                 parent_val=val,
                 parent_num=n_samples,
                 cum_sum=deepcopy(cum_sum),
+                values_normalized=values_normalized,
             )
             self._shrink_tree(
                 tree,
@@ -729,6 +802,7 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
                 parent_val=val,
                 parent_num=n_samples,
                 cum_sum=deepcopy(cum_sum),
+                values_normalized=values_normalized,
             )
 
             # edit the non-leaf nodes for later visualization (doesn&#39;t effect predictions)
@@ -807,7 +881,8 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -921,10 +996,11 @@ contained subobjects that are estimators.</dd>
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -947,12 +1023,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -969,10 +1039,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1025,9 +1096,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li><code>_estimator_type</code> class attribute defaulting to <code>"classifier"</code>;</li>
+<li>set estimator type to <code>"classifier"</code> through the <code>estimator_type</code> tag;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.accuracy_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
+which is done by setting the classifier type tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -1076,7 +1148,8 @@ array([1, 1, 1])
 <li>sklearn.base.ClassifierMixin</li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -1090,10 +1163,11 @@ array([1, 1, 1])
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1116,12 +1190,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1138,10 +1206,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1203,9 +1272,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li><code>_estimator_type</code> class attribute defaulting to <code>"classifier"</code>;</li>
+<li>set estimator type to <code>"classifier"</code> through the <code>estimator_type</code> tag;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.accuracy_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
+which is done by setting the classifier type tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -1270,7 +1340,8 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         if estimator_ is None:
             estimator_ = DecisionTreeClassifier(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
-        self.reg_param_list = np.array(reg_param_list)
+        # stored unmodified so that the estimator stays sklearn-cloneable
+        self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
         self.shrinkage_scheme_ = shrinkage_scheme_
@@ -1280,13 +1351,27 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         #     raise Warning(&#39;Passed an already fitted estimator,&#39;
         #                   &#39;but shrinking not applied until fit method is called.&#39;)
 
+    def get_params(self, deep=True):
+        d = {
+            &#34;estimator_&#34;: self.estimator_,
+            &#34;reg_param_list&#34;: self.reg_param_list,
+            &#34;shrinkage_scheme_&#34;: self.shrinkage_scheme_,
+            &#34;max_leaf_nodes&#34;: self.estimator_.max_leaf_nodes,
+            &#34;cv&#34;: self.cv,
+            &#34;scoring&#34;: self.scoring,
+        }
+        if deep:
+            return deepcopy(d)
+        return d
+
     def fit(self, X, y, *args, **kwargs):
+        X_arr, y_arr = _as_arrays(X, y)
         self.scores_ = [[] for _ in self.reg_param_list]
         scorer = kwargs.get(&#34;scoring&#34;, log_loss)
         kf = KFold(n_splits=self.cv)
-        for train_index, test_index in kf.split(X):
-            X_out, y_out = X[test_index, :], y[test_index]
-            X_in, y_in = X[train_index, :], y[train_index]
+        for train_index, test_index in kf.split(X_arr):
+            X_out, y_out = X_arr[test_index, :], y_arr[test_index]
+            X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
@@ -1296,8 +1381,8 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
                     scorer(y_out, est_hs.predict_proba(X_out)))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
-        self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
-        super().fit(X=X, y=y, *args, **kwargs)
+        self.reg_param = np.asarray(self.reg_param_list)[cv_criterion(self.scores_)]
+        return super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
         attr_list = [
@@ -1320,7 +1405,8 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li>sklearn.base.ClassifierMixin</li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -1335,12 +1421,13 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fit(self, X, y, *args, **kwargs):
+    X_arr, y_arr = _as_arrays(X, y)
     self.scores_ = [[] for _ in self.reg_param_list]
     scorer = kwargs.get(&#34;scoring&#34;, log_loss)
     kf = KFold(n_splits=self.cv)
-    for train_index, test_index in kf.split(X):
-        X_out, y_out = X[test_index, :], y[test_index]
-        X_in, y_in = X[train_index, :], y[train_index]
+    for train_index, test_index in kf.split(X_arr):
+        X_out, y_out = X_arr[test_index, :], y_arr[test_index]
+        X_in, y_in = X_arr[train_index, :], y_arr[train_index]
         base_est = deepcopy(self.estimator_)
         base_est.fit(X_in, y_in)
         for i, reg_param in enumerate(self.reg_param_list):
@@ -1350,8 +1437,71 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
                 scorer(y_out, est_hs.predict_proba(X_out)))
     self.scores_ = [np.mean(s) for s in self.scores_]
     cv_criterion = _get_cv_criterion(scorer)
-    self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
-    super().fit(X=X, y=y, *args, **kwargs)</code></pre>
+    self.reg_param = np.asarray(self.reg_param_list)[cv_criterion(self.scores_)]
+    return super().fit(X=X, y=y, *args, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a>) ‑> <a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>No-op.</p>
+<p>Calling this method has no effect.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
 </details>
 </dd>
 </dl>
@@ -1360,7 +1510,6 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
@@ -1374,9 +1523,10 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li><code>_estimator_type</code> class attribute defaulting to <code>"regressor"</code>;</li>
+<li>set estimator type to <code>"regressor"</code> through the <code>estimator_type</code> tag;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.r2_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
+which is done by setting the regressor type tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -1425,7 +1575,8 @@ array([0, 0, 0])
 <li>sklearn.base.RegressorMixin</li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -1439,10 +1590,11 @@ array([0, 0, 0])
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1465,12 +1617,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1487,10 +1633,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1552,9 +1699,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li><code>_estimator_type</code> class attribute defaulting to <code>"regressor"</code>;</li>
+<li>set estimator type to <code>"regressor"</code> through the <code>estimator_type</code> tag;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.r2_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
+which is done by setting the regressor type tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -1619,7 +1767,8 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         if estimator_ is None:
             estimator_ = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
-        self.reg_param_list = np.array(reg_param_list)
+        # stored unmodified so that the estimator stays sklearn-cloneable
+        self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
         self.shrinkage_scheme_ = shrinkage_scheme_
@@ -1629,13 +1778,27 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         #     raise Warning(&#39;Passed an already fitted estimator,&#39;
         #                   &#39;but shrinking not applied until fit method is called.&#39;)
 
+    def get_params(self, deep=True):
+        d = {
+            &#34;estimator_&#34;: self.estimator_,
+            &#34;reg_param_list&#34;: self.reg_param_list,
+            &#34;shrinkage_scheme_&#34;: self.shrinkage_scheme_,
+            &#34;max_leaf_nodes&#34;: self.estimator_.max_leaf_nodes,
+            &#34;cv&#34;: self.cv,
+            &#34;scoring&#34;: self.scoring,
+        }
+        if deep:
+            return deepcopy(d)
+        return d
+
     def fit(self, X, y, *args, **kwargs):
+        X_arr, y_arr = _as_arrays(X, y)
         self.scores_ = [[] for _ in self.reg_param_list]
         kf = KFold(n_splits=self.cv)
         scorer = kwargs.get(&#34;scoring&#34;, mean_squared_error)
-        for train_index, test_index in kf.split(X):
-            X_out, y_out = X[test_index, :], y[test_index]
-            X_in, y_in = X[train_index, :], y[train_index]
+        for train_index, test_index in kf.split(X_arr):
+            X_out, y_out = X_arr[test_index, :], y_arr[test_index]
+            X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
@@ -1644,8 +1807,8 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
                 self.scores_[i].append(scorer(est_hs.predict(X_out), y_out))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
-        self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
-        super().fit(X=X, y=y, *args, **kwargs)
+        self.reg_param = np.asarray(self.reg_param_list)[cv_criterion(self.scores_)]
+        return super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
         attr_list = [
@@ -1668,7 +1831,8 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li>sklearn.base.RegressorMixin</li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -1683,12 +1847,13 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fit(self, X, y, *args, **kwargs):
+    X_arr, y_arr = _as_arrays(X, y)
     self.scores_ = [[] for _ in self.reg_param_list]
     kf = KFold(n_splits=self.cv)
     scorer = kwargs.get(&#34;scoring&#34;, mean_squared_error)
-    for train_index, test_index in kf.split(X):
-        X_out, y_out = X[test_index, :], y[test_index]
-        X_in, y_in = X[train_index, :], y[train_index]
+    for train_index, test_index in kf.split(X_arr):
+        X_out, y_out = X_arr[test_index, :], y_arr[test_index]
+        X_in, y_in = X_arr[train_index, :], y_arr[train_index]
         base_est = deepcopy(self.estimator_)
         base_est.fit(X_in, y_in)
         for i, reg_param in enumerate(self.reg_param_list):
@@ -1697,8 +1862,71 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
             self.scores_[i].append(scorer(est_hs.predict(X_out), y_out))
     self.scores_ = [np.mean(s) for s in self.scores_]
     cv_criterion = _get_cv_criterion(scorer)
-    self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
-    super().fit(X=X, y=y, *args, **kwargs)</code></pre>
+    self.reg_param = np.asarray(self.reg_param_list)[cv_criterion(self.scores_)]
+    return super().fit(X=X, y=y, *args, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a>) ‑> <a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>No-op.</p>
+<p>Calling this method has no effect.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
 </details>
 </dd>
 </dl>
@@ -1707,7 +1935,6 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
@@ -1749,6 +1976,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <h4><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV.fit" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 <li>
@@ -1761,6 +1989,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <h4><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.fit" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 </ul>

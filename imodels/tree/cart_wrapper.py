@@ -39,8 +39,14 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
             Fitted estimator.
         """
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        classes = self.classes_  # super().fit overwrites this with the encoded labels
+        names_in = getattr(self, 'feature_names_in_', None)
         super().fit(X, y, sample_weight=sample_weight, check_input=check_input)
+        self.classes_ = classes
+        if names_in is not None:  # super().fit strips this when passed a plain array
+            self.feature_names_in_ = names_in
         self._set_complexity()
+        return self
 
     def _set_complexity(self):
         """Set complexity as number of non-leaf nodes
@@ -85,12 +91,14 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
         self : DecisionTreeRegressor
             Fitted estimator.
         """
-        if feature_names is not None:
-            self.feature_names = feature_names
-        else:
-            self.feature_names = ["X" + str(i + 1) for i in range(X.shape[1])]
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        self.feature_names = list(feature_names)
+        names_in = getattr(self, 'feature_names_in_', None)
         super().fit(X, y, sample_weight=sample_weight, check_input=check_input)
+        if names_in is not None:  # super().fit strips this when passed a plain array
+            self.feature_names_in_ = names_in
         self._set_complexity()
+        return self
 
     def _set_complexity(self):
         """Set complexity as number of non-leaf nodes

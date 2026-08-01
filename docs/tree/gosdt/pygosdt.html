@@ -110,7 +110,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
         result = json.loads(result)
         self.tree_ = TreeClassifier(result[0])
 
-    def fit(self, X, y, feature_names=None):
+    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         &#34;&#34;&#34;
         Parameters
         ---
@@ -163,12 +163,13 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             # dtree = DecisionTreeClassifierWithComplexity()
             # dtree.fit(X, y)
             # self.tree_ = dtree
-            super().fit(X, y, feature_names=feature_names)
+            super().fit(X, y, feature_names=feature_names,
+                        sample_weight=sample_weight, check_input=check_input)
             self.tree_type = &#39;dt&#39;
 
         return self
 
-    def predict(self, X):
+    def predict(self, X, check_input=True):
         &#34;&#34;&#34;
         Parameters
         ---
@@ -187,9 +188,9 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
                 X = pd.DataFrame(X, columns=self.feature_names_)
             return self.tree_.predict(X)
         else:
-            return super().predict(X)
+            return super().predict(X, check_input=check_input)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X, check_input=True):
         validation.check_is_fitted(self)
         if self.tree_type == &#39;gosdt&#39;:
             if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
@@ -197,7 +198,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             probs = np.expand_dims(self.tree_.confidence(X), axis=1)
             return np.hstack((1 - probs, probs))
         else:
-            return super().predict_proba(X)
+            return super().predict_proba(X, check_input=check_input)
 
     def score(self, X, y, weight=None):
         &#34;&#34;&#34;
@@ -216,12 +217,14 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             optionals for weighted accuracy
         &#34;&#34;&#34;
         validation.check_is_fitted(self)
-        if type(self.tree_) is TreeClassifier:
+        if self.tree_type == &#39;gosdt&#39;:
             if not isinstance(X, pd.DataFrame):
                 X = pd.DataFrame(X, columns=self.feature_names_)
             return self.tree_.score(X, y, weight=weight)
         else:
-            return self.tree_.score(X, y, sample_weight=weight)
+            # self.tree_ is then sklearn&#39;s raw Tree struct, which has no score;
+            # defer to the sklearn estimator&#39;s own score
+            return super().score(X, y, sample_weight=weight)
 
     def __len__(self):
         &#34;&#34;&#34;
@@ -230,7 +233,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
         natural number : The number of terminal nodes present in this tree
         &#34;&#34;&#34;
         validation.check_is_fitted(self)
-        if type(self.tree_) is TreeClassifier:
+        if self.tree_type == &#39;gosdt&#39;:
             return len(self.tree_)
         else:
             warnings.warn(&#34;Using DecisionTreeClassifier due to absence of gosdt package. &#34;
@@ -430,7 +433,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
         result = json.loads(result)
         self.tree_ = TreeClassifier(result[0])
 
-    def fit(self, X, y, feature_names=None):
+    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         &#34;&#34;&#34;
         Parameters
         ---
@@ -483,12 +486,13 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             # dtree = DecisionTreeClassifierWithComplexity()
             # dtree.fit(X, y)
             # self.tree_ = dtree
-            super().fit(X, y, feature_names=feature_names)
+            super().fit(X, y, feature_names=feature_names,
+                        sample_weight=sample_weight, check_input=check_input)
             self.tree_type = &#39;dt&#39;
 
         return self
 
-    def predict(self, X):
+    def predict(self, X, check_input=True):
         &#34;&#34;&#34;
         Parameters
         ---
@@ -507,9 +511,9 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
                 X = pd.DataFrame(X, columns=self.feature_names_)
             return self.tree_.predict(X)
         else:
-            return super().predict(X)
+            return super().predict(X, check_input=check_input)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X, check_input=True):
         validation.check_is_fitted(self)
         if self.tree_type == &#39;gosdt&#39;:
             if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
@@ -517,7 +521,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             probs = np.expand_dims(self.tree_.confidence(X), axis=1)
             return np.hstack((1 - probs, probs))
         else:
-            return super().predict_proba(X)
+            return super().predict_proba(X, check_input=check_input)
 
     def score(self, X, y, weight=None):
         &#34;&#34;&#34;
@@ -536,12 +540,14 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             optionals for weighted accuracy
         &#34;&#34;&#34;
         validation.check_is_fitted(self)
-        if type(self.tree_) is TreeClassifier:
+        if self.tree_type == &#39;gosdt&#39;:
             if not isinstance(X, pd.DataFrame):
                 X = pd.DataFrame(X, columns=self.feature_names_)
             return self.tree_.score(X, y, weight=weight)
         else:
-            return self.tree_.score(X, y, sample_weight=weight)
+            # self.tree_ is then sklearn&#39;s raw Tree struct, which has no score;
+            # defer to the sklearn estimator&#39;s own score
+            return super().score(X, y, sample_weight=weight)
 
     def __len__(self):
         &#34;&#34;&#34;
@@ -550,7 +556,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
         natural number : The number of terminal nodes present in this tree
         &#34;&#34;&#34;
         validation.check_is_fitted(self)
-        if type(self.tree_) is TreeClassifier:
+        if self.tree_type == &#39;gosdt&#39;:
             return len(self.tree_)
         else:
             warnings.warn(&#34;Using DecisionTreeClassifier due to absence of gosdt package. &#34;
@@ -669,13 +675,14 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
 <li>sklearn.tree._classes.BaseDecisionTree</li>
 <li>sklearn.base.MultiOutputMixin</li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, sample_weight=None, check_input=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="parameters">Parameters</h2>
@@ -691,7 +698,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def fit(self, X, y, feature_names=None):
+<pre><code class="python">def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
     &#34;&#34;&#34;
     Parameters
     ---
@@ -744,7 +751,8 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
         # dtree = DecisionTreeClassifierWithComplexity()
         # dtree.fit(X, y)
         # self.tree_ = dtree
-        super().fit(X, y, feature_names=feature_names)
+        super().fit(X, y, feature_names=feature_names,
+                    sample_weight=sample_weight, check_input=check_input)
         self.tree_type = &#39;dt&#39;
 
     return self</code></pre>
@@ -922,7 +930,7 @@ being a reserved character in LaTeX</p>
 </details>
 </dd>
 <dt id="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+<span>def <span class="ident">predict</span></span>(<span>self, X, check_input=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="parameters">Parameters</h2>
@@ -940,7 +948,7 @@ be used for prediction</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self, X):
+<pre><code class="python">def predict(self, X, check_input=True):
     &#34;&#34;&#34;
     Parameters
     ---
@@ -959,11 +967,11 @@ be used for prediction</dd>
             X = pd.DataFrame(X, columns=self.feature_names_)
         return self.tree_.predict(X)
     else:
-        return super().predict(X)</code></pre>
+        return super().predict(X, check_input=check_input)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.predict_proba"><code class="name flex">
-<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X, check_input=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Predict class probabilities of the input samples X.</p>
@@ -990,7 +998,7 @@ classes corresponds to that in the attribute :term:<code>classes_</code>.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict_proba(self, X):
+<pre><code class="python">def predict_proba(self, X, check_input=True):
     validation.check_is_fitted(self)
     if self.tree_type == &#39;gosdt&#39;:
         if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
@@ -998,7 +1006,7 @@ classes corresponds to that in the attribute :term:<code>classes_</code>.</dd>
         probs = np.expand_dims(self.tree_.confidence(X), axis=1)
         return np.hstack((1 - probs, probs))
     else:
-        return super().predict_proba(X)</code></pre>
+        return super().predict_proba(X, check_input=check_input)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.score"><code class="name flex">
@@ -1040,120 +1048,25 @@ classes corresponds to that in the attribute :term:<code>classes_</code>.</dd>
         optionals for weighted accuracy
     &#34;&#34;&#34;
     validation.check_is_fitted(self)
-    if type(self.tree_) is TreeClassifier:
+    if self.tree_type == &#39;gosdt&#39;:
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X, columns=self.feature_names_)
         return self.tree_.score(X, y, weight=weight)
     else:
-        return self.tree_.score(X, y, sample_weight=weight)</code></pre>
-</details>
-</dd>
-<dt id="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">OptimalTreeClassifier</a>, *, feature_names: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">OptimalTreeClassifier</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
-mechanism works.</p>
-<p>The options for each parameter are:</p>
-<ul>
-<li>
-<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
-</li>
-<li>
-<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
-</li>
-<li>
-<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
-</li>
-<li>
-<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
-</li>
-</ul>
-<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
-existing request. This allows you to change the request for some
-parameters and not others.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
-default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
-<dd>Metadata routing for <code>feature_names</code> parameter in <code>fit</code>.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
+        # self.tree_ is then sklearn&#39;s raw Tree struct, which has no score;
+        # defer to the sklearn estimator&#39;s own score
+        return super().score(X, y, sample_weight=weight)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.set_score_request"><code class="name flex">
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">OptimalTreeClassifier</a>, *, weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">OptimalTreeClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1176,12 +1089,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1198,10 +1105,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1249,8 +1157,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.cart_wrapper.GreedyTreeClassifier" href="../cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.cart_wrapper.GreedyTreeClassifier.set_predict_proba_request" href="../cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier.set_predict_proba_request">set_predict_proba_request</a></code></li>
-<li><code><a title="imodels.tree.cart_wrapper.GreedyTreeClassifier.set_predict_request" href="../cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier.set_predict_request">set_predict_request</a></code></li>
+<li><code><a title="imodels.tree.cart_wrapper.GreedyTreeClassifier.set_fit_request" href="../cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1284,7 +1191,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.predict" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.predict_proba" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.score" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.score">score</a></code></li>
-<li><code><a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.set_fit_request" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.set_score_request" href="#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
