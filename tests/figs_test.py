@@ -234,3 +234,32 @@ def test_verbose_progress_reporting():
 
     # and it round-trips as a normal parameter
     assert FIGSRegressor(verbose=1).get_params()['verbose'] == 1
+
+
+def test_single_feature_input():
+    """FIGS should fit data with one feature
+
+    Annotating the tree indexed X by the node's split feature even for leaves,
+    whose feature is the -2 placeholder. With several features that silently
+    picked the wrong column; with one it raised IndexError.
+    """
+    from imodels import FIGSClassifier, FIGSClassifierCV, FIGSRegressor
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(120, 1)
+    y = (X[:, 0] > 0).astype(int)
+
+    classifier = FIGSClassifier(max_rules=5).fit(X, y)
+    assert classifier.predict(X).shape == (120,)
+    assert np.mean(classifier.predict(X) == y) > 0.9
+    assert classifier.feature_importances_.shape == (1,)
+
+    regressor = FIGSRegressor(max_rules=5).fit(X, X[:, 0])
+    assert regressor.predict(X).shape == (120,)
+
+    cv = FIGSClassifierCV(n_rules_list=[3], n_trees_list=[2], cv=2).fit(X, y)
+    assert cv.predict(X).shape == (120,)
+
+    # leaf membership and rules work too
+    assert classifier.apply(X).shape[0] == 120
+    assert len(classifier.get_rules()) > 0

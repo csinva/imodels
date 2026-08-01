@@ -541,6 +541,11 @@ class FIGS(BaseEstimator):
                               value_sklearn=value_sklearn,
                               n_samples_=X.shape[0])
 
+                if node.left is None and node.right is None:
+                    # a leaf splits on nothing: its feature is the -2 placeholder,
+                    # which indexes the wrong column (or raises, with one feature)
+                    return
+
                 idxs_left = X[:, node.feature] <= node.threshold
                 _annotate_node(node.left, X[idxs_left], y[idxs_left],
                                weights[idxs_left], is_classmixin)
