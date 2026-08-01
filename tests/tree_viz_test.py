@@ -82,3 +82,29 @@ def test_errors_are_clear():
     model = imodels.FIGSClassifier(max_rules=4).fit(X, y)
     with pytest.raises(ValueError, match='tree_num'):
         imodels.shadow_tree(model, X, y, tree_num=99)
+
+
+def test_renders_an_svg():
+    """The shadow tree actually renders, not just constructs
+
+    Needs the graphviz binaries, so skipped where `dot` isn't on PATH.
+    """
+    import shutil
+
+    import dtreeviz
+
+    if shutil.which('dot') is None:
+        pytest.skip('graphviz (dot) is not installed')
+
+    X, y = _data()
+    model = imodels.FIGSClassifier(max_rules=6).fit(X, y)
+
+    viz = dtreeviz.trees.DTreeVizAPI(imodels.shadow_tree(model, X, y))
+    svg = viz.view().svg()
+
+    assert svg.lstrip().startswith('<svg')
+    assert len(svg) > 1000, 'expected a non-trivial drawing'
+    # the split features the model actually used appear in the drawing
+    used = {rule.split()[0] for rule in model.get_rules()['rule']
+            if rule != 'else'}
+    assert any(feature in svg for feature in used), used
