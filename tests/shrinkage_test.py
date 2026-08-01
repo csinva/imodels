@@ -243,3 +243,52 @@ def test_models_do_not_share_a_default_estimator():
     assert HSTreeRegressor().fit(X, X[:, 0]).predict(X).shape == (300,)
     assert isinstance(HSTreeRegressor().estimator_, DecisionTreeRegressor)
     assert isinstance(HSTreeClassifier().estimator_, DecisionTreeClassifier)
+
+
+def test_cv_fits_each_tree_once_per_fold():
+    """The CV search should not refit the tree for every reg_param
+
+    Shrinkage is post-hoc, so one fit per fold is enough; the tree used to be
+    refit for each candidate (see https://github.com/csinva/imodels/issues/175).
+    """
+    from sklearn.tree import DecisionTreeClassifier as _DTC
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(600, 6)
+    y = (X[:, 0] + rng.randn(600) > 0).astype(int)
+
+    n_fits = []
+    original_fit = _DTC.fit
+
+    def counting_fit(self, *args, **kwargs):
+        n_fits.append(1)
+        return original_fit(self, *args, **kwargs)
+
+    _DTC.fit = counting_fit
+    try:
+        model = HSTreeClassifierCV(cv=3).fit(X, y)
+    finally:
+        _DTC.fit = original_fit
+
+    # one fit per fold, plus the final fit on all the data
+    assert len(n_fits) == model.cv + 1, f'{len(n_fits)} tree fits'
+    assert len(model.scores_) == len(model.reg_param_list)
+
+
+def test_cv_scores_are_unchanged():
+    """Scoring each reg_param on the same fitted tree gives the same answers"""
+    from sklearn.tree import DecisionTreeClassifier as _DTC
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(1500, 10)
+    y = (X[:, 0] + rng.randn(1500) > 0).astype(int)
+
+    model = HSTreeClassifierCV(
+        estimator_=_DTC(max_leaf_nodes=20, random_state=0), cv=3).fit(X, y)
+
+    # values recorded from the previous implementation, which refit the tree
+    # for every reg_param; identical once the tree is deterministic
+    expected = [1.239293, 0.664447, 0.617181, 0.563517,
+                0.523661, 0.512812, 0.531620]
+    assert np.allclose(model.scores_, expected, atol=1e-5)
+    assert model.reg_param == 100.0
