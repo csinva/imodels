@@ -265,10 +265,8 @@ class FIGS(BaseEstimator):
         return node_split
 
     def _encode_categories(self, X, categorical_features, encoder_name):
-        encoder = None
-        if hasattr(self, encoder_name):
-            encoder = self._encoder
-        return encode_categories(X, categorical_features, encoder)
+        """Apply the encoder stored under encoder_name (fitted during fit) to X."""
+        return encode_categories(X, categorical_features, getattr(self, encoder_name))
 
     def fit(
         self,
@@ -288,7 +286,7 @@ class FIGS(BaseEstimator):
             are ignored while searching for a split in each node.
         """
         if categorical_features is not None:
-            X, self._encoder = self._encode_categories(X, categorical_features, "_encoder")
+            X, self._encoder = encode_categories(X, categorical_features)
             
         if hasattr(y, 'values'):
             y = y.values
@@ -306,7 +304,8 @@ class FIGS(BaseEstimator):
 
             #self.classes_, y = np.unique(y, return_inverse=True)
             self.classes_ = np.unique(y)
-            y, self._class_encoder = self._encode_categories(pd.DataFrame(y, columns = [class_name]), [class_name], "_class_encoder")
+            y, self._class_encoder = encode_categories(
+                pd.DataFrame(y, columns=[class_name]), [class_name])
             self.Y = y
             self._class_map = {i:c for i, c in zip(np.arange(0, y.shape[1]), self._class_encoder.inverse_transform(np.eye(y.shape[1])).reshape(-1, ))}
             
@@ -765,12 +764,30 @@ class FIGSCV:
     ):
 
         self._figs_class = figs
-        self.n_rules_list = np.array(n_rules_list)
-        self.n_trees_list = np.array(n_trees_list)
-        self.depth_list = np.array(depth_list)
-        self.min_impurity_decrease_list = np.array(min_impurity_decrease_list)
+        # stored unmodified so that the estimator stays sklearn-cloneable
+        self.n_rules_list = n_rules_list
+        self.n_trees_list = n_trees_list
+        self.depth_list = depth_list
+        self.min_impurity_decrease_list = min_impurity_decrease_list
         self.cv = cv
         self.scoring = scoring
+
+    def get_params(self, deep=True):
+        # defined explicitly because __init__ takes *args/**kwargs, which sklearn's
+        # automatic parameter introspection rejects
+        return {
+            "n_rules_list": self.n_rules_list,
+            "n_trees_list": self.n_trees_list,
+            "depth_list": self.depth_list,
+            "min_impurity_decrease_list": self.min_impurity_decrease_list,
+            "cv": self.cv,
+            "scoring": self.scoring,
+        }
+
+    def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
+        return self
 
     def fit(self, X, y):
         self.scores_ = []
@@ -785,6 +802,12 @@ class FIGSCV:
 
             self.scores_.append(mean_score)
         self.figs.fit(X=X, y=y)
+        self.n_features_in_ = self.figs.n_features_in_
+        if hasattr(self.figs, "classes_"):
+            self.classes_ = self.figs.classes_
+        if hasattr(self.figs, "feature_names_in_"):
+            self.feature_names_in_ = self.figs.feature_names_in_
+        return self
 
     def predict_proba(self, X):
         return self.figs.predict_proba(X)

@@ -15,7 +15,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, decode_labels
 
 from ..c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
     set_as_leaf_node
@@ -225,7 +225,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         raw_preds = self.raw_preds(X)
-        return (raw_preds > np.ones_like(raw_preds) * 0.5).astype(int)
+        return decode_labels(self, (raw_preds > np.ones_like(raw_preds) * 0.5).astype(int))
 
     def predict_proba(self, X):
         raw_preds = self.raw_preds(X)

@@ -18,7 +18,7 @@ from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
 from .rule_set import boosted_rules
 from .rule_set.boosted_rules import *
-from .rule_set.boosted_rules import BoostedRulesClassifier
+from .rule_set.boosted_rules import BoostedRulesClassifier, BoostedRulesRegressor
 from .rule_set.brs import BayesianRuleSetClassifier
 from .rule_set.fplasso import FPLassoRegressor, FPLassoClassifier
 from .rule_set.fpskope import FPSkopeClassifier
@@ -66,25 +66,33 @@ CLASSIFIERS = [
     C45TreeClassifier,
     OptimalTreeClassifier,
     OneRClassifier,
-    SlipperClassifier,
     RuleFitClassifier,
+    FPLassoClassifier,
+    FPSkopeClassifier,
     TaoTreeClassifier,
     TreeGAMClassifier,
     FIGSClassifier,
+    FIGSClassifierCV,
     HSTreeClassifier,
     HSTreeClassifierCV,
     GreedyTreeClassifier,
+    DecisionTreeCCPClassifier,
     AutoInterpretableClassifier,
 ]  # , IRFClassifier
 REGRESSORS = [
     RuleFitRegressor,
+    FPLassoRegressor,
     SLIMRegressor,
     GreedyTreeRegressor,
     FIGSRegressor,
+    FIGSRegressorCV,
     TaoTreeRegressor,
     TreeGAMRegressor,
+    BoostedRulesRegressor,
+    MarginalShrinkageLinearModelRegressor,
     HSTreeRegressor,
     HSTreeRegressorCV,
+    DecisionTreeCCPRegressor,
     BART,
     AutoInterpretableRegressor,
 ]
