@@ -17,27 +17,193 @@
 <main>
 <article id="content">
 <section id="section-intro">
-<p>Repeatedly fit random forest, giving features with high importance a higher chance of being selected.</p>
+<p>Map samples to the leaves they land in, like sklearn's <code>tree.apply</code>.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#39;&#39;&#39;Repeatedly fit random forest, giving features with high importance a higher chance of being selected.
-&#39;&#39;&#39;</code></pre>
+<pre><code class="python">&#34;&#34;&#34;Map samples to the leaves they land in, like sklearn&#39;s `tree.apply`.&#34;&#34;&#34;
+
+import numpy as np
+from sklearn.utils.validation import check_array
+
+
+def apply_leaves(model, X) -&gt; np.ndarray:
+    &#34;&#34;&#34;Return the leaf each sample reaches, for a tree-based model.
+
+    Parameters
+    ----------
+    model
+        A fitted tree-based imodels model.
+    X : array-like of shape (n_samples, n_features)
+
+    Returns
+    -------
+    numpy.ndarray
+        For a model built from a single tree, shape ``(n_samples,)``: the index
+        of the leaf each sample falls in, using the same node numbering as
+        scikit-learn&#39;s ``DecisionTree.apply``.
+
+        For a model built from several trees (FIGS, boosted rules, TreeGAM),
+        shape ``(n_samples, n_trees)``, matching ``RandomForest.apply``: column
+        ``t`` holds the leaf reached in tree ``t``.
+
+    Raises
+    ------
+    ValueError
+        If the model is not tree-based, or is not fitted yet.
+
+    Examples
+    --------
+    &gt;&gt;&gt; model = FIGSClassifier(max_rules=3).fit(X, y)   # doctest: +SKIP
+    &gt;&gt;&gt; model.apply(X).shape                            # doctest: +SKIP
+    (100, 2)
+    &#34;&#34;&#34;
+    trees = _sklearn_trees(model)
+    if trees is None:
+        raise ValueError(
+            f&#34;Don&#39;t know how to get leaf membership for {type(model).__name__}. &#34;
+            &#34;apply is defined for tree-based models; if the model is not fitted &#34;
+            &#34;yet, fit it first.&#34;
+        )
+
+    X = check_array(X, ensure_all_finite=False) if _accepts_nan() else check_array(X)
+    leaves = np.column_stack([tree.apply(X) for tree in trees])
+    return leaves[:, 0] if len(trees) == 1 else leaves
+
+
+def _accepts_nan():
+    from inspect import signature
+    return &#39;ensure_all_finite&#39; in signature(check_array).parameters
+
+
+def _is_sklearn_tree(estimator):
+    return hasattr(getattr(estimator, &#39;tree_&#39;, None), &#39;feature&#39;)
+
+
+def _sklearn_trees(model):
+    &#34;&#34;&#34;The fitted sklearn trees behind a model, or None if there are none.&#34;&#34;&#34;
+    if hasattr(model, &#39;trees_&#39;):  # FIGS: a sum of trees
+        from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
+        n_classes = len(getattr(model, &#39;classes_&#39;, [0, 1]))
+        return [extract_sklearn_tree_from_figs(model, i, n_classes)
+                for i in range(len(model.trees_))]
+
+    if _is_sklearn_tree(model):
+        return [model]
+
+    # models that wrap or delegate to another fitted model
+    for attr in (&#39;figs&#39;, &#39;estimator_&#39;, &#39;model&#39;):
+        inner = getattr(model, attr, None)
+        if inner is not None and inner is not model:
+            trees = _sklearn_trees(inner)
+            if trees is not None:
+                return trees
+
+    subestimators = getattr(model, &#39;estimators_&#39;, None)
+    if subestimators is not None and len(subestimators) &gt; 0:
+        trees = []
+        for estimator in subestimators:
+            if isinstance(estimator, np.ndarray):  # gradient boosting nests them
+                estimator = estimator[0]
+            if not _is_sklearn_tree(estimator):
+                return None
+            trees.append(estimator)
+        return trees
+
+    return None</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="imodels.tree.iterative_random_forest.iterative_random_forest" href="iterative_random_forest.html">imodels.tree.iterative_random_forest.iterative_random_forest</a></code></dt>
+<dt id="imodels.util.apply.apply_leaves"><code class="name flex">
+<span>def <span class="ident">apply_leaves</span></span>(<span>model, X) ‑> numpy.ndarray</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return the leaf each sample reaches, for a tree-based model.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>model</code></strong></dt>
+<dd>A fitted tree-based imodels model.</dd>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>numpy.ndarray</code></dt>
+<dd>
+<p>For a model built from a single tree, shape <code>(n_samples,)</code>: the index
+of the leaf each sample falls in, using the same node numbering as
+scikit-learn's <code>DecisionTree.apply</code>.</p>
+<p>For a model built from several trees (FIGS, boosted rules, TreeGAM),
+shape <code>(n_samples, n_trees)</code>, matching <code>RandomForest.apply</code>: column
+<code>t</code> holds the leaf reached in tree <code>t</code>.</p>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If the model is not tree-based, or is not fitted yet.</dd>
+</dl>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; model = FIGSClassifier(max_rules=3).fit(X, y)   # doctest: +SKIP
+&gt;&gt;&gt; model.apply(X).shape                            # doctest: +SKIP
+(100, 2)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply_leaves(model, X) -&gt; np.ndarray:
+    &#34;&#34;&#34;Return the leaf each sample reaches, for a tree-based model.
+
+    Parameters
+    ----------
+    model
+        A fitted tree-based imodels model.
+    X : array-like of shape (n_samples, n_features)
+
+    Returns
+    -------
+    numpy.ndarray
+        For a model built from a single tree, shape ``(n_samples,)``: the index
+        of the leaf each sample falls in, using the same node numbering as
+        scikit-learn&#39;s ``DecisionTree.apply``.
+
+        For a model built from several trees (FIGS, boosted rules, TreeGAM),
+        shape ``(n_samples, n_trees)``, matching ``RandomForest.apply``: column
+        ``t`` holds the leaf reached in tree ``t``.
+
+    Raises
+    ------
+    ValueError
+        If the model is not tree-based, or is not fitted yet.
+
+    Examples
+    --------
+    &gt;&gt;&gt; model = FIGSClassifier(max_rules=3).fit(X, y)   # doctest: +SKIP
+    &gt;&gt;&gt; model.apply(X).shape                            # doctest: +SKIP
+    (100, 2)
+    &#34;&#34;&#34;
+    trees = _sklearn_trees(model)
+    if trees is None:
+        raise ValueError(
+            f&#34;Don&#39;t know how to get leaf membership for {type(model).__name__}. &#34;
+            &#34;apply is defined for tree-based models; if the model is not fitted &#34;
+            &#34;yet, fit it first.&#34;
+        )
+
+    X = check_array(X, ensure_all_finite=False) if _accepts_nan() else check_array(X)
+    leaves = np.column_stack([tree.apply(X) for tree in trees])
+    return leaves[:, 0] if len(trees) == 1 else leaves</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -50,19 +216,12 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.tree" href="../index.html">imodels.tree</a></code></li>
+<li><code><a title="imodels.util" href="index.html">imodels.util</a></code></li>
 </ul>
 </li>
-<li><h3>Our favorite models</h3>
-<ul>
-<li><a href="https://csinva.io/imodels/shrinkage.html">Hierarchical shrinkage: post-hoc regularization for tree-based methods</a></li>
-<li><a href="https://csinva.io/imodels/figs.html">FIGS: Fast interpretable greedy-tree sums</a></li>
-<li><a href="https://csinva.io/imodels/mdi_plus.html">MDI+: Flexible tree-based feature importance</a></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="imodels.tree.iterative_random_forest.iterative_random_forest" href="iterative_random_forest.html">imodels.tree.iterative_random_forest.iterative_random_forest</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.util.apply.apply_leaves" href="#imodels.util.apply.apply_leaves">apply_leaves</a></code></li>
 </ul>
 </li>
 </ul>

@@ -62,7 +62,8 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
                 setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
-        path = self.estimator_.cost_complexity_pruning_path(X, y)
+        path = self.estimator_.cost_complexity_pruning_path(
+            X, y, sample_weight=sample_weight)
         ccp_alphas, impurities = path.ccp_alphas, path.impurities
         complexities = {}
         low = 0
@@ -73,7 +74,7 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
             est_params = self.estimator_.get_params()
             est_params[&#39;ccp_alpha&#39;] = ccp_alphas[cur]
             copied_estimator = deepcopy(self.estimator_).set_params(**est_params)
-            copied_estimator.fit(X, y)
+            copied_estimator.fit(X, y, sample_weight=sample_weight)
             if self._get_complexity(copied_estimator, self.complexity_measure) &lt; self.desired_complexity:
                 high = cur - 1
             elif self._get_complexity(copied_estimator, self.complexity_measure) &gt; self.desired_complexity:
@@ -96,9 +97,14 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
         self._get_alpha(X, y, sample_weight, *args, **kwargs)
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
-        self.estimator_.fit(X, y, *args, **kwargs)
+        self.estimator_.fit(X, y, *args, sample_weight=sample_weight, **kwargs)
         self._copy_fitted_attributes()
         return self
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
 
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
@@ -149,7 +155,8 @@ class DecisionTreeCCPRegressor(BaseEstimator):
                 setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None):
-        path = self.estimator_.cost_complexity_pruning_path(X, y)
+        path = self.estimator_.cost_complexity_pruning_path(
+            X, y, sample_weight=sample_weight)
         ccp_alphas, impurities = path.ccp_alphas, path.impurities
         complexities = {}
         low = 0
@@ -160,7 +167,7 @@ class DecisionTreeCCPRegressor(BaseEstimator):
             est_params = self.estimator_.get_params()
             est_params[&#39;ccp_alpha&#39;] = ccp_alphas[cur]
             copied_estimator = deepcopy(self.estimator_).set_params(**est_params)
-            copied_estimator.fit(X, y)
+            copied_estimator.fit(X, y, sample_weight=sample_weight)
             if self._get_complexity(copied_estimator, self.complexity_measure) &lt; self.desired_complexity:
                 high = cur - 1
             elif self._get_complexity(copied_estimator, self.complexity_measure) &gt; self.desired_complexity:
@@ -186,7 +193,7 @@ class DecisionTreeCCPRegressor(BaseEstimator):
         self._get_alpha(X, y, sample_weight)
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
-        self.estimator_.fit(X, y)
+        self.estimator_.fit(X, y, sample_weight=sample_weight)
         self._copy_fitted_attributes()
         return self
 
@@ -337,7 +344,8 @@ array([1, 1, 1])
                 setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
-        path = self.estimator_.cost_complexity_pruning_path(X, y)
+        path = self.estimator_.cost_complexity_pruning_path(
+            X, y, sample_weight=sample_weight)
         ccp_alphas, impurities = path.ccp_alphas, path.impurities
         complexities = {}
         low = 0
@@ -348,7 +356,7 @@ array([1, 1, 1])
             est_params = self.estimator_.get_params()
             est_params[&#39;ccp_alpha&#39;] = ccp_alphas[cur]
             copied_estimator = deepcopy(self.estimator_).set_params(**est_params)
-            copied_estimator.fit(X, y)
+            copied_estimator.fit(X, y, sample_weight=sample_weight)
             if self._get_complexity(copied_estimator, self.complexity_measure) &lt; self.desired_complexity:
                 high = cur - 1
             elif self._get_complexity(copied_estimator, self.complexity_measure) &gt; self.desired_complexity:
@@ -371,9 +379,14 @@ array([1, 1, 1])
         self._get_alpha(X, y, sample_weight, *args, **kwargs)
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
-        self.estimator_.fit(X, y, *args, **kwargs)
+        self.estimator_.fit(X, y, *args, sample_weight=sample_weight, **kwargs)
         self._copy_fitted_attributes()
         return self
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
 
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
@@ -417,7 +430,7 @@ array([1, 1, 1])
     self._get_alpha(X, y, sample_weight, *args, **kwargs)
     params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
     self.estimator_.set_params(**params_for_fitting)
-    self.estimator_.fit(X, y, *args, **kwargs)
+    self.estimator_.fit(X, y, *args, sample_weight=sample_weight, **kwargs)
     self._copy_fitted_attributes()
     return self</code></pre>
 </details>
@@ -450,6 +463,21 @@ contained subobjects that are estimators.</dd>
         &#34;desired_complexity&#34;: self.desired_complexity,
         &#34;complexity_measure&#34;: self.complexity_measure,
     }</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_rules"><code class="name flex">
+<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rules(self, feature_names=None):
+    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+    from imodels.util.get_rules import get_rules
+    return get_rules(self, feature_names=feature_names)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict"><code class="name flex">
@@ -714,7 +742,8 @@ array([3, 3, 3])
                 setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None):
-        path = self.estimator_.cost_complexity_pruning_path(X, y)
+        path = self.estimator_.cost_complexity_pruning_path(
+            X, y, sample_weight=sample_weight)
         ccp_alphas, impurities = path.ccp_alphas, path.impurities
         complexities = {}
         low = 0
@@ -725,7 +754,7 @@ array([3, 3, 3])
             est_params = self.estimator_.get_params()
             est_params[&#39;ccp_alpha&#39;] = ccp_alphas[cur]
             copied_estimator = deepcopy(self.estimator_).set_params(**est_params)
-            copied_estimator.fit(X, y)
+            copied_estimator.fit(X, y, sample_weight=sample_weight)
             if self._get_complexity(copied_estimator, self.complexity_measure) &lt; self.desired_complexity:
                 high = cur - 1
             elif self._get_complexity(copied_estimator, self.complexity_measure) &gt; self.desired_complexity:
@@ -751,7 +780,7 @@ array([3, 3, 3])
         self._get_alpha(X, y, sample_weight)
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
-        self.estimator_.fit(X, y)
+        self.estimator_.fit(X, y, sample_weight=sample_weight)
         self._copy_fitted_attributes()
         return self
 
@@ -790,7 +819,7 @@ array([3, 3, 3])
     self._get_alpha(X, y, sample_weight)
     params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
     self.estimator_.set_params(**params_for_fitting)
-    self.estimator_.fit(X, y)
+    self.estimator_.fit(X, y, sample_weight=sample_weight)
     self._copy_fitted_attributes()
     return self</code></pre>
 </details>
@@ -1075,7 +1104,9 @@ array([1, 1, 1])
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.apply" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_params" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_rules" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_fit_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
@@ -1178,7 +1209,9 @@ array([0, 0, 0])
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.apply" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_params" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_rules" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_fit_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request">set_score_request</a></code></li>
 </ul>
@@ -1206,6 +1239,7 @@ array([0, 0, 0])
 <ul class="two-column">
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_params" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_rules" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict_proba" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.score" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.score">score</a></code></li>

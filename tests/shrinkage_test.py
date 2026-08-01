@@ -7,7 +7,6 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels import HSTreeClassifier, HSTreeClassifierCV, \
     HSTreeRegressor, HSTreeRegressorCV, C45TreeClassifier
-# OptimalTreeClassifier, HSOptimalTreeClassifierCV
 from imodels.tree.c45_tree.c45_tree import HSC45TreeClassifierCV
 import random
 from functools import partial
@@ -18,7 +17,6 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels import HSTreeClassifier, HSTreeClassifierCV, \
     HSTreeRegressor, HSTreeRegressorCV, C45TreeClassifier
-# OptimalTreeClassifier, HSOptimalTreeClassifierCV
 from imodels.tree.c45_tree.c45_tree import HSC45TreeClassifierCV
 
 
@@ -57,7 +55,6 @@ class TestShrinkage:
             partial(HSTreeClassifierCV, estimator_=RandomForestClassifier()),
             partial(HSC45TreeClassifierCV, estimator_=C45TreeClassifier()),
             HSTreeClassifierCV,  # default estimator is Decision tree with 25 max_leaf_nodes
-            # partial(HSOptimalTreeClassifierCV, estimator_=OptimalTreeClassifier()),
         ]:
             init_kwargs = {}
             m = model_type(**init_kwargs)

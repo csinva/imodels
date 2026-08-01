@@ -71,6 +71,12 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
         self._set_complexity()
         return self
 
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
     def _set_complexity(self):
         &#34;&#34;&#34;Set complexity as number of non-leaf nodes
         &#34;&#34;&#34;
@@ -122,6 +128,12 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
             self.feature_names_in_ = names_in
         self._set_complexity()
         return self
+
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
 
     def _set_complexity(self):
         &#34;&#34;&#34;Set complexity as number of non-leaf nodes
@@ -195,6 +207,12 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
         self._set_complexity()
         return self
 
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
     def _set_complexity(self):
         &#34;&#34;&#34;Set complexity as number of non-leaf nodes
         &#34;&#34;&#34;
@@ -220,10 +238,6 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
 <li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
 <li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="imodels.tree.gosdt.pygosdt.OptimalTreeClassifier" href="gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">OptimalTreeClassifier</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -298,6 +312,21 @@ Don't use this parameter unless you know what you do.</dd>
         self.feature_names_in_ = names_in
     self._set_complexity()
     return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.cart_wrapper.GreedyTreeClassifier.get_rules"><code class="name flex">
+<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rules(self, feature_names=None):
+    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+    from imodels.util.get_rules import get_rules
+    return get_rules(self, feature_names=feature_names)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_wrapper.GreedyTreeClassifier.set_fit_request"><code class="name flex">
@@ -539,6 +568,12 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
         self._set_complexity()
         return self
 
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
     def _set_complexity(self):
         &#34;&#34;&#34;Set complexity as number of non-leaf nodes
         &#34;&#34;&#34;
@@ -626,6 +661,21 @@ Don't use this parameter unless you know what you do.</dd>
         self.feature_names_in_ = names_in
     self._set_complexity()
     return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.cart_wrapper.GreedyTreeRegressor.get_rules"><code class="name flex">
+<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rules(self, feature_names=None):
+    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+    from imodels.util.get_rules import get_rules
+    return get_rules(self, feature_names=feature_names)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_wrapper.GreedyTreeRegressor.set_fit_request"><code class="name flex">
@@ -841,6 +891,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <h4><code><a title="imodels.tree.cart_wrapper.GreedyTreeClassifier" href="#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.tree.cart_wrapper.GreedyTreeClassifier.fit" href="#imodels.tree.cart_wrapper.GreedyTreeClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.cart_wrapper.GreedyTreeClassifier.get_rules" href="#imodels.tree.cart_wrapper.GreedyTreeClassifier.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.cart_wrapper.GreedyTreeClassifier.set_fit_request" href="#imodels.tree.cart_wrapper.GreedyTreeClassifier.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.cart_wrapper.GreedyTreeClassifier.set_score_request" href="#imodels.tree.cart_wrapper.GreedyTreeClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
@@ -849,6 +900,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <h4><code><a title="imodels.tree.cart_wrapper.GreedyTreeRegressor" href="#imodels.tree.cart_wrapper.GreedyTreeRegressor">GreedyTreeRegressor</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.tree.cart_wrapper.GreedyTreeRegressor.fit" href="#imodels.tree.cart_wrapper.GreedyTreeRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.cart_wrapper.GreedyTreeRegressor.get_rules" href="#imodels.tree.cart_wrapper.GreedyTreeRegressor.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.cart_wrapper.GreedyTreeRegressor.set_fit_request" href="#imodels.tree.cart_wrapper.GreedyTreeRegressor.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.cart_wrapper.GreedyTreeRegressor.set_score_request" href="#imodels.tree.cart_wrapper.GreedyTreeRegressor.set_score_request">set_score_request</a></code></li>
 </ul>

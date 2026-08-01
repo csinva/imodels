@@ -53,13 +53,14 @@ class DistilledRegressor(BaseEstimator, RegressorMixin):
                 raise ValueError(&#34;Student must be a regressor&#34;)
 
     def _check_teacher_type(self):
+        # sklearn &gt;= 1.9 dropped _estimator_type in favor of tags, so go through
+        # the public is_regressor helper rather than sniffing the attribute
         if hasattr(self.teacher, &#34;prediction_task&#34;):
             self.teacher_type = self.teacher.prediction_task
-        elif hasattr(self.teacher, &#34;_estimator_type&#34;):
-            if is_regressor(self.teacher):
-                self.teacher_type = &#34;regression&#34;
-            else:
-                self.teacher_type = &#34;classification&#34;
+        elif is_regressor(self.teacher):
+            self.teacher_type = &#34;regression&#34;
+        else:
+            self.teacher_type = &#34;classification&#34;
 
     def set_teacher_params(self, **params):
         self.teacher.set_params(**params)
@@ -78,6 +79,7 @@ class DistilledRegressor(BaseEstimator, RegressorMixin):
                 
         # fit student
         self.student.fit(X, y)
+        return self
 
     def predict(self, X):
         return self.student.predict(X)</code></pre>
@@ -137,13 +139,14 @@ must be a regressor</p></div>
                 raise ValueError(&#34;Student must be a regressor&#34;)
 
     def _check_teacher_type(self):
+        # sklearn &gt;= 1.9 dropped _estimator_type in favor of tags, so go through
+        # the public is_regressor helper rather than sniffing the attribute
         if hasattr(self.teacher, &#34;prediction_task&#34;):
             self.teacher_type = self.teacher.prediction_task
-        elif hasattr(self.teacher, &#34;_estimator_type&#34;):
-            if is_regressor(self.teacher):
-                self.teacher_type = &#34;regression&#34;
-            else:
-                self.teacher_type = &#34;classification&#34;
+        elif is_regressor(self.teacher):
+            self.teacher_type = &#34;regression&#34;
+        else:
+            self.teacher_type = &#34;classification&#34;
 
     def set_teacher_params(self, **params):
         self.teacher.set_params(**params)
@@ -162,6 +165,7 @@ must be a regressor</p></div>
                 
         # fit student
         self.student.fit(X, y)
+        return self
 
     def predict(self, X):
         return self.student.predict(X)</code></pre>
@@ -195,7 +199,8 @@ must be a regressor</p></div>
             y = self.teacher.predict_proba(X)[:, 1] # assumes binary classifier
             
     # fit student
-    self.student.fit(X, y)</code></pre>
+    self.student.fit(X, y)
+    return self</code></pre>
 </details>
 </dd>
 <dt id="imodels.util.distillation.DistilledRegressor.predict"><code class="name flex">

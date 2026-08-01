@@ -20,7 +20,6 @@ requirements:
     - pip
     - python >=3.6
   run:
-    - corels ==1.1.29
     - mlxtend >=0.18.0
     - numpy
     - pandas

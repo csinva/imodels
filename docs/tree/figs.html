@@ -35,6 +35,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.validation import _check_sample_weight, check_is_fitted
 
 from scipy.special import softmax
@@ -145,6 +146,7 @@ class FIGS(BaseEstimator):
         random_state=None,
         max_features: str = None,
         max_depth: int = None,
+        class_weight=None,
     ):
         &#34;&#34;&#34;
         Params
@@ -157,6 +159,12 @@ class FIGS(BaseEstimator):
             A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
         max_features
             The number of features to consider when looking for the best split (see https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
+        class_weight: dict, list of dict or &#34;balanced&#34;, default=None
+            Classification only. Weights associated with classes, in the form
+            {class_label: weight}. &#34;balanced&#34; weights each class by
+            n_samples / (n_classes * np.bincount(y)), so that rare classes count
+            as much as common ones. Combined multiplicatively with sample_weight
+            when both are given.
         &#34;&#34;&#34;
         super().__init__()
         self.max_rules = max_rules
@@ -165,9 +173,35 @@ class FIGS(BaseEstimator):
         self.random_state = random_state
         self.max_features = max_features
         self.max_depth = max_depth
+        self.class_weight = class_weight
         self._init_decision_function()
         self.n_outputs = None
         self.need_to_reshape = False
+
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+    def _apply_class_weight(self, y, sample_weight):
+        &#34;&#34;&#34;Fold class_weight into sample_weight, which the splits already honor.&#34;&#34;&#34;
+        if self.class_weight is None:
+            return sample_weight
+        if not isinstance(self, ClassifierMixin):
+            raise ValueError(
+                &#34;class_weight is only meaningful for classification; &#34;
+                f&#34;{type(self).__name__} is a regressor. Use sample_weight instead.&#34;
+            )
+
+        class_based = compute_sample_weight(self.class_weight, np.ravel(y))
+        if sample_weight is None:
+            return class_based
+        return np.asarray(sample_weight, dtype=float) * class_based
 
     def _init_decision_function(self):
         &#34;&#34;&#34;Sets decision function based on _estimator_type&#34;&#34;&#34;
@@ -310,7 +344,9 @@ class FIGS(BaseEstimator):
         &#34;&#34;&#34;
         if categorical_features is not None:
             X, self._encoder = encode_categories(X, categorical_features)
-            
+
+        sample_weight = self._apply_class_weight(y, sample_weight)
+
         if hasattr(y, &#39;values&#39;):
             y = y.values
         if len(y.shape) == 1:
@@ -490,31 +526,39 @@ class FIGS(BaseEstimator):
         for tree_ in self.trees_:
             node_counter = iter(range(0, int(1e06)))
 
-            def _annotate_node(node: Node, X, y, is_classmixin=False):
+            def _annotate_node(node: Node, X, y, weights, is_classmixin=False):
                 #TODO: impurity decrease is correct
                 if node is None:
                     return
 
-                # TODO does not incorporate sample weights
+                # value_sklearn holds weighted class totals, matching what
+                # sklearn stores, so that importances and the converted tree
+                # both reflect sample_weight
                 #TODO: how to handdle for n_outputs&gt; 1?
                 if is_classmixin:
-                    unique, counts = np.unique(np.argmax(y, axis = 1), return_counts=True)
-                    
                     value_sklearn = np.zeros(self.n_outputs)
-                    value_sklearn[unique] = counts
+                    classes = np.argmax(y, axis=1)
+                    for class_idx in np.unique(classes):
+                        value_sklearn[class_idx] = weights[classes == class_idx].sum()
                     value_sklearn = value_sklearn.astype(float)
-                
+
                 else:
-                    value_sklearn = np.array([X.shape[0]], dtype=float)
+                    value_sklearn = np.array([weights.sum()], dtype=float)
 
                 node.setattrs(node_id=next(node_counter),
-                              value_sklearn=value_sklearn)
+                              value_sklearn=value_sklearn,
+                              n_samples_=X.shape[0])
 
                 idxs_left = X[:, node.feature] &lt;= node.threshold
-                _annotate_node(node.left, X[idxs_left], y[idxs_left], is_classmixin)
-                _annotate_node(node.right, X[~idxs_left], y[~idxs_left], is_classmixin)
-            
-            _annotate_node(tree_, X, y, isinstance(self, ClassifierMixin))
+                _annotate_node(node.left, X[idxs_left], y[idxs_left],
+                               weights[idxs_left], is_classmixin)
+                _annotate_node(node.right, X[~idxs_left], y[~idxs_left],
+                               weights[~idxs_left], is_classmixin)
+
+            annotate_weights = (np.ones(X.shape[0]) if sample_weight is None
+                                else np.asarray(sample_weight, dtype=float))
+            _annotate_node(tree_, X, y, annotate_weights,
+                           isinstance(self, ClassifierMixin))
 
             # now that the samples per node are known, we can start to compute the importances
             importance_data_tree = np.zeros(self.n_features)
@@ -523,7 +567,7 @@ class FIGS(BaseEstimator):
                 if node is None or node.left is None:
                     return 0.0
 
-                # TODO does not incorporate sample weights, but will if added to value_sklearn
+                # value_sklearn is weighted, so these importances are too
                 importance_data_tree[node.feature] += (
                     np.sum(node.value_sklearn) * node.impurity
                     - np.sum(node.left.value_sklearn) * node.left.impurity
@@ -795,6 +839,12 @@ class FIGSCV(BaseEstimator):
         self.cv = cv
         self.scoring = scoring
 
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
     def get_params(self, deep=True):
         # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
         # automatic parameter introspection rejects
@@ -997,7 +1047,7 @@ if __name__ == &#34;__main__&#34;:
 <dl>
 <dt id="imodels.tree.figs.FIGS"><code class="flex name class">
 <span>class <span class="ident">FIGS</span></span>
-<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None)</span>
+<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None, class_weight=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
@@ -1014,7 +1064,13 @@ Max total number of trees
 min_impurity_decrease: float
 A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
 max_features
-The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)</p></div>
+The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)
+class_weight: dict, list of dict or "balanced", default=None
+Classification only. Weights associated with classes, in the form
+{class_label: weight}. "balanced" weights each class by
+n_samples / (n_classes * np.bincount(y)), so that rare classes count
+as much as common ones. Combined multiplicatively with sample_weight
+when both are given.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1036,6 +1092,7 @@ The number of features to consider when looking for the best split (see <a href=
         random_state=None,
         max_features: str = None,
         max_depth: int = None,
+        class_weight=None,
     ):
         &#34;&#34;&#34;
         Params
@@ -1048,6 +1105,12 @@ The number of features to consider when looking for the best split (see <a href=
             A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
         max_features
             The number of features to consider when looking for the best split (see https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
+        class_weight: dict, list of dict or &#34;balanced&#34;, default=None
+            Classification only. Weights associated with classes, in the form
+            {class_label: weight}. &#34;balanced&#34; weights each class by
+            n_samples / (n_classes * np.bincount(y)), so that rare classes count
+            as much as common ones. Combined multiplicatively with sample_weight
+            when both are given.
         &#34;&#34;&#34;
         super().__init__()
         self.max_rules = max_rules
@@ -1056,9 +1119,35 @@ The number of features to consider when looking for the best split (see <a href=
         self.random_state = random_state
         self.max_features = max_features
         self.max_depth = max_depth
+        self.class_weight = class_weight
         self._init_decision_function()
         self.n_outputs = None
         self.need_to_reshape = False
+
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+    def _apply_class_weight(self, y, sample_weight):
+        &#34;&#34;&#34;Fold class_weight into sample_weight, which the splits already honor.&#34;&#34;&#34;
+        if self.class_weight is None:
+            return sample_weight
+        if not isinstance(self, ClassifierMixin):
+            raise ValueError(
+                &#34;class_weight is only meaningful for classification; &#34;
+                f&#34;{type(self).__name__} is a regressor. Use sample_weight instead.&#34;
+            )
+
+        class_based = compute_sample_weight(self.class_weight, np.ravel(y))
+        if sample_weight is None:
+            return class_based
+        return np.asarray(sample_weight, dtype=float) * class_based
 
     def _init_decision_function(self):
         &#34;&#34;&#34;Sets decision function based on _estimator_type&#34;&#34;&#34;
@@ -1201,7 +1290,9 @@ The number of features to consider when looking for the best split (see <a href=
         &#34;&#34;&#34;
         if categorical_features is not None:
             X, self._encoder = encode_categories(X, categorical_features)
-            
+
+        sample_weight = self._apply_class_weight(y, sample_weight)
+
         if hasattr(y, &#39;values&#39;):
             y = y.values
         if len(y.shape) == 1:
@@ -1381,31 +1472,39 @@ The number of features to consider when looking for the best split (see <a href=
         for tree_ in self.trees_:
             node_counter = iter(range(0, int(1e06)))
 
-            def _annotate_node(node: Node, X, y, is_classmixin=False):
+            def _annotate_node(node: Node, X, y, weights, is_classmixin=False):
                 #TODO: impurity decrease is correct
                 if node is None:
                     return
 
-                # TODO does not incorporate sample weights
+                # value_sklearn holds weighted class totals, matching what
+                # sklearn stores, so that importances and the converted tree
+                # both reflect sample_weight
                 #TODO: how to handdle for n_outputs&gt; 1?
                 if is_classmixin:
-                    unique, counts = np.unique(np.argmax(y, axis = 1), return_counts=True)
-                    
                     value_sklearn = np.zeros(self.n_outputs)
-                    value_sklearn[unique] = counts
+                    classes = np.argmax(y, axis=1)
+                    for class_idx in np.unique(classes):
+                        value_sklearn[class_idx] = weights[classes == class_idx].sum()
                     value_sklearn = value_sklearn.astype(float)
-                
+
                 else:
-                    value_sklearn = np.array([X.shape[0]], dtype=float)
+                    value_sklearn = np.array([weights.sum()], dtype=float)
 
                 node.setattrs(node_id=next(node_counter),
-                              value_sklearn=value_sklearn)
+                              value_sklearn=value_sklearn,
+                              n_samples_=X.shape[0])
 
                 idxs_left = X[:, node.feature] &lt;= node.threshold
-                _annotate_node(node.left, X[idxs_left], y[idxs_left], is_classmixin)
-                _annotate_node(node.right, X[~idxs_left], y[~idxs_left], is_classmixin)
-            
-            _annotate_node(tree_, X, y, isinstance(self, ClassifierMixin))
+                _annotate_node(node.left, X[idxs_left], y[idxs_left],
+                               weights[idxs_left], is_classmixin)
+                _annotate_node(node.right, X[~idxs_left], y[~idxs_left],
+                               weights[~idxs_left], is_classmixin)
+
+            annotate_weights = (np.ones(X.shape[0]) if sample_weight is None
+                                else np.asarray(sample_weight, dtype=float))
+            _annotate_node(tree_, X, y, annotate_weights,
+                           isinstance(self, ClassifierMixin))
 
             # now that the samples per node are known, we can start to compute the importances
             importance_data_tree = np.zeros(self.n_features)
@@ -1414,7 +1513,7 @@ The number of features to consider when looking for the best split (see <a href=
                 if node is None or node.left is None:
                     return 0.0
 
-                # TODO does not incorporate sample weights, but will if added to value_sklearn
+                # value_sklearn is weighted, so these importances are too
                 importance_data_tree[node.feature] += (
                     np.sum(node.value_sklearn) * node.impurity
                     - np.sum(node.left.value_sklearn) * node.left.impurity
@@ -1687,6 +1786,21 @@ def feature_importances_(self):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="imodels.tree.figs.FIGS.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, X):
+    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+    from imodels.util.apply import apply_leaves
+    return apply_leaves(self, X)</code></pre>
+</details>
+</dd>
 <dt id="imodels.tree.figs.FIGS.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=False, sample_weight=None, categorical_features=None)</span>
 </code></dt>
@@ -1719,7 +1833,9 @@ are ignored while searching for a split in each node.</p></div>
     &#34;&#34;&#34;
     if categorical_features is not None:
         X, self._encoder = encode_categories(X, categorical_features)
-        
+
+    sample_weight = self._apply_class_weight(y, sample_weight)
+
     if hasattr(y, &#39;values&#39;):
         y = y.values
     if len(y.shape) == 1:
@@ -1899,31 +2015,39 @@ are ignored while searching for a split in each node.</p></div>
     for tree_ in self.trees_:
         node_counter = iter(range(0, int(1e06)))
 
-        def _annotate_node(node: Node, X, y, is_classmixin=False):
+        def _annotate_node(node: Node, X, y, weights, is_classmixin=False):
             #TODO: impurity decrease is correct
             if node is None:
                 return
 
-            # TODO does not incorporate sample weights
+            # value_sklearn holds weighted class totals, matching what
+            # sklearn stores, so that importances and the converted tree
+            # both reflect sample_weight
             #TODO: how to handdle for n_outputs&gt; 1?
             if is_classmixin:
-                unique, counts = np.unique(np.argmax(y, axis = 1), return_counts=True)
-                
                 value_sklearn = np.zeros(self.n_outputs)
-                value_sklearn[unique] = counts
+                classes = np.argmax(y, axis=1)
+                for class_idx in np.unique(classes):
+                    value_sklearn[class_idx] = weights[classes == class_idx].sum()
                 value_sklearn = value_sklearn.astype(float)
-            
+
             else:
-                value_sklearn = np.array([X.shape[0]], dtype=float)
+                value_sklearn = np.array([weights.sum()], dtype=float)
 
             node.setattrs(node_id=next(node_counter),
-                          value_sklearn=value_sklearn)
+                          value_sklearn=value_sklearn,
+                          n_samples_=X.shape[0])
 
             idxs_left = X[:, node.feature] &lt;= node.threshold
-            _annotate_node(node.left, X[idxs_left], y[idxs_left], is_classmixin)
-            _annotate_node(node.right, X[~idxs_left], y[~idxs_left], is_classmixin)
-        
-        _annotate_node(tree_, X, y, isinstance(self, ClassifierMixin))
+            _annotate_node(node.left, X[idxs_left], y[idxs_left],
+                           weights[idxs_left], is_classmixin)
+            _annotate_node(node.right, X[~idxs_left], y[~idxs_left],
+                           weights[~idxs_left], is_classmixin)
+
+        annotate_weights = (np.ones(X.shape[0]) if sample_weight is None
+                            else np.asarray(sample_weight, dtype=float))
+        _annotate_node(tree_, X, y, annotate_weights,
+                       isinstance(self, ClassifierMixin))
 
         # now that the samples per node are known, we can start to compute the importances
         importance_data_tree = np.zeros(self.n_features)
@@ -1932,7 +2056,7 @@ are ignored while searching for a split in each node.</p></div>
             if node is None or node.left is None:
                 return 0.0
 
-            # TODO does not incorporate sample weights, but will if added to value_sklearn
+            # value_sklearn is weighted, so these importances are too
             importance_data_tree[node.feature] += (
                 np.sum(node.value_sklearn) * node.impurity
                 - np.sum(node.left.value_sklearn) * node.left.impurity
@@ -1958,6 +2082,21 @@ are ignored while searching for a split in each node.</p></div>
     self.importance_data_ = importance_data
     
     return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.figs.FIGS.get_rules"><code class="name flex">
+<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rules(self, feature_names=None):
+    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+    from imodels.util.get_rules import get_rules
+    return get_rules(self, feature_names=feature_names)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.figs.FIGS.plot"><code class="name flex">
@@ -2484,6 +2623,12 @@ array([3, 3, 3])
         self.cv = cv
         self.scoring = scoring
 
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
     def get_params(self, deep=True):
         # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
         # automatic parameter introspection rejects
@@ -2687,6 +2832,21 @@ contained subobjects that are estimators.</dd>
     }</code></pre>
 </details>
 </dd>
+<dt id="imodels.tree.figs.FIGSCV.get_rules"><code class="name flex">
+<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rules(self, feature_names=None):
+    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+    from imodels.util.get_rules import get_rules
+    return get_rules(self, feature_names=feature_names)</code></pre>
+</details>
+</dd>
 <dt id="imodels.tree.figs.FIGSCV.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X, by_tree=False)</span>
 </code></dt>
@@ -2840,7 +3000,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.figs.FIGSClassifier"><code class="flex name class">
 <span>class <span class="ident">FIGSClassifier</span></span>
-<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None)</span>
+<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None, class_weight=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
@@ -2880,7 +3040,13 @@ Max total number of trees
 min_impurity_decrease: float
 A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
 max_features
-The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)</p></div>
+The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)
+class_weight: dict, list of dict or "balanced", default=None
+Classification only. Weights associated with classes, in the form
+{class_label: weight}. "balanced" weights each class by
+n_samples / (n_classes * np.bincount(y)), so that rare classes count
+as much as common ones. Combined multiplicatively with sample_weight
+when both are given.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3016,8 +3182,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.figs.FIGS.apply" href="#imodels.tree.figs.FIGS.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.feature_importances_" href="#imodels.tree.figs.FIGS.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.get_rules" href="#imodels.tree.figs.FIGS.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.set_fit_request" href="#imodels.tree.figs.FIGS.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.set_predict_proba_request" href="#imodels.tree.figs.FIGS.set_predict_proba_request">set_predict_proba_request</a></code></li>
@@ -3199,6 +3367,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><b><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="#imodels.tree.figs.FIGSCV.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_params" href="#imodels.tree.figs.FIGSCV.set_params">set_params</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_predict_request" href="#imodels.tree.figs.FIGSCV.set_predict_request">set_predict_request</a></code></li>
 </ul>
@@ -3207,7 +3376,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.figs.FIGSRegressor"><code class="flex name class">
 <span>class <span class="ident">FIGSRegressor</span></span>
-<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None)</span>
+<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None, class_weight=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
@@ -3247,7 +3416,13 @@ Max total number of trees
 min_impurity_decrease: float
 A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
 max_features
-The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)</p></div>
+The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)
+class_weight: dict, list of dict or "balanced", default=None
+Classification only. Weights associated with classes, in the form
+{class_label: weight}. "balanced" weights each class by
+n_samples / (n_classes * np.bincount(y)), so that rare classes count
+as much as common ones. Combined multiplicatively with sample_weight
+when both are given.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -3365,8 +3540,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.figs.FIGS.apply" href="#imodels.tree.figs.FIGS.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.feature_importances_" href="#imodels.tree.figs.FIGS.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.get_rules" href="#imodels.tree.figs.FIGS.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.set_fit_request" href="#imodels.tree.figs.FIGS.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.set_predict_proba_request" href="#imodels.tree.figs.FIGS.set_predict_proba_request">set_predict_proba_request</a></code></li>
@@ -3548,6 +3725,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><b><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="#imodels.tree.figs.FIGSCV.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_params" href="#imodels.tree.figs.FIGSCV.set_params">set_params</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_predict_request" href="#imodels.tree.figs.FIGSCV.set_predict_request">set_predict_request</a></code></li>
 </ul>
@@ -3708,8 +3886,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li>
 <h4><code><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></code></h4>
 <ul class="">
+<li><code><a title="imodels.tree.figs.FIGS.apply" href="#imodels.tree.figs.FIGS.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.feature_importances_" href="#imodels.tree.figs.FIGS.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.get_rules" href="#imodels.tree.figs.FIGS.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.plot" href="#imodels.tree.figs.FIGS.plot">plot</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict" href="#imodels.tree.figs.FIGS.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
@@ -3724,6 +3904,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="">
 <li><code><a title="imodels.tree.figs.FIGSCV.fit" href="#imodels.tree.figs.FIGSCV.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="#imodels.tree.figs.FIGSCV.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.max_depth" href="#imodels.tree.figs.FIGSCV.max_depth">max_depth</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.max_rules" href="#imodels.tree.figs.FIGSCV.max_rules">max_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.max_trees" href="#imodels.tree.figs.FIGSCV.max_trees">max_trees</a></code></li>

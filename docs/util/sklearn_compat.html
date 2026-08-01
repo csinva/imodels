@@ -17,27 +17,85 @@
 <main>
 <article id="content">
 <section id="section-intro">
+<p>Thin wrappers over private sklearn helpers whose signatures change between versions.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Thin wrappers over private sklearn helpers whose signatures change between versions.&#34;&#34;&#34;
+
+from inspect import signature
+
+from sklearn.ensemble._forest import (
+    _generate_sample_indices,
+    _generate_unsampled_indices,
+)
+
+
+def _call_with_optional_sample_weight(func, random_state, n_samples, n_samples_bootstrap):
+    &#34;&#34;&#34;Call one of sklearn&#39;s bootstrap-index helpers across sklearn versions.
+
+    sklearn 1.9 added a required `sample_weight` argument to these private helpers.
+    &#34;&#34;&#34;
+    if &#34;sample_weight&#34; in signature(func).parameters:
+        return func(random_state, n_samples, n_samples_bootstrap, None)
+    return func(random_state, n_samples, n_samples_bootstrap)
+
+
+def generate_sample_indices(random_state, n_samples, n_samples_bootstrap):
+    &#34;&#34;&#34;Indices of the bootstrap sample a tree was fit on.&#34;&#34;&#34;
+    return _call_with_optional_sample_weight(
+        _generate_sample_indices, random_state, n_samples, n_samples_bootstrap
+    )
+
+
+def generate_unsampled_indices(random_state, n_samples, n_samples_bootstrap):
+    &#34;&#34;&#34;Indices left out of the bootstrap sample a tree was fit on (its OOB set).&#34;&#34;&#34;
+    return _call_with_optional_sample_weight(
+        _generate_unsampled_indices, random_state, n_samples, n_samples_bootstrap
+    )</code></pre>
+</details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="imodels.tree.gosdt.pygosdt" href="pygosdt.html">imodels.tree.gosdt.pygosdt</a></code></dt>
+<dt id="imodels.util.sklearn_compat.generate_sample_indices"><code class="name flex">
+<span>def <span class="ident">generate_sample_indices</span></span>(<span>random_state, n_samples, n_samples_bootstrap)</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Indices of the bootstrap sample a tree was fit on.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_sample_indices(random_state, n_samples, n_samples_bootstrap):
+    &#34;&#34;&#34;Indices of the bootstrap sample a tree was fit on.&#34;&#34;&#34;
+    return _call_with_optional_sample_weight(
+        _generate_sample_indices, random_state, n_samples, n_samples_bootstrap
+    )</code></pre>
+</details>
 </dd>
-<dt><code class="name"><a title="imodels.tree.gosdt.pygosdt_helper" href="pygosdt_helper.html">imodels.tree.gosdt.pygosdt_helper</a></code></dt>
+<dt id="imodels.util.sklearn_compat.generate_unsampled_indices"><code class="name flex">
+<span>def <span class="ident">generate_unsampled_indices</span></span>(<span>random_state, n_samples, n_samples_bootstrap)</span>
+</code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="imodels.tree.gosdt.pygosdt_shrinkage" href="pygosdt_shrinkage.html">imodels.tree.gosdt.pygosdt_shrinkage</a></code></dt>
-<dd>
-<div class="desc"></div>
+<div class="desc"><p>Indices left out of the bootstrap sample a tree was fit on (its OOB set).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_unsampled_indices(random_state, n_samples, n_samples_bootstrap):
+    &#34;&#34;&#34;Indices left out of the bootstrap sample a tree was fit on (its OOB set).&#34;&#34;&#34;
+    return _call_with_optional_sample_weight(
+        _generate_unsampled_indices, random_state, n_samples, n_samples_bootstrap
+    )</code></pre>
+</details>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -50,21 +108,13 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="imodels.tree" href="../index.html">imodels.tree</a></code></li>
+<li><code><a title="imodels.util" href="index.html">imodels.util</a></code></li>
 </ul>
 </li>
-<li><h3>Our favorite models</h3>
-<ul>
-<li><a href="https://csinva.io/imodels/shrinkage.html">Hierarchical shrinkage: post-hoc regularization for tree-based methods</a></li>
-<li><a href="https://csinva.io/imodels/figs.html">FIGS: Fast interpretable greedy-tree sums</a></li>
-<li><a href="https://csinva.io/imodels/mdi_plus.html">MDI+: Flexible tree-based feature importance</a></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="imodels.tree.gosdt.pygosdt" href="pygosdt.html">imodels.tree.gosdt.pygosdt</a></code></li>
-<li><code><a title="imodels.tree.gosdt.pygosdt_helper" href="pygosdt_helper.html">imodels.tree.gosdt.pygosdt_helper</a></code></li>
-<li><code><a title="imodels.tree.gosdt.pygosdt_shrinkage" href="pygosdt_shrinkage.html">imodels.tree.gosdt.pygosdt_shrinkage</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.util.sklearn_compat.generate_sample_indices" href="#imodels.util.sklearn_compat.generate_sample_indices">generate_sample_indices</a></code></li>
+<li><code><a title="imodels.util.sklearn_compat.generate_unsampled_indices" href="#imodels.util.sklearn_compat.generate_unsampled_indices">generate_unsampled_indices</a></code></li>
 </ul>
 </li>
 </ul>

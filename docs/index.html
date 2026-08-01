@@ -30,7 +30,7 @@ All sklearn-compatible and easy to use. <br/>
 </p>
 <p align="center">
 <img src="https://img.shields.io/badge/license-mit-blue.svg">
-<img src="https://img.shields.io/badge/python-3.9--3.11-blue">
+<img src="https://img.shields.io/badge/python-3.10--3.13-blue">
 <img src="https://img.shields.io/badge/numpy->=2.0-blue">
 <a href="https://doi.org/10.21105/joss.03192"><img src="https://joss.theoj.org/papers/10.21105/joss.03192/status.svg"></a>
 <a href="https://github.com/csinva/imodels/actions"><img src="https://github.com/csinva/imodels/workflows/tests/badge.svg"></a>
@@ -128,11 +128,6 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 <td>Fits rule list restricted to only one feature</td>
 </tr>
 <tr>
-<td style="text-align: left;">Optimal rule tree</td>
-<td><a href="https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">🗂️</a>, <a href="https://arxiv.org/abs/2006.08690">📄</a>, <a href="https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees">🔗</a></td>
-<td>Fits succinct tree using global optimization for sparsity (GOSDT)</td>
-</tr>
-<tr>
 <td style="text-align: left;">Greedy rule tree</td>
 <td><a href="https://csinva.io/imodels/tree/cart_wrapper.html">🗂️</a>, <a href="https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone">📄</a>, <a href="https://scikit-learn.org/stable/modules/tree.html">🔗</a></td>
 <td>Greedily fits tree using CART</td>
@@ -146,11 +141,6 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 <td style="text-align: left;">TAO rule tree</td>
 <td><a href="https://csinva.io/imodels/tree/tao.html">🗂️</a>, <a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">📄</a></td>
 <td>Fits tree using alternating optimization</td>
-</tr>
-<tr>
-<td style="text-align: left;">Iterative random<br/>forest</td>
-<td><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html">🗂️</a>, <a href="https://www.pnas.org/content/115/8/1943">📄</a>, <a href="https://github.com/Yu-Group/iterative-Random-Forest">🔗</a></td>
-<td>Repeatedly fit random forest, giving features with<br/>high importance a higher chance of being selected</td>
 </tr>
 <tr>
 <td style="text-align: left;">Sparse integer<br/>linear model</td>
@@ -341,12 +331,6 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <td></td>
 </tr>
 <tr>
-<td style="text-align: left;">Optimal rule tree (GOSDT)</td>
-<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/gosdt/pygosdt.html#imodels.tree.gosdt.pygosdt.OptimalTreeClassifier">OptimalTreeClassifier</a></td>
-<td style="text-align: center;"></td>
-<td>Requires <a href="https://pypi.org/project/gosdt/">gosdt</a>, fails for large problems</td>
-</tr>
-<tr>
 <td style="text-align: left;">Greedy rule tree (CART)</td>
 <td style="text-align: center;"><a href="https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></td>
 <td style="text-align: center;"><a href="https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor">GreedyTreeRegressor</a></td>
@@ -369,12 +353,6 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <td style="text-align: center;"><a href="https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></td>
 <td style="text-align: center;"><a href="https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></td>
 <td></td>
-</tr>
-<tr>
-<td style="text-align: left;">Iterative random forest</td>
-<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a></td>
-<td style="text-align: center;"></td>
-<td>Requires <a href="https://pypi.org/project/irf/">irf</a>; currently not exported from <code><a title="imodels" href="#imodels">imodels</a></code></td>
 </tr>
 <tr>
 <td style="text-align: left;">Sparse integer linear model</td>
@@ -426,6 +404,37 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 </tr>
 </tbody>
 </table>
+<h3 id="inspecting-the-rules-a-model-learned">Inspecting the rules a model learned</h3>
+<p>Every rule-based model exposes its rules the same way, as a <code>pandas</code> DataFrame with
+one row per rule, via <code>get_rules()</code>:</p>
+<pre><code class="language-python">from imodels import FIGSClassifier
+
+model = FIGSClassifier(max_rules=4).fit(X_train, y_train, feature_names=feature_names)
+model.get_rules()
+</code></pre>
+<pre><code>                                               rule  prediction  tree
+0                        FocalNeuroFindings2 &lt;= 0.5       0.117     0
+1                         FocalNeuroFindings2 &gt; 0.5       0.427     0
+2                             HighriskDiving &lt;= 0.5      -0.008     1
+3                              HighriskDiving &gt; 0.5       0.550     1
+4  PainNeck2 &lt;= 0.5 and AlteredMentalStatus2 &lt;= 0.5      -0.083     2
+5   PainNeck2 &lt;= 0.5 and AlteredMentalStatus2 &gt; 0.5       0.048     2
+6                                   PainNeck2 &gt; 0.5       0.058     2
+</code></pre>
+<p>Two columns are always present: <code>rule</code>, the condition as a string, and <code>prediction</code>,
+what the model predicts when that rule applies. Models add their own columns on top —
+<code>coef</code>, <code>support</code> and <code><a title="imodels.importance" href="importance/index.html">imodels.importance</a></code> for RuleFit, <code><a title="imodels.tree" href="tree/index.html">imodels.tree</a></code> for models made of several trees.
+Where a model is additive, as FIGS is, <code>prediction</code> is that tree's contribution, so the
+contributions of the matching rules sum to the model's output.</p>
+<p>This works across rule sets, rule lists and tree-based models (RuleFit, SkopeRules,
+SLIPPER, greedy and Bayesian rule lists, FIGS, CART, C4.5, TAO, boosted rules, and
+hierarchical shrinkage, including the <code>CV</code> variants). It is also available as a
+function, <code>imodels.get_rules(model)</code>, and takes an optional <code>feature_names</code> argument
+to rename the features. Models that aren't rule-based raise a clear error.</p>
+<p>Tree-based models also expose <code>apply(X)</code>, which reports which leaf each sample
+falls into, using the same node numbering as scikit-learn. A single tree returns
+one index per sample; a model made of several trees (FIGS, boosted rules) returns
+one column per tree, like <code>RandomForest.apply</code>.</p>
 <h3 id="extras">Extras</h3>
 <details>
 <summary><a href="https://csinva.io/imodels/util/data_util.html#imodels.util.data_util.get_clean_dataset">Data-wrangling functions</a> for working with popular tabular datasets (e.g. compas).</summary>
@@ -565,7 +574,6 @@ from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 from .experimental.bartpy import BART
 from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
-# from .experimental.corels_wrapper import OptimalRuleListClassifier
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
 from .rule_set import boosted_rules
@@ -585,15 +593,8 @@ from .tree.cart_ccp import (
     HSDecisionTreeCCPRegressorCV,
 )
 
-# from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
-# from .tree.optimal_classification_tree import OptimalTreeModel
 from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
 from .tree.figs import FIGSRegressor, FIGSClassifier, FIGSRegressorCV, FIGSClassifierCV
-from .tree.gosdt.pygosdt import OptimalTreeClassifier
-from .tree.gosdt.pygosdt_shrinkage import (
-    HSOptimalTreeClassifier,
-    HSOptimalTreeClassifierCV,
-)
 from .tree.hierarchical_shrinkage import (
     HSTreeRegressor,
     HSTreeClassifier,
@@ -603,6 +604,7 @@ from .tree.hierarchical_shrinkage import (
 from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
 from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
+from .util.get_rules import get_rules
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
 from .clustering.stableclustering import StableClustering
@@ -616,7 +618,6 @@ CLASSIFIERS = [
     SlipperClassifier,
     BayesianRuleSetClassifier,
     C45TreeClassifier,
-    OptimalTreeClassifier,
     OneRClassifier,
     RuleFitClassifier,
     FPLassoClassifier,
@@ -630,7 +631,7 @@ CLASSIFIERS = [
     GreedyTreeClassifier,
     DecisionTreeCCPClassifier,
     AutoInterpretableClassifier,
-]  # , IRFClassifier
+]
 REGRESSORS = [
     RuleFitRegressor,
     FPLassoRegressor,
@@ -710,6 +711,7 @@ DISCRETIZERS = [RFDiscretizer, BasicDiscretizer,
 <li><a href="#demo-notebooks">Demo notebooks</a></li>
 <li><a href="#whats-the-difference-between-the-models">What's the difference between the models?</a></li>
 <li><a href="#support-for-different-tasks">Support for different tasks</a><ul>
+<li><a href="#inspecting-the-rules-a-model-learned">Inspecting the rules a model learned</a></li>
 <li><a href="#extras">Extras</a></li>
 </ul>
 </li>
