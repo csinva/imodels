@@ -211,10 +211,11 @@ model.get_rules()
 ```
 
 Two columns are always present: `rule`, the condition as a string, and `prediction`,
-what the model predicts when that rule applies. Models add their own columns on top —
-`coef`, `support` and `importance` for RuleFit, `tree` for models made of several trees.
-Where a model is additive, as FIGS is, `prediction` is that tree's contribution, so the
-contributions of the matching rules sum to the model's output.
+what that rule predicts. Models add their own columns on top — `coef`, `support` and
+`importance` for RuleFit, `tree` for models made of several trees, and `weight` for
+boosted ensembles, which combine their trees by weighted vote. Where a model is
+additive, as FIGS is, `prediction` is that tree's contribution, so the contributions
+of the matching rules sum to the model's output.
 
 This works across rule sets, rule lists and tree-based models (RuleFit, SkopeRules,
 SLIPPER, greedy and Bayesian rule lists, FIGS, CART, C4.5, TAO, boosted rules, and
