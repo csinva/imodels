@@ -43,3 +43,22 @@ class TestClassRegression:
             mse = np.mean(np.square(preds - self.y_regression))
             assert mse < np.var(self.y_regression), \
                 f"mse {mse:0.3f} is no better than predicting the mean"
+
+
+def test_marginal_shrinkage_single_feature():
+    """The marginal model should fit data with one feature
+
+    Stacking the per-feature coefficients used a bare squeeze(), which collapses
+    a single coefficient to a scalar, so X @ coef raised
+    "Input operand 1 does not have enough dimensions".
+    """
+    from imodels import MarginalShrinkageLinearModelRegressor
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(200, 1)
+    y = 2 * X[:, 0] + 0.1 * rng.randn(200)
+
+    model = MarginalShrinkageLinearModelRegressor().fit(X, y)
+    assert np.shape(model.coef_marginal_) == (1,)
+    assert model.predict(X).shape == (200,)
+    assert np.mean((model.predict(X) - y) ** 2) < np.var(y)
