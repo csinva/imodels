@@ -44,7 +44,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         depth
             the depth of the current layer (used to recurse)
         """
-        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        X, y, feature_names = check_fit_arguments(
+            self, X, y, feature_names, binary_only=True)
         self.depth = 0  # reset so that refitting doesn't accumulate depth
         self.rules_ = self.fit_node_recursive(X, y, depth=0, verbose=verbose)
         self.complexity_ = len(self.rules_)

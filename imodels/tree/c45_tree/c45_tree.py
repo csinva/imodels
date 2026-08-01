@@ -140,7 +140,8 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
     def fit(self, X, y, feature_names: str = None):
         self.complexity_ = 0
         # X, y = check_X_y(X, y)
-        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        X, y, feature_names = check_fit_arguments(
+            self, X, y, feature_names, binary_only=True)
         self.resultType = type(y[0])
         if feature_names is None:
             self.feature_names = [f'X_{x}' for x in range(X.shape[1])]

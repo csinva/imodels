@@ -106,6 +106,12 @@ class TreeGAM(BaseEstimator):
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
             self.classes_, y = np.unique(y, return_inverse=True)
+            if len(self.classes_) > 2:
+                raise ValueError(
+                    f"{type(self).__name__} does not yet support multiclass "
+                    f"classification (found {len(self.classes_)} classes: "
+                    f"{list(self.classes_)}); it is a binary classifier."
+                )
 
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
 

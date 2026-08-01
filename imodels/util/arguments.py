@@ -9,7 +9,7 @@ import scipy.sparse
 
 
 def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_classmixin=True,
-                        allow_nan=False):
+                        allow_nan=False, binary_only=False):
     """Process arguments for fit and predict methods.
 
     For classifiers, sets ``model.classes_`` and encodes y as integers 0..n_classes-1
@@ -20,10 +20,19 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
     allow_nan: pass missing values in X through instead of rejecting them, for models
         that delegate to an estimator able to handle them (e.g. an sklearn decision
         tree). That estimator still raises if it cannot.
+
+    binary_only: reject a target with more than two classes, for models that only
+        implement binary classification.
     """
     if isinstance(model, ClassifierMixin) and is_classmixin:
         model.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
         check_classification_targets(y)
+        if binary_only and len(model.classes_) > 2:
+            raise ValueError(
+                f"{type(model).__name__} does not yet support multiclass "
+                f"classification (found {len(model.classes_)} classes: "
+                f"{list(model.classes_)}); it is a binary classifier."
+            )
 
     if feature_names is None:
         if isinstance(X, pd.DataFrame):

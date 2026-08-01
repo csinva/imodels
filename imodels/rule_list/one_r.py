@@ -27,7 +27,8 @@ class OneRClassifier(GreedyRuleListClassifier):
     def fit(self, X, y, feature_names=None):
         """Fit oneR
         """
-        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        X, y, feature_names = check_fit_arguments(
+            self, X, y, feature_names, binary_only=True)
 
         ms = []
         accs = np.zeros(X.shape[1])

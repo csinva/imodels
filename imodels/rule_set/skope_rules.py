@@ -267,7 +267,8 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
         self : object
             Returns self.
         """
-        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        X, y, feature_names = check_fit_arguments(
+            self, X, y, feature_names, binary_only=True)
         check_classification_targets(y)
         self.n_features_ = X.shape[1]
         self.sample_weight = sample_weight
