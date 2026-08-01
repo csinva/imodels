@@ -17,7 +17,8 @@ from tqdm import tqdm
 import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
-from imodels.util.arguments import decode_labels, set_feature_names_in
+from imodels.util.arguments import (check_binary_target, decode_labels,
+                                    set_feature_names_in)
 
 
 class TreeGAM(BaseEstimator):
@@ -105,6 +106,7 @@ class TreeGAM(BaseEstimator):
         self.n_features_in_ = X.shape[1]
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
+            check_binary_target(self, y)
             self.classes_, y = np.unique(y, return_inverse=True)
 
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
