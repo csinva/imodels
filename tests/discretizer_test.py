@@ -219,3 +219,57 @@ def test_extra_basic_discretizer_onehot_shape():
     Xd_test = disc.transform(X.iloc[:10])
     assert list(Xd_test.columns) == list(Xd.columns)
     assert Xd_test.shape == (10, Xd.shape[1])
+
+
+def test_fit_does_not_mutate_the_n_bins_parameter():
+    """fit must leave constructor parameters alone
+
+    _validate_n_bins expanded a scalar n_bins into one entry per feature and
+    wrote it back over the parameter, so a fitted discretizer could not be
+    refitted on a different number of columns.
+    """
+    from sklearn.base import clone
+
+    rng = np.random.RandomState(0)
+    X = pd.DataFrame(rng.randn(200, 3), columns=['a', 'b', 'c'])
+    y = (X['a'] > 0).astype(int)
+
+    disc = BasicDiscretizer(n_bins=3)
+    disc.fit(X[['a', 'b']], y)
+
+    assert disc.n_bins == 3, 'the parameter should be untouched'
+    assert list(disc.n_bins_) == [3, 3], 'per-feature counts belong on n_bins_'
+    assert clone(disc).n_bins == 3
+
+    # refitting on more columns used to raise ValueError
+    assert disc.fit_transform(X, y).shape[0] == 200
+
+
+def test_per_feature_n_bins_still_respected():
+    rng = np.random.RandomState(0)
+    X = pd.DataFrame(rng.randn(200, 3), columns=['a', 'b', 'c'])
+    y = (X['a'] > 0).astype(int)
+
+    out = BasicDiscretizer(dcols=['a', 'b'], n_bins=[2, 4]).fit_transform(X, y)
+    # the 2-bin feature is binary, so onehot_drop='if_binary' keeps one column
+    # of it; 1 + 4 encoded columns, plus the column left alone
+    assert out.shape == (200, 1 + 4 + 1)
+
+    # asking for the same number of bins everywhere gives the same total
+    same = BasicDiscretizer(dcols=['a', 'b'], n_bins=4).fit_transform(X, y)
+    assert same.shape == (200, 4 + 4 + 1)
+
+
+def test_reweight_n_bins_still_applies_at_fit():
+    """reweight_n_bins is called deliberately, so its allocation must survive"""
+    rng = np.random.RandomState(0)
+    X = pd.DataFrame(rng.randn(300, 4), columns=list('abcd'))
+    y = (X['a'] > 0).astype(int)
+
+    disc = RFDiscretizer(dcols=list('abcd'), n_bins=4, classification=True)
+    disc.reweight_n_bins(X, y)
+    reallocated = np.array(disc.n_bins, copy=True)
+
+    disc.fit(X, y)
+    assert np.array_equal(np.asarray(disc.n_bins_), reallocated)
+    assert np.sum(reallocated) == 4 * 4, 'total bins are preserved'
