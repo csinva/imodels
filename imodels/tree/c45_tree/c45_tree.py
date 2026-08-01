@@ -15,7 +15,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
-from imodels.util.arguments import check_fit_arguments, decode_labels
+from imodels.util.arguments import check_fit_arguments, check_predict_X, decode_labels
 
 from ..c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
     set_as_leaf_node
@@ -213,7 +213,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
 
     def raw_preds(self, X):
         check_is_fitted(self, ['tree_', 'resultType', 'feature_names'])
-        X = check_array(X)
+        X = check_predict_X(self, check_array(X))
         if isinstance(X, pd.DataFrame):
             X = deepcopy(X)
             X.columns = self.feature_names
