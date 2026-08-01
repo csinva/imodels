@@ -10,6 +10,11 @@ import numpy as np
 import pandas as pd
 
 from imodels.util.convert import tree_to_rules
+from imodels.util.model_trees import (
+    WRAPPED_MODEL_ATTRS,
+    is_sklearn_tree,
+    sklearn_trees,
+)
 
 #: Columns every `get_rules` result has, in the order they appear.
 CORE_COLUMNS = ['rule', 'prediction']
@@ -33,9 +38,13 @@ def get_rules(model, feature_names=None) -> pd.DataFrame:
 
         - ``rule``: the condition as a string, e.g. ``"age <= 30.5 and bmi > 24.1"``.
           The catch-all final rule of a rule list is ``"else"``.
-        - ``prediction``: what the model predicts when that rule applies. For
-          classifiers this is the predicted value/probability held in the leaf;
-          it is ``NaN`` where a model defines no per-rule prediction.
+        - ``prediction``: what the rule itself predicts. For a single tree this is
+          the value held in the leaf, so it is the model's prediction. For models
+          that combine several rules the meaning follows the model: an additive
+          model like FIGS contributes its trees' values, so they sum to the
+          output, while a boosted ensemble takes a weighted vote and reports each
+          tree's own prediction alongside a ``weight`` column. It is ``NaN``
+          where a model defines no per-rule prediction.
 
         Models add their own columns on top of these, for example ``coef``,
         ``support`` and ``importance`` for RuleFit, or ``tree`` and ``depth`` for
@@ -99,7 +108,7 @@ def _get_feature_names(model, feature_names, n_features=None):
 
 def _rules_from_wrapped_model(model, feature_names):
     """Models that delegate to another fitted model (shrinkage, CV wrappers)."""
-    for attr in ('figs', 'estimator_', 'model'):
+    for attr in WRAPPED_MODEL_ATTRS:
         inner = getattr(model, attr, None)
         # an unfitted sklearn tree has no tree_; don't recurse into it
         if inner is not None and inner is not model and _has_rules(inner):
@@ -109,15 +118,10 @@ def _rules_from_wrapped_model(model, feature_names):
     return None
 
 
-def _is_sklearn_tree(model):
-    # C45TreeClassifier also has a tree_, but it holds XML rather than a tree
-    return hasattr(getattr(model, 'tree_', None), 'feature')
-
-
 def _has_rules(model):
     if getattr(model, 'rules_', None) is not None:
         return True
-    if _is_sklearn_tree(model):
+    if is_sklearn_tree(model):
         return True
     return any(hasattr(model, attr) for attr in ('trees_', 'estimators_'))
 
@@ -277,14 +281,23 @@ def _rules_from_trees(model, feature_names):
         n_features = trees[0].n_features_in_
     names = _get_feature_names(model, feature_names, n_features)
 
+    # boosted ensembles combine their trees by weighted vote, so report the
+    # weight alongside each tree's own prediction
+    tree_weights = getattr(model, 'estimator_weights_', None)
+    if tree_weights is not None and len(tree_weights) != len(trees):
+        tree_weights = None
+
     rows = []
     for tree_num, tree in enumerate(trees):
         for rule, value in tree_to_rules(tree, names, prediction_values=True):
-            rows.append({
+            row = {
                 'rule': rule,
                 'prediction': value[-1] if len(value) > 1 else value[0],
                 'tree': tree_num,
-            })
+            }
+            if tree_weights is not None:
+                row['weight'] = tree_weights[tree_num]
+            rows.append(row)
     rules = pd.DataFrame(rows)
     if len(trees) == 1:  # a single tree needs no tree index
         rules = rules.drop(columns='tree')
@@ -292,19 +305,9 @@ def _rules_from_trees(model, feature_names):
 
 
 def _collect_trees(model):
-    """The sklearn trees making up a model, or None if it isn't tree-based."""
-    if _is_sklearn_tree(model):
-        return [model]
+    """The sklearn trees making up a model, or None if it isn't tree-based.
 
-    subestimators = getattr(model, 'estimators_', None)
-    if subestimators is not None and len(subestimators) > 0:
-        trees = []
-        for estimator in subestimators:
-            if isinstance(estimator, np.ndarray):  # gradient boosting nests them
-                estimator = estimator[0]
-            if not _is_sklearn_tree(estimator):
-                return None
-            trees.append(estimator)
-        return trees
-
-    return None
+    FIGS is excluded: _rules_from_figs reads its nodes directly, because the
+    converted sklearn trees hold class counts rather than predictions.
+    """
+    return sklearn_trees(model, convert_figs=False)

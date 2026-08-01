@@ -826,6 +826,10 @@ class FIGSCV(BaseEstimator):
     def feature_importances_(self):
         """Mean decrease in impurity of the selected FIGS model."""
         return self.figs.feature_importances_
+    def apply(self, X):
+        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
 
     def get_params(self, deep=True):
         # defined explicitly because __init__ takes *args/**kwargs, which sklearn's
