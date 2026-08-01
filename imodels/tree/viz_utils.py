@@ -46,8 +46,10 @@ def _extract_arrays_from_figs_tree(figs_tree):
         tree_data.feature.append(feature)
         tree_data.threshold.append(threshold)
         tree_data.impurity.append(node.impurity)
-        tree_data.n_node_samples.append(np.sum(value_sklearn))
-        tree_data.weighted_n_node_samples.append(np.sum(value_sklearn)) # TODO add sample weights
+        # n_node_samples counts rows; the weighted version sums their weights
+        tree_data.n_node_samples.append(getattr(node, 'n_samples_',
+                                                np.sum(value_sklearn)))
+        tree_data.weighted_n_node_samples.append(np.sum(value_sklearn))
         tree_data.missing_go_to_left.append(1)
         value_sklearn_array.append(value_sklearn)
 
