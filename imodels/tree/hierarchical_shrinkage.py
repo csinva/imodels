@@ -91,7 +91,10 @@ class HSTree(BaseEstimator):
         # remove feature_names if it exists (note: only works as keyword-arg)
         # None returned if not passed
         feature_names = kwargs.pop("feature_names", None)
-        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        # missing values are left to the wrapped estimator, which handles them for
+        # sklearn decision trees and forests and raises for those that cannot
+        X, y, feature_names = check_fit_arguments(
+            self, X, y, feature_names, allow_nan=True)
         if feature_names is not None:
             self.feature_names = feature_names
         self.estimator_ = self.estimator_.fit(

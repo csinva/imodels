@@ -155,3 +155,38 @@ def test_supported_estimators_still_shrink():
         shrunk = HSTreeRegressor(deepcopy(estimator), reg_param=50).fit(X, y)
         assert not np.allclose(unshrunk.predict(X), shrunk.predict(X)), \
             f'shrinkage had no effect on {type(estimator).__name__}'
+
+
+def test_missing_values_are_passed_to_the_estimator():
+    """Shrinkage should not reject NaN that the wrapped estimator can handle
+
+    Regression test for https://github.com/csinva/imodels/issues/213: imodels
+    validated X itself and raised "Input contains NaN" before the estimator --
+    which for sklearn trees and forests supports missing values -- saw the data.
+    """
+    import pytest
+    from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+    from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(80, 3)
+    y = (X[:, 0] > 0).astype(int)
+    X_nan = X.copy()
+    X_nan[::7, 1] = np.nan
+
+    for estimator in [DecisionTreeClassifier(max_leaf_nodes=8),
+                      RandomForestClassifier(n_estimators=3, random_state=0)]:
+        model = HSTreeClassifier(estimator, reg_param=10).fit(X_nan, y)
+        assert model.predict(X_nan).shape == (80,)
+
+    model = HSTreeRegressor(
+        DecisionTreeRegressor(max_leaf_nodes=8), reg_param=10).fit(X_nan, X[:, 0])
+    assert model.predict(X_nan).shape == (80,)
+
+    # the CV variants score internally, so exercise those too
+    assert HSTreeClassifierCV().fit(X_nan, y).predict(X_nan).shape == (80,)
+
+    # estimators that can't handle missing values still say so themselves
+    with pytest.raises(ValueError, match='NaN'):
+        HSTreeClassifier(
+            GradientBoostingClassifier(n_estimators=3)).fit(X_nan, y)
