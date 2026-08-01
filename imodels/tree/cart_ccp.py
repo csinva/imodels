@@ -39,7 +39,8 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
                 setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
-        path = self.estimator_.cost_complexity_pruning_path(X, y)
+        path = self.estimator_.cost_complexity_pruning_path(
+            X, y, sample_weight=sample_weight)
         ccp_alphas, impurities = path.ccp_alphas, path.impurities
         complexities = {}
         low = 0
@@ -50,7 +51,7 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
             est_params = self.estimator_.get_params()
             est_params['ccp_alpha'] = ccp_alphas[cur]
             copied_estimator = deepcopy(self.estimator_).set_params(**est_params)
-            copied_estimator.fit(X, y)
+            copied_estimator.fit(X, y, sample_weight=sample_weight)
             if self._get_complexity(copied_estimator, self.complexity_measure) < self.desired_complexity:
                 high = cur - 1
             elif self._get_complexity(copied_estimator, self.complexity_measure) > self.desired_complexity:
@@ -73,7 +74,7 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
         self._get_alpha(X, y, sample_weight, *args, **kwargs)
         params_for_fitting['ccp_alpha'] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
-        self.estimator_.fit(X, y, *args, **kwargs)
+        self.estimator_.fit(X, y, *args, sample_weight=sample_weight, **kwargs)
         self._copy_fitted_attributes()
         return self
 
@@ -131,7 +132,8 @@ class DecisionTreeCCPRegressor(BaseEstimator):
                 setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None):
-        path = self.estimator_.cost_complexity_pruning_path(X, y)
+        path = self.estimator_.cost_complexity_pruning_path(
+            X, y, sample_weight=sample_weight)
         ccp_alphas, impurities = path.ccp_alphas, path.impurities
         complexities = {}
         low = 0
@@ -142,7 +144,7 @@ class DecisionTreeCCPRegressor(BaseEstimator):
             est_params = self.estimator_.get_params()
             est_params['ccp_alpha'] = ccp_alphas[cur]
             copied_estimator = deepcopy(self.estimator_).set_params(**est_params)
-            copied_estimator.fit(X, y)
+            copied_estimator.fit(X, y, sample_weight=sample_weight)
             if self._get_complexity(copied_estimator, self.complexity_measure) < self.desired_complexity:
                 high = cur - 1
             elif self._get_complexity(copied_estimator, self.complexity_measure) > self.desired_complexity:
@@ -168,7 +170,7 @@ class DecisionTreeCCPRegressor(BaseEstimator):
         self._get_alpha(X, y, sample_weight)
         params_for_fitting['ccp_alpha'] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
-        self.estimator_.fit(X, y)
+        self.estimator_.fit(X, y, sample_weight=sample_weight)
         self._copy_fitted_attributes()
         return self
 
