@@ -152,3 +152,43 @@ def test_class_weight():
     # and is rejected where it has no meaning
     with pytest.raises(ValueError, match='only meaningful for classification'):
         FIGSRegressor(class_weight='balanced').fit(X, X[:, 0])
+
+
+def test_feature_importances_use_sample_weight():
+    """FIGS feature_importances_ should account for sample_weight
+
+    https://github.com/csinva/imodels/issues/157: the node statistics behind
+    importances (and behind the sklearn tree conversion used by plot) counted
+    rows, ignoring their weights.
+    """
+    from imodels import FIGSClassifier
+    from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(200, 3)
+    y = ((X[:, 0] > 0) | (X[:, 1] > 1)).astype(int)
+    weights = np.where(np.arange(200) % 3 == 0, 3.0, 1.0)
+
+    # weighting rows must match repeating them, which is what weights mean
+    weighted = FIGSClassifier(max_rules=5).fit(X, y, sample_weight=weights)
+    duplicated = FIGSClassifier(max_rules=5).fit(
+        np.repeat(X, weights.astype(int), axis=0),
+        np.repeat(y, weights.astype(int)))
+    assert np.allclose(weighted.feature_importances_,
+                       duplicated.feature_importances_)
+
+    # uniform weights change nothing
+    assert np.allclose(
+        FIGSClassifier(max_rules=5).fit(
+            X, y, sample_weight=np.ones(len(y))).feature_importances_,
+        FIGSClassifier(max_rules=5).fit(X, y).feature_importances_)
+
+    # and weighting actually moves them
+    assert not np.allclose(weighted.feature_importances_,
+                           FIGSClassifier(max_rules=5).fit(
+                               X, y).feature_importances_)
+
+    # the converted sklearn tree keeps raw counts and weighted totals apart
+    tree = extract_sklearn_tree_from_figs(weighted, 0, 2).tree_
+    assert tree.n_node_samples[0] == len(y)
+    assert np.isclose(tree.weighted_n_node_samples[0], weights.sum())

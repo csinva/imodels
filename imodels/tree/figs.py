@@ -503,31 +503,39 @@ class FIGS(BaseEstimator):
         for tree_ in self.trees_:
             node_counter = iter(range(0, int(1e06)))
 
-            def _annotate_node(node: Node, X, y, is_classmixin=False):
+            def _annotate_node(node: Node, X, y, weights, is_classmixin=False):
                 #TODO: impurity decrease is correct
                 if node is None:
                     return
 
-                # TODO does not incorporate sample weights
+                # value_sklearn holds weighted class totals, matching what
+                # sklearn stores, so that importances and the converted tree
+                # both reflect sample_weight
                 #TODO: how to handdle for n_outputs> 1?
                 if is_classmixin:
-                    unique, counts = np.unique(np.argmax(y, axis = 1), return_counts=True)
-                    
                     value_sklearn = np.zeros(self.n_outputs)
-                    value_sklearn[unique] = counts
+                    classes = np.argmax(y, axis=1)
+                    for class_idx in np.unique(classes):
+                        value_sklearn[class_idx] = weights[classes == class_idx].sum()
                     value_sklearn = value_sklearn.astype(float)
-                
+
                 else:
-                    value_sklearn = np.array([X.shape[0]], dtype=float)
+                    value_sklearn = np.array([weights.sum()], dtype=float)
 
                 node.setattrs(node_id=next(node_counter),
-                              value_sklearn=value_sklearn)
+                              value_sklearn=value_sklearn,
+                              n_samples_=X.shape[0])
 
                 idxs_left = X[:, node.feature] <= node.threshold
-                _annotate_node(node.left, X[idxs_left], y[idxs_left], is_classmixin)
-                _annotate_node(node.right, X[~idxs_left], y[~idxs_left], is_classmixin)
-            
-            _annotate_node(tree_, X, y, isinstance(self, ClassifierMixin))
+                _annotate_node(node.left, X[idxs_left], y[idxs_left],
+                               weights[idxs_left], is_classmixin)
+                _annotate_node(node.right, X[~idxs_left], y[~idxs_left],
+                               weights[~idxs_left], is_classmixin)
+
+            annotate_weights = (np.ones(X.shape[0]) if sample_weight is None
+                                else np.asarray(sample_weight, dtype=float))
+            _annotate_node(tree_, X, y, annotate_weights,
+                           isinstance(self, ClassifierMixin))
 
             # now that the samples per node are known, we can start to compute the importances
             importance_data_tree = np.zeros(self.n_features)
@@ -536,7 +544,7 @@ class FIGS(BaseEstimator):
                 if node is None or node.left is None:
                     return 0.0
 
-                # TODO does not incorporate sample weights, but will if added to value_sklearn
+                # value_sklearn is weighted, so these importances are too
                 importance_data_tree[node.feature] += (
                     np.sum(node.value_sklearn) * node.impurity
                     - np.sum(node.left.value_sklearn) * node.left.impurity
