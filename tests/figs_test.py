@@ -192,3 +192,45 @@ def test_feature_importances_use_sample_weight():
     tree = extract_sklearn_tree_from_figs(weighted, 0, 2).tree_
     assert tree.n_node_samples[0] == len(y)
     assert np.isclose(tree.weighted_n_node_samples[0], weights.sum())
+
+
+def test_verbose_progress_reporting():
+    """FIGS should be able to report progress while fitting
+
+    Feature request https://github.com/csinva/imodels/issues/92: a long fit
+    gave no indication of progress.
+    """
+    import contextlib
+    import io
+
+    from imodels import FIGSRegressor
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(200, 4)
+    y = X[:, 0] + (X[:, 1] > 0)
+
+    def fit_and_capture(model, **fit_kwargs):
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            model.fit(X, y, **fit_kwargs)
+        return buffer.getvalue()
+
+    # silent by default
+    assert fit_and_capture(FIGSRegressor(max_rules=4)) == ''
+
+    # verbose=1 reports each rule, with a running count against the budget
+    output = fit_and_capture(FIGSRegressor(max_rules=4, verbose=1))
+    lines = [line for line in output.splitlines() if line.startswith('rule ')]
+    assert len(lines) == 4
+    assert 'rule 1/4' in output and 'rule 4/4' in output
+    assert 'tree(s)' in output
+
+    # verbose=2 additionally prints the model
+    assert 'FIGS' in fit_and_capture(FIGSRegressor(max_rules=2, verbose=2))
+
+    # fit(verbose=...) still overrides, as it did before
+    assert fit_and_capture(FIGSRegressor(max_rules=2), verbose=1) != ''
+    assert fit_and_capture(FIGSRegressor(max_rules=2, verbose=1), verbose=0) == ''
+
+    # and it round-trips as a normal parameter
+    assert FIGSRegressor(verbose=1).get_params()['verbose'] == 1
