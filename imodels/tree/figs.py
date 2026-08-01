@@ -124,6 +124,7 @@ class FIGS(BaseEstimator):
         max_features: str = None,
         max_depth: int = None,
         class_weight=None,
+        verbose: int = 0,
     ):
         """
         Params
@@ -136,6 +137,10 @@ class FIGS(BaseEstimator):
             A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
         max_features
             The number of features to consider when looking for the best split (see https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
+        verbose: int, default=0
+            Controls progress reporting while fitting. 0 is silent; 1 reports each
+            rule as it is added, with the running total; 2 also prints the model
+            after every rule. Can be overridden per call via fit(verbose=...).
         class_weight: dict, list of dict or "balanced", default=None
             Classification only. Weights associated with classes, in the form
             {class_label: weight}. "balanced" weights each class by
@@ -151,6 +156,7 @@ class FIGS(BaseEstimator):
         self.max_features = max_features
         self.max_depth = max_depth
         self.class_weight = class_weight
+        self.verbose = verbose
         self._init_decision_function()
         self.n_outputs = None
         self.need_to_reshape = False
@@ -307,7 +313,7 @@ class FIGS(BaseEstimator):
         X,
         y=None,
         feature_names=None,
-        verbose=False,
+        verbose=None,
         sample_weight=None,
         categorical_features=None,
     ):
@@ -319,6 +325,9 @@ class FIGS(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         """
+        # fit(verbose=...) still wins, so existing callers are unaffected
+        verbose = int(self.verbose if verbose is None else verbose)
+
         if categorical_features is not None:
             X, self._encoder = encode_categories(X, categorical_features)
 
@@ -405,8 +414,6 @@ class FIGS(BaseEstimator):
                 continue
 
             # split on node
-            if verbose:
-                print("\nadding " + str(split_node))
             self.complexity_ += 1
 
             # if added a tree root
@@ -434,6 +441,14 @@ class FIGS(BaseEstimator):
             # add children to potential_splits
             potential_splits.append(split_node.left)
             potential_splits.append(split_node.right)
+
+            if verbose >= 1:
+                # reported after the bookkeeping above, so the counts are final
+                budget = '' if self.max_rules is None else f'/{self.max_rules}'
+                condition = (f"X_{split_node.feature} <= {split_node.threshold:0.3f}"
+                             if split_node.feature is not None else str(split_node))
+                print(f"rule {self.complexity_}{budget} "
+                      f"({len(self.trees_)} tree(s)): {condition}")
 
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
@@ -492,7 +507,7 @@ class FIGS(BaseEstimator):
             potential_splits = sorted(
                 potential_splits_new, key=lambda x: x.impurity_reduction
             )
-            if verbose:
+            if verbose >= 2:
                 print(self)
             if self.max_rules is not None and self.complexity_ >= self.max_rules:
                 finished = True
