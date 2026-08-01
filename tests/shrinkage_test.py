@@ -146,3 +146,38 @@ def test_str_with_ensemble_estimator():
 
     # unfitted models still print their parameters
     assert 'reg_param' in str(HSTreeRegressor(RandomForestRegressor()))
+def test_unsupported_estimator_raises():
+    """Shrinkage should reject models it cannot actually shrink
+
+    Regression test for https://github.com/csinva/imodels/issues/199: wrapping
+    an unsupported model used to fit and predict without error while leaving it
+    completely unchanged.
+    """
+    import pytest
+    from sklearn.linear_model import LinearRegression, LogisticRegression
+
+    X = np.random.RandomState(0).randn(50, 3)
+
+    with pytest.raises(ValueError, match='not supported by hierarchical shrinkage'):
+        HSTreeClassifier(LogisticRegression()).fit(X, (X[:, 0] > 0).astype(int))
+
+    with pytest.raises(ValueError, match='not supported by hierarchical shrinkage'):
+        HSTreeRegressor(LinearRegression()).fit(X, X[:, 0])
+
+
+def test_supported_estimators_still_shrink():
+    """Trees and tree ensembles remain supported and are actually modified"""
+    from copy import deepcopy
+
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.tree import DecisionTreeRegressor
+
+    X = np.random.RandomState(0).randn(80, 3)
+    y = X[:, 0]
+
+    for estimator in [DecisionTreeRegressor(max_leaf_nodes=8),
+                      RandomForestRegressor(n_estimators=3, random_state=0)]:
+        unshrunk = deepcopy(estimator).fit(X, y)
+        shrunk = HSTreeRegressor(deepcopy(estimator), reg_param=50).fit(X, y)
+        assert not np.allclose(unshrunk.predict(X), shrunk.predict(X)), \
+            f'shrinkage had no effect on {type(estimator).__name__}'
