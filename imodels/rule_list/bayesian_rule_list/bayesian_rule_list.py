@@ -287,12 +287,17 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         P = preds_d_t(X2, np.zeros((N, 1), dtype=int), self.d_star, self.theta)
         return np.vstack((1 - P, P)).T
 
-    def predict(self, X, threshold=0.1):
+    def predict(self, X, threshold=0.5):
         """Perform classification on samples in X.
 
         Parameters
         ----------
         X : array-like, shape = [n_samples, n_features]
+
+        threshold : float, default=0.5
+            Probability at or above which the positive class is predicted. The
+            default makes predict agree with predict_proba, as for any other
+            classifier; lower it to trade precision for recall.
 
         Returns
         -------
