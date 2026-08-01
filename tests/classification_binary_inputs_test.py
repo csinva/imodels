@@ -42,3 +42,35 @@ def test_classification_binary_inputs(model_type, binary_data):
 
     acc = np.mean(preds == y)
     assert acc > 0.9, f"train accuracy {acc:0.2f} is too low for an easy task"
+
+
+def test_incompatible_gosdt_falls_back_with_clear_message():
+    """An incompatible gosdt install should not fail deep inside fit
+
+    Regression test for https://github.com/csinva/imodels/issues/219: the
+    unrelated `gosdt` package on PyPI imports under the same name but has a
+    different API, so `import gosdt` succeeding was not enough and fitting died
+    with `AttributeError: module 'gosdt' has no attribute 'configure'`.
+    """
+    import warnings
+
+    import numpy as np
+    from imodels import OptimalTreeClassifier
+    from imodels.tree.gosdt import pygosdt
+
+    X = np.random.RandomState(0).randn(60, 3)
+    y = (X[:, 0] > 0).astype(int)
+
+    installed, supported = pygosdt.gosdt_installed, pygosdt.gosdt_supported
+    try:
+        pygosdt.gosdt_installed, pygosdt.gosdt_supported = True, False
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            model = OptimalTreeClassifier().fit(X, y)
+            messages = [str(w.message) for w in caught]
+
+        # falls back to a working tree instead of raising
+        assert model.predict(X).shape == (60,)
+        assert any('gosdt-deprecated' in m for m in messages), messages
+    finally:
+        pygosdt.gosdt_installed, pygosdt.gosdt_supported = installed, supported
