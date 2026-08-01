@@ -120,6 +120,32 @@ if __name__ == '__main__':
     t.test_classification_shrinkage()
 
 
+def test_str_with_ensemble_estimator():
+    """Printing a shrunk ensemble should summarize it rather than raise
+
+    Regression test for https://github.com/csinva/imodels/issues/212:
+    export_text only renders a single tree, so str() raised
+    InvalidParameterError for RandomForest/GradientBoosting estimators.
+    """
+    from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+    from sklearn.tree import DecisionTreeRegressor
+
+    X = np.random.RandomState(0).randn(60, 3)
+    y = X[:, 0]
+
+    for estimator in [RandomForestRegressor(n_estimators=3, random_state=0),
+                      GradientBoostingRegressor(n_estimators=3, random_state=0)]:
+        model = HSTreeRegressor(estimator_=estimator).fit(X, y)
+        printed = str(model)
+        assert type(estimator).__name__ in printed
+        assert '3 trees' in printed
+
+    # single trees still print the tree itself
+    single = HSTreeRegressor(DecisionTreeRegressor(max_leaf_nodes=3)).fit(X, y)
+    assert '|---' in str(single)
+
+    # unfitted models still print their parameters
+    assert 'reg_param' in str(HSTreeRegressor(RandomForestRegressor()))
 def test_unsupported_estimator_raises():
     """Shrinkage should reject models it cannot actually shrink
 

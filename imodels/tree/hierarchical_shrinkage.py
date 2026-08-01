@@ -269,6 +269,18 @@ class HSTree(BaseEstimator):
             s += str(self.reg_param)
             s += ")"
             return s
+        elif not hasattr(self.estimator_, "tree_"):
+            # an ensemble: export_text only renders a single tree, so summarize
+            n_trees = len(getattr(self.estimator_, "estimators_", []))
+            s = "> ------------------------------\n"
+            s += "> Tree ensemble with Hierarchical Shrinkage\n"
+            s += "> \tPrediction is made by combining the predictions of each shrunk tree\n"
+            s += "> ------------------------------" + "\n"
+            s += f"> {type(self.estimator_).__name__} of {n_trees} trees, "
+            s += f"reg_param={self.reg_param}\n"
+            if hasattr(self, "complexity_"):
+                s += f"> {self.complexity_} total non-leaf nodes\n"
+            return s
         else:
             s = "> ------------------------------\n"
             s += "> Decision Tree with Hierarchical Shrinkage\n"
