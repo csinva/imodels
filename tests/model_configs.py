@@ -56,6 +56,12 @@ BINARY_INPUT_MODELS = {
     "FPSkopeClassifier",
 }
 
+# models that can't be used inside a sklearn GridSearchCV, with why
+NO_GRIDSEARCH_MODELS = {
+    # its fit/score signatures don't line up with sklearn's metadata routing
+    "OptimalTreeClassifier": "incompatible with sklearn metadata routing",
+}
+
 # per-model overrides of the accuracy bar on the small shared task
 ACCURACY_FLOORS = {}
 DEFAULT_ACCURACY_FLOOR = 0.8

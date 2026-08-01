@@ -749,7 +749,7 @@ class FIGSClassifier(ClassifierMixin, FIGS):
         return self._class_map
 
 
-class FIGSCV:
+class FIGSCV(BaseEstimator):
     def __init__(
         self,
         figs,

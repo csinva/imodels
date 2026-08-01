@@ -12,11 +12,14 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.base import clone
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
 
 import imodels
 
 from tests.model_configs import (
     ACCURACY_FLOORS,
+    NO_GRIDSEARCH_MODELS,
     BINARY_INPUT_MODELS,
     DEFAULT_ACCURACY_FLOOR,
     EXCLUDED_MODELS,
@@ -124,6 +127,22 @@ class TestSharedModelAPI:
         params = model.get_params()
         model.set_params(**params)  # setting params back is a no-op
         assert set(model.get_params().keys()) == set(params.keys())
+
+    @pytest.mark.parametrize("model_type,classification", ALL_MODELS, ids=ALL_IDS)
+    def test_works_in_sklearn_pipeline(self, model_type, classification):
+        """models can be dropped into a sklearn Pipeline"""
+        X, y, _ = _make_data(model_type, classification)
+        pipe = Pipeline([("model", _make_model(model_type))]).fit(X, y)
+        assert np.asarray(pipe.predict(X)).shape == (N_SAMPLES,)
+
+    @pytest.mark.parametrize("model_type,classification", ALL_MODELS, ids=ALL_IDS)
+    def test_works_in_grid_search(self, model_type, classification):
+        """models can be tuned with GridSearchCV"""
+        if model_type.__name__ in NO_GRIDSEARCH_MODELS:
+            pytest.skip(NO_GRIDSEARCH_MODELS[model_type.__name__])
+        X, y, _ = _make_data(model_type, classification)
+        search = GridSearchCV(_make_model(model_type), {}, cv=2).fit(X, y)
+        assert np.asarray(search.predict(X)).shape == (N_SAMPLES,)
 
     @pytest.mark.parametrize("model_type,classification", ALL_MODELS, ids=ALL_IDS)
     def test_repr_before_and_after_fit(self, model_type, classification):

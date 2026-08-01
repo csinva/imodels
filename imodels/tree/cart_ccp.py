@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 from sklearn import datasets
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
@@ -11,7 +11,7 @@ from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifie
 from imodels.util.tree import compute_tree_complexity
 
 
-class DecisionTreeCCPClassifier(DecisionTreeClassifier):
+class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
