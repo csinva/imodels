@@ -220,6 +220,25 @@ function, `imodels.get_rules(model)`, and takes an optional `feature_names` argu
 to rename the features. Models that aren't rule-based raise a clear error.
 
 
+### SHAP values for shrunk trees
+
+`shap.TreeExplainer` dispatches on the model class, so it doesn't recognize the
+imodels wrapper. Pass the shrunk estimator it wraps:
+
+```python
+import shap
+from imodels import HSTreeClassifier
+
+model = HSTreeClassifier(DecisionTreeClassifier(max_leaf_nodes=8), reg_param=50).fit(X, y)
+explainer = shap.TreeExplainer(model.estimator_)   # not model itself
+shap_values = explainer.shap_values(X)
+```
+
+Hierarchical shrinkage rewrites the node values of that tree in place, so the
+explainer sees the shrunk model: the SHAP values differ from the unshrunk tree's
+and sum, with the expected value, to `model.predict_proba(X)`. This reproduces
+the SHAP summary plots in the [paper](https://arxiv.org/abs/2202.00858).
+
 Tree-based models expose `feature_importances_` (mean decrease in impurity), the
 same measure sklearn's tree models report, so they can be compared directly.
 
