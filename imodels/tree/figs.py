@@ -161,6 +161,10 @@ class FIGS(BaseEstimator):
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)
 
+    def apply(self, X):
+        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
     def _apply_class_weight(self, y, sample_weight):
         """Fold class_weight into sample_weight, which the splits already honor."""
         if self.class_weight is None:
