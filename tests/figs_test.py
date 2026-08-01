@@ -114,3 +114,41 @@ if __name__ == '__main__':
     t.test_recognized_by_sklearn()
     # t.test_fitting()
     # t.test_categorical()
+
+
+def test_class_weight():
+    """FIGSClassifier should accept class_weight, like sklearn classifiers
+
+    Feature request https://github.com/csinva/imodels/issues/195: passing
+    class_weight used to raise TypeError.
+    """
+    import pytest
+    from sklearn.metrics import balanced_accuracy_score
+
+    from imodels import FIGSClassifier, FIGSRegressor
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(400, 3)
+    y = (X[:, 0] + rng.randn(400) > 1.3).astype(int)  # ~15% positives
+
+    unweighted = FIGSClassifier(max_rules=5).fit(X, y)
+    balanced = FIGSClassifier(max_rules=5, class_weight='balanced').fit(X, y)
+
+    # upweighting the rare class should help it be predicted
+    assert (balanced_accuracy_score(y, balanced.predict(X)) >
+            balanced_accuracy_score(y, unweighted.predict(X)))
+
+    # an explicit dict works too, and gets combined with sample_weight
+    explicit = FIGSClassifier(max_rules=5, class_weight={0: 1, 1: 5}).fit(X, y)
+    assert explicit.predict(X).shape == (400,)
+    combined = FIGSClassifier(max_rules=5, class_weight='balanced').fit(
+        X, y, sample_weight=np.ones(len(y)) * 3)
+    assert combined.predict(X).shape == (400,)
+
+    # it round-trips through get_params/set_params like any other parameter
+    assert FIGSClassifier(class_weight='balanced').get_params()[
+        'class_weight'] == 'balanced'
+
+    # and is rejected where it has no meaning
+    with pytest.raises(ValueError, match='only meaningful for classification'):
+        FIGSRegressor(class_weight='balanced').fit(X, X[:, 0])
