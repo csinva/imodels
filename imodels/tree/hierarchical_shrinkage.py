@@ -13,6 +13,8 @@ from sklearn.ensemble import (
     GradientBoostingRegressor,
 )
 
+from sklearn.utils.validation import check_is_fitted
+
 from imodels.util import checks
 from imodels.util.arguments import check_fit_arguments
 from imodels.util.tree import compute_tree_complexity
@@ -90,6 +92,16 @@ class HSTree(BaseEstimator):
         """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
         from imodels.util.apply import apply_leaves
         return apply_leaves(self, X)
+
+    @property
+    def feature_importances_(self):
+        """Mean decrease in impurity, as in sklearn's tree models.
+
+        Shrinkage rewrites node values but not the tree structure or its
+        impurities, so these match the underlying fitted estimator's.
+        """
+        check_is_fitted(self.estimator_ if hasattr(self, 'estimator_') else self)
+        return self.estimator_.feature_importances_
 
     def get_params(self, deep=True):
         d = {
