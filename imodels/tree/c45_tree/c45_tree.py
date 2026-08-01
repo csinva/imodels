@@ -15,7 +15,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
-from imodels.util.arguments import check_fit_arguments, decode_labels
+from imodels.util.arguments import check_binary_target, check_fit_arguments, decode_labels
 
 from ..c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
     set_as_leaf_node
@@ -139,6 +139,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y, feature_names: str = None):
         self.complexity_ = 0
+        check_binary_target(self, y)
         # X, y = check_X_y(X, y)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         self.resultType = type(y[0])
