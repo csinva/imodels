@@ -53,6 +53,28 @@ def test_integration():
     # expected = np.array([0.89630491, 0.15375469, 0.89624531, 1.05000033, 0.00369476])
     # assert np.allclose(rfr.predict(X), expected)
 
+def test_sample_fract_is_used():
+    """sample_fract should control the subsample used to generate the trees
+
+    Regression test for https://github.com/csinva/imodels/issues/200: the
+    parameter was stored but never passed on, so it had no effect.
+    """
+    X = np.random.RandomState(0).randn(200, 4)
+    y = X[:, 0] + 0.1 * np.random.RandomState(1).randn(200)
+
+    def fit_rules(sample_fract):
+        m = RuleFitRegressor(sample_fract=sample_fract, random_state=0,
+                             exp_rand_tree_size=False, n_estimators=10)
+        m.fit(X, y)
+        return [str(rule) for rule in m.rules_]
+
+    # different subsampling fractions should give different rule sets
+    assert fit_rules(0.2) != fit_rules(0.9)
+
+    # the default is unchanged (Friedman & Popescu's heuristic), and is not
+    # simply whatever an explicit fraction gives
+    assert fit_rules('default') == fit_rules('default')
+    assert fit_rules('default') != fit_rules(0.9)
 def test_set_params_lin_trim_quantile():
     """lin_trim_quantile set after construction should be used when fitting
 
