@@ -58,3 +58,40 @@ class TestBRL(unittest.TestCase):
     #     model.fit(X_train_disc.values, y_train, feature_names=X_train_disc.columns)
     #     preds = model.predict(X_test_disc.values, threshold=0.1)
     #     print("RuleListClassifier Accuracy:", np.mean(y_test == preds), "Learned interpretable model:\n", model)
+
+
+def test_predict_agrees_with_predict_proba():
+    """predict should return the class predict_proba scores highest
+
+    The default threshold was 0.1, so on data the model cannot separate,
+    predict returned every sample as positive while predict_proba said the
+    opposite -- worse than predicting the majority class.
+    """
+    rng = np.random.RandomState(3)
+    X = (rng.randn(400, 5) > 0).astype(int)
+    y = ((X[:, 0] + 1.5 * rng.randn(400)) > 1.4).astype(int)  # weak signal
+
+    model = BayesianRuleListClassifier(
+        max_iter=2000, n_chains=1, random_state=0).fit(X, y)
+
+    probs = model.predict_proba(X)
+    expected = np.asarray(model.classes_)[np.argmax(probs, axis=1)]
+    assert np.array_equal(model.predict(X), expected)
+
+    # never worse than always guessing the majority class
+    accuracy = np.mean(model.predict(X) == y)
+    assert accuracy >= max(y.mean(), 1 - y.mean()) - 1e-9
+
+    # the threshold is still adjustable for a different operating point
+    assert np.mean(model.predict(X, threshold=0.1)) >= np.mean(model.predict(X))
+
+
+def test_learnable_task_is_unaffected():
+    """Data the model can separate predicts the same as before"""
+    rng = np.random.RandomState(3)
+    X = (rng.randn(400, 5) > 0).astype(int)
+    y = ((X[:, 0] + X[:, 1]) >= 2).astype(int)
+
+    model = BayesianRuleListClassifier(
+        max_iter=2000, n_chains=1, random_state=0).fit(X, y)
+    assert np.mean(model.predict(X) == y) > 0.9

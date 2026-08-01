@@ -184,6 +184,14 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
 
 
+**Multiclass.** These classifiers handle more than two classes: `FIGSClassifier`,
+`GreedyTreeClassifier`, `HSTreeClassifier`, `TaoTreeClassifier`,
+`BoostedRulesClassifier`, `SLIMClassifier`, `DecisionTreeCCPClassifier` and the
+`CV` variants. The rule-set and rule-list models are binary-only and raise a
+clear error if given a multiclass target, rather than silently treating it as
+binary.
+
+
 ### Plotting trees with dtreeviz
 
 Tree-based models can be drawn with [dtreeviz](https://github.com/parrt/dtreeviz).
@@ -239,6 +247,25 @@ hierarchical shrinkage, including the `CV` variants). It is also available as a
 function, `imodels.get_rules(model)`, and takes an optional `feature_names` argument
 to rename the features. Models that aren't rule-based raise a clear error.
 
+
+### SHAP values for shrunk trees
+
+`shap.TreeExplainer` dispatches on the model class, so it doesn't recognize the
+imodels wrapper. Pass the shrunk estimator it wraps:
+
+```python
+import shap
+from imodels import HSTreeClassifier
+
+model = HSTreeClassifier(DecisionTreeClassifier(max_leaf_nodes=8), reg_param=50).fit(X, y)
+explainer = shap.TreeExplainer(model.estimator_)   # not model itself
+shap_values = explainer.shap_values(X)
+```
+
+Hierarchical shrinkage rewrites the node values of that tree in place, so the
+explainer sees the shrunk model: the SHAP values differ from the unshrunk tree's
+and sum, with the expected value, to `model.predict_proba(X)`. This reproduces
+the SHAP summary plots in the [paper](https://arxiv.org/abs/2202.00858).
 
 Tree-based models expose `feature_importances_` (mean decrease in impurity), the
 same measure sklearn's tree models report, so they can be compared directly.
