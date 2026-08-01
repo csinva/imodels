@@ -19,13 +19,13 @@ class TaoTree(BaseEstimator):
 
     def __init__(self, model_type: str = 'CART',
                  n_iters: int = 20,
-                 model_args: dict = {'max_leaf_nodes': 15},
+                 model_args: dict = None,
                  randomize_tree=False,
                  update_scoring='accuracy',
                  min_node_samples_tao=3,
                  min_leaf_samples_tao=2,
                  node_model='stump',
-                 node_model_args: dict = {},
+                 node_model_args: dict = None,
                  reg_param: float = 1e-3,
                  weight_errors: bool = False,
                  verbose: int = 0,
@@ -81,13 +81,16 @@ class TaoTree(BaseEstimator):
         super().__init__()
         self.model_type = model_type
         self.n_iters = n_iters
-        self.model_args = model_args
+        # built per instance: a dict default in the signature is shared by every
+        # model, so mutating one would change the others
+        self.model_args = ({'max_leaf_nodes': 15} if model_args is None
+                           else model_args)
         self.randomize_tree = randomize_tree
         self.update_scoring = update_scoring
         self.min_node_samples_tao = min_node_samples_tao
         self.min_leaf_samples_tao = min_leaf_samples_tao
         self.node_model = node_model
-        self.node_model_args = node_model_args
+        self.node_model_args = {} if node_model_args is None else node_model_args
         self.reg_param = reg_param
         self.weight_errors = weight_errors
         self.verbose = verbose

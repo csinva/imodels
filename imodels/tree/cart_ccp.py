@@ -83,6 +83,11 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)
 
+    def apply(self, X):
+        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
 
@@ -173,6 +178,16 @@ class DecisionTreeCCPRegressor(BaseEstimator):
         self.estimator_.fit(X, y, sample_weight=sample_weight)
         self._copy_fitted_attributes()
         return self
+
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
 
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
