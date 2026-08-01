@@ -81,6 +81,9 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
     def _validate_n_bins(self):
         """
         Check if n_bins argument is valid.
+
+        Stores the per-feature bin counts in n_bins_, leaving the n_bins
+        constructor parameter as the caller set it.
         """
         orig_bins = self.n_bins
         n_features = len(self.dcols_)
@@ -99,7 +102,7 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
                         AbstractDiscretizer.__name__, orig_bins
                     )
                 )
-            self.n_bins = np.full(n_features, orig_bins, dtype=int)
+            self.n_bins_ = np.full(n_features, orig_bins, dtype=int)
         else:
             n_bins = check_array(orig_bins, dtype=int,
                                  copy=True, ensure_2d=False)
@@ -120,7 +123,7 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
                         AbstractDiscretizer.__name__, indices
                     )
                 )
-            self.n_bins = n_bins
+            self.n_bins_ = n_bins
 
     def _validate_dcols(self, X):
         """
@@ -517,7 +520,7 @@ class BasicDiscretizer(AbstractDiscretizer):
         self._fit_preprocessing(X)
 
         # apply KBinsDiscretizer to the selected columns
-        discretizer = KBinsDiscretizer(n_bins=self.n_bins,
+        discretizer = KBinsDiscretizer(n_bins=self.n_bins_,
                                        encode='ordinal',
                                        strategy=self.strategy)
 
@@ -533,12 +536,12 @@ class BasicDiscretizer(AbstractDiscretizer):
 
         # fix KBinsDiscretizer errors if any when strategy = "quantile"
         if self.strategy == "quantile":
-            err_idx = np.where(discretized_df.nunique() != self.n_bins)[0]
+            err_idx = np.where(discretized_df.nunique() != self.n_bins_)[0]
             self.manual_discretizer_ = dict()
             for idx in err_idx:
                 col = self.dcols_[idx]
                 if X[col].nunique() > 1:
-                    q_values = np.linspace(0, 1, self.n_bins[idx] + 1)
+                    q_values = np.linspace(0, 1, self.n_bins_[idx] + 1)
                     bin_edges = np.quantile(X[col], q_values)
                     discretized_df[col] = self._discretize_to_bins(X[col], bin_edges,
                                                                    keep_pointwise_bins=True)
@@ -802,7 +805,7 @@ class RFDiscretizer(AbstractDiscretizer):
         self._fit_rf(X=X, y=y)
 
         # get total number of bins to reallocate
-        total_bins = self.n_bins.sum()
+        total_bins = np.asarray(self.n_bins_).sum()
 
         # reweight n_bins
         if by == "nsplits":
@@ -846,7 +849,7 @@ class RFDiscretizer(AbstractDiscretizer):
         if len(self.missing_rf_cols_) > 0:
             print("{} did not appear in random forest so were discretized via {} discretization"
                   .format(self.missing_rf_cols_, self.strategy))
-            missing_n_bins = np.array([self.n_bins[np.array(self.dcols_) == col][0]
+            missing_n_bins = np.array([self.n_bins_[np.array(self.dcols_) == col][0]
                                        for col in self.missing_rf_cols_])
 
             backup_discretizer = BasicDiscretizer(n_bins=missing_n_bins,
@@ -870,7 +873,7 @@ class RFDiscretizer(AbstractDiscretizer):
         for col in self.dcols_:
             if col in self.rf_splits.keys():
                 # .item(): numpy no longer converts a size-1 array to a scalar
-                b = self.n_bins[np.array(self.dcols_) == col].item()
+                b = self.n_bins_[np.array(self.dcols_) == col].item()
                 if self.strategy == "quantile":
                     q_values = np.linspace(0, 1, int(b) + 1)
                     bin_edges = np.quantile(self.rf_splits[col], q_values)
