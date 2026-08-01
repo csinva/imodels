@@ -5,6 +5,11 @@ from sklearn.utils.validation import check_array, check_is_fitted
 
 class RuleSet:
 
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
     def _extract_rules(self, X, y):
         pass
 

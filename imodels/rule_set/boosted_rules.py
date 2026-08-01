@@ -53,6 +53,12 @@ class BoostedRulesClassifier(AdaBoostClassifier):
             self.estimator = estimator
 
 
+
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         classes = self.classes_  # super().fit overwrites this with the encoded labels
@@ -97,6 +103,12 @@ class BoostedRulesRegressor(AdaBoostRegressor):
                 random_state=random_state,
             )
             self.estimator = estimator
+
+
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
