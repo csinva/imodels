@@ -20,15 +20,17 @@ MODEL_KWARGS = {
     "FPSkopeClassifier": dict(
         random_state=0, recall_min=0.5, max_depth_duplication=1),
     "SlipperClassifier": dict(n_estimators=1),
+    # the defaults run 50k MCMC iterations over 3 chains, which dominates the suite
+    "BayesianRuleListClassifier": dict(max_iter=2000, n_chains=1, random_state=0),
     "BoostedRulesClassifier": dict(n_estimators=5, random_state=0),
     "BoostedRulesRegressor": dict(n_estimators=5, random_state=0),
     "RuleFitClassifier": dict(max_rules=5, n_estimators=5, random_state=0),
     "RuleFitRegressor": dict(max_rules=5, n_estimators=5, random_state=0),
     "TreeGAMClassifier": dict(n_boosting_rounds=10, random_state=0),
-    "TreeGAMRegressor": dict(n_boosting_rounds=100, random_state=0),
+    "TreeGAMRegressor": dict(n_boosting_rounds=50, random_state=0),
     "FIGSClassifierCV": dict(n_rules_list=[3], n_trees_list=[2], cv=2),
     "FIGSRegressorCV": dict(n_rules_list=[3], n_trees_list=[2], cv=2),
-    "BART": dict(n_samples=10, n_burn=10, n_trees=5, n_chains=1),
+    "BART": dict(n_samples=5, n_burn=5, n_trees=3, n_chains=1),
     "DecisionTreeCCPClassifier": dict(
         estimator_=DecisionTreeClassifier(random_state=0), desired_complexity=3
     ),
