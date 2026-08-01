@@ -170,15 +170,44 @@ class HSTree(BaseEstimator):
 
         return tree
 
+    def _unwrap_tree(self, estimator):
+        """Get the underlying sklearn tree, or None if there isn't one."""
+        if isinstance(estimator, np.ndarray):
+            assert estimator.size == 1, "multiple trees stored under tree_?"
+            estimator = estimator[0]
+        return getattr(estimator, "tree_", None)
+
+    def _check_estimator_supported(self):
+        """Reject estimators that shrinkage cannot be applied to.
+
+        Shrinkage rewrites the node values of sklearn decision trees, so it needs
+        either a fitted tree (tree_) or an ensemble of them (estimators_).
+        Without this check an unsupported model is returned unchanged, which
+        looks like it worked -- see https://github.com/csinva/imodels/issues/199
+        """
+        if hasattr(self.estimator_, "tree_"):
+            return
+        subestimators = getattr(self.estimator_, "estimators_", None)
+        if subestimators is not None and len(subestimators) > 0:
+            if self._unwrap_tree(subestimators[0]) is not None:
+                return
+
+        raise ValueError(
+            f"{type(self.estimator_).__name__} is not supported by hierarchical "
+            "shrinkage, which needs an estimator built from scikit-learn decision "
+            "trees (exposing tree_, or estimators_ of trees) -- for example "
+            "DecisionTreeClassifier, RandomForestRegressor or "
+            "GradientBoostingClassifier. Applying shrinkage to it would leave the "
+            "model unchanged."
+        )
+
     def _shrink(self):
+        self._check_estimator_supported()
         if hasattr(self.estimator_, "tree_"):
             self._shrink_tree(self.estimator_.tree_, self.reg_param)
-        elif hasattr(self.estimator_, "estimators_"):
+        else:
             for t in self.estimator_.estimators_:
-                if isinstance(t, np.ndarray):
-                    assert t.size == 1, "multiple trees stored under tree_?"
-                    t = t[0]
-                self._shrink_tree(t.tree_, self.reg_param)
+                self._shrink_tree(self._unwrap_tree(t), self.reg_param)
 
     def predict(self, X, *args, **kwargs):
         preds = self.estimator_.predict(X, *args, **kwargs)
