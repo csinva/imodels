@@ -8,6 +8,7 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from imodels import HSTreeClassifier, HSTreeClassifierCV, \
     HSTreeRegressor, HSTreeRegressorCV, C45TreeClassifier
 from imodels.tree.c45_tree.c45_tree import HSC45TreeClassifierCV
+from imodels.util.tree import compute_tree_complexity
 import random
 from functools import partial
 
@@ -289,3 +290,84 @@ def test_cv_scores_are_unchanged():
                 0.523661, 0.512812, 0.531620]
     assert np.allclose(model.scores_, expected, atol=1e-5)
     assert model.reg_param == 100.0
+
+
+def test_predict_with_an_already_fitted_estimator():
+    """Wrapping a fitted estimator is documented, and predict must work on it
+
+    HSTree.predict mapped the estimator's output through classes_, which only
+    exists when HSTree did the fitting, so this raised AttributeError. The CV
+    classes rely on this path internally when scoring candidate reg_params.
+    """
+    from copy import deepcopy
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(300, 4)
+    y = (X[:, 0] + rng.randn(300) > 0).astype(int)
+
+    base = DecisionTreeClassifier(max_leaf_nodes=8, random_state=0).fit(X, y)
+    shrunk = HSTreeClassifier(deepcopy(base), reg_param=10)
+
+    preds = shrunk.predict(X)
+    assert preds.shape == (300,)
+    assert np.array_equal(preds, shrunk.estimator_.predict(X))
+
+    # when HSTree does the fitting, labels are still decoded
+    labelled = HSTreeClassifier(DecisionTreeClassifier(max_leaf_nodes=8)).fit(
+        X, np.where(y == 1, 'yes', 'no'))
+    assert set(np.unique(labelled.predict(X))) == {'yes', 'no'}
+
+
+def test_cv_criterion_is_deterministic_and_explicit():
+    """Choosing the best reg_param must not disturb the caller's randomness"""
+    import pytest
+    from sklearn.metrics import accuracy_score, log_loss, mean_squared_error
+
+    from imodels.tree.hierarchical_shrinkage import _get_cv_criterion
+
+    # the direction is read correctly for scorers used by the CV classes
+    assert _get_cv_criterion(log_loss) is np.argmin
+    assert _get_cv_criterion(mean_squared_error) is np.argmin
+    assert _get_cv_criterion(accuracy_score) is np.argmax
+
+    # probing the scorer draws no random numbers
+    np.random.seed(42)
+    expected = np.random.rand(3)
+    np.random.seed(42)
+    _get_cv_criterion(log_loss)
+    assert np.allclose(expected, np.random.rand(3))
+
+    # a seeded estimator means fitting leaves the global stream alone entirely
+    X = np.random.RandomState(0).randn(200, 4)
+    y = (X[:, 0] > 0).astype(int)
+    np.random.seed(42)
+    HSTreeClassifierCV(
+        estimator_=DecisionTreeClassifier(max_leaf_nodes=20, random_state=0),
+        reg_param_list=[0.1, 1, 10]).fit(X, y)
+    assert np.allclose(expected, np.random.rand(3))
+
+    # a scorer whose direction can't be read says so instead of failing later
+    with pytest.raises(ValueError, match='higher or lower'):
+        _get_cv_criterion(lambda y_true, y_pred: 0.5)
+
+
+def test_complexity_of_an_ensemble_does_not_touch_it():
+    """Complexity is read off the trees, so it must not modify the estimator"""
+    from sklearn.ensemble import RandomForestClassifier
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(300, 4)
+    y = (X[:, 0] + rng.randn(300) > 0).astype(int)
+
+    forest = RandomForestClassifier(n_estimators=5, random_state=0)
+    model = HSTreeClassifier(forest, reg_param=10).fit(X, y)
+
+    per_tree = [compute_tree_complexity(t.tree_)
+                for t in model.estimator_.estimators_]
+    assert model.complexity_ == sum(per_tree)
+
+    # reading it again gives the same answer (nothing was consumed or changed)
+    predictions = model.predict_proba(X).copy()
+    assert model.complexity_ == sum(compute_tree_complexity(t.tree_)
+                                    for t in model.estimator_.estimators_)
+    assert np.allclose(predictions, model.predict_proba(X))
