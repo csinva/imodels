@@ -184,6 +184,25 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
 
 
+### Plotting trees with dtreeviz
+
+Tree-based models can be drawn with [dtreeviz](https://github.com/parrt/dtreeviz).
+`shadow_tree` builds the `ShadowDecTree` it needs from any imodels tree model:
+
+```python
+import dtreeviz
+from imodels import FIGSClassifier, shadow_tree
+
+model = FIGSClassifier(max_rules=6).fit(X, y)
+viz = dtreeviz.trees.DTreeVizAPI(shadow_tree(model, X, y))
+viz.view()
+```
+
+For a model made of several trees (FIGS, boosted rules), pass `tree_num` to pick
+one. Feature and class names default to those the model was fitted with.
+dtreeviz is not a dependency and is imported only when this is called.
+
+
 ### Inspecting the rules a model learned
 
 Every rule-based model exposes its rules the same way, as a `pandas` DataFrame with
