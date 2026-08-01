@@ -453,8 +453,9 @@ class HSTreeClassifierCV(HSTreeClassifier):
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
-                est_hs = HSTreeClassifier(base_est, reg_param)
-                est_hs.fit(X_in, y_in, *args, **kwargs)
+                # shrinkage is post-hoc, so shrink a copy of the tree fitted
+                # above rather than refitting it for every reg_param
+                est_hs = HSTreeClassifier(deepcopy(base_est), reg_param)
                 self.scores_[i].append(
                     scorer(y_out, est_hs.predict_proba(X_out)))
         self.scores_ = [np.mean(s) for s in self.scores_]
@@ -542,8 +543,9 @@ class HSTreeRegressorCV(HSTreeRegressor):
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
-                est_hs = HSTreeRegressor(base_est, reg_param)
-                est_hs.fit(X_in, y_in)
+                # shrinkage is post-hoc, so shrink a copy of the tree fitted
+                # above rather than refitting it for every reg_param
+                est_hs = HSTreeRegressor(deepcopy(base_est), reg_param)
                 self.scores_[i].append(scorer(est_hs.predict(X_out), y_out))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
