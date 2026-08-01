@@ -145,3 +145,51 @@ path_to_tests = os.path.dirname(os.path.realpath(__file__))
 #     Xd_test.head()
 
 #     assert discretizer.n_bins.sum() == (len(discretizer.dcols) * 4)
+
+
+def _discretizer_data():
+    rng = np.random.RandomState(0)
+    X = pd.DataFrame(rng.randn(60, 3), columns=['a', 'b', 'c'])
+    return X, (X['a'] > 0).astype(int)
+
+
+def test_basic_discretizer_transform():
+    """BasicDiscretizer should one-hot encode the requested columns
+
+    Regression test for https://github.com/csinva/imodels/issues/206.
+    """
+    X, y = _discretizer_data()
+
+    disc = BasicDiscretizer(dcols=['a', 'b'], n_bins=3)
+    Xd = disc.fit_transform(X, y)
+
+    # 3 bins for each of the 2 discretized columns, plus the untouched column
+    assert Xd.shape == (60, 3 * 2 + 1)
+    assert 'c' in Xd.columns
+    assert (Xd[[col for col in Xd.columns if col != 'c']].sum(axis=1) == 2).all()
+
+    # discretizing every numeric column by default still works
+    Xd_all = BasicDiscretizer(n_bins=3).fit_transform(X, y)
+    assert Xd_all.shape == (60, 3 * 3)
+
+    # ordinal encoding returns one column per feature
+    Xd_ord = BasicDiscretizer(
+        dcols=['a'], n_bins=3, encode='ordinal').fit_transform(X, y)
+    assert Xd_ord.shape == (60, 3)
+    assert set(Xd_ord['a'].unique()) <= {0, 1, 2}
+
+
+def test_rf_discretizer_transform():
+    """RFDiscretizer should one-hot encode the requested columns
+
+    Regression test for https://github.com/csinva/imodels/issues/206.
+    """
+    X, y = _discretizer_data()
+
+    disc = RFDiscretizer(dcols=['a', 'b'], n_bins=3, classification=True)
+    Xd = disc.fit_transform(X, y)
+
+    assert Xd.shape[0] == 60
+    assert 'c' in Xd.columns
+    # transform on new data gives the same columns
+    assert list(disc.transform(X.iloc[:10]).columns) == list(Xd.columns)

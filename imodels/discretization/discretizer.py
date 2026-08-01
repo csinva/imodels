@@ -1,6 +1,7 @@
 import numbers
 
 import numpy as np
+import scipy.sparse
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -224,6 +225,8 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
             numeric_cols = [
                 col for col in X.columns if is_numeric_dtype(X[col].dtype)]
             self.dcols_ = numeric_cols
+        else:
+            self.dcols_ = list(self.dcols)
 
         # error checking
         self._validate_n_bins()
@@ -263,6 +266,10 @@ class AbstractDiscretizer(TransformerMixin, BaseEstimator):
                 onehot_col_names = self.onehot_.get_feature_names(
                     colnames)  # older versions of sklearn
             discretized_df = self.onehot_.transform(discretized_df.astype(str))
+            if scipy.sparse.issparse(discretized_df):
+                # OneHotEncoder returns a sparse matrix by default, which pandas
+                # would otherwise store as a single column of sparse rows
+                discretized_df = discretized_df.toarray()
             discretized_df = pd.DataFrame(discretized_df,
                                           columns=onehot_col_names,
                                           index=X.index).astype(int)
@@ -855,7 +862,8 @@ class RFDiscretizer(AbstractDiscretizer):
         self.bin_edges_ = dict()
         for col in self.dcols_:
             if col in self.rf_splits.keys():
-                b = self.n_bins[np.array(self.dcols_) == col]
+                # .item(): numpy no longer converts a size-1 array to a scalar
+                b = self.n_bins[np.array(self.dcols_) == col].item()
                 if self.strategy == "quantile":
                     q_values = np.linspace(0, 1, int(b) + 1)
                     bin_edges = np.quantile(self.rf_splits[col], q_values)
