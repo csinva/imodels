@@ -116,7 +116,9 @@ class MarginalShrinkageLinearModel(BaseEstimator):
                 est_marginal.fit(X[:, i].reshape(-1, 1), y,
                                  sample_weight=sample_weight)
                 coef_marginal_.append(deepcopy(est_marginal.coef_))
-            coef_marginal_ = np.vstack(coef_marginal_).squeeze()
+            # squeeze() alone collapses a single feature's coefficient to a
+            # scalar, which then cannot be multiplied with X
+            coef_marginal_ = np.vstack(coef_marginal_).squeeze(axis=1)
 
         # evenly divide effects among features
         if self.marginal_divide_by_d:

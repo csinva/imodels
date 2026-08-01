@@ -276,3 +276,30 @@ def test_categorical_features_remembered_from_fit():
     numeric = FIGSClassifier(max_rules=4).fit(X_num, (X_num['a'] > 0).astype(int))
     assert numeric.categorical_features_ is None
     assert numeric.predict(X_num).shape == (200,)
+def test_single_feature_input():
+    """FIGS should fit data with one feature
+
+    Annotating the tree indexed X by the node's split feature even for leaves,
+    whose feature is the -2 placeholder. With several features that silently
+    picked the wrong column; with one it raised IndexError.
+    """
+    from imodels import FIGSClassifier, FIGSClassifierCV, FIGSRegressor
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(120, 1)
+    y = (X[:, 0] > 0).astype(int)
+
+    classifier = FIGSClassifier(max_rules=5).fit(X, y)
+    assert classifier.predict(X).shape == (120,)
+    assert np.mean(classifier.predict(X) == y) > 0.9
+    assert classifier.feature_importances_.shape == (1,)
+
+    regressor = FIGSRegressor(max_rules=5).fit(X, X[:, 0])
+    assert regressor.predict(X).shape == (120,)
+
+    cv = FIGSClassifierCV(n_rules_list=[3], n_trees_list=[2], cv=2).fit(X, y)
+    assert cv.predict(X).shape == (120,)
+
+    # leaf membership and rules work too
+    assert classifier.apply(X).shape[0] == 120
+    assert len(classifier.get_rules()) > 0
