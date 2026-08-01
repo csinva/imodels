@@ -36,11 +36,10 @@ from copy import deepcopy
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.tree import DecisionTreeClassifier
 from imodels.rule_list.rule_list import RuleList
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, decode_labels
 
 
 class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
@@ -73,7 +72,10 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             the depth of the current layer (used to recurse)
         &#34;&#34;&#34;
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-        return self.fit_node_recursive(X, y, depth=0, verbose=verbose)
+        self.depth = 0  # reset so that refitting doesn&#39;t accumulate depth
+        self.rules_ = self.fit_node_recursive(X, y, depth=0, verbose=verbose)
+        self.complexity_ = len(self.rules_)
+        return self
 
     def fit_node_recursive(self, X, y, depth: int, verbose):
 
@@ -98,9 +100,12 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             col = m.tree_.feature[0]
             cutoff = m.tree_.threshold[0]
             # col, cutoff, criterion_val = self._find_best_split(X, y)
+            # base case 4: no split found, so emit a leaf holding this group&#39;s mean.
+            # (returning [] here would leave a split rule as the list&#39;s final entry,
+            # which predict_proba treats as the default rule and applies to everything)
             if col == -2:
-                return []
-                
+                return [{&#39;val&#39;: np.mean(y), &#39;num_pts&#39;: y.size}]
+
             y_left = y[X[:, col] &lt; cutoff]  # left-hand side data
             y_right = y[X[:, col] &gt;= cutoff]  # right-hand side data
 
@@ -123,6 +128,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
             # save info
             par_node = [{
+                &#39;depth&#39;: depth,
                 &#39;col&#39;: self.feature_names_[col],
                 &#39;index_col&#39;: col,
                 &#39;cutoff&#39;: cutoff,
@@ -140,7 +146,6 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             self.depth += 1  # increase the depth since we call fit once
             self.rules_ = par_node
             self.complexity_ = len(self.rules_)
-            self.classes_ = unique_labels(y)
             return par_node
 
     def predict_proba(self, X):
@@ -165,48 +170,27 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
     def predict(self, X):
         check_is_fitted(self)
         X = check_array(X)
-        return np.argmax(self.predict_proba(X), axis=1)
+        return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
-    &#34;&#34;&#34;
-    def __str__(self):
-        # s = &#39;&#39;
-        # for rule in self.rules_:
-        #     s += f&#34;mean {rule[&#39;val&#39;].round(3)} ({rule[&#39;num_pts&#39;]} pts)\n&#34;
-        #     if &#39;col&#39; in rule:
-        #         s += f&#34;if {rule[&#39;col&#39;]} &gt;= {rule[&#39;cutoff&#39;]} then {rule[&#39;val_right&#39;].round(3)} ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
-        # return s
-    &#34;&#34;&#34;
 
     def __str__(self):
         &#39;&#39;&#39;Print out the list in a nice way
         &#39;&#39;&#39;
+
         s = &#39;&gt; ------------------------------\n&gt; Greedy Rule List\n&gt; ------------------------------\n&#39;
-
-        def red(s):
-            # return f&#34;\033[91m{s}\033[00m&#34;
-            return s
-
-        def cyan(s):
-            # return f&#34;\033[96m{s}\033[00m&#34;
-            return s
-
-        def rule_name(rule):
-            if rule[&#39;flip&#39;]:
-                return &#39;~&#39; + rule[&#39;col&#39;]
-            return rule[&#39;col&#39;]
-
-        # rule = self.rules_[0]
-        #     s += f&#34;{red((100 * rule[&#39;val&#39;]).round(3))}% IwI ({rule[&#39;num_pts&#39;]} pts)\n&#34;
+        precision = 2
         for rule in self.rules_:
-            s += u&#39;\u2193\n&#39; + f&#34;{cyan((100 * rule[&#39;val&#39;]).round(2))}% risk ({rule[&#39;num_pts&#39;]} pts)\n&#34;
-            #         s += f&#34;\t{&#39;Else&#39;:&gt;45} =&gt; {cyan((100 * rule[&#39;val&#39;]).round(2)):&gt;6}% IwI ({rule[&#39;val&#39;] * rule[&#39;num_pts&#39;]:.0f}/{rule[&#39;num_pts&#39;]} pts)\n&#34;
             if &#39;col&#39; in rule:
-                #             prefix = f&#34;if {rule[&#39;col&#39;]} &gt;= {rule[&#39;cutoff&#39;]}&#34;
-                prefix = f&#34;if {rule_name(rule)}&#34;
-                val = f&#34;{100 * rule[&#39;val_right&#39;].round(3)}&#34;
-                s += f&#34;\t{prefix} ==&gt; {red(val)}% risk ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
-        # rule = self.rules_[-1]
-        #     s += f&#34;{red((100 * rule[&#39;val&#39;]).round(3))}% IwI ({rule[&#39;num_pts&#39;]} pts)\n&#34;
+                prefix = &#34;if&#34; if rule[&#39;depth&#39;] == 0 else &#34;else if&#34;
+                sign = &#39;&lt;=&#39; if rule[&#39;flip&#39;] else &#39;&gt;&#39;
+                threshold = rule[&#39;cutoff&#39;].round(precision)
+                condition = f&#34;{prefix} {rule[&#39;col&#39;]} {sign} {threshold}&#34;
+                pred_prob = (100 * rule[&#39;val_right&#39;]).round(precision)
+                num_pts = rule[&#39;num_pts_right&#39;]
+                s += f&#34;&gt; {condition} | {pred_prob}% pred prob ({num_pts} obs)\n&#34;
+            else:
+                s += f&#34;&gt; else | {(100 * rule[&#39;val&#39;]).round(precision)}% pred prob ({rule[&#39;num_pts&#39;]} obs)\n&#34;
+        s += &#39;&gt; ------------------------------\n&#39;
         return s
 
     ######## HERE ONWARDS CUSTOM SPLITTING (DEPRECATED IN FAVOR OF SKLEARN STUMP) ########
@@ -455,7 +439,10 @@ Criterion used to split
             the depth of the current layer (used to recurse)
         &#34;&#34;&#34;
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-        return self.fit_node_recursive(X, y, depth=0, verbose=verbose)
+        self.depth = 0  # reset so that refitting doesn&#39;t accumulate depth
+        self.rules_ = self.fit_node_recursive(X, y, depth=0, verbose=verbose)
+        self.complexity_ = len(self.rules_)
+        return self
 
     def fit_node_recursive(self, X, y, depth: int, verbose):
 
@@ -480,9 +467,12 @@ Criterion used to split
             col = m.tree_.feature[0]
             cutoff = m.tree_.threshold[0]
             # col, cutoff, criterion_val = self._find_best_split(X, y)
+            # base case 4: no split found, so emit a leaf holding this group&#39;s mean.
+            # (returning [] here would leave a split rule as the list&#39;s final entry,
+            # which predict_proba treats as the default rule and applies to everything)
             if col == -2:
-                return []
-                
+                return [{&#39;val&#39;: np.mean(y), &#39;num_pts&#39;: y.size}]
+
             y_left = y[X[:, col] &lt; cutoff]  # left-hand side data
             y_right = y[X[:, col] &gt;= cutoff]  # right-hand side data
 
@@ -505,6 +495,7 @@ Criterion used to split
 
             # save info
             par_node = [{
+                &#39;depth&#39;: depth,
                 &#39;col&#39;: self.feature_names_[col],
                 &#39;index_col&#39;: col,
                 &#39;cutoff&#39;: cutoff,
@@ -522,7 +513,6 @@ Criterion used to split
             self.depth += 1  # increase the depth since we call fit once
             self.rules_ = par_node
             self.complexity_ = len(self.rules_)
-            self.classes_ = unique_labels(y)
             return par_node
 
     def predict_proba(self, X):
@@ -547,48 +537,27 @@ Criterion used to split
     def predict(self, X):
         check_is_fitted(self)
         X = check_array(X)
-        return np.argmax(self.predict_proba(X), axis=1)
+        return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
-    &#34;&#34;&#34;
-    def __str__(self):
-        # s = &#39;&#39;
-        # for rule in self.rules_:
-        #     s += f&#34;mean {rule[&#39;val&#39;].round(3)} ({rule[&#39;num_pts&#39;]} pts)\n&#34;
-        #     if &#39;col&#39; in rule:
-        #         s += f&#34;if {rule[&#39;col&#39;]} &gt;= {rule[&#39;cutoff&#39;]} then {rule[&#39;val_right&#39;].round(3)} ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
-        # return s
-    &#34;&#34;&#34;
 
     def __str__(self):
         &#39;&#39;&#39;Print out the list in a nice way
         &#39;&#39;&#39;
+
         s = &#39;&gt; ------------------------------\n&gt; Greedy Rule List\n&gt; ------------------------------\n&#39;
-
-        def red(s):
-            # return f&#34;\033[91m{s}\033[00m&#34;
-            return s
-
-        def cyan(s):
-            # return f&#34;\033[96m{s}\033[00m&#34;
-            return s
-
-        def rule_name(rule):
-            if rule[&#39;flip&#39;]:
-                return &#39;~&#39; + rule[&#39;col&#39;]
-            return rule[&#39;col&#39;]
-
-        # rule = self.rules_[0]
-        #     s += f&#34;{red((100 * rule[&#39;val&#39;]).round(3))}% IwI ({rule[&#39;num_pts&#39;]} pts)\n&#34;
+        precision = 2
         for rule in self.rules_:
-            s += u&#39;\u2193\n&#39; + f&#34;{cyan((100 * rule[&#39;val&#39;]).round(2))}% risk ({rule[&#39;num_pts&#39;]} pts)\n&#34;
-            #         s += f&#34;\t{&#39;Else&#39;:&gt;45} =&gt; {cyan((100 * rule[&#39;val&#39;]).round(2)):&gt;6}% IwI ({rule[&#39;val&#39;] * rule[&#39;num_pts&#39;]:.0f}/{rule[&#39;num_pts&#39;]} pts)\n&#34;
             if &#39;col&#39; in rule:
-                #             prefix = f&#34;if {rule[&#39;col&#39;]} &gt;= {rule[&#39;cutoff&#39;]}&#34;
-                prefix = f&#34;if {rule_name(rule)}&#34;
-                val = f&#34;{100 * rule[&#39;val_right&#39;].round(3)}&#34;
-                s += f&#34;\t{prefix} ==&gt; {red(val)}% risk ({rule[&#39;num_pts_right&#39;]} pts)\n&#34;
-        # rule = self.rules_[-1]
-        #     s += f&#34;{red((100 * rule[&#39;val&#39;]).round(3))}% IwI ({rule[&#39;num_pts&#39;]} pts)\n&#34;
+                prefix = &#34;if&#34; if rule[&#39;depth&#39;] == 0 else &#34;else if&#34;
+                sign = &#39;&lt;=&#39; if rule[&#39;flip&#39;] else &#39;&gt;&#39;
+                threshold = rule[&#39;cutoff&#39;].round(precision)
+                condition = f&#34;{prefix} {rule[&#39;col&#39;]} {sign} {threshold}&#34;
+                pred_prob = (100 * rule[&#39;val_right&#39;]).round(precision)
+                num_pts = rule[&#39;num_pts_right&#39;]
+                s += f&#34;&gt; {condition} | {pred_prob}% pred prob ({num_pts} obs)\n&#34;
+            else:
+                s += f&#34;&gt; else | {(100 * rule[&#39;val&#39;]).round(precision)}% pred prob ({rule[&#39;num_pts&#39;]} obs)\n&#34;
+        s += &#39;&gt; ------------------------------\n&#39;
         return s
 
     ######## HERE ONWARDS CUSTOM SPLITTING (DEPRECATED IN FAVOR OF SKLEARN STUMP) ########
@@ -749,7 +718,8 @@ Criterion used to split
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li><a title="imodels.rule_list.rule_list.RuleList" href="rule_list.html#imodels.rule_list.rule_list.RuleList">RuleList</a></li>
 <li>sklearn.base.ClassifierMixin</li>
@@ -788,7 +758,10 @@ the depth of the current layer (used to recurse)</p></div>
         the depth of the current layer (used to recurse)
     &#34;&#34;&#34;
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-    return self.fit_node_recursive(X, y, depth=0, verbose=verbose)</code></pre>
+    self.depth = 0  # reset so that refitting doesn&#39;t accumulate depth
+    self.rules_ = self.fit_node_recursive(X, y, depth=0, verbose=verbose)
+    self.complexity_ = len(self.rules_)
+    return self</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.fit_node_recursive"><code class="name flex">
@@ -823,9 +796,12 @@ the depth of the current layer (used to recurse)</p></div>
         col = m.tree_.feature[0]
         cutoff = m.tree_.threshold[0]
         # col, cutoff, criterion_val = self._find_best_split(X, y)
+        # base case 4: no split found, so emit a leaf holding this group&#39;s mean.
+        # (returning [] here would leave a split rule as the list&#39;s final entry,
+        # which predict_proba treats as the default rule and applies to everything)
         if col == -2:
-            return []
-            
+            return [{&#39;val&#39;: np.mean(y), &#39;num_pts&#39;: y.size}]
+
         y_left = y[X[:, col] &lt; cutoff]  # left-hand side data
         y_right = y[X[:, col] &gt;= cutoff]  # right-hand side data
 
@@ -848,6 +824,7 @@ the depth of the current layer (used to recurse)</p></div>
 
         # save info
         par_node = [{
+            &#39;depth&#39;: depth,
             &#39;col&#39;: self.feature_names_[col],
             &#39;index_col&#39;: col,
             &#39;cutoff&#39;: cutoff,
@@ -865,7 +842,6 @@ the depth of the current layer (used to recurse)</p></div>
         self.depth += 1  # increase the depth since we call fit once
         self.rules_ = par_node
         self.complexity_ = len(self.rules_)
-        self.classes_ = unique_labels(y)
         return par_node</code></pre>
 </details>
 </dd>
@@ -881,7 +857,7 @@ the depth of the current layer (used to recurse)</p></div>
 <pre><code class="python">def predict(self, X):
     check_is_fitted(self)
     X = check_array(X)
-    return np.argmax(self.predict_proba(X), axis=1)</code></pre>
+    return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier.predict_proba"><code class="name flex">
@@ -917,10 +893,11 @@ the depth of the current layer (used to recurse)</p></div>
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a>, *, depth: bool | str | None = '$UNCHANGED$', feature_names: bool | str | None = '$UNCHANGED$', verbose: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -942,12 +919,6 @@ existing request. This allows you to change the request for some
 parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -971,10 +942,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1021,10 +993,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier" href="#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1047,12 +1020,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1069,10 +1036,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(

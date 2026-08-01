@@ -30,13 +30,14 @@ class DistilledRegressor(BaseEstimator, RegressorMixin):
                 raise ValueError("Student must be a regressor")
 
     def _check_teacher_type(self):
+        # sklearn >= 1.9 dropped _estimator_type in favor of tags, so go through
+        # the public is_regressor helper rather than sniffing the attribute
         if hasattr(self.teacher, "prediction_task"):
             self.teacher_type = self.teacher.prediction_task
-        elif hasattr(self.teacher, "_estimator_type"):
-            if is_regressor(self.teacher):
-                self.teacher_type = "regression"
-            else:
-                self.teacher_type = "classification"
+        elif is_regressor(self.teacher):
+            self.teacher_type = "regression"
+        else:
+            self.teacher_type = "classification"
 
     def set_teacher_params(self, **params):
         self.teacher.set_params(**params)
@@ -55,6 +56,7 @@ class DistilledRegressor(BaseEstimator, RegressorMixin):
                 
         # fit student
         self.student.fit(X, y)
+        return self
 
     def predict(self, X):
         return self.student.predict(X)

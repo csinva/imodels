@@ -12,6 +12,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import datasets, model_selection
+from imodels.util.arguments import set_feature_names_in
 
 from .data import Data
 from .initializers.initializer import Initializer
@@ -244,6 +245,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         SklearnModel
             self with trained parameter values
         """
+        set_feature_names_in(self, X)
+        self.n_features_in_ = np.asarray(X).shape[1]
         self.model = self._construct_model(X, y)
         self.extract = Parallel(n_jobs=self.n_jobs)(self.f_delayed_chains(X, y))
         self.combined_chains = self._combine_chains(self.extract)

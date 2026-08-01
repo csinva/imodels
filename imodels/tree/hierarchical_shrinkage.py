@@ -1,4 +1,3 @@
-import time
 from copy import deepcopy
 from typing import List
 
@@ -6,18 +5,31 @@ import numpy as np
 from sklearn import datasets
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics import r2_score, mean_squared_error, log_loss
-from sklearn.model_selection import cross_val_score, KFold
+from sklearn.model_selection import KFold
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
 from sklearn.ensemble import (
     GradientBoostingClassifier,
     GradientBoostingRegressor,
-    RandomForestRegressor,
 )
 
 from imodels.util import checks
 from imodels.util.arguments import check_fit_arguments
 from imodels.util.tree import compute_tree_complexity
+
+
+def _as_arrays(X, y):
+    """Convert X, y to numpy arrays so that they can be indexed by CV folds."""
+    return np.asarray(X), np.asarray(y)
+
+
+def _values_are_normalized(tree):
+    """Whether a fitted tree stores per-node values as probabilities rather than counts.
+
+    sklearn switched classification trees from storing class counts to storing
+    normalized class fractions in version 1.3.
+    """
+    return bool(np.allclose(tree.value.sum(axis=(1, 2)), 1))
 
 
 class HSTree(BaseEstimator):
@@ -101,20 +113,34 @@ class HSTree(BaseEstimator):
         return self
 
     def _shrink_tree(
-        self, tree, reg_param, i=0, parent_val=None, parent_num=None, cum_sum=0
+        self,
+        tree,
+        reg_param,
+        i=0,
+        parent_val=None,
+        parent_num=None,
+        cum_sum=0,
+        values_normalized=None,
     ):
         """Shrink the tree"""
         if reg_param is None:
             reg_param = 1.0
+        if values_normalized is None:
+            # sklearn >= 1.3 stores classification tree values as probabilities
+            # rather than counts, in which case they must not be renormalized.
+            # Computed once at the root, since shrinking rewrites tree.value.
+            values_normalized = _values_are_normalized(tree)
         left = tree.children_left[i]
         right = tree.children_right[i]
         is_leaf = left == right
         n_samples = tree.weighted_n_node_samples[i]
-        if isinstance(self, RegressorMixin) or isinstance(
-            self.estimator_, GradientBoostingClassifier
+        if (
+            isinstance(self, RegressorMixin)
+            or isinstance(self.estimator_, GradientBoostingClassifier)
+            or values_normalized
         ):
             val = deepcopy(tree.value[i, :, :])
-        else:  # If classification, normalize to probability vector
+        else:  # If classification, counts need normalizing into a probability vector
             val = tree.value[i, :, :] / n_samples
 
         # Step 1: Update cum_sum
@@ -156,6 +182,7 @@ class HSTree(BaseEstimator):
                 parent_val=val,
                 parent_num=n_samples,
                 cum_sum=deepcopy(cum_sum),
+                values_normalized=values_normalized,
             )
             self._shrink_tree(
                 tree,
@@ -164,6 +191,7 @@ class HSTree(BaseEstimator):
                 parent_val=val,
                 parent_num=n_samples,
                 cum_sum=deepcopy(cum_sum),
+                values_normalized=values_normalized,
             )
 
             # edit the non-leaf nodes for later visualization (doesn't effect predictions)
@@ -189,7 +217,14 @@ class HSTree(BaseEstimator):
 
     def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, "predict_proba"):
-            return self.estimator_.predict_proba(X, *args, **kwargs)
+            probs = self.estimator_.predict_proba(X, *args, **kwargs)
+            # the shrinkage arithmetic can leave values a hair outside [0, 1]
+            # (e.g. -1e-17), which newer versions of sklearn's log_loss reject
+            probs = np.clip(probs, 0, 1)
+            totals = probs.sum(axis=1, keepdims=True)
+            with np.errstate(invalid="ignore", divide="ignore"):
+                normalized = probs / totals
+            return np.where(totals > 0, normalized, 1 / probs.shape[1])
         else:
             return NotImplemented
 
@@ -320,7 +355,8 @@ class HSTreeClassifierCV(HSTreeClassifier):
         if estimator_ is None:
             estimator_ = DecisionTreeClassifier(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
-        self.reg_param_list = np.array(reg_param_list)
+        # stored unmodified so that the estimator stays sklearn-cloneable
+        self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
         self.shrinkage_scheme_ = shrinkage_scheme_
@@ -330,13 +366,27 @@ class HSTreeClassifierCV(HSTreeClassifier):
         #     raise Warning('Passed an already fitted estimator,'
         #                   'but shrinking not applied until fit method is called.')
 
+    def get_params(self, deep=True):
+        d = {
+            "estimator_": self.estimator_,
+            "reg_param_list": self.reg_param_list,
+            "shrinkage_scheme_": self.shrinkage_scheme_,
+            "max_leaf_nodes": self.estimator_.max_leaf_nodes,
+            "cv": self.cv,
+            "scoring": self.scoring,
+        }
+        if deep:
+            return deepcopy(d)
+        return d
+
     def fit(self, X, y, *args, **kwargs):
+        X_arr, y_arr = _as_arrays(X, y)
         self.scores_ = [[] for _ in self.reg_param_list]
         scorer = kwargs.get("scoring", log_loss)
         kf = KFold(n_splits=self.cv)
-        for train_index, test_index in kf.split(X):
-            X_out, y_out = X[test_index, :], y[test_index]
-            X_in, y_in = X[train_index, :], y[train_index]
+        for train_index, test_index in kf.split(X_arr):
+            X_out, y_out = X_arr[test_index, :], y_arr[test_index]
+            X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
@@ -346,8 +396,8 @@ class HSTreeClassifierCV(HSTreeClassifier):
                     scorer(y_out, est_hs.predict_proba(X_out)))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
-        self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
-        super().fit(X=X, y=y, *args, **kwargs)
+        self.reg_param = np.asarray(self.reg_param_list)[cv_criterion(self.scores_)]
+        return super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
         attr_list = [
@@ -394,7 +444,8 @@ class HSTreeRegressorCV(HSTreeRegressor):
         if estimator_ is None:
             estimator_ = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes)
         super().__init__(estimator_, reg_param=None)
-        self.reg_param_list = np.array(reg_param_list)
+        # stored unmodified so that the estimator stays sklearn-cloneable
+        self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
         self.shrinkage_scheme_ = shrinkage_scheme_
@@ -404,13 +455,27 @@ class HSTreeRegressorCV(HSTreeRegressor):
         #     raise Warning('Passed an already fitted estimator,'
         #                   'but shrinking not applied until fit method is called.')
 
+    def get_params(self, deep=True):
+        d = {
+            "estimator_": self.estimator_,
+            "reg_param_list": self.reg_param_list,
+            "shrinkage_scheme_": self.shrinkage_scheme_,
+            "max_leaf_nodes": self.estimator_.max_leaf_nodes,
+            "cv": self.cv,
+            "scoring": self.scoring,
+        }
+        if deep:
+            return deepcopy(d)
+        return d
+
     def fit(self, X, y, *args, **kwargs):
+        X_arr, y_arr = _as_arrays(X, y)
         self.scores_ = [[] for _ in self.reg_param_list]
         kf = KFold(n_splits=self.cv)
         scorer = kwargs.get("scoring", mean_squared_error)
-        for train_index, test_index in kf.split(X):
-            X_out, y_out = X[test_index, :], y[test_index]
-            X_in, y_in = X[train_index, :], y[train_index]
+        for train_index, test_index in kf.split(X_arr):
+            X_out, y_out = X_arr[test_index, :], y_arr[test_index]
+            X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)
             base_est.fit(X_in, y_in)
             for i, reg_param in enumerate(self.reg_param_list):
@@ -419,8 +484,8 @@ class HSTreeRegressorCV(HSTreeRegressor):
                 self.scores_[i].append(scorer(est_hs.predict(X_out), y_out))
         self.scores_ = [np.mean(s) for s in self.scores_]
         cv_criterion = _get_cv_criterion(scorer)
-        self.reg_param = self.reg_param_list[cv_criterion(self.scores_)]
-        super().fit(X=X, y=y, *args, **kwargs)
+        self.reg_param = np.asarray(self.reg_param_list)[cv_criterion(self.scores_)]
+        return super().fit(X=X, y=y, *args, **kwargs)
 
     def __repr__(self):
         attr_list = [

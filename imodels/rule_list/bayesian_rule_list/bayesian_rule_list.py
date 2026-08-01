@@ -12,6 +12,7 @@ from imodels.rule_list.bayesian_rule_list.brl_util import (
 from imodels.rule_list.rule_list import RuleList
 from imodels.util.convert import itemsets_to_rules
 from imodels.util.extract import extract_fpgrowth
+from imodels.util.arguments import decode_labels, set_feature_names_in
 from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
 
 
@@ -128,10 +129,12 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         if len(set(y)) != 2:
             raise ValueError("Only binary classification is supported at this time!")
 
+        set_feature_names_in(self, X)
         X, y = check_X_y(X, y)
         check_classification_targets(y)
         self.n_features_in_ = X.shape[1]
-        self.classes_ = unique_labels(y)
+        # encode y as 0/1 so that non-numeric labels (e.g. strings) are supported
+        self.classes_, y = np.unique(y, return_inverse=True)
 
         # Check that all features are either categorical or discretized
         if not np.all((X == 1) | (X == 0)):
@@ -299,6 +302,4 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         check_is_fitted(self)
         X = check_array(X)
 
-        # print('predicting!')
-        # print('preds_proba', self.predict_proba(X)[:, 1])
-        return 1 * (self.predict_proba(X)[:, 1] >= threshold)
+        return decode_labels(self, 1 * (self.predict_proba(X)[:, 1] >= threshold))

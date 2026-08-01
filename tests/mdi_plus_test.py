@@ -364,7 +364,9 @@ class TestMDIPlus:
         assert_array_equal(scores, true_scores)
 
     def test_multi_scoring(self):
-        ridge_ppm = RidgeRegressorPPM()
+        # log_loss/roc_auc need a classifier partial model: scoring a regressor's
+        # unbounded predictions as probabilities is rejected by newer sklearn
+        logistic_ppm = LogisticClassifierPPM()
         rf_transformers = []
         rf_ppms = []
         tree_random_states = []
@@ -372,8 +374,8 @@ class TestMDIPlus:
             transformer = MDIPlusDefaultTransformer(tree_model)
             blocked_data = transformer.fit_transform(self.X)
             rf_transformers.append(transformer)
-            ridge_ppm.fit(blocked_data.get_all_data(), self.y)
-            rf_ppms.append(copy.deepcopy(ridge_ppm))
+            logistic_ppm.fit(blocked_data.get_all_data(), self.y_bin)
+            rf_ppms.append(copy.deepcopy(logistic_ppm))
             tree_random_states.append(tree_model.random_state)
         scoring_fns = {"log_loss": log_loss, "roc_auc": roc_auc_score}
         gmdi = ForestMDIPlus(rf_ppms, rf_transformers, scoring_fns,

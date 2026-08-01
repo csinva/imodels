@@ -10,7 +10,10 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor, GradientBoostingClassifier
-from sklearn.ensemble._forest import _generate_unsampled_indices, _generate_sample_indices
+from imodels.util.sklearn_compat import (
+    generate_unsampled_indices as _generate_unsampled_indices,
+    generate_sample_indices as _generate_sample_indices,
+)
 
 # rf+ prediction imports
 from imodels.tree.rf_plus.rf_plus.rf_plus_utils import _check_X, _check_Xy

@@ -4,7 +4,10 @@ import numpy as np
 # import pprint
 from collections import defaultdict
 from sklearn.ensemble import BaseEnsemble
-from sklearn.ensemble._forest import _generate_unsampled_indices, _generate_sample_indices
+from imodels.util.sklearn_compat import (
+    generate_unsampled_indices as _generate_unsampled_indices,
+    generate_sample_indices as _generate_sample_indices,
+)
 from imodels.tree.rf_plus.data_transformations.local_stumps import make_stumps, tree_feature_transform
 
 
