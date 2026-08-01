@@ -76,6 +76,12 @@ class HSTree(BaseEstimator):
             self.estimator_.max_leaf_nodes = max_leaf_nodes
             self.estimator_.random_state = random_state
 
+
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
     def get_params(self, deep=True):
         d = {
             "reg_param": self.reg_param,

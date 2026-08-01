@@ -19,6 +19,12 @@ The tests are organized as:
 
 ### Adding a new model
 
+If the model is rule-based, make sure `get_rules()` works on it (see
+`imodels/util/get_rules.py`): inherit from `RuleSet`/`RuleList`, or add the small
+`get_rules` method that forwards to `imodels.get_rules`. Add it to
+`tests/get_rules_test.py`, which checks the shared contract for every rule model.
+
+
 1. Export it from `imodels/__init__.py` and add it to `CLASSIFIERS` or `REGRESSORS`.
 2. Add an entry to `MODEL_KWARGS` in `tests/model_configs.py` if the defaults are slow (keep each model well under a second), and to `BINARY_INPUT_MODELS` if it needs pre-discretized features.
 

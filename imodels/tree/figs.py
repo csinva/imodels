@@ -146,6 +146,12 @@ class FIGS(BaseEstimator):
         self.n_outputs = None
         self.need_to_reshape = False
 
+
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
     def _init_decision_function(self):
         """Sets decision function based on _estimator_type"""
         # used by sklearn GridSearchCV, BaggingClassifier
@@ -771,6 +777,12 @@ class FIGSCV(BaseEstimator):
         self.min_impurity_decrease_list = min_impurity_decrease_list
         self.cv = cv
         self.scoring = scoring
+
+
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
 
     def get_params(self, deep=True):
         # defined explicitly because __init__ takes *args/**kwargs, which sklearn's

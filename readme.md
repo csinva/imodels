@@ -187,6 +187,42 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
 
 
+### Inspecting the rules a model learned
+
+Every rule-based model exposes its rules the same way, as a `pandas` DataFrame with
+one row per rule, via `get_rules()`:
+
+```python
+from imodels import FIGSClassifier
+
+model = FIGSClassifier(max_rules=4).fit(X_train, y_train, feature_names=feature_names)
+model.get_rules()
+```
+
+```
+                                               rule  prediction  tree
+0                        FocalNeuroFindings2 <= 0.5       0.117     0
+1                         FocalNeuroFindings2 > 0.5       0.427     0
+2                             HighriskDiving <= 0.5      -0.008     1
+3                              HighriskDiving > 0.5       0.550     1
+4  PainNeck2 <= 0.5 and AlteredMentalStatus2 <= 0.5      -0.083     2
+5   PainNeck2 <= 0.5 and AlteredMentalStatus2 > 0.5       0.048     2
+6                                   PainNeck2 > 0.5       0.058     2
+```
+
+Two columns are always present: `rule`, the condition as a string, and `prediction`,
+what the model predicts when that rule applies. Models add their own columns on top —
+`coef`, `support` and `importance` for RuleFit, `tree` for models made of several trees.
+Where a model is additive, as FIGS is, `prediction` is that tree's contribution, so the
+contributions of the matching rules sum to the model's output.
+
+This works across rule sets, rule lists and tree-based models (RuleFit, SkopeRules,
+SLIPPER, greedy and Bayesian rule lists, FIGS, CART, C4.5, TAO, boosted rules, and
+hierarchical shrinkage, including the `CV` variants). It is also available as a
+function, `imodels.get_rules(model)`, and takes an optional `feature_names` argument
+to rename the features. Models that aren't rule-based raise a clear error.
+
+
 ### Extras
 
 <details>

@@ -48,6 +48,12 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
         self._set_complexity()
         return self
 
+
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
     def _set_complexity(self):
         """Set complexity as number of non-leaf nodes
         """
@@ -99,6 +105,12 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
             self.feature_names_in_ = names_in
         self._set_complexity()
         return self
+
+
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
 
     def _set_complexity(self):
         """Set complexity as number of non-leaf nodes

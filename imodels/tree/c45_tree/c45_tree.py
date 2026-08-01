@@ -170,6 +170,11 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         self.dom_ = minidom.parseString(self.tree_)
         return self
 
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
     def impute_nodes(self, X, y):
         """
         Returns
