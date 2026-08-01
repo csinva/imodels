@@ -10,12 +10,40 @@ from imodels import GreedyTreeClassifier
 from imodels.tree.gosdt.pygosdt_helper import TreeClassifier
 from imodels.util import rule
 
+# imodels uses the C++ extension API shipped by the gosdt-deprecated package.
+# The unrelated `gosdt` package on PyPI imports under the same name but exposes a
+# different API, so check for the functions actually used rather than the import
+# alone -- otherwise it fails much later with AttributeError (see issue #219).
+_GOSDT_REQUIRED_ATTRS = ("configure", "fit", "time", "iterations", "size")
+
 try:
     import gosdt
 
-    gosdt_supported = True
+    gosdt_installed = True
+    _gosdt_missing_attrs = [attr for attr in _GOSDT_REQUIRED_ATTRS
+                            if not hasattr(gosdt, attr)]
+    gosdt_supported = not _gosdt_missing_attrs
 except ImportError:
+    gosdt_installed = False
+    _gosdt_missing_attrs = list(_GOSDT_REQUIRED_ATTRS)
     gosdt_supported = False
+
+
+def _gosdt_unavailable_message():
+    if gosdt_installed:
+        return (
+            "The installed 'gosdt' package does not provide the extension API "
+            "imodels uses (missing: " + ", ".join(_gosdt_missing_attrs) + "). "
+            "imodels needs the gosdt-deprecated package: "
+            "'pip install gosdt-deprecated'. "
+            "Defaulting to Non-optimal DecisionTreeClassifier."
+        )
+    return (
+        "Should install gosdt extension. On x86_64 linux or macOS: "
+        "'pip install gosdt-deprecated'. On other platforms, see "
+        "https://github.com/keyan3/GeneralizedOptimalSparseDecisionTrees. "
+        "Defaulting to Non-optimal DecisionTreeClassifier."
+    )
 
 
 class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else BaseEstimator):
@@ -101,6 +129,8 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
         trains the model so that this model instance is ready for prediction
         """
         try:
+            if not gosdt_supported:
+                raise ImportError(_gosdt_unavailable_message())
             import gosdt
 
             if not isinstance(X, pd.DataFrame):
@@ -130,12 +160,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
 
         except ImportError:
 
-            warnings.warn(
-                "Should install gosdt extension. On x86_64 linux or macOS: "
-                "'pip install gosdt-deprecated'. On other platforms, see "
-                "https://github.com/keyan3/GeneralizedOptimalSparseDecisionTrees. "
-                "Defaulting to Non-optimal DecisionTreeClassifier."
-            )
+            warnings.warn(_gosdt_unavailable_message())
 
             # dtree = DecisionTreeClassifierWithComplexity()
             # dtree.fit(X, y)
