@@ -9,11 +9,10 @@ from copy import deepcopy
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.multiclass import unique_labels
 from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.tree import DecisionTreeClassifier
 from imodels.rule_list.rule_list import RuleList
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, decode_labels
 
 
 class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
@@ -46,7 +45,10 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             the depth of the current layer (used to recurse)
         """
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
-        return self.fit_node_recursive(X, y, depth=0, verbose=verbose)
+        self.depth = 0  # reset so that refitting doesn't accumulate depth
+        self.rules_ = self.fit_node_recursive(X, y, depth=0, verbose=verbose)
+        self.complexity_ = len(self.rules_)
+        return self
 
     def fit_node_recursive(self, X, y, depth: int, verbose):
 
@@ -71,9 +73,12 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             col = m.tree_.feature[0]
             cutoff = m.tree_.threshold[0]
             # col, cutoff, criterion_val = self._find_best_split(X, y)
+            # base case 4: no split found, so emit a leaf holding this group's mean.
+            # (returning [] here would leave a split rule as the list's final entry,
+            # which predict_proba treats as the default rule and applies to everything)
             if col == -2:
-                return []
-                
+                return [{'val': np.mean(y), 'num_pts': y.size}]
+
             y_left = y[X[:, col] < cutoff]  # left-hand side data
             y_right = y[X[:, col] >= cutoff]  # right-hand side data
 
@@ -114,7 +119,6 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             self.depth += 1  # increase the depth since we call fit once
             self.rules_ = par_node
             self.complexity_ = len(self.rules_)
-            self.classes_ = unique_labels(y)
             return par_node
 
     def predict_proba(self, X):
@@ -139,7 +143,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
     def predict(self, X):
         check_is_fitted(self)
         X = check_array(X)
-        return np.argmax(self.predict_proba(X), axis=1)
+        return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
 
     def __str__(self):

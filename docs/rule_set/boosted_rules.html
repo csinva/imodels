@@ -78,8 +78,15 @@ class BoostedRulesClassifier(AdaBoostClassifier):
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        classes = self.classes_  # super().fit overwrites this with the encoded labels
+        names_in = getattr(self, &#39;feature_names_in_&#39;, None)
         super().fit(X, y, **kwargs)
+        self.classes_ = classes
+        if names_in is not None:  # super().fit strips this when passed a plain array
+            self.feature_names_in_ = names_in
         self.complexity_ = len(self.estimators_)
+        return self
+
 
 class BoostedRulesRegressor(AdaBoostRegressor):
     &#39;&#39;&#39;An easy-interpretable regressor optimizing simple logical rules.
@@ -116,8 +123,12 @@ class BoostedRulesRegressor(AdaBoostRegressor):
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        names_in = getattr(self, &#39;feature_names_in_&#39;, None)
         super().fit(X, y, **kwargs)
+        if names_in is not None:  # super().fit strips this when passed a plain array
+            self.feature_names_in_ = names_in
         self.complexity_ = len(self.estimators_)
+        return self
 
 
 if __name__ == &#39;__main__&#39;:
@@ -192,8 +203,14 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        classes = self.classes_  # super().fit overwrites this with the encoded labels
+        names_in = getattr(self, &#39;feature_names_in_&#39;, None)
         super().fit(X, y, **kwargs)
-        self.complexity_ = len(self.estimators_)</code></pre>
+        self.classes_ = classes
+        if names_in is not None:  # super().fit strips this when passed a plain array
+            self.feature_names_in_ = names_in
+        self.complexity_ = len(self.estimators_)
+        return self</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -204,7 +221,8 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 <li>sklearn.ensemble._base.BaseEnsemble</li>
 <li>sklearn.base.MetaEstimatorMixin</li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -240,18 +258,25 @@ DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
 </summary>
 <pre><code class="python">def fit(self, X, y, feature_names=None, **kwargs):
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+    classes = self.classes_  # super().fit overwrites this with the encoded labels
+    names_in = getattr(self, &#39;feature_names_in_&#39;, None)
     super().fit(X, y, **kwargs)
-    self.complexity_ = len(self.estimators_)</code></pre>
+    self.classes_ = classes
+    if names_in is not None:  # super().fit strips this when passed a plain array
+        self.feature_names_in_ = names_in
+    self.complexity_ = len(self.estimators_)
+    return self</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_fit_request"><code class="name flex">
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a>, *, feature_names: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -274,12 +299,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -296,10 +315,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -346,10 +366,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -372,12 +393,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -394,10 +409,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -490,8 +506,12 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        names_in = getattr(self, &#39;feature_names_in_&#39;, None)
         super().fit(X, y, **kwargs)
-        self.complexity_ = len(self.estimators_)</code></pre>
+        if names_in is not None:  # super().fit strips this when passed a plain array
+            self.feature_names_in_ = names_in
+        self.complexity_ = len(self.estimators_)
+        return self</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -502,7 +522,8 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
 <li>sklearn.ensemble._base.BaseEnsemble</li>
 <li>sklearn.base.MetaEstimatorMixin</li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -534,18 +555,23 @@ DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
 </summary>
 <pre><code class="python">def fit(self, X, y, feature_names=None, **kwargs):
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+    names_in = getattr(self, &#39;feature_names_in_&#39;, None)
     super().fit(X, y, **kwargs)
-    self.complexity_ = len(self.estimators_)</code></pre>
+    if names_in is not None:  # super().fit strips this when passed a plain array
+        self.feature_names_in_ = names_in
+    self.complexity_ = len(self.estimators_)
+    return self</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor.set_fit_request"><code class="name flex">
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a>, *, feature_names: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -568,12 +594,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -590,10 +610,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -640,10 +661,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -666,12 +688,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -688,10 +704,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(

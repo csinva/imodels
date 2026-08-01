@@ -84,7 +84,7 @@ from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, decode_labels
 from imodels.util.rule import replace_feature_name, get_feature_dict, Rule
 from imodels.util.extract import extract_skope
 from imodels.util.score import score_precision_recall
@@ -271,7 +271,9 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
         check_classification_targets(y)
         self.n_features_ = X.shape[1]
         self.sample_weight = sample_weight
-        self.classes_ = unique_labels(y)
+        # check_fit_arguments already set self.classes_ to the original labels and
+        # encoded y as 0..n_classes-1, so check the encoded labels here
+        encoded_classes = unique_labels(y)
         n_classes = len(self.classes_)
 
         if n_classes < 2:
@@ -283,7 +285,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
         if not isinstance(self.max_depth_duplication, int) and self.max_depth_duplication is not None:
             raise ValueError("max_depth_duplication should be an integer")
 
-        if not set(self.classes_) == {0, 1}:
+        if not set(encoded_classes) == {0, 1}:
             warn(
                 "Found labels %s. This method assumes target class to be labeled as 1 and normal data to be labeled as "
                 "0. Any label different from 0 will be considered as being from the target class."
@@ -347,7 +349,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
             be considered as an outlier according to the selected rules.
         """
         X = check_array(X)
-        return np.argmax(self.predict_proba(X), axis=1)
+        return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
     def predict_proba(self, X) -> np.ndarray:
         '''Predict probability of a particular sample being an outlier or not

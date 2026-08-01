@@ -28,8 +28,14 @@ from sklearn.utils.validation import check_X_y, check_array
 from sklearn.utils.multiclass import check_classification_targets
 import scipy.sparse
 
+
 def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_classmixin=True):
     &#34;&#34;&#34;Process arguments for fit and predict methods.
+
+    For classifiers, sets ``model.classes_`` and encodes y as integers 0..n_classes-1
+    (use `decode_labels` to map predictions back onto the original labels).
+    Always sets ``model.feature_names_`` and ``model.n_features_in_``, and sets the
+    sklearn-standard ``model.feature_names_in_`` when X carries column names.
     &#34;&#34;&#34;
     if isinstance(model, ClassifierMixin) and is_classmixin:
         model.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
@@ -44,6 +50,9 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
             model.feature_names_ = [&#39;X&#39; + str(i) for i in range(X.shape[1])]
     else:
         model.feature_names_ = feature_names
+
+    set_feature_names_in(model, X)
+
     if scipy.sparse.issparse(X):
         X = X.toarray()
     X, y = check_X_y(X=X, y=y, multi_output=multi_output)
@@ -52,13 +61,41 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
     y = y.astype(float)
     return X, y, model.feature_names_
 
+
+def set_feature_names_in(model, X):
+    &#34;&#34;&#34;Set the sklearn-standard ``feature_names_in_`` if X carries string column names.
+
+    sklearn deletes this attribute when a model is subsequently fit on a plain array,
+    so wrappers that forward a numpy array to a parent estimator should call this
+    again afterwards.
+    &#34;&#34;&#34;
+    if hasattr(X, &#39;columns&#39;) and all(isinstance(c, str) for c in X.columns):
+        model.feature_names_in_ = np.asarray(X.columns, dtype=object)
+        return True
+    return False
+
+
 def check_fit_X(X):
     &#34;&#34;&#34;Process X argument for fit and predict methods.
     &#34;&#34;&#34;
     if scipy.sparse.issparse(X):
         X = X.toarray()
     X = check_array(X)
-    return X</code></pre>
+    return X
+
+
+def decode_labels(model, preds):
+    &#34;&#34;&#34;Map integer-encoded predictions back onto the original labels seen during fit.
+
+    `check_fit_arguments` encodes y as 0..n_classes-1, so classifiers must decode
+    their predictions to honor the sklearn contract that predict returns labels
+    drawn from ``classes_`` (which may be strings, or ints that aren&#39;t 0/1).
+    &#34;&#34;&#34;
+    preds = np.asarray(preds)
+    if not hasattr(model, &#39;classes_&#39;):
+        return preds
+    classes = np.asarray(model.classes_)
+    return classes[preds.astype(int)]</code></pre>
 </details>
 </section>
 <section>
@@ -90,13 +127,22 @@ def check_fit_X(X):
 <span>def <span class="ident">check_fit_arguments</span></span>(<span>model, X, y, feature_names, multi_output=False, is_classmixin=True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Process arguments for fit and predict methods.</p></div>
+<div class="desc"><p>Process arguments for fit and predict methods.</p>
+<p>For classifiers, sets <code>model.classes_</code> and encodes y as integers 0..n_classes-1
+(use <code><a title="imodels.util.arguments.decode_labels" href="#imodels.util.arguments.decode_labels">decode_labels()</a></code> to map predictions back onto the original labels).
+Always sets <code>model.feature_names_</code> and <code>model.n_features_in_</code>, and sets the
+sklearn-standard <code>model.feature_names_in_</code> when X carries column names.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_classmixin=True):
     &#34;&#34;&#34;Process arguments for fit and predict methods.
+
+    For classifiers, sets ``model.classes_`` and encodes y as integers 0..n_classes-1
+    (use `decode_labels` to map predictions back onto the original labels).
+    Always sets ``model.feature_names_`` and ``model.n_features_in_``, and sets the
+    sklearn-standard ``model.feature_names_in_`` when X carries column names.
     &#34;&#34;&#34;
     if isinstance(model, ClassifierMixin) and is_classmixin:
         model.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
@@ -111,6 +157,9 @@ def check_fit_X(X):
             model.feature_names_ = [&#39;X&#39; + str(i) for i in range(X.shape[1])]
     else:
         model.feature_names_ = feature_names
+
+    set_feature_names_in(model, X)
+
     if scipy.sparse.issparse(X):
         X = X.toarray()
     X, y = check_X_y(X=X, y=y, multi_output=multi_output)
@@ -118,6 +167,57 @@ def check_fit_X(X):
     assert len(model.feature_names_) == model.n_features_in_, &#39;feature_names should be same size as X.shape[1]&#39;
     y = y.astype(float)
     return X, y, model.feature_names_</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.arguments.decode_labels"><code class="name flex">
+<span>def <span class="ident">decode_labels</span></span>(<span>model, preds)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Map integer-encoded predictions back onto the original labels seen during fit.</p>
+<p><code><a title="imodels.util.arguments.check_fit_arguments" href="#imodels.util.arguments.check_fit_arguments">check_fit_arguments()</a></code> encodes y as 0..n_classes-1, so classifiers must decode
+their predictions to honor the sklearn contract that predict returns labels
+drawn from <code>classes_</code> (which may be strings, or ints that aren't 0/1).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decode_labels(model, preds):
+    &#34;&#34;&#34;Map integer-encoded predictions back onto the original labels seen during fit.
+
+    `check_fit_arguments` encodes y as 0..n_classes-1, so classifiers must decode
+    their predictions to honor the sklearn contract that predict returns labels
+    drawn from ``classes_`` (which may be strings, or ints that aren&#39;t 0/1).
+    &#34;&#34;&#34;
+    preds = np.asarray(preds)
+    if not hasattr(model, &#39;classes_&#39;):
+        return preds
+    classes = np.asarray(model.classes_)
+    return classes[preds.astype(int)]</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.arguments.set_feature_names_in"><code class="name flex">
+<span>def <span class="ident">set_feature_names_in</span></span>(<span>model, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the sklearn-standard <code>feature_names_in_</code> if X carries string column names.</p>
+<p>sklearn deletes this attribute when a model is subsequently fit on a plain array,
+so wrappers that forward a numpy array to a parent estimator should call this
+again afterwards.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_feature_names_in(model, X):
+    &#34;&#34;&#34;Set the sklearn-standard ``feature_names_in_`` if X carries string column names.
+
+    sklearn deletes this attribute when a model is subsequently fit on a plain array,
+    so wrappers that forward a numpy array to a parent estimator should call this
+    again afterwards.
+    &#34;&#34;&#34;
+    if hasattr(X, &#39;columns&#39;) and all(isinstance(c, str) for c in X.columns):
+        model.feature_names_in_ = np.asarray(X.columns, dtype=object)
+        return True
+    return False</code></pre>
 </details>
 </dd>
 </dl>
@@ -140,6 +240,8 @@ def check_fit_X(X):
 <ul class="">
 <li><code><a title="imodels.util.arguments.check_fit_X" href="#imodels.util.arguments.check_fit_X">check_fit_X</a></code></li>
 <li><code><a title="imodels.util.arguments.check_fit_arguments" href="#imodels.util.arguments.check_fit_arguments">check_fit_arguments</a></code></li>
+<li><code><a title="imodels.util.arguments.decode_labels" href="#imodels.util.arguments.decode_labels">decode_labels</a></code></li>
+<li><code><a title="imodels.util.arguments.set_feature_names_in" href="#imodels.util.arguments.set_feature_names_in">set_feature_names_in</a></code></li>
 </ul>
 </li>
 </ul>
