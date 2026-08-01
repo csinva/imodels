@@ -55,8 +55,15 @@ class BoostedRulesClassifier(AdaBoostClassifier):
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        classes = self.classes_  # super().fit overwrites this with the encoded labels
+        names_in = getattr(self, 'feature_names_in_', None)
         super().fit(X, y, **kwargs)
+        self.classes_ = classes
+        if names_in is not None:  # super().fit strips this when passed a plain array
+            self.feature_names_in_ = names_in
         self.complexity_ = len(self.estimators_)
+        return self
+
 
 class BoostedRulesRegressor(AdaBoostRegressor):
     '''An easy-interpretable regressor optimizing simple logical rules.
@@ -93,8 +100,12 @@ class BoostedRulesRegressor(AdaBoostRegressor):
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        names_in = getattr(self, 'feature_names_in_', None)
         super().fit(X, y, **kwargs)
+        if names_in is not None:  # super().fit strips this when passed a plain array
+            self.feature_names_in_ = names_in
         self.complexity_ = len(self.estimators_)
+        return self
 
 
 if __name__ == '__main__':

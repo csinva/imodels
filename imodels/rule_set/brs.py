@@ -282,7 +282,6 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                                  shape=(len(df.columns),
                                         len(self.rules_)))
         mat = df.values @ rule_matrix
-        print('mat.shape', mat.shape)
         len_matrix = np.array([len_rules] * df.shape[0])
         Z = (mat == len_matrix).astype(int)
         Zpos = [Z[i] for i in np.where(y > 0)][0]
@@ -295,7 +294,6 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         p2 = FN.astype(float) / (FN + TN)
         pp = (TP + FP).astype(float) / (TP + FP + TN + FN)
         # p1 = np.clip(p1, a_min=1e-10, a_max=1-1e-10)
-        print('\n\n\n\np1.shape', p1.shape, 'pp.shape', pp.shape, 'cond_entropy.shape')  # , cond_entropy.shape)
         with warnings.catch_warnings():
             if not verbose:
                 warnings.simplefilter("ignore")  # ignore warnings about invalid values (e.g. log(0))

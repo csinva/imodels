@@ -40,6 +40,7 @@ from tqdm import tqdm
 import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
+from imodels.util.arguments import decode_labels, set_feature_names_in
 
 
 class TreeGAM(BaseEstimator):
@@ -122,7 +123,9 @@ class TreeGAM(BaseEstimator):
         self.random_state = random_state
 
     def fit(self, X, y, sample_weight=None):
+        set_feature_names_in(self, X)
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+        self.n_features_in_ = X.shape[1]
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
             self.classes_, y = np.unique(y, return_inverse=True)
@@ -355,14 +358,19 @@ class TreeGAM(BaseEstimator):
             else:
                 for i, est in enumerate(self.estimators_):
                     probs1 += cyclic_coef_[i] * est.predict(X)
-        probs1 = np.clip(probs1, a_min=0, a_max=1)
+        if isinstance(self, ClassifierMixin):
+            # only clip for classification, where this column is a probability;
+            # for regression it is the prediction itself and must stay unbounded
+            probs1 = np.clip(probs1, a_min=0, a_max=1)
         return np.array([1 - probs1, probs1]).T
 
     def predict(self, X, marginal_only=False):
         if isinstance(self, RegressorMixin):
             return self.predict_proba(X, marginal_only=marginal_only)[:, 1]
         elif isinstance(self, ClassifierMixin):
-            return np.argmax(self.predict_proba(X, marginal_only=marginal_only), axis=1)
+            preds = np.argmax(self.predict_proba(
+                X, marginal_only=marginal_only), axis=1)
+            return decode_labels(self, preds)
 
     def _calc_mse(self, X, y, sample_weight=None):
         return np.average(
@@ -556,7 +564,9 @@ Random seed.</p></div>
         self.random_state = random_state
 
     def fit(self, X, y, sample_weight=None):
+        set_feature_names_in(self, X)
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+        self.n_features_in_ = X.shape[1]
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
             self.classes_, y = np.unique(y, return_inverse=True)
@@ -789,14 +799,19 @@ Random seed.</p></div>
             else:
                 for i, est in enumerate(self.estimators_):
                     probs1 += cyclic_coef_[i] * est.predict(X)
-        probs1 = np.clip(probs1, a_min=0, a_max=1)
+        if isinstance(self, ClassifierMixin):
+            # only clip for classification, where this column is a probability;
+            # for regression it is the prediction itself and must stay unbounded
+            probs1 = np.clip(probs1, a_min=0, a_max=1)
         return np.array([1 - probs1, probs1]).T
 
     def predict(self, X, marginal_only=False):
         if isinstance(self, RegressorMixin):
             return self.predict_proba(X, marginal_only=marginal_only)[:, 1]
         elif isinstance(self, ClassifierMixin):
-            return np.argmax(self.predict_proba(X, marginal_only=marginal_only), axis=1)
+            preds = np.argmax(self.predict_proba(
+                X, marginal_only=marginal_only), axis=1)
+            return decode_labels(self, preds)
 
     def _calc_mse(self, X, y, sample_weight=None):
         return np.average(
@@ -807,7 +822,8 @@ Random seed.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -827,7 +843,9 @@ Random seed.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fit(self, X, y, sample_weight=None):
+    set_feature_names_in(self, X)
     X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+    self.n_features_in_ = X.shape[1]
     if isinstance(self, ClassifierMixin):
         check_classification_targets(y)
         self.classes_, y = np.unique(y, return_inverse=True)
@@ -893,7 +911,9 @@ Random seed.</p></div>
     if isinstance(self, RegressorMixin):
         return self.predict_proba(X, marginal_only=marginal_only)[:, 1]
     elif isinstance(self, ClassifierMixin):
-        return np.argmax(self.predict_proba(X, marginal_only=marginal_only), axis=1)</code></pre>
+        preds = np.argmax(self.predict_proba(
+            X, marginal_only=marginal_only), axis=1)
+        return decode_labels(self, preds)</code></pre>
 </details>
 </dd>
 <dt id="imodels.algebraic.tree_gam.TreeGAM.predict_proba"><code class="name flex">
@@ -944,7 +964,10 @@ If True, only use the marginal effects.</p></div>
         else:
             for i, est in enumerate(self.estimators_):
                 probs1 += cyclic_coef_[i] * est.predict(X)
-    probs1 = np.clip(probs1, a_min=0, a_max=1)
+    if isinstance(self, ClassifierMixin):
+        # only clip for classification, where this column is a probability;
+        # for regression it is the prediction itself and must stay unbounded
+        probs1 = np.clip(probs1, a_min=0, a_max=1)
     return np.array([1 - probs1, probs1]).T</code></pre>
 </details>
 </dd>
@@ -952,10 +975,11 @@ If True, only use the marginal effects.</p></div>
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -978,12 +1002,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1000,10 +1018,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1050,10 +1069,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">set_predict_proba_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a>, *, marginal_only: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>predict_proba</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>predict_proba</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1076,12 +1096,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>marginal_only</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1098,10 +1112,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1148,10 +1163,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">set_predict_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a>, *, marginal_only: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>predict</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>predict</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1174,12 +1190,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>marginal_only</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1196,10 +1206,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1301,7 +1312,8 @@ Random seed.</p></div>
 <ul class="hlist">
 <li><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
@@ -1311,10 +1323,11 @@ Random seed.</p></div>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAMClassifier" href="#imodels.algebraic.tree_gam.TreeGAMClassifier">TreeGAMClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAMClassifier" href="#imodels.algebraic.tree_gam.TreeGAMClassifier">TreeGAMClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1337,12 +1350,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1359,10 +1366,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1475,7 +1483,8 @@ Random seed.</p></div>
 <ul class="hlist">
 <li><a title="imodels.algebraic.tree_gam.TreeGAM" href="#imodels.algebraic.tree_gam.TreeGAM">TreeGAM</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>
@@ -1485,10 +1494,11 @@ Random seed.</p></div>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.tree_gam.TreeGAMRegressor" href="#imodels.algebraic.tree_gam.TreeGAMRegressor">TreeGAMRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.tree_gam.TreeGAMRegressor" href="#imodels.algebraic.tree_gam.TreeGAMRegressor">TreeGAMRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1511,12 +1521,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1533,10 +1537,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
