@@ -200,7 +200,8 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <ul class="hlist">
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
@@ -217,10 +218,11 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_set.fplasso.FPLasso" href="#imodels.rule_set.fplasso.FPLasso">FPLasso</a>, *, feature_names: bool | str | None = '$UNCHANGED$', undiscretized_features: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.fplasso.FPLasso" href="#imodels.rule_set.fplasso.FPLasso">FPLasso</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -243,12 +245,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -268,10 +264,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -389,7 +386,8 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <li><a title="imodels.rule_set.fplasso.FPLasso" href="#imodels.rule_set.fplasso.FPLasso">FPLasso</a></li>
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
@@ -402,10 +400,11 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.fplasso.FPLassoClassifier" href="#imodels.rule_set.fplasso.FPLassoClassifier">FPLassoClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.fplasso.FPLassoClassifier" href="#imodels.rule_set.fplasso.FPLassoClassifier">FPLassoClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -428,12 +427,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -450,10 +443,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -572,7 +566,8 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <li><a title="imodels.rule_set.fplasso.FPLasso" href="#imodels.rule_set.fplasso.FPLasso">FPLasso</a></li>
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
@@ -585,10 +580,11 @@ Must be GradientBoostingRegressor(), GradientBoostingClassifier(), or RandomFore
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.fplasso.FPLassoRegressor" href="#imodels.rule_set.fplasso.FPLassoRegressor">FPLassoRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.fplasso.FPLassoRegressor" href="#imodels.rule_set.fplasso.FPLassoRegressor">FPLassoRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -611,12 +607,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -633,10 +623,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(

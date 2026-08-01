@@ -1,3 +1,9 @@
+"""Regression checks for wrappers that aren't in the imodels.REGRESSORS registry.
+
+Every registered regressor is exercised by model_api_test.py; this file covers the
+meta-estimators that need another model passed in, and so can't be auto-instantiated.
+"""
+
 from functools import partial
 
 import numpy as np
@@ -5,55 +11,35 @@ import pytest
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 
-from imodels import (
-    RuleFitRegressor,
-    SLIMRegressor,
-    GreedyTreeRegressor,
-    HSTreeRegressor,
-    HSTreeRegressorCV,
-    FIGSRegressor,
-    DistilledRegressor,
-    TaoTreeRegressor,
-    BoostedRulesRegressor,
-    TreeGAMRegressor,
-    MarginalShrinkageLinearModelRegressor,
-)
+from imodels import DistilledRegressor
+
+N_SAMPLES = 20
+N_FEATURES = 5
 
 
 class TestClassRegression:
     def setup_method(self):
-        np.random.seed(13)
-        self.n = 10
-        self.p = 10
-        self.X_regression = np.random.randn(self.n, self.p)
-        self.y_regression = self.X_regression[:,
-                                              0] + np.random.randn(self.n) * 0.01
+        rng = np.random.RandomState(13)
+        self.X_regression = rng.randn(N_SAMPLES, N_FEATURES)
+        self.y_regression = self.X_regression[:, 0] + \
+            rng.randn(N_SAMPLES) * 0.01
 
     @pytest.mark.filterwarnings("ignore::UserWarning")
     def test_regression(self):
-        """Test imodels on basic binary classification task"""
+        """Meta-estimators fit an easy, nearly linear target"""
         for model_type in [
-            RuleFitRegressor,
-            SLIMRegressor,
-            GreedyTreeRegressor,
-            FIGSRegressor,  # TaoTreeRegressor,
-            BoostedRulesRegressor,
             partial(
                 DistilledRegressor,
-                teacher=RandomForestRegressor(n_estimators=3),
-                student=DecisionTreeRegressor(),
+                teacher=RandomForestRegressor(n_estimators=3, random_state=0),
+                student=DecisionTreeRegressor(random_state=0),
             ),
-            TreeGAMRegressor,
-            MarginalShrinkageLinearModelRegressor,
         ]:
-            if model_type == RuleFitRegressor:
-                m = model_type(include_linear=False, max_rules=3)
-            else:
-                m = model_type()
+            m = model_type()
             m.fit(self.X_regression, self.y_regression)
 
-            preds = m.predict(self.X_regression)
-            assert preds.size == self.n, "predictions are right size"
+            preds = np.asarray(m.predict(self.X_regression), dtype=float)
+            assert preds.size == N_SAMPLES, "predictions are right size"
 
             mse = np.mean(np.square(preds - self.y_regression))
-            assert mse < 1, "mse less than 1"
+            assert mse < np.var(self.y_regression), \
+                f"mse {mse:0.3f} is no better than predicting the mean"

@@ -22,7 +22,7 @@
 <br/>
 Python package for concise, transparent, and accurate predictive modeling. <br/>
 All sklearn-compatible and easy to use. <br/>
-<i> For interpretability in NLP, check out our new package: <a href="https://github.com/csinva/imodelsX">imodelsX</a> </i>
+<i> Check out our new packages! Interpretability in text: <a href="https://github.com/csinva/imodelsX">imodelsX</a>, interpretability tools for tabular data with agents: <a href="https://github.com/csinva/agentic-imodels">agentic-imodels</a> </i>
 </p>
 <p align="center">
 <a href="https://csinva.github.io/imodels/">📚 docs</a> •
@@ -40,8 +40,8 @@ All sklearn-compatible and easy to use. <br/>
 </p>
 <p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
 <p>Modern machine-learning models are increasingly complex, often making them difficult to interpret. This package provides a simple interface for fitting and using state-of-the-art interpretable models, all compatible with scikit-learn. These models can often replace black-box models (e.g. random forests) with simpler models (e.g. rule lists) while improving interpretability and computational efficiency, all without sacrificing predictive accuracy! Simply import a classifier or regressor and use the <code>fit</code> and <code>predict</code> methods, same as standard scikit-learn models.</p>
-<pre><code class="language-python">from sklearn.model_selection import train_test_split
-from imodels import get_clean_dataset, HSTreeClassifierCV # import any imodels model here
+<pre><code class="language-python">from imodels import get_clean_dataset, HSTreeClassifierCV # import any imodels model here
+from sklearn.model_selection import train_test_split
 
 # prepare data (a sample clinical dataset)
 X, y, feature_names = get_clean_dataset('csi_pecarn_pred')
@@ -269,6 +269,7 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 </details>
 <h2 id="support-for-different-tasks">Support for different tasks</h2>
 <p>Different models support different machine-learning tasks. Current support for different models is given below (each of these models can be imported directly from imodels (e.g. <code>from <a title="imodels" href="#imodels">imodels</a> import RuleFitClassifier</code>):</p>
+<p>All of these models follow the standard sklearn estimator API, which is checked for every model in <a href="tests/model_api_test.py">tests/model_api_test.py</a>: <code>fit</code> returns the estimator, <code>predict</code> returns labels drawn from <code>classes_</code> (strings included), <code>predict_proba</code> returns an <code>(n_samples, n_classes)</code> matrix whose rows sum to 1, DataFrame input sets <code>feature_names_in_</code>,, models can be <code>clone</code>d and configured with <code>get_params</code>/<code>set_params</code>, and every model works inside sklearn pipelines and grid searches.</p>
 <table>
 <thead>
 <tr>
@@ -290,6 +291,18 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <td style="text-align: center;"><a href="https://csinva.io/imodels/rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></td>
 <td style="text-align: center;"></td>
 <td></td>
+</tr>
+<tr>
+<td style="text-align: left;">FPSkope rule set</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_set/fpskope.html#imodels.rule_set.fpskope.FPSkopeClassifier">FPSkopeClassifier</a></td>
+<td style="text-align: center;"></td>
+<td>Like Skope, but generates candidate rules with FPGrowth; requires discretized features</td>
+</tr>
+<tr>
+<td style="text-align: left;">FPLasso rule set</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoClassifier">FPLassoClassifier</a></td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoRegressor">FPLassoRegressor</a></td>
+<td>Lasso over rules mined with FPGrowth; requires discretized features</td>
 </tr>
 <tr>
 <td style="text-align: left;">Boosted rule set</td>
@@ -346,6 +359,12 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <td></td>
 </tr>
 <tr>
+<td style="text-align: left;">CCP-pruned rule tree</td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></td>
+<td>Prunes a tree to a target complexity via cost-complexity pruning</td>
+</tr>
+<tr>
 <td style="text-align: left;">TAO rule tree</td>
 <td style="text-align: center;"><a href="https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></td>
 <td style="text-align: center;"><a href="https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></td>
@@ -355,7 +374,7 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <td style="text-align: left;">Iterative random forest</td>
 <td style="text-align: center;"><a href="https://csinva.io/imodels/tree/iterative_random_forest/iterative_random_forest.html#imodels.tree.iterative_random_forest.iterative_random_forest.IRFClassifier">IRFClassifier</a></td>
 <td style="text-align: center;"></td>
-<td>Requires <a href="https://pypi.org/project/irf/">irf</a></td>
+<td>Requires <a href="https://pypi.org/project/irf/">irf</a>; currently not exported from <code><a title="imodels" href="#imodels">imodels</a></code></td>
 </tr>
 <tr>
 <td style="text-align: left;">Sparse integer linear model</td>
@@ -380,6 +399,18 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 <td style="text-align: center;"><a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></td>
 <td style="text-align: center;"><a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></td>
 <td>Wraps any sklearn tree-based model</td>
+</tr>
+<tr>
+<td style="text-align: left;">Marginal shrinkage<br/>linear model</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/algebraic/marginal_shrinkage_linear_model.html">MarginalShrinkageLinearModelRegressor</a></td>
+<td>Linear model shrunk towards its marginal effects</td>
+</tr>
+<tr>
+<td style="text-align: left;">BART</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"><a href="https://csinva.io/imodels/experimental/bartpy/index.html">BART</a></td>
+<td>Bayesian additive regression trees (slow)</td>
 </tr>
 <tr>
 <td style="text-align: left;">Distillation</td>
@@ -489,6 +520,7 @@ The code here heavily derives from the wonderful work of previous projects. We s
 <li><a href="https://github.com/interpretml/interpret">interpretml</a>: boosting-based gam</li>
 <li><a href="https://github.com/h2oai/h2o-3">h20 ai</a>: gams + glms (and more)</li>
 <li><a href="https://github.com/guillermo-navas-palencia/optbinning">optbinning</a>: data discretization / scoring models</li>
+<li><a href="https://github.com/gialmisi/desdeo-brb">desdeo-brb</a>: distributional rule-based models</li>
 </ul>
 </details>
 <details>
@@ -501,7 +533,7 @@ The code here heavily derives from the wonderful work of previous projects. We s
 </details>
 <p>Please cite the package if you use it in an academic work :)</p>
 <pre><code class="language-r">@software{
-    imodels2021,
+    singh2021imodels,
     title        = {imodels: a python package for fitting interpretable models},
     journal      = {Journal of Open Source Software},
     publisher    = {The Open Journal},
@@ -513,7 +545,6 @@ The code here heavily derives from the wonderful work of previous projects. We s
     doi          = {10.21105/joss.03192},
     url          = {https://doi.org/10.21105/joss.03192},
 }
-
 </code></pre>
 <details class="source">
 <summary>
@@ -539,7 +570,7 @@ from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
 from .rule_set import boosted_rules
 from .rule_set.boosted_rules import *
-from .rule_set.boosted_rules import BoostedRulesClassifier
+from .rule_set.boosted_rules import BoostedRulesClassifier, BoostedRulesRegressor
 from .rule_set.brs import BayesianRuleSetClassifier
 from .rule_set.fplasso import FPLassoRegressor, FPLassoClassifier
 from .rule_set.fpskope import FPSkopeClassifier
@@ -587,25 +618,33 @@ CLASSIFIERS = [
     C45TreeClassifier,
     OptimalTreeClassifier,
     OneRClassifier,
-    SlipperClassifier,
     RuleFitClassifier,
+    FPLassoClassifier,
+    FPSkopeClassifier,
     TaoTreeClassifier,
     TreeGAMClassifier,
     FIGSClassifier,
+    FIGSClassifierCV,
     HSTreeClassifier,
     HSTreeClassifierCV,
     GreedyTreeClassifier,
+    DecisionTreeCCPClassifier,
     AutoInterpretableClassifier,
 ]  # , IRFClassifier
 REGRESSORS = [
     RuleFitRegressor,
+    FPLassoRegressor,
     SLIMRegressor,
     GreedyTreeRegressor,
     FIGSRegressor,
+    FIGSRegressorCV,
     TaoTreeRegressor,
     TreeGAMRegressor,
+    BoostedRulesRegressor,
+    MarginalShrinkageLinearModelRegressor,
     HSTreeRegressor,
     HSTreeRegressorCV,
+    DecisionTreeCCPRegressor,
     BART,
     AutoInterpretableRegressor,
 ]

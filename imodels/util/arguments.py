@@ -5,8 +5,14 @@ from sklearn.utils.validation import check_X_y, check_array
 from sklearn.utils.multiclass import check_classification_targets
 import scipy.sparse
 
+
 def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_classmixin=True):
     """Process arguments for fit and predict methods.
+
+    For classifiers, sets ``model.classes_`` and encodes y as integers 0..n_classes-1
+    (use `decode_labels` to map predictions back onto the original labels).
+    Always sets ``model.feature_names_`` and ``model.n_features_in_``, and sets the
+    sklearn-standard ``model.feature_names_in_`` when X carries column names.
     """
     if isinstance(model, ClassifierMixin) and is_classmixin:
         model.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
@@ -21,6 +27,9 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
             model.feature_names_ = ['X' + str(i) for i in range(X.shape[1])]
     else:
         model.feature_names_ = feature_names
+
+    set_feature_names_in(model, X)
+
     if scipy.sparse.issparse(X):
         X = X.toarray()
     X, y = check_X_y(X=X, y=y, multi_output=multi_output)
@@ -29,6 +38,20 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
     y = y.astype(float)
     return X, y, model.feature_names_
 
+
+def set_feature_names_in(model, X):
+    """Set the sklearn-standard ``feature_names_in_`` if X carries string column names.
+
+    sklearn deletes this attribute when a model is subsequently fit on a plain array,
+    so wrappers that forward a numpy array to a parent estimator should call this
+    again afterwards.
+    """
+    if hasattr(X, 'columns') and all(isinstance(c, str) for c in X.columns):
+        model.feature_names_in_ = np.asarray(X.columns, dtype=object)
+        return True
+    return False
+
+
 def check_fit_X(X):
     """Process X argument for fit and predict methods.
     """
@@ -36,3 +59,17 @@ def check_fit_X(X):
         X = X.toarray()
     X = check_array(X)
     return X
+
+
+def decode_labels(model, preds):
+    """Map integer-encoded predictions back onto the original labels seen during fit.
+
+    `check_fit_arguments` encodes y as 0..n_classes-1, so classifiers must decode
+    their predictions to honor the sklearn contract that predict returns labels
+    drawn from ``classes_`` (which may be strings, or ints that aren't 0/1).
+    """
+    preds = np.asarray(preds)
+    if not hasattr(model, 'classes_'):
+        return preds
+    classes = np.asarray(model.classes_)
+    return classes[preds.astype(int)]

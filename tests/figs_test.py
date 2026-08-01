@@ -43,8 +43,9 @@ class TestFIGS:
         categories_2 = ['bear', 'chicken', 'cow']
 
         self.X_cat = pd.DataFrame(self.X)
-        self.X_cat['pet1'] = np.random.choice(categories, size=(self.n, 1))
-        self.X_cat['pet2'] = np.random.choice(categories_2, size=(self.n, 1))
+        # 1d: a (n, 1) array becomes a column of arrays under pandas >= 3
+        self.X_cat['pet1'] = np.random.choice(categories, size=self.n)
+        self.X_cat['pet2'] = np.random.choice(categories_2, size=self.n)
 
         figs_reg = FIGSRegressor()
         figs_cls = FIGSClassifier()

@@ -137,6 +137,10 @@ def gelmanrubin(res):
     '''
     n = 0  # number of samples per chain - to be computed
     m = len(res)  # number of chains
+    if m < 2:
+        # the diagnostic compares variance between chains, so it is undefined
+        # for a single chain -- report it as unavailable rather than dividing by zero
+        return np.nan
     phi_bar_j = {}
     for chain in res:
         phi_bar_j[chain] = 0.

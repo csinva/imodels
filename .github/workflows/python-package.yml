@@ -9,8 +9,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: [3.10.8, 3.12.2]
+        # minor versions only, so each run picks up the latest patch release
+        python-version: ["3.10", "3.12", "3.13"]
 
     steps:
     - uses: actions/checkout@v4
@@ -22,8 +24,14 @@ jobs:
     - name: Set up python
       run: uv python install
 
-    - name: Install the project
-      run: uv sync --dev
+    # --upgrade ignores the pins in uv.lock and resolves the newest versions
+    # allowed by pyproject.toml, so that breakage from a new release of a
+    # dependency shows up here rather than in users' environments
+    - name: Install the project with the latest dependencies
+      run: uv sync --dev --upgrade
+
+    - name: Show resolved dependency versions
+      run: uv pip list
 
     - name: Run tests
       run: uv run pytest tests

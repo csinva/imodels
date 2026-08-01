@@ -17,6 +17,7 @@ from tqdm import tqdm
 import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
+from imodels.util.arguments import decode_labels, set_feature_names_in
 
 
 class TreeGAM(BaseEstimator):
@@ -99,7 +100,9 @@ class TreeGAM(BaseEstimator):
         self.random_state = random_state
 
     def fit(self, X, y, sample_weight=None):
+        set_feature_names_in(self, X)
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+        self.n_features_in_ = X.shape[1]
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
             self.classes_, y = np.unique(y, return_inverse=True)
@@ -332,14 +335,19 @@ class TreeGAM(BaseEstimator):
             else:
                 for i, est in enumerate(self.estimators_):
                     probs1 += cyclic_coef_[i] * est.predict(X)
-        probs1 = np.clip(probs1, a_min=0, a_max=1)
+        if isinstance(self, ClassifierMixin):
+            # only clip for classification, where this column is a probability;
+            # for regression it is the prediction itself and must stay unbounded
+            probs1 = np.clip(probs1, a_min=0, a_max=1)
         return np.array([1 - probs1, probs1]).T
 
     def predict(self, X, marginal_only=False):
         if isinstance(self, RegressorMixin):
             return self.predict_proba(X, marginal_only=marginal_only)[:, 1]
         elif isinstance(self, ClassifierMixin):
-            return np.argmax(self.predict_proba(X, marginal_only=marginal_only), axis=1)
+            preds = np.argmax(self.predict_proba(
+                X, marginal_only=marginal_only), axis=1)
+            return decode_labels(self, preds)
 
     def _calc_mse(self, X, y, sample_weight=None):
         return np.average(

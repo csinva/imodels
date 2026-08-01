@@ -193,3 +193,29 @@ def test_rf_discretizer_transform():
     assert 'c' in Xd.columns
     # transform on new data gives the same columns
     assert list(disc.transform(X.iloc[:10]).columns) == list(Xd.columns)
+def test_extra_basic_discretizer_onehot_shape():
+    """ExtraBasicDiscretizer should return one column per bin
+
+    Regression test for https://github.com/csinva/imodels/issues/211: newer
+    scikit-learn returns a sparse matrix from OneHotEncoder, which pandas stored
+    as a single column, so building the output frame raised a shape error.
+    """
+    from imodels.discretization import ExtraBasicDiscretizer
+
+    rng = np.random.RandomState(0)
+    X = pd.DataFrame(rng.randn(40, 3), columns=['a', 'b', 'c'])
+
+    disc = ExtraBasicDiscretizer(['a', 'b'], n_bins=3, strategy='uniform')
+    Xd = disc.fit_transform(X)
+
+    # 3 bins for each of the 2 discretized columns, plus the untouched column
+    assert Xd.shape == (40, 3 * 2 + 1)
+    assert 'c' in Xd.columns
+    onehot_cols = [col for col in Xd.columns if col != 'c']
+    # each row falls in exactly one bin per discretized column
+    assert (Xd[onehot_cols].sum(axis=1) == 2).all()
+
+    # transform on new data gives the same columns
+    Xd_test = disc.transform(X.iloc[:10])
+    assert list(Xd_test.columns) == list(Xd.columns)
+    assert Xd_test.shape == (10, Xd.shape[1])

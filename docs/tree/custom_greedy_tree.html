@@ -235,9 +235,10 @@ if __name__ == &#39;__main__&#39;:
 <div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li><code>_estimator_type</code> class attribute defaulting to <code>"classifier"</code>;</li>
+<li>set estimator type to <code>"classifier"</code> through the <code>estimator_type</code> tag;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.accuracy_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
+which is done by setting the classifier type tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
