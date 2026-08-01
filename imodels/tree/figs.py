@@ -12,6 +12,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.validation import _check_sample_weight, check_is_fitted
 
 from scipy.special import softmax
@@ -122,6 +123,7 @@ class FIGS(BaseEstimator):
         random_state=None,
         max_features: str = None,
         max_depth: int = None,
+        class_weight=None,
     ):
         """
         Params
@@ -134,6 +136,12 @@ class FIGS(BaseEstimator):
             A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
         max_features
             The number of features to consider when looking for the best split (see https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
+        class_weight: dict, list of dict or "balanced", default=None
+            Classification only. Weights associated with classes, in the form
+            {class_label: weight}. "balanced" weights each class by
+            n_samples / (n_classes * np.bincount(y)), so that rare classes count
+            as much as common ones. Combined multiplicatively with sample_weight
+            when both are given.
         """
         super().__init__()
         self.max_rules = max_rules
@@ -142,6 +150,7 @@ class FIGS(BaseEstimator):
         self.random_state = random_state
         self.max_features = max_features
         self.max_depth = max_depth
+        self.class_weight = class_weight
         self._init_decision_function()
         self.n_outputs = None
         self.need_to_reshape = False
@@ -151,6 +160,21 @@ class FIGS(BaseEstimator):
         """Return this model's rules as a DataFrame (see imodels.get_rules)."""
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)
+
+    def _apply_class_weight(self, y, sample_weight):
+        """Fold class_weight into sample_weight, which the splits already honor."""
+        if self.class_weight is None:
+            return sample_weight
+        if not isinstance(self, ClassifierMixin):
+            raise ValueError(
+                "class_weight is only meaningful for classification; "
+                f"{type(self).__name__} is a regressor. Use sample_weight instead."
+            )
+
+        class_based = compute_sample_weight(self.class_weight, np.ravel(y))
+        if sample_weight is None:
+            return class_based
+        return np.asarray(sample_weight, dtype=float) * class_based
 
     def _init_decision_function(self):
         """Sets decision function based on _estimator_type"""
@@ -293,7 +317,9 @@ class FIGS(BaseEstimator):
         """
         if categorical_features is not None:
             X, self._encoder = encode_categories(X, categorical_features)
-            
+
+        sample_weight = self._apply_class_weight(y, sample_weight)
+
         if hasattr(y, 'values'):
             y = y.values
         if len(y.shape) == 1:
