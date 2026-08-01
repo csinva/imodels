@@ -1,7 +1,7 @@
-import random
 
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils import check_random_state
 from sklearn.model_selection import train_test_split
 
 from imodels.util.arguments import check_fit_arguments
@@ -13,7 +13,10 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
     as part of the SlipperRulesClassifier.
     """
 
-    def __init__(self):
+    def __init__(self, random_state=None):
+        # exposed so that the boosting ensemble seeds each clone of this
+        # estimator, which is how sklearn makes sub-estimators reproducible
+        self.random_state = random_state
         self.Z = None
         self.rule = None
         self.D = None
@@ -177,10 +180,10 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         predict negative
         """
         default_rule = []
-        features = random.choices(
-            range(X.shape[1]),
-            k=random.randint(2, 8)
-        )
+        # drawn through random_state rather than the `random` module, which
+        # neither random_state nor np.random.seed can control
+        rng = check_random_state(self.random_state)
+        features = list(rng.choice(X.shape[1], size=rng.randint(2, 9)))
 
         default_rule.append({
             'feature': str(features[0]),
@@ -247,14 +250,11 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         }
 
     def predict_proba(self, X):
-
-        proba = self.predict(X)
-        proba = proba.reshape(-1, 1)
-        proba = np.hstack([
-            np.zeros(proba.shape), proba
-        ])
-
-        return proba
+        # a rule either fires or it doesn't, so the two columns are the
+        # complementary probabilities; returning [0, prediction] instead left
+        # rows that don't sum to 1, which corrupts the boosting weights
+        proba = np.asarray(self.predict(X), dtype=float).reshape(-1, 1)
+        return np.hstack([1 - proba, proba])
 
     def predict(self, X):
         """
@@ -267,12 +267,16 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         """
         Main loop for training
         """
-        X, y, feature_names = check_fit_arguments(self, X, y, feature_names) 
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if sample_weight is not None:
             self.D = sample_weight
+        elif self.D is None:
+            # uniform weights, so the estimator also works outside the ensemble
+            self.D = np.full(len(y), 1 / len(y))
 
+        rng = check_random_state(self.random_state)
         X_grow, X_prune, y_grow, y_prune = \
-            train_test_split(X, y, test_size=0.33)
+            train_test_split(X, y, test_size=0.33, random_state=rng)
 
         self._make_feature_dict(X.shape[1], feature_names)
 
