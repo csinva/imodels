@@ -96,8 +96,6 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.cv = cv
         self.random_state = random_state
 
-        self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
-        self.friedscale = FriedScale(self.winsorizer)
         self.stddev = None
         self.mean = None
 
@@ -105,6 +103,11 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         """Fit and estimate linear combination of rule ensemble
 
         """
+        # built here rather than in __init__ so that changing lin_trim_quantile
+        # with set_params after construction still takes effect
+        self.winsorizer = Winsorizer(trim_quantile=self.lin_trim_quantile)
+        self.friedscale = FriedScale(self.winsorizer)
+
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if isinstance(self, ClassifierMixin) and len(np.unique(y)) > 2:
             raise ValueError(
