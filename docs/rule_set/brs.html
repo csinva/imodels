@@ -306,7 +306,6 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
                                  shape=(len(df.columns),
                                         len(self.rules_)))
         mat = df.values @ rule_matrix
-        print(&#39;mat.shape&#39;, mat.shape)
         len_matrix = np.array([len_rules] * df.shape[0])
         Z = (mat == len_matrix).astype(int)
         Zpos = [Z[i] for i in np.where(y &gt; 0)][0]
@@ -319,7 +318,6 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
         p2 = FN.astype(float) / (FN + TN)
         pp = (TP + FP).astype(float) / (TP + FP + TN + FN)
         # p1 = np.clip(p1, a_min=1e-10, a_max=1-1e-10)
-        print(&#39;\n\n\n\np1.shape&#39;, p1.shape, &#39;pp.shape&#39;, pp.shape, &#39;cond_entropy.shape&#39;)  # , cond_entropy.shape)
         with warnings.catch_warnings():
             if not verbose:
                 warnings.simplefilter(&#34;ignore&#34;)  # ignore warnings about invalid values (e.g. log(0))
@@ -885,7 +883,6 @@ discretization method</p></div>
                                  shape=(len(df.columns),
                                         len(self.rules_)))
         mat = df.values @ rule_matrix
-        print(&#39;mat.shape&#39;, mat.shape)
         len_matrix = np.array([len_rules] * df.shape[0])
         Z = (mat == len_matrix).astype(int)
         Zpos = [Z[i] for i in np.where(y &gt; 0)][0]
@@ -898,7 +895,6 @@ discretization method</p></div>
         p2 = FN.astype(float) / (FN + TN)
         pp = (TP + FP).astype(float) / (TP + FP + TN + FN)
         # p1 = np.clip(p1, a_min=1e-10, a_max=1-1e-10)
-        print(&#39;\n\n\n\np1.shape&#39;, p1.shape, &#39;pp.shape&#39;, pp.shape, &#39;cond_entropy.shape&#39;)  # , cond_entropy.shape)
         with warnings.catch_warnings():
             if not verbose:
                 warnings.simplefilter(&#34;ignore&#34;)  # ignore warnings about invalid values (e.g. log(0))
@@ -1036,7 +1032,8 @@ discretization method</p></div>
 <ul class="hlist">
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
@@ -1211,10 +1208,11 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_set.brs.BayesianRuleSetClassifier" href="#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a>, *, feature_names: bool | str | None = '$UNCHANGED$', init: bool | str | None = '$UNCHANGED$', verbose: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.brs.BayesianRuleSetClassifier" href="#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1236,12 +1234,6 @@ existing request. This allows you to change the request for some
 parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -1265,10 +1257,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1315,10 +1308,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.brs.BayesianRuleSetClassifier" href="#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.brs.BayesianRuleSetClassifier" href="#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1341,12 +1335,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1363,10 +1351,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(

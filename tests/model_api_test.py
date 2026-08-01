@@ -19,7 +19,6 @@ import imodels
 
 from tests.model_configs import (
     ACCURACY_FLOORS,
-    NO_GRIDSEARCH_MODELS,
     BINARY_INPUT_MODELS,
     DEFAULT_ACCURACY_FLOOR,
     EXCLUDED_MODELS,
@@ -137,11 +136,13 @@ class TestSharedModelAPI:
 
     @pytest.mark.parametrize("model_type,classification", ALL_MODELS, ids=ALL_IDS)
     def test_works_in_grid_search(self, model_type, classification):
-        """models can be tuned with GridSearchCV"""
-        if model_type.__name__ in NO_GRIDSEARCH_MODELS:
-            pytest.skip(NO_GRIDSEARCH_MODELS[model_type.__name__])
+        """models can be tuned with GridSearchCV, including scoring each fold"""
         X, y, _ = _make_data(model_type, classification)
-        search = GridSearchCV(_make_model(model_type), {}, cv=2).fit(X, y)
+        # error_score="raise" so that a model whose score() fails surfaces here
+        # rather than silently producing nan scores
+        search = GridSearchCV(_make_model(model_type), {},
+                              cv=2, error_score="raise").fit(X, y)
+        assert np.isfinite(search.best_score_), "scoring produced nan"
         assert np.asarray(search.predict(X)).shape == (N_SAMPLES,)
 
     @pytest.mark.parametrize("model_type,classification", ALL_MODELS, ids=ALL_IDS)

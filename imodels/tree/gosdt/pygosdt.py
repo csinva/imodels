@@ -87,7 +87,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
         result = json.loads(result)
         self.tree_ = TreeClassifier(result[0])
 
-    def fit(self, X, y, feature_names=None):
+    def fit(self, X, y, feature_names=None, sample_weight=None, check_input=True):
         """
         Parameters
         ---
@@ -140,12 +140,13 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             # dtree = DecisionTreeClassifierWithComplexity()
             # dtree.fit(X, y)
             # self.tree_ = dtree
-            super().fit(X, y, feature_names=feature_names)
+            super().fit(X, y, feature_names=feature_names,
+                        sample_weight=sample_weight, check_input=check_input)
             self.tree_type = 'dt'
 
         return self
 
-    def predict(self, X):
+    def predict(self, X, check_input=True):
         """
         Parameters
         ---
@@ -164,9 +165,9 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
                 X = pd.DataFrame(X, columns=self.feature_names_)
             return self.tree_.predict(X)
         else:
-            return super().predict(X)
+            return super().predict(X, check_input=check_input)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X, check_input=True):
         validation.check_is_fitted(self)
         if self.tree_type == 'gosdt':
             if type(self.tree_) is TreeClassifier and not isinstance(X, pd.DataFrame):
@@ -174,7 +175,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             probs = np.expand_dims(self.tree_.confidence(X), axis=1)
             return np.hstack((1 - probs, probs))
         else:
-            return super().predict_proba(X)
+            return super().predict_proba(X, check_input=check_input)
 
     def score(self, X, y, weight=None):
         """
@@ -193,12 +194,14 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
             optionals for weighted accuracy
         """
         validation.check_is_fitted(self)
-        if type(self.tree_) is TreeClassifier:
+        if self.tree_type == 'gosdt':
             if not isinstance(X, pd.DataFrame):
                 X = pd.DataFrame(X, columns=self.feature_names_)
             return self.tree_.score(X, y, weight=weight)
         else:
-            return self.tree_.score(X, y, sample_weight=weight)
+            # self.tree_ is then sklearn's raw Tree struct, which has no score;
+            # defer to the sklearn estimator's own score
+            return super().score(X, y, sample_weight=weight)
 
     def __len__(self):
         """
@@ -207,7 +210,7 @@ class OptimalTreeClassifier(GreedyTreeClassifier if not gosdt_supported else Bas
         natural number : The number of terminal nodes present in this tree
         """
         validation.check_is_fitted(self)
-        if type(self.tree_) is TreeClassifier:
+        if self.tree_type == 'gosdt':
             return len(self.tree_)
         else:
             warnings.warn("Using DecisionTreeClassifier due to absence of gosdt package. "

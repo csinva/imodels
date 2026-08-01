@@ -217,7 +217,14 @@ class HSTree(BaseEstimator):
 
     def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, "predict_proba"):
-            return self.estimator_.predict_proba(X, *args, **kwargs)
+            probs = self.estimator_.predict_proba(X, *args, **kwargs)
+            # the shrinkage arithmetic can leave values a hair outside [0, 1]
+            # (e.g. -1e-17), which newer versions of sklearn's log_loss reject
+            probs = np.clip(probs, 0, 1)
+            totals = probs.sum(axis=1, keepdims=True)
+            with np.errstate(invalid="ignore", divide="ignore"):
+                normalized = probs / totals
+            return np.where(totals > 0, normalized, 1 / probs.shape[1])
         else:
             return NotImplemented
 

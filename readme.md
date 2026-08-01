@@ -157,7 +157,7 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 
 Different models support different machine-learning tasks. Current support for different models is given below (each of these models can be imported directly from imodels (e.g. `from imodels import RuleFitClassifier`):
 
-All of these models follow the standard sklearn estimator API, which is checked for every model in [tests/model_api_test.py](tests/model_api_test.py): `fit` returns the estimator, `predict` returns labels drawn from `classes_` (strings included), `predict_proba` returns an `(n_samples, n_classes)` matrix whose rows sum to 1, DataFrame input sets `feature_names_in_`, and models can be `clone`d and configured with `get_params`/`set_params`. Most also drop into sklearn pipelines and grid searches (`OptimalTreeClassifier` is a known exception for `GridSearchCV`).
+All of these models follow the standard sklearn estimator API, which is checked for every model in [tests/model_api_test.py](tests/model_api_test.py): `fit` returns the estimator, `predict` returns labels drawn from `classes_` (strings included), `predict_proba` returns an `(n_samples, n_classes)` matrix whose rows sum to 1, DataFrame input sets `feature_names_in_`,, models can be `clone`d and configured with `get_params`/`set_params`, and every model works inside sklearn pipelines and grid searches.
 
 | Model                       |                    Binary classification                     |                          Regression                          | Notes |
 | :-------------------------- | :----------------------------------------------------------: | :----------------------------------------------------------: | --------------------------- |
