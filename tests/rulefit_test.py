@@ -3,7 +3,7 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.utils._testing import ignore_warnings
 
-from imodels.rule_set.rule_fit import RuleFitRegressor
+from imodels.rule_set.rule_fit import RuleFitClassifier, RuleFitRegressor
 from imodels.util.transforms import FriedScale
 
 
@@ -95,3 +95,37 @@ def test_set_params_lin_trim_quantile():
     assert (via_init.friedscale.winsorizer.trim_quantile ==
             via_set_params.friedscale.winsorizer.trim_quantile)
     assert np.allclose(via_init.predict(X), via_set_params.predict(X))
+
+
+def test_tree_generator_is_not_modified():
+    """A supplied tree_generator should be left alone, fitted or not
+
+    Regression test for https://github.com/csinva/imodels/issues/133: rule
+    extraction set warm_start/n_estimators/max_leaf_nodes on the caller's
+    estimator, which both modified it and raised
+    "n_estimators=1 must be larger or equal to estimators_.shape[0]"
+    when the estimator had already been fitted.
+    """
+    from sklearn.ensemble import GradientBoostingClassifier
+
+    X = np.random.RandomState(0).randn(60, 3)
+    y = (X[:, 0] > 0).astype(int)
+
+    # a separately tuned and already-fitted generator
+    generator = GradientBoostingClassifier(n_estimators=20, random_state=0)
+    generator.fit(X, y)
+    params_before = dict(generator.get_params())
+    n_estimators_before = len(generator.estimators_)
+
+    model = RuleFitClassifier(tree_generator=generator, random_state=0)
+    model.fit(X, y)  # used to raise ValueError
+    assert len(model.rules_) > 0
+
+    # the caller's estimator is untouched
+    assert generator.get_params() == params_before
+    assert len(generator.estimators_) == n_estimators_before
+
+    # an unfitted generator still works
+    unfitted = GradientBoostingClassifier(n_estimators=20, random_state=0)
+    RuleFitClassifier(tree_generator=unfitted, random_state=0).fit(X, y)
+    assert not hasattr(unfitted, 'estimators_')

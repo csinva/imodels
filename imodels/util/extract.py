@@ -5,6 +5,7 @@ import pandas as pd
 from mlxtend import frequent_patterns as mlx
 from sklearn.ensemble import BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor, \
     GradientBoostingClassifier, RandomForestClassifier
+from sklearn.base import clone
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_array
 import inspect
@@ -55,6 +56,11 @@ def extract_rulefit(X, y, feature_names,
         raise ValueError(
             "RuleFit only works with GradientBoostingClassifier(), GradientBoostingRegressor(), "
             "RandomForestRegressor() or RandomForestClassifier()")
+
+    # work on a copy: rule extraction refits the generator and overrides some of
+    # its parameters, which would otherwise modify the caller's estimator. Cloning
+    # also drops any previous fit, which would clash with warm_start below.
+    tree_generator = clone(tree_generator)
 
     # fit tree generator
     if not exp_rand_tree_size:  # simply fit with constant tree size
