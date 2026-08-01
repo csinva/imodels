@@ -1,6 +1,7 @@
 import numbers
 
 import numpy as np
+import scipy.sparse
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -388,14 +389,21 @@ class ExtraBasicDiscretizer(TransformerMixin):
 
         # One-hot encode the ordinal DF
         disc_onehot_np = self.encoder_.transform(disc_ordinal_df_str)
+        if scipy.sparse.issparse(disc_onehot_np):
+            # OneHotEncoder returns a sparse matrix by default, which pandas
+            # would otherwise store as a single column of sparse rows
+            disc_onehot_np = disc_onehot_np.toarray()
         disc_onehot = pd.DataFrame(
-            disc_onehot_np, columns=self.encoder_.get_feature_names_out())
+            disc_onehot_np, columns=self.encoder_.get_feature_names_out(),
+            index=X.index)
 
         # Name columns after the interval they represent (e.g. 0.1_to_0.5)
         for col, bin_edges in zip(self.dcols, self.discretizer_.bin_edges_):
             bin_edges = bin_edges.astype(str)
 
-            for ordinal_value in disc_ordinal_df_str[col].unique():
+            # every bin learned during fit, not just the ones present in X, so
+            # that transform gives the same columns whatever data it is given
+            for ordinal_value in range(len(bin_edges) - 1):
                 bin_lb = bin_edges[int(ordinal_value)]
                 bin_ub = bin_edges[int(ordinal_value) + 1]
                 interval_string = f'{bin_lb}_to_{bin_ub}'

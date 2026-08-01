@@ -16,6 +16,7 @@ import imodels
 from sklearn.model_selection import GridSearchCV, train_test_split
 import numpy as np
 from sklearn.pipeline import Pipeline
+from imodels.util.arguments import set_feature_names_in
 
 
 class AutoInterpretableModel(BaseEstimator):
@@ -37,8 +38,11 @@ class AutoInterpretableModel(BaseEstimator):
     def fit(self, X, y, cv=5):
         self.pipe_ = Pipeline([("est", BaseEstimator())]
                               )  # Placeholder Estimator
+        set_feature_names_in(self, X)
+        self.n_features_in_ = np.asarray(X).shape[1]
         if isinstance(self, ClassifierMixin):
             scoring = "roc_auc"
+            self.classes_ = np.unique(y)
         elif isinstance(self, RegressorMixin):
             scoring = "r2"
         self.est_ = GridSearchCV(

@@ -26,7 +26,7 @@ from typing import List
 
 import numpy as np
 from sklearn import datasets
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
@@ -34,13 +34,32 @@ from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifie
 from imodels.util.tree import compute_tree_complexity
 
 
-class DecisionTreeCCPClassifier(DecisionTreeClassifier):
+class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
-        # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
+
+    def get_params(self, deep=True):
+        # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
+        # automatic parameter introspection rejects
+        return {
+            &#34;estimator_&#34;: self.estimator_,
+            &#34;desired_complexity&#34;: self.desired_complexity,
+            &#34;complexity_measure&#34;: self.complexity_measure,
+        }
+
+    def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
+        return self
+
+    def _copy_fitted_attributes(self):
+        &#34;&#34;&#34;Mirror the wrapped estimator&#39;s fitted sklearn attributes onto self.&#34;&#34;&#34;
+        for attr in (&#34;classes_&#34;, &#34;n_features_in_&#34;, &#34;feature_names_in_&#34;):
+            if hasattr(self.estimator_, attr):
+                setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
         path = self.estimator_.cost_complexity_pruning_path(X, y)
@@ -78,22 +97,24 @@ class DecisionTreeCCPClassifier(DecisionTreeClassifier):
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
         self.estimator_.fit(X, y, *args, **kwargs)
+        self._copy_fitted_attributes()
+        return self
 
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
 
-    def predict_proba(self, *args, **kwargs):
+    def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, &#39;predict_proba&#39;):
-            return self.estimator_.predict_proba(*args, **kwargs)
+            return self.estimator_.predict_proba(X, *args, **kwargs)
         else:
             return NotImplemented
 
     def predict(self, X, *args, **kwargs):
         return self.estimator_.predict(X, *args, **kwargs)
 
-    def score(self, *args, **kwargs):
+    def score(self, X, y, *args, **kwargs):
         if hasattr(self.estimator_, &#39;score&#39;):
-            return self.estimator_.score(*args, **kwargs)
+            return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented
 
@@ -103,10 +124,29 @@ class DecisionTreeCCPRegressor(BaseEstimator):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
-        # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
         self.alpha = 0.0
         self.complexity_measure = complexity_measure
+
+    def get_params(self, deep=True):
+        # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
+        # automatic parameter introspection rejects
+        return {
+            &#34;estimator_&#34;: self.estimator_,
+            &#34;desired_complexity&#34;: self.desired_complexity,
+            &#34;complexity_measure&#34;: self.complexity_measure,
+        }
+
+    def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
+        return self
+
+    def _copy_fitted_attributes(self):
+        &#34;&#34;&#34;Mirror the wrapped estimator&#39;s fitted sklearn attributes onto self.&#34;&#34;&#34;
+        for attr in (&#34;n_features_in_&#34;, &#34;feature_names_in_&#34;):
+            if hasattr(self.estimator_, attr):
+                setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None):
         path = self.estimator_.cost_complexity_pruning_path(X, y)
@@ -147,6 +187,8 @@ class DecisionTreeCCPRegressor(BaseEstimator):
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
         self.estimator_.fit(X, y)
+        self._copy_fitted_attributes()
+        return self
 
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
@@ -154,9 +196,9 @@ class DecisionTreeCCPRegressor(BaseEstimator):
     def predict(self, X, *args, **kwargs):
         return self.estimator_.predict(X, *args, **kwargs)
 
-    def score(self, *args, **kwargs):
+    def score(self, X, y, *args, **kwargs):
         if hasattr(self.estimator_, &#39;score&#39;):
-            return self.estimator_.score(*args, **kwargs)
+            return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented
 
@@ -179,7 +221,7 @@ class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        return super().fit(X=X, y=y)
 
 
 class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
@@ -200,7 +242,7 @@ class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        return super().fit(X=X, y=y)
 
 
 if __name__ == &#39;__main__&#39;:
@@ -234,244 +276,65 @@ if __name__ == &#39;__main__&#39;:
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A decision tree classifier.</p>
-<p>Read more in the :ref:<code>User Guide &lt;tree&gt;</code>.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>criterion</code></strong> :&ensp;<code>{"gini", "entropy", "log_loss"}</code>, default=<code>"gini"</code></dt>
-<dd>The function to measure the quality of a split. Supported criteria are
-"gini" for the Gini impurity and "log_loss" and "entropy" both for the
-Shannon information gain, see :ref:<code>tree_mathematical_formulation</code>.</dd>
-<dt><strong><code>splitter</code></strong> :&ensp;<code>{"best", "random"}</code>, default=<code>"best"</code></dt>
-<dd>The strategy used to choose the split at each node. Supported
-strategies are "best" to choose the best split and "random" to choose
-the best random split.</dd>
-<dt><strong><code>max_depth</code></strong> :&ensp;<code>int</code>, default=<code>None</code></dt>
-<dd>The maximum depth of the tree. If None, then nodes are expanded until
-all leaves are pure or until all leaves contain less than
-min_samples_split samples.</dd>
-<dt><strong><code>min_samples_split</code></strong> :&ensp;<code>int</code> or <code>float</code>, default=<code>2</code></dt>
-<dd>
-<p>The minimum number of samples required to split an internal node:</p>
+<div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
+<p>This mixin defines the following functionality:</p>
 <ul>
-<li>If int, then consider <code>min_samples_split</code> as the minimum number.</li>
-<li>If float, then <code>min_samples_split</code> is a fraction and
-<code>ceil(min_samples_split * n_samples)</code> are the minimum
-number of samples for each split.</li>
+<li>set estimator type to <code>"classifier"</code> through the <code>estimator_type</code> tag;</li>
+<li><code>score</code> method that default to :func:<code>~sklearn.metrics.accuracy_score</code>.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
+which is done by setting the classifier type tag.</li>
 </ul>
-<div class="admonition versionchanged">
-<p class="admonition-title">Changed in version:&ensp;0.18</p>
-<p>Added float values for fractions.</p>
-</div>
-</dd>
-<dt><strong><code>min_samples_leaf</code></strong> :&ensp;<code>int</code> or <code>float</code>, default=<code>1</code></dt>
-<dd>
-<p>The minimum number of samples required to be at a leaf node.
-A split point at any depth will only be considered if it leaves at
-least <code>min_samples_leaf</code> training samples in each of the left and
-right branches.
-This may have the effect of smoothing the model,
-especially in regression.</p>
-<ul>
-<li>If int, then consider <code>min_samples_leaf</code> as the minimum number.</li>
-<li>If float, then <code>min_samples_leaf</code> is a fraction and
-<code>ceil(min_samples_leaf * n_samples)</code> are the minimum
-number of samples for each node.</li>
-</ul>
-<div class="admonition versionchanged">
-<p class="admonition-title">Changed in version:&ensp;0.18</p>
-<p>Added float values for fractions.</p>
-</div>
-</dd>
-<dt><strong><code>min_weight_fraction_leaf</code></strong> :&ensp;<code>float</code>, default=<code>0.0</code></dt>
-<dd>The minimum weighted fraction of the sum total of weights (of all
-the input samples) required to be at a leaf node. Samples have
-equal weight when sample_weight is not provided.</dd>
-<dt><strong><code>max_features</code></strong> :&ensp;<code>int, float</code> or <code>{"sqrt", "log2"}</code>, default=<code>None</code></dt>
-<dd>
-<p>The number of features to consider when looking for the best split:</p>
-<pre><code>- If int, then consider &lt;code&gt;max\_features&lt;/code&gt; features at each split.
-- If float, then &lt;code&gt;max\_features&lt;/code&gt; is a fraction and
-  `max(1, int(max_features * n_features_in_))` features are considered at
-  each split.
-- If "sqrt", then `max_features=sqrt(n_features)`.
-- If "log2", then `max_features=log2(n_features)`.
-- If None, then `max_features=n_features`.
-</code></pre>
-<p>Note: the search for a split does not stop until at least one
-valid partition of the node samples is found, even if it requires to
-effectively inspect more than <code>max_features</code> features.</p>
-</dd>
-<dt><strong><code>random_state</code></strong> :&ensp;<code>int, RandomState instance</code> or <code>None</code>, default=<code>None</code></dt>
-<dd>Controls the randomness of the estimator. The features are always
-randomly permuted at each split, even if <code>splitter</code> is set to
-<code>"best"</code>. When <code>max_features &lt; n_features</code>, the algorithm will
-select <code>max_features</code> at random at each split before finding the best
-split among them. But the best found split may vary across different
-runs, even if <code>max_features=n_features</code>. That is the case, if the
-improvement of the criterion is identical for several splits and one
-split has to be selected at random. To obtain a deterministic behaviour
-during fitting, <code>random_state</code> has to be fixed to an integer.
-See :term:<code>Glossary &lt;random_state&gt;</code> for details.</dd>
-<dt><strong><code>max_leaf_nodes</code></strong> :&ensp;<code>int</code>, default=<code>None</code></dt>
-<dd>Grow a tree with <code>max_leaf_nodes</code> in best-first fashion.
-Best nodes are defined as relative reduction in impurity.
-If None then unlimited number of leaf nodes.</dd>
-<dt><strong><code>min_impurity_decrease</code></strong> :&ensp;<code>float</code>, default=<code>0.0</code></dt>
-<dd>
-<p>A node will be split if this split induces a decrease of the impurity
-greater than or equal to this value.</p>
-<p>The weighted impurity decrease equation is the following::</p>
-<pre><code>N_t / N * (impurity - N_t_R / N_t * right_impurity
-                    - N_t_L / N_t * left_impurity)
-</code></pre>
-<p>where <code>N</code> is the total number of samples, <code>N_t</code> is the number of
-samples at the current node, <code>N_t_L</code> is the number of samples in the
-left child, and <code>N_t_R</code> is the number of samples in the right child.</p>
-<p><code>N</code>, <code>N_t</code>, <code>N_t_R</code> and <code>N_t_L</code> all refer to the weighted sum,
-if <code>sample_weight</code> is passed.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;0.19</p>
-</div>
-</dd>
-<dt><strong><code>class_weight</code></strong> :&ensp;<code>dict, list</code> of <code>dict</code> or <code>"balanced"</code>, default=<code>None</code></dt>
-<dd>
-<p>Weights associated with classes in the form <code>{class_label: weight}</code>.
-If None, all classes are supposed to have weight one. For
-multi-output problems, a list of dicts can be provided in the same
-order as the columns of y.</p>
-<p>Note that for multioutput (including multilabel) weights should be
-defined for each class of every column in its own dict. For example,
-for four-class multilabel classification weights should be
-[{0: 1, 1: 1}, {0: 1, 1: 5}, {0: 1, 1: 1}, {0: 1, 1: 1}] instead of
-[{1:1}, {2:5}, {3:1}, {4:1}].</p>
-<p>The "balanced" mode uses the values of y to automatically adjust
-weights inversely proportional to class frequencies in the input data
-as <code>n_samples / (n_classes * np.bincount(y))</code></p>
-<p>For multi-output, the weights of each column of y will be multiplied.</p>
-<p>Note that these weights will be multiplied with sample_weight (passed
-through the fit method) if sample_weight is specified.</p>
-</dd>
-<dt><strong><code>ccp_alpha</code></strong> :&ensp;<code>non-negative float</code>, default=<code>0.0</code></dt>
-<dd>
-<p>Complexity parameter used for Minimal Cost-Complexity Pruning. The
-subtree with the largest cost complexity that is smaller than
-<code>ccp_alpha</code> will be chosen. By default, no pruning is performed. See
-:ref:<code>minimal_cost_complexity_pruning</code> for details.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;0.22</p>
-</div>
-</dd>
-<dt><strong><code>monotonic_cst</code></strong> :&ensp;<code>array-like</code> of <code>int</code> of <code>shape (n_features)</code>, default=<code>None</code></dt>
-<dd>
-<p>Indicates the monotonicity constraint to enforce on each feature.
-- 1: monotonic increase
-- 0: no constraint
-- -1: monotonic decrease</p>
-<p>If monotonic_cst is None, no constraints are applied.</p>
-<p>Monotonicity constraints are not supported for:
-- multiclass classifications (i.e. when <code>n_classes &gt; 2</code>),
-- multioutput classifications (i.e. when <code>n_outputs_ &gt; 1</code>),
-- classifications trained on data with missing values.</p>
-<p>The constraints hold over the probability of the positive class.</p>
-<p>Read more in the :ref:<code>User Guide &lt;monotonic_cst_gbdt&gt;</code>.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.4</p>
-</div>
-</dd>
-</dl>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>classes_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_classes,)</code> or <code>list</code> of <code>ndarray</code></dt>
-<dd>The classes labels (single output problem),
-or a list of arrays of class labels (multi-output problem).</dd>
-<dt><strong><code>feature_importances_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_features,)</code></dt>
-<dd>
-<p>The impurity-based feature importances.
-The higher, the more important the feature.
-The importance of a feature is computed as the (normalized)
-total reduction of the criterion brought by that feature.
-It is also
-known as the Gini importance [4]_.</p>
-<p>Warning: impurity-based feature importances can be misleading for
-high cardinality features (many unique values). See
-:func:<code>sklearn.inspection.permutation_importance</code> as an alternative.</p>
-</dd>
-<dt><strong><code>max_features_</code></strong> :&ensp;<code>int</code></dt>
-<dd>The inferred value of max_features.</dd>
-<dt><strong><code>n_classes_</code></strong> :&ensp;<code>int</code> or <code>list</code> of <code>int</code></dt>
-<dd>The number of classes (for single output problems),
-or a list containing the number of classes for each
-output (for multi-output problems).</dd>
-<dt><strong><code>n_features_in_</code></strong> :&ensp;<code>int</code></dt>
-<dd>
-<p>Number of features seen during :term:<code>fit</code>.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;0.24</p>
-</div>
-</dd>
-<dt><strong><code>feature_names_in_</code></strong> :&ensp;<code>ndarray</code> of <code>shape (</code>n_features_in_<code>,)</code></dt>
-<dd>
-<p>Names of features seen during :term:<code>fit</code>. Defined only when <code>X</code>
-has feature names that are all strings.</p>
-<div class="admonition versionadded">
-<p class="admonition-title">Added in version:&ensp;1.0</p>
-</div>
-</dd>
-<dt><strong><code>n_outputs_</code></strong> :&ensp;<code>int</code></dt>
-<dd>The number of outputs when <code>fit</code> is performed.</dd>
-<dt><strong><code>tree_</code></strong> :&ensp;<code>Tree instance</code></dt>
-<dd>The underlying Tree object. Please refer to
-<code>help(sklearn.tree._tree.Tree)</code> for attributes of Tree object and
-:ref:<code>sphx_glr_auto_examples_tree_plot_unveil_tree_structure.py</code>
-for basic usage of these attributes.</dd>
-</dl>
-<h2 id="see-also">See Also</h2>
-<dl>
-<dt><code>DecisionTreeRegressor</code></dt>
-<dd>A decision tree regressor.</dd>
-</dl>
-<h2 id="notes">Notes</h2>
-<p>The default values for the parameters controlling the size of the trees
-(e.g. <code>max_depth</code>, <code>min_samples_leaf</code>, etc.) lead to fully grown and
-unpruned trees which can potentially be very large on some data sets. To
-reduce memory consumption, the complexity and size of the trees should be
-controlled by setting those parameter values.</p>
-<p>The :meth:<code>predict</code> method operates using the :func:<code>numpy.argmax</code>
-function on the outputs of :meth:<code>predict_proba</code>. This means that in
-case the highest predicted probabilities are tied, the classifier will
-predict the tied class with the lowest index in :term:<code>classes_</code>.</p>
-<h2 id="references">References</h2>
-<p>.. [1] <a href="https://en.wikipedia.org/wiki/Decision_tree_learning">https://en.wikipedia.org/wiki/Decision_tree_learning</a></p>
-<p>.. [2] L. Breiman, J. Friedman, R. Olshen, and C. Stone, "Classification
-and Regression Trees", Wadsworth, Belmont, CA, 1984.</p>
-<p>.. [3] T. Hastie, R. Tibshirani and J. Friedman. "Elements of Statistical
-Learning", Springer, 2009.</p>
-<p>.. [4] L. Breiman, and A. Cutler, "Random Forests",
-<a href="https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm">https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm</a></p>
+<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; from sklearn.datasets import load_iris
-&gt;&gt;&gt; from sklearn.model_selection import cross_val_score
-&gt;&gt;&gt; from sklearn.tree import DecisionTreeClassifier
-&gt;&gt;&gt; clf = DecisionTreeClassifier(random_state=0)
-&gt;&gt;&gt; iris = load_iris()
-&gt;&gt;&gt; cross_val_score(clf, iris.data, iris.target, cv=10)
-...                             # doctest: +SKIP
-...
-array([ 1.     ,  0.93...,  0.86...,  0.93...,  0.93...,
-        0.93...,  0.93...,  1.     ,  0.93...,  1.      ])
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.base import BaseEstimator, ClassifierMixin
+&gt;&gt;&gt; # Mixin classes should always be on the left-hand side for a correct MRO
+&gt;&gt;&gt; class MyEstimator(ClassifierMixin, BaseEstimator):
+...     def __init__(self, *, param=1):
+...         self.param = param
+...     def fit(self, X, y=None):
+...         self.is_fitted_ = True
+...         return self
+...     def predict(self, X):
+...         return np.full(shape=X.shape[0], fill_value=self.param)
+&gt;&gt;&gt; estimator = MyEstimator(param=1)
+&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
+&gt;&gt;&gt; y = np.array([1, 0, 1])
+&gt;&gt;&gt; estimator.fit(X, y).predict(X)
+array([1, 1, 1])
+&gt;&gt;&gt; estimator.score(X, y)
+0.66...
 </code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DecisionTreeCCPClassifier(DecisionTreeClassifier):
+<pre><code class="python">class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
-        # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
+
+    def get_params(self, deep=True):
+        # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
+        # automatic parameter introspection rejects
+        return {
+            &#34;estimator_&#34;: self.estimator_,
+            &#34;desired_complexity&#34;: self.desired_complexity,
+            &#34;complexity_measure&#34;: self.complexity_measure,
+        }
+
+    def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
+        return self
+
+    def _copy_fitted_attributes(self):
+        &#34;&#34;&#34;Mirror the wrapped estimator&#39;s fitted sklearn attributes onto self.&#34;&#34;&#34;
+        for attr in (&#34;classes_&#34;, &#34;n_features_in_&#34;, &#34;feature_names_in_&#34;):
+            if hasattr(self.estimator_, attr):
+                setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
         path = self.estimator_.cost_complexity_pruning_path(X, y)
@@ -509,33 +372,33 @@ array([ 1.     ,  0.93...,  0.86...,  0.93...,  0.93...,
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
         self.estimator_.fit(X, y, *args, **kwargs)
+        self._copy_fitted_attributes()
+        return self
 
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
 
-    def predict_proba(self, *args, **kwargs):
+    def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, &#39;predict_proba&#39;):
-            return self.estimator_.predict_proba(*args, **kwargs)
+            return self.estimator_.predict_proba(X, *args, **kwargs)
         else:
             return NotImplemented
 
     def predict(self, X, *args, **kwargs):
         return self.estimator_.predict(X, *args, **kwargs)
 
-    def score(self, *args, **kwargs):
+    def score(self, X, y, *args, **kwargs):
         if hasattr(self.estimator_, &#39;score&#39;):
-            return self.estimator_.score(*args, **kwargs)
+            return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>sklearn.tree._classes.DecisionTreeClassifier</li>
 <li>sklearn.base.ClassifierMixin</li>
-<li>sklearn.tree._classes.BaseDecisionTree</li>
-<li>sklearn.base.MultiOutputMixin</li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -544,30 +407,7 @@ array([ 1.     ,  0.93...,  0.86...,  0.93...,  0.93...,
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Build a decision tree classifier from the training set (X, y).</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>{array-like, sparse matrix}</code> of <code>shape (n_samples, n_features)</code></dt>
-<dd>The training input samples. Internally, it will be converted to
-<code>dtype=np.float32</code> and if a sparse matrix is provided
-to a sparse <code>csc_matrix</code>.</dd>
-<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code> or <code>(n_samples, n_outputs)</code></dt>
-<dd>The target values (class labels) as integers or strings.</dd>
-<dt><strong><code>sample_weight</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code>, default=<code>None</code></dt>
-<dd>Sample weights. If None, then samples are equally weighted. Splits
-that would create child nodes with net zero or negative weight are
-ignored while searching for a split in each node. Splits are also
-ignored if they would result in any single class carrying a
-negative weight in either child node.</dd>
-<dt><strong><code>check_input</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
-<dd>Allow to bypass several input checking.
-Don't use this parameter unless you know what you're doing.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>DecisionTreeClassifier</code></dt>
-<dd>Fitted estimator.</dd>
-</dl></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -577,32 +417,46 @@ Don't use this parameter unless you know what you're doing.</dd>
     self._get_alpha(X, y, sample_weight, *args, **kwargs)
     params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
     self.estimator_.set_params(**params_for_fitting)
-    self.estimator_.fit(X, y, *args, **kwargs)</code></pre>
+    self.estimator_.fit(X, y, *args, **kwargs)
+    self._copy_fitted_attributes()
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_params"><code class="name flex">
+<span>def <span class="ident">get_params</span></span>(<span>self, deep=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get parameters for this estimator.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>deep</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Parameter names mapped to their values.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_params(self, deep=True):
+    # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
+    # automatic parameter introspection rejects
+    return {
+        &#34;estimator_&#34;: self.estimator_,
+        &#34;desired_complexity&#34;: self.desired_complexity,
+        &#34;complexity_measure&#34;: self.complexity_measure,
+    }</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Predict class or regression value for X.</p>
-<p>For a classification model, the predicted class for each sample in X is
-returned. For a regression model, the predicted value based on X is
-returned.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>{array-like, sparse matrix}</code> of <code>shape (n_samples, n_features)</code></dt>
-<dd>The input samples. Internally, it will be converted to
-<code>dtype=np.float32</code> and if a sparse matrix is provided
-to a sparse <code>csr_matrix</code>.</dd>
-<dt><strong><code>check_input</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
-<dd>Allow to bypass several input checking.
-Don't use this parameter unless you know what you're doing.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code> or <code>(n_samples, n_outputs)</code></dt>
-<dd>The predicted classes, or the predict values.</dd>
-</dl></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -612,45 +466,26 @@ Don't use this parameter unless you know what you're doing.</dd>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict_proba"><code class="name flex">
-<span>def <span class="ident">predict_proba</span></span>(<span>self, *args, **kwargs)</span>
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Predict class probabilities of the input samples X.</p>
-<p>The predicted class probability is the fraction of samples of the same
-class in a leaf.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>{array-like, sparse matrix}</code> of <code>shape (n_samples, n_features)</code></dt>
-<dd>The input samples. Internally, it will be converted to
-<code>dtype=np.float32</code> and if a sparse matrix is provided
-to a sparse <code>csr_matrix</code>.</dd>
-<dt><strong><code>check_input</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
-<dd>Allow to bypass several input checking.
-Don't use this parameter unless you know what you're doing.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>proba</code></strong> :&ensp;<code>ndarray</code> of <code>shape (n_samples, n_classes)</code> or <code>list</code> of <code>n_outputs
-such arrays if n_outputs &gt; 1</code></dt>
-<dd>The class probabilities of the input samples. The order of the
-classes corresponds to that in the attribute :term:<code>classes_</code>.</dd>
-</dl></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict_proba(self, *args, **kwargs):
+<pre><code class="python">def predict_proba(self, X, *args, **kwargs):
     if hasattr(self.estimator_, &#39;predict_proba&#39;):
-        return self.estimator_.predict_proba(*args, **kwargs)
+        return self.estimator_.predict_proba(X, *args, **kwargs)
     else:
         return NotImplemented</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.score"><code class="name flex">
-<span>def <span class="ident">score</span></span>(<span>self, *args, **kwargs)</span>
+<span>def <span class="ident">score</span></span>(<span>self, X, y, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return the mean accuracy on the given test data and labels.</p>
+<div class="desc"><p>Return :ref:<code>accuracy &lt;accuracy_score&gt;</code> on provided data and labels.</p>
 <p>In multi-label classification, this is the subset accuracy
 which is a harsh metric since you require for each sample that
 each label set be correctly predicted.</p>
@@ -672,9 +507,9 @@ each label set be correctly predicted.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def score(self, *args, **kwargs):
+<pre><code class="python">def score(self, X, y, *args, **kwargs):
     if hasattr(self.estimator_, &#39;score&#39;):
-        return self.estimator_.score(*args, **kwargs)
+        return self.estimator_.score(X, y, *args, **kwargs)
     else:
         return NotImplemented</code></pre>
 </details>
@@ -683,10 +518,11 @@ each label set be correctly predicted.</p>
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -709,12 +545,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -731,10 +561,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -775,6 +606,35 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
     _instance._metadata_request = requests
 
     return _instance</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.set_params"><code class="name flex">
+<span>def <span class="ident">set_params</span></span>(<span>self, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as :class:<code>~sklearn.pipeline.Pipeline</code>). The latter have
+parameters of the form <code>&lt;component&gt;__&lt;parameter&gt;</code> so that it's
+possible to update each component of a nested object.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>**params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Estimator parameters.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>estimator instance</code></dt>
+<dd>Estimator instance.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_params(self, **params):
+    for key, value in params.items():
+        setattr(self, key, value)
+    return self</code></pre>
 </details>
 </dd>
 </dl>
@@ -829,10 +689,29 @@ array([3, 3, 3])
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
-        # print(&#39;est&#39;, estimator_)
         self.estimator_ = estimator_
         self.alpha = 0.0
         self.complexity_measure = complexity_measure
+
+    def get_params(self, deep=True):
+        # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
+        # automatic parameter introspection rejects
+        return {
+            &#34;estimator_&#34;: self.estimator_,
+            &#34;desired_complexity&#34;: self.desired_complexity,
+            &#34;complexity_measure&#34;: self.complexity_measure,
+        }
+
+    def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
+        return self
+
+    def _copy_fitted_attributes(self):
+        &#34;&#34;&#34;Mirror the wrapped estimator&#39;s fitted sklearn attributes onto self.&#34;&#34;&#34;
+        for attr in (&#34;n_features_in_&#34;, &#34;feature_names_in_&#34;):
+            if hasattr(self.estimator_, attr):
+                setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None):
         path = self.estimator_.cost_complexity_pruning_path(X, y)
@@ -873,6 +752,8 @@ array([3, 3, 3])
         params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
         self.estimator_.fit(X, y)
+        self._copy_fitted_attributes()
+        return self
 
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
@@ -880,16 +761,17 @@ array([3, 3, 3])
     def predict(self, X, *args, **kwargs):
         return self.estimator_.predict(X, *args, **kwargs)
 
-    def score(self, *args, **kwargs):
+    def score(self, X, y, *args, **kwargs):
         if hasattr(self.estimator_, &#39;score&#39;):
-            return self.estimator_.score(*args, **kwargs)
+            return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -908,7 +790,39 @@ array([3, 3, 3])
     self._get_alpha(X, y, sample_weight)
     params_for_fitting[&#39;ccp_alpha&#39;] = self.alpha
     self.estimator_.set_params(**params_for_fitting)
-    self.estimator_.fit(X, y)</code></pre>
+    self.estimator_.fit(X, y)
+    self._copy_fitted_attributes()
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_params"><code class="name flex">
+<span>def <span class="ident">get_params</span></span>(<span>self, deep=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get parameters for this estimator.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>deep</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Parameter names mapped to their values.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_params(self, deep=True):
+    # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
+    # automatic parameter introspection rejects
+    return {
+        &#34;estimator_&#34;: self.estimator_,
+        &#34;desired_complexity&#34;: self.desired_complexity,
+        &#34;complexity_measure&#34;: self.complexity_measure,
+    }</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict"><code class="name flex">
@@ -925,7 +839,7 @@ array([3, 3, 3])
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.score"><code class="name flex">
-<span>def <span class="ident">score</span></span>(<span>self, *args, **kwargs)</span>
+<span>def <span class="ident">score</span></span>(<span>self, X, y, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -933,9 +847,9 @@ array([3, 3, 3])
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def score(self, *args, **kwargs):
+<pre><code class="python">def score(self, X, y, *args, **kwargs):
     if hasattr(self.estimator_, &#39;score&#39;):
-        return self.estimator_.score(*args, **kwargs)
+        return self.estimator_.score(X, y, *args, **kwargs)
     else:
         return NotImplemented</code></pre>
 </details>
@@ -944,10 +858,11 @@ array([3, 3, 3])
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant if
-<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -970,12 +885,6 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method is only relevant if this estimator is used as a
-sub-estimator of a meta-estimator, e.g. used inside a
-:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
-</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -992,10 +901,11 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the request for provided parameters
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality
+    See REQUESTER_DOC for expected functionality.
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1038,6 +948,35 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
     return _instance</code></pre>
 </details>
 </dd>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.set_params"><code class="name flex">
+<span>def <span class="ident">set_params</span></span>(<span>self, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as :class:<code>~sklearn.pipeline.Pipeline</code>). The latter have
+parameters of the form <code>&lt;component&gt;__&lt;parameter&gt;</code> so that it's
+possible to update each component of a nested object.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>**params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Estimator parameters.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>estimator instance</code></dt>
+<dd>Estimator instance.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_params(self, **params):
+    for key, value in params.items():
+        setattr(self, key, value)
+    return self</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 <dt id="imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV"><code class="flex name class">
@@ -1048,9 +987,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li><code>_estimator_type</code> class attribute defaulting to <code>"classifier"</code>;</li>
+<li>set estimator type to <code>"classifier"</code> through the <code>estimator_type</code> tag;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.accuracy_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
+which is done by setting the classifier type tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -1095,7 +1035,7 @@ array([1, 1, 1])
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)</code></pre>
+        return super().fit(X=X, y=y)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1103,7 +1043,8 @@ array([1, 1, 1])
 <li>sklearn.base.ClassifierMixin</li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -1126,7 +1067,7 @@ array([1, 1, 1])
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
     self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-    super().fit(X=X, y=y)</code></pre>
+    return super().fit(X=X, y=y)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1149,9 +1090,10 @@ array([1, 1, 1])
 <div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li><code>_estimator_type</code> class attribute defaulting to <code>"regressor"</code>;</li>
+<li>set estimator type to <code>"regressor"</code> through the <code>estimator_type</code> tag;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.r2_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
+which is done by setting the regressor type tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -1196,7 +1138,7 @@ array([0, 0, 0])
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)</code></pre>
+        return super().fit(X=X, y=y)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1204,7 +1146,8 @@ array([0, 0, 0])
 <li>sklearn.base.RegressorMixin</li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -1227,7 +1170,7 @@ array([0, 0, 0])
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
     self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-    super().fit(X=X, y=y)</code></pre>
+    return super().fit(X=X, y=y)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1260,21 +1203,25 @@ array([0, 0, 0])
 <ul>
 <li>
 <h4><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_params" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict_proba" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.score" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.score">score</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.set_fit_request" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.set_params" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.set_params">set_params</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.fit" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_params" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.score" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.score">score</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.set_fit_request" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.set_params" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.set_params">set_params</a></code></li>
 </ul>
 </li>
 <li>

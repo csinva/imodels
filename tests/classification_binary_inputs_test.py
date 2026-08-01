@@ -1,75 +1,44 @@
-import random
+"""Classification on pre-discretized (binary) inputs, for every registered classifier.
+
+Continuous inputs and the general estimator contract are covered by model_api_test.py;
+this file pins the binary-input path, which several rule-based models are built around.
+"""
 
 import numpy as np
+import pytest
 
-from imodels import (
-    OptimalTreeClassifier,
-    FPLassoClassifier,
-    FPSkopeClassifier,
-    TreeGAMClassifier,
-)
+import imodels
+from tests.model_configs import EXCLUDED_MODELS, MODEL_KWARGS
 
+CLASSIFIERS = [m for m in imodels.CLASSIFIERS if m.__name__ not in EXCLUDED_MODELS]
+IDS = [m.__name__ for m in CLASSIFIERS]
 
-class TestClassClassificationBinary:
-    """Tests simple classification for different models. Note: still doesn't test all the models!"""
-
-    def setup_method(self):
-        np.random.seed(13)
-        random.seed(13)
-        self.n = 40
-        self.p = 2
-        self.X_classification_binary = (
-            np.random.randn(self.n, self.p) > 0).astype(int)
-
-        # y = x0 > 0
-        self.y_classification_binary = (self.X_classification_binary[:, 0] > 0).astype(
-            int
-        )
-
-        # flip labels for last few
-        self.y_classification_binary[-2:] = 1 - \
-            self.y_classification_binary[-2:]
-
-    def test_classification_binary(self):
-        """Test imodels on basic binary classification task"""
-        for model_type in [
-            OptimalTreeClassifier,
-            FPLassoClassifier,
-            FPSkopeClassifier,
-            TreeGAMClassifier,
-        ]:
-            init_kwargs = {}
-            if model_type == FPSkopeClassifier:
-                init_kwargs["recall_min"] = 0.5
-            if model_type == TreeGAMClassifier:
-                init_kwargs["n_boosting_rounds"] = 10
-            m = model_type(**init_kwargs)
-
-            X = self.X_classification_binary
-            m.fit(X, self.y_classification_binary)
-
-            # test predict()
-            preds = m.predict(X)  # > 0.5).astype(int)
-            assert preds.size == self.n, "predict() yields right size"
-
-            # test preds_proba()
-            if model_type not in {OptimalTreeClassifier}:
-                preds_proba = m.predict_proba(X)
-                assert len(preds_proba.shape) == 2, "preds_proba has 2 columns"
-                assert preds_proba.shape[1] == 2, "preds_proba has 2 columns"
-                assert np.max(
-                    preds_proba) < 1.1, "preds_proba has no values over 1"
-                assert (np.argmax(preds_proba, axis=1) == preds).all(), (
-                    "predict_proba and " "predict correspond"
-                )
-
-            # test acc
-            acc_train = np.mean(preds == self.y_classification_binary)
-            # print(type(m), m, 'final acc', acc_train)
-            assert acc_train > 0.8, "acc greater than 0.8"
+N_SAMPLES = 60
+N_FEATURES = 4
 
 
-if __name__ == "__main__":
-    t = TestClassClassificationBinary()
-    t.setup()
-    t.test_classification_binary()
+@pytest.fixture(scope="module")
+def binary_data():
+    """Binary features with y = x0, plus a couple of flipped labels as noise."""
+    rng = np.random.RandomState(13)
+    X = (rng.randn(N_SAMPLES, N_FEATURES) > 0).astype(int)
+    y = X[:, 0].copy()
+    y[-2:] = 1 - y[-2:]
+    return X, y
+
+
+@pytest.mark.parametrize("model_type", CLASSIFIERS, ids=IDS)
+def test_classification_binary_inputs(model_type, binary_data):
+    X, y = binary_data
+    model = model_type(**MODEL_KWARGS.get(model_type.__name__, {}))
+    model.fit(X, y)
+
+    preds = np.asarray(model.predict(X))
+    assert preds.size == N_SAMPLES, "predict() yields one prediction per sample"
+
+    probs = model.predict_proba(X)
+    assert probs.shape == (N_SAMPLES, 2), "predict_proba is (n_samples, n_classes)"
+    assert np.allclose(probs.sum(axis=1), 1), "probabilities sum to 1"
+
+    acc = np.mean(preds == y)
+    assert acc > 0.9, f"train accuracy {acc:0.2f} is too low for an easy task"

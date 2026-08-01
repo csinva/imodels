@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 from sklearn import datasets
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
@@ -11,13 +11,32 @@ from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifie
 from imodels.util.tree import compute_tree_complexity
 
 
-class DecisionTreeCCPClassifier(DecisionTreeClassifier):
+class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
-        # print('est', estimator_)
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
+
+    def get_params(self, deep=True):
+        # defined explicitly because __init__ takes *args/**kwargs, which sklearn's
+        # automatic parameter introspection rejects
+        return {
+            "estimator_": self.estimator_,
+            "desired_complexity": self.desired_complexity,
+            "complexity_measure": self.complexity_measure,
+        }
+
+    def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
+        return self
+
+    def _copy_fitted_attributes(self):
+        """Mirror the wrapped estimator's fitted sklearn attributes onto self."""
+        for attr in ("classes_", "n_features_in_", "feature_names_in_"):
+            if hasattr(self.estimator_, attr):
+                setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
         path = self.estimator_.cost_complexity_pruning_path(X, y)
@@ -55,22 +74,24 @@ class DecisionTreeCCPClassifier(DecisionTreeClassifier):
         params_for_fitting['ccp_alpha'] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
         self.estimator_.fit(X, y, *args, **kwargs)
+        self._copy_fitted_attributes()
+        return self
 
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
 
-    def predict_proba(self, *args, **kwargs):
+    def predict_proba(self, X, *args, **kwargs):
         if hasattr(self.estimator_, 'predict_proba'):
-            return self.estimator_.predict_proba(*args, **kwargs)
+            return self.estimator_.predict_proba(X, *args, **kwargs)
         else:
             return NotImplemented
 
     def predict(self, X, *args, **kwargs):
         return self.estimator_.predict(X, *args, **kwargs)
 
-    def score(self, *args, **kwargs):
+    def score(self, X, y, *args, **kwargs):
         if hasattr(self.estimator_, 'score'):
-            return self.estimator_.score(*args, **kwargs)
+            return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented
 
@@ -80,10 +101,29 @@ class DecisionTreeCCPRegressor(BaseEstimator):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
-        # print('est', estimator_)
         self.estimator_ = estimator_
         self.alpha = 0.0
         self.complexity_measure = complexity_measure
+
+    def get_params(self, deep=True):
+        # defined explicitly because __init__ takes *args/**kwargs, which sklearn's
+        # automatic parameter introspection rejects
+        return {
+            "estimator_": self.estimator_,
+            "desired_complexity": self.desired_complexity,
+            "complexity_measure": self.complexity_measure,
+        }
+
+    def set_params(self, **params):
+        for key, value in params.items():
+            setattr(self, key, value)
+        return self
+
+    def _copy_fitted_attributes(self):
+        """Mirror the wrapped estimator's fitted sklearn attributes onto self."""
+        for attr in ("n_features_in_", "feature_names_in_"):
+            if hasattr(self.estimator_, attr):
+                setattr(self, attr, getattr(self.estimator_, attr))
 
     def _get_alpha(self, X, y, sample_weight=None):
         path = self.estimator_.cost_complexity_pruning_path(X, y)
@@ -124,6 +164,8 @@ class DecisionTreeCCPRegressor(BaseEstimator):
         params_for_fitting['ccp_alpha'] = self.alpha
         self.estimator_.set_params(**params_for_fitting)
         self.estimator_.fit(X, y)
+        self._copy_fitted_attributes()
+        return self
 
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
@@ -131,9 +173,9 @@ class DecisionTreeCCPRegressor(BaseEstimator):
     def predict(self, X, *args, **kwargs):
         return self.estimator_.predict(X, *args, **kwargs)
 
-    def score(self, *args, **kwargs):
+    def score(self, X, y, *args, **kwargs):
         if hasattr(self.estimator_, 'score'):
-            return self.estimator_.score(*args, **kwargs)
+            return self.estimator_.score(X, y, *args, **kwargs)
         else:
             return NotImplemented
 
@@ -156,7 +198,7 @@ class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        return super().fit(X=X, y=y)
 
 
 class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
@@ -177,7 +219,7 @@ class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
+        return super().fit(X=X, y=y)
 
 
 if __name__ == '__main__':

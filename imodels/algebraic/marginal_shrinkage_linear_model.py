@@ -6,6 +6,7 @@ from sklearn.linear_model import LinearRegression, RidgeCV, Ridge, ElasticNet, E
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, _check_sample_weight
+from imodels.util.arguments import set_feature_names_in
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score
 from tqdm import tqdm
@@ -72,7 +73,9 @@ class MarginalShrinkageLinearModel(BaseEstimator):
 
     def fit(self, X, y, sample_weight=None):
         # checks
+        set_feature_names_in(self, X)
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=False)
+        self.n_features_in_ = X.shape[1]
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
