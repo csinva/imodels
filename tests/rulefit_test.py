@@ -52,3 +52,24 @@ def test_integration():
     rfr.fit(X, y)
     # expected = np.array([0.89630491, 0.15375469, 0.89624531, 1.05000033, 0.00369476])
     # assert np.allclose(rfr.predict(X), expected)
+
+def test_set_params_lin_trim_quantile():
+    """lin_trim_quantile set after construction should be used when fitting
+
+    Regression test for https://github.com/csinva/imodels/issues/222: the
+    winsorizer/scaler used to be built in __init__, so set_params had no effect.
+    """
+    X = np.random.RandomState(0).randn(50, 3)
+    y = (X[:, 0] > 0).astype(int)
+
+    via_init = RuleFitRegressor(lin_trim_quantile=0.04, random_state=0)
+    via_set_params = RuleFitRegressor(random_state=0).set_params(
+        lin_trim_quantile=0.04)
+
+    via_init.fit(X, y)
+    via_set_params.fit(X, y)
+
+    assert via_set_params.friedscale.winsorizer.trim_quantile == 0.04
+    assert (via_init.friedscale.winsorizer.trim_quantile ==
+            via_set_params.friedscale.winsorizer.trim_quantile)
+    assert np.allclose(via_init.predict(X), via_set_params.predict(X))
