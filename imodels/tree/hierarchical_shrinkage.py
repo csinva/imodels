@@ -82,6 +82,11 @@ class HSTree(BaseEstimator):
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)
 
+    def apply(self, X):
+        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def get_params(self, deep=True):
         d = {
             "reg_param": self.reg_param,

@@ -152,6 +152,11 @@ class FIGS(BaseEstimator):
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)
 
+    def apply(self, X):
+        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def _init_decision_function(self):
         """Sets decision function based on _estimator_type"""
         # used by sklearn GridSearchCV, BaggingClassifier

@@ -223,6 +223,12 @@ function, `imodels.get_rules(model)`, and takes an optional `feature_names` argu
 to rename the features. Models that aren't rule-based raise a clear error.
 
 
+Tree-based models also expose `apply(X)`, which reports which leaf each sample
+falls into, using the same node numbering as scikit-learn. A single tree returns
+one index per sample; a model made of several trees (FIGS, boosted rules) returns
+one column per tree, like `RandomForest.apply`.
+
+
 ### Extras
 
 <details>
