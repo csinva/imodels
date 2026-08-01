@@ -216,3 +216,30 @@ def test_missing_values_are_passed_to_the_estimator():
     with pytest.raises(ValueError, match='NaN'):
         HSTreeClassifier(
             GradientBoostingClassifier(n_estimators=3)).fit(X_nan, y)
+
+
+def test_models_do_not_share_a_default_estimator():
+    """Two HSTree models must not wrap the same estimator object
+
+    The default estimator used to be built once in the signature, so every
+    HSTreeClassifier() shared it and fitting one model refit another's tree.
+    """
+    assert HSTreeClassifier().estimator_ is not HSTreeClassifier().estimator_
+    assert HSTreeRegressor().estimator_ is not HSTreeRegressor().estimator_
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(300, 4)
+    y = (X[:, 0] + 1.5 * rng.randn(300) > 0).astype(int)
+
+    first = HSTreeClassifier().fit(X, y)
+    before = first.predict_proba(X).copy()
+
+    HSTreeClassifier().fit(X, np.roll(y, 7))  # a different model, different labels
+
+    assert np.allclose(before, first.predict_proba(X)), \
+        'fitting one model changed another already-fitted model'
+
+    # the defaults themselves still behave
+    assert HSTreeRegressor().fit(X, X[:, 0]).predict(X).shape == (300,)
+    assert isinstance(HSTreeRegressor().estimator_, DecisionTreeRegressor)
+    assert isinstance(HSTreeClassifier().estimator_, DecisionTreeClassifier)

@@ -35,7 +35,7 @@ def _values_are_normalized(tree):
 class HSTree(BaseEstimator):
     def __init__(
         self,
-        estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+        estimator_: BaseEstimator = None,
         reg_param: float = 1,
         shrinkage_scheme_: str = "node_based",
         max_leaf_nodes: int = None,
@@ -67,6 +67,10 @@ class HSTree(BaseEstimator):
         """
         super().__init__()
         self.reg_param = reg_param
+        # constructed here rather than defaulted in the signature, so that
+        # separate models don't share (and refit) one estimator object
+        if estimator_ is None:
+            estimator_ = DecisionTreeClassifier(max_leaf_nodes=20)
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
         self.random_state = random_state
@@ -333,12 +337,16 @@ class HSTree(BaseEstimator):
 class HSTreeRegressor(RegressorMixin, HSTree):
     def __init__(
         self,
-        estimator_: BaseEstimator = DecisionTreeRegressor(max_leaf_nodes=20),
+        estimator_: BaseEstimator = None,
         reg_param: float = 1,
         shrinkage_scheme_: str = "node_based",
         max_leaf_nodes: int = None,
         random_state: int = None,
     ):
+        if estimator_ is None:
+            estimator_ = DecisionTreeRegressor(max_leaf_nodes=20)
+        if estimator_ is None:
+            estimator_ = DecisionTreeClassifier(max_leaf_nodes=20)
         super().__init__(
             estimator_=estimator_,
             reg_param=reg_param,
@@ -351,7 +359,7 @@ class HSTreeRegressor(RegressorMixin, HSTree):
 class HSTreeClassifier(ClassifierMixin, HSTree):
     def __init__(
         self,
-        estimator_: BaseEstimator = DecisionTreeClassifier(max_leaf_nodes=20),
+        estimator_: BaseEstimator = None,
         reg_param: float = 1,
         shrinkage_scheme_: str = "node_based",
         max_leaf_nodes: int = None,
