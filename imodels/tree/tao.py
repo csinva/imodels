@@ -380,6 +380,11 @@ class TaoTree(BaseEstimator):
         from imodels.util.apply import apply_leaves
         return apply_leaves(self, X)
 
+    @property
+    def feature_importances_(self):
+        """Mean decrease in impurity of the fitted tree, as in sklearn."""
+        return self.model.feature_importances_
+
     def predict(self, X):
         preds = self.model.predict(X)
         if hasattr(self, "classes_"):

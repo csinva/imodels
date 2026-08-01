@@ -822,6 +822,11 @@ class FIGSCV(BaseEstimator):
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)
 
+    @property
+    def feature_importances_(self):
+        """Mean decrease in impurity of the selected FIGS model."""
+        return self.figs.feature_importances_
+
     def get_params(self, deep=True):
         # defined explicitly because __init__ takes *args/**kwargs, which sklearn's
         # automatic parameter introspection rejects

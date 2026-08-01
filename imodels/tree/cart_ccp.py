@@ -83,6 +83,11 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)
 
+    @property
+    def feature_importances_(self):
+        """Mean decrease in impurity of the pruned tree, as in sklearn."""
+        return self.estimator_.feature_importances_
+
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
 
@@ -173,6 +178,11 @@ class DecisionTreeCCPRegressor(BaseEstimator):
         self.estimator_.fit(X, y, sample_weight=sample_weight)
         self._copy_fitted_attributes()
         return self
+
+    @property
+    def feature_importances_(self):
+        """Mean decrease in impurity of the pruned tree, as in sklearn."""
+        return self.estimator_.feature_importances_
 
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
