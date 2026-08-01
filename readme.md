@@ -184,6 +184,20 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
 
 
+**Categorical features.** `FIGS` takes them directly — pass the column names and
+it one-hot encodes them internally, remembering them for `predict`:
+
+```python
+model = FIGSClassifier().fit(X, y, categorical_features=['pet', 'city'])
+model.predict(X)
+```
+
+Other models expect numeric input, so encode categorical columns first (e.g. with
+`sklearn.preprocessing.OneHotEncoder`, or one of the
+[discretizers](https://csinva.io/imodels/discretization/index.html) for numeric
+columns that a rule model needs binarized).
+
+
 ### Inspecting the rules a model learned
 
 Every rule-based model exposes its rules the same way, as a `pandas` DataFrame with
