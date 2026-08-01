@@ -283,6 +283,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                                memory_par=self.memory_par,
                                tree_generator=self.tree_generator,
                                exp_rand_tree_size=self.exp_rand_tree_size,
+                               sample_fract=self.sample_fract,
                                random_state=self.random_state)
 
     def _score_rules(self, X, y, rules) -> Tuple[List[Rule], List[float], float]:

@@ -33,9 +33,15 @@ def extract_rulefit(X, y, feature_names,
                     memory_par=0.01,
                     tree_generator=None,
                     exp_rand_tree_size=True,
+                    sample_fract='default',
                     random_state=None) -> List[str]:
     if tree_generator is None:
-        sample_fract_ = min(0.5, (100 + 6 * np.sqrt(X.shape[0])) / X.shape[0])
+        if sample_fract == 'default':
+            # Friedman & Popescu 2004 (Sec. 2) default
+            sample_fract_ = min(
+                0.5, (100 + 6 * np.sqrt(X.shape[0])) / X.shape[0])
+        else:
+            sample_fract_ = sample_fract
 
         tree_generator = GradientBoostingRegressor(n_estimators=n_estimators,
                                                    max_leaf_nodes=tree_size,
