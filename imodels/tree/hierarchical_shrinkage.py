@@ -134,8 +134,8 @@ class HSTree(BaseEstimator):
             self.complexity_ = compute_tree_complexity(self.estimator_.tree_)
         elif hasattr(self.estimator_, "estimators_"):
             self.complexity_ = 0
-            for i in range(len(self.estimator_.estimators_)):
-                t = deepcopy(self.estimator_.estimators_[i])
+            for t in self.estimator_.estimators_:
+                # read-only, so no need to copy the tree
                 if isinstance(t, np.ndarray):
                     assert t.size == 1, "multiple trees stored under tree_?"
                     t = t[0]
@@ -169,7 +169,7 @@ class HSTree(BaseEstimator):
             or isinstance(self.estimator_, GradientBoostingClassifier)
             or values_normalized
         ):
-            val = deepcopy(tree.value[i, :, :])
+            val = tree.value[i, :, :].copy()
         else:  # If classification, counts need normalizing into a probability vector
             val = tree.value[i, :, :] / n_samples
 
@@ -211,7 +211,7 @@ class HSTree(BaseEstimator):
                 left,
                 parent_val=val,
                 parent_num=n_samples,
-                cum_sum=deepcopy(cum_sum),
+                cum_sum=np.copy(cum_sum),
                 values_normalized=values_normalized,
             )
             self._shrink_tree(
@@ -220,7 +220,7 @@ class HSTree(BaseEstimator):
                 right,
                 parent_val=val,
                 parent_num=n_samples,
-                cum_sum=deepcopy(cum_sum),
+                cum_sum=np.copy(cum_sum),
                 values_normalized=values_normalized,
             )
 
@@ -269,7 +269,10 @@ class HSTree(BaseEstimator):
 
     def predict(self, X, *args, **kwargs):
         preds = self.estimator_.predict(X, *args, **kwargs)
-        if hasattr(self.estimator_, "classes_"):
+        # fit encodes y as 0..n_classes-1, so map back onto the original labels.
+        # When the estimator was fitted elsewhere and passed in already fitted,
+        # there is no such encoding and its predictions are already labels.
+        if hasattr(self, "classes_") and hasattr(self.estimator_, "classes_"):
             return np.array([self.classes_[int(i)] for i in preds])
         else:
             return preds
@@ -387,18 +390,27 @@ class HSTreeClassifier(ClassifierMixin, HSTree):
 
 
 def _get_cv_criterion(scorer):
-    y_true = np.random.binomial(n=1, p=0.5, size=100)
+    """Whether the best score is the highest or the lowest one.
 
-    y_pred_good = y_true
-    y_pred_bad = np.random.uniform(0, 1, 100)
+    Probed on fixed data: a scorer's direction does not depend on the draw, and
+    sampling here would advance the caller's global numpy random stream.
+    """
+    y_true = np.tile([0, 1], 50)
 
-    score_good = scorer(y_true, y_pred_good)
-    score_bad = scorer(y_true, y_pred_bad)
+    score_good = scorer(y_true, y_true)
+    score_bad = scorer(y_true, 1 - y_true)
 
     if score_good > score_bad:
         return np.argmax
     elif score_good < score_bad:
         return np.argmin
+
+    raise ValueError(
+        f"Cannot tell whether higher or lower scores from "
+        f"{getattr(scorer, '__name__', scorer)} are better: it scored a perfect "
+        "and a fully incorrect prediction the same. Pass a scoring function that "
+        "separates them."
+    )
 
 
 class HSTreeClassifierCV(HSTreeClassifier):

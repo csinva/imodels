@@ -130,9 +130,12 @@ def extract_sklearn_tree_from_figs(figs, tree_num, n_classes, with_leaf_predicti
         dt = DecisionTreeRegressor(max_depth=max_depth)
 
     try:
-        dt.__setstate__(_state);
-    except:
-        raise Exception(f'Did not successfully run __setstate__() when translating to {type(dt)}, did sklearn update?')
+        dt.__setstate__(_state)
+    except Exception as e:
+        # chain the original error: what actually went wrong is the useful part
+        raise Exception(
+            f'Did not successfully run __setstate__() when translating to '
+            f'{type(dt)}, did sklearn update?') from e
 
     if not with_leaf_predictions:
         return dt
