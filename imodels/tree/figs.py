@@ -19,7 +19,7 @@ from sklearn.utils.validation import _check_sample_weight, check_is_fitted
 from scipy.special import softmax
 
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, check_predict_X
 from imodels.util.data_util import encode_categories
 
 import scipy.sparse
@@ -687,7 +687,7 @@ class FIGS(BaseEstimator):
         if hasattr(self, "_encoder"):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name="_encoder")
-        X = check_array(X)
+        X = check_predict_X(self, check_array(X))
         preds = np.zeros((X.shape[0], self.n_outputs, len(self.trees_)))
         for i, tree in enumerate(self.trees_):
             preds[:, :, i] += self._predict_tree(tree, X)
@@ -727,7 +727,7 @@ class FIGS(BaseEstimator):
         if hasattr(self, "_encoder"):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name="_encoder")
-        X = check_array(X)
+        X = check_predict_X(self, check_array(X))
         if isinstance(self, RegressorMixin):
             return NotImplemented
         preds = np.zeros((X.shape[0], self.n_outputs))

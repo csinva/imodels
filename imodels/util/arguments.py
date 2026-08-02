@@ -77,6 +77,22 @@ def _finite_check_kwarg(allow_nan):
     return {name: "allow-nan"}
 
 
+def check_predict_X(model, X):
+    """Check X at predict time against the data the model was fitted on.
+
+    Models that index X by a stored feature number silently accept extra
+    columns, returning predictions that look reasonable but ignore part of the
+    input. sklearn raises instead, and so should we.
+    """
+    n_features = getattr(model, 'n_features_in_', None)
+    if n_features is not None and np.shape(X)[1] != n_features:
+        raise ValueError(
+            f"X has {np.shape(X)[1]} features, but "
+            f"{type(model).__name__} is expecting {n_features} features as input."
+        )
+    return X
+
+
 def set_feature_names_in(model, X):
     """Set the sklearn-standard ``feature_names_in_`` if X carries string column names.
 

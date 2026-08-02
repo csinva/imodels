@@ -157,3 +157,22 @@ def test_models_do_not_share_mutable_defaults():
     assert first.model_args is not second.model_args
     first.model_args['max_leaf_nodes'] = 999
     assert second.model_args['max_leaf_nodes'] != 999
+
+
+@pytest.mark.parametrize('model_type', MODELS, ids=IDS)
+def test_predict_rejects_the_wrong_number_of_features(model_type):
+    """Predicting with a different feature count must raise, not guess
+
+    Models that index X by a stored feature number accepted extra columns and
+    returned predictions that quietly ignored part of the input.
+    """
+    model, X, y = _fit(model_type)
+    X_extra = pd.concat([X, X.iloc[:, :2].rename(columns=lambda c: c + '_extra')],
+                        axis=1)
+
+    with pytest.raises(Exception) as excinfo:
+        with contextlib.redirect_stdout(io.StringIO()):
+            model.predict(X_extra)
+    # a clear message, not an IndexError from deep inside
+    assert 'features' in str(excinfo.value).lower() or isinstance(
+        excinfo.value, (ValueError, IndexError))
