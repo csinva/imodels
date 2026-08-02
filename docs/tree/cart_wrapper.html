@@ -62,6 +62,7 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
             Fitted estimator.
         &#34;&#34;&#34;
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        self.feature_names = list(feature_names)
         classes = self.classes_  # super().fit overwrites this with the encoded labels
         names_in = getattr(self, &#39;feature_names_in_&#39;, None)
         super().fit(X, y, sample_weight=sample_weight, check_input=check_input)
@@ -198,6 +199,7 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
             Fitted estimator.
         &#34;&#34;&#34;
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        self.feature_names = list(feature_names)
         classes = self.classes_  # super().fit overwrites this with the encoded labels
         names_in = getattr(self, &#39;feature_names_in_&#39;, None)
         super().fit(X, y, sample_weight=sample_weight, check_input=check_input)
@@ -304,6 +306,7 @@ Don't use this parameter unless you know what you do.</dd>
         Fitted estimator.
     &#34;&#34;&#34;
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+    self.feature_names = list(feature_names)
     classes = self.classes_  # super().fit overwrites this with the encoded labels
     names_in = getattr(self, &#39;feature_names_in_&#39;, None)
     super().fit(X, y, sample_weight=sample_weight, check_input=check_input)

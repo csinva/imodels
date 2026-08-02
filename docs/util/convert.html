@@ -27,6 +27,22 @@ from sklearn.tree import _tree
 from typing import Union, List, Tuple
 
 
+def _round_threshold(threshold, decimals: int = 5):
+    &#34;&#34;&#34;Shorten a split threshold without moving it onto the data.
+
+    Rounding to a fixed number of decimal places collapses thresholds on
+    small-scale features to 0.0, which changes which rows a rule selects (and
+    can turn two distinct splits into the same one). Rounding to significant
+    digits instead keeps the threshold in the right place at any scale.
+    &#34;&#34;&#34;
+    if threshold == 0 or not np.isfinite(threshold):
+        return threshold
+    magnitude = int(np.floor(np.log10(abs(threshold))))
+    # keep `decimals` digits after the point for values of order 1, and the
+    # equivalent precision for values that are much smaller or larger
+    return float(np.round(threshold, decimals=max(decimals, decimals - magnitude)))
+
+
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
                   feature_names: List[str],
                   prediction_values: bool = False, round_thresholds=True) -&gt; List[str]:
@@ -59,7 +75,7 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
             symbol2 = &#39;&gt;&#39;
             threshold = tree_.threshold[node]
             if round_thresholds:
-                threshold = np.round(threshold, decimals=5)
+                threshold = _round_threshold(threshold)
             text = base_name + [&#34;{} {} {}&#34;.format(name, symbol, threshold)]
             recurse(tree_.children_left[node], text)
 
@@ -175,7 +191,82 @@ def single_discretized_feature_to_rule(feat: str) -&gt; str:
     else:
         rule = f&#39;{feature_name} &gt; {lower_value} and {feature_name} &lt;= {upper_value}&#39;
 
-    return rule</code></pre>
+    return rule
+
+
+def is_xgboost_model(model) -&gt; bool:
+    &#34;&#34;&#34;Whether model is an XGBoost estimator, without importing xgboost.
+
+    xgboost is not a dependency of imodels, so this is duck-typed: it is only
+    true for something exposing a Booster.
+    &#34;&#34;&#34;
+    return hasattr(model, &#39;get_booster&#39;) and type(model).__module__.startswith(&#39;xgboost&#39;)
+
+
+def xgboost_to_rules(model, feature_names: List[str],
+                     prediction_values: bool = False) -&gt; List[str]:
+    &#34;&#34;&#34;Return a list of rules from a fitted XGBoost model.
+
+    XGBoost stores its trees in a Booster rather than sklearn&#39;s tree_ arrays, so
+    the paths are read off `trees_to_dataframe()`. Note XGBoost sends a sample
+    left when `feature &lt; threshold` (sklearn uses `&lt;=`), which is reflected here.
+
+    Thresholds are emitted at full precision. XGBoost compares in float32, so a
+    row sitting within float32 rounding of a threshold can be routed differently
+    when the rule is later evaluated in float64; evaluated in float32 the rules
+    reproduce XGBoost&#39;s leaf assignment exactly.
+
+    Parameters
+    ----------
+        model : a fitted XGBClassifier/XGBRegressor
+        feature_names: list of variable names
+
+    Returns
+    -------
+    rules : list of rules, or of (rule, leaf value) pairs if prediction_values
+    &#34;&#34;&#34;
+    booster = model.get_booster()
+    frame = booster.trees_to_dataframe()
+
+    # the booster names features f0, f1, ... when fitted on an array; map those
+    # back onto the caller&#39;s names by position
+    booster_names = booster.feature_names or []
+    name_by_booster_name = {booster_name: feature_names[i]
+                            for i, booster_name in enumerate(booster_names)
+                            if i &lt; len(feature_names)}
+
+    def resolve(booster_feature):
+        if booster_feature in name_by_booster_name:
+            return name_by_booster_name[booster_feature]
+        if booster_feature.startswith(&#39;f&#39;) and booster_feature[1:].isdigit():
+            index = int(booster_feature[1:])
+            if index &lt; len(feature_names):
+                return feature_names[index]
+        return booster_feature
+
+    rules = []
+    for _, tree in frame.groupby(&#39;Tree&#39;):
+        nodes = tree.set_index(&#39;ID&#39;)
+
+        def recurse(node_id, conditions):
+            node = nodes.loc[node_id]
+            if node[&#39;Feature&#39;] == &#39;Leaf&#39;:
+                condition = &#39; and &#39;.join(conditions)
+                if condition == &#39;&#39;:  # a stump that never splits selects everything
+                    condition = &#39; == &#39;.join([feature_names[0]] * 2)
+                # for a leaf, Gain holds the value the tree contributes
+                rules.append((condition, [float(node[&#39;Gain&#39;])])
+                             if prediction_values else condition)
+                return
+            name = resolve(node[&#39;Feature&#39;])
+            # full precision: rounding here would send rows that sit between the
+            # true and rounded threshold down the wrong branch
+            threshold = repr(float(node[&#39;Split&#39;]))
+            recurse(node[&#39;Yes&#39;], conditions + [f&#39;{name} &lt; {threshold}&#39;])
+            recurse(node[&#39;No&#39;], conditions + [f&#39;{name} &gt;= {threshold}&#39;])
+
+        recurse(tree[&#39;ID&#39;].iloc[0], [])
+    return rules</code></pre>
 </details>
 </section>
 <section>
@@ -228,6 +319,26 @@ rule: list of dict of schema
         )
 
     return output[:-5]</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.convert.is_xgboost_model"><code class="name flex">
+<span>def <span class="ident">is_xgboost_model</span></span>(<span>model) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Whether model is an XGBoost estimator, without importing xgboost.</p>
+<p>xgboost is not a dependency of imodels, so this is duck-typed: it is only
+true for something exposing a Booster.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_xgboost_model(model) -&gt; bool:
+    &#34;&#34;&#34;Whether model is an XGBoost estimator, without importing xgboost.
+
+    xgboost is not a dependency of imodels, so this is duck-typed: it is only
+    true for something exposing a Booster.
+    &#34;&#34;&#34;
+    return hasattr(model, &#39;get_booster&#39;) and type(model).__module__.startswith(&#39;xgboost&#39;)</code></pre>
 </details>
 </dd>
 <dt id="imodels.util.convert.itemsets_to_rules"><code class="name flex">
@@ -374,7 +485,7 @@ feature_names: list of variable names
             symbol2 = &#39;&gt;&#39;
             threshold = tree_.threshold[node]
             if round_thresholds:
-                threshold = np.round(threshold, decimals=5)
+                threshold = _round_threshold(threshold)
             text = base_name + [&#34;{} {} {}&#34;.format(name, symbol, threshold)]
             recurse(tree_.children_left[node], text)
 
@@ -396,6 +507,97 @@ feature_names: list of variable names
     return rules if len(rules) &gt; 0 else &#39;True&#39;</code></pre>
 </details>
 </dd>
+<dt id="imodels.util.convert.xgboost_to_rules"><code class="name flex">
+<span>def <span class="ident">xgboost_to_rules</span></span>(<span>model, feature_names: List[str], prediction_values: bool = False) ‑> List[str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return a list of rules from a fitted XGBoost model.</p>
+<p>XGBoost stores its trees in a Booster rather than sklearn's tree_ arrays, so
+the paths are read off <code>trees_to_dataframe()</code>. Note XGBoost sends a sample
+left when <code>feature &lt; threshold</code> (sklearn uses <code>&lt;=</code>), which is reflected here.</p>
+<p>Thresholds are emitted at full precision. XGBoost compares in float32, so a
+row sitting within float32 rounding of a threshold can be routed differently
+when the rule is later evaluated in float64; evaluated in float32 the rules
+reproduce XGBoost's leaf assignment exactly.</p>
+<h2 id="parameters">Parameters</h2>
+<pre><code>model : a fitted XGBClassifier/XGBRegressor
+feature_names: list of variable names
+</code></pre>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>rules</code></strong> :&ensp;<code>list</code> of <code>rules,</code> or <code>of (rule, leaf value) pairs if prediction_values</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def xgboost_to_rules(model, feature_names: List[str],
+                     prediction_values: bool = False) -&gt; List[str]:
+    &#34;&#34;&#34;Return a list of rules from a fitted XGBoost model.
+
+    XGBoost stores its trees in a Booster rather than sklearn&#39;s tree_ arrays, so
+    the paths are read off `trees_to_dataframe()`. Note XGBoost sends a sample
+    left when `feature &lt; threshold` (sklearn uses `&lt;=`), which is reflected here.
+
+    Thresholds are emitted at full precision. XGBoost compares in float32, so a
+    row sitting within float32 rounding of a threshold can be routed differently
+    when the rule is later evaluated in float64; evaluated in float32 the rules
+    reproduce XGBoost&#39;s leaf assignment exactly.
+
+    Parameters
+    ----------
+        model : a fitted XGBClassifier/XGBRegressor
+        feature_names: list of variable names
+
+    Returns
+    -------
+    rules : list of rules, or of (rule, leaf value) pairs if prediction_values
+    &#34;&#34;&#34;
+    booster = model.get_booster()
+    frame = booster.trees_to_dataframe()
+
+    # the booster names features f0, f1, ... when fitted on an array; map those
+    # back onto the caller&#39;s names by position
+    booster_names = booster.feature_names or []
+    name_by_booster_name = {booster_name: feature_names[i]
+                            for i, booster_name in enumerate(booster_names)
+                            if i &lt; len(feature_names)}
+
+    def resolve(booster_feature):
+        if booster_feature in name_by_booster_name:
+            return name_by_booster_name[booster_feature]
+        if booster_feature.startswith(&#39;f&#39;) and booster_feature[1:].isdigit():
+            index = int(booster_feature[1:])
+            if index &lt; len(feature_names):
+                return feature_names[index]
+        return booster_feature
+
+    rules = []
+    for _, tree in frame.groupby(&#39;Tree&#39;):
+        nodes = tree.set_index(&#39;ID&#39;)
+
+        def recurse(node_id, conditions):
+            node = nodes.loc[node_id]
+            if node[&#39;Feature&#39;] == &#39;Leaf&#39;:
+                condition = &#39; and &#39;.join(conditions)
+                if condition == &#39;&#39;:  # a stump that never splits selects everything
+                    condition = &#39; == &#39;.join([feature_names[0]] * 2)
+                # for a leaf, Gain holds the value the tree contributes
+                rules.append((condition, [float(node[&#39;Gain&#39;])])
+                             if prediction_values else condition)
+                return
+            name = resolve(node[&#39;Feature&#39;])
+            # full precision: rounding here would send rows that sit between the
+            # true and rounded threshold down the wrong branch
+            threshold = repr(float(node[&#39;Split&#39;]))
+            recurse(node[&#39;Yes&#39;], conditions + [f&#39;{name} &lt; {threshold}&#39;])
+            recurse(node[&#39;No&#39;], conditions + [f&#39;{name} &gt;= {threshold}&#39;])
+
+        recurse(tree[&#39;ID&#39;].iloc[0], [])
+    return rules</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -415,10 +617,12 @@ feature_names: list of variable names
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="imodels.util.convert.dict_to_rule" href="#imodels.util.convert.dict_to_rule">dict_to_rule</a></code></li>
+<li><code><a title="imodels.util.convert.is_xgboost_model" href="#imodels.util.convert.is_xgboost_model">is_xgboost_model</a></code></li>
 <li><code><a title="imodels.util.convert.itemsets_to_rules" href="#imodels.util.convert.itemsets_to_rules">itemsets_to_rules</a></code></li>
 <li><code><a title="imodels.util.convert.single_discretized_feature_to_rule" href="#imodels.util.convert.single_discretized_feature_to_rule">single_discretized_feature_to_rule</a></code></li>
 <li><code><a title="imodels.util.convert.tree_to_code" href="#imodels.util.convert.tree_to_code">tree_to_code</a></code></li>
 <li><code><a title="imodels.util.convert.tree_to_rules" href="#imodels.util.convert.tree_to_rules">tree_to_rules</a></code></li>
+<li><code><a title="imodels.util.convert.xgboost_to_rules" href="#imodels.util.convert.xgboost_to_rules">xgboost_to_rules</a></code></li>
 </ul>
 </li>
 </ul>

@@ -35,6 +35,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
+from joblib import Parallel, delayed
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.validation import _check_sample_weight, check_is_fitted
 
@@ -147,6 +148,8 @@ class FIGS(BaseEstimator):
         max_features: str = None,
         max_depth: int = None,
         class_weight=None,
+        verbose: int = 0,
+        n_jobs: int = None,
     ):
         &#34;&#34;&#34;
         Params
@@ -159,6 +162,15 @@ class FIGS(BaseEstimator):
             A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
         max_features
             The number of features to consider when looking for the best split (see https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
+        n_jobs: int, default=None
+            Number of threads used to evaluate candidate splits, which are
+            independent of one another. None means 1; -1 uses all processors.
+            Only helps once there are several candidates to compare, i.e. on
+            larger datasets or deeper models.
+        verbose: int, default=0
+            Controls progress reporting while fitting. 0 is silent; 1 reports each
+            rule as it is added, with the running total; 2 also prints the model
+            after every rule. Can be overridden per call via fit(verbose=...).
         class_weight: dict, list of dict or &#34;balanced&#34;, default=None
             Classification only. Weights associated with classes, in the form
             {class_label: weight}. &#34;balanced&#34; weights each class by
@@ -174,6 +186,8 @@ class FIGS(BaseEstimator):
         self.max_features = max_features
         self.max_depth = max_depth
         self.class_weight = class_weight
+        self.verbose = verbose
+        self.n_jobs = n_jobs
         self._init_decision_function()
         self.n_outputs = None
         self.need_to_reshape = False
@@ -188,6 +202,26 @@ class FIGS(BaseEstimator):
         &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
         from imodels.util.apply import apply_leaves
         return apply_leaves(self, X)
+    def _fit_candidate_stumps(self, X, potential_splits, y_residuals_per_tree,
+                              sample_weight):
+        &#34;&#34;&#34;Re-fit the stump for every candidate split, in parallel if asked.&#34;&#34;&#34;
+        def fit_stump(potential_split):
+            return self._construct_node_with_stump(
+                X=X,
+                y=y_residuals_per_tree[potential_split.tree_num],
+                idxs=potential_split.idxs,
+                tree_num=potential_split.tree_num,
+                sample_weight=sample_weight,
+                max_features=self.max_features,
+                depth=potential_split.depth + 1,
+            )
+
+        n_jobs = 1 if self.n_jobs is None else self.n_jobs
+        if n_jobs == 1 or len(potential_splits) &lt; 2:
+            return [fit_stump(split) for split in potential_splits]
+        return Parallel(n_jobs=n_jobs, backend=&#34;threading&#34;)(
+            delayed(fit_stump)(split) for split in potential_splits)
+
     def _apply_class_weight(self, y, sample_weight):
         &#34;&#34;&#34;Fold class_weight into sample_weight, which the splits already honor.&#34;&#34;&#34;
         if self.class_weight is None:
@@ -330,7 +364,7 @@ class FIGS(BaseEstimator):
         X,
         y=None,
         feature_names=None,
-        verbose=False,
+        verbose=None,
         sample_weight=None,
         categorical_features=None,
     ):
@@ -342,6 +376,11 @@ class FIGS(BaseEstimator):
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         &#34;&#34;&#34;
+        # fit(verbose=...) still wins, so existing callers are unaffected
+        verbose = int(self.verbose if verbose is None else verbose)
+
+        # remembered so that predict/predict_proba don&#39;t need them passed again
+        self.categorical_features_ = categorical_features
         if categorical_features is not None:
             X, self._encoder = encode_categories(X, categorical_features)
 
@@ -428,8 +467,6 @@ class FIGS(BaseEstimator):
                 continue
 
             # split on node
-            if verbose:
-                print(&#34;\nadding &#34; + str(split_node))
             self.complexity_ += 1
 
             # if added a tree root
@@ -458,6 +495,14 @@ class FIGS(BaseEstimator):
             potential_splits.append(split_node.left)
             potential_splits.append(split_node.right)
 
+            if verbose &gt;= 1:
+                # reported after the bookkeeping above, so the counts are final
+                budget = &#39;&#39; if self.max_rules is None else f&#39;/{self.max_rules}&#39;
+                condition = (f&#34;X_{split_node.feature} &lt;= {split_node.threshold:0.3f}&#34;
+                             if split_node.feature is not None else str(split_node))
+                print(f&#34;rule {self.complexity_}{budget} &#34;
+                      f&#34;({len(self.trees_)} tree(s)): {condition}&#34;)
+
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
                 y_predictions_per_tree[tree_num_] = self._predict_tree(
@@ -482,19 +527,12 @@ class FIGS(BaseEstimator):
 
             # recompute all impurities + update potential_split children
             potential_splits_new = []
-            for potential_split in potential_splits:
-                y_target = y_residuals_per_tree[potential_split.tree_num]
-
-                # re-calculate the best split
-                potential_split_updated = self._construct_node_with_stump(
-                    X=X,
-                    y=y_target,
-                    idxs=potential_split.idxs,
-                    tree_num=potential_split.tree_num,
-                    sample_weight=sample_weight,
-                    max_features=self.max_features,
-                    depth=potential_split.depth+1,
-                )
+            # each candidate&#39;s stump is fit independently of the others, and
+            # sklearn&#39;s tree builder releases the GIL, so this threads well
+            updated_splits = self._fit_candidate_stumps(
+                X, potential_splits, y_residuals_per_tree, sample_weight)
+            for potential_split, potential_split_updated in zip(
+                    potential_splits, updated_splits):
 
                 # need to preserve certain attributes from before (value at this split + is_root)
                 # value may change because residuals may have changed, but we want it to store the value from before
@@ -515,7 +553,7 @@ class FIGS(BaseEstimator):
             potential_splits = sorted(
                 potential_splits_new, key=lambda x: x.impurity_reduction
             )
-            if verbose:
+            if verbose &gt;= 2:
                 print(self)
             if self.max_rules is not None and self.complexity_ &gt;= self.max_rules:
                 finished = True
@@ -548,6 +586,11 @@ class FIGS(BaseEstimator):
                 node.setattrs(node_id=next(node_counter),
                               value_sklearn=value_sklearn,
                               n_samples_=X.shape[0])
+
+                if node.left is None and node.right is None:
+                    # a leaf splits on nothing: its feature is the -2 placeholder,
+                    # which indexes the wrong column (or raises, with one feature)
+                    return
 
                 idxs_left = X[:, node.feature] &lt;= node.threshold
                 _annotate_node(node.left, X[idxs_left], y[idxs_left],
@@ -663,6 +706,7 @@ class FIGS(BaseEstimator):
         return s
 
     def predict(self, X, categorical_features=None, by_tree=False):
+        categorical_features = self._categorical_features(categorical_features)
         if hasattr(self, &#34;_encoder&#34;):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name=&#34;_encoder&#34;)
@@ -691,11 +735,18 @@ class FIGS(BaseEstimator):
 #             class_preds = (preds &gt; 0.5).astype(int)
 #             return np.array([self.classes_[i] for i in class_preds])
 
+    def _categorical_features(self, categorical_features):
+        &#34;&#34;&#34;Fall back on the categorical features the model was fitted with.&#34;&#34;&#34;
+        if categorical_features is None:
+            return getattr(self, &#39;categorical_features_&#39;, None)
+        return categorical_features
+
     def predict_proba(self, X, categorical_features=None, use_clipped_prediction=False):
         &#34;&#34;&#34;Predict probability for classifiers:
         Default behavior is to constrain the outputs to the range of probabilities, i.e. 0 to 1, with a sigmoid function.
         Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.
         &#34;&#34;&#34;
+        categorical_features = self._categorical_features(categorical_features)
         if hasattr(self, &#34;_encoder&#34;):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name=&#34;_encoder&#34;)
@@ -844,6 +895,15 @@ class FIGSCV(BaseEstimator):
         &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)
+
+    @property
+    def feature_importances_(self):
+        &#34;&#34;&#34;Mean decrease in impurity of the selected FIGS model.&#34;&#34;&#34;
+        return self.figs.feature_importances_
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
 
     def get_params(self, deep=True):
         # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
@@ -1047,7 +1107,7 @@ if __name__ == &#34;__main__&#34;:
 <dl>
 <dt id="imodels.tree.figs.FIGS"><code class="flex name class">
 <span>class <span class="ident">FIGS</span></span>
-<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None, class_weight=None)</span>
+<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None, class_weight=None, verbose: int = 0, n_jobs: int = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>FIGS (sum of trees) classifier.
@@ -1065,6 +1125,15 @@ min_impurity_decrease: float
 A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
 max_features
 The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)
+n_jobs: int, default=None
+Number of threads used to evaluate candidate splits, which are
+independent of one another. None means 1; -1 uses all processors.
+Only helps once there are several candidates to compare, i.e. on
+larger datasets or deeper models.
+verbose: int, default=0
+Controls progress reporting while fitting. 0 is silent; 1 reports each
+rule as it is added, with the running total; 2 also prints the model
+after every rule. Can be overridden per call via fit(verbose=&hellip;).
 class_weight: dict, list of dict or "balanced", default=None
 Classification only. Weights associated with classes, in the form
 {class_label: weight}. "balanced" weights each class by
@@ -1093,6 +1162,8 @@ when both are given.</p></div>
         max_features: str = None,
         max_depth: int = None,
         class_weight=None,
+        verbose: int = 0,
+        n_jobs: int = None,
     ):
         &#34;&#34;&#34;
         Params
@@ -1105,6 +1176,15 @@ when both are given.</p></div>
             A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
         max_features
             The number of features to consider when looking for the best split (see https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
+        n_jobs: int, default=None
+            Number of threads used to evaluate candidate splits, which are
+            independent of one another. None means 1; -1 uses all processors.
+            Only helps once there are several candidates to compare, i.e. on
+            larger datasets or deeper models.
+        verbose: int, default=0
+            Controls progress reporting while fitting. 0 is silent; 1 reports each
+            rule as it is added, with the running total; 2 also prints the model
+            after every rule. Can be overridden per call via fit(verbose=...).
         class_weight: dict, list of dict or &#34;balanced&#34;, default=None
             Classification only. Weights associated with classes, in the form
             {class_label: weight}. &#34;balanced&#34; weights each class by
@@ -1120,6 +1200,8 @@ when both are given.</p></div>
         self.max_features = max_features
         self.max_depth = max_depth
         self.class_weight = class_weight
+        self.verbose = verbose
+        self.n_jobs = n_jobs
         self._init_decision_function()
         self.n_outputs = None
         self.need_to_reshape = False
@@ -1134,6 +1216,26 @@ when both are given.</p></div>
         &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
         from imodels.util.apply import apply_leaves
         return apply_leaves(self, X)
+    def _fit_candidate_stumps(self, X, potential_splits, y_residuals_per_tree,
+                              sample_weight):
+        &#34;&#34;&#34;Re-fit the stump for every candidate split, in parallel if asked.&#34;&#34;&#34;
+        def fit_stump(potential_split):
+            return self._construct_node_with_stump(
+                X=X,
+                y=y_residuals_per_tree[potential_split.tree_num],
+                idxs=potential_split.idxs,
+                tree_num=potential_split.tree_num,
+                sample_weight=sample_weight,
+                max_features=self.max_features,
+                depth=potential_split.depth + 1,
+            )
+
+        n_jobs = 1 if self.n_jobs is None else self.n_jobs
+        if n_jobs == 1 or len(potential_splits) &lt; 2:
+            return [fit_stump(split) for split in potential_splits]
+        return Parallel(n_jobs=n_jobs, backend=&#34;threading&#34;)(
+            delayed(fit_stump)(split) for split in potential_splits)
+
     def _apply_class_weight(self, y, sample_weight):
         &#34;&#34;&#34;Fold class_weight into sample_weight, which the splits already honor.&#34;&#34;&#34;
         if self.class_weight is None:
@@ -1276,7 +1378,7 @@ when both are given.</p></div>
         X,
         y=None,
         feature_names=None,
-        verbose=False,
+        verbose=None,
         sample_weight=None,
         categorical_features=None,
     ):
@@ -1288,6 +1390,11 @@ when both are given.</p></div>
             Splits that would create child nodes with net zero or negative weight
             are ignored while searching for a split in each node.
         &#34;&#34;&#34;
+        # fit(verbose=...) still wins, so existing callers are unaffected
+        verbose = int(self.verbose if verbose is None else verbose)
+
+        # remembered so that predict/predict_proba don&#39;t need them passed again
+        self.categorical_features_ = categorical_features
         if categorical_features is not None:
             X, self._encoder = encode_categories(X, categorical_features)
 
@@ -1374,8 +1481,6 @@ when both are given.</p></div>
                 continue
 
             # split on node
-            if verbose:
-                print(&#34;\nadding &#34; + str(split_node))
             self.complexity_ += 1
 
             # if added a tree root
@@ -1404,6 +1509,14 @@ when both are given.</p></div>
             potential_splits.append(split_node.left)
             potential_splits.append(split_node.right)
 
+            if verbose &gt;= 1:
+                # reported after the bookkeeping above, so the counts are final
+                budget = &#39;&#39; if self.max_rules is None else f&#39;/{self.max_rules}&#39;
+                condition = (f&#34;X_{split_node.feature} &lt;= {split_node.threshold:0.3f}&#34;
+                             if split_node.feature is not None else str(split_node))
+                print(f&#34;rule {self.complexity_}{budget} &#34;
+                      f&#34;({len(self.trees_)} tree(s)): {condition}&#34;)
+
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
                 y_predictions_per_tree[tree_num_] = self._predict_tree(
@@ -1428,19 +1541,12 @@ when both are given.</p></div>
 
             # recompute all impurities + update potential_split children
             potential_splits_new = []
-            for potential_split in potential_splits:
-                y_target = y_residuals_per_tree[potential_split.tree_num]
-
-                # re-calculate the best split
-                potential_split_updated = self._construct_node_with_stump(
-                    X=X,
-                    y=y_target,
-                    idxs=potential_split.idxs,
-                    tree_num=potential_split.tree_num,
-                    sample_weight=sample_weight,
-                    max_features=self.max_features,
-                    depth=potential_split.depth+1,
-                )
+            # each candidate&#39;s stump is fit independently of the others, and
+            # sklearn&#39;s tree builder releases the GIL, so this threads well
+            updated_splits = self._fit_candidate_stumps(
+                X, potential_splits, y_residuals_per_tree, sample_weight)
+            for potential_split, potential_split_updated in zip(
+                    potential_splits, updated_splits):
 
                 # need to preserve certain attributes from before (value at this split + is_root)
                 # value may change because residuals may have changed, but we want it to store the value from before
@@ -1461,7 +1567,7 @@ when both are given.</p></div>
             potential_splits = sorted(
                 potential_splits_new, key=lambda x: x.impurity_reduction
             )
-            if verbose:
+            if verbose &gt;= 2:
                 print(self)
             if self.max_rules is not None and self.complexity_ &gt;= self.max_rules:
                 finished = True
@@ -1494,6 +1600,11 @@ when both are given.</p></div>
                 node.setattrs(node_id=next(node_counter),
                               value_sklearn=value_sklearn,
                               n_samples_=X.shape[0])
+
+                if node.left is None and node.right is None:
+                    # a leaf splits on nothing: its feature is the -2 placeholder,
+                    # which indexes the wrong column (or raises, with one feature)
+                    return
 
                 idxs_left = X[:, node.feature] &lt;= node.threshold
                 _annotate_node(node.left, X[idxs_left], y[idxs_left],
@@ -1609,6 +1720,7 @@ when both are given.</p></div>
         return s
 
     def predict(self, X, categorical_features=None, by_tree=False):
+        categorical_features = self._categorical_features(categorical_features)
         if hasattr(self, &#34;_encoder&#34;):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name=&#34;_encoder&#34;)
@@ -1637,11 +1749,18 @@ when both are given.</p></div>
 #             class_preds = (preds &gt; 0.5).astype(int)
 #             return np.array([self.classes_[i] for i in class_preds])
 
+    def _categorical_features(self, categorical_features):
+        &#34;&#34;&#34;Fall back on the categorical features the model was fitted with.&#34;&#34;&#34;
+        if categorical_features is None:
+            return getattr(self, &#39;categorical_features_&#39;, None)
+        return categorical_features
+
     def predict_proba(self, X, categorical_features=None, use_clipped_prediction=False):
         &#34;&#34;&#34;Predict probability for classifiers:
         Default behavior is to constrain the outputs to the range of probabilities, i.e. 0 to 1, with a sigmoid function.
         Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.
         &#34;&#34;&#34;
+        categorical_features = self._categorical_features(categorical_features)
         if hasattr(self, &#34;_encoder&#34;):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name=&#34;_encoder&#34;)
@@ -1802,7 +1921,7 @@ def feature_importances_(self):
 </details>
 </dd>
 <dt id="imodels.tree.figs.FIGS.fit"><code class="name flex">
-<span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=False, sample_weight=None, categorical_features=None)</span>
+<span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=None, sample_weight=None, categorical_features=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="params">Params</h2>
@@ -1819,7 +1938,7 @@ are ignored while searching for a split in each node.</p></div>
     X,
     y=None,
     feature_names=None,
-    verbose=False,
+    verbose=None,
     sample_weight=None,
     categorical_features=None,
 ):
@@ -1831,6 +1950,11 @@ are ignored while searching for a split in each node.</p></div>
         Splits that would create child nodes with net zero or negative weight
         are ignored while searching for a split in each node.
     &#34;&#34;&#34;
+    # fit(verbose=...) still wins, so existing callers are unaffected
+    verbose = int(self.verbose if verbose is None else verbose)
+
+    # remembered so that predict/predict_proba don&#39;t need them passed again
+    self.categorical_features_ = categorical_features
     if categorical_features is not None:
         X, self._encoder = encode_categories(X, categorical_features)
 
@@ -1917,8 +2041,6 @@ are ignored while searching for a split in each node.</p></div>
             continue
 
         # split on node
-        if verbose:
-            print(&#34;\nadding &#34; + str(split_node))
         self.complexity_ += 1
 
         # if added a tree root
@@ -1947,6 +2069,14 @@ are ignored while searching for a split in each node.</p></div>
         potential_splits.append(split_node.left)
         potential_splits.append(split_node.right)
 
+        if verbose &gt;= 1:
+            # reported after the bookkeeping above, so the counts are final
+            budget = &#39;&#39; if self.max_rules is None else f&#39;/{self.max_rules}&#39;
+            condition = (f&#34;X_{split_node.feature} &lt;= {split_node.threshold:0.3f}&#34;
+                         if split_node.feature is not None else str(split_node))
+            print(f&#34;rule {self.complexity_}{budget} &#34;
+                  f&#34;({len(self.trees_)} tree(s)): {condition}&#34;)
+
         # update predictions for altered tree
         for tree_num_ in range(len(self.trees_)):
             y_predictions_per_tree[tree_num_] = self._predict_tree(
@@ -1971,19 +2101,12 @@ are ignored while searching for a split in each node.</p></div>
 
         # recompute all impurities + update potential_split children
         potential_splits_new = []
-        for potential_split in potential_splits:
-            y_target = y_residuals_per_tree[potential_split.tree_num]
-
-            # re-calculate the best split
-            potential_split_updated = self._construct_node_with_stump(
-                X=X,
-                y=y_target,
-                idxs=potential_split.idxs,
-                tree_num=potential_split.tree_num,
-                sample_weight=sample_weight,
-                max_features=self.max_features,
-                depth=potential_split.depth+1,
-            )
+        # each candidate&#39;s stump is fit independently of the others, and
+        # sklearn&#39;s tree builder releases the GIL, so this threads well
+        updated_splits = self._fit_candidate_stumps(
+            X, potential_splits, y_residuals_per_tree, sample_weight)
+        for potential_split, potential_split_updated in zip(
+                potential_splits, updated_splits):
 
             # need to preserve certain attributes from before (value at this split + is_root)
             # value may change because residuals may have changed, but we want it to store the value from before
@@ -2004,7 +2127,7 @@ are ignored while searching for a split in each node.</p></div>
         potential_splits = sorted(
             potential_splits_new, key=lambda x: x.impurity_reduction
         )
-        if verbose:
+        if verbose &gt;= 2:
             print(self)
         if self.max_rules is not None and self.complexity_ &gt;= self.max_rules:
             finished = True
@@ -2037,6 +2160,11 @@ are ignored while searching for a split in each node.</p></div>
             node.setattrs(node_id=next(node_counter),
                           value_sklearn=value_sklearn,
                           n_samples_=X.shape[0])
+
+            if node.left is None and node.right is None:
+                # a leaf splits on nothing: its feature is the -2 placeholder,
+                # which indexes the wrong column (or raises, with one feature)
+                return
 
             idxs_left = X[:, node.feature] &lt;= node.threshold
             _annotate_node(node.left, X[idxs_left], y[idxs_left],
@@ -2173,6 +2301,7 @@ are ignored while searching for a split in each node.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict(self, X, categorical_features=None, by_tree=False):
+    categorical_features = self._categorical_features(categorical_features)
     if hasattr(self, &#34;_encoder&#34;):
         X = self._encode_categories(
             X, categorical_features=categorical_features, encoder_name=&#34;_encoder&#34;)
@@ -2216,6 +2345,7 @@ Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 
     Default behavior is to constrain the outputs to the range of probabilities, i.e. 0 to 1, with a sigmoid function.
     Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.
     &#34;&#34;&#34;
+    categorical_features = self._categorical_features(categorical_features)
     if hasattr(self, &#34;_encoder&#34;):
         X = self._encode_categories(
             X, categorical_features=categorical_features, encoder_name=&#34;_encoder&#34;)
@@ -2629,6 +2759,15 @@ array([3, 3, 3])
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)
 
+    @property
+    def feature_importances_(self):
+        &#34;&#34;&#34;Mean decrease in impurity of the selected FIGS model.&#34;&#34;&#34;
+        return self.figs.feature_importances_
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def get_params(self, deep=True):
         # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
         # automatic parameter introspection rejects
@@ -2706,6 +2845,19 @@ array([3, 3, 3])
 </ul>
 <h3>Instance variables</h3>
 <dl>
+<dt id="imodels.tree.figs.FIGSCV.feature_importances_"><code class="name">var <span class="ident">feature_importances_</span></code></dt>
+<dd>
+<div class="desc"><p>Mean decrease in impurity of the selected FIGS model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def feature_importances_(self):
+    &#34;&#34;&#34;Mean decrease in impurity of the selected FIGS model.&#34;&#34;&#34;
+    return self.figs.feature_importances_</code></pre>
+</details>
+</dd>
 <dt id="imodels.tree.figs.FIGSCV.max_depth"><code class="name">var <span class="ident">max_depth</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -2769,6 +2921,21 @@ def trees_(self):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="imodels.tree.figs.FIGSCV.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, X):
+    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+    from imodels.util.apply import apply_leaves
+    return apply_leaves(self, X)</code></pre>
+</details>
+</dd>
 <dt id="imodels.tree.figs.FIGSCV.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
 </code></dt>
@@ -3000,7 +3167,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.figs.FIGSClassifier"><code class="flex name class">
 <span>class <span class="ident">FIGSClassifier</span></span>
-<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None, class_weight=None)</span>
+<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None, class_weight=None, verbose: int = 0, n_jobs: int = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
@@ -3041,6 +3208,15 @@ min_impurity_decrease: float
 A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
 max_features
 The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)
+n_jobs: int, default=None
+Number of threads used to evaluate candidate splits, which are
+independent of one another. None means 1; -1 uses all processors.
+Only helps once there are several candidates to compare, i.e. on
+larger datasets or deeper models.
+verbose: int, default=0
+Controls progress reporting while fitting. 0 is silent; 1 reports each
+rule as it is added, with the running total; 2 also prints the model
+after every rule. Can be overridden per call via fit(verbose=&hellip;).
 class_weight: dict, list of dict or "balanced", default=None
 Classification only. Weights associated with classes, in the form
 {class_label: weight}. "balanced" weights each class by
@@ -3366,6 +3542,8 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.figs.FIGSCV.apply" href="#imodels.tree.figs.FIGSCV.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.feature_importances_" href="#imodels.tree.figs.FIGSCV.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="#imodels.tree.figs.FIGSCV.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_params" href="#imodels.tree.figs.FIGSCV.set_params">set_params</a></code></li>
@@ -3376,7 +3554,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.figs.FIGSRegressor"><code class="flex name class">
 <span>class <span class="ident">FIGSRegressor</span></span>
-<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None, class_weight=None)</span>
+<span>(</span><span>max_rules: int = 12, max_trees: int = None, min_impurity_decrease: float = 0.0, random_state=None, max_features: str = None, max_depth: int = None, class_weight=None, verbose: int = 0, n_jobs: int = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
@@ -3417,6 +3595,15 @@ min_impurity_decrease: float
 A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
 max_features
 The number of features to consider when looking for the best split (see <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html</a>)
+n_jobs: int, default=None
+Number of threads used to evaluate candidate splits, which are
+independent of one another. None means 1; -1 uses all processors.
+Only helps once there are several candidates to compare, i.e. on
+larger datasets or deeper models.
+verbose: int, default=0
+Controls progress reporting while fitting. 0 is silent; 1 reports each
+rule as it is added, with the running total; 2 also prints the model
+after every rule. Can be overridden per call via fit(verbose=&hellip;).
 class_weight: dict, list of dict or "balanced", default=None
 Classification only. Weights associated with classes, in the form
 {class_label: weight}. "balanced" weights each class by
@@ -3724,6 +3911,8 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.tree.figs.FIGSCV.apply" href="#imodels.tree.figs.FIGSCV.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.feature_importances_" href="#imodels.tree.figs.FIGSCV.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="#imodels.tree.figs.FIGSCV.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_params" href="#imodels.tree.figs.FIGSCV.set_params">set_params</a></code></li>
@@ -3902,6 +4091,8 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li>
 <h4><code><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></code></h4>
 <ul class="">
+<li><code><a title="imodels.tree.figs.FIGSCV.apply" href="#imodels.tree.figs.FIGSCV.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.feature_importances_" href="#imodels.tree.figs.FIGSCV.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.fit" href="#imodels.tree.figs.FIGSCV.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="#imodels.tree.figs.FIGSCV.get_rules">get_rules</a></code></li>

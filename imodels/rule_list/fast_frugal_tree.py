@@ -22,7 +22,7 @@ from sklearn.utils.validation import check_array, check_is_fitted
 
 from imodels.rule_list.rule_list import RuleList
 from imodels.util.arguments import (check_binary_target, check_fit_arguments,
-                                    decode_labels)
+                                    check_predict_X, decode_labels)
 
 
 class FastFrugalTreeClassifier(BaseEstimator, RuleList, ClassifierMixin):
@@ -131,7 +131,7 @@ class FastFrugalTreeClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
     def predict_proba(self, X):
         check_is_fitted(self)
-        X = check_array(X)
+        X = check_predict_X(self, check_array(X))
 
         probs = np.zeros(X.shape[0])
         undecided = np.ones(X.shape[0], dtype=bool)

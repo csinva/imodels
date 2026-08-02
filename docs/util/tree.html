@@ -59,11 +59,18 @@ def compute_tree_complexity(tree, complexity_measure=&#39;num_rules&#39;):
 
 def _validate_feature_costs(feature_costs, n_features):
     if feature_costs is None:
-        feature_costs = np.ones(n_features, dtype=np.float64)
-    else:
-        assert len(
-            feature_costs) == n_features, f&#39;{len(feature_costs)} != {n_features}&#39;
-        np.min(feature_costs) &gt;= 0
+        return np.ones(n_features, dtype=np.float64)
+
+    if len(feature_costs) != n_features:
+        raise ValueError(
+            f&#39;feature_costs has {len(feature_costs)} entries but there are &#39;
+            f&#39;{n_features} features&#39;)
+    # this was written as a bare comparison, so negative costs passed through
+    # and produced negative depths
+    if np.min(feature_costs) &lt; 0:
+        raise ValueError(
+            f&#39;feature_costs must be non-negative, got a minimum of &#39;
+            f&#39;{np.min(feature_costs)}&#39;)
     return feature_costs
 
 
@@ -160,18 +167,15 @@ def calculate_mean_unique_calls_in_ensemble(ensemble, X, feature_costs=None):
     &#39;&#39;&#39;
     if X is None:
         # Should pass X, this is just for testing
-        n_features_in = ensemble.n_features_in_
-        X = np.random.randint(2, size=(100, n_features_in))
+        X = np.random.randint(
+            2, size=(100, ensemble.n_features_in_))
 
-    if feature_costs is None:
-        feature_costs = np.ones(n_features_in, dtype=np.float64)
-    else:
-        assert len(
-            feature_costs) == n_features_in, f&#39;{len(feature_costs)} != {n_features_in}&#39;
-        np.min(feature_costs) &gt;= 0
+    # n_features_in used to be read from a branch that only ran when X was None,
+    # so passing X -- the documented use -- raised UnboundLocalError
+    feature_costs = _validate_feature_costs(feature_costs, np.shape(X)[1])
 
-    # extract the decision path for each sample
-    ests = ensemble.estimators_.flatten()
+    # estimators_ is a list for forests and a 2d array for gradient boosting
+    ests = np.asarray(ensemble.estimators_).flatten()
     feats = [set() for _ in range(len(X))]
     for i in range(len(ests)):
         est = ests[i]
@@ -258,18 +262,15 @@ This is the average depth of the path from the root to the point.</p></div>
     &#39;&#39;&#39;
     if X is None:
         # Should pass X, this is just for testing
-        n_features_in = ensemble.n_features_in_
-        X = np.random.randint(2, size=(100, n_features_in))
+        X = np.random.randint(
+            2, size=(100, ensemble.n_features_in_))
 
-    if feature_costs is None:
-        feature_costs = np.ones(n_features_in, dtype=np.float64)
-    else:
-        assert len(
-            feature_costs) == n_features_in, f&#39;{len(feature_costs)} != {n_features_in}&#39;
-        np.min(feature_costs) &gt;= 0
+    # n_features_in used to be read from a branch that only ran when X was None,
+    # so passing X -- the documented use -- raised UnboundLocalError
+    feature_costs = _validate_feature_costs(feature_costs, np.shape(X)[1])
 
-    # extract the decision path for each sample
-    ests = ensemble.estimators_.flatten()
+    # estimators_ is a list for forests and a 2d array for gradient boosting
+    ests = np.asarray(ensemble.estimators_).flatten()
     feats = [set() for _ in range(len(X))]
     for i in range(len(ests)):
         est = ests[i]

@@ -12,7 +12,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import datasets, model_selection
-from imodels.util.arguments import set_feature_names_in
+from imodels.util.arguments import check_predict_X, set_feature_names_in
 
 from .data import Data
 from .initializers.initializer import Initializer
@@ -359,12 +359,15 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             raise ValueError(
                 "In sample predictions only possible if model.store_in_sample_predictions is `True`.  Either set the parameter to True or pass a non-None X parameter")
         else:
+            check_predict_X(self, X)
             predictions = self._out_of_sample_predict(X)
             if self.classification:
                 return np.round(predictions, 0)
             return predictions
 
     def predict_proba(self, X: np.ndarray = None) -> np.ndarray:
+        if X is not None:
+            check_predict_X(self, X)
         preds = self._out_of_sample_predict(X)
         return np.stack([preds, 1 - preds], axis=1)
 
