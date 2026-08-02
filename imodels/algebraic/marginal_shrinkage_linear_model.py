@@ -4,7 +4,7 @@ from sklearn.base import BaseEstimator
 from sklearn.linear_model import RidgeCV, ElasticNet, ElasticNetCV
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, _check_sample_weight
-from imodels.util.arguments import set_feature_names_in
+from imodels.util.arguments import check_predict_X, set_feature_names_in
 from sklearn.preprocessing import StandardScaler
 
 from sklearn.base import RegressorMixin, ClassifierMixin
@@ -180,11 +180,13 @@ class MarginalShrinkageLinearModel(BaseEstimator):
 
     def predict_proba(self, X):
         check_is_fitted(self, 'est_main_')
+        check_predict_X(self, X)
         X = self.scalar_X_.transform(X)
         return self.est_main_.predict_proba(X)
 
     def predict(self, X):
         check_is_fitted(self, 'est_main_')
+        check_predict_X(self, X)
         X = self.scalar_X_.transform(X)
         pred = self.est_main_.predict(X)
         return self.scalar_y_.inverse_transform(pred.reshape(-1, 1)).squeeze()

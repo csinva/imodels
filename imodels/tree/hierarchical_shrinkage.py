@@ -11,7 +11,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.utils.validation import check_is_fitted
 
 from imodels.util import checks
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, check_predict_X
 from imodels.util.tree import compute_tree_complexity
 
 
@@ -119,7 +119,10 @@ class HSTree(BaseEstimator):
             self, X, y, feature_names, allow_nan=True)
         if feature_names is not None:
             self.feature_names = feature_names
-        self.estimator_ = self.estimator_.fit(
+        # fit a copy: shrinkage rewrites the tree in place, so fitting the
+        # object handed to __init__ would shrink it out from under any other
+        # model built on the same estimator
+        self.estimator_ = deepcopy(self.estimator_).fit(
             X, y, *args, sample_weight=sample_weight, **kwargs
         )
         self._shrink()
@@ -263,6 +266,7 @@ class HSTree(BaseEstimator):
                 self._shrink_tree(self._unwrap_tree(t), self.reg_param)
 
     def predict(self, X, *args, **kwargs):
+        check_predict_X(self, X)
         preds = self.estimator_.predict(X, *args, **kwargs)
         # fit encodes y as 0..n_classes-1, so map back onto the original labels.
         # When the estimator was fitted elsewhere and passed in already fitted,
@@ -273,6 +277,7 @@ class HSTree(BaseEstimator):
             return preds
 
     def predict_proba(self, X, *args, **kwargs):
+        check_predict_X(self, X)
         if hasattr(self.estimator_, "predict_proba"):
             probs = self.estimator_.predict_proba(X, *args, **kwargs)
             # the shrinkage arithmetic can leave values a hair outside [0, 1]

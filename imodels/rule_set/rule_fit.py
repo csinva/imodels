@@ -18,7 +18,7 @@ from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, check_predict_X
 from imodels.util.extract import extract_rulefit
 from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
 from imodels.util.score import score_linear
@@ -156,6 +156,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         For classification, returns discrete output.
         '''
         check_is_fitted(self)
+        check_predict_X(self, X)
         if scipy.sparse.issparse(X):
             X = X.toarray()
         X = check_array(X)
@@ -167,6 +168,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
 
     def predict_proba(self, X):
         check_is_fitted(self)
+        check_predict_X(self, X)
         if scipy.sparse.issparse(X):
             X = X.toarray()
         X = check_array(X)

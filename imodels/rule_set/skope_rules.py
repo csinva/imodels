@@ -84,7 +84,8 @@ from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.arguments import check_binary_target, check_fit_arguments, decode_labels
+from imodels.util.arguments import (check_binary_target, check_fit_arguments,
+                                    check_predict_X, decode_labels)
 from imodels.util.rule import replace_feature_name, get_feature_dict, Rule
 from imodels.util.extract import extract_skope
 from imodels.util.score import score_precision_recall
@@ -349,6 +350,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
             For each observations, tells whether or not (1 or 0) it should
             be considered as an outlier according to the selected rules.
         """
+        check_predict_X(self, X)
         X = check_array(X)
         return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
@@ -357,6 +359,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
 
         '''
         check_is_fitted(self, 'rules_without_feature_names_')
+        check_predict_X(self, X)
         X = check_array(X)
         weight_sum = np.sum([w[0] for (r, w) in self.rules_without_feature_names_])
         if weight_sum == 0:
@@ -489,7 +492,8 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
                              verbose=self.verbose)
 
     def _score_rules(self, X, y, rules) -> List[Rule]:
-        return score_precision_recall(X, y, rules, self.estimators_samples_, self.estimators_features_, self.feature_placeholders)
+        return score_precision_recall(X, y, rules, self.estimators_samples_, self.estimators_features_,
+                                      self.feature_placeholders, sample_weight=self.sample_weight)
 
     def _prune_rules(self, rules) -> List[Rule]:
         return deduplicate(

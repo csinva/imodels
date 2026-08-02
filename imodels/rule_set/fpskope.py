@@ -68,4 +68,5 @@ class FPSkopeClassifier(SkopeRulesClassifier):
                                       self.estimators_samples_,
                                       self.estimators_features_,
                                       self.feature_placeholders,
-                                      oob=False)
+                                      oob=False,
+                                      sample_weight=self.sample_weight)

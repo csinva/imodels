@@ -82,19 +82,41 @@ def check_predict_X(model, X):
 
     Models that index X by a stored feature number silently accept extra
     columns, returning predictions that look reasonable but ignore part of the
-    input. sklearn raises instead, and so should we.
+    input. They equally silently accept the right columns in the wrong order,
+    which quietly returns predictions for the wrong features. sklearn raises in
+    both cases, and so should we.
 
     Also raises NotFittedError when called before fit. Otherwise predicting on
     an unfitted model fails later with whatever AttributeError the model
     happens to hit first, which callers cannot catch as NotFittedError.
+
+    Pass X before converting it to an array, or the column names are gone by the
+    time this sees them.
     """
     check_is_fitted(model)
+
+    # read the shape off X directly: np.shape() would coerce X, and sklearn's
+    # estimator checks pass array-likes that must reach check_array untouched
+    shape = getattr(X, 'shape', None)
+    n_given = shape[1] if shape is not None and len(shape) == 2 else None
+
     n_features = getattr(model, 'n_features_in_', None)
-    if n_features is not None and np.shape(X)[1] != n_features:
+    if n_features is not None and n_given is not None and n_given != n_features:
         raise ValueError(
-            f"X has {np.shape(X)[1]} features, but "
+            f"X has {n_given} features, but "
             f"{type(model).__name__} is expecting {n_features} features as input."
         )
+
+    fitted_names = getattr(model, 'feature_names_in_', None)
+    if fitted_names is not None and hasattr(X, 'columns'):
+        given = np.asarray(X.columns, dtype=object)
+        if not np.array_equal(given, np.asarray(fitted_names, dtype=object)):
+            raise ValueError(
+                "The feature names should match those that were passed during "
+                f"fit.\nFeature names seen at fit time, in order:\n"
+                f"{list(fitted_names)}\nFeature names given, in order:\n"
+                f"{list(given)}"
+            )
     return X
 
 

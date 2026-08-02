@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
-from imodels.util.arguments import (check_binary_target, decode_labels,
+from imodels.util.arguments import (check_binary_target, check_predict_X, decode_labels,
                                     set_feature_names_in)
 
 
@@ -314,6 +314,7 @@ class TreeGAM(BaseEstimator):
         marginal_only: bool
             If True, only use the marginal effects.
         """
+        check_predict_X(self, X)
         X = check_array(X, accept_sparse=False, dtype=None)
         check_is_fitted(self)
         probs1 = np.ones(X.shape[0]) * self.bias_

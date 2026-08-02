@@ -9,7 +9,7 @@ from sklearn.metrics import get_scorer
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_text
 from sklearn.utils import check_X_y
 
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, check_predict_X
 from sklearn.utils.validation import check_is_fitted
 
 
@@ -388,6 +388,7 @@ class TaoTree(BaseEstimator):
 
     def predict(self, X):
         check_is_fitted(self, 'model')
+        check_predict_X(self, X)
         preds = self.model.predict(X)
         if hasattr(self, "classes_"):
             return np.array([self.classes_[int(i)] for i in preds])
@@ -396,6 +397,7 @@ class TaoTree(BaseEstimator):
 
     def predict_proba(self, X):
         check_is_fitted(self, 'model')
+        check_predict_X(self, X)
         return self.model.predict_proba(X)
 
     # def score(self, X, y):

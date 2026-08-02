@@ -12,7 +12,8 @@ from imodels.rule_list.bayesian_rule_list.brl_util import (
 from imodels.rule_list.rule_list import RuleList
 from imodels.util.convert import itemsets_to_rules
 from imodels.util.extract import extract_fpgrowth
-from imodels.util.arguments import decode_labels, set_feature_names_in
+from imodels.util.arguments import (check_predict_X, decode_labels,
+                                    set_feature_names_in)
 from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
 
 
@@ -282,6 +283,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             order, as they appear in the attribute `classes_`.
         """
         check_is_fitted(self)
+        check_predict_X(self, X)
         X = check_array(X)
 
         D = pd.DataFrame(X, columns=self.feature_placeholders)
@@ -309,6 +311,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             Class labels for samples in X.
         """
         check_is_fitted(self)
+        check_predict_X(self, X)
         X = check_array(X)
 
         return decode_labels(self, 1 * (self.predict_proba(X)[:, 1] >= threshold))
