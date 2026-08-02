@@ -13,6 +13,7 @@ from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
 from .experimental.bartpy import BART
 from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListClassifier
+from .rule_list.fast_frugal_tree import FastFrugalTreeClassifier
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
 from .rule_set import boosted_rules
@@ -44,6 +45,7 @@ from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
 from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
 from .util.get_rules import get_rules
+from .util.tree_viz import shadow_tree
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
 from .clustering.stableclustering import StableClustering
@@ -51,6 +53,7 @@ from .clustering.stableclustering import StableClustering
 CLASSIFIERS = [
     BayesianRuleListClassifier,
     GreedyRuleListClassifier,
+    FastFrugalTreeClassifier,
     SkopeRulesClassifier,
     BoostedRulesClassifier,
     SLIMClassifier,

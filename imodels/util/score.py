@@ -45,8 +45,10 @@ def score_precision_recall(X,
             columns=np.array(feature_names)[curr_features_to_use]
         )
 
-        if X_oob.shape[1] <= 1:  # otherwise pandas bug (cf. issue #16363)
-            return []
+        # a guard for pandas issue #16363 used to skip estimators that use a
+        # single feature, and did so with `return []`, discarding every rule
+        # scored so far. That pandas bug is long fixed, and on data with few
+        # features every estimator uses one feature, so no rules survived.
 
         y_oob = y[mask]
         y_oob = np.array((y_oob != 0))

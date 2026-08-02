@@ -75,9 +75,12 @@ class CorrelationScreenTransformer(BaseEstimator, TransformerMixin):
     def __init__(self, threshold=1.0):
         # Initialize with a correlation threshold
         self.threshold = threshold
-        self.correlated_feature_sets = []
 
     def fit(self, X, y=None):
+        # started fresh each time: appending to sets kept from a previous fit
+        # would screen out features that are not correlated in this data
+        self.correlated_feature_sets = []
+
         # Check if X is a pandas DataFrame; if not, convert it to DataFrame
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
@@ -120,7 +123,7 @@ class CorrelationScreenTransformer(BaseEstimator, TransformerMixin):
             X_transformed.iloc[:, to_remove] = 0
 
         if input_type == np.ndarray:
-            X_transformed == X_transformed.values
+            X_transformed = X_transformed.values
 
         return X_transformed
 

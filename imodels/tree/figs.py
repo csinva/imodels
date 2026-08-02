@@ -12,6 +12,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import plot_tree, DecisionTreeClassifier
 from sklearn.utils import check_X_y, check_array
+from joblib import Parallel, delayed
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.validation import _check_sample_weight, check_is_fitted
 
@@ -125,6 +126,7 @@ class FIGS(BaseEstimator):
         max_depth: int = None,
         class_weight=None,
         verbose: int = 0,
+        n_jobs: int = None,
     ):
         """
         Params
@@ -137,6 +139,11 @@ class FIGS(BaseEstimator):
             A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
         max_features
             The number of features to consider when looking for the best split (see https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html)
+        n_jobs: int, default=None
+            Number of threads used to evaluate candidate splits, which are
+            independent of one another. None means 1; -1 uses all processors.
+            Only helps once there are several candidates to compare, i.e. on
+            larger datasets or deeper models.
         verbose: int, default=0
             Controls progress reporting while fitting. 0 is silent; 1 reports each
             rule as it is added, with the running total; 2 also prints the model
@@ -157,6 +164,7 @@ class FIGS(BaseEstimator):
         self.max_depth = max_depth
         self.class_weight = class_weight
         self.verbose = verbose
+        self.n_jobs = n_jobs
         self._init_decision_function()
         self.n_outputs = None
         self.need_to_reshape = False
@@ -171,6 +179,26 @@ class FIGS(BaseEstimator):
         """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
         from imodels.util.apply import apply_leaves
         return apply_leaves(self, X)
+    def _fit_candidate_stumps(self, X, potential_splits, y_residuals_per_tree,
+                              sample_weight):
+        """Re-fit the stump for every candidate split, in parallel if asked."""
+        def fit_stump(potential_split):
+            return self._construct_node_with_stump(
+                X=X,
+                y=y_residuals_per_tree[potential_split.tree_num],
+                idxs=potential_split.idxs,
+                tree_num=potential_split.tree_num,
+                sample_weight=sample_weight,
+                max_features=self.max_features,
+                depth=potential_split.depth + 1,
+            )
+
+        n_jobs = 1 if self.n_jobs is None else self.n_jobs
+        if n_jobs == 1 or len(potential_splits) < 2:
+            return [fit_stump(split) for split in potential_splits]
+        return Parallel(n_jobs=n_jobs, backend="threading")(
+            delayed(fit_stump)(split) for split in potential_splits)
+
     def _apply_class_weight(self, y, sample_weight):
         """Fold class_weight into sample_weight, which the splits already honor."""
         if self.class_weight is None:
@@ -328,6 +356,8 @@ class FIGS(BaseEstimator):
         # fit(verbose=...) still wins, so existing callers are unaffected
         verbose = int(self.verbose if verbose is None else verbose)
 
+        # remembered so that predict/predict_proba don't need them passed again
+        self.categorical_features_ = categorical_features
         if categorical_features is not None:
             X, self._encoder = encode_categories(X, categorical_features)
 
@@ -474,19 +504,12 @@ class FIGS(BaseEstimator):
 
             # recompute all impurities + update potential_split children
             potential_splits_new = []
-            for potential_split in potential_splits:
-                y_target = y_residuals_per_tree[potential_split.tree_num]
-
-                # re-calculate the best split
-                potential_split_updated = self._construct_node_with_stump(
-                    X=X,
-                    y=y_target,
-                    idxs=potential_split.idxs,
-                    tree_num=potential_split.tree_num,
-                    sample_weight=sample_weight,
-                    max_features=self.max_features,
-                    depth=potential_split.depth+1,
-                )
+            # each candidate's stump is fit independently of the others, and
+            # sklearn's tree builder releases the GIL, so this threads well
+            updated_splits = self._fit_candidate_stumps(
+                X, potential_splits, y_residuals_per_tree, sample_weight)
+            for potential_split, potential_split_updated in zip(
+                    potential_splits, updated_splits):
 
                 # need to preserve certain attributes from before (value at this split + is_root)
                 # value may change because residuals may have changed, but we want it to store the value from before
@@ -660,6 +683,7 @@ class FIGS(BaseEstimator):
         return s
 
     def predict(self, X, categorical_features=None, by_tree=False):
+        categorical_features = self._categorical_features(categorical_features)
         if hasattr(self, "_encoder"):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name="_encoder")
@@ -688,11 +712,18 @@ class FIGS(BaseEstimator):
 #             class_preds = (preds > 0.5).astype(int)
 #             return np.array([self.classes_[i] for i in class_preds])
 
+    def _categorical_features(self, categorical_features):
+        """Fall back on the categorical features the model was fitted with."""
+        if categorical_features is None:
+            return getattr(self, 'categorical_features_', None)
+        return categorical_features
+
     def predict_proba(self, X, categorical_features=None, use_clipped_prediction=False):
         """Predict probability for classifiers:
         Default behavior is to constrain the outputs to the range of probabilities, i.e. 0 to 1, with a sigmoid function.
         Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.
         """
+        categorical_features = self._categorical_features(categorical_features)
         if hasattr(self, "_encoder"):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name="_encoder")

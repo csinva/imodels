@@ -140,6 +140,10 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         if not np.all((X == 1) | (X == 0)):
             raise ValueError("All numeric features must be discretized prior to fitting!")
 
+        # fall back to the DataFrame's columns when no names were passed, so the
+        # printed rule list names the caller's features rather than X_0, X_1, ...
+        if feature_names is None:
+            feature_names = getattr(self, 'feature_names_in_', None)
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
         self.feature_names = np.array(list(self.feature_dict_.values()))
@@ -287,12 +291,17 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         P = preds_d_t(X2, np.zeros((N, 1), dtype=int), self.d_star, self.theta)
         return np.vstack((1 - P, P)).T
 
-    def predict(self, X, threshold=0.1):
+    def predict(self, X, threshold=0.5):
         """Perform classification on samples in X.
 
         Parameters
         ----------
         X : array-like, shape = [n_samples, n_features]
+
+        threshold : float, default=0.5
+            Probability at or above which the positive class is predicted. The
+            default makes predict agree with predict_proba, as for any other
+            classifier; lower it to trade precision for recall.
 
         Returns
         -------

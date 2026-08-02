@@ -13,7 +13,7 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels import GreedyRuleListClassifier
 from imodels.rule_list.rule_list import RuleList
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_binary_target, check_fit_arguments
 
 
 class OneRClassifier(GreedyRuleListClassifier):
@@ -27,6 +27,7 @@ class OneRClassifier(GreedyRuleListClassifier):
     def fit(self, X, y, feature_names=None):
         """Fit oneR
         """
+        check_binary_target(self, y)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
 
         ms = []

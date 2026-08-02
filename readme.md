@@ -78,6 +78,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | Bayesian rule set           | [🗂️](https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier), [📄](https://www.jmlr.org/papers/volume18/16-003/16-003.pdf), [🔗](https://github.com/wangtongada/BOA) | Finds concise rule set with Bayesian sampling (slow)  |
 | Bayesian rule list          | [🗂️](https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier), [📄](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-9/issue-3/Interpretable-classifiers-using-rules-and-Bayesian-analysis--Building-a/10.1214/15-AOAS848.full), [🔗](https://github.com/tmadl/sklearn-expertsys) | Fits compact rule list distribution with Bayesian sampling (slow) |
 | Greedy rule list            | [🗂️](https://csinva.io/imodels/rule_list/greedy_rule_list.html), [🔗](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea) | Uses CART to fit a list (only a single path), rather than a tree |
+| Fast-and-frugal tree        | [FastFrugalTreeClassifier](https://csinva.io/imodels/rule_list/fast_frugal_tree.html) |  | One cue per level, each able to decide |
 | OneR rule list              | [🗂️](https://csinva.io/imodels/rule_list/one_r.html), [📄](https://link.springer.com/article/10.1023/A:1022631118932) | Fits rule list restricted to only one feature              |
 | Greedy rule tree            | [🗂️](https://csinva.io/imodels/tree/cart_wrapper.html), [📄](https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone), [🔗](https://scikit-learn.org/stable/modules/tree.html)  | Greedily fits tree using CART                              |
 | C4.5 rule tree        | [🗂️](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier), [📄](https://link.springer.com/article/10.1007/BF00993309), [🔗](https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier) | Greedily fits tree using C4.5                           |
@@ -182,6 +183,46 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | BART |  | [BART](https://csinva.io/imodels/experimental/bartpy/index.html) | Bayesian additive regression trees (slow) |
 | Distillation |  | [DistilledRegressor](https://csinva.io/imodels/util/distillation.html#imodels.util.distillation.DistilledRegressor) | Wraps any sklearn-compatible models |
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
+
+
+**Multiclass.** These classifiers handle more than two classes: `FIGSClassifier`,
+`GreedyTreeClassifier`, `HSTreeClassifier`, `TaoTreeClassifier`,
+`BoostedRulesClassifier`, `SLIMClassifier`, `C45TreeClassifier`,
+`DecisionTreeCCPClassifier` and the `CV` variants. The rule-set and rule-list models are binary-only and raise a
+clear error if given a multiclass target, rather than silently treating it as
+binary.
+
+**Categorical features.** `FIGS` takes them directly — pass the column names and
+it one-hot encodes them internally, remembering them for `predict`:
+
+```python
+model = FIGSClassifier().fit(X, y, categorical_features=['pet', 'city'])
+model.predict(X)
+```
+
+Other models expect numeric input, so encode categorical columns first (e.g. with
+`sklearn.preprocessing.OneHotEncoder`, or one of the
+[discretizers](https://csinva.io/imodels/discretization/index.html) for numeric
+columns that a rule model needs binarized).
+
+
+### Plotting trees with dtreeviz
+
+Tree-based models can be drawn with [dtreeviz](https://github.com/parrt/dtreeviz).
+`shadow_tree` builds the `ShadowDecTree` it needs from any imodels tree model:
+
+```python
+import dtreeviz
+from imodels import FIGSClassifier, shadow_tree
+
+model = FIGSClassifier(max_rules=6).fit(X, y)
+viz = dtreeviz.trees.DTreeVizAPI(shadow_tree(model, X, y))
+viz.view()
+```
+
+For a model made of several trees (FIGS, boosted rules), pass `tree_num` to pick
+one. Feature and class names default to those the model was fitted with.
+dtreeviz is not a dependency and is imported only when this is called.
 
 
 ### Inspecting the rules a model learned

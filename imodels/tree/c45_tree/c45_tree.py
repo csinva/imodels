@@ -124,6 +124,22 @@ def shrink_node(node, reg_param, parent_val, parent_num, cum_sum, scheme, consta
     return node
 
 
+def _make_xml_safe_names(feature_names):
+    """Turn feature names into distinct, valid XML element names."""
+    safe_names = []
+    for name in feature_names:
+        safe = ''.join(c for c in str(name) if c.isalnum() or c == '_')
+        if not safe or safe[0].isdigit():
+            safe = 'X_' + safe
+        # keep names distinct after stripping the punctuation out of them
+        candidate, suffix = safe, 1
+        while candidate in safe_names:
+            candidate = f'{safe}_{suffix}'
+            suffix += 1
+        safe_names.append(candidate)
+    return safe_names
+
+
 class C45TreeClassifier(BaseEstimator, ClassifierMixin):
     """A C4.5 tree classifier.
 
@@ -145,16 +161,15 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         if feature_names is None:
             self.feature_names = [f'X_{x}' for x in range(X.shape[1])]
         else:
-            # only include alphanumeric chars / replace spaces with underscores
-            self.feature_names = [''.join([i for i in x if i.isalnum()]).replace(' ', '_')
-                                  for x in feature_names]
-            self.feature_names = [
-                'X_' + x if x[0].isdigit()
-                else x
-                for x in self.feature_names
-            ]
+            # the tree is stored as XML, so names must be valid element names.
+            # They must also stay distinct: 'age (years)' and 'age-years' both
+            # reduce to 'ageyears', and the tree would then read the wrong column.
+            self.feature_names = _make_xml_safe_names(feature_names)
 
         assert len(self.feature_names) == X.shape[1]
+        # so that rules can be reported with the names the caller used
+        self.xml_name_to_feature_name_ = dict(
+            zip(self.feature_names, feature_names))
 
         data = [[] for i in range(len(self.feature_names))]
         categories = []
@@ -228,13 +243,43 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
 
         return np.array(prediction)
 
+    def _class_scores(self, X):
+        """Per-class scores for each row, from the leaves it reaches.
+
+        `decision` returns {class label: probability}; C4.5 is multiclass by
+        construction, so this keeps the whole distribution rather than
+        collapsing it to the top class.
+        """
+        check_is_fitted(self, ['tree_', 'resultType', 'feature_names'])
+        X = check_array(X)
+        n_classes = len(self.classes_)
+
+        scores = np.zeros((X.shape[0], n_classes))
+        for i in range(X.shape[0]):
+            answers = decision(self.root, X[i], self.feature_names, 1) or {}
+            for label, probability in answers.items():
+                # leaves store the encoded label (0, 1, ... ) as a string
+                index = int(float(label))
+                if 0 <= index < n_classes:
+                    scores[i, index] += float(probability)
+        return scores
+
     def predict(self, X):
-        raw_preds = self.raw_preds(X)
-        return decode_labels(self, (raw_preds > np.ones_like(raw_preds) * 0.5).astype(int))
+        return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
     def predict_proba(self, X):
-        raw_preds = self.raw_preds(X)
-        return np.vstack((1 - raw_preds, raw_preds)).transpose()
+        if len(self.classes_) == 2:
+            # unchanged binary path: leaves hold the probability of class 1,
+            # which is also what hierarchical shrinkage rewrites them to
+            raw_preds = self.raw_preds(X)
+            return np.vstack((1 - raw_preds, raw_preds)).transpose()
+
+        scores = self._class_scores(X)
+        totals = scores.sum(axis=1, keepdims=True)
+        # a row that reached no leaf falls back to a uniform distribution
+        with np.errstate(invalid='ignore', divide='ignore'):
+            normalized = scores / totals
+        return np.where(totals > 0, normalized, 1 / scores.shape[1])
 
     def __str__(self):
         check_is_fitted(self, ['tree_'])
