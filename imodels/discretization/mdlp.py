@@ -18,7 +18,7 @@ from imodels.util.metrics import entropy, cut_point_information_gain
 
 
 class MDLPDiscretizer(object):
-    def __init__(self, dataset, class_label, out_path_data=None, out_path_bins=None, features=None):
+    def __init__(self, dataset=None, class_label=None, out_path_data=None, out_path_bins=None, features=None):
         '''
         initializes discretizer object:
             saves raw copy of data and creates self._data with only features to discretize and class
@@ -32,12 +32,20 @@ class MDLPDiscretizer(object):
         Params
         ------
         dataset
-            pandas dataframe with data to discretize
+            pandas dataframe with data to discretize. If None, the cut points
+            are computed later by calling fit(X, y).
         class_label
             name of the column containing class in input dataframe
         features
             if !None, features that the user wants to discretize specifically
         '''
+        self._out_path_data = out_path_data
+        self._out_path_bins = out_path_bins
+        self._requested_features = features
+
+        if dataset is None:  # defer the work to fit
+            self._class_name = class_label
+            return
 
         if not isinstance(dataset, pd.core.frame.DataFrame):  # class needs a pandas dataframe
             raise AttributeError('input dataset should be a pandas data frame')
@@ -234,6 +242,61 @@ class MDLPDiscretizer(object):
             self._single_feature_accepted_cutpoints(feature=attr)
         return
 
+    def _bin_labels(self, attr):
+        '''Names of the bins a feature is cut into (a feature with no accepted
+        cut point stays in one catch-all bin).
+        '''
+        if len(self._cuts[attr]) == 0:
+            return ['All']
+        cuts = [-np.inf] + self._cuts[attr] + [np.inf]
+        return ['%s_to_%s' % (str(cuts[i]), str(cuts[i + 1]))
+                for i in range(len(cuts) - 1)]
+
+    def _bin_column(self, attr, column):
+        '''Applies this feature's cut points to any column of its values.'''
+        if len(self._cuts[attr]) == 0:
+            return 'All'
+        cuts = [-np.inf] + self._cuts[attr] + [np.inf]
+        return pd.cut(x=np.asarray(column), bins=cuts, right=False,
+                      labels=self._bin_labels(attr), precision=6,
+                      include_lowest=True)
+
+    def fit(self, X, y):
+        '''Learns cut points for the numeric columns of X, in the sklearn style.
+
+        Equivalent to constructing with a dataset, but lets the same fitted
+        discretizer be applied to new data with transform.
+        '''
+        X = pd.DataFrame(X).copy()
+        X.columns = [str(c) for c in X.columns]
+        class_label = self._class_name if self._class_name is not None else 'y'
+        while class_label in X.columns:  # don't collide with a real feature
+            class_label += '_'
+        X[class_label] = np.asarray(y)
+        MDLPDiscretizer.__init__(
+            self, dataset=X, class_label=class_label,
+            out_path_data=self._out_path_data,
+            out_path_bins=self._out_path_bins,
+            features=self._requested_features)
+        return self
+
+    def transform(self, X):
+        '''Bins X with the cut points found by fit. Columns that were not
+        discretized are passed through unchanged.
+        '''
+        if not hasattr(self, '_cuts'):
+            raise ValueError(
+                'This MDLPDiscretizer is not fitted yet. Call fit before transform.')
+        X = pd.DataFrame(X).copy()
+        X.columns = [str(c) for c in X.columns]
+        for attr in self._features:
+            if attr in X.columns:
+                X[attr] = self._bin_column(attr, X[attr])
+        return X
+
+    def fit_transform(self, X, y):
+        return self.fit(X, y).transform(X)
+
     def _apply_cutpoints(self, out_data_path=None, out_bins_path=None):
         '''
         Discretizes data by applying bins according to self._cuts. Saves a new, discretized file, and a description of
@@ -244,16 +307,9 @@ class MDLPDiscretizer(object):
         '''
         bin_label_collection = {}
         for attr in self._features:
-            if len(self._cuts[attr]) == 0:
-                self._data[attr] = 'All'
-                bin_label_collection[attr] = ['All']
-            else:
-                cuts = [-np.inf] + self._cuts[attr] + [np.inf]
-                start_bin_indices = range(0, len(cuts) - 1)
-                bin_labels = ['%s_to_%s' % (str(cuts[i]), str(cuts[i + 1])) for i in start_bin_indices]
-                bin_label_collection[attr] = bin_labels
-                self._data[attr] = pd.cut(x=self._data[attr].values, bins=cuts, right=False, labels=bin_labels,
-                                          precision=6, include_lowest=True)
+            bin_label_collection[attr] = self._bin_labels(attr)
+            self._data[attr] = self._bin_column(attr, self._data[attr])
+        self.bin_labels_ = bin_label_collection
 
         # reconstitute full data, now discretized
         if self._ignored_features:
@@ -286,6 +342,10 @@ class BRLDiscretizer:
         # check which features are numeric (to be discretized)
         self.discretized_features = []
 
+        # _encode_strings indexes positionally, so a DataFrame has to be
+        # unwrapped here the same way transform does
+        if isinstance(X, (pd.DataFrame, pd.Series)):
+            X = X.values
         X_str_disc = self._encode_strings(X)
 
         for fi in range(X_str_disc.shape[1]):
@@ -310,7 +370,11 @@ class BRLDiscretizer:
             self.discretized_X = X_str_and_num_disc
         else:
             self.discretizer = None
-            return
+        return self
+
+    def fit_transform(self, X, y, undiscretized_features=[], return_onehot=True):
+        return self.fit(X, y, undiscretized_features).transform(
+            X, return_onehot=return_onehot)
 
     def discretize(self, X, y):
         '''Discretize the features specified in self.discretized_features
@@ -320,7 +384,9 @@ class BRLDiscretizer:
         D = pd.DataFrame(np.hstack((X, np.expand_dims(y, axis=1))), columns=list(self.feature_labels) + ["y"])
         self.discretizer = MDLPDiscretizer(dataset=D, class_label="y", features=self.discretized_features)
 
-        cat_data = pd.DataFrame(np.zeros_like(X))
+        # object dtype: the columns are filled with bin-label strings, which
+        # pandas refuses to write into the float frame np.zeros_like would give
+        cat_data = pd.DataFrame(np.zeros(np.shape(X), dtype=object))
         for i in range(len(self.feature_labels)):
             label = self.feature_labels[i]
             if label in self.discretized_features:
