@@ -137,9 +137,12 @@ def get_clean_dataset(
     ```
     """
     if dataset_name in DSET_KWARGS:
+        # resolving the shorthand name is not a logging step: it used to sit
+        # inside the verbose branch, so verbose=False looked the dataset up
+        # under its shorthand and 404'd
+        data_source = DSET_KWARGS[dataset_name]["data_source"]
+        dataset_name = DSET_KWARGS[dataset_name]["dataset_name"]
         if verbose:
-            data_source = DSET_KWARGS[dataset_name]["data_source"]
-            dataset_name = DSET_KWARGS[dataset_name]["dataset_name"]
             print(f"fetching {dataset_name} from {data_source}")
     assert data_source in ["imodels", "pmlb", "imodels-multitask", "sklearn", "openml", "synthetic"], (
         data_source + " not correct"
