@@ -17,6 +17,27 @@ from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from imodels.util.arguments import set_feature_names_in
 
+def _warn_if_rounding_collapsed(coef, rounded):
+    """Warn when rounding to integers has destroyed the fitted model.
+
+    SLIM's coefficients are integers, so a feature whose natural coefficient is
+    much smaller than 1 rounds to zero. On data whose columns are on very
+    different scales that silently removes most of the model: on breast_cancer,
+    raw features give a below-chance classifier while standardized ones reach
+    0.99 AUC.
+    """
+    nonzero_before = int(np.count_nonzero(coef))
+    nonzero_after = int(np.count_nonzero(rounded))
+    if nonzero_before and nonzero_after * 2 < nonzero_before:
+        warnings.warn(
+            f"Rounding coefficients to integers left {nonzero_after} of "
+            f"{nonzero_before} nonzero, so most of the fitted model was lost. "
+            "SLIM uses integer coefficients, so features on very different "
+            "scales collapse when rounded; scale X first (for example with "
+            "sklearn.preprocessing.StandardScaler)."
+        )
+
+
 class SLIMRegressor(RegressorMixin, BaseEstimator):
     '''Sparse integer linear model
     Params
@@ -81,7 +102,9 @@ class SLIMRegressor(RegressorMixin, BaseEstimator):
     def _fit_backup(self, X, y, sample_weight):
         m = Lasso(alpha=self.alpha)
         m.fit(X, y, sample_weight=sample_weight)
-        self.model_.coef_ = np.round(m.coef_).astype(int)
+        rounded = np.round(m.coef_).astype(int)
+        _warn_if_rounding_collapsed(m.coef_, rounded)
+        self.model_.coef_ = rounded
         self.model_.intercept_ = m.intercept_
 
     def predict(self, X):
@@ -162,7 +185,9 @@ class SLIMClassifier(ClassifierMixin, BaseEstimator):
     def _fit_backup(self, X, y, sample_weight=None):
         m = LogisticRegression(C=1 / self.alpha)
         m.fit(X, y, sample_weight=sample_weight)
-        self.model_.coef_ = np.round(m.coef_).astype(int)
+        rounded = np.round(m.coef_).astype(int)
+        _warn_if_rounding_collapsed(m.coef_, rounded)
+        self.model_.coef_ = rounded
         self.model_.intercept_ = m.intercept_
 
     def predict(self, X):

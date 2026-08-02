@@ -180,6 +180,11 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
 
 
+**Feature scaling.** Most models here work on raw features. `SLIMClassifier` and
+`SLIMRegressor` are the exception: their coefficients are integers, so features
+on very different scales collapse to zero when rounded. Standardize X before
+fitting them (they warn if rounding has removed most of the model).
+
 **Multiclass.** These classifiers handle more than two classes: `FIGSClassifier`,
 `GreedyTreeClassifier`, `HSTreeClassifier`, `TaoTreeClassifier`,
 `BoostedRulesClassifier`, `SLIMClassifier`, `C45TreeClassifier`,
