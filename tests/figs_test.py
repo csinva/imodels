@@ -303,3 +303,30 @@ def test_single_feature_input():
     # leaf membership and rules work too
     assert classifier.apply(X).shape[0] == 120
     assert len(classifier.get_rules()) > 0
+
+
+def test_n_jobs_gives_identical_models():
+    """Fitting candidate splits in parallel must not change the result
+
+    https://github.com/csinva/imodels/issues/94: FIGS used one core. Candidate
+    splits are independent, so they can be evaluated in threads.
+    """
+    from imodels import FIGSClassifier, FIGSRegressor
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(2000, 10)
+    y = X[:, 0] + X[:, 1] + rng.randn(2000) * 0.3
+
+    serial = FIGSRegressor(max_rules=12).fit(X, y)
+    parallel = FIGSRegressor(max_rules=12, n_jobs=4).fit(X, y)
+    assert np.allclose(serial.predict(X), parallel.predict(X))
+    assert len(serial.trees_) == len(parallel.trees_)
+
+    y_binary = (y > 0).astype(int)
+    serial_clf = FIGSClassifier(max_rules=10).fit(X, y_binary)
+    parallel_clf = FIGSClassifier(max_rules=10, n_jobs=4).fit(X, y_binary)
+    assert np.allclose(serial_clf.predict_proba(X), parallel_clf.predict_proba(X))
+
+    # it round-trips as an ordinary parameter
+    assert FIGSRegressor(n_jobs=4).get_params()['n_jobs'] == 4
+    assert FIGSRegressor().get_params()['n_jobs'] is None
