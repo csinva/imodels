@@ -94,7 +94,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 
 ## Demo notebooks
 
-Demos are contained in the [notebooks](notebooks) folder.
+Demos are contained in the [notebooks](notebooks) folder. (The standalone Colab notebook has been retired; please refer to the demos below, which are kept up to date with the package.)
 
 <details>
 <summary><a href="https://github.com/csinva/imodels/blob/master/notebooks/imodels_demo.ipynb">Quickstart demo</a></summary>
@@ -104,11 +104,6 @@ Shows how to fit, predict, and visualize with different interpretable models
 <details>
 <summary><a href="https://auto.gluon.ai/dev/tutorials/tabular_prediction/tabular-interpretability.html">Autogluon demo</a></summary>
 Fit/select an interpretable model automatically using Autogluon AutoML
-</details>
-
-<details>
-<summary><a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ">Quickstart colab demo</a> <a href="https://colab.research.google.com/drive/1WfqvSjegygT7p0gyqiWpRpiwz2ePtiao#scrollTo=bLnLknIuoWtQ"> <img src="https://colab.research.google.com/assets/colab-badge.svg"></a></summary>
-Shows how to fit, predict, and visualize with different interpretable models
 </details>
 
 <details>

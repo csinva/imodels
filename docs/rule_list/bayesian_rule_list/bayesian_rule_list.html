@@ -163,6 +163,10 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         if not np.all((X == 1) | (X == 0)):
             raise ValueError(&#34;All numeric features must be discretized prior to fitting!&#34;)
 
+        # fall back to the DataFrame&#39;s columns when no names were passed, so the
+        # printed rule list names the caller&#39;s features rather than X_0, X_1, ...
+        if feature_names is None:
+            feature_names = getattr(self, &#39;feature_names_in_&#39;, None)
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
         self.feature_names = np.array(list(self.feature_dict_.values()))
@@ -310,12 +314,17 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         P = preds_d_t(X2, np.zeros((N, 1), dtype=int), self.d_star, self.theta)
         return np.vstack((1 - P, P)).T
 
-    def predict(self, X, threshold=0.1):
+    def predict(self, X, threshold=0.5):
         &#34;&#34;&#34;Perform classification on samples in X.
 
         Parameters
         ----------
         X : array-like, shape = [n_samples, n_features]
+
+        threshold : float, default=0.5
+            Probability at or above which the positive class is predicted. The
+            default makes predict agree with predict_proba, as for any other
+            classifier; lower it to trade precision for recall.
 
         Returns
         -------
@@ -497,6 +506,10 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         if not np.all((X == 1) | (X == 0)):
             raise ValueError(&#34;All numeric features must be discretized prior to fitting!&#34;)
 
+        # fall back to the DataFrame&#39;s columns when no names were passed, so the
+        # printed rule list names the caller&#39;s features rather than X_0, X_1, ...
+        if feature_names is None:
+            feature_names = getattr(self, &#39;feature_names_in_&#39;, None)
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
         self.feature_names = np.array(list(self.feature_dict_.values()))
@@ -644,12 +657,17 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
         P = preds_d_t(X2, np.zeros((N, 1), dtype=int), self.d_star, self.theta)
         return np.vstack((1 - P, P)).T
 
-    def predict(self, X, threshold=0.1):
+    def predict(self, X, threshold=0.5):
         &#34;&#34;&#34;Perform classification on samples in X.
 
         Parameters
         ----------
         X : array-like, shape = [n_samples, n_features]
+
+        threshold : float, default=0.5
+            Probability at or above which the positive class is predicted. The
+            default makes predict agree with predict_proba, as for any other
+            classifier; lower it to trade precision for recall.
 
         Returns
         -------
@@ -741,6 +759,10 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
     if not np.all((X == 1) | (X == 0)):
         raise ValueError(&#34;All numeric features must be discretized prior to fitting!&#34;)
 
+    # fall back to the DataFrame&#39;s columns when no names were passed, so the
+    # printed rule list names the caller&#39;s features rather than X_0, X_1, ...
+    if feature_names is None:
+        feature_names = getattr(self, &#39;feature_names_in_&#39;, None)
     self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
     self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
     self.feature_names = np.array(list(self.feature_dict_.values()))
@@ -808,7 +830,7 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
 </details>
 </dd>
 <dt id="imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>self, X, threshold=0.1)</span>
+<span>def <span class="ident">predict</span></span>(<span>self, X, threshold=0.5)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Perform classification on samples in X.</p>
@@ -816,6 +838,10 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
 <dl>
 <dt><strong><code>X</code></strong> :&ensp;<code>array-like, shape = [n_samples, n_features]</code></dt>
 <dd>&nbsp;</dd>
+<dt><strong><code>threshold</code></strong> :&ensp;<code>float</code>, default=<code>0.5</code></dt>
+<dd>Probability at or above which the positive class is predicted. The
+default makes predict agree with predict_proba, as for any other
+classifier; lower it to trade precision for recall.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -826,12 +852,17 @@ If empty and X is not a DataFrame, then features are simply enumerated</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def predict(self, X, threshold=0.1):
+<pre><code class="python">def predict(self, X, threshold=0.5):
     &#34;&#34;&#34;Perform classification on samples in X.
 
     Parameters
     ----------
     X : array-like, shape = [n_samples, n_features]
+
+    threshold : float, default=0.5
+        Probability at or above which the positive class is predicted. The
+        default makes predict agree with predict_proba, as for any other
+        classifier; lower it to trade precision for recall.
 
     Returns
     -------

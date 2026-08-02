@@ -70,6 +70,23 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
     return X, y, model.feature_names_
 
 
+def check_binary_target(model, y):
+    &#34;&#34;&#34;Raise if y has more than two classes, for models that only handle binary.
+
+    Without this a multiclass target is silently collapsed: the model fits, and
+    predict_proba returns two columns rather than one per class
+    (see https://github.com/csinva/imodels/issues/93).
+    &#34;&#34;&#34;
+    n_classes = len(np.unique(y))
+    if n_classes &gt; 2:
+        raise ValueError(
+            f&#34;{type(model).__name__} only supports binary classification, but y &#34;
+            f&#34;has {n_classes} classes. Models in imodels that do support &#34;
+            &#34;multiclass include FIGSClassifier, GreedyTreeClassifier, &#34;
+            &#34;HSTreeClassifier, TaoTreeClassifier and BoostedRulesClassifier.&#34;
+        )
+
+
 def _finite_check_kwarg(allow_nan):
     &#34;&#34;&#34;Spell the &#34;allow NaN&#34; option the way the installed sklearn expects.
 
@@ -126,6 +143,35 @@ def decode_labels(model, preds):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="imodels.util.arguments.check_binary_target"><code class="name flex">
+<span>def <span class="ident">check_binary_target</span></span>(<span>model, y)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Raise if y has more than two classes, for models that only handle binary.</p>
+<p>Without this a multiclass target is silently collapsed: the model fits, and
+predict_proba returns two columns rather than one per class
+(see <a href="https://github.com/csinva/imodels/issues/93">https://github.com/csinva/imodels/issues/93</a>).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_binary_target(model, y):
+    &#34;&#34;&#34;Raise if y has more than two classes, for models that only handle binary.
+
+    Without this a multiclass target is silently collapsed: the model fits, and
+    predict_proba returns two columns rather than one per class
+    (see https://github.com/csinva/imodels/issues/93).
+    &#34;&#34;&#34;
+    n_classes = len(np.unique(y))
+    if n_classes &gt; 2:
+        raise ValueError(
+            f&#34;{type(model).__name__} only supports binary classification, but y &#34;
+            f&#34;has {n_classes} classes. Models in imodels that do support &#34;
+            &#34;multiclass include FIGSClassifier, GreedyTreeClassifier, &#34;
+            &#34;HSTreeClassifier, TaoTreeClassifier and BoostedRulesClassifier.&#34;
+        )</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.arguments.check_fit_X"><code class="name flex">
 <span>def <span class="ident">check_fit_X</span></span>(<span>X)</span>
 </code></dt>
@@ -268,6 +314,7 @@ again afterwards.</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="imodels.util.arguments.check_binary_target" href="#imodels.util.arguments.check_binary_target">check_binary_target</a></code></li>
 <li><code><a title="imodels.util.arguments.check_fit_X" href="#imodels.util.arguments.check_fit_X">check_fit_X</a></code></li>
 <li><code><a title="imodels.util.arguments.check_fit_arguments" href="#imodels.util.arguments.check_fit_arguments">check_fit_arguments</a></code></li>
 <li><code><a title="imodels.util.arguments.decode_labels" href="#imodels.util.arguments.decode_labels">decode_labels</a></code></li>

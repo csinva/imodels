@@ -106,6 +106,15 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)
 
+    @property
+    def feature_importances_(self):
+        &#34;&#34;&#34;Mean decrease in impurity of the pruned tree, as in sklearn.&#34;&#34;&#34;
+        return self.estimator_.feature_importances_
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
 
@@ -196,6 +205,20 @@ class DecisionTreeCCPRegressor(BaseEstimator):
         self.estimator_.fit(X, y, sample_weight=sample_weight)
         self._copy_fitted_attributes()
         return self
+
+    @property
+    def feature_importances_(self):
+        &#34;&#34;&#34;Mean decrease in impurity of the pruned tree, as in sklearn.&#34;&#34;&#34;
+        return self.estimator_.feature_importances_
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
 
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
@@ -388,6 +411,15 @@ array([1, 1, 1])
         from imodels.util.get_rules import get_rules
         return get_rules(self, feature_names=feature_names)
 
+    @property
+    def feature_importances_(self):
+        &#34;&#34;&#34;Mean decrease in impurity of the pruned tree, as in sklearn.&#34;&#34;&#34;
+        return self.estimator_.feature_importances_
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
 
@@ -414,8 +446,39 @@ array([1, 1, 1])
 <li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.feature_importances_"><code class="name">var <span class="ident">feature_importances_</span></code></dt>
+<dd>
+<div class="desc"><p>Mean decrease in impurity of the pruned tree, as in sklearn.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def feature_importances_(self):
+    &#34;&#34;&#34;Mean decrease in impurity of the pruned tree, as in sklearn.&#34;&#34;&#34;
+    return self.estimator_.feature_importances_</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, X):
+    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+    from imodels.util.apply import apply_leaves
+    return apply_leaves(self, X)</code></pre>
+</details>
+</dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, *args, **kwargs)</span>
 </code></dt>
@@ -784,6 +847,20 @@ array([3, 3, 3])
         self._copy_fitted_attributes()
         return self
 
+    @property
+    def feature_importances_(self):
+        &#34;&#34;&#34;Mean decrease in impurity of the pruned tree, as in sklearn.&#34;&#34;&#34;
+        return self.estimator_.feature_importances_
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
+
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
 
@@ -803,8 +880,39 @@ array([3, 3, 3])
 <li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.feature_importances_"><code class="name">var <span class="ident">feature_importances_</span></code></dt>
+<dd>
+<div class="desc"><p>Mean decrease in impurity of the pruned tree, as in sklearn.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def feature_importances_(self):
+    &#34;&#34;&#34;Mean decrease in impurity of the pruned tree, as in sklearn.&#34;&#34;&#34;
+    return self.estimator_.feature_importances_</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, X):
+    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+    from imodels.util.apply import apply_leaves
+    return apply_leaves(self, X)</code></pre>
+</details>
+</dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
 </code></dt>
@@ -852,6 +960,21 @@ contained subobjects that are estimators.</dd>
         &#34;desired_complexity&#34;: self.desired_complexity,
         &#34;complexity_measure&#34;: self.complexity_measure,
     }</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_rules"><code class="name flex">
+<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rules(self, feature_names=None):
+    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
+    from imodels.util.get_rules import get_rules
+    return get_rules(self, feature_names=feature_names)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict"><code class="name flex">
@@ -1105,6 +1228,7 @@ array([1, 1, 1])
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.apply" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.feature_importances_" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_params" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_rules" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_fit_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
@@ -1210,6 +1334,7 @@ array([0, 0, 0])
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.apply" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.feature_importances_" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_params" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_rules" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_fit_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
@@ -1236,7 +1361,9 @@ array([0, 0, 0])
 <ul>
 <li>
 <h4><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></code></h4>
-<ul class="two-column">
+<ul class="">
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.apply" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.feature_importances_" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_params" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_rules" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_rules">get_rules</a></code></li>
@@ -1249,9 +1376,12 @@ array([0, 0, 0])
 </li>
 <li>
 <h4><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></code></h4>
-<ul class="two-column">
+<ul class="">
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.apply" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.feature_importances_" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.fit" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_params" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_rules" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.score" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.score">score</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.set_fit_request" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.set_fit_request">set_fit_request</a></code></li>

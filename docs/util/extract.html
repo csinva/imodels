@@ -74,11 +74,13 @@ def extract_rulefit(X, y, feature_names,
                                                    random_state=random_state,
                                                    max_depth=100)
 
-    if type(tree_generator) not in [GradientBoostingClassifier, GradientBoostingRegressor,
-                                    RandomForestRegressor, RandomForestClassifier]:
+    is_xgboost = convert.is_xgboost_model(tree_generator)
+    if not is_xgboost and type(tree_generator) not in [
+            GradientBoostingClassifier, GradientBoostingRegressor,
+            RandomForestRegressor, RandomForestClassifier]:
         raise ValueError(
             &#34;RuleFit only works with GradientBoostingClassifier(), GradientBoostingRegressor(), &#34;
-            &#34;RandomForestRegressor() or RandomForestClassifier()&#34;)
+            &#34;RandomForestRegressor(), RandomForestClassifier(), or an XGBoost model&#34;)
 
     # work on a copy: rule extraction refits the generator and overrides some of
     # its parameters, which would otherwise modify the caller&#39;s estimator. Cloning
@@ -86,7 +88,11 @@ def extract_rulefit(X, y, feature_names,
     tree_generator = clone(tree_generator)
 
     # fit tree generator
-    if not exp_rand_tree_size:  # simply fit with constant tree size
+    if is_xgboost:
+        # XGBoost has no sklearn-style warm_start, so the varying-tree-size
+        # scheme below doesn&#39;t apply; its own n_estimators controls the ensemble
+        tree_generator.fit(X, y)
+    elif not exp_rand_tree_size:  # simply fit with constant tree size
         tree_generator.fit(X, y)
     else:  # randomise tree size as per Friedman 2005 Sec 3.3
         np.random.seed(random_state)
@@ -107,21 +113,28 @@ def extract_rulefit(X, y, feature_names,
             curr_est_ = curr_est_ + 1
         tree_generator.set_params(warm_start=False)
 
-    if isinstance(tree_generator, RandomForestRegressor) or isinstance(tree_generator, RandomForestClassifier):
-        estimators_ = [[x] for x in tree_generator.estimators_]
+    if is_xgboost:
+        rule_value_pairs = convert.xgboost_to_rules(
+            tree_generator, list(feature_names), prediction_values=True)
     else:
-        estimators_ = tree_generator.estimators_
+        if isinstance(tree_generator, RandomForestRegressor) or isinstance(tree_generator, RandomForestClassifier):
+            estimators_ = [[x] for x in tree_generator.estimators_]
+        else:
+            estimators_ = tree_generator.estimators_
+        rule_value_pairs = [
+            pair for estimator in estimators_
+            for pair in convert.tree_to_rules(
+                estimator[0], np.array(feature_names), prediction_values=True)
+        ]
 
     seen_rules = set()
     extracted_rules = []
-    for estimator in estimators_:
-        for rule_value_pair in convert.tree_to_rules(estimator[0], np.array(feature_names), prediction_values=True):
+    for rule_value_pair in rule_value_pairs:
+        rule_obj = rule.Rule(rule_value_pair[0])
 
-            rule_obj = rule.Rule(rule_value_pair[0])
-
-            if rule_obj not in seen_rules:
-                extracted_rules.append(rule_value_pair)
-                seen_rules.add(rule_obj)
+        if rule_obj not in seen_rules:
+            extracted_rules.append(rule_value_pair)
+            seen_rules.add(rule_obj)
 
     extracted_rules = sorted(extracted_rules, key=lambda x: x[1])
     extracted_rules = list(map(lambda x: x[0], extracted_rules))
@@ -377,11 +390,13 @@ The maximum number of evaluations to make for each feature</p>
                                                    random_state=random_state,
                                                    max_depth=100)
 
-    if type(tree_generator) not in [GradientBoostingClassifier, GradientBoostingRegressor,
-                                    RandomForestRegressor, RandomForestClassifier]:
+    is_xgboost = convert.is_xgboost_model(tree_generator)
+    if not is_xgboost and type(tree_generator) not in [
+            GradientBoostingClassifier, GradientBoostingRegressor,
+            RandomForestRegressor, RandomForestClassifier]:
         raise ValueError(
             &#34;RuleFit only works with GradientBoostingClassifier(), GradientBoostingRegressor(), &#34;
-            &#34;RandomForestRegressor() or RandomForestClassifier()&#34;)
+            &#34;RandomForestRegressor(), RandomForestClassifier(), or an XGBoost model&#34;)
 
     # work on a copy: rule extraction refits the generator and overrides some of
     # its parameters, which would otherwise modify the caller&#39;s estimator. Cloning
@@ -389,7 +404,11 @@ The maximum number of evaluations to make for each feature</p>
     tree_generator = clone(tree_generator)
 
     # fit tree generator
-    if not exp_rand_tree_size:  # simply fit with constant tree size
+    if is_xgboost:
+        # XGBoost has no sklearn-style warm_start, so the varying-tree-size
+        # scheme below doesn&#39;t apply; its own n_estimators controls the ensemble
+        tree_generator.fit(X, y)
+    elif not exp_rand_tree_size:  # simply fit with constant tree size
         tree_generator.fit(X, y)
     else:  # randomise tree size as per Friedman 2005 Sec 3.3
         np.random.seed(random_state)
@@ -410,21 +429,28 @@ The maximum number of evaluations to make for each feature</p>
             curr_est_ = curr_est_ + 1
         tree_generator.set_params(warm_start=False)
 
-    if isinstance(tree_generator, RandomForestRegressor) or isinstance(tree_generator, RandomForestClassifier):
-        estimators_ = [[x] for x in tree_generator.estimators_]
+    if is_xgboost:
+        rule_value_pairs = convert.xgboost_to_rules(
+            tree_generator, list(feature_names), prediction_values=True)
     else:
-        estimators_ = tree_generator.estimators_
+        if isinstance(tree_generator, RandomForestRegressor) or isinstance(tree_generator, RandomForestClassifier):
+            estimators_ = [[x] for x in tree_generator.estimators_]
+        else:
+            estimators_ = tree_generator.estimators_
+        rule_value_pairs = [
+            pair for estimator in estimators_
+            for pair in convert.tree_to_rules(
+                estimator[0], np.array(feature_names), prediction_values=True)
+        ]
 
     seen_rules = set()
     extracted_rules = []
-    for estimator in estimators_:
-        for rule_value_pair in convert.tree_to_rules(estimator[0], np.array(feature_names), prediction_values=True):
+    for rule_value_pair in rule_value_pairs:
+        rule_obj = rule.Rule(rule_value_pair[0])
 
-            rule_obj = rule.Rule(rule_value_pair[0])
-
-            if rule_obj not in seen_rules:
-                extracted_rules.append(rule_value_pair)
-                seen_rules.add(rule_obj)
+        if rule_obj not in seen_rules:
+            extracted_rules.append(rule_value_pair)
+            seen_rules.add(rule_obj)
 
     extracted_rules = sorted(extracted_rules, key=lambda x: x[1])
     extracted_rules = list(map(lambda x: x[0], extracted_rules))

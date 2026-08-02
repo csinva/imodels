@@ -42,13 +42,13 @@ class TaoTree(BaseEstimator):
 
     def __init__(self, model_type: str = &#39;CART&#39;,
                  n_iters: int = 20,
-                 model_args: dict = {&#39;max_leaf_nodes&#39;: 15},
+                 model_args: dict = None,
                  randomize_tree=False,
                  update_scoring=&#39;accuracy&#39;,
                  min_node_samples_tao=3,
                  min_leaf_samples_tao=2,
                  node_model=&#39;stump&#39;,
-                 node_model_args: dict = {},
+                 node_model_args: dict = None,
                  reg_param: float = 1e-3,
                  weight_errors: bool = False,
                  verbose: int = 0,
@@ -104,13 +104,16 @@ class TaoTree(BaseEstimator):
         super().__init__()
         self.model_type = model_type
         self.n_iters = n_iters
-        self.model_args = model_args
+        # built per instance: a dict default in the signature is shared by every
+        # model, so mutating one would change the others
+        self.model_args = ({&#39;max_leaf_nodes&#39;: 15} if model_args is None
+                           else model_args)
         self.randomize_tree = randomize_tree
         self.update_scoring = update_scoring
         self.min_node_samples_tao = min_node_samples_tao
         self.min_leaf_samples_tao = min_leaf_samples_tao
         self.node_model = node_model
-        self.node_model_args = node_model_args
+        self.node_model_args = {} if node_model_args is None else node_model_args
         self.reg_param = reg_param
         self.weight_errors = weight_errors
         self.verbose = verbose
@@ -403,6 +406,11 @@ class TaoTree(BaseEstimator):
         from imodels.util.apply import apply_leaves
         return apply_leaves(self, X)
 
+    @property
+    def feature_importances_(self):
+        &#34;&#34;&#34;Mean decrease in impurity of the fitted tree, as in sklearn.&#34;&#34;&#34;
+        return self.model.feature_importances_
+
     def predict(self, X):
         preds = self.model.predict(X)
         if hasattr(self, &#34;classes_&#34;):
@@ -466,7 +474,7 @@ if __name__ == &#39;__main__&#39;:
 <dl>
 <dt id="imodels.tree.tao.TaoTree"><code class="flex name class">
 <span>class <span class="ident">TaoTree</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = {}, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -550,13 +558,13 @@ Note: this implementation learns single-feature splits rather than oblique trees
 
     def __init__(self, model_type: str = &#39;CART&#39;,
                  n_iters: int = 20,
-                 model_args: dict = {&#39;max_leaf_nodes&#39;: 15},
+                 model_args: dict = None,
                  randomize_tree=False,
                  update_scoring=&#39;accuracy&#39;,
                  min_node_samples_tao=3,
                  min_leaf_samples_tao=2,
                  node_model=&#39;stump&#39;,
-                 node_model_args: dict = {},
+                 node_model_args: dict = None,
                  reg_param: float = 1e-3,
                  weight_errors: bool = False,
                  verbose: int = 0,
@@ -612,13 +620,16 @@ Note: this implementation learns single-feature splits rather than oblique trees
         super().__init__()
         self.model_type = model_type
         self.n_iters = n_iters
-        self.model_args = model_args
+        # built per instance: a dict default in the signature is shared by every
+        # model, so mutating one would change the others
+        self.model_args = ({&#39;max_leaf_nodes&#39;: 15} if model_args is None
+                           else model_args)
         self.randomize_tree = randomize_tree
         self.update_scoring = update_scoring
         self.min_node_samples_tao = min_node_samples_tao
         self.min_leaf_samples_tao = min_leaf_samples_tao
         self.node_model = node_model
-        self.node_model_args = node_model_args
+        self.node_model_args = {} if node_model_args is None else node_model_args
         self.reg_param = reg_param
         self.weight_errors = weight_errors
         self.verbose = verbose
@@ -911,6 +922,11 @@ Note: this implementation learns single-feature splits rather than oblique trees
         from imodels.util.apply import apply_leaves
         return apply_leaves(self, X)
 
+    @property
+    def feature_importances_(self):
+        &#34;&#34;&#34;Mean decrease in impurity of the fitted tree, as in sklearn.&#34;&#34;&#34;
+        return self.model.feature_importances_
+
     def predict(self, X):
         preds = self.model.predict(X)
         if hasattr(self, &#34;classes_&#34;):
@@ -936,6 +952,22 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <li><a title="imodels.tree.tao.TaoTreeClassifier" href="#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></li>
 <li><a title="imodels.tree.tao.TaoTreeRegressor" href="#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="imodels.tree.tao.TaoTree.feature_importances_"><code class="name">var <span class="ident">feature_importances_</span></code></dt>
+<dd>
+<div class="desc"><p>Mean decrease in impurity of the fitted tree, as in sklearn.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def feature_importances_(self):
+    &#34;&#34;&#34;Mean decrease in impurity of the fitted tree, as in sklearn.&#34;&#34;&#34;
+    return self.model.feature_importances_</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="imodels.tree.tao.TaoTree.apply"><code class="name flex">
@@ -1161,7 +1193,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.tao.TaoTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">TaoTreeClassifier</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = {}, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -1355,6 +1387,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><b><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.tree.tao.TaoTree.apply" href="#imodels.tree.tao.TaoTree.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.feature_importances_" href="#imodels.tree.tao.TaoTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.get_rules" href="#imodels.tree.tao.TaoTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.set_fit_request" href="#imodels.tree.tao.TaoTree.set_fit_request">set_fit_request</a></code></li>
@@ -1364,7 +1397,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.tao.TaoTreeRegressor"><code class="flex name class">
 <span>class <span class="ident">TaoTreeRegressor</span></span>
-<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = {'max_leaf_nodes': 15}, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = {}, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
+<span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Base class for all estimators in scikit-learn.</p>
@@ -1558,6 +1591,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><b><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.tree.tao.TaoTree.apply" href="#imodels.tree.tao.TaoTree.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.feature_importances_" href="#imodels.tree.tao.TaoTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.get_rules" href="#imodels.tree.tao.TaoTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.set_fit_request" href="#imodels.tree.tao.TaoTree.set_fit_request">set_fit_request</a></code></li>
@@ -1583,8 +1617,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul>
 <li>
 <h4><code><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="imodels.tree.tao.TaoTree.apply" href="#imodels.tree.tao.TaoTree.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.feature_importances_" href="#imodels.tree.tao.TaoTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.get_rules" href="#imodels.tree.tao.TaoTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.predict" href="#imodels.tree.tao.TaoTree.predict">predict</a></code></li>

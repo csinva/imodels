@@ -160,9 +160,12 @@ def get_clean_dataset(
     ```
     &#34;&#34;&#34;
     if dataset_name in DSET_KWARGS:
+        # resolving the shorthand name is not a logging step: it used to sit
+        # inside the verbose branch, so verbose=False looked the dataset up
+        # under its shorthand and 404&#39;d
+        data_source = DSET_KWARGS[dataset_name][&#34;data_source&#34;]
+        dataset_name = DSET_KWARGS[dataset_name][&#34;dataset_name&#34;]
         if verbose:
-            data_source = DSET_KWARGS[dataset_name][&#34;data_source&#34;]
-            dataset_name = DSET_KWARGS[dataset_name][&#34;dataset_name&#34;]
             print(f&#34;fetching {dataset_name} from {data_source}&#34;)
     assert data_source in [&#34;imodels&#34;, &#34;pmlb&#34;, &#34;imodels-multitask&#34;, &#34;sklearn&#34;, &#34;openml&#34;, &#34;synthetic&#34;], (
         data_source + &#34; not correct&#34;
@@ -507,9 +510,12 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
     ```
     &#34;&#34;&#34;
     if dataset_name in DSET_KWARGS:
+        # resolving the shorthand name is not a logging step: it used to sit
+        # inside the verbose branch, so verbose=False looked the dataset up
+        # under its shorthand and 404&#39;d
+        data_source = DSET_KWARGS[dataset_name][&#34;data_source&#34;]
+        dataset_name = DSET_KWARGS[dataset_name][&#34;dataset_name&#34;]
         if verbose:
-            data_source = DSET_KWARGS[dataset_name][&#34;data_source&#34;]
-            dataset_name = DSET_KWARGS[dataset_name][&#34;dataset_name&#34;]
             print(f&#34;fetching {dataset_name} from {data_source}&#34;)
     assert data_source in [&#34;imodels&#34;, &#34;pmlb&#34;, &#34;imodels-multitask&#34;, &#34;sklearn&#34;, &#34;openml&#34;, &#34;synthetic&#34;], (
         data_source + &#34; not correct&#34;

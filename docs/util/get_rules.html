@@ -38,6 +38,11 @@ import numpy as np
 import pandas as pd
 
 from imodels.util.convert import tree_to_rules
+from imodels.util.model_trees import (
+    WRAPPED_MODEL_ATTRS,
+    is_sklearn_tree,
+    sklearn_trees,
+)
 
 #: Columns every `get_rules` result has, in the order they appear.
 CORE_COLUMNS = [&#39;rule&#39;, &#39;prediction&#39;]
@@ -61,9 +66,13 @@ def get_rules(model, feature_names=None) -&gt; pd.DataFrame:
 
         - ``rule``: the condition as a string, e.g. ``&#34;age &lt;= 30.5 and bmi &gt; 24.1&#34;``.
           The catch-all final rule of a rule list is ``&#34;else&#34;``.
-        - ``prediction``: what the model predicts when that rule applies. For
-          classifiers this is the predicted value/probability held in the leaf;
-          it is ``NaN`` where a model defines no per-rule prediction.
+        - ``prediction``: what the rule itself predicts. For a single tree this is
+          the value held in the leaf, so it is the model&#39;s prediction. For models
+          that combine several rules the meaning follows the model: an additive
+          model like FIGS contributes its trees&#39; values, so they sum to the
+          output, while a boosted ensemble takes a weighted vote and reports each
+          tree&#39;s own prediction alongside a ``weight`` column. It is ``NaN``
+          where a model defines no per-rule prediction.
 
         Models add their own columns on top of these, for example ``coef``,
         ``support`` and ``importance`` for RuleFit, or ``tree`` and ``depth`` for
@@ -127,7 +136,7 @@ def _get_feature_names(model, feature_names, n_features=None):
 
 def _rules_from_wrapped_model(model, feature_names):
     &#34;&#34;&#34;Models that delegate to another fitted model (shrinkage, CV wrappers).&#34;&#34;&#34;
-    for attr in (&#39;figs&#39;, &#39;estimator_&#39;, &#39;model&#39;):
+    for attr in WRAPPED_MODEL_ATTRS:
         inner = getattr(model, attr, None)
         # an unfitted sklearn tree has no tree_; don&#39;t recurse into it
         if inner is not None and inner is not model and _has_rules(inner):
@@ -137,15 +146,10 @@ def _rules_from_wrapped_model(model, feature_names):
     return None
 
 
-def _is_sklearn_tree(model):
-    # C45TreeClassifier also has a tree_, but it holds XML rather than a tree
-    return hasattr(getattr(model, &#39;tree_&#39;, None), &#39;feature&#39;)
-
-
 def _has_rules(model):
     if getattr(model, &#39;rules_&#39;, None) is not None:
         return True
-    if _is_sklearn_tree(model):
+    if is_sklearn_tree(model):
         return True
     return any(hasattr(model, attr) for attr in (&#39;trees_&#39;, &#39;estimators_&#39;))
 
@@ -236,6 +240,8 @@ def _rules_from_c45(model, feature_names):
 
     # flags mark how a child splits its parent: less-than, right (&gt;=) or equal
     comparisons = {&#39;l&#39;: &#39;&lt;&#39;, &#39;r&#39;: &#39;&gt;=&#39;, &#39;m&#39;: &#39;==&#39;}
+    # the tree stores XML-safe names; report the ones the caller used
+    original_names = getattr(model, &#39;xml_name_to_feature_name_&#39;, {})
     rows = []
 
     def walk(node, conditions):
@@ -251,8 +257,8 @@ def _rules_from_c45(model, feature_names):
             flag = child.getAttribute(&#39;flag&#39;)
             threshold = child.getAttribute(&#39;feature&#39;)
             comparison = comparisons.get(flag, flag)
-            walk(child, conditions +
-                 [f&#34;{child.nodeName} {comparison} {threshold}&#34;])
+            name = original_names.get(child.nodeName, child.nodeName)
+            walk(child, conditions + [f&#34;{name} {comparison} {threshold}&#34;])
 
     walk(dom.childNodes[0], [])
     return pd.DataFrame(rows)
@@ -305,14 +311,23 @@ def _rules_from_trees(model, feature_names):
         n_features = trees[0].n_features_in_
     names = _get_feature_names(model, feature_names, n_features)
 
+    # boosted ensembles combine their trees by weighted vote, so report the
+    # weight alongside each tree&#39;s own prediction
+    tree_weights = getattr(model, &#39;estimator_weights_&#39;, None)
+    if tree_weights is not None and len(tree_weights) != len(trees):
+        tree_weights = None
+
     rows = []
     for tree_num, tree in enumerate(trees):
         for rule, value in tree_to_rules(tree, names, prediction_values=True):
-            rows.append({
+            row = {
                 &#39;rule&#39;: rule,
                 &#39;prediction&#39;: value[-1] if len(value) &gt; 1 else value[0],
                 &#39;tree&#39;: tree_num,
-            })
+            }
+            if tree_weights is not None:
+                row[&#39;weight&#39;] = tree_weights[tree_num]
+            rows.append(row)
     rules = pd.DataFrame(rows)
     if len(trees) == 1:  # a single tree needs no tree index
         rules = rules.drop(columns=&#39;tree&#39;)
@@ -320,22 +335,12 @@ def _rules_from_trees(model, feature_names):
 
 
 def _collect_trees(model):
-    &#34;&#34;&#34;The sklearn trees making up a model, or None if it isn&#39;t tree-based.&#34;&#34;&#34;
-    if _is_sklearn_tree(model):
-        return [model]
+    &#34;&#34;&#34;The sklearn trees making up a model, or None if it isn&#39;t tree-based.
 
-    subestimators = getattr(model, &#39;estimators_&#39;, None)
-    if subestimators is not None and len(subestimators) &gt; 0:
-        trees = []
-        for estimator in subestimators:
-            if isinstance(estimator, np.ndarray):  # gradient boosting nests them
-                estimator = estimator[0]
-            if not _is_sklearn_tree(estimator):
-                return None
-            trees.append(estimator)
-        return trees
-
-    return None</code></pre>
+    FIGS is excluded: _rules_from_figs reads its nodes directly, because the
+    converted sklearn trees hold class counts rather than predictions.
+    &#34;&#34;&#34;
+    return sklearn_trees(model, convert_figs=False)</code></pre>
 </details>
 </section>
 <section>
@@ -373,9 +378,13 @@ fitted with, falling back to X0, X1, &hellip; .</dd>
 <ul>
 <li><code>rule</code>: the condition as a string, e.g. <code>"age &lt;= 30.5 and bmi &gt; 24.1"</code>.
 The catch-all final rule of a rule list is <code>"else"</code>.</li>
-<li><code>prediction</code>: what the model predicts when that rule applies. For
-classifiers this is the predicted value/probability held in the leaf;
-it is <code>NaN</code> where a model defines no per-rule prediction.</li>
+<li><code>prediction</code>: what the rule itself predicts. For a single tree this is
+the value held in the leaf, so it is the model's prediction. For models
+that combine several rules the meaning follows the model: an additive
+model like FIGS contributes its trees' values, so they sum to the
+output, while a boosted ensemble takes a weighted vote and reports each
+tree's own prediction alongside a <code>weight</code> column. It is <code>NaN</code>
+where a model defines no per-rule prediction.</li>
 </ul>
 <p>Models add their own columns on top of these, for example <code>coef</code>,
 <code>support</code> and <code>importance</code> for RuleFit, or <code>tree</code> and <code>depth</code> for
@@ -418,9 +427,13 @@ tree-based models. Those extra columns vary by model; only <code>rule</code> and
 
         - ``rule``: the condition as a string, e.g. ``&#34;age &lt;= 30.5 and bmi &gt; 24.1&#34;``.
           The catch-all final rule of a rule list is ``&#34;else&#34;``.
-        - ``prediction``: what the model predicts when that rule applies. For
-          classifiers this is the predicted value/probability held in the leaf;
-          it is ``NaN`` where a model defines no per-rule prediction.
+        - ``prediction``: what the rule itself predicts. For a single tree this is
+          the value held in the leaf, so it is the model&#39;s prediction. For models
+          that combine several rules the meaning follows the model: an additive
+          model like FIGS contributes its trees&#39; values, so they sum to the
+          output, while a boosted ensemble takes a weighted vote and reports each
+          tree&#39;s own prediction alongside a ``weight`` column. It is ``NaN``
+          where a model defines no per-rule prediction.
 
         Models add their own columns on top of these, for example ``coef``,
         ``support`` and ``importance`` for RuleFit, or ``tree`` and ``depth`` for
