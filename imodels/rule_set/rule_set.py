@@ -1,14 +1,10 @@
 import numpy as np
 import pandas as pd
 from sklearn.utils.validation import check_array, check_is_fitted
+from imodels.util.introspection import RulesMixin
 
 
-class RuleSet:
-
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
+class RuleSet(RulesMixin):
 
     def _extract_rules(self, X, y):
         pass

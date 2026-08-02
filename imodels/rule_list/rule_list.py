@@ -1,12 +1,8 @@
 from sklearn.utils.validation import check_is_fitted
+from imodels.util.introspection import RulesMixin
 
 
-class RuleList:
-
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
+class RuleList(RulesMixin):
 
     def _get_complexity(self):
         check_is_fitted(self, ['rules_without_feature_names_'])

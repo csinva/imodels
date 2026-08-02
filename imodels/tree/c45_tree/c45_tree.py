@@ -19,6 +19,7 @@ from imodels.util.arguments import check_fit_arguments, check_predict_X, decode_
 
 from ..c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
     set_as_leaf_node
+from imodels.util.introspection import RulesMixin
 
 
 def _add_label(node, label):
@@ -88,7 +89,7 @@ def _make_xml_safe_names(feature_names):
     return safe_names
 
 
-class C45TreeClassifier(BaseEstimator, ClassifierMixin):
+class C45TreeClassifier(RulesMixin, BaseEstimator, ClassifierMixin):
     """A C4.5 tree classifier.
 
     Parameters
@@ -132,11 +133,6 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         # print('self.tree_', self.tree_)
         self.dom_ = minidom.parseString(self.tree_)
         return self
-
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
 
     def impute_nodes(self, X, y):
         """
