@@ -161,3 +161,47 @@ def test_performances():
     assert y_pred.shape == (n_samples,)
     # training set performance
     assert accuracy_score(y, y_pred) > 0.83
+
+
+def test_learns_rules_with_few_features():
+    """SkopeRules found no rules at all on data with only a couple of features
+
+    Rule scoring skipped any estimator that used a single feature, as a
+    workaround for a long-fixed pandas bug, and did so with `return []` --
+    discarding every rule scored so far. With few features every estimator uses
+    one feature, so nothing survived.
+    """
+    import numpy as np
+    import pandas as pd
+
+    from imodels import SkopeRulesClassifier
+
+    rng = np.random.RandomState(0)
+    for n_features in (1, 2, 3):
+        X = pd.DataFrame(rng.randn(400, n_features),
+                         columns=[f'f{i}' for i in range(n_features)])
+        y = (X['f0'] > 0).astype(int)
+
+        model = SkopeRulesClassifier(
+            max_depth=2, random_state=0, precision_min=0.3,
+            max_depth_duplication=1).fit(X, y)
+
+        assert len(model.rules_) > 0, f'no rules with {n_features} feature(s)'
+        assert np.mean(model.predict(X) == y) > 0.9
+
+
+def test_fpskope_learns_rules_with_few_features():
+    """FPSkope shares the same rule scorer"""
+    import numpy as np
+    import pandas as pd
+
+    from imodels import FPSkopeClassifier
+
+    rng = np.random.RandomState(0)
+    X = (pd.DataFrame(rng.randn(400, 3), columns=list('abc')) > 0).astype(int)
+    y = (X['a'] > 0).astype(int)
+
+    model = FPSkopeClassifier(random_state=0, recall_min=0.3, precision_min=0.3,
+                              max_depth_duplication=1).fit(X, y)
+    assert len(model.rules_) > 0
+    assert np.mean(model.predict(X) == y) > 0.9
