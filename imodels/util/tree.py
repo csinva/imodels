@@ -36,11 +36,18 @@ def compute_tree_complexity(tree, complexity_measure='num_rules'):
 
 def _validate_feature_costs(feature_costs, n_features):
     if feature_costs is None:
-        feature_costs = np.ones(n_features, dtype=np.float64)
-    else:
-        assert len(
-            feature_costs) == n_features, f'{len(feature_costs)} != {n_features}'
-        np.min(feature_costs) >= 0
+        return np.ones(n_features, dtype=np.float64)
+
+    if len(feature_costs) != n_features:
+        raise ValueError(
+            f'feature_costs has {len(feature_costs)} entries but there are '
+            f'{n_features} features')
+    # this was written as a bare comparison, so negative costs passed through
+    # and produced negative depths
+    if np.min(feature_costs) < 0:
+        raise ValueError(
+            f'feature_costs must be non-negative, got a minimum of '
+            f'{np.min(feature_costs)}')
     return feature_costs
 
 
@@ -137,18 +144,15 @@ def calculate_mean_unique_calls_in_ensemble(ensemble, X, feature_costs=None):
     '''
     if X is None:
         # Should pass X, this is just for testing
-        n_features_in = ensemble.n_features_in_
-        X = np.random.randint(2, size=(100, n_features_in))
+        X = np.random.randint(
+            2, size=(100, ensemble.n_features_in_))
 
-    if feature_costs is None:
-        feature_costs = np.ones(n_features_in, dtype=np.float64)
-    else:
-        assert len(
-            feature_costs) == n_features_in, f'{len(feature_costs)} != {n_features_in}'
-        np.min(feature_costs) >= 0
+    # n_features_in used to be read from a branch that only ran when X was None,
+    # so passing X -- the documented use -- raised UnboundLocalError
+    feature_costs = _validate_feature_costs(feature_costs, np.shape(X)[1])
 
-    # extract the decision path for each sample
-    ests = ensemble.estimators_.flatten()
+    # estimators_ is a list for forests and a 2d array for gradient boosting
+    ests = np.asarray(ensemble.estimators_).flatten()
     feats = [set() for _ in range(len(X))]
     for i in range(len(ests)):
         est = ests[i]
