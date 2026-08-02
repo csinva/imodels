@@ -124,6 +124,22 @@ def shrink_node(node, reg_param, parent_val, parent_num, cum_sum, scheme, consta
     return node
 
 
+def _make_xml_safe_names(feature_names):
+    """Turn feature names into distinct, valid XML element names."""
+    safe_names = []
+    for name in feature_names:
+        safe = ''.join(c for c in str(name) if c.isalnum() or c == '_')
+        if not safe or safe[0].isdigit():
+            safe = 'X_' + safe
+        # keep names distinct after stripping the punctuation out of them
+        candidate, suffix = safe, 1
+        while candidate in safe_names:
+            candidate = f'{safe}_{suffix}'
+            suffix += 1
+        safe_names.append(candidate)
+    return safe_names
+
+
 class C45TreeClassifier(BaseEstimator, ClassifierMixin):
     """A C4.5 tree classifier.
 
@@ -145,16 +161,15 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         if feature_names is None:
             self.feature_names = [f'X_{x}' for x in range(X.shape[1])]
         else:
-            # only include alphanumeric chars / replace spaces with underscores
-            self.feature_names = [''.join([i for i in x if i.isalnum()]).replace(' ', '_')
-                                  for x in feature_names]
-            self.feature_names = [
-                'X_' + x if x[0].isdigit()
-                else x
-                for x in self.feature_names
-            ]
+            # the tree is stored as XML, so names must be valid element names.
+            # They must also stay distinct: 'age (years)' and 'age-years' both
+            # reduce to 'ageyears', and the tree would then read the wrong column.
+            self.feature_names = _make_xml_safe_names(feature_names)
 
         assert len(self.feature_names) == X.shape[1]
+        # so that rules can be reported with the names the caller used
+        self.xml_name_to_feature_name_ = dict(
+            zip(self.feature_names, feature_names))
 
         data = [[] for i in range(len(self.feature_names))]
         categories = []
