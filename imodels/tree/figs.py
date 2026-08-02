@@ -328,6 +328,8 @@ class FIGS(BaseEstimator):
         # fit(verbose=...) still wins, so existing callers are unaffected
         verbose = int(self.verbose if verbose is None else verbose)
 
+        # remembered so that predict/predict_proba don't need them passed again
+        self.categorical_features_ = categorical_features
         if categorical_features is not None:
             X, self._encoder = encode_categories(X, categorical_features)
 
@@ -660,6 +662,7 @@ class FIGS(BaseEstimator):
         return s
 
     def predict(self, X, categorical_features=None, by_tree=False):
+        categorical_features = self._categorical_features(categorical_features)
         if hasattr(self, "_encoder"):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name="_encoder")
@@ -688,11 +691,18 @@ class FIGS(BaseEstimator):
 #             class_preds = (preds > 0.5).astype(int)
 #             return np.array([self.classes_[i] for i in class_preds])
 
+    def _categorical_features(self, categorical_features):
+        """Fall back on the categorical features the model was fitted with."""
+        if categorical_features is None:
+            return getattr(self, 'categorical_features_', None)
+        return categorical_features
+
     def predict_proba(self, X, categorical_features=None, use_clipped_prediction=False):
         """Predict probability for classifiers:
         Default behavior is to constrain the outputs to the range of probabilities, i.e. 0 to 1, with a sigmoid function.
         Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 1 instead.
         """
+        categorical_features = self._categorical_features(categorical_features)
         if hasattr(self, "_encoder"):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name="_encoder")

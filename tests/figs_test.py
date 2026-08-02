@@ -236,6 +236,46 @@ def test_verbose_progress_reporting():
     assert FIGSRegressor(verbose=1).get_params()['verbose'] == 1
 
 
+def test_categorical_features_remembered_from_fit():
+    """predict shouldn't require re-passing categorical_features
+
+    https://github.com/csinva/imodels/issues/77: fitting with
+    categorical_features worked, but predict(X) then failed with
+    "TypeError: 'NoneType' object is not iterable" unless they were passed again.
+    """
+    import pandas as pd
+
+    from imodels import FIGSClassifier, FIGSRegressor
+
+    rng = np.random.RandomState(0)
+    X = pd.DataFrame({
+        'age': rng.randn(300),
+        'pet': rng.choice(['cat', 'dog', 'bird'], 300),
+        'city': rng.choice(['NY', 'LA'], 300),
+    })
+    y = ((X['age'] > 0) | (X['pet'] == 'dog')).astype(int)
+    categorical = ['pet', 'city']
+
+    model = FIGSClassifier(max_rules=5).fit(X, y, categorical_features=categorical)
+
+    preds = model.predict(X)                       # used to raise
+    assert preds.shape == (300,)
+    assert model.categorical_features_ == categorical
+    assert model.predict_proba(X).shape == (300, 2)
+
+    # passing them explicitly gives the same answer
+    assert np.array_equal(preds, model.predict(X, categorical_features=categorical))
+
+    # regressors too
+    regressor = FIGSRegressor(max_rules=4).fit(
+        X, X['age'], categorical_features=categorical)
+    assert regressor.predict(X).shape == (300,)
+
+    # and a purely numeric model is unaffected
+    X_num = pd.DataFrame(rng.randn(200, 3), columns=list('abc'))
+    numeric = FIGSClassifier(max_rules=4).fit(X_num, (X_num['a'] > 0).astype(int))
+    assert numeric.categorical_features_ is None
+    assert numeric.predict(X_num).shape == (200,)
 def test_single_feature_input():
     """FIGS should fit data with one feature
 
