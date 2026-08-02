@@ -124,7 +124,10 @@ class HSTree(BaseEstimator):
             self, X, y, feature_names, allow_nan=True)
         if feature_names is not None:
             self.feature_names = feature_names
-        self.estimator_ = self.estimator_.fit(
+        # fit a copy: shrinkage rewrites the tree in place, so fitting the
+        # object handed to __init__ would shrink it out from under any other
+        # model built on the same estimator
+        self.estimator_ = deepcopy(self.estimator_).fit(
             X, y, *args, sample_weight=sample_weight, **kwargs
         )
         self._shrink()

@@ -20,7 +20,8 @@ def score_precision_recall(X,
                            samples: List[List[int]],
                            features: List[List[int]],
                            feature_names: List[str],
-                           oob: bool = True) -> List[Rule]:
+                           oob: bool = True,
+                           sample_weight=None) -> List[Rule]:
 
     scored_rules = []
 
@@ -52,26 +53,37 @@ def score_precision_recall(X,
 
         y_oob = y[mask]
         y_oob = np.array((y_oob != 0))
+        # the weights have to follow the same samples the rules are scored on
+        w_oob = None if sample_weight is None else np.asarray(
+            sample_weight, dtype=float)[mask]
 
         # Add OOB performances to rules:
         scored_rules += [
-            Rule(r, args=_eval_rule_perf(r, X_oob, y_oob))
+            Rule(r, args=_eval_rule_perf(r, X_oob, y_oob, w_oob))
             for r in set(curr_rules)
         ]
 
     return scored_rules
 
 
-def _eval_rule_perf(rule: str, X, y) -> Tuple[float, float]:
+def _eval_rule_perf(rule: str, X, y, sample_weight=None) -> Tuple[float, float]:
     detected_index = list(X.query(rule).index)
     if len(detected_index) <= 1:
         return (0, 0)
     y_detected = y[detected_index]
-    true_pos = y_detected[y_detected > 0].sum()
+    # with uniform weights these are exactly the unweighted precision and
+    # recall, so passing no weights leaves rule selection unchanged
+    weights = np.ones(len(y)) if sample_weight is None else np.asarray(
+        sample_weight, dtype=float)
+    w_detected = weights[detected_index]
+    true_pos = float((w_detected * (y_detected > 0)).sum())
     if true_pos == 0:
         return (0, 0)
-    pos = y[y > 0].sum()
-    return y_detected.mean(), float(true_pos) / pos
+    pos = float((weights * (y > 0)).sum())
+    detected = float(w_detected.sum())
+    if detected == 0 or pos == 0:
+        return (0, 0)
+    return true_pos / detected, true_pos / pos
 
 
 def score_linear(X, y, rules: List[str],

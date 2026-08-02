@@ -488,7 +488,8 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
                              verbose=self.verbose)
 
     def _score_rules(self, X, y, rules) -> List[Rule]:
-        return score_precision_recall(X, y, rules, self.estimators_samples_, self.estimators_features_, self.feature_placeholders)
+        return score_precision_recall(X, y, rules, self.estimators_samples_, self.estimators_features_,
+                                      self.feature_placeholders, sample_weight=self.sample_weight)
 
     def _prune_rules(self, rules) -> List[Rule]:
         return deduplicate(
