@@ -45,6 +45,7 @@ from .tree.tao import TaoTreeClassifier, TaoTreeRegressor
 from .util.automl import AutoInterpretableClassifier, AutoInterpretableRegressor
 from .util.data_util import get_clean_dataset
 from .util.get_rules import get_rules
+from .util.tree_viz import shadow_tree
 from .util.distillation import DistilledRegressor
 from .util.explain_errors import explain_classification_errors
 from .clustering.stableclustering import StableClustering
