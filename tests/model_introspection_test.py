@@ -159,6 +159,69 @@ def test_models_do_not_share_mutable_defaults():
     assert second.model_args['max_leaf_nodes'] != 999
 
 
+# classifiers that implement only two classes and should say so
+BINARY_ONLY_CLASSIFIERS = [
+    'BayesianRuleListClassifier', 'GreedyRuleListClassifier',
+    'SkopeRulesClassifier', 'SlipperClassifier',
+    'OneRClassifier', 'RuleFitClassifier', 'FPLassoClassifier',
+    'FPSkopeClassifier', 'TreeGAMClassifier', 'FastFrugalTreeClassifier',
+]
+
+
+def _multiclass_data(model_type):
+    rng = np.random.RandomState(0)
+    X = pd.DataFrame(rng.randn(240, 4), columns=FEATURE_NAMES)
+    binary = (X > 0).astype(int)
+    y = (binary['a'] + binary['b']).to_numpy()  # three classes
+    return (binary if model_type.__name__ in BINARY_INPUT_MODELS else X), y
+
+
+@pytest.mark.parametrize('model_type',
+                         [m for m in imodels.CLASSIFIERS
+                          if m.__name__ in BINARY_ONLY_CLASSIFIERS],
+                         ids=[n for n in BINARY_ONLY_CLASSIFIERS])
+def test_binary_only_classifiers_reject_multiclass(model_type):
+    """A binary classifier must refuse a third class rather than mis-handle it
+
+    Several returned a two-column predict_proba for three-class data and never
+    predicted the third class; SLIPPER failed later with a shape mismatch.
+    """
+    X, y = _multiclass_data(model_type)
+    model = model_type(**MODEL_KWARGS.get(model_type.__name__, {}))
+
+    with pytest.raises(ValueError) as excinfo:
+        with contextlib.redirect_stdout(io.StringIO()):
+            model.fit(X, y)
+    message = str(excinfo.value).lower()
+    assert 'multiclass' in message or 'binary' in message, message
+
+
+@pytest.mark.parametrize('model_type',
+                         [m for m in imodels.CLASSIFIERS
+                          if m.__name__ not in BINARY_ONLY_CLASSIFIERS
+                          and m.__name__ not in EXCLUDED_MODELS],
+                         ids=[m.__name__ for m in imodels.CLASSIFIERS
+                              if m.__name__ not in BINARY_ONLY_CLASSIFIERS
+                              and m.__name__ not in EXCLUDED_MODELS])
+def test_multiclass_classifiers_give_one_column_per_class(model_type):
+    """Classifiers that accept three classes must score all three"""
+    X, y = _multiclass_data(model_type)
+    model = model_type(**MODEL_KWARGS.get(model_type.__name__, {}))
+    with contextlib.redirect_stdout(io.StringIO()):
+        model.fit(X, y)
+        probs = model.predict_proba(X)
+
+    assert probs.shape[1] == 3
+    assert np.allclose(probs.sum(axis=1), 1)
+
+
+def test_binary_classification_still_works():
+    """The new check must not affect ordinary two-class fitting"""
+    for name in ['OneRClassifier', 'C45TreeClassifier', 'SkopeRulesClassifier',
+                 'TreeGAMClassifier', 'SlipperClassifier']:
+        model_type = getattr(imodels, name)
+        model, X, y = _fit(model_type)
+        assert model.predict_proba(X).shape[1] == 2
 @pytest.mark.parametrize('model_type', MODELS, ids=IDS)
 def test_predict_rejects_the_wrong_number_of_features(model_type):
     """Predicting with a different feature count must raise, not guess
