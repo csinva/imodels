@@ -4,6 +4,22 @@ from sklearn.tree import _tree
 from typing import Union, List, Tuple
 
 
+def _round_threshold(threshold, decimals: int = 5):
+    """Shorten a split threshold without moving it onto the data.
+
+    Rounding to a fixed number of decimal places collapses thresholds on
+    small-scale features to 0.0, which changes which rows a rule selects (and
+    can turn two distinct splits into the same one). Rounding to significant
+    digits instead keeps the threshold in the right place at any scale.
+    """
+    if threshold == 0 or not np.isfinite(threshold):
+        return threshold
+    magnitude = int(np.floor(np.log10(abs(threshold))))
+    # keep `decimals` digits after the point for values of order 1, and the
+    # equivalent precision for values that are much smaller or larger
+    return float(np.round(threshold, decimals=max(decimals, decimals - magnitude)))
+
+
 def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
                   feature_names: List[str],
                   prediction_values: bool = False, round_thresholds=True) -> List[str]:
@@ -36,7 +52,7 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
             symbol2 = '>'
             threshold = tree_.threshold[node]
             if round_thresholds:
-                threshold = np.round(threshold, decimals=5)
+                threshold = _round_threshold(threshold)
             text = base_name + ["{} {} {}".format(name, symbol, threshold)]
             recurse(tree_.children_left[node], text)
 
