@@ -9,7 +9,7 @@ import imodels
 def explain_classification_errors(X, predictions, y,
                                   feature_names: list = None,
                                   target_name: str = None,
-                                  classifier: BaseEstimator = imodels.GreedyTreeClassifier(),
+                                  classifier: BaseEstimator = None,
                                   target_one_hot_encode: bool = False,
                                   print_rules: bool = True):
     """Explains the classification errors of a model by fitting an interpretable model to them.
@@ -25,11 +25,19 @@ def explain_classification_errors(X, predictions, y,
         (n, 1) targets with integer values representing class
     feature_names
         n_features
+    classifier
+        Interpretable model fitted to the errors. A new GreedyTreeClassifier is
+        used if none is given.
 
     Returns
     -------
     model: BaseEstimator
     """
+    # built per call: a default constructed in the signature is created once at
+    # import, so every call would share and refit the same classifier
+    if classifier is None:
+        classifier = imodels.GreedyTreeClassifier()
+
     # deal with names
     if feature_names is None:
         if isinstance(X, pd.DataFrame):
