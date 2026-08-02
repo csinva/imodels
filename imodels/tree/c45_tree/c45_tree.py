@@ -15,7 +15,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
-from imodels.util.arguments import check_binary_target, check_fit_arguments, decode_labels
+from imodels.util.arguments import check_fit_arguments, decode_labels
 
 from ..c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
     set_as_leaf_node
@@ -139,7 +139,6 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y, feature_names: str = None):
         self.complexity_ = 0
-        check_binary_target(self, y)
         # X, y = check_X_y(X, y)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         self.resultType = type(y[0])
@@ -229,13 +228,43 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
 
         return np.array(prediction)
 
+    def _class_scores(self, X):
+        """Per-class scores for each row, from the leaves it reaches.
+
+        `decision` returns {class label: probability}; C4.5 is multiclass by
+        construction, so this keeps the whole distribution rather than
+        collapsing it to the top class.
+        """
+        check_is_fitted(self, ['tree_', 'resultType', 'feature_names'])
+        X = check_array(X)
+        n_classes = len(self.classes_)
+
+        scores = np.zeros((X.shape[0], n_classes))
+        for i in range(X.shape[0]):
+            answers = decision(self.root, X[i], self.feature_names, 1) or {}
+            for label, probability in answers.items():
+                # leaves store the encoded label (0, 1, ... ) as a string
+                index = int(float(label))
+                if 0 <= index < n_classes:
+                    scores[i, index] += float(probability)
+        return scores
+
     def predict(self, X):
-        raw_preds = self.raw_preds(X)
-        return decode_labels(self, (raw_preds > np.ones_like(raw_preds) * 0.5).astype(int))
+        return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
     def predict_proba(self, X):
-        raw_preds = self.raw_preds(X)
-        return np.vstack((1 - raw_preds, raw_preds)).transpose()
+        if len(self.classes_) == 2:
+            # unchanged binary path: leaves hold the probability of class 1,
+            # which is also what hierarchical shrinkage rewrites them to
+            raw_preds = self.raw_preds(X)
+            return np.vstack((1 - raw_preds, raw_preds)).transpose()
+
+        scores = self._class_scores(X)
+        totals = scores.sum(axis=1, keepdims=True)
+        # a row that reached no leaf falls back to a uniform distribution
+        with np.errstate(invalid='ignore', divide='ignore'):
+            normalized = scores / totals
+        return np.where(totals > 0, normalized, 1 / scores.shape[1])
 
     def __str__(self):
         check_is_fitted(self, ['tree_'])

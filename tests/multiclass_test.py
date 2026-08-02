@@ -14,12 +14,13 @@ MULTICLASS_MODELS = [
     'BoostedRulesClassifier', 'SLIMClassifier', 'TaoTreeClassifier',
     'FIGSClassifier', 'FIGSClassifierCV', 'HSTreeClassifier',
     'HSTreeClassifierCV', 'GreedyTreeClassifier', 'DecisionTreeCCPClassifier',
+    'C45TreeClassifier',
 ]
 
 # binary-only: these must say so rather than silently collapsing the target
 BINARY_ONLY_MODELS = [
     'BayesianRuleListClassifier', 'RuleFitClassifier', 'FPLassoClassifier',
-    'GreedyRuleListClassifier', 'SkopeRulesClassifier', 'C45TreeClassifier',
+    'GreedyRuleListClassifier', 'SkopeRulesClassifier',
     'OneRClassifier', 'FPSkopeClassifier', 'TreeGAMClassifier',
     'SlipperClassifier', 'FastFrugalTreeClassifier',
 ]
@@ -79,3 +80,40 @@ def test_every_classifier_is_accounted_for():
     covered = set(MULTICLASS_MODELS) | set(BINARY_ONLY_MODELS)
     # AutoInterpretable wraps a grid search, so it follows whatever it selects
     assert registered - covered <= {'AutoInterpretableClassifier'}
+
+
+def test_c45_multiclass_matches_a_cart_tree():
+    """C4.5 is multiclass by construction, so it should hold its own on 3 classes"""
+    from sklearn.datasets import load_iris, load_wine
+    from sklearn.model_selection import train_test_split
+    from sklearn.tree import DecisionTreeClassifier
+
+    from imodels import C45TreeClassifier
+
+    for load in (load_iris, load_wine):
+        X, y = load(return_X_y=True)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
+
+        model = C45TreeClassifier(max_rules=10).fit(X_train, y_train)
+        probs = model.predict_proba(X_test)
+
+        assert probs.shape == (len(X_test), 3)
+        assert np.allclose(probs.sum(axis=1), 1)
+        assert set(np.unique(model.predict(X_test))) <= {0, 1, 2}
+
+        cart = DecisionTreeClassifier(max_depth=4, random_state=0).fit(X_train, y_train)
+        accuracy = (model.predict(X_test) == y_test).mean()
+        assert accuracy >= (cart.predict(X_test) == y_test).mean() - 0.1
+
+
+def test_c45_multiclass_string_labels():
+    from sklearn.datasets import load_iris
+
+    from imodels import C45TreeClassifier
+
+    X, y = load_iris(return_X_y=True)
+    labels = np.array(['setosa', 'versicolor', 'virginica'])[y]
+
+    model = C45TreeClassifier(max_rules=8).fit(X, labels)
+    assert list(model.classes_) == ['setosa', 'versicolor', 'virginica']
+    assert set(np.unique(model.predict(X))) <= set(model.classes_)
