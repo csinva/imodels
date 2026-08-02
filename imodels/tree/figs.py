@@ -423,8 +423,19 @@ class FIGS(BaseEstimator):
             # get node with max impurity_reduction (since it's sorted)
             split_node = potential_splits.pop()
 
-            # don't split on node
-            if split_node.impurity_reduction < self.min_impurity_decrease:
+            # don't split on node.
+            # impurity_reduction is None when the stump found no valid split,
+            # which happens when y is constant over the node -- there is nothing
+            # left to fit, so stop rather than compare None to a float
+            if (split_node.impurity_reduction is None
+                    or split_node.impurity_reduction < self.min_impurity_decrease):
+                # nothing worth splitting on. If that happened before any tree
+                # was grown, keep this node as a single leaf: predictions are a
+                # sum over trees, so with none at all the model would return 0
+                # whatever y is, rather than y's mean.
+                if split_node.is_root and not self.trees_:
+                    split_node.setattrs(tree_num=0, left=None, right=None)
+                    self.trees_.append(split_node)
                 finished = True
                 break
             elif (
