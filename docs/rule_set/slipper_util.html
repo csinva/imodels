@@ -21,10 +21,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import random
-
-import numpy as np
+<pre><code class="python">import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils import check_random_state
 from sklearn.model_selection import train_test_split
 
 from imodels.util.arguments import check_fit_arguments
@@ -36,7 +35,10 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
     as part of the SlipperRulesClassifier.
     &#34;&#34;&#34;
 
-    def __init__(self):
+    def __init__(self, random_state=None):
+        # exposed so that the boosting ensemble seeds each clone of this
+        # estimator, which is how sklearn makes sub-estimators reproducible
+        self.random_state = random_state
         self.Z = None
         self.rule = None
         self.D = None
@@ -200,10 +202,10 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         predict negative
         &#34;&#34;&#34;
         default_rule = []
-        features = random.choices(
-            range(X.shape[1]),
-            k=random.randint(2, 8)
-        )
+        # drawn through random_state rather than the `random` module, which
+        # neither random_state nor np.random.seed can control
+        rng = check_random_state(self.random_state)
+        features = list(rng.choice(X.shape[1], size=rng.randint(2, 9)))
 
         default_rule.append({
             &#39;feature&#39;: str(features[0]),
@@ -270,14 +272,11 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         }
 
     def predict_proba(self, X):
-
-        proba = self.predict(X)
-        proba = proba.reshape(-1, 1)
-        proba = np.hstack([
-            np.zeros(proba.shape), proba
-        ])
-
-        return proba
+        # a rule either fires or it doesn&#39;t, so the two columns are the
+        # complementary probabilities; returning [0, prediction] instead left
+        # rows that don&#39;t sum to 1, which corrupts the boosting weights
+        proba = np.asarray(self.predict(X), dtype=float).reshape(-1, 1)
+        return np.hstack([1 - proba, proba])
 
     def predict(self, X):
         &#34;&#34;&#34;
@@ -290,12 +289,16 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
         &#34;&#34;&#34;
         Main loop for training
         &#34;&#34;&#34;
-        X, y, feature_names = check_fit_arguments(self, X, y, feature_names) 
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if sample_weight is not None:
             self.D = sample_weight
+        elif self.D is None:
+            # uniform weights, so the estimator also works outside the ensemble
+            self.D = np.full(len(y), 1 / len(y))
 
+        rng = check_random_state(self.random_state)
         X_grow, X_prune, y_grow, y_prune = \
-            train_test_split(X, y, test_size=0.33)
+            train_test_split(X, y, test_size=0.33, random_state=rng)
 
         self._make_feature_dict(X.shape[1], feature_names)
 
@@ -317,6 +320,7 @@ class SlipperBaseEstimator(BaseEstimator, ClassifierMixin):
 <dl>
 <dt id="imodels.rule_set.slipper_util.SlipperBaseEstimator"><code class="flex name class">
 <span>class <span class="ident">SlipperBaseEstimator</span></span>
+<span>(</span><span>random_state=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>An estimator that supports building rules as described in
@@ -332,7 +336,10 @@ as part of the SlipperRulesClassifier.</p></div>
     as part of the SlipperRulesClassifier.
     &#34;&#34;&#34;
 
-    def __init__(self):
+    def __init__(self, random_state=None):
+        # exposed so that the boosting ensemble seeds each clone of this
+        # estimator, which is how sklearn makes sub-estimators reproducible
+        self.random_state = random_state
         self.Z = None
         self.rule = None
         self.D = None
@@ -496,10 +503,10 @@ as part of the SlipperRulesClassifier.</p></div>
         predict negative
         &#34;&#34;&#34;
         default_rule = []
-        features = random.choices(
-            range(X.shape[1]),
-            k=random.randint(2, 8)
-        )
+        # drawn through random_state rather than the `random` module, which
+        # neither random_state nor np.random.seed can control
+        rng = check_random_state(self.random_state)
+        features = list(rng.choice(X.shape[1], size=rng.randint(2, 9)))
 
         default_rule.append({
             &#39;feature&#39;: str(features[0]),
@@ -566,14 +573,11 @@ as part of the SlipperRulesClassifier.</p></div>
         }
 
     def predict_proba(self, X):
-
-        proba = self.predict(X)
-        proba = proba.reshape(-1, 1)
-        proba = np.hstack([
-            np.zeros(proba.shape), proba
-        ])
-
-        return proba
+        # a rule either fires or it doesn&#39;t, so the two columns are the
+        # complementary probabilities; returning [0, prediction] instead left
+        # rows that don&#39;t sum to 1, which corrupts the boosting weights
+        proba = np.asarray(self.predict(X), dtype=float).reshape(-1, 1)
+        return np.hstack([1 - proba, proba])
 
     def predict(self, X):
         &#34;&#34;&#34;
@@ -586,12 +590,16 @@ as part of the SlipperRulesClassifier.</p></div>
         &#34;&#34;&#34;
         Main loop for training
         &#34;&#34;&#34;
-        X, y, feature_names = check_fit_arguments(self, X, y, feature_names) 
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         if sample_weight is not None:
             self.D = sample_weight
+        elif self.D is None:
+            # uniform weights, so the estimator also works outside the ensemble
+            self.D = np.full(len(y), 1 / len(y))
 
+        rng = check_random_state(self.random_state)
         X_grow, X_prune, y_grow, y_prune = \
-            train_test_split(X, y, test_size=0.33)
+            train_test_split(X, y, test_size=0.33, random_state=rng)
 
         self._make_feature_dict(X.shape[1], feature_names)
 
@@ -624,12 +632,16 @@ as part of the SlipperRulesClassifier.</p></div>
     &#34;&#34;&#34;
     Main loop for training
     &#34;&#34;&#34;
-    X, y, feature_names = check_fit_arguments(self, X, y, feature_names) 
+    X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
     if sample_weight is not None:
         self.D = sample_weight
+    elif self.D is None:
+        # uniform weights, so the estimator also works outside the ensemble
+        self.D = np.full(len(y), 1 / len(y))
 
+    rng = check_random_state(self.random_state)
     X_grow, X_prune, y_grow, y_prune = \
-        train_test_split(X, y, test_size=0.33)
+        train_test_split(X, y, test_size=0.33, random_state=rng)
 
     self._make_feature_dict(X.shape[1], feature_names)
 
@@ -668,14 +680,11 @@ using estimators rule</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
-
-    proba = self.predict(X)
-    proba = proba.reshape(-1, 1)
-    proba = np.hstack([
-        np.zeros(proba.shape), proba
-    ])
-
-    return proba</code></pre>
+    # a rule either fires or it doesn&#39;t, so the two columns are the
+    # complementary probabilities; returning [0, prediction] instead left
+    # rows that don&#39;t sum to 1, which corrupts the boosting weights
+    proba = np.asarray(self.predict(X), dtype=float).reshape(-1, 1)
+    return np.hstack([1 - proba, proba])</code></pre>
 </details>
 </dd>
 <dt id="imodels.rule_set.slipper_util.SlipperBaseEstimator.set_fit_request"><code class="name flex">

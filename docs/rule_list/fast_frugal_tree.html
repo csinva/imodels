@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.11.6" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<section id="section-intro">
+<p>Fast-and-frugal trees (Phillips, Neth, Woike &amp; Gaissmaier 2017).</p>
+<p>A fast-and-frugal tree asks one question per level and, at every level, is able
+to stop and decide: each cue has an <em>exit</em> to one class, and whatever it doesn't
+catch falls through to the next cue. The last cue exits both ways, so the tree
+always decides within <code>max_depth</code> questions.</p>
+<p>That single descending path is why this lives with the rule lists rather than
+the trees, and it is what makes these models usable from memory &ndash; they are
+widely used for triage decisions in medicine.</p>
+<h2 id="references">References</h2>
+<p>Phillips, Neth, Woike &amp; Gaissmaier (2017), "FFTrees: A toolbox to create,
+visualize, and evaluate fast-and-frugal decision trees",
+Judgment and Decision Making 12(4). <a href="http://journal.sjdm.org/17/17217/jdm17217.html">http://journal.sjdm.org/17/17217/jdm17217.html</a></p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Fast-and-frugal trees (Phillips, Neth, Woike &amp; Gaissmaier 2017).
+
+A fast-and-frugal tree asks one question per level and, at every level, is able
+to stop and decide: each cue has an *exit* to one class, and whatever it doesn&#39;t
+catch falls through to the next cue. The last cue exits both ways, so the tree
+always decides within `max_depth` questions.
+
+That single descending path is why this lives with the rule lists rather than
+the trees, and it is what makes these models usable from memory -- they are
+widely used for triage decisions in medicine.
+
+References
+----------
+Phillips, Neth, Woike &amp; Gaissmaier (2017), &#34;FFTrees: A toolbox to create,
+visualize, and evaluate fast-and-frugal decision trees&#34;,
+Judgment and Decision Making 12(4). http://journal.sjdm.org/17/17217/jdm17217.html
+&#34;&#34;&#34;
+
+import numpy as np
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils.validation import check_array, check_is_fitted
+
+from imodels.rule_list.rule_list import RuleList
+from imodels.util.arguments import (check_binary_target, check_fit_arguments,
+                                    decode_labels)
+
+
+class FastFrugalTreeClassifier(BaseEstimator, RuleList, ClassifierMixin):
+    &#34;&#34;&#34;A fast-and-frugal tree: one cue per level, each with an exit.
+
+    Parameters
+    ----------
+    max_depth : int, default=4
+        Number of cues the tree may ask. Fast-and-frugal trees are deliberately
+        shallow; the literature typically uses 4 or fewer.
+    max_thresholds : int, default=64
+        Candidate thresholds considered per feature. Thresholds are taken from
+        quantiles of the feature, so this bounds the search on large datasets.
+    min_samples_exit : int, default=1
+        A cue must send at least this many samples to its exit to be used.
+
+    Attributes
+    ----------
+    rules_ : list of dict
+        One entry per cue, in the order they are asked, plus a final catch-all.
+        Uses the same representation as the other rule lists, so `get_rules()`
+        works on it.
+    classes_ : ndarray
+    &#34;&#34;&#34;
+
+    def __init__(self, max_depth: int = 4, max_thresholds: int = 64,
+                 min_samples_exit: int = 1):
+        self.max_depth = max_depth
+        self.max_thresholds = max_thresholds
+        self.min_samples_exit = min_samples_exit
+
+    def fit(self, X, y, feature_names=None):
+        check_binary_target(self, y)
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+
+        remaining = np.ones(X.shape[0], dtype=bool)
+        self.rules_ = []
+
+        for depth in range(self.max_depth):
+            # the last cue has to decide both ways, so stop asking questions
+            if depth == self.max_depth - 1 or remaining.sum() == 0:
+                break
+            cue = self._best_cue(X, y, remaining, feature_names)
+            if cue is None:  # no cue earns its place
+                break
+            cue[&#39;depth&#39;] = depth
+            self.rules_.append(cue)
+            remaining = remaining &amp; ~cue.pop(&#39;_exits&#39;)
+
+        self.rules_.append(self._final_exit(y, remaining))
+        self.complexity_ = len(self.rules_)
+        return self
+
+    def _candidate_thresholds(self, column):
+        values = np.unique(column)
+        if len(values) &lt;= self.max_thresholds:
+            # midpoints between observed values
+            return (values[:-1] + values[1:]) / 2 if len(values) &gt; 1 else values
+        quantiles = np.linspace(0, 1, self.max_thresholds + 2)[1:-1]
+        return np.unique(np.quantile(column, quantiles))
+
+    def _best_cue(self, X, y, remaining, feature_names):
+        &#34;&#34;&#34;The cue whose exit gets the most samples right, net of its mistakes.&#34;&#34;&#34;
+        y_remaining = y[remaining]
+        best, best_score = None, 0
+
+        for feature in range(X.shape[1]):
+            column = X[remaining, feature]
+            for threshold in self._candidate_thresholds(column):
+                above = column &gt; threshold
+                for exit_above in (True, False):
+                    exits = above if exit_above else ~above
+                    n_exits = int(exits.sum())
+                    if n_exits &lt; self.min_samples_exit:
+                        continue
+                    exited_y = y_remaining[exits]
+                    for exit_class in (0, 1):
+                        correct = int((exited_y == exit_class).sum())
+                        # reward correct exits, penalize wrong ones
+                        score = 2 * correct - n_exits
+                        if score &gt; best_score:
+                            full = np.zeros(len(y), dtype=bool)
+                            full[np.flatnonzero(remaining)[exits]] = True
+                            best_score = score
+                            best = {
+                                &#39;col&#39;: str(feature_names[feature]),
+                                &#39;index_col&#39;: feature,
+                                &#39;cutoff&#39;: threshold,
+                                # &#39;flip&#39; marks the exit as the &lt;= side, matching
+                                # how the other rule lists record their direction
+                                &#39;flip&#39;: not exit_above,
+                                &#39;val_right&#39;: float(exit_class),
+                                &#39;num_pts&#39;: int(remaining.sum()),
+                                &#39;num_pts_right&#39;: n_exits,
+                                &#39;_exits&#39;: full,
+                            }
+        return best
+
+    def _final_exit(self, y, remaining):
+        &#34;&#34;&#34;Everything still undecided takes the majority class of what&#39;s left.&#34;&#34;&#34;
+        if remaining.sum() == 0:
+            value = float(np.round(y.mean())) if len(y) else 0.0
+            return {&#39;val&#39;: value, &#39;num_pts&#39;: 0}
+        return {&#39;val&#39;: float(np.round(y[remaining].mean())),
+                &#39;num_pts&#39;: int(remaining.sum())}
+
+    def predict_proba(self, X):
+        check_is_fitted(self)
+        X = check_array(X)
+
+        probs = np.zeros(X.shape[0])
+        undecided = np.ones(X.shape[0], dtype=bool)
+        for rule in self.rules_:
+            if &#39;col&#39; not in rule:  # the final catch-all
+                probs[undecided] = rule[&#39;val&#39;]
+                break
+            above = X[:, rule[&#39;index_col&#39;]] &gt; rule[&#39;cutoff&#39;]
+            exits = (~above if rule[&#39;flip&#39;] else above) &amp; undecided
+            probs[exits] = rule[&#39;val_right&#39;]
+            undecided = undecided &amp; ~exits
+
+        return np.vstack((1 - probs, probs)).transpose()
+
+    def predict(self, X):
+        return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
+
+    def __str__(self):
+        if not hasattr(self, &#39;rules_&#39;):
+            return f&#39;{type(self).__name__}(max_depth={self.max_depth})&#39;
+        s = &#39;&gt; ------------------------------\n&#39;
+        s += &#39;&gt; Fast-and-frugal tree\n&#39;
+        s += &#39;&gt; \tEach cue either decides, or passes the case to the next cue\n&#39;
+        s += &#39;&gt; ------------------------------\n&#39;
+        for rule in self.rules_:
+            if &#39;col&#39; not in rule:
+                s += (f&#34;&gt; else | predict {int(rule[&#39;val&#39;])} &#34;
+                      f&#34;({rule[&#39;num_pts&#39;]} obs)\n&#34;)
+                continue
+            comparison = &#39;&lt;=&#39; if rule[&#39;flip&#39;] else &#39;&gt;&#39;
+            s += (f&#34;&gt; if {rule[&#39;col&#39;]} {comparison} {rule[&#39;cutoff&#39;]:.3g} | &#34;
+                  f&#34;predict {int(rule[&#39;val_right&#39;])} &#34;
+                  f&#34;({rule[&#39;num_pts_right&#39;]} obs)\n&#34;)
+        s += &#39;&gt; ------------------------------\n&#39;
+        return s</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier"><code class="flex name class">
+<span>class <span class="ident">FastFrugalTreeClassifier</span></span>
+<span>(</span><span>max_depth: int = 4, max_thresholds: int = 64, min_samples_exit: int = 1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A fast-and-frugal tree: one cue per level, each with an exit.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>max_depth</code></strong> :&ensp;<code>int</code>, default=<code>4</code></dt>
+<dd>Number of cues the tree may ask. Fast-and-frugal trees are deliberately
+shallow; the literature typically uses 4 or fewer.</dd>
+<dt><strong><code>max_thresholds</code></strong> :&ensp;<code>int</code>, default=<code>64</code></dt>
+<dd>Candidate thresholds considered per feature. Thresholds are taken from
+quantiles of the feature, so this bounds the search on large datasets.</dd>
+<dt><strong><code>min_samples_exit</code></strong> :&ensp;<code>int</code>, default=<code>1</code></dt>
+<dd>A cue must send at least this many samples to its exit to be used.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>rules_</code></strong> :&ensp;<code>list</code> of <code>dict</code></dt>
+<dd>One entry per cue, in the order they are asked, plus a final catch-all.
+Uses the same representation as the other rule lists, so <code>get_rules()</code>
+works on it.</dd>
+<dt><strong><code>classes_</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FastFrugalTreeClassifier(BaseEstimator, RuleList, ClassifierMixin):
+    &#34;&#34;&#34;A fast-and-frugal tree: one cue per level, each with an exit.
+
+    Parameters
+    ----------
+    max_depth : int, default=4
+        Number of cues the tree may ask. Fast-and-frugal trees are deliberately
+        shallow; the literature typically uses 4 or fewer.
+    max_thresholds : int, default=64
+        Candidate thresholds considered per feature. Thresholds are taken from
+        quantiles of the feature, so this bounds the search on large datasets.
+    min_samples_exit : int, default=1
+        A cue must send at least this many samples to its exit to be used.
+
+    Attributes
+    ----------
+    rules_ : list of dict
+        One entry per cue, in the order they are asked, plus a final catch-all.
+        Uses the same representation as the other rule lists, so `get_rules()`
+        works on it.
+    classes_ : ndarray
+    &#34;&#34;&#34;
+
+    def __init__(self, max_depth: int = 4, max_thresholds: int = 64,
+                 min_samples_exit: int = 1):
+        self.max_depth = max_depth
+        self.max_thresholds = max_thresholds
+        self.min_samples_exit = min_samples_exit
+
+    def fit(self, X, y, feature_names=None):
+        check_binary_target(self, y)
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+
+        remaining = np.ones(X.shape[0], dtype=bool)
+        self.rules_ = []
+
+        for depth in range(self.max_depth):
+            # the last cue has to decide both ways, so stop asking questions
+            if depth == self.max_depth - 1 or remaining.sum() == 0:
+                break
+            cue = self._best_cue(X, y, remaining, feature_names)
+            if cue is None:  # no cue earns its place
+                break
+            cue[&#39;depth&#39;] = depth
+            self.rules_.append(cue)
+            remaining = remaining &amp; ~cue.pop(&#39;_exits&#39;)
+
+        self.rules_.append(self._final_exit(y, remaining))
+        self.complexity_ = len(self.rules_)
+        return self
+
+    def _candidate_thresholds(self, column):
+        values = np.unique(column)
+        if len(values) &lt;= self.max_thresholds:
+            # midpoints between observed values
+            return (values[:-1] + values[1:]) / 2 if len(values) &gt; 1 else values
+        quantiles = np.linspace(0, 1, self.max_thresholds + 2)[1:-1]
+        return np.unique(np.quantile(column, quantiles))
+
+    def _best_cue(self, X, y, remaining, feature_names):
+        &#34;&#34;&#34;The cue whose exit gets the most samples right, net of its mistakes.&#34;&#34;&#34;
+        y_remaining = y[remaining]
+        best, best_score = None, 0
+
+        for feature in range(X.shape[1]):
+            column = X[remaining, feature]
+            for threshold in self._candidate_thresholds(column):
+                above = column &gt; threshold
+                for exit_above in (True, False):
+                    exits = above if exit_above else ~above
+                    n_exits = int(exits.sum())
+                    if n_exits &lt; self.min_samples_exit:
+                        continue
+                    exited_y = y_remaining[exits]
+                    for exit_class in (0, 1):
+                        correct = int((exited_y == exit_class).sum())
+                        # reward correct exits, penalize wrong ones
+                        score = 2 * correct - n_exits
+                        if score &gt; best_score:
+                            full = np.zeros(len(y), dtype=bool)
+                            full[np.flatnonzero(remaining)[exits]] = True
+                            best_score = score
+                            best = {
+                                &#39;col&#39;: str(feature_names[feature]),
+                                &#39;index_col&#39;: feature,
+                                &#39;cutoff&#39;: threshold,
+                                # &#39;flip&#39; marks the exit as the &lt;= side, matching
+                                # how the other rule lists record their direction
+                                &#39;flip&#39;: not exit_above,
+                                &#39;val_right&#39;: float(exit_class),
+                                &#39;num_pts&#39;: int(remaining.sum()),
+                                &#39;num_pts_right&#39;: n_exits,
+                                &#39;_exits&#39;: full,
+                            }
+        return best
+
+    def _final_exit(self, y, remaining):
+        &#34;&#34;&#34;Everything still undecided takes the majority class of what&#39;s left.&#34;&#34;&#34;
+        if remaining.sum() == 0:
+            value = float(np.round(y.mean())) if len(y) else 0.0
+            return {&#39;val&#39;: value, &#39;num_pts&#39;: 0}
+        return {&#39;val&#39;: float(np.round(y[remaining].mean())),
+                &#39;num_pts&#39;: int(remaining.sum())}
+
+    def predict_proba(self, X):
+        check_is_fitted(self)
+        X = check_array(X)
+
+        probs = np.zeros(X.shape[0])
+        undecided = np.ones(X.shape[0], dtype=bool)
+        for rule in self.rules_:
+            if &#39;col&#39; not in rule:  # the final catch-all
+                probs[undecided] = rule[&#39;val&#39;]
+                break
+            above = X[:, rule[&#39;index_col&#39;]] &gt; rule[&#39;cutoff&#39;]
+            exits = (~above if rule[&#39;flip&#39;] else above) &amp; undecided
+            probs[exits] = rule[&#39;val_right&#39;]
+            undecided = undecided &amp; ~exits
+
+        return np.vstack((1 - probs, probs)).transpose()
+
+    def predict(self, X):
+        return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
+
+    def __str__(self):
+        if not hasattr(self, &#39;rules_&#39;):
+            return f&#39;{type(self).__name__}(max_depth={self.max_depth})&#39;
+        s = &#39;&gt; ------------------------------\n&#39;
+        s += &#39;&gt; Fast-and-frugal tree\n&#39;
+        s += &#39;&gt; \tEach cue either decides, or passes the case to the next cue\n&#39;
+        s += &#39;&gt; ------------------------------\n&#39;
+        for rule in self.rules_:
+            if &#39;col&#39; not in rule:
+                s += (f&#34;&gt; else | predict {int(rule[&#39;val&#39;])} &#34;
+                      f&#34;({rule[&#39;num_pts&#39;]} obs)\n&#34;)
+                continue
+            comparison = &#39;&lt;=&#39; if rule[&#39;flip&#39;] else &#39;&gt;&#39;
+            s += (f&#34;&gt; if {rule[&#39;col&#39;]} {comparison} {rule[&#39;cutoff&#39;]:.3g} | &#34;
+                  f&#34;predict {int(rule[&#39;val_right&#39;])} &#34;
+                  f&#34;({rule[&#39;num_pts_right&#39;]} obs)\n&#34;)
+        s += &#39;&gt; ------------------------------\n&#39;
+        return s</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
+<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li><a title="imodels.rule_list.rule_list.RuleList" href="rule_list.html#imodels.rule_list.rule_list.RuleList">RuleList</a></li>
+<li>sklearn.base.ClassifierMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, feature_names=None):
+    check_binary_target(self, y)
+    X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+
+    remaining = np.ones(X.shape[0], dtype=bool)
+    self.rules_ = []
+
+    for depth in range(self.max_depth):
+        # the last cue has to decide both ways, so stop asking questions
+        if depth == self.max_depth - 1 or remaining.sum() == 0:
+            break
+        cue = self._best_cue(X, y, remaining, feature_names)
+        if cue is None:  # no cue earns its place
+            break
+        cue[&#39;depth&#39;] = depth
+        self.rules_.append(cue)
+        remaining = remaining &amp; ~cue.pop(&#39;_exits&#39;)
+
+    self.rules_.append(self._final_exit(y, remaining))
+    self.complexity_ = len(self.rules_)
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    check_is_fitted(self)
+    X = check_array(X)
+
+    probs = np.zeros(X.shape[0])
+    undecided = np.ones(X.shape[0], dtype=bool)
+    for rule in self.rules_:
+        if &#39;col&#39; not in rule:  # the final catch-all
+            probs[undecided] = rule[&#39;val&#39;]
+            break
+        above = X[:, rule[&#39;index_col&#39;]] &gt; rule[&#39;cutoff&#39;]
+        exits = (~above if rule[&#39;flip&#39;] else above) &amp; undecided
+        probs[exits] = rule[&#39;val_right&#39;]
+        undecided = undecided &amp; ~exits
+
+    return np.vstack((1 - probs, probs)).transpose()</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier" href="#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a>, *, feature_names: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier" href="#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>feature_names</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+<dt id="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier" href="#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier" href="#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant when this estimator is used as a
+sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
+with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
+    for the parameters provided as `**kw`.
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality.
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.rule_list.rule_list.RuleList" href="rule_list.html#imodels.rule_list.rule_list.RuleList">RuleList</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.rule_list.rule_list.RuleList.get_rules" href="rule_list.html#imodels.rule_list.rule_list.RuleList.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index 🔍</h1>
+<div class="toc">
+<ul>
+<li><a href="#references">References</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.rule_list" href="index.html">imodels.rule_list</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier" href="#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.fit" href="#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.predict" href="#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.predict_proba" href="#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.set_fit_request" href="#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.set_score_request" href="#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 c122.0,82.7 120.5,78.6 120.5,78.6 c119.2,72.0 123.4,76.3 123.4,76.3 c127.3,80.9 125.5,87.3 125.5,87.3 c122.9,97.6 130.6,101.9 134.4,103.2" fill="currentcolor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">
