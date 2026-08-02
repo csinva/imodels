@@ -4,6 +4,7 @@ import unittest
 from os.path import join as oj
 from random import sample
 
+import numpy as np
 from pandas.io.parsers import read_csv
 
 from imodels import *

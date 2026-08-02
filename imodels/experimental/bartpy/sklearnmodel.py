@@ -2,7 +2,6 @@ import copy
 from copy import deepcopy
 from typing import List, Callable, Mapping, Union, Optional
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -10,7 +9,6 @@ from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, BaseEstimator
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
-from sklearn.tree import DecisionTreeClassifier
 from sklearn import datasets, model_selection
 from imodels.util.arguments import check_predict_X, set_feature_names_in
 
@@ -786,7 +784,3 @@ def main():
     # #
     # # plt.close()
     #
-
-
-if __name__ == '__main__':
-    main()

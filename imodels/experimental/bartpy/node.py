@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Tuple
 
 from .data import Data
 from .split import Split, SplitCondition

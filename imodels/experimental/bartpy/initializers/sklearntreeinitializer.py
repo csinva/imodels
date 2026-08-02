@@ -1,10 +1,9 @@
-from typing import Tuple, List
+from typing import Tuple
 from operator import gt, le
 
 import numpy as np
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from imodels.tree.figs import FIGSRegressor, Node, FIGSRegressorCV
-from sklearn.exceptions import NotFittedError
 from sklearn.tree import DecisionTreeRegressor
 
 from ..data import make_bartpy_data

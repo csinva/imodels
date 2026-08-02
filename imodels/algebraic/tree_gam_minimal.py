@@ -7,8 +7,6 @@ from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_is_fitted, _check_sample_weight
 from sklearn.model_selection import train_test_split
 from sklearn.base import RegressorMixin, ClassifierMixin
-from sklearn.metrics import accuracy_score, roc_auc_score
-import imodels
 
 
 class TreeGAMMinimal(BaseEstimator):
@@ -176,36 +174,3 @@ class TreeGAMMinimalRegressor(TreeGAMMinimal, RegressorMixin):
 
 class TreeGAMMinimalClassifier(TreeGAMMinimal, ClassifierMixin):
     ...
-
-
-if __name__ == "__main__":
-    X, y, feature_names = imodels.get_clean_dataset("heart")
-    X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-    gam = TreeGAMMinimalClassifier(
-        boosting_strategy="cyclic",
-        random_state=42,
-        learning_rate=0.1,
-        max_leaf_nodes=3,
-        n_boosting_rounds=100,
-    )
-    gam.fit(X, y_train)
-
-    # check roc auc score
-    y_pred = gam.predict_proba(X_test)[:, 1]
-    # print(
-    #     "train roc:",
-    #     roc_auc_score(y_train, gam.predict_proba(X)[:, 1]).round(3),
-    # )
-    print(f"test roc: {roc_auc_score(y_test, y_pred):.3f}")
-    print(f"test acc {accuracy_score(y_test, gam.predict(X_test)):.3f}")
-    print('\t(imb:', np.mean(y_test).round(3), ')')
-    # print(
-    #     "accs",
-    #     accuracy_score(y_train, gam.predict(X)).round(3),
-    #     accuracy_score(y_test, gam.predict(X_test)).round(3),
-    #     "imb",
-    #     np.mean(y_train).round(3),
-    #     np.mean(y_test).round(3),
-    # )
-
-    # # print(gam.estimators_)

@@ -19,7 +19,6 @@ from imodels.util.arguments import check_fit_arguments, check_predict_X, decode_
 
 from ..c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
     set_as_leaf_node
-from ...util.data_util import get_clean_dataset
 
 
 def _add_label(node, label):
@@ -415,12 +414,3 @@ class HSC45TreeClassifierCV(HSC45TreeClassifier):
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         super().fit(X=X, y=y)
-
-
-if __name__ == '__main__':
-    X, y, feature_names = get_clean_dataset('ionosphere', data_source='pmlb')
-    m = C45TreeClassifier(max_rules=3)
-    m.fit(X, y)
-    s_m = HSC45TreeClassifier(estimator_=m)
-    s_m.fit(X, y)
-    preds = s_m.predict_proba(X)

@@ -1,4 +1,4 @@
-from copy import deepcopy, copy
+from copy import deepcopy
 from typing import List, Generator, Optional
 from imodels.util.checks import check_is_fitted
 

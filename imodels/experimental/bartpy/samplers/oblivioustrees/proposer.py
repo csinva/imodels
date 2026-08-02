@@ -1,7 +1,6 @@
 from operator import le, gt
-from typing import Callable, List, Mapping, Optional, Tuple
+from typing import List, Optional, Tuple
 
-import numpy as np
 
 from ...errors import NoSplittableVariableException, NoPrunableNodeException
 from ...mutation import TreeMutation, GrowMutation, PruneMutation

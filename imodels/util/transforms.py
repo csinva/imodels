@@ -125,14 +125,3 @@ class CorrelationScreenTransformer(BaseEstimator, TransformerMixin):
             X_transformed = X_transformed.values
 
         return X_transformed
-
-
-if __name__ == '__main__':
-    X = np.random.randn(5, 5)
-    X[:, 0] = [1, 1, 0, 1, 1]
-    X[:, 1] = X[:, 0]
-
-    transformer = CorrelationScreenTransformer()
-    print(X)
-    X_transformed = transformer.fit_transform(X)
-    print(X_transformed)

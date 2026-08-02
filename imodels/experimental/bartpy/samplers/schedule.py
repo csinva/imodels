@@ -1,7 +1,5 @@
 from typing import Callable, Generator, Text, Tuple
 
-import numpy as np
-import pandas as pd
 
 from ..model import Model
 from ..samplers.leafnode import LeafNodeSampler
