@@ -19,7 +19,6 @@ from imodels.util.arguments import check_binary_target, check_fit_arguments
 class OneRClassifier(GreedyRuleListClassifier):
     def __init__(self, max_depth=5, class_weight=None, criterion='gini'):
         self.max_depth = max_depth
-        self.feature_names_ = None
         self.class_weight = class_weight
         self.criterion = criterion
         self._estimator_type = 'classifier'

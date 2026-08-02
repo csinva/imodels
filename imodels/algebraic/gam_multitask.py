@@ -31,6 +31,9 @@ from sklearn.base import RegressorMixin, ClassifierMixin
 # merge ebms: https://github.com/interpretml/interpret/blob/develop/python/interpret-core/interpret/glassbox/_ebm/_merge_ebms.py#L280
 # eval_terms: https://interpret.ml/docs/python/api/ExplainableBoostingRegressor.html#interpret.glassbox.ExplainableBoostingRegressor.eval_terms
 
+DEFAULT_EBM_KWARGS = {'n_jobs': 1, 'max_rounds': 5000}
+
+
 class MultiTaskGAM(BaseEstimator):
     """EBM-based GAM that shares curves for predicting different outputs.
     - If only one target is given, we fit an EBM to predict each covariate
@@ -40,7 +43,7 @@ class MultiTaskGAM(BaseEstimator):
 
     def __init__(
         self,
-        ebm_kwargs={'n_jobs': 1, 'max_rounds': 5000, },
+        ebm_kwargs=None,
         multitask=True,
         interactions=0.95,
         linear_penalty='ridge',
@@ -92,10 +95,6 @@ class MultiTaskGAM(BaseEstimator):
         self.use_correlation_screening_for_features = use_correlation_screening_for_features
         self.fit_linear_frac = fit_linear_frac
 
-        # override ebm_kwargs
-        ebm_kwargs['random_state'] = random_state
-        ebm_kwargs['interactions'] = interactions
-
     def fit(self, X, y, sample_weight=None):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
         self.n_outputs_ = 1 if len(y.shape) == 1 else y.shape[1]
@@ -123,9 +122,9 @@ class MultiTaskGAM(BaseEstimator):
         # just fit ebm normally
         if not self.multitask:
             if isinstance(self, ClassifierMixin):
-                self.ebm_ = ExplainableBoostingClassifier(**self.ebm_kwargs)
+                self.ebm_ = ExplainableBoostingClassifier(**self._ebm_kwargs())
             else:
-                self.ebm_ = ExplainableBoostingRegressor(**self.ebm_kwargs)
+                self.ebm_ = ExplainableBoostingRegressor(**self._ebm_kwargs())
 
             # fit
             if self.n_outputs_ > 1:
@@ -195,11 +194,24 @@ class MultiTaskGAM(BaseEstimator):
 
         return self
 
+    def _ebm_kwargs(self):
+        """Constructor kwargs for the internal EBMs.
+
+        random_state and interactions are applied here rather than in __init__,
+        so that neither the caller's dict nor the shared default is mutated and
+        get_params() keeps returning exactly what was passed in.
+        """
+        kwargs = dict(DEFAULT_EBM_KWARGS if self.ebm_kwargs is None
+                      else self.ebm_kwargs)
+        kwargs['random_state'] = self.random_state
+        kwargs['interactions'] = self.interactions
+        return kwargs
+
     def _initialize_ebm_internal(self, y):
         if self.use_internal_classifiers and len(np.unique(y)) == 2:
-            return ExplainableBoostingClassifier(**self.ebm_kwargs)
+            return ExplainableBoostingClassifier(**self._ebm_kwargs())
         else:
-            return ExplainableBoostingRegressor(**self.ebm_kwargs)
+            return ExplainableBoostingRegressor(**self._ebm_kwargs())
 
     def _split_data(self, num_samples):
         '''Split data into EBM and linear model data

@@ -41,8 +41,7 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
         path = self.estimator_.cost_complexity_pruning_path(
             X, y, sample_weight=sample_weight)
-        ccp_alphas, impurities = path.ccp_alphas, path.impurities
-        complexities = {}
+        ccp_alphas = path.ccp_alphas
         low = 0
         high = len(ccp_alphas) - 1
         cur = 0
@@ -143,8 +142,7 @@ class DecisionTreeCCPRegressor(BaseEstimator):
     def _get_alpha(self, X, y, sample_weight=None):
         path = self.estimator_.cost_complexity_pruning_path(
             X, y, sample_weight=sample_weight)
-        ccp_alphas, impurities = path.ccp_alphas, path.impurities
-        complexities = {}
+        ccp_alphas = path.ccp_alphas
         low = 0
         high = len(ccp_alphas) - 1
         cur = 0

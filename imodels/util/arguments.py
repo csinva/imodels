@@ -3,7 +3,7 @@ from inspect import signature
 import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin
-from sklearn.utils.validation import check_X_y, check_array
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import check_classification_targets
 import scipy.sparse
 
@@ -83,7 +83,12 @@ def check_predict_X(model, X):
     Models that index X by a stored feature number silently accept extra
     columns, returning predictions that look reasonable but ignore part of the
     input. sklearn raises instead, and so should we.
+
+    Also raises NotFittedError when called before fit. Otherwise predicting on
+    an unfitted model fails later with whatever AttributeError the model
+    happens to hit first, which callers cannot catch as NotFittedError.
     """
+    check_is_fitted(model)
     n_features = getattr(model, 'n_features_in_', None)
     if n_features is not None and np.shape(X)[1] != n_features:
         raise ValueError(

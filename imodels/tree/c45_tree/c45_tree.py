@@ -14,63 +14,12 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score
-from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
+from sklearn.utils.validation import check_array, check_is_fitted
 from imodels.util.arguments import check_fit_arguments, check_predict_X, decode_labels
 
 from ..c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
     set_as_leaf_node
 from ...util.data_util import get_clean_dataset
-
-
-def _add_label(node, label):
-    if hasattr(node, "labels"):
-        node.labels.append(label)
-        return
-    node.labels = [label]
-    return
-
-
-def _get_next_node(children, att):
-    for child in children:
-        is_equal = child.getAttribute("flag") == "m" and child.getAttribute("feature") == att
-        is_less_than = child.getAttribute("flag") == "l" and float(att) < float(child.getAttribute("feature"))
-        is_greater_than = child.getAttribute("flag") == "r" and float(att) >= float(child.getAttribute("feature"))
-        if is_equal or is_less_than or is_greater_than:
-            return child
-
-
-def shrink_node(node, reg_param, parent_val, parent_num, cum_sum, scheme, constant):
-    """Shrink the tree
-    """
-
-    is_leaf = not node.hasChildNodes()
-    # if self.prediction_task == 'regression':
-    val = node.nodeValue
-    is_root = parent_val is None and parent_num is None
-    n_samples = len(node.labels) if (scheme != "leaf_based" or is_root) else parent_num
-
-    if is_root:
-        val_new = val
-
-    else:
-        reg_term = reg_param if scheme == "constant" else reg_param / parent_num
-
-        val_new = (val - parent_val) / (1 + reg_term)
-
-    cum_sum += val_new
-
-    if is_leaf:
-        if scheme == "leaf_based":
-            v = constant + (val - constant) / (1 + reg_param / node.n_obs)
-            node.nodeValue = v
-        else:
-            node.nodeValue = cum_sum
-
-    else:
-        for c in node.childNodes:
-            shrink_node(c, reg_param, val, parent_num=n_samples, cum_sum=cum_sum, scheme=scheme, constant=constant)
-
-    return node
 
 
 def _add_label(node, label):
@@ -268,6 +217,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
     def predict_proba(self, X):
+        check_is_fitted(self, 'dom_')
         if len(self.classes_) == 2:
             # unchanged binary path: leaves hold the probability of class 1,
             # which is also what hierarchical shrinkage rewrites them to

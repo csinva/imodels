@@ -5,6 +5,8 @@ imodels.CLASSIFIERS or imodels.REGRESSORS only needs configuring once (and
 model_api_test.TestRegistryCoverage fails if it isn't).
 """
 
+from copy import deepcopy
+
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 N_SAMPLES = 50
@@ -46,6 +48,17 @@ MODEL_KWARGS = {
                      "est__max_leaf_nodes": [2, 4]}],
     ),
 }
+
+def model_kwargs(model_name):
+    """A fresh copy of the kwargs for `model_name`.
+
+    Some entries hold estimator instances (the CCP models take an ``estimator_``).
+    Handing the same instance to every test lets one test's fit leak into the
+    next, which hides state bugs -- a model built from the registry would
+    already be fitted. Always build from a copy.
+    """
+    return deepcopy(MODEL_KWARGS.get(model_name, {}))
+
 
 # models that require pre-discretized (binary) features
 BINARY_INPUT_MODELS = {

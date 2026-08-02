@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 import imodels
-from tests.model_configs import EXCLUDED_MODELS, MODEL_KWARGS
+from tests.model_configs import EXCLUDED_MODELS, model_kwargs
 
 CLASSIFIERS = [m for m in imodels.CLASSIFIERS if m.__name__ not in EXCLUDED_MODELS]
 IDS = [m.__name__ for m in CLASSIFIERS]
@@ -30,7 +30,7 @@ def binary_data():
 @pytest.mark.parametrize("model_type", CLASSIFIERS, ids=IDS)
 def test_classification_binary_inputs(model_type, binary_data):
     X, y = binary_data
-    model = model_type(**MODEL_KWARGS.get(model_type.__name__, {}))
+    model = model_type(**model_kwargs(model_type.__name__))
     model.fit(X, y)
 
     preds = np.asarray(model.predict(X))

@@ -356,6 +356,7 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
         '''Predict probability of a particular sample being an outlier or not
 
         '''
+        check_is_fitted(self, 'rules_without_feature_names_')
         X = check_array(X)
         weight_sum = np.sum([w[0] for (r, w) in self.rules_without_feature_names_])
         if weight_sum == 0:

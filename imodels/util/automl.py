@@ -17,6 +17,7 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 import numpy as np
 from sklearn.pipeline import Pipeline
 from imodels.util.arguments import set_feature_names_in
+from sklearn.utils.validation import check_is_fitted
 
 
 class AutoInterpretableModel(BaseEstimator):
@@ -51,13 +52,29 @@ class AutoInterpretableModel(BaseEstimator):
         return self
 
     def predict(self, X):
+        check_is_fitted(self, 'est_')
         return self.est_.predict(X)
 
     def predict_proba(self, X):
+        check_is_fitted(self, 'est_')
         return self.est_.predict_proba(X)
 
     def score(self, X, y):
+        check_is_fitted(self, 'est_')
         return self.est_.score(X, y)
+
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules).
+
+        The rules are those of the model the search selected.
+        """
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
 
     PARAM_GRID_LINEAR_CLASSIFICATION = [
         {

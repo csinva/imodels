@@ -15,6 +15,7 @@ from collections import defaultdict
 import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
+from sklearn.utils.validation import check_is_fitted
 
 
 class MarginalShrinkageLinearModel(BaseEstimator):
@@ -185,10 +186,12 @@ class MarginalShrinkageLinearModel(BaseEstimator):
             )
 
     def predict_proba(self, X):
+        check_is_fitted(self, 'est_main_')
         X = self.scalar_X_.transform(X)
         return self.est_main_.predict_proba(X)
 
     def predict(self, X):
+        check_is_fitted(self, 'est_main_')
         X = self.scalar_X_.transform(X)
         pred = self.est_main_.predict(X)
         return self.scalar_y_.inverse_transform(pred.reshape(-1, 1)).squeeze()

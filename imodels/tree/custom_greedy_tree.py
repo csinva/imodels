@@ -1,17 +1,6 @@
-from sklearn.tree._tree import Tree
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.base import ClassifierMixin, RegressorMixin
-from sklearn import __version__
-from collections import namedtuple
-import pandas as pd
 import numpy as np
 
-from collections import namedtuple
-
-from sklearn import __version__
-from sklearn.base import ClassifierMixin, RegressorMixin
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.tree._tree import Tree
+from sklearn.base import ClassifierMixin
 import imodels.util.tree
 
 

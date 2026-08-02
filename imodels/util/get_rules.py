@@ -118,12 +118,23 @@ def _rules_from_wrapped_model(model, feature_names):
     return None
 
 
-def _has_rules(model):
+def _has_rules(model, _depth=0):
     if getattr(model, 'rules_', None) is not None:
         return True
     if is_sklearn_tree(model):
         return True
-    return any(hasattr(model, attr) for attr in ('trees_', 'estimators_'))
+    if any(hasattr(model, attr) for attr in ('trees_', 'estimators_')):
+        return True
+    # a wrapper may hold the model with the rules several levels down, e.g. a
+    # search whose best estimator is a pipeline; the depth cap keeps a model
+    # that refers back to itself from looping
+    if _depth >= 4:
+        return False
+    for attr in WRAPPED_MODEL_ATTRS:
+        inner = getattr(model, attr, None)
+        if inner is not None and inner is not model and _has_rules(inner, _depth + 1):
+            return True
+    return False
 
 
 def _rules_from_rulefit(model, feature_names):
