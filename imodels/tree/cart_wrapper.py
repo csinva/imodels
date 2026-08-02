@@ -39,6 +39,7 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
             Fitted estimator.
         """
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        self.feature_names = list(feature_names)
         classes = self.classes_  # super().fit overwrites this with the encoded labels
         names_in = getattr(self, 'feature_names_in_', None)
         super().fit(X, y, sample_weight=sample_weight, check_input=check_input)

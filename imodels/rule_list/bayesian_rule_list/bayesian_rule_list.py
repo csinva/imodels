@@ -140,6 +140,10 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         if not np.all((X == 1) | (X == 0)):
             raise ValueError("All numeric features must be discretized prior to fitting!")
 
+        # fall back to the DataFrame's columns when no names were passed, so the
+        # printed rule list names the caller's features rather than X_0, X_1, ...
+        if feature_names is None:
+            feature_names = getattr(self, 'feature_names_in_', None)
         self.feature_dict_ = get_feature_dict(X.shape[1], feature_names)
         self.feature_placeholders = np.array(list(self.feature_dict_.keys()))
         self.feature_names = np.array(list(self.feature_dict_.values()))
