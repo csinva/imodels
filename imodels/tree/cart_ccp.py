@@ -70,6 +70,9 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
         # self.alpha = closest_alpha
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
+        # fit a copy, so the estimator passed to __init__ is left untouched and
+        # two models sharing one estimator cannot interfere with each other
+        self.estimator_ = deepcopy(self.estimator_)
         params_for_fitting = self.estimator_.get_params()
         self._get_alpha(X, y, sample_weight, *args, **kwargs)
         params_for_fitting['ccp_alpha'] = self.alpha
@@ -175,6 +178,8 @@ class DecisionTreeCCPRegressor(BaseEstimator):
     #  self.alpha = closest_alpha
 
     def fit(self, X, y, sample_weight=None):
+        # fit a copy (see DecisionTreeCCPClassifier.fit)
+        self.estimator_ = deepcopy(self.estimator_)
         params_for_fitting = self.estimator_.get_params()
         self._get_alpha(X, y, sample_weight)
         params_for_fitting['ccp_alpha'] = self.alpha
