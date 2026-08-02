@@ -94,7 +94,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 
 ## Demo notebooks
 
-Demos are contained in the [notebooks](notebooks) folder. (The standalone Colab notebook has been retired; please refer to the demos below, which are kept up to date with the package.)
+Demos are contained in the [notebooks](notebooks) folder
 
 <details>
 <summary><a href="https://github.com/csinva/imodels/blob/master/notebooks/imodels_demo.ipynb">Quickstart demo</a></summary>
