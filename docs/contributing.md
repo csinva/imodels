@@ -7,25 +7,6 @@ Before contributing, it would be good to read the sklearn estimator [contributin
 
 [Docs](https://csinva.io/imodels/docs/) are built using [pdoc](https://pdoc3.github.io/pdoc/). Build them by changing to the `docs` directory and then running `./build_docs.sh`.
 
-## Notebooks
-
-The demo notebooks in [notebooks](notebooks) are run against the library, so
-they break when an API changes. To run them:
-
-```bash
-uv sync --dev
-uv run jupyter nbconvert --execute --to notebook --inplace notebooks/<name>.ipynb
-```
-
-Most run with just the dev dependencies. Three demonstrate third-party tools
-and need those installed separately, since they are not imodels dependencies:
-
-| notebook | also needs |
-| --- | --- |
-| `figs_demo` | `skompiler` (only the last two cells, which compile a model to source) |
-| `posthoc_analysis` | `eli5`, `pdpbox`, `lime`, `shap` |
-| `autogluon_imodels_example` | `autogluon.tabular` |
-
 ## Tests
 
 [Tests](tests) are run with [pytest](https://docs.pytest.org/en/stable/) - run `pytest` in the repo directory (or `uv run pytest tests`, which is what CI runs). The full suite takes about 20 seconds. Make sure it passes before pushing code. Note that you might need to install some additional dependencies in order to get the tests to pass.
