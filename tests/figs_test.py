@@ -330,3 +330,33 @@ def test_n_jobs_gives_identical_models():
     # it round-trips as an ordinary parameter
     assert FIGSRegressor(n_jobs=4).get_params()['n_jobs'] == 4
     assert FIGSRegressor().get_params()['n_jobs'] is None
+
+
+def test_constant_target():
+    """FIGS should fit a trivial model when there is nothing to split on
+
+    It used to raise TypeError comparing None to a float, because a stump that
+    finds no split reports impurity_reduction=None. Once that was handled, a
+    model with no trees predicted 0 whatever y was, since predictions are a sum
+    over trees.
+    """
+    from imodels import FIGSClassifier, FIGSRegressor
+
+    X = np.random.RandomState(0).randn(50, 3)
+
+    # a constant target is predicted exactly, not as 0
+    for constant in (3.7, 0.0, -2.5, 100.0):
+        model = FIGSRegressor(max_rules=5).fit(X, np.full(50, constant))
+        assert np.allclose(model.predict(X), constant), constant
+
+    # a single-class target predicts that class
+    for label in (0, 1):
+        model = FIGSClassifier(max_rules=5).fit(X, np.full(50, label, dtype=int))
+        assert set(np.unique(model.predict(X))) == {label}
+        assert model.predict_proba(X).shape[0] == 50
+
+    # ordinary data is unaffected
+    y = X[:, 0] + 0.01 * np.random.RandomState(1).randn(50)
+    fitted = FIGSRegressor(max_rules=6).fit(X, y)
+    assert len(fitted.trees_) >= 1
+    assert 1 - np.var(y - fitted.predict(X)) / np.var(y) > 0.9
