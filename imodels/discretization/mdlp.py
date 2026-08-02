@@ -56,7 +56,10 @@ class MDLPDiscretizer(object):
             if missing:
                 print('WARNING: user-specified features %s not in input dataframe' % str(missing))
         else:  # then we need to recognize which features are numeric
-            numeric_cols = self._data_raw._data.get_numeric_data().items
+            # _data is a private pandas internal, deprecated in pandas 2 and
+            # removed in pandas 3; select_dtypes is the public equivalent
+            numeric_cols = self._data_raw.select_dtypes(
+                include=[np.number]).columns
             self._features = [f for f in numeric_cols if f != class_label]
         # other features that won't be discretized
         self._ignored_features = set(self._data_raw.columns) - set(self._features)
