@@ -15,7 +15,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.linear_model import LinearRegression, Lasso, LogisticRegression
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
-from imodels.util.arguments import set_feature_names_in
+from imodels.util.arguments import check_predict_X, set_feature_names_in
 
 def _warn_if_rounding_collapsed(coef, rounded):
     """Warn when rounding to integers has destroyed the fitted model.
@@ -109,11 +109,8 @@ class SLIMRegressor(RegressorMixin, BaseEstimator):
 
     def predict(self, X):
         check_is_fitted(self)
+        check_predict_X(self, X)
         X = check_array(X)
-        # ensure input feature count matches training
-        if hasattr(self, 'n_features_in_') and X.shape[1] != self.n_features_in_:
-            raise ValueError("X has %d features, but %s is expecting %d features as input" %
-                             (X.shape[1], self.__class__.__name__, self.n_features_in_))
         return self.model_.predict(X)
 
 
@@ -192,18 +189,12 @@ class SLIMClassifier(ClassifierMixin, BaseEstimator):
 
     def predict(self, X):
         check_is_fitted(self)
+        check_predict_X(self, X)
         X = check_array(X)
-        # ensure input feature count matches training
-        if hasattr(self, 'n_features_in_') and X.shape[1] != self.n_features_in_:
-            raise ValueError("X has %d features, but %s is expecting %d features as input" %
-                             (X.shape[1], self.__class__.__name__, self.n_features_in_))
         return self.model_.predict(X)
 
     def predict_proba(self, X):
         check_is_fitted(self)
+        check_predict_X(self, X)
         X = check_array(X)
-        # ensure input feature count matches training
-        if hasattr(self, 'n_features_in_') and X.shape[1] != self.n_features_in_:
-            raise ValueError("X has %d features, but %s is expecting %d features as input" %
-                             (X.shape[1], self.__class__.__name__, self.n_features_in_))
         return self.model_.predict_proba(X)
