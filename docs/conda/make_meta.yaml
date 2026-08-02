@@ -27,3 +27,16 @@
 #
 # Every runtime dependency is on conda-forge, so nothing blocks this. The
 # packages that used to (corels, gosdt, irf) were removed from imodels.
+#
+# Verified locally with conda-build 26.5.0: `conda build .` builds
+# imodels-2.0.4-py_0.conda and passes both `pip check` and the import test on
+# python 3.9, 3.10 and 3.13. conda_build_config.yaml supplies python_min so the
+# recipe renders outside conda-forge; conda-forge's own pinning takes over there.
+#
+# Two things to know before submitting:
+#
+# * the mlxtend upper bound is forced by upstream metadata, not by imodels --
+#   see the comment in meta.yaml. Without it `pip check` fails below python 3.11.
+# * the recipe builds the sdist published on PyPI, so cut a release first.
+#   Building 2.0.4 reproduces bugs already fixed on master (fit returning None,
+#   HSTree probabilities slightly below zero), which would ship to conda users.

@@ -24,7 +24,12 @@ requirements:
   run:
     - python >={{ python_min }}
     - matplotlib-base
-    - mlxtend
+    # upper bound forced by packaging, not by imodels: mlxtend 0.24/0.25 declare
+    # requirements (numpy >=2.3.5, scikit-learn >=1.8, scipy >=1.16.3) that their
+    # conda packages don't enforce, so `pip check` fails below python 3.11.
+    # imodels only uses fpgrowth from mlxtend, which 0.23 provides. Drop the
+    # bound once mlxtend's conda metadata is consistent.
+    - mlxtend <0.24
     - numpy
     - pandas
     - requests
