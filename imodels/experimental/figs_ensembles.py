@@ -2,11 +2,9 @@ from copy import deepcopy
 
 import numpy as np
 from matplotlib import pyplot as plt
-from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import RidgeCV, RidgeClassifierCV
-from sklearn.model_selection import train_test_split
 from sklearn.tree import plot_tree
 from sklearn.utils import check_X_y
 
@@ -127,15 +125,6 @@ class FIGSExt(BaseEstimator):
         it is equivalent to FIGSExtRegressor
         """
         self.prediction_task = 'regression'
-
-    def _init_decision_function(self):
-        """Sets decision function based on prediction_task
-        """
-        # used by sklearn GridSearchCV, BaggingClassifier
-        if self.prediction_task == 'classification':
-            def decision_function(x): return self.predict_proba(x)[:, 1]
-        elif self.prediction_task == 'regression':
-            decision_function = self.predict
 
     def _construct_node_linear(self, X, y, idxs, tree_num=0, sample_weight=None):
         """This can be made a lot faster
@@ -429,8 +418,8 @@ class FIGSExt(BaseEstimator):
             X_feats = self._extract_tree_predictions(X)
             return self.weighted_model_.predict(X_feats)
         preds = np.zeros(X.shape[0])
-        for tree in self.trees_:
-            preds += self._predict_tree(tree, X)
+        for figs_tree in self.trees_:
+            preds += self._predict_tree(figs_tree, X)
         if self.prediction_task == 'regression':
             return preds
         elif self.prediction_task == 'classification':
@@ -447,8 +436,8 @@ class FIGSExt(BaseEstimator):
             return np.vstack((1 - probs, probs)).transpose()
         else:
             preds = np.zeros(X.shape[0])
-            for tree in self.trees_:
-                preds += self._predict_tree(tree, X)
+            for figs_tree in self.trees_:
+                preds += self._predict_tree(figs_tree, X)
             # constrain to range of probabilities
             preds = np.clip(preds, a_min=0., a_max=1.)
             return np.vstack((1 - preds, preds)).transpose()
@@ -494,27 +483,17 @@ class FIGSExt(BaseEstimator):
     def plot(self, cols=2, feature_names=None, filename=None, label="all",
              impurity=False, tree_number=None, dpi=150, fig_size=None):
         is_single_tree = len(self.trees_) < 2 or tree_number is not None
-        n_cols = int(cols)
-        n_rows = int(np.ceil(len(self.trees_) / n_cols))
-        # if is_single_tree:
-        #     fig, ax = plt.subplots(1)
-        # else:
-        #     fig, axs = plt.subplots(n_rows, n_cols)
         n_plots = int(len(self.trees_)) if tree_number is None else 1
-        fig, axs = plt.subplots(n_plots, dpi=dpi)
+        n_cols = 1 if is_single_tree else max(1, min(int(cols), n_plots))
+        n_rows = int(np.ceil(n_plots / n_cols))
+        fig, axs = plt.subplots(n_rows, n_cols, dpi=dpi, squeeze=False)
         if fig_size is not None:
             fig.set_size_inches(fig_size, fig_size)
-        criterion = "squared_error" if self.prediction_task == "regression" else "gini"
+        for ax in axs.flat[n_plots:]:
+            ax.axis("off")
         n_classes = 1 if self.prediction_task == 'regression' else 2
-        ax_size = int(len(self.trees_))  # n_cols * n_rows
         for i in range(n_plots):
-            r = i // n_cols
-            c = i % n_cols
-            if not is_single_tree:
-                # ax = axs[r, c]
-                ax = axs[i]
-            else:
-                ax = axs
+            ax = axs.flat[i]
             try:
                 dt = extract_sklearn_tree_from_figs(
                     self, i if tree_number is None else tree_number, n_classes)
@@ -539,22 +518,3 @@ class FIGSExtRegressor(FIGSExt):
 class FIGSExtClassifier(FIGSExt):
     def _init_prediction_task(self):
         self.prediction_task = 'classification'
-
-
-if __name__ == '__main__':
-    np.random.seed(13)
-    # X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
-    X, y = datasets.load_diabetes(return_X_y=True)  # regression
-    # X = np.random.randn(500, 10)
-    # y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=42
-    )
-    print('X.shape', X.shape)
-    print('ys', np.unique(y_train), '\n\n')
-
-    m = FIGSExtClassifier(max_rules=50)
-    m.fit(X_train, y_train)
-    print(m.predict_proba(X_train))
-    m.plot(2, tree_number=0)

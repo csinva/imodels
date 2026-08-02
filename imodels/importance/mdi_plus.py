@@ -339,7 +339,7 @@ class TreeMDIPlus:
                 if len(scoring_fns) > 1:
                     msg = "scoring_fn={} should return one value for each feature.".format(fn_name)
                 else:
-                    msg = "scoring_fns should return one value for each feature.".format(fn_name)
+                    msg = "scoring_fns should return one value for each feature."
                 raise ValueError("Unexpected dimensions. {}".format(msg))
             scores = scores.ravel()
             all_scores[fn_name] = scores

@@ -7,8 +7,6 @@ These functions help to predict many outputs using ridge regression efficiently.
 import time
 import numpy as np
 from tqdm import tqdm
-import logging
-import joblib
 import itertools as itools
 from imodels.algebraic.ridge_multi_utils import mult_diag, _z_score, ridge_logger, _counter
 from sklearn.utils.extmath import randomized_svd
@@ -575,94 +573,3 @@ def boostrap_ridge_with_lowrank(
 
 
     ###########################################################
-if __name__ == '__main__':
-    # sample data for ridge regression
-    np.random.seed(0)
-
-    # set logging to debug
-    logging.basicConfig(level=logging.DEBUG)
-
-    # params = joblib.load('example_params.joblib')
-    params = joblib.load('/home/chansingh/fmri/example_params_full.joblib')
-    print(params.keys())
-
-    X_train = params['features_train_delayed']
-    y_train = params['resp_train']
-    X_test = params['features_test_delayed']
-    y_test = params['resp_test']
-    alphas = params['alphas']
-    # nboots=params['nboots'],
-    nboots = 10
-    chunklen = params['chunklen']
-    nchunks = params['nchunks']
-    singcutoff = params['singcutoff']
-    single_alpha = params['single_alpha']
-
-    # wt_hybrid, corrs_test, corrs_tune, valinds = boostrap_ridge_with_lowrank(
-    #     X_train, y_train, X_test, y_test,
-    #     alphas_ridge=alphas,
-    #     alphas_lowrank=alphas,
-    #     ranks=[100],
-    #     nboots=nboots, chunklen=chunklen, nchunks=nchunks)
-
-    print('alphas', alphas)
-
-    # baseline call (with decrease_alpha=1)
-    t0 = time.time()
-    wt_ridge, corrs_test, alphas_best, corrs_tune, valinds = bootstrap_ridge(
-        X_train, y_train, X_test, y_test,
-        alphas=alphas,
-        nboots=nboots,
-        chunklen=params['chunklen'], nchunks=params['nchunks'],
-        singcutoff=params['singcutoff'], single_alpha=params['single_alpha'],
-        decrease_alpha=1
-    )
-    print('time elapsed', time.time()-t0)
-
-    pred_test = X_test @ wt_ridge
-    corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
-                           for ii in range(y_test.shape[1])])
-    print('mean test corrs', corrs_test.mean())
-    pred_train = X_train @ wt_ridge
-    corrs_train = np.array([np.corrcoef(y_train[:, ii], pred_train[:, ii].ravel())[0, 1]
-                            for ii in range(y_train.shape[1])])
-    print('mean train corrs', corrs_train.mean())
-
-    # # call 2
-    # t0 = time.time()
-    # wt_lowrank, meanbootcorrs = bootstrap_low_rank_ridge(
-    #     X_train, y_train, alphas=alphas[::2], ranks=[25, 100], nboots=nboots, chunklen=chunklen, nchunks=nchunks)
-    # print('time elapsed', time.time()-t0)
-    # pred_train = X_train @ wt_lowrank
-
-    # pred_test = X_test @ wt_lowrank
-    # corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
-    #                        for ii in range(y_test.shape[1])])
-    # print('mean test corrs', corrs_test.mean())
-    # pred_train = X_train @ wt_lowrank
-    # corrs_train = np.array([np.corrcoef(y_train[:, ii], pred_train[:, ii].ravel())[0, 1]
-    #                         for ii in range(y_train.shape[1])])
-    # print('mean train corrs', corrs_train.mean())
-
-    # # select weights between wt and wt_lowrank based on bootstrap results
-    # try:
-    #     meanbootcorrs_ridge = corrs_tune.mean(2).max(axis=0)
-    #     meanbootcorrs_lowrank = meanbootcorrs.max(axis=0)
-    #     wt_hybrid = np.zeros_like(wt_ridge)
-    #     for i in range(y_train.shape[1]):
-    #         if meanbootcorrs_ridge[i] > meanbootcorrs_lowrank[i]:
-    #             wt_hybrid[:, i] = wt_ridge[:, i]
-    #         else:
-    #             wt_hybrid[:, i] = wt_lowrank[:, i]
-
-    #     pred_test = X_test @ wt_hybrid
-    #     corrs_test = np.array([np.corrcoef(y_test[:, ii], pred_test[:, ii].ravel())[0, 1]
-    #                            for ii in range(y_test.shape[1])])
-    #     print('mean test corrs', corrs_test.mean())
-    #     pred_train = X_train @ wt_hybrid
-    #     corrs_train = np.array([np.corrcoef(y_train[:, ii], pred_train[:, ii].ravel())[0, 1]
-    #                             for ii in range(y_train.shape[1])])
-    #     print('mean train corrs', corrs_train.mean())
-    # except Exception as e:
-    #     print(e)
-    #     breakpoint()

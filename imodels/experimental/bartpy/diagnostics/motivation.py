@@ -4,16 +4,14 @@ import os
 from functools import partial
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from tqdm import tqdm
-from sklearn import model_selection, datasets
+from sklearn import model_selection
 from sklearn.metrics import mean_squared_error
 
 from imodels import get_clean_dataset
 from imodels.experimental.bartpy.model import Model
-from imodels.experimental.bartpy.tree import Tree
 from ..sklearnmodel import BART, SklearnModel
 
 ART_PATH = "/accounts/campus/omer_ronen/projects/tree_shrink/imodels/art"
@@ -191,7 +189,3 @@ def main():
 
             plt.savefig(os.path.join(ART_PATH, "functional", f"{d[0]}_samples_{n_samples}.png"))
             plt.close()
-
-
-if __name__ == '__main__':
-    main()

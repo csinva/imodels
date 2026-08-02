@@ -2,12 +2,9 @@ from copy import deepcopy
 import numpy as np
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster import KMeans
-from sklearn.decomposition import NMF
 from sklearn.metrics import rand_score, adjusted_rand_score
-import sklearn.datasets
 from sklearn.utils.validation import check_is_fitted
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 
 
 class StableClustering(BaseEstimator, ClusterMixin):
@@ -93,19 +90,3 @@ class StableClustering(BaseEstimator, ClusterMixin):
             closest_points = np.argsort(distances_)[:n_closest]
             preds[closest_points] = i
         return preds
-
-
-if __name__ == '__main__':
-    # sample sklearn datraset
-    X_simple = sklearn.datasets.load_iris().data
-
-    stable_clustering = StableClustering(
-        k_values=[3, 4, 5, 6, 7, 8, 9, 10, 12, 15], n_repetitions=10,
-        algorithm="k-means",
-        # algorithm="nmf",
-        metric="adjusted_rand")
-    stable_clustering.fit(X_simple)
-    print(stable_clustering.scores_)  # Dictionary of scores for each k
-
-    plt.plot(list(stable_clustering.scores_.keys()), list(
-        stable_clustering.scores_.values()), '.-')

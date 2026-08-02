@@ -1,7 +1,4 @@
-from sklearn import datasets
-from sklearn.tree import DecisionTreeRegressor
 import numpy as np
-from sklearn.tree._tree import Tree
 from imodels.tree.custom_greedy_tree import CustomDecisionTreeClassifier
 
 
@@ -182,10 +179,3 @@ def compute_mean_llm_calls(model_name, num_prompts, model=None, X=None):
         return num_prompts
     else:
         return num_prompts
-
-
-if __name__ == '__main__':
-    X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
-    m = DecisionTreeRegressor(random_state=42, max_leaf_nodes=4)
-    m.fit(X, y)
-    print(compute_tree_complexity(m.tree_, complexity_measure='num_leaves'))

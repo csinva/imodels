@@ -1,18 +1,11 @@
 from copy import deepcopy
 import numpy as np
-import pandas as pd
 from sklearn.base import BaseEstimator
-from sklearn.linear_model import LinearRegression, RidgeCV, Ridge, ElasticNet, ElasticNetCV
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.linear_model import RidgeCV, ElasticNet, ElasticNetCV
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, _check_sample_weight
 from imodels.util.arguments import set_feature_names_in
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score
-from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler
-from collections import defaultdict
-import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
 from sklearn.utils.validation import check_is_fitted
@@ -274,94 +267,3 @@ class MarginalLinearClassifier(MarginalLinearModel, ClassifierMixin):
 #     print(m.coef_)
 #     print(m.predict(X_test))
 #     print(m.score(X_test, y_test))
-
-if __name__ == "__main__":
-    # X, y, feature_names = imodels.get_clean_dataset("heart")
-    X, y, feature_names = imodels.get_clean_dataset(
-        **imodels.util.data_util.DSET_KWARGS["california_housing"]
-    )
-
-    # scale the data
-    X = StandardScaler().fit_transform(X)
-    y = StandardScaler().fit_transform(y.reshape(-1, 1)).squeeze()
-
-    print("shapes", X.shape, y.shape, "nunique", np.unique(y).size)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, random_state=42, test_size=0.2
-    )
-
-    coefs = []
-    alphas = (0.1, 1, 10, 100, 1000, 10000)  # (0.1, 1, 10, 100, 1000, 10000)
-    # alphas = 10000
-    kwargs = dict(
-        random_state=42,
-        alphas=alphas,
-    )
-    results = defaultdict(list)
-    for m in [
-        # MarginalShrinkageLinearModelRegressor(**kwargs),
-        # MarginalShrinkageLinearModelRegressor(
-        #     est_marginal_name=None, **kwargs),
-        # MarginalShrinkageLinearModelRegressor(
-        #     est_main_name=None,
-        #     **kwargs,
-        # ),
-        # MarginalShrinkageLinearModelRegressor(
-        #     est_marginal_name="ridge",
-        #     est_main_name="ridge",
-        #     marginal_sign_constraint=True,
-        #     **kwargs,
-        # ),
-        # MarginalShrinkageLinearModelRegressor(
-        #     est_marginal_name=None, est_main_name="lasso", **kwargs
-        # ),
-        # MarginalShrinkageLinearModelRegressor(
-        #     est_marginal_name="ridge",
-        #     est_main_name="lasso",
-        #     marginal_sign_constraint=True,
-        #     **kwargs,
-        # ),
-        MarginalLinearRegressor(alpha=1.0),
-        RidgeCV(alphas=alphas, fit_intercept=False),
-    ]:
-        results["model_name"].append(str(m))
-        m.fit(X_train, y_train)
-
-        # check roc auc score
-        if isinstance(m, ClassifierMixin):
-            results["train_roc"].append(
-                roc_auc_score(y_train, m.predict_proba(X_train)[:, 1])
-            )
-            results["test_roc"].append(
-                roc_auc_score(y_test, m.predict_proba(X_test)[:, 1])
-            )
-            results["acc_train"].append(
-                accuracy_score(y_train, m.predict(X_train)))
-            results["acc_test"].append(
-                accuracy_score(y_test, m.predict(X_test)))
-        else:
-            y_pred = m.predict(X_test)
-            results["train_mse"].append(
-                np.mean((y_train - m.predict(X_train)) ** 2))
-            results["test_mse"].append(np.mean((y_test - y_pred) ** 2))
-            results["train_r2"].append(m.score(X_train, y_train))
-            results["test_r2"].append(m.score(X_test, y_test))
-
-        if isinstance(m, MarginalShrinkageLinearModelRegressor):
-            lin = m.est_main_
-        else:
-            lin = m
-
-        coefs.append(deepcopy(lin.coef_))
-        print("alpha best", lin.alpha_)
-
-    # diffs = pd.DataFrame({str(i): coefs[i] for i in range(len(coefs))})
-    # diffs["diff 0 - 1"] = diffs["0"] - diffs["1"]
-    # diffs["diff 1 - 2"] = diffs["1"] - diffs["2"]
-    # print(diffs)
-
-    # don't round strings
-    with pd.option_context(
-        "display.max_rows", None, "display.max_columns", None, "display.width", 1000
-    ):
-        print(pd.DataFrame(results).round(3))

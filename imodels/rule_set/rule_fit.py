@@ -15,8 +15,7 @@ import scipy
 from scipy.special import softmax
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.base import TransformerMixin
-from sklearn.utils.multiclass import unique_labels
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from sklearn.utils.validation import check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
 from imodels.util.arguments import check_fit_arguments
