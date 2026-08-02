@@ -9,7 +9,7 @@ import scipy.sparse
 
 
 def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_classmixin=True,
-                        allow_nan=False, binary_only=False):
+                        allow_nan=False):
     """Process arguments for fit and predict methods.
 
     For classifiers, sets ``model.classes_`` and encodes y as integers 0..n_classes-1
@@ -20,19 +20,10 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
     allow_nan: pass missing values in X through instead of rejecting them, for models
         that delegate to an estimator able to handle them (e.g. an sklearn decision
         tree). That estimator still raises if it cannot.
-
-    binary_only: reject a target with more than two classes, for models that only
-        implement binary classification.
     """
     if isinstance(model, ClassifierMixin) and is_classmixin:
         model.classes_, y = np.unique(y, return_inverse=True)  # deals with str inputs
         check_classification_targets(y)
-        if binary_only and len(model.classes_) > 2:
-            raise ValueError(
-                f"{type(model).__name__} does not yet support multiclass "
-                f"classification (found {len(model.classes_)} classes: "
-                f"{list(model.classes_)}); it is a binary classifier."
-            )
 
     if feature_names is None:
         if isinstance(X, pd.DataFrame):
@@ -54,6 +45,23 @@ def check_fit_arguments(model, X, y, feature_names, multi_output=False, is_class
     assert len(model.feature_names_) == model.n_features_in_, 'feature_names should be same size as X.shape[1]'
     y = y.astype(float)
     return X, y, model.feature_names_
+
+
+def check_binary_target(model, y):
+    """Raise if y has more than two classes, for models that only handle binary.
+
+    Without this a multiclass target is silently collapsed: the model fits, and
+    predict_proba returns two columns rather than one per class
+    (see https://github.com/csinva/imodels/issues/93).
+    """
+    n_classes = len(np.unique(y))
+    if n_classes > 2:
+        raise ValueError(
+            f"{type(model).__name__} only supports binary classification, but y "
+            f"has {n_classes} classes. Models in imodels that do support "
+            "multiclass include FIGSClassifier, GreedyTreeClassifier, "
+            "HSTreeClassifier, TaoTreeClassifier and BoostedRulesClassifier."
+        )
 
 
 def _finite_check_kwarg(allow_nan):

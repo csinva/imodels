@@ -84,7 +84,7 @@ from sklearn.utils.multiclass import check_classification_targets, unique_labels
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
-from imodels.util.arguments import check_fit_arguments, decode_labels
+from imodels.util.arguments import check_binary_target, check_fit_arguments, decode_labels
 from imodels.util.rule import replace_feature_name, get_feature_dict, Rule
 from imodels.util.extract import extract_skope
 from imodels.util.score import score_precision_recall
@@ -267,8 +267,8 @@ class SkopeRulesClassifier(BaseEstimator, RuleSet, ClassifierMixin):
         self : object
             Returns self.
         """
-        X, y, feature_names = check_fit_arguments(
-            self, X, y, feature_names, binary_only=True)
+        check_binary_target(self, y)
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         check_classification_targets(y)
         self.n_features_ = X.shape[1]
         self.sample_weight = sample_weight

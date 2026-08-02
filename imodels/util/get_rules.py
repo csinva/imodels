@@ -212,6 +212,8 @@ def _rules_from_c45(model, feature_names):
 
     # flags mark how a child splits its parent: less-than, right (>=) or equal
     comparisons = {'l': '<', 'r': '>=', 'm': '=='}
+    # the tree stores XML-safe names; report the ones the caller used
+    original_names = getattr(model, 'xml_name_to_feature_name_', {})
     rows = []
 
     def walk(node, conditions):
@@ -227,8 +229,8 @@ def _rules_from_c45(model, feature_names):
             flag = child.getAttribute('flag')
             threshold = child.getAttribute('feature')
             comparison = comparisons.get(flag, flag)
-            walk(child, conditions +
-                 [f"{child.nodeName} {comparison} {threshold}"])
+            name = original_names.get(child.nodeName, child.nodeName)
+            walk(child, conditions + [f"{name} {comparison} {threshold}"])
 
     walk(dom.childNodes[0], [])
     return pd.DataFrame(rows)

@@ -17,7 +17,8 @@ from tqdm import tqdm
 import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
-from imodels.util.arguments import decode_labels, set_feature_names_in
+from imodels.util.arguments import (check_binary_target, decode_labels,
+                                    set_feature_names_in)
 
 
 class TreeGAM(BaseEstimator):
@@ -105,13 +106,8 @@ class TreeGAM(BaseEstimator):
         self.n_features_in_ = X.shape[1]
         if isinstance(self, ClassifierMixin):
             check_classification_targets(y)
+            check_binary_target(self, y)
             self.classes_, y = np.unique(y, return_inverse=True)
-            if len(self.classes_) > 2:
-                raise ValueError(
-                    f"{type(self).__name__} does not yet support multiclass "
-                    f"classification (found {len(self.classes_)} classes: "
-                    f"{list(self.classes_)}); it is a binary classifier."
-                )
 
         sample_weight = _check_sample_weight(sample_weight, X, dtype=None)
 

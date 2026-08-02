@@ -1,6 +1,8 @@
 from typing import List
 
 import numpy as np
+
+from imodels.util.arguments import check_binary_target
 import pandas as pd
 
 from imodels.rule_set.skope_rules import SkopeRulesClassifier
@@ -49,6 +51,7 @@ class FPSkopeClassifier(SkopeRulesClassifier):
 
     def fit(self, X, y=None, feature_names=None, undiscretized_features=[], sample_weight=None):
         self.undiscretized_features = undiscretized_features
+        check_binary_target(self, y)
         super().fit(X, y, feature_names=feature_names, sample_weight=sample_weight)
         return self
 

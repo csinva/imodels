@@ -12,7 +12,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array, check_is_fitted
 from sklearn.tree import DecisionTreeClassifier
 from imodels.rule_list.rule_list import RuleList
-from imodels.util.arguments import check_fit_arguments, decode_labels
+from imodels.util.arguments import check_binary_target, check_fit_arguments, decode_labels
 
 
 class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
@@ -44,8 +44,8 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
         depth
             the depth of the current layer (used to recurse)
         """
-        X, y, feature_names = check_fit_arguments(
-            self, X, y, feature_names, binary_only=True)
+        check_binary_target(self, y)
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         self.depth = 0  # reset so that refitting doesn't accumulate depth
         self.rules_ = self.fit_node_recursive(X, y, depth=0, verbose=verbose)
         self.complexity_ = len(self.rules_)

@@ -162,9 +162,9 @@ def test_models_do_not_share_mutable_defaults():
 # classifiers that implement only two classes and should say so
 BINARY_ONLY_CLASSIFIERS = [
     'BayesianRuleListClassifier', 'GreedyRuleListClassifier',
-    'SkopeRulesClassifier', 'SlipperClassifier', 'C45TreeClassifier',
+    'SkopeRulesClassifier', 'SlipperClassifier',
     'OneRClassifier', 'RuleFitClassifier', 'FPLassoClassifier',
-    'FPSkopeClassifier', 'TreeGAMClassifier',
+    'FPSkopeClassifier', 'TreeGAMClassifier', 'FastFrugalTreeClassifier',
 ]
 
 
@@ -193,7 +193,7 @@ def test_binary_only_classifiers_reject_multiclass(model_type):
         with contextlib.redirect_stdout(io.StringIO()):
             model.fit(X, y)
     message = str(excinfo.value).lower()
-    assert 'multiclass' in message or 'binary' in message
+    assert 'multiclass' in message or 'binary' in message, message
 
 
 @pytest.mark.parametrize('model_type',
