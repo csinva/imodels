@@ -228,7 +228,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
 
     def raw_preds(self, X):
         check_is_fitted(self, ['tree_', 'resultType', 'feature_names'])
-        X = check_predict_X(self, check_array(X))
+        X = check_array(check_predict_X(self, X))
         if isinstance(X, pd.DataFrame):
             X = deepcopy(X)
             X.columns = self.feature_names

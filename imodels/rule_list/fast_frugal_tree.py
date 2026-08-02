@@ -131,7 +131,7 @@ class FastFrugalTreeClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
     def predict_proba(self, X):
         check_is_fitted(self)
-        X = check_predict_X(self, check_array(X))
+        X = check_array(check_predict_X(self, X))
 
         probs = np.zeros(X.shape[0])
         undecided = np.ones(X.shape[0], dtype=bool)

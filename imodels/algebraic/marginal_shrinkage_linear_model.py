@@ -6,7 +6,7 @@ from sklearn.linear_model import LinearRegression, RidgeCV, Ridge, ElasticNet, E
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, _check_sample_weight
-from imodels.util.arguments import set_feature_names_in
+from imodels.util.arguments import check_predict_X, set_feature_names_in
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score
 from tqdm import tqdm
@@ -185,10 +185,12 @@ class MarginalShrinkageLinearModel(BaseEstimator):
             )
 
     def predict_proba(self, X):
+        check_predict_X(self, X)
         X = self.scalar_X_.transform(X)
         return self.est_main_.predict_proba(X)
 
     def predict(self, X):
+        check_predict_X(self, X)
         X = self.scalar_X_.transform(X)
         pred = self.est_main_.predict(X)
         return self.scalar_y_.inverse_transform(pred.reshape(-1, 1)).squeeze()

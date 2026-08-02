@@ -125,7 +125,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
     def predict_proba(self, X):
         check_is_fitted(self)
-        X = check_predict_X(self, check_array(X))
+        X = check_array(check_predict_X(self, X))
         n = X.shape[0]
         probs = np.zeros(n)
         for i in range(n):
@@ -144,7 +144,7 @@ class GreedyRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
 
     def predict(self, X):
         check_is_fitted(self)
-        X = check_predict_X(self, check_array(X))
+        X = check_array(check_predict_X(self, X))
         return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
 

@@ -687,7 +687,7 @@ class FIGS(BaseEstimator):
         if hasattr(self, "_encoder"):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name="_encoder")
-        X = check_predict_X(self, check_array(X))
+        X = check_array(check_predict_X(self, X))
         preds = np.zeros((X.shape[0], self.n_outputs, len(self.trees_)))
         for i, tree in enumerate(self.trees_):
             preds[:, :, i] += self._predict_tree(tree, X)
@@ -727,7 +727,7 @@ class FIGS(BaseEstimator):
         if hasattr(self, "_encoder"):
             X = self._encode_categories(
                 X, categorical_features=categorical_features, encoder_name="_encoder")
-        X = check_predict_X(self, check_array(X))
+        X = check_array(check_predict_X(self, X))
         if isinstance(self, RegressorMixin):
             return NotImplemented
         preds = np.zeros((X.shape[0], self.n_outputs))
