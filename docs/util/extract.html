@@ -24,7 +24,6 @@
 <pre><code class="python">from typing import Iterable, Tuple, List
 
 import numpy as np
-import pandas as pd
 from mlxtend import frequent_patterns as mlx
 from sklearn.ensemble import BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor, \
     GradientBoostingClassifier, RandomForestClassifier
@@ -255,12 +254,7 @@ def extract_marginal_curves(clf, X, max_evals=100):
         shape_function_vals = clf.predict_proba(dummy_input)[:, 1] - base
         feature_vals_list.append(feature_vals)
         shape_function_vals_list.append(shape_function_vals.tolist())
-    return feature_vals_list, shape_function_vals_list
-
-
-if __name__ == &#39;__main__&#39;:
-    init_signature = inspect.signature(BaggingRegressor.__init__)
-    print(&#39;estimator&#39; in init_signature.parameters.keys())</code></pre>
+    return feature_vals_list, shape_function_vals_list</code></pre>
 </details>
 </section>
 <section>

@@ -36,7 +36,6 @@ class SlipperClassifier(BoostedRulesClassifier):
         n_estimators
         &#39;&#39;&#39;
         super().__init__(estimator=SlipperBaseEstimator(), n_estimators=n_estimators, **kwargs)
-        # super().__init__(n_estimators, SlipperBaseEstimator)
 
     def fit(self, X, y, feature_names=None, **kwargs):
         # its base estimator learns a single binary rule, so a multiclass target
@@ -86,7 +85,6 @@ Parameters</p>
         n_estimators
         &#39;&#39;&#39;
         super().__init__(estimator=SlipperBaseEstimator(), n_estimators=n_estimators, **kwargs)
-        # super().__init__(n_estimators, SlipperBaseEstimator)
 
     def fit(self, X, y, feature_names=None, **kwargs):
         # its base estimator learns a single binary rule, so a multiclass target

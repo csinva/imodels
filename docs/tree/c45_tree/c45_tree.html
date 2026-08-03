@@ -42,63 +42,11 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score
-from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
-from imodels.util.arguments import check_fit_arguments, decode_labels
+from sklearn.utils.validation import check_array, check_is_fitted
+from imodels.util.arguments import check_fit_arguments, check_predict_X, decode_labels
 
 from ..c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
     set_as_leaf_node
-from ...util.data_util import get_clean_dataset
-
-
-def _add_label(node, label):
-    if hasattr(node, &#34;labels&#34;):
-        node.labels.append(label)
-        return
-    node.labels = [label]
-    return
-
-
-def _get_next_node(children, att):
-    for child in children:
-        is_equal = child.getAttribute(&#34;flag&#34;) == &#34;m&#34; and child.getAttribute(&#34;feature&#34;) == att
-        is_less_than = child.getAttribute(&#34;flag&#34;) == &#34;l&#34; and float(att) &lt; float(child.getAttribute(&#34;feature&#34;))
-        is_greater_than = child.getAttribute(&#34;flag&#34;) == &#34;r&#34; and float(att) &gt;= float(child.getAttribute(&#34;feature&#34;))
-        if is_equal or is_less_than or is_greater_than:
-            return child
-
-
-def shrink_node(node, reg_param, parent_val, parent_num, cum_sum, scheme, constant):
-    &#34;&#34;&#34;Shrink the tree
-    &#34;&#34;&#34;
-
-    is_leaf = not node.hasChildNodes()
-    # if self.prediction_task == &#39;regression&#39;:
-    val = node.nodeValue
-    is_root = parent_val is None and parent_num is None
-    n_samples = len(node.labels) if (scheme != &#34;leaf_based&#34; or is_root) else parent_num
-
-    if is_root:
-        val_new = val
-
-    else:
-        reg_term = reg_param if scheme == &#34;constant&#34; else reg_param / parent_num
-
-        val_new = (val - parent_val) / (1 + reg_term)
-
-    cum_sum += val_new
-
-    if is_leaf:
-        if scheme == &#34;leaf_based&#34;:
-            v = constant + (val - constant) / (1 + reg_param / node.n_obs)
-            node.nodeValue = v
-        else:
-            node.nodeValue = cum_sum
-
-    else:
-        for c in node.childNodes:
-            shrink_node(c, reg_param, val, parent_num=n_samples, cum_sum=cum_sum, scheme=scheme, constant=constant)
-
-    return node
 
 
 def _add_label(node, label):
@@ -256,7 +204,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
 
     def raw_preds(self, X):
         check_is_fitted(self, [&#39;tree_&#39;, &#39;resultType&#39;, &#39;feature_names&#39;])
-        X = check_array(X)
+        X = check_array(check_predict_X(self, X))
         if isinstance(X, pd.DataFrame):
             X = deepcopy(X)
             X.columns = self.feature_names
@@ -296,6 +244,7 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
     def predict_proba(self, X):
+        check_is_fitted(self, &#39;dom_&#39;)
         if len(self.classes_) == 2:
             # unchanged binary path: leaves hold the probability of class 1,
             # which is also what hierarchical shrinkage rewrites them to
@@ -492,16 +441,7 @@ class HSC45TreeClassifierCV(HSC45TreeClassifier):
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
-        super().fit(X=X, y=y)
-
-
-if __name__ == &#39;__main__&#39;:
-    X, y, feature_names = get_clean_dataset(&#39;ionosphere&#39;, data_source=&#39;pmlb&#39;)
-    m = C45TreeClassifier(max_rules=3)
-    m.fit(X, y)
-    s_m = HSC45TreeClassifier(estimator_=m)
-    s_m.fit(X, y)
-    preds = s_m.predict_proba(X)</code></pre>
+        super().fit(X=X, y=y)</code></pre>
 </details>
 </section>
 <section>
@@ -662,7 +602,7 @@ if __name__ == &#39;__main__&#39;:
 
     def raw_preds(self, X):
         check_is_fitted(self, [&#39;tree_&#39;, &#39;resultType&#39;, &#39;feature_names&#39;])
-        X = check_array(X)
+        X = check_array(check_predict_X(self, X))
         if isinstance(X, pd.DataFrame):
             X = deepcopy(X)
             X.columns = self.feature_names
@@ -702,6 +642,7 @@ if __name__ == &#39;__main__&#39;:
         return decode_labels(self, np.argmax(self.predict_proba(X), axis=1))
 
     def predict_proba(self, X):
+        check_is_fitted(self, &#39;dom_&#39;)
         if len(self.classes_) == 2:
             # unchanged binary path: leaves hold the probability of class 1,
             # which is also what hierarchical shrinkage rewrites them to
@@ -1093,6 +1034,7 @@ def root(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
+    check_is_fitted(self, &#39;dom_&#39;)
     if len(self.classes_) == 2:
         # unchanged binary path: leaves hold the probability of class 1,
         # which is also what hierarchical shrinkage rewrites them to
@@ -1118,7 +1060,7 @@ def root(self):
 </summary>
 <pre><code class="python">def raw_preds(self, X):
     check_is_fitted(self, [&#39;tree_&#39;, &#39;resultType&#39;, &#39;feature_names&#39;])
-    X = check_array(X)
+    X = check_array(check_predict_X(self, X))
     if isinstance(X, pd.DataFrame):
         X = deepcopy(X)
         X.columns = self.feature_names

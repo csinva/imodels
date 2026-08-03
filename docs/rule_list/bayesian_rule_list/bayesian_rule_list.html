@@ -26,7 +26,7 @@ import pandas as pd
 import random
 from collections import Counter, defaultdict
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.multiclass import check_classification_targets, unique_labels
+from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_list.bayesian_rule_list.brl_util import (
@@ -35,7 +35,8 @@ from imodels.rule_list.bayesian_rule_list.brl_util import (
 from imodels.rule_list.rule_list import RuleList
 from imodels.util.convert import itemsets_to_rules
 from imodels.util.extract import extract_fpgrowth
-from imodels.util.arguments import decode_labels, set_feature_names_in
+from imodels.util.arguments import (check_predict_X, decode_labels,
+                                    set_feature_names_in)
 from imodels.util.rule import get_feature_dict, replace_feature_name, Rule
 
 
@@ -305,6 +306,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             order, as they appear in the attribute `classes_`.
         &#34;&#34;&#34;
         check_is_fitted(self)
+        check_predict_X(self, X)
         X = check_array(X)
 
         D = pd.DataFrame(X, columns=self.feature_placeholders)
@@ -332,6 +334,7 @@ class BayesianRuleListClassifier(BaseEstimator, RuleList, ClassifierMixin):
             Class labels for samples in X.
         &#34;&#34;&#34;
         check_is_fitted(self)
+        check_predict_X(self, X)
         X = check_array(X)
 
         return decode_labels(self, 1 * (self.predict_proba(X)[:, 1] &gt;= threshold))</code></pre>
@@ -648,6 +651,7 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
             order, as they appear in the attribute `classes_`.
         &#34;&#34;&#34;
         check_is_fitted(self)
+        check_predict_X(self, X)
         X = check_array(X)
 
         D = pd.DataFrame(X, columns=self.feature_placeholders)
@@ -675,6 +679,7 @@ rule lists, trying to optimize for compactness and predictive performance.</p>
             Class labels for samples in X.
         &#34;&#34;&#34;
         check_is_fitted(self)
+        check_predict_X(self, X)
         X = check_array(X)
 
         return decode_labels(self, 1 * (self.predict_proba(X)[:, 1] &gt;= threshold))</code></pre>
@@ -870,6 +875,7 @@ classifier; lower it to trade precision for recall.</dd>
         Class labels for samples in X.
     &#34;&#34;&#34;
     check_is_fitted(self)
+    check_predict_X(self, X)
     X = check_array(X)
 
     return decode_labels(self, 1 * (self.predict_proba(X)[:, 1] &gt;= threshold))</code></pre>
@@ -911,6 +917,7 @@ order, as they appear in the attribute <code>classes_</code>.</dd>
         order, as they appear in the attribute `classes_`.
     &#34;&#34;&#34;
     check_is_fitted(self)
+    check_predict_X(self, X)
     X = check_array(X)
 
     D = pd.DataFrame(X, columns=self.feature_placeholders)
