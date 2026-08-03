@@ -16,9 +16,10 @@ import imodels
 from sklearn.base import RegressorMixin, ClassifierMixin
 from imodels.util.arguments import (check_binary_target, decode_labels,
                                     set_feature_names_in)
+from imodels.util.introspection import RuleInspectionMixin
 
 
-class TreeGAM(BaseEstimator):
+class TreeGAM(RuleInspectionMixin, BaseEstimator):
     """Tree-based GAM classifier.
     Uses cyclical boosting to fit a GAM with small trees.
     Simplified version of the explainable boosting machine described in https://github.com/interpretml/interpret
@@ -152,16 +153,6 @@ class TreeGAM(BaseEstimator):
         self.mse_val_ = self._calc_mse(X_val, y_val, sample_weight_val)
 
         return self
-
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
 
     def _marginal_fit(
         self,

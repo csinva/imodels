@@ -13,6 +13,7 @@ from sklearn.utils.validation import check_is_fitted
 from imodels.util import checks
 from imodels.util.arguments import check_fit_arguments
 from imodels.util.tree import compute_tree_complexity
+from imodels.util.introspection import RuleInspectionMixin
 
 
 def _as_arrays(X, y):
@@ -29,7 +30,7 @@ def _values_are_normalized(tree):
     return bool(np.allclose(tree.value.sum(axis=(1, 2)), 1))
 
 
-class HSTree(BaseEstimator):
+class HSTree(RuleInspectionMixin, BaseEstimator):
     def __init__(
         self,
         estimator_: BaseEstimator = None,
@@ -77,16 +78,6 @@ class HSTree(BaseEstimator):
             self.estimator_.max_leaf_nodes = max_leaf_nodes
             self.estimator_.random_state = random_state
 
-
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
 
     @property
     def feature_importances_(self):

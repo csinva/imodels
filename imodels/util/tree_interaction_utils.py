@@ -1,8 +1,4 @@
-import itertools
-from typing import Set, Tuple
-
 import numpy as np
-import pandas as pd
 
 
 def make_rj(n=300, p=50):
@@ -62,60 +58,3 @@ def make_vp(n=100, p=100):
     y = effects + interactions + np.random.normal(scale=0.14, size=n)
 
     return X, y
-
-
-def get_gt(dataset_name):
-    important_features = []
-    interactions = []
-    if dataset_name == "friedman1":
-        important_features = [0, 1, 2, 3, 4]
-        interactions = [(0, 1)]
-    elif dataset_name == "radchenko_james":
-        important_features = [0, 1, 2, 3, 4]
-        interactions = [(0, 1), (0, 2)]
-    elif dataset_name == "vo_pati":
-        important_features = [0, 1, 2, 3, 4]
-        interactions = [(0, 1), (1, 2), (2, 3)]
-
-    return set(important_features), set(interactions)
-
-
-def get_important_features(importance, k):
-    return set(np.argsort(importance)[0:k])
-
-
-def get_interacting_features(interaction, k):
-    scores_list = []
-    for ind_1, ind_2 in itertools.combinations(range(interaction.shape[0]), 2):
-        scores_list.append([interaction[ind_1, ind_2], ind_1, ind_2])
-    df = pd.DataFrame(scores_list)
-    df = df.sort_values(0, ascending=False)
-    interactions = []
-    for i in range(k):
-        interactions.append((df.iloc[i, 1], df.iloc[i, 2]))
-    return set(interactions)
-
-
-def interaction_fpr(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
-    if len(i_gt) == 0:
-        return
-    n_pairs = 0.5 * p * (p - 1)
-    n_non_interacting_pairs = (n_pairs - len(i_gt))
-    return len(i_hat.difference(i_gt)) / n_non_interacting_pairs
-
-
-def interaction_tpr(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
-    if len(i_gt) == 0:
-        return
-    n_interactions = len(i_gt)
-    return len(i_hat.intersection(i_gt)) / n_interactions
-
-
-def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
-    if len(i_gt) == 0:
-        return
-    recall = len(i_gt.intersection(i_hat)) / len(i_gt)
-    precision = interaction_tpr(i_hat, i_gt, p)
-    if recall + precision == 0:
-        return 0
-    return 2 * ((precision * recall) / (precision + recall))

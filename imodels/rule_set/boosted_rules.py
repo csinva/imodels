@@ -3,9 +3,10 @@ from sklearn.ensemble import AdaBoostClassifier, AdaBoostRegressor
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels.util.arguments import check_fit_arguments
+from imodels.util.introspection import RuleInspectionMixin
 
 
-class BoostedRulesClassifier(AdaBoostClassifier):
+class BoostedRulesClassifier(RuleInspectionMixin, AdaBoostClassifier):
     '''An easy-interpretable classifier optimizing simple logical rules.
 
     Params
@@ -41,16 +42,6 @@ class BoostedRulesClassifier(AdaBoostClassifier):
 
 
 
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
-
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         classes = self.classes_  # super().fit overwrites this with the encoded labels
@@ -63,7 +54,7 @@ class BoostedRulesClassifier(AdaBoostClassifier):
         return self
 
 
-class BoostedRulesRegressor(AdaBoostRegressor):
+class BoostedRulesRegressor(RuleInspectionMixin, AdaBoostRegressor):
     '''An easy-interpretable regressor optimizing simple logical rules.
 
     Params
@@ -96,16 +87,6 @@ class BoostedRulesRegressor(AdaBoostRegressor):
             )
             self.estimator = estimator
 
-
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
