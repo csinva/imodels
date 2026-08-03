@@ -98,6 +98,44 @@ def check_predict_X(model, X):
     return X
 
 
+def explicit_get_params(model, names, deep=True):
+    """get_params for a model whose __init__ takes *args/**kwargs.
+
+    sklearn builds get_params by introspecting __init__, and refuses to do so
+    when the signature has varargs; such models have to spell their parameters
+    out. This keeps them honoring ``deep``, which is what lets a search tune a
+    nested estimator via ``<param>__<subparam>``.
+    """
+    params = {name: getattr(model, name) for name in names}
+    if deep:
+        for name, value in list(params.items()):
+            if hasattr(value, 'get_params'):
+                params.update({f'{name}__{k}': v
+                               for k, v in value.get_params().items()})
+    return params
+
+
+def explicit_set_params(model, names, **params):
+    """The counterpart to `explicit_get_params`, handling nested parameters.
+
+    Split on the known parameter names rather than on the first ``__``: several
+    of these parameters are themselves named with a trailing underscore (e.g.
+    ``estimator_``), so ``estimator___max_depth`` would otherwise be read as
+    ``estimator`` plus ``_max_depth``.
+    """
+    nested = {}
+    for key, value in params.items():
+        for name in sorted(names, key=len, reverse=True):
+            if key.startswith(name + '__'):
+                nested.setdefault(name, {})[key[len(name) + 2:]] = value
+                break
+        else:
+            setattr(model, key, value)
+    for name, subparams in nested.items():
+        getattr(model, name).set_params(**subparams)
+    return model
+
+
 def set_feature_names_in(model, X):
     """Set the sklearn-standard ``feature_names_in_`` if X carries string column names.
 

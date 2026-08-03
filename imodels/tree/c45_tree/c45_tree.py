@@ -15,7 +15,8 @@ import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.utils.validation import check_array, check_is_fitted
-from imodels.util.arguments import check_fit_arguments, check_predict_X, decode_labels
+from imodels.util.arguments import (check_fit_arguments, check_predict_X, decode_labels,
+                                    explicit_get_params, explicit_set_params)
 
 from ..c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
     set_as_leaf_node
@@ -356,6 +357,16 @@ class HSC45TreeClassifier(BaseEstimator):
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
 
+    #: spelled out because HSC45TreeClassifierCV's __init__ takes *args/**kwargs,
+    #: which sklearn's parameter introspection rejects
+    _PARAM_NAMES = ("estimator_", "reg_param", "shrinkage_scheme_")
+
+    def get_params(self, deep=True):
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
+
+    def set_params(self, **params):
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
+
     def _calc_probs(self, node):
         self.estimator_._calc_probs(node)
 
@@ -385,13 +396,18 @@ class HSC45TreeClassifier(BaseEstimator):
 
 
 class HSC45TreeClassifierCV(HSC45TreeClassifier):
+    _PARAM_NAMES = ("estimator_", "reg_param_list", "shrinkage_scheme_",
+                    "cv", "scoring")
+
     def __init__(self, estimator_: C45TreeClassifier,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based',
                  cv: int = 3, scoring='accuracy', *args, **kwargs):
         """Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
         """
         super().__init__(estimator_, reg_param=None)
-        self.reg_param_list = np.array(reg_param_list)
+        # stored as passed: sklearn's clone checks that __init__ leaves each
+        # parameter identical, and np.array() would copy it
+        self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
         self.shrinkage_scheme_ = shrinkage_scheme_

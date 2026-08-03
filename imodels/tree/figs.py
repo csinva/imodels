@@ -20,6 +20,7 @@ from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 from imodels.util.arguments import check_fit_arguments, check_predict_X
 from imodels.util.data_util import encode_categories
 from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.arguments import explicit_get_params
 
 
 class Node:
@@ -863,17 +864,13 @@ class FIGSCV(RuleInspectionMixin, BaseEstimator):
     def feature_importances_(self):
         """Mean decrease in impurity of the selected FIGS model."""
         return self.figs.feature_importances_
+    #: __init__ takes *args/**kwargs, which sklearn's introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = ("n_rules_list", "n_trees_list", "depth_list",
+                    "min_impurity_decrease_list", "cv", "scoring")
+
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn's
-        # automatic parameter introspection rejects
-        return {
-            "n_rules_list": self.n_rules_list,
-            "n_trees_list": self.n_trees_list,
-            "depth_list": self.depth_list,
-            "min_impurity_decrease_list": self.min_impurity_decrease_list,
-            "cv": self.cv,
-            "scoring": self.scoring,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
         for key, value in params.items():

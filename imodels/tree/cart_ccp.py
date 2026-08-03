@@ -8,6 +8,7 @@ from sklearn.model_selection import cross_val_score
 from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier
 from imodels.util.tree import compute_tree_complexity
 from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.arguments import explicit_get_params, explicit_set_params
 
 
 class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
@@ -17,19 +18,15 @@ class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstima
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
 
+    #: __init__ takes *args/**kwargs, which sklearn's introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = ("estimator_", "desired_complexity", "complexity_measure")
+
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn's
-        # automatic parameter introspection rejects
-        return {
-            "estimator_": self.estimator_,
-            "desired_complexity": self.desired_complexity,
-            "complexity_measure": self.complexity_measure,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
-        for key, value in params.items():
-            setattr(self, key, value)
-        return self
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
 
     def _copy_fitted_attributes(self):
         """Mirror the wrapped estimator's fitted sklearn attributes onto self."""
@@ -108,19 +105,15 @@ class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
         self.alpha = 0.0
         self.complexity_measure = complexity_measure
 
+    #: __init__ takes *args/**kwargs, which sklearn's introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = ("estimator_", "desired_complexity", "complexity_measure")
+
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn's
-        # automatic parameter introspection rejects
-        return {
-            "estimator_": self.estimator_,
-            "desired_complexity": self.desired_complexity,
-            "complexity_measure": self.complexity_measure,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
-        for key, value in params.items():
-            setattr(self, key, value)
-        return self
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
 
     def _copy_fitted_attributes(self):
         """Mirror the wrapped estimator's fitted sklearn attributes onto self."""
