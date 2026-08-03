@@ -1,6 +1,7 @@
 from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 import numpy as np
+from imodels.util.arguments import explicit_get_params, explicit_set_params
 
 
 class ShapGAM(BaseEstimator):
@@ -121,17 +122,13 @@ class ShapGAM(BaseEstimator):
 
             return preds
 
+    _PARAM_NAMES = ("n_estimators", "feature_fraction", "random_state")
+
     def get_params(self, deep=True):
-        return {
-            "n_estimators": self.n_estimators,
-            "feature_fraction": self.feature_fraction,
-            "random_state": self.random_state
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
-        for param, value in params.items():
-            setattr(self, param, value)
-        return self
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
 
 
 class ShapGAMRegressor(ShapGAM, RegressorMixin):

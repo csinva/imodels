@@ -330,7 +330,7 @@ def bootstrap_ridge(
     n_train, n_targets = y_train.shape
     splits = _gen_temporal_chunk_splits(
         nboots, n_train, chunklen, nchunks)
-    valinds = [splits[1] for splits in splits]
+    valinds = [split[1] for split in splits]
 
     correlation_matrices = []
     for idx_bootstrap in _counter(range(nboots), countevery=1, total=nboots):
@@ -479,7 +479,6 @@ def bootstrap_low_rank_ridge(
     n_train, n_targets = y_train.shape
     splits = _gen_temporal_chunk_splits(
         nboots, n_train, chunklen, nchunks)
-    valinds = [splits[1] for splits in splits]
 
     correlation_matrices = []
     for idx_bootstrap in _counter(range(nboots), countevery=1, total=nboots):

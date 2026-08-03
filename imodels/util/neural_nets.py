@@ -35,7 +35,6 @@ Example
     assert np.isclose(preds_dt, preds_net).all(), 'preds are not close'
 
 """
-import time
 from copy import deepcopy
 
 import numpy as np
@@ -102,7 +101,6 @@ class Net(nn.Module):
         #     t0 = time.perf_counter()
         x = x.reshape(x.shape[0], -1)
         x = self.layers[0](x)
-        t1 = time.perf_counter()
         x[x < 0] = -1
         x[x >= 0] = 1
 

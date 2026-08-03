@@ -5,9 +5,10 @@ from sklearn.tree import DecisionTreeClassifier, export_text, DecisionTreeRegres
 from imodels.util.arguments import check_fit_arguments
 
 from imodels.util.tree import compute_tree_complexity
+from imodels.util.introspection import RulesMixin
 
 
-class GreedyTreeClassifier(DecisionTreeClassifier):
+class GreedyTreeClassifier(RulesMixin, DecisionTreeClassifier):
     """Wrapper around sklearn greedy tree classifier
     """
 
@@ -50,11 +51,6 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
         return self
 
 
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
     def _set_complexity(self):
         """Set complexity as number of non-leaf nodes
         """
@@ -71,7 +67,7 @@ class GreedyTreeClassifier(DecisionTreeClassifier):
             return s + export_text(self, show_weights=True)
 
 
-class GreedyTreeRegressor(DecisionTreeRegressor):
+class GreedyTreeRegressor(RulesMixin, DecisionTreeRegressor):
     """Wrapper around sklearn greedy tree regressor
     """
 
@@ -107,11 +103,6 @@ class GreedyTreeRegressor(DecisionTreeRegressor):
         self._set_complexity()
         return self
 
-
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
 
     def _set_complexity(self):
         """Set complexity as number of non-leaf nodes

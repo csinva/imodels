@@ -74,78 +74,10 @@ def tree_to_rules(tree: Union[DecisionTreeClassifier, DecisionTreeRegressor],
     return rules if len(rules) > 0 else 'True'
 
 
-def tree_to_code(clf, feature_names):
-    '''Prints a tree with a single split
-    '''
-    n_nodes = clf.tree_.node_count
-    children_left = clf.tree_.children_left
-    children_right = clf.tree_.children_right
-    feature = clf.tree_.feature
-    threshold = clf.tree_.threshold
-
-    node_depth = np.zeros(shape=n_nodes, dtype=np.int64)
-    is_leaves = np.zeros(shape=n_nodes, dtype=bool)
-    stack = [(0, 0)]  # start with the root node id (0) and its depth (0)
-    s = ''
-    while len(stack) > 0:
-        # `pop` ensures each node is only visited once
-        node_id, depth = stack.pop()
-        node_depth[node_id] = depth
-
-        # If the left and right child of a node is not the same we have a split
-        # node
-        is_split_node = children_left[node_id] != children_right[node_id]
-        # If a split node, append left and right children and depth to `stack`
-        # so we can loop through them
-        if is_split_node:
-            stack.append((children_left[node_id], depth + 1))
-            stack.append((children_right[node_id], depth + 1))
-        else:
-            is_leaves[node_id] = True
-
-    # print("The binary tree structure has {n} nodes and has "
-    #       "the following tree structure:\n".format(n=n_nodes))
-    for i in range(n_nodes):
-        if is_leaves[i]:
-            pass
-        #     print("{space}node={node} is a leaf node.".format(
-        # space=node_depth[i] * "\t", node=i))
-        else:
-            s += f"{feature_names[feature[i]]} <= {threshold[i]}"
-    return f"\033[96m{s}\033[00m\n"
-
-
 def itemsets_to_rules(itemsets: List[Tuple]) -> List[str]:
     itemsets_clean = list(filter(lambda it: it != 'null' and 'All' not in ''.join(it), itemsets))
     f = lambda itemset: ' and '.join([single_discretized_feature_to_rule(item) for item in itemset])
     return list(map(f, itemsets_clean))
-
-
-def dict_to_rule(rule, clf_feature_dict):
-    """
-    Function to accept rule dict and convert to Rule object
-
-    Parameters:
-    rule: list of dict of schema
-    [
-        {
-            'feature': int,
-            'operator': str,
-            'value': float
-        },
-    ]
-    """
-
-    output = ''
-
-    for condition in rule:
-        output += '{} {} {} and '.format(
-            clf_feature_dict[int(condition['feature'])],
-            condition['operator'],
-            condition['pivot']
-        )
-
-    return output[:-5]
 
 
 def single_discretized_feature_to_rule(feat: str) -> str:

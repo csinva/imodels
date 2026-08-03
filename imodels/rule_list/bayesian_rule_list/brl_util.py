@@ -59,7 +59,6 @@ import pickle as Pickle
 import time
 from collections import defaultdict
 
-from numpy import *
 import numpy as np
 from scipy.special import gammaln
 from scipy.stats import poisson, beta
@@ -93,7 +92,7 @@ def run_bdl_multichain_serial(numiters, thinning, alpha, lbda, eta, X, Y, nrules
     '''Run mcmc for each of the chains in serial
     '''
     # random seed
-    random.seed(seed)
+    np.random.seed(seed)
 
     # Run each chain
     t1 = time.process_time()
@@ -174,7 +173,7 @@ def gelmanrubin(res):
     varhat = ((n - 1) / float(n)) * W + (1. / float(n)) * B
     # And finally,
     try:
-        Rhat = sqrt(varhat / float(W))
+        Rhat = np.sqrt(varhat / float(W))
     except:
         print('RuntimeWarning computing Rhat, W=' + str(W) + ', B=' + str(B))
         Rhat = 0.
@@ -220,18 +219,18 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
                          for j in d_t[:-1]] * int(permsdic[perm][1]))
 
     # Now compute average
-    avglistlen = average(listlens)
+    avglistlen = np.average(listlens)
     if verbose:
         print('Posterior average length:', avglistlen)
     try:
-        avgrulesize = average(rulesizes)
+        avgrulesize = np.average(rulesizes)
         if verbose:
             print('Posterior average width:', avgrulesize)
         # Prepare the intervals
-        minlen = int(floor(avglistlen))
-        maxlen = int(ceil(avglistlen))
-        minrulesize = int(floor(avgrulesize))
-        maxrulesize = int(ceil(avgrulesize))
+        minlen = int(np.floor(avglistlen))
+        maxlen = int(np.ceil(avglistlen))
+        minrulesize = int(np.floor(avgrulesize))
+        maxrulesize = int(np.ceil(avgrulesize))
         # Run through all perms again
         likelihoods = []
         d_ts = []
@@ -245,7 +244,7 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
                 if len(d_t) >= minlen and len(d_t) <= maxlen:
 
                     # Check the rule size
-                    rulesize = average([lhs_len[j] for j in d_t[:-1]])
+                    rulesize = np.average([lhs_len[j] for j in d_t[:-1]])
                     if rulesize >= minrulesize and rulesize <= maxrulesize:
                         d_ts.append(d_t)
 
@@ -255,7 +254,7 @@ def get_point_estimate(permsdic, lhs_len, X, Y, alpha, nruleslen, maxlhs, lbda, 
                         likelihoods.append(
                             fn_logposterior(d_t, R_t, N_t, alpha, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen,
                                             lhs_len))
-        likelihoods = array(likelihoods)
+        likelihoods = np.array(likelihoods)
         d_star = d_ts[likelihoods.argmax()]
     except RuntimeWarning:
         # This can happen if all perms are identically [0], or if no soln is found within the len and width bounds (probably the chains didn't converge)
@@ -274,10 +273,10 @@ def get_rule_rhs(Xtrain, Ytrain, d_t, alpha, intervals):
     ci_theta = []  # confidence interval for Y=1
     for i, j in enumerate(d_t):
         # theta ~ Dirichlet(n_rules[j,:] + alpha)
-        # E[theta] = (n_rules[j,:] + alpha)/float(sum(n_rules[j,:] + alpha))
+        # E[theta] = (n_rules[j,:] + alpha)/float(np.sum(n_rules[j,:] + alpha))
         # NOTE this result is only for binary classification
         # theta = p(y=1)
-        theta.append((N_t[i, 1] + alpha[1]) / float(sum(N_t[i, :] + alpha)))
+        theta.append((N_t[i, 1] + alpha[1]) / float(np.sum(N_t[i, :] + alpha)))
         # And now the 95% interval, for Beta(n_rules[j,1] + alpha[1], n_rules[j,0] + alpha[0])
         if intervals:
             ci_theta.append(beta.interval(
@@ -290,7 +289,7 @@ def preds_d_t(X, Y, d_t, theta):
     '''
     # this is binary only. The score is the Prob of 1.
     unused = set(range(Y.shape[0]))
-    preds = -1 * ones(Y.shape[0])
+    preds = -1 * np.ones(Y.shape[0])
     for i, j in enumerate(d_t):
         # these are the observations in X that make it to rule j
         usedj = unused.intersection(X[j])
@@ -309,7 +308,7 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
     # initialize
     perms = []
     if rseed:
-        random.seed(rseed)
+        np.random.seed(rseed)
 
     # Do some pre-computation for the prior
     beta_Z, logalpha_pmf, logbeta_pmf = prior_calculations(
@@ -343,8 +342,8 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
             permsdic[a_star][0] = fn_logposterior(d_star, R_star, N_star, alpha, logalpha_pmf, logbeta_pmf, maxlhs,
                                                   beta_Z, nruleslen, lhs_len)
         # Compute the metropolis acceptance probability
-        q = exp(permsdic[a_star][0] - permsdic[a_t][0] + Jratio)
-        u = random.random()
+        q = np.exp(permsdic[a_star][0] - permsdic[a_t][0] + Jratio)
+        u = np.random.random()
         if u < q:
             # then we accept the move
             d_t = list(d_star)
@@ -381,7 +380,7 @@ def initialize_d(X, Y, lbda, eta, lhs_len, maxlhs, nruleslen):
         # Now sample a rule of that size uniformly at random
         rule_cands = [j for j, lhslen in enumerate(
             lhs_len) if lhslen == r and j not in used_rules]
-        random.shuffle(rule_cands)
+        np.random.shuffle(rule_cands)
         j = rule_cands[0]
         # And add it in
         d_t.append(j)
@@ -405,76 +404,76 @@ def proposal(d_t, R_t, X, Y, alpha):
     d_star = list(d_t)
     R_star = int(R_t)
     # We begin with these as the move probabilities, but will renormalize as needed if certain moves are unavailable.
-    move_probs_default = array([0.3333333333, 0.3333333333, 0.3333333333])
+    move_probs_default = np.array([0.3333333333, 0.3333333333, 0.3333333333])
     # We have 3 moves: move, add, cut. Define the pdf for the probabilities of the moves, in that order:
     if R_t == 0:
         # List is empty. We must add.
-        move_probs = array([0., 1., 0.])
+        move_probs = np.array([0., 1., 0.])
         # This is an add transition. The probability of the reverse cut move is the prob of a list of len 1 having
         # a cut (other option for list of len 1 is an add).
-        Jratios = array([0., move_probs_default[2] /
+        Jratios = np.array([0., move_probs_default[2] /
                         float(move_probs_default[1] + move_probs_default[2]), 0.])
     elif R_t == 1:
         # List has one rule on it. We cannot move, must add or cut.
-        move_probs = array(move_probs_default)  # copy
+        move_probs = np.array(move_probs_default)  # copy
         move_probs[0] = 0.  # drop move move.
-        move_probs = move_probs / sum(move_probs)  # renormalize
+        move_probs = move_probs / np.sum(move_probs)  # renormalize
         # If add, probability of the reverse cut is the default cut probability
         # If cut, probability of the reverse add is 1.
-        inv_move_probs = array([0., move_probs_default[2], 1.])
-        Jratios = zeros_like(move_probs)
+        inv_move_probs = np.array([0., move_probs_default[2], 1.])
+        Jratios = np.zeros_like(move_probs)
         Jratios[1:] = inv_move_probs[1:] / \
             move_probs[1:]  # array elementwise division
     elif R_t == len(d_t) - 1:
         # List has all rules on it. We cannot add, must move or cut.
-        move_probs = array(move_probs_default)  # copy
+        move_probs = np.array(move_probs_default)  # copy
         move_probs[1] = 0.  # drop add move.
-        move_probs = move_probs / sum(move_probs)  # renormalize
+        move_probs = move_probs / np.sum(move_probs)  # renormalize
         # If move, probability of reverse move is move_probs[0], so Jratio = 1.
         # if cut, probability of reverse add is move_probs_default
-        Jratios = array([1., 0., move_probs_default[1] / move_probs[2]])
+        Jratios = np.array([1., 0., move_probs_default[1] / move_probs[2]])
     elif R_t == len(d_t) - 2:
         # List has all rules but 1 on it.
         # Move probabilities are the default, but the inverse are a little different.
-        move_probs = array(move_probs_default)
+        move_probs = np.array(move_probs_default)
         # If move, probability of reverse move is still default, so Jratio = 1.
         # if cut, probability of reverse add is move_probs_default[1],
         # if add, probability of reverse cut is,
-        Jratios = array([1., move_probs_default[2] / float(move_probs_default[0] + move_probs_default[2]) / float(
+        Jratios = np.array([1., move_probs_default[2] / float(move_probs_default[0] + move_probs_default[2]) / float(
             move_probs_default[1]), move_probs_default[1] / float(move_probs_default[2])])
     else:
-        move_probs = array(move_probs_default)
-        Jratios = array([1., move_probs[2] / float(move_probs[1]),
+        move_probs = np.array(move_probs_default)
+        Jratios = np.array([1., move_probs[2] / float(move_probs[1]),
                         move_probs[1] / float(move_probs[2])])
-    u = random.random()
+    u = np.random.random()
     # First we will find the indices for the insertion-deletion. indx1 is the item to be moved, indx2 is the new location
-    if u < sum(move_probs[:1]):
+    if u < np.sum(move_probs[:1]):
         # This is an on-list move.
         step = 'move'
         # value error if there are no on list entries
-        [indx1, indx2] = random.permutation(range(len(d_t[:R_t])))[:2]
+        [indx1, indx2] = np.random.permutation(range(len(d_t[:R_t])))[:2]
         # print 'move',indx1,indx2
         Jratio = Jratios[0]  # ratio of move/move probabilities is 1.
-    elif u < sum(move_probs[:2]):
+    elif u < np.sum(move_probs[:2]):
         # this is an add
         step = 'add'
-        indx1 = R_t + 1 + random.randint(0, len(
+        indx1 = R_t + 1 + np.random.randint(0, len(
             d_t[R_t + 1:]))  # this will throw ValueError if there are no off list entries
         # this one will always work
-        indx2 = random.randint(0, len(d_t[:R_t + 1]))
+        indx2 = np.random.randint(0, len(d_t[:R_t + 1]))
         # print 'add',indx1,indx2
         # the probability of going from d_star back to d_t is the probability of the corresponding cut.
         # p(d*->d|cut) = 1/|d*| = 1/(|d|+1) = 1./float(R_t+1)
         # p(d->d*|add) = 1/((|a|-|d|)(|d|+1)) = 1./(float(len(d_t)-1-R_t)*float(R_t+1))
         Jratio = Jratios[1] * float(len(d_t) - 1 - R_t)
         R_star += 1
-    elif u < sum(move_probs[:3]):
+    elif u < np.sum(move_probs[:3]):
         # this is a cut
         step = 'cut'
         # this will throw ValueError if there are no on list entries
-        indx1 = random.randint(0, len(d_t[:R_t]))
+        indx1 = np.random.randint(0, len(d_t[:R_t]))
         # this one will always work
-        indx2 = R_t + random.randint(0, len(d_t[R_t:]))
+        indx2 = R_t + np.random.randint(0, len(d_t[R_t:]))
         # print 'cut',indx1,indx2
         # the probability of going from d_star back to d_t is the probability of the corresponding add.
         # p(d*->d|add) = 1/((|a|-|d*|)(|d*|+1)) = 1/((|a|-|d|+1)(|d|))
@@ -486,7 +485,7 @@ def proposal(d_t, R_t, X, Y, alpha):
         raise Exception
     # Now do the insertion-deletion
     d_star.insert(indx2, d_star.pop(indx1))
-    return d_star, log(Jratio), R_star, step
+    return d_star, np.log(Jratio), R_star, step
 
 
 def prior_calculations(lbda, maxlen, eta, maxlhs):
@@ -520,8 +519,8 @@ def fn_loglikelihood(d_t, N_t, R_t, alpha):
     '''Compute log likelihood
     '''
     gammaln_Nt_jk = gammaln(N_t + alpha)
-    gammaln_Nt_j = gammaln(sum(N_t + alpha, 1))
-    loglikelihood = sum(gammaln_Nt_jk) - sum(gammaln_Nt_j)
+    gammaln_Nt_j = gammaln(np.sum(N_t + alpha, 1))
+    loglikelihood = np.sum(gammaln_Nt_jk) - np.sum(gammaln_Nt_j)
     return loglikelihood
 
 
@@ -538,13 +537,13 @@ def fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, 
         R_t]  # this is proportional to logalpha - we have dropped the normalization for truncating based on total number of rules
     logprior += logalpha
     empty_rulelens = []
-    nlens = zeros(maxlhs + 1)
+    nlens = np.zeros(maxlhs + 1)
     for i in range(R_t):
         l_i = lhs_len[d_t[i]]
-        logbeta = logbeta_pmf[l_i] - log(
-            beta_Z - sum([logbeta_pmf[l_j] for l_j in empty_rulelens]))  # The correction for exhausted rule lengths
+        logbeta = logbeta_pmf[l_i] - np.log(
+            beta_Z - np.sum([logbeta_pmf[l_j] for l_j in empty_rulelens]))  # The correction for exhausted rule lengths
         # Finally loggamma
-        loggamma = -log(nruleslen[l_i] - nlens[l_i])
+        loggamma = -np.log(nruleslen[l_i] - nlens[l_i])
         # And now check if we have exhausted all rules of a certain size
         nlens[l_i] += 1
         if nlens[l_i] == nruleslen[l_i]:
@@ -561,7 +560,7 @@ def fn_logprior(d_t, R_t, logalpha_pmf, logbeta_pmf, maxlhs, beta_Z, nruleslen, 
 def compute_rule_usage(d_star, R_star, X, Y):
     '''Compute which rules are being used to classify data points with what labels
     '''
-    N_star = zeros((R_star + 1, Y.shape[1]))
+    N_star = np.zeros((R_star + 1, Y.shape[1]))
     remaining_unused = set(range(Y.shape[0]))
     i = 0
     while remaining_unused:
@@ -570,6 +569,6 @@ def compute_rule_usage(d_star, R_star, X, Y):
         remaining_unused = remaining_unused.difference(set(usedj))
         N_star[i, :] = Y[list(usedj), :].sum(0)
         i += 1
-    if int(sum(N_star)) != Y.shape[0]:
+    if int(np.sum(N_star)) != Y.shape[0]:
         raise Exception  # bug check
     return N_star

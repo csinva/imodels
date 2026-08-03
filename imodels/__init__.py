@@ -16,8 +16,6 @@ from .rule_list.bayesian_rule_list.bayesian_rule_list import BayesianRuleListCla
 from .rule_list.fast_frugal_tree import FastFrugalTreeClassifier
 from .rule_list.greedy_rule_list import GreedyRuleListClassifier
 from .rule_list.one_r import OneRClassifier
-from .rule_set import boosted_rules
-from .rule_set.boosted_rules import *
 from .rule_set.boosted_rules import BoostedRulesClassifier, BoostedRulesRegressor
 from .rule_set.brs import BayesianRuleSetClassifier
 from .rule_set.fplasso import FPLassoRegressor, FPLassoClassifier
@@ -94,3 +92,28 @@ REGRESSORS = [
 ESTIMATORS = CLASSIFIERS + REGRESSORS
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer,
                 MDLPDiscretizer, BRLDiscretizer]
+
+# The public API. Kept explicit so that `from imodels import *` brings in the
+# models and helpers rather than whatever each submodule happened to import.
+__all__ = [
+    "AutoInterpretableClassifier", "AutoInterpretableRegressor", "BART",
+    "BRLDiscretizer", "BasicDiscretizer", "BayesianRuleListClassifier",
+    "BayesianRuleSetClassifier", "BoostedRulesClassifier",
+    "BoostedRulesRegressor", "C45TreeClassifier", "CLASSIFIERS",
+    "DISCRETIZERS", "DecisionTreeCCPClassifier", "DecisionTreeCCPRegressor",
+    "DistilledRegressor", "ESTIMATORS", "FIGSClassifier",
+    "FIGSClassifierCV", "FIGSRegressor", "FIGSRegressorCV",
+    "FPLassoClassifier", "FPLassoRegressor", "FPSkopeClassifier",
+    "FastFrugalTreeClassifier", "GreedyRuleListClassifier",
+    "GreedyTreeClassifier", "GreedyTreeRegressor",
+    "HSDecisionTreeCCPClassifierCV", "HSDecisionTreeCCPRegressorCV",
+    "HSTreeClassifier", "HSTreeClassifierCV", "HSTreeRegressor",
+    "HSTreeRegressorCV", "MDLPDiscretizer",
+    "MarginalShrinkageLinearModelRegressor", "OneRClassifier", "REGRESSORS",
+    "RFDiscretizer", "RuleFitClassifier", "RuleFitRegressor",
+    "SLIMClassifier", "SLIMRegressor", "SkopeRulesClassifier",
+    "SlipperClassifier", "StableClustering", "TaoTreeClassifier",
+    "TaoTreeRegressor", "TreeGAMClassifier", "TreeGAMRegressor",
+    "explain_classification_errors", "get_clean_dataset", "get_rules",
+    "shadow_tree",
+]

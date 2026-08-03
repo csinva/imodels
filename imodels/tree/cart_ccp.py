@@ -7,28 +7,26 @@ from sklearn.model_selection import cross_val_score
 
 from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier
 from imodels.util.tree import compute_tree_complexity
+from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.arguments import explicit_get_params, explicit_set_params
 
 
-class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
+class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
 
+    #: __init__ takes *args/**kwargs, which sklearn's introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = ("estimator_", "desired_complexity", "complexity_measure")
+
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn's
-        # automatic parameter introspection rejects
-        return {
-            "estimator_": self.estimator_,
-            "desired_complexity": self.desired_complexity,
-            "complexity_measure": self.complexity_measure,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
-        for key, value in params.items():
-            setattr(self, key, value)
-        return self
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
 
     def _copy_fitted_attributes(self):
         """Mirror the wrapped estimator's fitted sklearn attributes onto self."""
@@ -78,20 +76,10 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
         self._copy_fitted_attributes()
         return self
 
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
     @property
     def feature_importances_(self):
         """Mean decrease in impurity of the pruned tree, as in sklearn."""
         return self.estimator_.feature_importances_
-    def apply(self, X):
-        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
-
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
 
@@ -111,7 +99,7 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
             return NotImplemented
 
 
-class DecisionTreeCCPRegressor(BaseEstimator):
+class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args,
                  **kwargs):
@@ -120,19 +108,15 @@ class DecisionTreeCCPRegressor(BaseEstimator):
         self.alpha = 0.0
         self.complexity_measure = complexity_measure
 
+    #: __init__ takes *args/**kwargs, which sklearn's introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = ("estimator_", "desired_complexity", "complexity_measure")
+
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn's
-        # automatic parameter introspection rejects
-        return {
-            "estimator_": self.estimator_,
-            "desired_complexity": self.desired_complexity,
-            "complexity_measure": self.complexity_measure,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
-        for key, value in params.items():
-            setattr(self, key, value)
-        return self
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
 
     def _copy_fitted_attributes(self):
         """Mirror the wrapped estimator's fitted sklearn attributes onto self."""
@@ -188,16 +172,6 @@ class DecisionTreeCCPRegressor(BaseEstimator):
     def feature_importances_(self):
         """Mean decrease in impurity of the pruned tree, as in sklearn."""
         return self.estimator_.feature_importances_
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
-
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
 

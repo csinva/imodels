@@ -162,20 +162,3 @@ def calculate_mean_unique_calls_in_ensemble(ensemble, X, feature_costs=None):
             feats[j] = feats[j].union(feats_est[j])
     # -1 for the -2 feature that is always present
     return np.mean([len(f) - 1 for f in feats])
-
-
-def compute_mean_llm_calls(model_name, num_prompts, model=None, X=None):
-    if model_name == "manual_tree":
-        return calculate_mean_depth_of_points_in_tree(model.tree_)
-    elif model_name == "manual_hstree":
-        return calculate_mean_depth_of_points_in_tree(model.estimator_.tree_)
-    elif model_name == "manual_gbdt":
-        return calculate_mean_unique_calls_in_ensemble(model, X)
-    elif model_name == "manual_tree_cv":
-        return calculate_mean_depth_of_points_in_tree(model.best_estimator_.tree_)
-    elif model_name in ["manual_single_prompt"]:
-        return 1
-    elif model_name in ["manual_ensemble", "manual_boosting"]:
-        return num_prompts
-    else:
-        return num_prompts

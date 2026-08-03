@@ -9,3 +9,13 @@ from .ppms import GenericRegressorPPM, GenericClassifierPPM, \
     LogisticClassifierPPM, RobustRegressorPPM, LassoRegressorPPM
 from .block_transformers import IdentityTransformer, TreeTransformer, \
     CompositeTransformer, MDIPlusDefaultTransformer
+
+# re-exported for callers; listed so the intent is explicit
+__all__ = [
+    "CompositeTransformer", "ForestMDIPlus", "GenericClassifierPPM",
+    "GenericRegressorPPM", "GlmClassifierPPM", "GlmRegressorPPM",
+    "IdentityTransformer", "LassoRegressorPPM", "LogisticClassifierPPM",
+    "MDIPlusDefaultTransformer", "RandomForestPlusClassifier",
+    "RandomForestPlusRegressor", "RidgeClassifierPPM", "RidgeRegressorPPM",
+    "RobustRegressorPPM", "TreeMDIPlus", "TreeTransformer",
+]

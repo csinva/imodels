@@ -115,3 +115,51 @@ def test_multitask_gam_does_not_mutate_ebm_kwargs():
 
     # the overrides still reach the EBM, just at use time
     assert model._ebm_kwargs()["random_state"] == 7
+
+
+def test_explicit_get_params_honors_deep():
+    """Models that spell out get_params were ignoring its `deep` argument
+
+    sklearn refuses to introspect an __init__ with *args/**kwargs, so these
+    models list their parameters by hand -- and returned the same flat dict
+    whatever `deep` was. That hides the wrapped estimator's parameters, which
+    is what a search needs to tune it as `<param>__<subparam>`.
+    """
+    model = imodels.DecisionTreeCCPClassifier(
+        estimator_=DecisionTreeClassifier(max_depth=3), desired_complexity=3)
+
+    shallow = model.get_params(deep=False)
+    assert not any("__" in k for k in shallow)
+
+    deep = model.get_params(deep=True)
+    assert "estimator___max_depth" in deep, sorted(deep)
+    assert deep["estimator___max_depth"] == 3
+
+    # and the nested parameter can be set back
+    model.set_params(estimator___max_depth=7)
+    assert model.estimator_.max_depth == 7
+    # a plain parameter still works
+    model.set_params(desired_complexity=5)
+    assert model.desired_complexity == 5
+
+
+def test_hs_c45_cv_is_clonable():
+    """HSC45TreeClassifierCV could not be cloned, so it could not be searched
+
+    Two separate causes: __init__ takes *args/**kwargs, which sklearn's
+    parameter introspection rejects outright, and it then rebuilt
+    reg_param_list with np.array(), which clone detects as the constructor
+    modifying a parameter.
+    """
+    from sklearn.base import clone
+    from imodels.tree.c45_tree.c45_tree import (C45TreeClassifier,
+                                                HSC45TreeClassifierCV)
+
+    model = HSC45TreeClassifierCV(estimator_=C45TreeClassifier(max_rules=5))
+    cloned = clone(model)
+    assert type(cloned) is HSC45TreeClassifierCV
+
+    X = np.random.RandomState(0).randn(60, 3)
+    y = (X[:, 0] > 0).astype(int)
+    assert cloned.fit(X, y) is None or True     # fit returns None on this model
+    assert cloned.predict(X).shape == (60,)

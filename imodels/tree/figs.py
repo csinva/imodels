@@ -19,6 +19,8 @@ from scipy.special import softmax
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 from imodels.util.arguments import check_fit_arguments, check_predict_X
 from imodels.util.data_util import encode_categories
+from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.arguments import explicit_get_params
 
 
 class Node:
@@ -100,7 +102,7 @@ class Node:
         return self.__str__()
 
 
-class FIGS(BaseEstimator):
+class FIGS(RuleInspectionMixin, BaseEstimator):
     """FIGS (sum of trees) classifier.
     Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
     Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
@@ -162,15 +164,6 @@ class FIGS(BaseEstimator):
         self.need_to_reshape = False
 
 
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
     def _fit_candidate_stumps(self, X, potential_splits, y_residuals_per_tree,
                               sample_weight):
         """Re-fit the stump for every candidate split, in parallel if asked."""
@@ -854,7 +847,7 @@ class FIGSClassifier(ClassifierMixin, FIGS):
         return proba[:, 1]
 
 
-class FIGSCV(BaseEstimator):
+class FIGSCV(RuleInspectionMixin, BaseEstimator):
     def __init__(
         self,
         figs,
@@ -878,31 +871,17 @@ class FIGSCV(BaseEstimator):
         self.scoring = scoring
 
 
-    def get_rules(self, feature_names=None):
-        """Return this model's rules as a DataFrame (see imodels.get_rules)."""
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
     @property
     def feature_importances_(self):
         """Mean decrease in impurity of the selected FIGS model."""
         return self.figs.feature_importances_
-    def apply(self, X):
-        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
+    #: __init__ takes *args/**kwargs, which sklearn's introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = ("n_rules_list", "n_trees_list", "depth_list",
+                    "min_impurity_decrease_list", "cv", "scoring")
 
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn's
-        # automatic parameter introspection rejects
-        return {
-            "n_rules_list": self.n_rules_list,
-            "n_trees_list": self.n_trees_list,
-            "depth_list": self.depth_list,
-            "min_impurity_decrease_list": self.min_impurity_decrease_list,
-            "cv": self.cv,
-            "scoring": self.scoring,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
         for key, value in params.items():
