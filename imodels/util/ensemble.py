@@ -1,11 +1,6 @@
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.linear_model import LinearRegression
-import imodels
 
 
 class ResidualBoostingRegressor(BaseEstimator, RegressorMixin):
@@ -104,29 +99,3 @@ class SimpleBaggingRegressor:
 
         # Aggregate predictions
         return np.mean(predictions, axis=0)
-
-
-if __name__ == '__main__':
-    import imodels.algebraic.gam_multitask
-    X, y, feature_names = imodels.get_clean_dataset('california_housing')
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42)
-    X_train = X_train[:50, :2]
-    y_train = y_train[:50]
-    X_test = X_test[:50, :2]
-    y_test = y_test[:50]
-    # estimator = DecisionTreeRegressor(max_depth=3)
-    estimator = imodels.algebraic.gam_multitask.MultiTaskGAMRegressor()
-    for n_estimators in [1, 3, 5]:
-        # residual_boosting_regressor = ResidualBoostingRegressor(
-        # estimator=estimator, n_estimators=n_estimators)
-        residual_boosting_regressor = SimpleBaggingRegressor(
-            estimator=estimator, n_estimators=n_estimators)
-        residual_boosting_regressor.fit(X_train, y_train)
-
-        y_pred = residual_boosting_regressor.predict(X_test)
-        mse_train = mean_squared_error(
-            y_train, residual_boosting_regressor.predict(X_train))
-        mse = mean_squared_error(y_test, y_pred)
-        print(
-            f'MSE with {n_estimators} estimators: {mse:.2f} (train: {mse_train:.2f})')

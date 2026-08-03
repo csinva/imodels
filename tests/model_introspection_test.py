@@ -16,7 +16,7 @@ import imodels
 from imodels.util.apply import apply_leaves
 from imodels.util.get_rules import CORE_COLUMNS
 from tests.model_configs import (BINARY_INPUT_MODELS, EXCLUDED_MODELS,
-                                 MODEL_KWARGS)
+                                 model_kwargs)
 
 N_SAMPLES = 150
 FEATURE_NAMES = list('abcd')
@@ -43,7 +43,7 @@ def _data(model_type):
 
 def _fit(model_type):
     X, y = _data(model_type)
-    model = model_type(**MODEL_KWARGS.get(model_type.__name__, {}))
+    model = model_type(**model_kwargs(model_type.__name__))
     with contextlib.redirect_stdout(io.StringIO()):  # some models print
         model.fit(X, y)
     return model, X, y
@@ -187,7 +187,7 @@ def test_binary_only_classifiers_reject_multiclass(model_type):
     predicted the third class; SLIPPER failed later with a shape mismatch.
     """
     X, y = _multiclass_data(model_type)
-    model = model_type(**MODEL_KWARGS.get(model_type.__name__, {}))
+    model = model_type(**model_kwargs(model_type.__name__))
 
     with pytest.raises(ValueError) as excinfo:
         with contextlib.redirect_stdout(io.StringIO()):
@@ -206,7 +206,7 @@ def test_binary_only_classifiers_reject_multiclass(model_type):
 def test_multiclass_classifiers_give_one_column_per_class(model_type):
     """Classifiers that accept three classes must score all three"""
     X, y = _multiclass_data(model_type)
-    model = model_type(**MODEL_KWARGS.get(model_type.__name__, {}))
+    model = model_type(**model_kwargs(model_type.__name__))
     with contextlib.redirect_stdout(io.StringIO()):
         model.fit(X, y)
         probs = model.predict_proba(X)

@@ -332,6 +332,59 @@ def test_n_jobs_gives_identical_models():
     assert FIGSRegressor().get_params()['n_jobs'] is None
 
 
+def test_plot_lays_trees_out_over_cols():
+    """plot(cols=n) arranges the trees in n columns
+
+    cols was accepted and then ignored: every tree went into a single column
+    no matter what was passed.
+    """
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    rng = np.random.RandomState(0)
+    X = rng.randn(200, 6)
+    # additive signal, so FIGS grows a sum of several trees
+    y = X[:, 0] * 2 + np.sin(X[:, 1] * 3) + X[:, 2] ** 2 + X[:, 3]
+    model = FIGSRegressor(max_rules=12).fit(X, y)
+    assert len(model.trees_) > 1, 'need several trees for the layout to matter'
+
+    for cols in (1, 2, 3):
+        model.plot(cols=cols, filename=os.path.join(path_to_tests, 'figs_plot.png'))
+        geometry = plt.gcf().axes[0].get_subplotspec().get_gridspec().get_geometry()
+        plt.close('all')
+        expected_cols = min(cols, len(model.trees_))
+        assert geometry[1] == expected_cols, f'cols={cols} gave grid {geometry}'
+    os.remove(os.path.join(path_to_tests, 'figs_plot.png'))
+
+
+def test_classifier_has_decision_function():
+    """FIGSClassifier exposes decision_function, as sklearn wrappers expect
+
+    _init_decision_function() claimed to set one up but only bound a local that
+    was immediately discarded, so the attribute never existed.
+    """
+    rng = np.random.RandomState(0)
+    X = rng.randn(100, 4)
+    y = (X[:, 0] > 0).astype(int)
+    model = FIGSClassifier(max_rules=5).fit(X, y)
+
+    scores = model.decision_function(X)
+    assert scores.shape == (100,)
+    # it ranks the same way predict_proba does
+    assert np.allclose(scores, model.predict_proba(X)[:, 1])
+
+
+def test_fit_accepts_plain_lists():
+    """lists are valid input to fit, as they are for any sklearn estimator"""
+    rng = np.random.RandomState(0)
+    X = rng.randn(60, 3)
+    y = (X[:, 0] > 0).astype(int)
+
+    from_lists = FIGSClassifier(max_rules=4).fit(X.tolist(), y.tolist())
+    from_arrays = FIGSClassifier(max_rules=4).fit(X, y)
+    assert np.array_equal(from_lists.predict(X), from_arrays.predict(X))
+
 def test_constant_target():
     """FIGS should fit a trivial model when there is nothing to split on
 

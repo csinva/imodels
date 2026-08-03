@@ -3,23 +3,15 @@ It works by building a greedy rule list using only one feature at a time, and th
 the rule list with the highest accuracy
 '''
 
-import math
 import numpy as np
-from copy import deepcopy
-from sklearn.base import BaseEstimator
-from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
-from sklearn.utils.multiclass import check_classification_targets, unique_labels
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels import GreedyRuleListClassifier
-from imodels.rule_list.rule_list import RuleList
 from imodels.util.arguments import check_binary_target, check_fit_arguments
 
 
 class OneRClassifier(GreedyRuleListClassifier):
     def __init__(self, max_depth=5, class_weight=None, criterion='gini'):
         self.max_depth = max_depth
-        self.feature_names_ = None
         self.class_weight = class_weight
         self.criterion = criterion
         self._estimator_type = 'classifier'

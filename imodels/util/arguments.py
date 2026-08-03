@@ -3,7 +3,7 @@ from inspect import signature
 import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin
-from sklearn.utils.validation import check_X_y, check_array
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import check_classification_targets
 import scipy.sparse
 
@@ -86,9 +86,15 @@ def check_predict_X(model, X):
     which quietly returns predictions for the wrong features. sklearn raises in
     both cases, and so should we.
 
+    Also raises NotFittedError when called before fit. Otherwise predicting on
+    an unfitted model fails later with whatever AttributeError the model
+    happens to hit first, which callers cannot catch as NotFittedError.
+
     Pass X before converting it to an array, or the column names are gone by the
     time this sees them.
     """
+    check_is_fitted(model)
+
     # read the shape off X directly: np.shape() would coerce X, and sklearn's
     # estimator checks pass array-likes that must reach check_array untouched
     shape = getattr(X, 'shape', None)

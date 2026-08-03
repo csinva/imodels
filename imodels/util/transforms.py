@@ -28,7 +28,6 @@ class Winsorizer():
                 self.winsor_lims[:, i_col] = [lower, upper]
 
     def trim(self, X):
-        X_ = X.copy()
         X_ = np.where(X > self.winsor_lims[1, :], np.tile(self.winsor_lims[1, :], [X.shape[0], 1]),
                       np.where(X < self.winsor_lims[0, :], np.tile(self.winsor_lims[0, :], [X.shape[0], 1]), X))
         return X_
@@ -47,7 +46,7 @@ class FriedScale():
 
     def train(self, X):
         # get multipliers
-        if self.winsorizer != None:
+        if self.winsorizer is not None:
             X_trimmed = self.winsorizer.trim(X)
         else:
             X_trimmed = X
@@ -61,7 +60,7 @@ class FriedScale():
         self.scale_multipliers = scale_multipliers
 
     def scale(self, X):
-        if self.winsorizer != None:
+        if self.winsorizer is not None:
             return self.winsorizer.trim(X) * self.scale_multipliers
         else:
             return X * self.scale_multipliers
@@ -126,14 +125,3 @@ class CorrelationScreenTransformer(BaseEstimator, TransformerMixin):
             X_transformed = X_transformed.values
 
         return X_transformed
-
-
-if __name__ == '__main__':
-    X = np.random.randn(5, 5)
-    X[:, 0] = [1, 1, 0, 1, 1]
-    X[:, 1] = X[:, 0]
-
-    transformer = CorrelationScreenTransformer()
-    print(X)
-    X_transformed = transformer.fit_transform(X)
-    print(X_transformed)

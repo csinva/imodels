@@ -2,16 +2,11 @@ from copy import deepcopy
 from typing import List
 
 import numpy as np
-from sklearn import datasets
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
-from sklearn.metrics import r2_score, mean_squared_error, log_loss
+from sklearn.metrics import mean_squared_error, log_loss
 from sklearn.model_selection import KFold
-from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
-from sklearn.ensemble import (
-    GradientBoostingClassifier,
-    GradientBoostingRegressor,
-)
+from sklearn.ensemble import GradientBoostingClassifier
 
 from sklearn.utils.validation import check_is_fitted
 
@@ -595,55 +590,3 @@ class HSTreeRegressorCV(HSTreeRegressor):
             s += attr + "=" + repr(getattr(self, attr)) + ", "
         s = s[:-2] + ")"
         return s
-
-
-if __name__ == "__main__":
-    np.random.seed(15)
-    # X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
-    # X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
-    X, y = datasets.load_diabetes(return_X_y=True)  # regression
-    # X = np.random.randn(500, 10)
-    # y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=10
-    )
-    print("X.shape", X.shape)
-    print("ys", np.unique(y_train))
-
-    # m = HSTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
-    # m = DecisionTreeClassifier(max_leaf_nodes = 20,random_state=1, max_features=None)
-    # m = DecisionTreeClassifier(random_state=42)
-    m = GradientBoostingRegressor(random_state=10, n_estimators=5)
-    # print('best alpha', m.reg_param)
-    m.fit(X_train, y_train)
-    # m.predict_proba(X_train)  # just run this
-    print("score", r2_score(y_test, m.predict(X_test)))
-    print("running again....")
-
-    # x = DecisionTreeRegressor(random_state = 42, ccp_alpha = 0.3)
-    # x.fit(X_train,y_train)
-
-    # m = HSTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
-    # m = HSTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
-    # m = HSTreeRegressorCV(
-    #     estimator_=DecisionTreeClassifier(random_state=42),
-    #     shrinkage_scheme_="node_based",
-    #     reg_param_list=[0.1, 1, 2, 5, 10, 25, 50, 100, 500],
-    # )
-    # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
-    m = HSTreeRegressor(m)
-    print("score", r2_score(y_test, m.predict(X_test)))
-
-    m = HSTreeRegressor(
-        estimator_=GradientBoostingRegressor(
-            random_state=10,
-            n_estimators=5,
-        ),
-        reg_param=1,
-    )
-    m.fit(X_train, y_train)
-    print("best alpha", m.reg_param)
-    # m.predict_proba(X_train)  # just run this
-    # print('score', m.score(X_test, y_test))
-    print("score", r2_score(y_test, m.predict(X_test)))

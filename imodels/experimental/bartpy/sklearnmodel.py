@@ -2,7 +2,6 @@ import copy
 from copy import deepcopy
 from typing import List, Callable, Mapping, Union, Optional
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -10,7 +9,6 @@ from joblib import Parallel, delayed
 from sklearn.base import RegressorMixin, BaseEstimator
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
-from sklearn.tree import DecisionTreeClassifier
 from sklearn import datasets, model_selection
 from imodels.util.arguments import check_predict_X, set_feature_names_in
 
@@ -246,6 +244,11 @@ class SklearnModel(BaseEstimator, RegressorMixin):
             self with trained parameter values
         """
         set_feature_names_in(self, X)
+        # X/y may arrive as plain lists, which the model code indexes as arrays
+        if not hasattr(X, 'shape') and not hasattr(X, 'values'):
+            X = np.asarray(X)
+        if not hasattr(y, 'shape') and not hasattr(y, 'values'):
+            y = np.asarray(y)
         self.n_features_in_ = np.asarray(X).shape[1]
         self.model = self._construct_model(X, y)
         self.extract = Parallel(n_jobs=self.n_jobs)(self.f_delayed_chains(X, y))
@@ -468,6 +471,9 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         return total_var - within_chain_var
 
     def _out_of_sample_predict(self, X):
+        # the samples index X by (row, column), so a plain list will not do
+        if X is not None and not hasattr(X, 'shape') and not hasattr(X, 'values'):
+            X = np.asarray(X)
         samples = self._model_samples
         predictions_transformed = [x.predict(X) for x in samples]
         predictions = self.data.y.unnormalize_y(np.mean(predictions_transformed, axis=0))
@@ -778,7 +784,3 @@ def main():
     # #
     # # plt.close()
     #
-
-
-if __name__ == '__main__':
-    main()

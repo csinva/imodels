@@ -1,17 +1,6 @@
-from sklearn.tree._tree import Tree
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.base import ClassifierMixin, RegressorMixin
-from sklearn import __version__
-from collections import namedtuple
-import pandas as pd
 import numpy as np
 
-from collections import namedtuple
-
-from sklearn import __version__
-from sklearn.base import ClassifierMixin, RegressorMixin
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.tree._tree import Tree
+from sklearn.base import ClassifierMixin
 import imodels.util.tree
 
 
@@ -167,29 +156,3 @@ class CustomDecisionTreeClassifier(ClassifierMixin):
             elif node.right:
                 node = node.right
         return node.predicted_probs
-
-
-if __name__ == '__main__':
-    from sklearn.datasets import load_breast_cancer, load_iris
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import accuracy_score
-
-    # data = load_breast_cancer()
-    data = load_iris()
-    X = data.data
-    y = data.target
-    # print(np.unique(y))
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, random_state=42, test_size=0.5)
-    m = CustomDecisionTreeClassifier(
-        # max_leaf_nodes=20,
-        impurity_func='cost_information_gain_ratio')
-    m.fit(X_train, y_train)
-    y_pred = m.predict(X_test)
-    print("Accuracy:", accuracy_score(y_test, y_pred))
-    print('n_nodes', m.n_splits + 1)
-    print('shapes', m.predict_proba(X_test).shape, m.predict(X_test).shape)
-
-    cost = imodels.util.tree.calculate_mean_depth_of_points_in_custom_tree(m)
-    print('Cost', cost)

@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 import imodels
-from tests.model_configs import BINARY_INPUT_MODELS, EXCLUDED_MODELS, MODEL_KWARGS
+from tests.model_configs import BINARY_INPUT_MODELS, EXCLUDED_MODELS, model_kwargs
 
 # verified to produce one probability column per class
 MULTICLASS_MODELS = [
@@ -40,7 +40,7 @@ def _data(model_name, n_classes):
 
 def _fit(model_name, n_classes):
     X, y = _data(model_name, n_classes)
-    model = getattr(imodels, model_name)(**MODEL_KWARGS.get(model_name, {}))
+    model = getattr(imodels, model_name)(**model_kwargs(model_name))
     with contextlib.redirect_stdout(io.StringIO()):
         model.fit(X, y)
     return model, X, y
@@ -60,7 +60,7 @@ def test_multiclass_models(model_name):
 def test_binary_only_models_reject_multiclass(model_name):
     """Binary-only models must raise, not silently treat y as binary"""
     X, y = _data(model_name, n_classes=3)
-    model = getattr(imodels, model_name)(**MODEL_KWARGS.get(model_name, {}))
+    model = getattr(imodels, model_name)(**model_kwargs(model_name))
     with pytest.raises(ValueError, match='binary|multiclass'):
         with contextlib.redirect_stdout(io.StringIO()):
             model.fit(X, y)

@@ -1,6 +1,5 @@
 from copy import deepcopy
 import numpy as np
-import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_is_fitted
@@ -9,10 +8,7 @@ from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y
 from sklearn.utils.validation import _check_sample_weight
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score
-from tqdm import tqdm
 
-import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
 
@@ -180,26 +176,3 @@ class TreeGAMSimpleRegressor(TreeGAMSimple, RegressorMixin):
 
 class TreeGAMSimpleClassifier(TreeGAMSimple, ClassifierMixin):
     ...
-
-
-if __name__ == "__main__":
-    X, y, feature_names = imodels.get_clean_dataset("heart")
-    X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-    gam = TreeGAMSimpleClassifier(
-        boosting_strategy="cyclic",
-        random_state=42,
-        learning_rate=0.1,
-        max_leaf_nodes=3,
-        n_boosting_rounds=100,
-    )
-    gam.fit(X, y_train)
-
-    # check roc auc score
-    y_pred = gam.predict_proba(X_test)[:, 1]
-    print(
-        "train roc:",
-        roc_auc_score(y_train, gam.predict_proba(X)[:, 1]).round(3),
-    )
-    print("test roc:", roc_auc_score(y_test, y_pred).round(3))
-    print("test acc:", accuracy_score(y_test, gam.predict(X_test)).round(3))
-    print('\t(imb:', np.mean(y_test).round(3), ')')

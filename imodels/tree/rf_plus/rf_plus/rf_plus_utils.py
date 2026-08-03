@@ -55,7 +55,6 @@ def _neg_log_loss(y_true, y_pred):
 
 def _check_Xy(X,y):
     if isinstance(X, pd.DataFrame):
-        feature_names_ = list(X.columns)
         X_array = X.values
     elif isinstance(X, np.ndarray):
         X_array = X
@@ -69,7 +68,6 @@ def _check_Xy(X,y):
 
 def _check_X(X):
     if isinstance(X, pd.DataFrame):
-        feature_names_ = list(X.columns)
         X_array = X.values
     elif isinstance(X, np.ndarray):
         X_array = X

@@ -5,13 +5,11 @@ import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.special import expit
-from sklearn import datasets
 from sklearn import tree
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.tree import plot_tree, DecisionTreeClassifier
-from sklearn.utils import check_X_y, check_array
+from sklearn.model_selection import cross_val_score
+from sklearn.tree import plot_tree
+from sklearn.utils import check_array
 from joblib import Parallel, delayed
 from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.validation import _check_sample_weight, check_is_fitted
@@ -21,11 +19,6 @@ from scipy.special import softmax
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 from imodels.util.arguments import check_fit_arguments, check_predict_X
 from imodels.util.data_util import encode_categories
-
-import scipy.sparse
-from sklearn.utils.validation import check_X_y, check_array
-from sklearn.utils.multiclass import check_classification_targets, type_of_target
-from sklearn.preprocessing import OneHotEncoder
 
 
 class Node:
@@ -98,7 +91,7 @@ class Node:
         if self.is_root:
             return f"X_{self.feature} <= {self.threshold:0.3f}" + one_proportion
         elif self.left is None and self.right is None:
-            return f"ΔRisk = [" + ", ".join(f"{v:.2f}" for v in self.value) + "]" + one_proportion
+            return "ΔRisk = [" + ", ".join(f"{v:.2f}" for v in self.value) + "]" + one_proportion
         else:
             return f"X_{self.feature} <= {self.threshold:0.3f}" + one_proportion
 
@@ -165,7 +158,6 @@ class FIGS(BaseEstimator):
         self.class_weight = class_weight
         self.verbose = verbose
         self.n_jobs = n_jobs
-        self._init_decision_function()
         self.n_outputs = None
         self.need_to_reshape = False
 
@@ -213,17 +205,6 @@ class FIGS(BaseEstimator):
         if sample_weight is None:
             return class_based
         return np.asarray(sample_weight, dtype=float) * class_based
-
-    def _init_decision_function(self):
-        """Sets decision function based on _estimator_type"""
-        # used by sklearn GridSearchCV, BaggingClassifier
-        if isinstance(self, ClassifierMixin):
-
-            def decision_function(x):
-                return self.predict_proba(x)[:, 1]
-
-        elif isinstance(self, RegressorMixin):
-            decision_function = self.predict
 
     def _construct_node_with_stump(
         self,
@@ -365,6 +346,8 @@ class FIGS(BaseEstimator):
 
         if hasattr(y, 'values'):
             y = y.values
+        # y may still be a plain list here, which has no .shape
+        y = np.asarray(y)
         if len(y.shape) == 1:
             y = y.reshape(-1, 1)
         
@@ -700,8 +683,8 @@ class FIGS(BaseEstimator):
                 X, categorical_features=categorical_features, encoder_name="_encoder")
         X = check_array(check_predict_X(self, X))
         preds = np.zeros((X.shape[0], self.n_outputs, len(self.trees_)))
-        for i, tree in enumerate(self.trees_):
-            preds[:, :, i] += self._predict_tree(tree, X)
+        for i, figs_tree in enumerate(self.trees_):
+            preds[:, :, i] += self._predict_tree(figs_tree, X)
         
         if isinstance(self, RegressorMixin):
             if by_tree:
@@ -742,8 +725,8 @@ class FIGS(BaseEstimator):
         if isinstance(self, RegressorMixin):
             return NotImplemented
         preds = np.zeros((X.shape[0], self.n_outputs))
-        for tree in self.trees_:
-            preds += self._predict_tree(tree, X)
+        for figs_tree in self.trees_:
+            preds += self._predict_tree(figs_tree, X)
         if use_clipped_prediction:
             # old behavior, pre v1.3.9
             # constrain to range of probabilities by clipping
@@ -801,27 +784,27 @@ class FIGS(BaseEstimator):
         fig_size=None,
     ):
         is_single_tree = len(self.trees_) < 2 or tree_number is not None
-        n_cols = int(cols)
-        n_rows = int(np.ceil(len(self.trees_) / n_cols))
 
         if feature_names is None:
             if hasattr(self, "feature_names_") and self.feature_names_ is not None:
                 feature_names = self.feature_names_
 
         n_plots = int(len(self.trees_)) if tree_number is None else 1
-        fig, axs = plt.subplots(n_plots, dpi=dpi)
+        # lay the trees out over `cols` columns, rather than stacking them all
+        # in a single one
+        n_cols = 1 if is_single_tree else max(1, min(int(cols), n_plots))
+        n_rows = int(np.ceil(n_plots / n_cols))
+        fig, axs = plt.subplots(n_rows, n_cols, dpi=dpi, squeeze=False)
         if fig_size is not None:
             fig.set_size_inches(fig_size, fig_size)
 
+        # any trailing cells of the grid hold no tree
+        for ax in axs.flat[n_plots:]:
+            ax.axis("off")
+
         n_classes = 1 if isinstance(self, RegressorMixin) else self.n_outputs
-        ax_size = int(len(self.trees_))
         for i in range(n_plots):
-            r = i // n_cols
-            c = i % n_cols
-            if not is_single_tree:
-                ax = axs[i]
-            else:
-                ax = axs
+            ax = axs.flat[i]
             try:
                 dt = extract_sklearn_tree_from_figs(
                     self, i if tree_number is None else tree_number, n_classes
@@ -849,10 +832,26 @@ class FIGSRegressor(RegressorMixin, FIGS):
 
 
 class FIGSClassifier(ClassifierMixin, FIGS):
-    
+
     @property
     def class_map(self):
         return self._class_map
+
+    def decision_function(self, X):
+        """Confidence score for the positive class, one value per sample.
+
+        Defined for binary problems only, matching sklearn's convention; it is
+        what scorers like roc_auc and wrappers like BaggingClassifier reach for
+        before falling back to predict_proba.
+        """
+        proba = self.predict_proba(X)
+        if proba.shape[1] != 2:
+            raise AttributeError(
+                "decision_function is only defined for binary classification; "
+                f"this model was fitted with {proba.shape[1]} classes. "
+                "Use predict_proba instead."
+            )
+        return proba[:, 1]
 
 
 class FIGSCV(BaseEstimator):
@@ -931,9 +930,11 @@ class FIGSCV(BaseEstimator):
         return self
 
     def predict_proba(self, X):
+        check_is_fitted(self, 'figs')
         return self.figs.predict_proba(X)
 
     def predict(self, X, by_tree = False):
+        check_is_fitted(self, 'figs')
         return self.figs.predict(X, by_tree = by_tree)
 
     @property
@@ -1038,47 +1039,3 @@ class FIGSClassifierCV(ClassifierMixin, FIGSCV):
     
 #     def predict(self, X):
 #         return np.array([est.predict(X) for est in self.estimators]).T.squeeze(0)
-
-        
-
-
-
-if __name__ == "__main__":
-    from sklearn import datasets
-
-    X_cls, Y_cls = datasets.load_breast_cancer(return_X_y=True)
-    X_reg, Y_reg = datasets.make_friedman1(100)
-
-    categories = ["cat", "dog", "bird", "fish"]
-    categories_2 = ["bear", "chicken", "cow"]
-
-    X_cat = pd.DataFrame(X_reg)
-    X_cat["pet1"] = np.random.choice(categories, size=(100, 1))
-    X_cat["pet2"] = np.random.choice(categories_2, size=(100, 1))
-
-    # X_cat.columns[-1] = "pet"
-    Y_cat = Y_reg
-
-    est = FIGSRegressor(max_rules=10)
-    est.fit(X_cat, Y_cat, categorical_features=["pet1", "pet2"])
-    est.predict(X_cat, categorical_features=["pet1", "pet2"])
-    est.plot(tree_number=1)
-
-    est = FIGSClassifier(max_rules=10)
-    # est.fit(X_cls, Y_cls, sample_weight=np.arange(0, X_cls.shape[0]))
-    est.fit(X_cls, Y_cls, sample_weight=[1] * X_cls.shape[0])
-    est.predict(X_cls)
-
-    est = FIGSRegressorCV()
-    est.fit(X_reg, Y_reg)
-    est.predict(X_reg)
-    print(est.max_rules)
-    est.figs.plot(tree_number=0)
-
-    est = FIGSClassifierCV()
-    est.fit(X_cls, Y_cls)
-    est.predict(X_cls)
-    print(est.max_rules)
-    est.figs.plot(tree_number=0)
-
-# %%

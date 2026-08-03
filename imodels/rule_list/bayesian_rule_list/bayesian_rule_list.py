@@ -3,7 +3,7 @@ import pandas as pd
 import random
 from collections import Counter, defaultdict
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.multiclass import check_classification_targets, unique_labels
+from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
 from imodels.rule_list.bayesian_rule_list.brl_util import (

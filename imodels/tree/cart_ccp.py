@@ -2,10 +2,8 @@ from copy import deepcopy
 from typing import List
 
 import numpy as np
-from sklearn import datasets
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.model_selection import cross_val_score, train_test_split
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import cross_val_score
 
 from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier
 from imodels.util.tree import compute_tree_complexity
@@ -41,8 +39,7 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
     def _get_alpha(self, X, y, sample_weight=None, *args, **kwargs):
         path = self.estimator_.cost_complexity_pruning_path(
             X, y, sample_weight=sample_weight)
-        ccp_alphas, impurities = path.ccp_alphas, path.impurities
-        complexities = {}
+        ccp_alphas = path.ccp_alphas
         low = 0
         high = len(ccp_alphas) - 1
         cur = 0
@@ -146,8 +143,7 @@ class DecisionTreeCCPRegressor(BaseEstimator):
     def _get_alpha(self, X, y, sample_weight=None):
         path = self.estimator_.cost_complexity_pruning_path(
             X, y, sample_weight=sample_weight)
-        ccp_alphas, impurities = path.ccp_alphas, path.impurities
-        complexities = {}
+        ccp_alphas = path.ccp_alphas
         low = 0
         high = len(ccp_alphas) - 1
         cur = 0
@@ -255,20 +251,3 @@ class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
         return super().fit(X=X, y=y)
-
-
-if __name__ == '__main__':
-    m = DecisionTreeCCPClassifier(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
-                                  complexity_measure='max_leaf_nodes')
-    # X,y = make_friedman1() #For regression
-    X, y = datasets.load_breast_cancer(return_X_y=True)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=42)
-    m.fit(X_train, y_train)
-    m.predict(X_test)
-    print(m.score(X_test, y_test))
-
-    m = HSDecisionTreeCCPClassifierCV(estimator_=DecisionTreeClassifier(random_state=1), desired_complexity=10,
-                                       reg_param_list=[0.0, 0.1, 1.0, 5.0, 10.0, 25.0, 50.0, 100.0])
-    m.fit(X_train, y_train)
-    print(m.score(X_test, y_test))

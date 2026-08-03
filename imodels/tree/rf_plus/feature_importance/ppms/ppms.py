@@ -1,8 +1,6 @@
 # generic imports
 import copy
 from abc import ABC
-import numpy as np
-from scipy.special import expit
 from joblib import Parallel, delayed
 
 class MDIPlusGenericRegressorPPM(ABC):

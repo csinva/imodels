@@ -1,18 +1,16 @@
-import random
 from copy import deepcopy
 from queue import deque
 
 import numpy as np
 from mlxtend.classifier import LogisticRegression
-from sklearn import datasets
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import get_scorer
-from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_text
 from sklearn.utils import check_X_y
 
 from imodels.util.arguments import check_fit_arguments, check_predict_X
+from sklearn.utils.validation import check_is_fitted
 
 
 class TaoTree(BaseEstimator):
@@ -389,6 +387,7 @@ class TaoTree(BaseEstimator):
         return self.model.feature_importances_
 
     def predict(self, X):
+        check_is_fitted(self, 'model')
         check_predict_X(self, X)
         preds = self.model.predict(X)
         if hasattr(self, "classes_"):
@@ -397,6 +396,7 @@ class TaoTree(BaseEstimator):
             return preds
 
     def predict_proba(self, X):
+        check_is_fitted(self, 'model')
         check_predict_X(self, X)
         return self.model.predict_proba(X)
 
@@ -410,33 +410,3 @@ class TaoTreeRegressor(TaoTree, RegressorMixin):
 
 class TaoTreeClassifier(TaoTree, ClassifierMixin):
     pass
-
-
-if __name__ == '__main__':
-    np.random.seed(13)
-    random.seed(13)
-    X, y = datasets.load_breast_cancer(return_X_y=True)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=42
-    )
-    print('X.shape', X.shape)
-    print('ys', np.unique(y_train), '\n\n')
-    m = TaoTreeClassifier(randomize_tree=False, weight_errors=False,
-                          node_model='stump', model_args={'max_depth': 3},
-                          verbose=1)
-    m.fit(X_train, y_train)
-    print('Train acc', np.mean(m.predict(X_train) == y_train))
-    print('Test acc', np.mean(m.predict(X_test) == y_test))
-    # print(m.predict(X_train), m.predict_proba(X_train).shape)
-    # print(m.predict_proba(X_train))
-
-    # X, y = datasets.load_diabetes(return_X_y=True)  # regression
-    # X = np.random.randn(500, 10)
-    # y = (X[:, 0] > 0).astype(float) + (X[:, 1] > 1).astype(float)
-    # X_train, X_test, y_train, y_test = train_test_split(
-    #     X, y, test_size=0.33, random_state=42
-    # )
-    # m = TaoRegressor()
-    # m.fit(X_train, y_train)
-    # print('mse', np.mean(np.square(m.predict(X_test) - y_test)),
-    #       'baseline', np.mean(np.square(y_test)))

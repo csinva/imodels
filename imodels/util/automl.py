@@ -12,11 +12,11 @@ from imodels import (
 )
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.linear_model import LogisticRegression, ElasticNet, Ridge
-import imodels
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import GridSearchCV
 import numpy as np
 from sklearn.pipeline import Pipeline
 from imodels.util.arguments import set_feature_names_in
+from sklearn.utils.validation import check_is_fitted
 
 
 class AutoInterpretableModel(BaseEstimator):
@@ -51,13 +51,29 @@ class AutoInterpretableModel(BaseEstimator):
         return self
 
     def predict(self, X):
+        check_is_fitted(self, 'est_')
         return self.est_.predict(X)
 
     def predict_proba(self, X):
+        check_is_fitted(self, 'est_')
         return self.est_.predict_proba(X)
 
     def score(self, X, y):
+        check_is_fitted(self, 'est_')
         return self.est_.score(X, y)
+
+    def get_rules(self, feature_names=None):
+        """Return this model's rules as a DataFrame (see imodels.get_rules).
+
+        The rules are those of the model the search selected.
+        """
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        """Return the leaf each sample reaches (see imodels.util.apply.apply_leaves)."""
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
 
     PARAM_GRID_LINEAR_CLASSIFICATION = [
         {
@@ -142,21 +158,3 @@ class AutoInterpretableClassifier(AutoInterpretableModel, ClassifierMixin):
 
 class AutoInterpretableRegressor(AutoInterpretableModel, RegressorMixin):
     ...
-
-
-if __name__ == "__main__":
-    X, y, feature_names = imodels.get_clean_dataset("heart")
-
-    print("shapes", X.shape, y.shape, "nunique", np.unique(y).size)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, random_state=42, test_size=0.2
-    )
-
-    m = AutoInterpretableClassifier()
-    # m = AutoInterpretableRegressor()
-    m.fit(X_train, y_train)
-
-    print("best params", m.est_.best_params_)
-    print("best score", m.est_.best_score_)
-    print("best estimator", m.est_.best_estimator_)
-    print("best estimator params", m.est_.best_estimator_.get_params())

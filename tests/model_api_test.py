@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.base import clone
+from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
@@ -23,7 +24,7 @@ from tests.model_configs import (
     DEFAULT_ACCURACY_FLOOR,
     EXCLUDED_MODELS,
     FEATURE_NAMES,
-    MODEL_KWARGS,
+    model_kwargs,
     N_FEATURES,
     N_SAMPLES,
 )
@@ -33,7 +34,7 @@ REGRESSORS = [m for m in imodels.REGRESSORS if m.__name__ not in EXCLUDED_MODELS
 
 
 def _make_model(model_type):
-    return model_type(**MODEL_KWARGS.get(model_type.__name__, {}))
+    return model_type(**model_kwargs(model_type.__name__))
 
 
 def _make_data(model_type, classification):
@@ -154,6 +155,25 @@ class TestSharedModelAPI:
         assert isinstance(repr(model), str)
         assert isinstance(str(model), str)
 
+    @pytest.mark.parametrize("model_type,classification", ALL_MODELS, ids=ALL_IDS)
+    def test_predict_before_fit_raises_not_fitted(self, model_type, classification):
+        """predict() before fit() raises NotFittedError, not whatever comes first
+
+        Callers catch NotFittedError; an AttributeError naming some internal
+        attribute is neither catchable nor informative.
+        """
+        X, _, _ = _make_data(model_type, classification)
+        model = _make_model(model_type)
+        with pytest.raises(NotFittedError):
+            model.predict(X)
+
+    @pytest.mark.parametrize("model_type,classification", ALL_MODELS, ids=ALL_IDS)
+    def test_list_input(self, model_type, classification):
+        """plain lists are accepted, and give the same result as arrays"""
+        X, y, _ = _make_data(model_type, classification)
+        from_lists = _make_model(model_type).fit(X.tolist(), y.tolist()).predict(X.tolist())
+        from_arrays = _make_model(model_type).fit(X, y).predict(X)
+        assert np.asarray(from_lists).shape == np.asarray(from_arrays).shape
 
 class TestClassifierAPI:
     """Conventions specific to classifiers."""

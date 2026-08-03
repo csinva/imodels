@@ -3,9 +3,7 @@
 
 import itertools
 import operator
-import os
 import warnings
-from os.path import join as oj
 from bisect import bisect_left
 from collections import defaultdict
 from copy import deepcopy
@@ -16,12 +14,10 @@ import numpy as np
 import pandas as pd
 from mlxtend.frequent_patterns import fpgrowth
 from numpy.random import random
-from pandas import read_csv
 from scipy.sparse import csc_matrix
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.utils.multiclass import check_classification_targets
-from sklearn.utils.validation import check_X_y, check_is_fitted
+from sklearn.utils.validation import check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
 from imodels.util.arguments import check_fit_arguments
@@ -517,42 +513,3 @@ def _extract_rules(tree, feature_names):
             rule.append(node)
         rules.append(rule)
     return rules
-
-
-if __name__ == '__main__':
-    test_dir = os.path.dirname(os.path.abspath(__file__))
-
-    df = read_csv(oj(test_dir, '../../tests/test_data', 'tictactoe_X.txt'), header=0, sep=" ")
-    Y = np.loadtxt(open(oj(test_dir, '../../tests/test_data', 'tictactoe_Y.txt'), "rb"), delimiter=" ")
-
-    lenY = len(Y)
-    idxs_train = sample(range(lenY), int(0.50 * lenY))
-    idxs_test = [i for i in range(lenY) if i not in idxs_train]
-    y_test = Y[idxs_test]
-    model = BayesianRuleSetClassifier(n_rules=100,
-                                      supp=5,
-                                      maxlen=3,
-                                      num_iterations=100,
-                                      num_chains=2,
-                                      alpha_pos=500, beta_pos=1,
-                                      alpha_neg=500, beta_neg=1,
-                                      alpha_l=None, beta_l=None)
-
-    # fit and check accuracy
-    np.random.seed(13)
-    # random.seed(13)
-    model.fit(df.iloc[idxs_train], Y[idxs_train])
-    y_pred = model.predict(df.iloc[idxs_test])
-    acc1 = np.mean(y_pred == y_test)
-    assert acc1 > 0.8
-
-    # try fitting np version
-    np.random.seed(13)
-    # random.seed(13)
-    model.fit(df.iloc[idxs_train].values, Y[idxs_train])
-    y_pred = model.predict(df.iloc[idxs_test].values)
-    y_test = Y[idxs_test]
-    acc2 = np.mean(y_pred == y_test)
-    assert acc2 > 0.8
-
-    # assert np.abs(acc1 - acc2) < 0.05 # todo: fix seeding

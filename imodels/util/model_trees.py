@@ -8,8 +8,12 @@ models are tree-based.
 
 import numpy as np
 
-#: attributes under which a model may keep the fitted model it delegates to
-WRAPPED_MODEL_ATTRS = ('figs', 'estimator_', 'model')
+#: attributes under which a model may keep the fitted model it delegates to.
+#: `est_`/`best_estimator_`/`_final_estimator` cover the search-and-pipeline
+#: chain that AutoInterpretableModel builds: est_ is a GridSearchCV whose
+#: best_estimator_ is a Pipeline ending in the model actually chosen.
+WRAPPED_MODEL_ATTRS = ('figs', 'estimator_', 'model',
+                       'est_', 'best_estimator_', '_final_estimator')
 
 
 def is_sklearn_tree(estimator) -> bool:

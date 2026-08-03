@@ -212,7 +212,7 @@ class MDLPDiscretizer(object):
             return
         # determine whether to cut and where
         cut_candidate = self._best_cut_point(data=data_partition, feature=feature)
-        if cut_candidate == None:
+        if cut_candidate is None:
             return
         decision = self.MDLPC_criterion(data=data_partition, feature=feature, cut_point=cut_candidate)
 
