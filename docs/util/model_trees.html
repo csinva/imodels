@@ -36,8 +36,12 @@ models are tree-based.
 
 import numpy as np
 
-#: attributes under which a model may keep the fitted model it delegates to
-WRAPPED_MODEL_ATTRS = (&#39;figs&#39;, &#39;estimator_&#39;, &#39;model&#39;)
+#: attributes under which a model may keep the fitted model it delegates to.
+#: `est_`/`best_estimator_`/`_final_estimator` cover the search-and-pipeline
+#: chain that AutoInterpretableModel builds: est_ is a GridSearchCV whose
+#: best_estimator_ is a Pipeline ending in the model actually chosen.
+WRAPPED_MODEL_ATTRS = (&#39;figs&#39;, &#39;estimator_&#39;, &#39;model&#39;,
+                       &#39;est_&#39;, &#39;best_estimator_&#39;, &#39;_final_estimator&#39;)
 
 
 def is_sklearn_tree(estimator) -&gt; bool:
@@ -110,7 +114,10 @@ def sklearn_trees(model, convert_figs=True):
 <dl>
 <dt id="imodels.util.model_trees.WRAPPED_MODEL_ATTRS"><code class="name">var <span class="ident">WRAPPED_MODEL_ATTRS</span></code></dt>
 <dd>
-<div class="desc"><p>attributes under which a model may keep the fitted model it delegates to</p></div>
+<div class="desc"><p>attributes under which a model may keep the fitted model it delegates to.
+<code>est_</code>/<code>best_estimator_</code>/<code>_final_estimator</code> cover the search-and-pipeline
+chain that AutoInterpretableModel builds: est_ is a GridSearchCV whose
+best_estimator_ is a Pipeline ending in the model actually chosen.</p></div>
 </dd>
 </dl>
 </section>

@@ -21,21 +21,19 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import random
-from copy import deepcopy
+<pre><code class="python">from copy import deepcopy
 from queue import deque
 
 import numpy as np
 from mlxtend.classifier import LogisticRegression
-from sklearn import datasets
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import get_scorer
-from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_text
 from sklearn.utils import check_X_y
 
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, check_predict_X
+from sklearn.utils.validation import check_is_fitted
 
 
 class TaoTree(BaseEstimator):
@@ -412,6 +410,8 @@ class TaoTree(BaseEstimator):
         return self.model.feature_importances_
 
     def predict(self, X):
+        check_is_fitted(self, &#39;model&#39;)
+        check_predict_X(self, X)
         preds = self.model.predict(X)
         if hasattr(self, &#34;classes_&#34;):
             return np.array([self.classes_[int(i)] for i in preds])
@@ -419,6 +419,8 @@ class TaoTree(BaseEstimator):
             return preds
 
     def predict_proba(self, X):
+        check_is_fitted(self, &#39;model&#39;)
+        check_predict_X(self, X)
         return self.model.predict_proba(X)
 
     # def score(self, X, y):
@@ -430,37 +432,7 @@ class TaoTreeRegressor(TaoTree, RegressorMixin):
 
 
 class TaoTreeClassifier(TaoTree, ClassifierMixin):
-    pass
-
-
-if __name__ == &#39;__main__&#39;:
-    np.random.seed(13)
-    random.seed(13)
-    X, y = datasets.load_breast_cancer(return_X_y=True)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=42
-    )
-    print(&#39;X.shape&#39;, X.shape)
-    print(&#39;ys&#39;, np.unique(y_train), &#39;\n\n&#39;)
-    m = TaoTreeClassifier(randomize_tree=False, weight_errors=False,
-                          node_model=&#39;stump&#39;, model_args={&#39;max_depth&#39;: 3},
-                          verbose=1)
-    m.fit(X_train, y_train)
-    print(&#39;Train acc&#39;, np.mean(m.predict(X_train) == y_train))
-    print(&#39;Test acc&#39;, np.mean(m.predict(X_test) == y_test))
-    # print(m.predict(X_train), m.predict_proba(X_train).shape)
-    # print(m.predict_proba(X_train))
-
-    # X, y = datasets.load_diabetes(return_X_y=True)  # regression
-    # X = np.random.randn(500, 10)
-    # y = (X[:, 0] &gt; 0).astype(float) + (X[:, 1] &gt; 1).astype(float)
-    # X_train, X_test, y_train, y_test = train_test_split(
-    #     X, y, test_size=0.33, random_state=42
-    # )
-    # m = TaoRegressor()
-    # m.fit(X_train, y_train)
-    # print(&#39;mse&#39;, np.mean(np.square(m.predict(X_test) - y_test)),
-    #       &#39;baseline&#39;, np.mean(np.square(y_test)))</code></pre>
+    pass</code></pre>
 </details>
 </section>
 <section>
@@ -928,6 +900,8 @@ Note: this implementation learns single-feature splits rather than oblique trees
         return self.model.feature_importances_
 
     def predict(self, X):
+        check_is_fitted(self, &#39;model&#39;)
+        check_predict_X(self, X)
         preds = self.model.predict(X)
         if hasattr(self, &#34;classes_&#34;):
             return np.array([self.classes_[int(i)] for i in preds])
@@ -935,6 +909,8 @@ Note: this implementation learns single-feature splits rather than oblique trees
             return preds
 
     def predict_proba(self, X):
+        check_is_fitted(self, &#39;model&#39;)
+        check_predict_X(self, X)
         return self.model.predict_proba(X)
 
     # def score(self, X, y):
@@ -1069,6 +1045,8 @@ are ignored while searching for a split in each node.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict(self, X):
+    check_is_fitted(self, &#39;model&#39;)
+    check_predict_X(self, X)
     preds = self.model.predict(X)
     if hasattr(self, &#34;classes_&#34;):
         return np.array([self.classes_[int(i)] for i in preds])
@@ -1086,6 +1064,8 @@ are ignored while searching for a split in each node.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
+    check_is_fitted(self, &#39;model&#39;)
+    check_predict_X(self, X)
     return self.model.predict_proba(X)
 
 # def score(self, X, y):

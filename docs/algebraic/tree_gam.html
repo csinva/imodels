@@ -23,7 +23,6 @@
 </summary>
 <pre><code class="python">from copy import deepcopy
 import numpy as np
-import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.linear_model import ElasticNetCV, LinearRegression, RidgeCV
 from sklearn.tree import DecisionTreeRegressor
@@ -32,15 +31,13 @@ from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y
 from sklearn.utils.validation import _check_sample_weight
-from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score
-from tqdm import tqdm
 
 import imodels
 
 from sklearn.base import RegressorMixin, ClassifierMixin
-from imodels.util.arguments import (check_binary_target, decode_labels,
+from imodels.util.arguments import (check_binary_target, check_predict_X, decode_labels,
                                     set_feature_names_in)
 
 
@@ -340,6 +337,7 @@ class TreeGAM(BaseEstimator):
         marginal_only: bool
             If True, only use the marginal effects.
         &#34;&#34;&#34;
+        check_predict_X(self, X)
         X = check_array(X, accept_sparse=False, dtype=None)
         check_is_fitted(self)
         probs1 = np.ones(X.shape[0]) * self.bias_
@@ -396,45 +394,7 @@ class TreeGAMRegressor(TreeGAM, RegressorMixin):
 
 
 class TreeGAMClassifier(TreeGAM, ClassifierMixin):
-    ...
-
-
-if __name__ == &#34;__main__&#34;:
-    X, y, feature_names = imodels.get_clean_dataset(&#34;heart&#34;)
-    X, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-    gam = TreeGAMClassifier(
-        boosting_strategy=&#34;cyclic&#34;,
-        random_state=42,
-        learning_rate=0.1,
-        max_leaf_nodes=3,
-        # select_linear_marginal=True,
-        # fit_linear_marginal=&#34;NNLS&#34;,
-        # n_boosting_rounds_marginal=3,
-        # decay_rate_towards_marginal=0,
-        fit_posthoc_tree_coefs=&#34;elasticnet&#34;,
-        n_boosting_rounds=100,
-    )
-    gam.fit(X, y_train)
-
-    # check roc auc score
-    y_pred = gam.predict_proba(X_test)[:, 1]
-    # print(
-    #     &#34;train roc:&#34;,
-    #     roc_auc_score(y_train, gam.predict_proba(X)[:, 1]).round(3),
-    # )
-    print(&#34;test roc:&#34;, roc_auc_score(y_test, y_pred).round(3))
-    print(&#34;test acc:&#34;, accuracy_score(y_test, gam.predict(X_test)).round(3))
-    print(&#39;\t(imb:&#39;, np.mean(y_test).round(3), &#39;)&#39;)
-    # print(
-    #     &#34;accs&#34;,
-    #     accuracy_score(y_train, gam.predict(X)).round(3),
-    #     accuracy_score(y_test, gam.predict(X_test)).round(3),
-    #     &#34;imb&#34;,
-    #     np.mean(y_train).round(3),
-    #     np.mean(y_test).round(3),
-    # )
-
-    # # print(gam.estimators_)</code></pre>
+    ...</code></pre>
 </details>
 </section>
 <section>
@@ -792,6 +752,7 @@ Random seed.</p></div>
         marginal_only: bool
             If True, only use the marginal effects.
         &#34;&#34;&#34;
+        check_predict_X(self, X)
         X = check_array(X, accept_sparse=False, dtype=None)
         check_is_fitted(self)
         probs1 = np.ones(X.shape[0]) * self.bias_
@@ -988,6 +949,7 @@ If True, only use the marginal effects.</p></div>
     marginal_only: bool
         If True, only use the marginal effects.
     &#34;&#34;&#34;
+    check_predict_X(self, X)
     X = check_array(X, accept_sparse=False, dtype=None)
     check_is_fitted(self)
     probs1 = np.ones(X.shape[0]) * self.bias_

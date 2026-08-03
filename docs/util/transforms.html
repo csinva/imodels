@@ -52,7 +52,6 @@ class Winsorizer():
                 self.winsor_lims[:, i_col] = [lower, upper]
 
     def trim(self, X):
-        X_ = X.copy()
         X_ = np.where(X &gt; self.winsor_lims[1, :], np.tile(self.winsor_lims[1, :], [X.shape[0], 1]),
                       np.where(X &lt; self.winsor_lims[0, :], np.tile(self.winsor_lims[0, :], [X.shape[0], 1]), X))
         return X_
@@ -71,7 +70,7 @@ class FriedScale():
 
     def train(self, X):
         # get multipliers
-        if self.winsorizer != None:
+        if self.winsorizer is not None:
             X_trimmed = self.winsorizer.trim(X)
         else:
             X_trimmed = X
@@ -85,7 +84,7 @@ class FriedScale():
         self.scale_multipliers = scale_multipliers
 
     def scale(self, X):
-        if self.winsorizer != None:
+        if self.winsorizer is not None:
             return self.winsorizer.trim(X) * self.scale_multipliers
         else:
             return X * self.scale_multipliers
@@ -149,18 +148,7 @@ class CorrelationScreenTransformer(BaseEstimator, TransformerMixin):
         if input_type == np.ndarray:
             X_transformed = X_transformed.values
 
-        return X_transformed
-
-
-if __name__ == &#39;__main__&#39;:
-    X = np.random.randn(5, 5)
-    X[:, 0] = [1, 1, 0, 1, 1]
-    X[:, 1] = X[:, 0]
-
-    transformer = CorrelationScreenTransformer()
-    print(X)
-    X_transformed = transformer.fit_transform(X)
-    print(X_transformed)</code></pre>
+        return X_transformed</code></pre>
 </details>
 </section>
 <section>
@@ -352,7 +340,7 @@ Warning: this class should not be used directly.</p></div>
 
     def train(self, X):
         # get multipliers
-        if self.winsorizer != None:
+        if self.winsorizer is not None:
             X_trimmed = self.winsorizer.trim(X)
         else:
             X_trimmed = X
@@ -366,7 +354,7 @@ Warning: this class should not be used directly.</p></div>
         self.scale_multipliers = scale_multipliers
 
     def scale(self, X):
-        if self.winsorizer != None:
+        if self.winsorizer is not None:
             return self.winsorizer.trim(X) * self.scale_multipliers
         else:
             return X * self.scale_multipliers</code></pre>
@@ -383,7 +371,7 @@ Warning: this class should not be used directly.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def scale(self, X):
-    if self.winsorizer != None:
+    if self.winsorizer is not None:
         return self.winsorizer.trim(X) * self.scale_multipliers
     else:
         return X * self.scale_multipliers</code></pre>
@@ -400,7 +388,7 @@ Warning: this class should not be used directly.</p></div>
 </summary>
 <pre><code class="python">def train(self, X):
     # get multipliers
-    if self.winsorizer != None:
+    if self.winsorizer is not None:
         X_trimmed = self.winsorizer.trim(X)
     else:
         X_trimmed = X
@@ -449,7 +437,6 @@ Warning: this class should not be used directly.</p></div>
                 self.winsor_lims[:, i_col] = [lower, upper]
 
     def trim(self, X):
-        X_ = X.copy()
         X_ = np.where(X &gt; self.winsor_lims[1, :], np.tile(self.winsor_lims[1, :], [X.shape[0], 1]),
                       np.where(X &lt; self.winsor_lims[0, :], np.tile(self.winsor_lims[0, :], [X.shape[0], 1]), X))
         return X_</code></pre>
@@ -487,7 +474,6 @@ Warning: this class should not be used directly.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def trim(self, X):
-    X_ = X.copy()
     X_ = np.where(X &gt; self.winsor_lims[1, :], np.tile(self.winsor_lims[1, :], [X.shape[0], 1]),
                   np.where(X &lt; self.winsor_lims[0, :], np.tile(self.winsor_lims[0, :], [X.shape[0], 1]), X))
     return X_</code></pre>

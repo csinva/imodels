@@ -26,7 +26,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin
-from sklearn.utils.validation import check_X_y, check_array
+from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import check_classification_targets
 import scipy.sparse
 
@@ -98,6 +98,49 @@ def _finite_check_kwarg(allow_nan):
             if &#34;ensure_all_finite&#34; in signature(check_X_y).parameters
             else &#34;force_all_finite&#34;)
     return {name: &#34;allow-nan&#34;}
+
+
+def check_predict_X(model, X):
+    &#34;&#34;&#34;Check X at predict time against the data the model was fitted on.
+
+    Models that index X by a stored feature number silently accept extra
+    columns, returning predictions that look reasonable but ignore part of the
+    input. They equally silently accept the right columns in the wrong order,
+    which quietly returns predictions for the wrong features. sklearn raises in
+    both cases, and so should we.
+
+    Also raises NotFittedError when called before fit. Otherwise predicting on
+    an unfitted model fails later with whatever AttributeError the model
+    happens to hit first, which callers cannot catch as NotFittedError.
+
+    Pass X before converting it to an array, or the column names are gone by the
+    time this sees them.
+    &#34;&#34;&#34;
+    check_is_fitted(model)
+
+    # read the shape off X directly: np.shape() would coerce X, and sklearn&#39;s
+    # estimator checks pass array-likes that must reach check_array untouched
+    shape = getattr(X, &#39;shape&#39;, None)
+    n_given = shape[1] if shape is not None and len(shape) == 2 else None
+
+    n_features = getattr(model, &#39;n_features_in_&#39;, None)
+    if n_features is not None and n_given is not None and n_given != n_features:
+        raise ValueError(
+            f&#34;X has {n_given} features, but &#34;
+            f&#34;{type(model).__name__} is expecting {n_features} features as input.&#34;
+        )
+
+    fitted_names = getattr(model, &#39;feature_names_in_&#39;, None)
+    if fitted_names is not None and hasattr(X, &#39;columns&#39;):
+        given = np.asarray(X.columns, dtype=object)
+        if not np.array_equal(given, np.asarray(fitted_names, dtype=object)):
+            raise ValueError(
+                &#34;The feature names should match those that were passed during &#34;
+                f&#34;fit.\nFeature names seen at fit time, in order:\n&#34;
+                f&#34;{list(fitted_names)}\nFeature names given, in order:\n&#34;
+                f&#34;{list(given)}&#34;
+            )
+    return X
 
 
 def set_feature_names_in(model, X):
@@ -245,6 +288,68 @@ tree). That estimator still raises if it cannot.</p></div>
     return X, y, model.feature_names_</code></pre>
 </details>
 </dd>
+<dt id="imodels.util.arguments.check_predict_X"><code class="name flex">
+<span>def <span class="ident">check_predict_X</span></span>(<span>model, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check X at predict time against the data the model was fitted on.</p>
+<p>Models that index X by a stored feature number silently accept extra
+columns, returning predictions that look reasonable but ignore part of the
+input. They equally silently accept the right columns in the wrong order,
+which quietly returns predictions for the wrong features. sklearn raises in
+both cases, and so should we.</p>
+<p>Also raises NotFittedError when called before fit. Otherwise predicting on
+an unfitted model fails later with whatever AttributeError the model
+happens to hit first, which callers cannot catch as NotFittedError.</p>
+<p>Pass X before converting it to an array, or the column names are gone by the
+time this sees them.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_predict_X(model, X):
+    &#34;&#34;&#34;Check X at predict time against the data the model was fitted on.
+
+    Models that index X by a stored feature number silently accept extra
+    columns, returning predictions that look reasonable but ignore part of the
+    input. They equally silently accept the right columns in the wrong order,
+    which quietly returns predictions for the wrong features. sklearn raises in
+    both cases, and so should we.
+
+    Also raises NotFittedError when called before fit. Otherwise predicting on
+    an unfitted model fails later with whatever AttributeError the model
+    happens to hit first, which callers cannot catch as NotFittedError.
+
+    Pass X before converting it to an array, or the column names are gone by the
+    time this sees them.
+    &#34;&#34;&#34;
+    check_is_fitted(model)
+
+    # read the shape off X directly: np.shape() would coerce X, and sklearn&#39;s
+    # estimator checks pass array-likes that must reach check_array untouched
+    shape = getattr(X, &#39;shape&#39;, None)
+    n_given = shape[1] if shape is not None and len(shape) == 2 else None
+
+    n_features = getattr(model, &#39;n_features_in_&#39;, None)
+    if n_features is not None and n_given is not None and n_given != n_features:
+        raise ValueError(
+            f&#34;X has {n_given} features, but &#34;
+            f&#34;{type(model).__name__} is expecting {n_features} features as input.&#34;
+        )
+
+    fitted_names = getattr(model, &#39;feature_names_in_&#39;, None)
+    if fitted_names is not None and hasattr(X, &#39;columns&#39;):
+        given = np.asarray(X.columns, dtype=object)
+        if not np.array_equal(given, np.asarray(fitted_names, dtype=object)):
+            raise ValueError(
+                &#34;The feature names should match those that were passed during &#34;
+                f&#34;fit.\nFeature names seen at fit time, in order:\n&#34;
+                f&#34;{list(fitted_names)}\nFeature names given, in order:\n&#34;
+                f&#34;{list(given)}&#34;
+            )
+    return X</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.arguments.decode_labels"><code class="name flex">
 <span>def <span class="ident">decode_labels</span></span>(<span>model, preds)</span>
 </code></dt>
@@ -317,6 +422,7 @@ again afterwards.</p></div>
 <li><code><a title="imodels.util.arguments.check_binary_target" href="#imodels.util.arguments.check_binary_target">check_binary_target</a></code></li>
 <li><code><a title="imodels.util.arguments.check_fit_X" href="#imodels.util.arguments.check_fit_X">check_fit_X</a></code></li>
 <li><code><a title="imodels.util.arguments.check_fit_arguments" href="#imodels.util.arguments.check_fit_arguments">check_fit_arguments</a></code></li>
+<li><code><a title="imodels.util.arguments.check_predict_X" href="#imodels.util.arguments.check_predict_X">check_predict_X</a></code></li>
 <li><code><a title="imodels.util.arguments.decode_labels" href="#imodels.util.arguments.decode_labels">decode_labels</a></code></li>
 <li><code><a title="imodels.util.arguments.set_feature_names_in" href="#imodels.util.arguments.set_feature_names_in">set_feature_names_in</a></code></li>
 </ul>

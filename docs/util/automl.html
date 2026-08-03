@@ -35,11 +35,11 @@ from imodels import (
 )
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.linear_model import LogisticRegression, ElasticNet, Ridge
-import imodels
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import GridSearchCV
 import numpy as np
 from sklearn.pipeline import Pipeline
 from imodels.util.arguments import set_feature_names_in
+from sklearn.utils.validation import check_is_fitted
 
 
 class AutoInterpretableModel(BaseEstimator):
@@ -74,13 +74,29 @@ class AutoInterpretableModel(BaseEstimator):
         return self
 
     def predict(self, X):
+        check_is_fitted(self, &#39;est_&#39;)
         return self.est_.predict(X)
 
     def predict_proba(self, X):
+        check_is_fitted(self, &#39;est_&#39;)
         return self.est_.predict_proba(X)
 
     def score(self, X, y):
+        check_is_fitted(self, &#39;est_&#39;)
         return self.est_.score(X, y)
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).
+
+        The rules are those of the model the search selected.
+        &#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
 
     PARAM_GRID_LINEAR_CLASSIFICATION = [
         {
@@ -164,25 +180,7 @@ class AutoInterpretableClassifier(AutoInterpretableModel, ClassifierMixin):
 
 
 class AutoInterpretableRegressor(AutoInterpretableModel, RegressorMixin):
-    ...
-
-
-if __name__ == &#34;__main__&#34;:
-    X, y, feature_names = imodels.get_clean_dataset(&#34;heart&#34;)
-
-    print(&#34;shapes&#34;, X.shape, y.shape, &#34;nunique&#34;, np.unique(y).size)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, random_state=42, test_size=0.2
-    )
-
-    m = AutoInterpretableClassifier()
-    # m = AutoInterpretableRegressor()
-    m.fit(X_train, y_train)
-
-    print(&#34;best params&#34;, m.est_.best_params_)
-    print(&#34;best score&#34;, m.est_.best_score_)
-    print(&#34;best estimator&#34;, m.est_.best_estimator_)
-    print(&#34;best estimator params&#34;, m.est_.best_estimator_.get_params())</code></pre>
+    ...</code></pre>
 </details>
 </section>
 <section>
@@ -222,6 +220,8 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <ul class="hlist">
 <li><code><b><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.apply" href="#imodels.util.automl.AutoInterpretableModel.apply">apply</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.get_rules" href="#imodels.util.automl.AutoInterpretableModel.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.set_fit_request" href="#imodels.util.automl.AutoInterpretableModel.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
@@ -271,13 +271,29 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
         return self
 
     def predict(self, X):
+        check_is_fitted(self, &#39;est_&#39;)
         return self.est_.predict(X)
 
     def predict_proba(self, X):
+        check_is_fitted(self, &#39;est_&#39;)
         return self.est_.predict_proba(X)
 
     def score(self, X, y):
+        check_is_fitted(self, &#39;est_&#39;)
         return self.est_.score(X, y)
+
+    def get_rules(self, feature_names=None):
+        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).
+
+        The rules are those of the model the search selected.
+        &#34;&#34;&#34;
+        from imodels.util.get_rules import get_rules
+        return get_rules(self, feature_names=feature_names)
+
+    def apply(self, X):
+        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+        from imodels.util.apply import apply_leaves
+        return apply_leaves(self, X)
 
     PARAM_GRID_LINEAR_CLASSIFICATION = [
         {
@@ -388,6 +404,21 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="imodels.util.automl.AutoInterpretableModel.apply"><code class="name flex">
+<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def apply(self, X):
+    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
+    from imodels.util.apply import apply_leaves
+    return apply_leaves(self, X)</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.automl.AutoInterpretableModel.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, cv=5)</span>
 </code></dt>
@@ -413,6 +444,25 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
     return self</code></pre>
 </details>
 </dd>
+<dt id="imodels.util.automl.AutoInterpretableModel.get_rules"><code class="name flex">
+<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p>
+<p>The rules are those of the model the search selected.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rules(self, feature_names=None):
+    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).
+
+    The rules are those of the model the search selected.
+    &#34;&#34;&#34;
+    from imodels.util.get_rules import get_rules
+    return get_rules(self, feature_names=feature_names)</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.automl.AutoInterpretableModel.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
@@ -423,6 +473,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict(self, X):
+    check_is_fitted(self, &#39;est_&#39;)
     return self.est_.predict(X)</code></pre>
 </details>
 </dd>
@@ -436,6 +487,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X):
+    check_is_fitted(self, &#39;est_&#39;)
     return self.est_.predict_proba(X)</code></pre>
 </details>
 </dd>
@@ -449,6 +501,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def score(self, X, y):
+    check_is_fitted(self, &#39;est_&#39;)
     return self.est_.score(X, y)</code></pre>
 </details>
 </dd>
@@ -576,6 +629,8 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <ul class="hlist">
 <li><code><b><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></b></code>:
 <ul class="hlist">
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.apply" href="#imodels.util.automl.AutoInterpretableModel.apply">apply</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.get_rules" href="#imodels.util.automl.AutoInterpretableModel.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.set_fit_request" href="#imodels.util.automl.AutoInterpretableModel.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
@@ -607,7 +662,9 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_DEFAULT_REGRESSION" href="#imodels.util.automl.AutoInterpretableModel.PARAM_GRID_DEFAULT_REGRESSION">PARAM_GRID_DEFAULT_REGRESSION</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_CLASSIFICATION" href="#imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_CLASSIFICATION">PARAM_GRID_LINEAR_CLASSIFICATION</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_REGRESSION" href="#imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_REGRESSION">PARAM_GRID_LINEAR_REGRESSION</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.apply" href="#imodels.util.automl.AutoInterpretableModel.apply">apply</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.fit" href="#imodels.util.automl.AutoInterpretableModel.fit">fit</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.get_rules" href="#imodels.util.automl.AutoInterpretableModel.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.predict" href="#imodels.util.automl.AutoInterpretableModel.predict">predict</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.predict_proba" href="#imodels.util.automl.AutoInterpretableModel.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.score" href="#imodels.util.automl.AutoInterpretableModel.score">score</a></code></li>

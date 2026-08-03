@@ -21,10 +21,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from sklearn import datasets
-from sklearn.tree import DecisionTreeRegressor
-import numpy as np
-from sklearn.tree._tree import Tree
+<pre><code class="python">import numpy as np
 from imodels.tree.custom_greedy_tree import CustomDecisionTreeClassifier
 
 
@@ -204,14 +201,7 @@ def compute_mean_llm_calls(model_name, num_prompts, model=None, X=None):
     elif model_name in [&#34;manual_ensemble&#34;, &#34;manual_boosting&#34;]:
         return num_prompts
     else:
-        return num_prompts
-
-
-if __name__ == &#39;__main__&#39;:
-    X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
-    m = DecisionTreeRegressor(random_state=42, max_leaf_nodes=4)
-    m.fit(X, y)
-    print(compute_tree_complexity(m.tree_, complexity_measure=&#39;num_leaves&#39;))</code></pre>
+        return num_prompts</code></pre>
 </details>
 </section>
 <section>

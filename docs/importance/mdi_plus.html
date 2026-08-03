@@ -362,7 +362,7 @@ class TreeMDIPlus:
                 if len(scoring_fns) &gt; 1:
                     msg = &#34;scoring_fn={} should return one value for each feature.&#34;.format(fn_name)
                 else:
-                    msg = &#34;scoring_fns should return one value for each feature.&#34;.format(fn_name)
+                    msg = &#34;scoring_fns should return one value for each feature.&#34;
                 raise ValueError(&#34;Unexpected dimensions. {}&#34;.format(msg))
             scores = scores.ravel()
             all_scores[fn_name] = scores
@@ -999,7 +999,7 @@ variance in the transformers.</dd>
                 if len(scoring_fns) &gt; 1:
                     msg = &#34;scoring_fn={} should return one value for each feature.&#34;.format(fn_name)
                 else:
-                    msg = &#34;scoring_fns should return one value for each feature.&#34;.format(fn_name)
+                    msg = &#34;scoring_fns should return one value for each feature.&#34;
                 raise ValueError(&#34;Unexpected dimensions. {}&#34;.format(msg))
             scores = scores.ravel()
             all_scores[fn_name] = scores

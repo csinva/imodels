@@ -30,7 +30,6 @@ import pandas as pd
 import requests
 import sklearn.datasets
 from scipy.sparse import issparse
-from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 
@@ -353,17 +352,7 @@ def encode_categories(X, features, encoder=None):
     X_encoded = pd.concat([X_encoded, X_one_hot], axis=1)
     if encoder is not None:
         return X_encoded
-    return X_encoded, one_hot_encoder
-
-
-if __name__ == &#34;__main__&#34;:
-    import imodels
-
-    # X, y, feature_names = imodels.get_clean_dataset(&#39;compas_two_year_clean&#39;, data_source=&#39;imodels&#39;, test_size=0.5)
-    X_train, X_test, y_train, y_test, feature_names = imodels.get_clean_dataset(
-        &#34;compas_two_year_clean&#34;, data_source=&#34;imodels&#34;, test_size=0.5
-    )
-    print(X_train.shape, y_train.shape)</code></pre>
+    return X_encoded, one_hot_encoder</code></pre>
 </details>
 </section>
 <section>

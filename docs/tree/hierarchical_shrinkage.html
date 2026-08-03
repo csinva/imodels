@@ -25,21 +25,16 @@
 from typing import List
 
 import numpy as np
-from sklearn import datasets
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
-from sklearn.metrics import r2_score, mean_squared_error, log_loss
+from sklearn.metrics import mean_squared_error, log_loss
 from sklearn.model_selection import KFold
-from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier, export_text
-from sklearn.ensemble import (
-    GradientBoostingClassifier,
-    GradientBoostingRegressor,
-)
+from sklearn.ensemble import GradientBoostingClassifier
 
 from sklearn.utils.validation import check_is_fitted
 
 from imodels.util import checks
-from imodels.util.arguments import check_fit_arguments
+from imodels.util.arguments import check_fit_arguments, check_predict_X
 from imodels.util.tree import compute_tree_complexity
 
 
@@ -147,7 +142,10 @@ class HSTree(BaseEstimator):
             self, X, y, feature_names, allow_nan=True)
         if feature_names is not None:
             self.feature_names = feature_names
-        self.estimator_ = self.estimator_.fit(
+        # fit a copy: shrinkage rewrites the tree in place, so fitting the
+        # object handed to __init__ would shrink it out from under any other
+        # model built on the same estimator
+        self.estimator_ = deepcopy(self.estimator_).fit(
             X, y, *args, sample_weight=sample_weight, **kwargs
         )
         self._shrink()
@@ -291,6 +289,7 @@ class HSTree(BaseEstimator):
                 self._shrink_tree(self._unwrap_tree(t), self.reg_param)
 
     def predict(self, X, *args, **kwargs):
+        check_predict_X(self, X)
         preds = self.estimator_.predict(X, *args, **kwargs)
         # fit encodes y as 0..n_classes-1, so map back onto the original labels.
         # When the estimator was fitted elsewhere and passed in already fitted,
@@ -301,6 +300,7 @@ class HSTree(BaseEstimator):
             return preds
 
     def predict_proba(self, X, *args, **kwargs):
+        check_predict_X(self, X)
         if hasattr(self.estimator_, &#34;predict_proba&#34;):
             probs = self.estimator_.predict_proba(X, *args, **kwargs)
             # the shrinkage arithmetic can leave values a hair outside [0, 1]
@@ -612,59 +612,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
         for attr in attr_list:
             s += attr + &#34;=&#34; + repr(getattr(self, attr)) + &#34;, &#34;
         s = s[:-2] + &#34;)&#34;
-        return s
-
-
-if __name__ == &#34;__main__&#34;:
-    np.random.seed(15)
-    # X, y = datasets.fetch_california_housing(return_X_y=True)  # regression
-    # X, y = datasets.load_breast_cancer(return_X_y=True)  # binary classification
-    X, y = datasets.load_diabetes(return_X_y=True)  # regression
-    # X = np.random.randn(500, 10)
-    # y = (X[:, 0] &gt; 0).astype(float) + (X[:, 1] &gt; 1).astype(float)
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.33, random_state=10
-    )
-    print(&#34;X.shape&#34;, X.shape)
-    print(&#34;ys&#34;, np.unique(y_train))
-
-    # m = HSTree(estimator_=DecisionTreeClassifier(), reg_param=0.1)
-    # m = DecisionTreeClassifier(max_leaf_nodes = 20,random_state=1, max_features=None)
-    # m = DecisionTreeClassifier(random_state=42)
-    m = GradientBoostingRegressor(random_state=10, n_estimators=5)
-    # print(&#39;best alpha&#39;, m.reg_param)
-    m.fit(X_train, y_train)
-    # m.predict_proba(X_train)  # just run this
-    print(&#34;score&#34;, r2_score(y_test, m.predict(X_test)))
-    print(&#34;running again....&#34;)
-
-    # x = DecisionTreeRegressor(random_state = 42, ccp_alpha = 0.3)
-    # x.fit(X_train,y_train)
-
-    # m = HSTree(estimator_=DecisionTreeRegressor(random_state=42, max_features=None), reg_param=10)
-    # m = HSTree(estimator_=DecisionTreeClassifier(random_state=42, max_features=None), reg_param=0)
-    # m = HSTreeRegressorCV(
-    #     estimator_=DecisionTreeClassifier(random_state=42),
-    #     shrinkage_scheme_=&#34;node_based&#34;,
-    #     reg_param_list=[0.1, 1, 2, 5, 10, 25, 50, 100, 500],
-    # )
-    # m = ShrunkTreeCV(estimator_=DecisionTreeClassifier())
-    m = HSTreeRegressor(m)
-    print(&#34;score&#34;, r2_score(y_test, m.predict(X_test)))
-
-    m = HSTreeRegressor(
-        estimator_=GradientBoostingRegressor(
-            random_state=10,
-            n_estimators=5,
-        ),
-        reg_param=1,
-    )
-    m.fit(X_train, y_train)
-    print(&#34;best alpha&#34;, m.reg_param)
-    # m.predict_proba(X_train)  # just run this
-    # print(&#39;score&#39;, m.score(X_test, y_test))
-    print(&#34;score&#34;, r2_score(y_test, m.predict(X_test)))</code></pre>
+        return s</code></pre>
 </details>
 </section>
 <section>
@@ -829,7 +777,10 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
             self, X, y, feature_names, allow_nan=True)
         if feature_names is not None:
             self.feature_names = feature_names
-        self.estimator_ = self.estimator_.fit(
+        # fit a copy: shrinkage rewrites the tree in place, so fitting the
+        # object handed to __init__ would shrink it out from under any other
+        # model built on the same estimator
+        self.estimator_ = deepcopy(self.estimator_).fit(
             X, y, *args, sample_weight=sample_weight, **kwargs
         )
         self._shrink()
@@ -973,6 +924,7 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
                 self._shrink_tree(self._unwrap_tree(t), self.reg_param)
 
     def predict(self, X, *args, **kwargs):
+        check_predict_X(self, X)
         preds = self.estimator_.predict(X, *args, **kwargs)
         # fit encodes y as 0..n_classes-1, so map back onto the original labels.
         # When the estimator was fitted elsewhere and passed in already fitted,
@@ -983,6 +935,7 @@ If estimator is None, then max_leaf_nodes is passed to the default decision tree
             return preds
 
     def predict_proba(self, X, *args, **kwargs):
+        check_predict_X(self, X)
         if hasattr(self.estimator_, &#34;predict_proba&#34;):
             probs = self.estimator_.predict_proba(X, *args, **kwargs)
             # the shrinkage arithmetic can leave values a hair outside [0, 1]
@@ -1124,7 +1077,10 @@ def feature_importances_(self):
         self, X, y, feature_names, allow_nan=True)
     if feature_names is not None:
         self.feature_names = feature_names
-    self.estimator_ = self.estimator_.fit(
+    # fit a copy: shrinkage rewrites the tree in place, so fitting the
+    # object handed to __init__ would shrink it out from under any other
+    # model built on the same estimator
+    self.estimator_ = deepcopy(self.estimator_).fit(
         X, y, *args, sample_weight=sample_weight, **kwargs
     )
     self._shrink()
@@ -1200,6 +1156,7 @@ contained subobjects that are estimators.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict(self, X, *args, **kwargs):
+    check_predict_X(self, X)
     preds = self.estimator_.predict(X, *args, **kwargs)
     # fit encodes y as 0..n_classes-1, so map back onto the original labels.
     # When the estimator was fitted elsewhere and passed in already fitted,
@@ -1220,6 +1177,7 @@ contained subobjects that are estimators.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict_proba(self, X, *args, **kwargs):
+    check_predict_X(self, X)
     if hasattr(self.estimator_, &#34;predict_proba&#34;):
         probs = self.estimator_.predict_proba(X, *args, **kwargs)
         # the shrinkage arithmetic can leave values a hair outside [0, 1]
@@ -1687,69 +1645,6 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
     return super().fit(X=X, y=y, *args, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a>) ‑> <a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>No-op.</p>
-<p>Calling this method has no effect.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -1759,6 +1654,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.feature_importances_" href="#imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_rules" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
@@ -2124,69 +2020,6 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
     return super().fit(X=X, y=y, *args, **kwargs)</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.set_fit_request"><code class="name flex">
-<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a>) ‑> <a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>No-op.</p>
-<p>Calling this method has no effect.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
-<dd>The updated object.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
-
-    This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
-    &#34;&#34;&#34;
-    if not _routing_enabled():
-        raise RuntimeError(
-            &#34;This method is only available when metadata routing is enabled.&#34;
-            &#34; You can enable it using&#34;
-            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
-        )
-
-    if self.validate_keys and (set(kw) - set(self.keys)):
-        raise TypeError(
-            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
-            f&#34;Accepted arguments are: {set(self.keys)}&#34;
-        )
-
-    # This makes it possible to use the decorated method as an unbound method,
-    # for instance when monkeypatching.
-    # https://github.com/scikit-learn/scikit-learn/issues/28632
-    if instance is None:
-        _instance = args[0]
-        args = args[1:]
-    else:
-        _instance = instance
-
-    # Replicating python&#39;s behavior when positional args are given other than
-    # `self`, and `self` is only allowed if this method is unbound.
-    if args:
-        raise TypeError(
-            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
-            f&#34; {len(args)} were given&#34;
-        )
-
-    requests = _instance._get_metadata_request()
-    method_metadata_request = getattr(requests, self.name)
-
-    for prop, alias in kw.items():
-        if alias is not UNCHANGED:
-            method_metadata_request.add_request(param=prop, alias=alias)
-    _instance._metadata_request = requests
-
-    return _instance</code></pre>
-</details>
-</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2196,6 +2029,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.feature_importances_" href="#imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_params" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_rules" href="#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request">set_score_request</a></code></li>
 </ul>
 </li>
@@ -2240,7 +2074,6 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <h4><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV.fit" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 <li>
@@ -2253,7 +2086,6 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 <h4><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></code></h4>
 <ul class="">
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.fit" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.set_fit_request" href="#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
 </ul>
