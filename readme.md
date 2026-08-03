@@ -78,7 +78,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | Bayesian rule set           | [🗂️](https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier), [📄](https://www.jmlr.org/papers/volume18/16-003/16-003.pdf), [🔗](https://github.com/wangtongada/BOA) | Finds concise rule set with Bayesian sampling (slow)  |
 | Bayesian rule list          | [🗂️](https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier), [📄](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-9/issue-3/Interpretable-classifiers-using-rules-and-Bayesian-analysis--Building-a/10.1214/15-AOAS848.full), [🔗](https://github.com/tmadl/sklearn-expertsys) | Fits compact rule list distribution with Bayesian sampling (slow) |
 | Greedy rule list            | [🗂️](https://csinva.io/imodels/rule_list/greedy_rule_list.html), [🔗](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea) | Uses CART to fit a list (only a single path), rather than a tree |
-| Fast-and-frugal tree        | [FastFrugalTreeClassifier](https://csinva.io/imodels/rule_list/fast_frugal_tree.html) |  | One cue per level, each able to decide |
+| Fast-and-frugal tree        | [🗂️](https://csinva.io/imodels/rule_list/fast_frugal_tree.html) [🔗](https://github.com/fasttrees/fasttrees)|  | One cue per level, each able to decide |
 | OneR rule list              | [🗂️](https://csinva.io/imodels/rule_list/one_r.html), [📄](https://link.springer.com/article/10.1023/A:1022631118932) | Fits rule list restricted to only one feature              |
 | Greedy rule tree            | [🗂️](https://csinva.io/imodels/tree/cart_wrapper.html), [📄](https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone), [🔗](https://scikit-learn.org/stable/modules/tree.html)  | Greedily fits tree using CART                              |
 | C4.5 rule tree        | [🗂️](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier), [📄](https://link.springer.com/article/10.1007/BF00993309), [🔗](https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier) | Greedily fits tree using C4.5                           |
@@ -132,6 +132,7 @@ Different models and algorithms vary not only in their final form but also in di
 | :----------------------------------------------------------: | :--------------------------------------------------------: | :-------------------------------------------------------: |
 | <img src="https://csinva.io/imodels/img/rule_candidates.jpg"> | <img src="https://csinva.io/imodels/img/rule_overfit.jpg"> | <img src="https://csinva.io/imodels/img/rule_pruned.jpg"> |
 
+
 <details>
 <summary>Ex. RuleFit vs. SkopeRules</summary>
 RuleFit and SkopeRules differ only in the way they prune rules: RuleFit uses a linear model whereas SkopeRules heuristically deduplicates rules sharing overlap.
@@ -147,7 +148,8 @@ Bayesian rule lists and greedy rule lists differ in how they select rules; bayes
 FPSkope and SkopeRules differ only in the way they generate candidate rules: FPSkope uses FPgrowth whereas SkopeRules extracts rules from decision trees.
 </details>
 
-## Support for different tasks
+<details>
+<summary><h3>Support for different tasks</h3></summary>
 
 Different models support different machine-learning tasks. Current support for different models is given below (each of these models can be imported directly from imodels (e.g. `from imodels import RuleFitClassifier`):
 
@@ -204,9 +206,11 @@ Other models expect numeric input, so encode categorical columns first (e.g. wit
 `sklearn.preprocessing.OneHotEncoder`, or one of the
 [discretizers](https://csinva.io/imodels/discretization/index.html) for numeric
 columns that a rule model needs binarized).
+</details>
 
 
-### Plotting trees with dtreeviz
+<details>
+<summary><h3>Plotting trees with dtreeviz</h3></summary>
 
 Tree-based models can be drawn with [dtreeviz](https://github.com/parrt/dtreeviz).
 `shadow_tree` builds the `ShadowDecTree` it needs from any imodels tree model:
@@ -223,9 +227,10 @@ viz.view()
 For a model made of several trees (FIGS, boosted rules), pass `tree_num` to pick
 one. Feature and class names default to those the model was fitted with.
 dtreeviz is not a dependency and is imported only when this is called.
+</details>
 
-
-### Inspecting the rules a model learned
+<details>
+<summary><h3>Inspecting the rules a model learned</h3></summary>
 
 Every rule-based model exposes its rules the same way, as a `pandas` DataFrame with
 one row per rule, via `get_rules()`:
@@ -260,9 +265,10 @@ SLIPPER, greedy and Bayesian rule lists, FIGS, CART, C4.5, TAO, boosted rules, a
 hierarchical shrinkage, including the `CV` variants). It is also available as a
 function, `imodels.get_rules(model)`, and takes an optional `feature_names` argument
 to rename the features. Models that aren't rule-based raise a clear error.
+</details>
 
-
-### SHAP values for shrunk trees
+<details>
+<summary><h3>SHAP values for shrunk trees</h3></summary>
 
 `shap.TreeExplainer` dispatches on the model class, so it doesn't recognize the
 imodels wrapper. Pass the shrunk estimator it wraps:
@@ -288,7 +294,7 @@ Tree-based models also expose `apply(X)`, which reports which leaf each sample
 falls into, using the same node numbering as scikit-learn. A single tree returns
 one index per sample; a model made of several trees (FIGS, boosted rules) returns
 one column per tree, like `RandomForest.apply`.
-
+</details>
 
 ### Extras
 
