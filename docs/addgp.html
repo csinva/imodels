@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- <script src="jquery-3.5.1.min.js"></script>-->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+    <meta name="generator" content="pdoc 0.10.0" />
+    <link rel="preload stylesheet" as="style"
+        href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css"
+        integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+    <link rel="preload stylesheet" as="style"
+        href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css"
+        integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+    <link rel="stylesheet preload" as="style"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+    <style>
+        :root {
+            --highlight-color: #fe9
+        }
+
+        .flex {
+            display: flex !important
+        }
+
+        body {
+            line-height: 1.5em
+        }
+
+        #content {
+            padding: 20px
+        }
+
+        #sidebar {
+            padding: 30px;
+            overflow: hidden
+        }
+
+        #sidebar>*:last-child {
+            margin-bottom: 2cm
+        }
+
+        .http-server-breadcrumbs {
+            font-size: 130%;
+            margin: 0 0 15px 0
+        }
+
+        #footer {
+            font-size: .75em;
+            padding: 5px 30px;
+            border-top: 1px solid #ddd;
+            text-align: right
+        }
+
+        #footer p {
+            margin: 0 0 0 1em;
+            display: inline-block
+        }
+
+        #footer p:last-child {
+            margin-right: 30px
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+            font-weight: 300
+        }
+
+        h1 {
+            font-size: 2.5em;
+            line-height: 1.1em
+        }
+
+        h2 {
+            font-size: 1.75em;
+            margin: 1em 0 .50em 0
+        }
+
+        h3 {
+            font-size: 1.4em;
+            margin: 25px 0 10px 0
+        }
+
+        h4 {
+            margin: 0;
+            font-size: 105%
+        }
+
+        h1:target,
+        h2:target,
+        h3:target,
+        h4:target,
+        h5:target,
+        h6:target {
+            background: var(--highlight-color);
+            padding: .2em 0
+        }
+
+        a {
+            color: #058;
+            text-decoration: none;
+            transition: color .3s ease-in-out
+        }
+
+        a:hover {
+            color: #e82
+        }
+
+        .title code {
+            font-weight: bold
+        }
+
+        h2[id^="header-"] {
+            margin-top: 2em
+        }
+
+        .ident {
+            color: #900
+        }
+
+        pre code {
+            background: #f8f8f8;
+            font-size: .8em;
+            line-height: 1.4em
+        }
+
+        code {
+            background: #f2f2f1;
+            padding: 1px 4px;
+            overflow-wrap: break-word
+        }
+
+        h1 code {
+            background: transparent
+        }
+
+        pre {
+            background: #f8f8f8;
+            border: 0;
+            border-top: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+            margin: 1em 0;
+            padding: 1ex
+        }
+
+        #http-server-module-list {
+            display: flex;
+            flex-flow: column
+        }
+
+        #http-server-module-list div {
+            display: flex
+        }
+
+        #http-server-module-list dt {
+            min-width: 10%
+        }
+
+        #http-server-module-list p {
+            margin-top: 0
+        }
+
+        .toc ul,
+        #index {
+            list-style-type: none;
+            margin: 0;
+            padding: 0
+        }
+
+        #index code {
+            background: transparent
+        }
+
+        #index h3 {
+            border-bottom: 1px solid #ddd
+        }
+
+        #index ul {
+            padding: 0
+        }
+
+        #index h4 {
+            margin-top: .6em;
+            font-weight: bold
+        }
+
+        @media (min-width:200ex) {
+            #index .two-column {
+                column-count: 2
+            }
+        }
+
+        @media (min-width:300ex) {
+            #index .two-column {
+                column-count: 3
+            }
+        }
+
+        dl {
+            margin-bottom: 2em
+        }
+
+        dl dl:last-child {
+            margin-bottom: 4em
+        }
+
+        dd {
+            margin: 0 0 1em 3em
+        }
+
+        #header-classes+dl>dd {
+            margin-bottom: 3em
+        }
+
+        dd dd {
+            margin-left: 2em
+        }
+
+        dd p {
+            margin: 10px 0
+        }
+
+        .name {
+            background: #eee;
+            font-weight: bold;
+            font-size: .85em;
+            padding: 5px 10px;
+            display: inline-block;
+            min-width: 40%
+        }
+
+        .name:hover {
+            background: #e0e0e0
+        }
+
+        dt:target .name {
+            background: var(--highlight-color)
+        }
+
+        .name>span:first-child {
+            white-space: nowrap
+        }
+
+        .name.class>span:nth-child(2) {
+            margin-left: .4em
+        }
+
+        .inherited {
+            color: #999;
+            border-left: 5px solid #eee;
+            padding-left: 1em
+        }
+
+        .inheritance em {
+            font-style: normal;
+            font-weight: bold
+        }
+
+        .desc h2 {
+            font-weight: 400;
+            font-size: 1.25em
+        }
+
+        .desc h3 {
+            font-size: 1em
+        }
+
+        .desc dt code {
+            background: inherit
+        }
+
+        .source summary,
+        .git-link-div {
+            color: #666;
+            text-align: right;
+            font-weight: 400;
+            font-size: .8em;
+            text-transform: uppercase
+        }
+
+        .source summary>* {
+            white-space: nowrap;
+            cursor: pointer
+        }
+
+        .git-link {
+            color: inherit;
+            margin-left: 1em
+        }
+
+        .source pre {
+            max-height: 500px;
+            overflow: auto;
+            margin: 0
+        }
+
+        .source pre code {
+            font-size: 12px;
+            overflow: visible
+        }
+
+        .hlist {
+            list-style: none
+        }
+
+        .hlist li {
+            display: inline
+        }
+
+        .hlist li:after {
+            content: ',\2002'
+        }
+
+        .hlist li:last-child:after {
+            content: none
+        }
+
+        .hlist .hlist {
+            display: inline;
+            padding-left: 1em
+        }
+
+        img {
+            max-width: 100%
+        }
+
+        td {
+            padding: 0 .5em
+        }
+
+        .admonition {
+            padding: .1em .5em;
+            margin-bottom: 1em
+        }
+
+        .admonition-title {
+            font-weight: bold
+        }
+
+        .admonition.note,
+        .admonition.info,
+        .admonition.important {
+            background: #aef
+        }
+
+        .admonition.todo,
+        .admonition.versionadded,
+        .admonition.tip,
+        .admonition.hint {
+            background: #dfd
+        }
+
+        .admonition.warning,
+        .admonition.versionchanged,
+        .admonition.deprecated {
+            background: #fd4
+        }
+
+        .admonition.error,
+        .admonition.danger,
+        .admonition.caution {
+            background: lightpink
+        }
+    </style>
+    <style media="screen and (min-width: 700px)">
+        @media screen and (min-width:700px) {
+            #sidebar {
+                width: 30%;
+                height: 100vh;
+                overflow: auto;
+                position: sticky;
+                top: 0
+            }
+
+            #content {
+                width: 70%;
+                max-width: 100ch;
+                padding: 3em 4em;
+                border-left: 1px solid #ddd
+            }
+
+            pre code {
+                font-size: 1em
+            }
+
+            .item .name {
+                font-size: 1em
+            }
+
+            main {
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: flex-end
+            }
+
+            .toc ul ul,
+            #index ul {
+                padding-left: 1.5em
+            }
+
+            .toc>ul>li {
+                margin-top: .5em
+            }
+        }
+    </style>
+    <style media="print">
+        @media print {
+            #sidebar h1 {
+                page-break-before: always
+            }
+
+            .source {
+                display: none
+            }
+        }
+
+        @media print {
+            * {
+                background: transparent !important;
+                color: #000 !important;
+                box-shadow: none !important;
+                text-shadow: none !important
+            }
+
+            a[href]:after {
+                content: " (" attr(href) ")";
+                font-size: 90%
+            }
+
+            a[href][title]:after {
+                content: none
+            }
+
+            abbr[title]:after {
+                content: " (" attr(title) ")"
+            }
+
+            .ir a:after,
+            a[href^="javascript:"]:after,
+            a[href^="#"]:after {
+                content: ""
+            }
+
+            pre,
+            blockquote {
+                border: 1px solid #999;
+                page-break-inside: avoid
+            }
+
+            thead {
+                display: table-header-group
+            }
+
+            tr,
+            img {
+                page-break-inside: avoid
+            }
+
+            img {
+                max-width: 100% !important
+            }
+
+            @page {
+                margin: 0.5cm
+            }
+
+            p,
+            h2,
+            h3 {
+                orphans: 3;
+                widows: 3
+            }
+
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6 {
+                page-break-after: avoid
+            }
+        }
+    </style>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"
+        integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+    <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+
+    <link rel="stylesheet" href="https://demos.csinva.io/figs/style.css">
+    <script type="text/javascript">
+        function drawgif() {
+            var wrapper = document.querySelector('svg')
+            wrapper.classList.add('active')
+        }
+    </script>
+
+</head>
+
+<body>
+    <main>
+        <article id="content">
+            <section id="section-intro">
+                <p align="center">
+                    <img align="center" width=60%
+                        src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"> </img>
+                    <br />
+
+                <div class="article" style="padding-right: 2%; padding-left: 2%;">
+                    <p align="center">
+                    <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> AddGP: Additive Gaussian
+                        Processes over Binned Features </h1>
+                    </p>
+                    <hr>
+
+                    <p><a href="https://csinva.io/imodels/algebraic/binned_additive_gp.html">🗂️ API</a>, <a
+                            href="https://github.com/csinva/imodels">🔗 Github</a></p>
+
+                    <p><b>AddGP</b> fits a generalized additive model with pairwise interactions
+                        (a GA<sup>2</sup>M) in which every shape function is a Gaussian process over the
+                        quantile bins of its feature. Every structural choice the model makes &mdash; how
+                        smooth each curve should be, which features matter, which interactions to include and
+                        how finely to grid them &mdash; is made by maximizing one quantity, the exact GP
+                        marginal likelihood. There is no cross-validation, no train/validation split, no
+                        bagging and no seed, so two fits on the same data give the same model.</p>
+
+                    <h2>Why binning makes an exact GP cheap</h2>
+
+                    <p>Fitting a GAM as a Gaussian process normally means an <i>n</i>&times;<i>n</i> kernel
+                        matrix, which is hopeless past a few thousand rows. But every component of a
+                        GA<sup>2</sup>M is one-dimensional (or a two-dimensional grid), so once each feature is
+                        quantile-binned, each component is just a function on a small grid &mdash; one value
+                        per bin.</p>
+
+                    <p>Write <code>Z</code> for the indicator matrix recording which bin each row falls in.
+                        Then the exact marginal likelihood touches the data <i>only</i> through three
+                        quantities:</p>
+
+                    <pre><code>C = Z.T @ Z      # bin co-occurrence counts
+b = Z.T @ y      # bin sums
+y.T @ y</code></pre>
+
+                    <p>Those are <code>P&times;P</code> and <code>P</code> numbers, where <code>P</code> is the
+                        total number of bins &mdash; a few thousand, fixed by a budget. A single pass over the
+                        data builds them, and every optimizer step afterwards works on them alone. The fit
+                        therefore costs <code>O(P³)</code> per step <b>regardless of the sample size</b>:
+                        a hundred thousand rows cost the same as a thousand.</p>
+
+                    <h2>What the likelihood decides</h2>
+
+                    <p>Each feature's prior is built from exactly two covariance kernels on its bin grid: a
+                        Matérn-½ at a short lengthscale, which produces rough, locally adaptive shapes, and a
+                        squared-exponential at a longer one, which produces smooth shapes. Their amplitudes are
+                        free parameters, so maximizing the likelihood chooses the blend per feature. Smoothness
+                        is inferred rather than tuned, and a feature needing a step and a feature needing a
+                        gentle curve are both served without a lengthscale search.</p>
+
+                    <p>The same amplitudes perform feature selection. A feature that explains nothing has its
+                        amplitude driven toward zero and drops out &mdash; automatic relevance determination,
+                        obtained for free from the same objective. Interactions are screened on the residual,
+                        then fit in blocks that share shrinkage, with each block's grid resolution chosen by
+                        comparing marginal likelihoods.</p>
+
+                    <h2>An example using AddGP</h2>
+
+                    <pre><code class="language-python">from imodels import AddGPRegressor
+from sklearn.datasets import make_friedman1
+from sklearn.model_selection import train_test_split
+
+X, y = make_friedman1(n_samples=800, noise=1.0, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
+
+model = AddGPRegressor().fit(X_train, y_train)
+preds = model.predict(X_test)</code></pre>
+
+                    <p>The fitted model is a set of lookup tables, so it can be read directly rather than
+                        explained after the fact:</p>
+
+                    <pre><code class="language-python">grid, values = model.shape_function(0)   # feature 0's fitted curve
+model.interaction_terms()                # the pairs the model chose
+# [(0, 1), (6, 7), (4, 6), (3, 8)]</code></pre>
+
+                    <p>On this data the first interaction AddGP selects is <code>(0, 1)</code> &mdash; which is
+                        the interaction Friedman&rsquo;s function actually contains, since its first term is
+                        <code>10&nbsp;sin(&pi;&nbsp;x&#8320;&nbsp;x&#8321;)</code>.</p>
+
+                    <h2>How well does it do?</h2>
+
+                    <p>Across four regression benchmark suites &mdash; 113 datasets in total, ranging from 50
+                        to 72,000 rows and up to 1,024 features &mdash; AddGP is the strongest interpretable
+                        model on every suite, ahead of explainable boosting machines, random forests and
+                        gradient boosting.</p>
+
+                    <table>
+                        <thead>
+                            <tr><th>Suite</th><th>AddGP</th><th>EBM</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>imodels (65 datasets)</td><td><b>4.60</b></td><td>5.00</td>
+                                <td>mean rank, capped at 1k training rows</td></tr>
+                            <tr><td>Classic-7 (full size)</td><td><b>2.43</b></td><td>3.43</td>
+                                <td>wins 6 of 7 head-to-head</td></tr>
+                            <tr><td>TabArena-13</td><td><b>2.62</b></td><td>2.85</td>
+                                <td>first of six models</td></tr>
+                            <tr><td>OpenML-CTR23 (28)</td><td><b>2.11</b></td><td>2.32</td>
+                                <td>held out; interpretable-model pool</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p>CTR23 matters most of the four: it was downloaded after the method was finished and was
+                        used for no design decision, so it measures whether the model generalizes rather than
+                        whether it was tuned. Only TabPFN, a black-box foundation model, ranks higher overall,
+                        and it cannot fit several of the wider datasets at all.</p>
+
+                    <p>The model&rsquo;s failure mode is consistent and worth knowing: it loses on smooth
+                        deterministic simulations and heavy-interaction data &mdash; wave-energy converters,
+                        building-energy simulation, robot arm dynamics &mdash; where the target depends on three
+                        or more inputs jointly. No sum of pairwise pieces can represent that, and this is a
+                        limit of the model class rather than of the fitting procedure.</p>
+
+                </div>
+            </section>
+            <section>
+            </section>
+        </article>
+        <nav id="sidebar">
+            <h1>Index 🔍</h1>
+            <div class="toc">
+                <ul>
+                    <li><a href="index.html#installation">Installation</a></li>
+                    <li><a href="index.html#supported-models">Supported models</a></li>
+                    <li><a href="index.html#demo-notebooks">Demo notebooks</a></li>
+                </ul>
+            </div>
+            <ul id="index">
+                <li>
+                    <h3>Our favorite models</h3>
+                    <ul>
+                        <li><a href="https://csinva.io/imodels/addgp.html">AddGP: additive Gaussian processes
+                                over binned features</a></li>
+                        <li><a href="https://csinva.io/imodels/shrinkage.html">Hierarchical shrinkage: post-hoc
+                                regularization for tree-based methods</a></li>
+                        <li><a href="https://csinva.io/imodels/figs.html">FIGS: Fast interpretable greedy-tree sums</a>
+                        </li>
+                        <li><a href="https://csinva.io/imodels/mdi_plus.html">MDI+: Flexible tree-based feature
+                                importance</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <h3><a href="#header-submodules">Sub-modules</a></h3>
+                    <ul>
+                        <li><code><a title="imodels.algebraic" href="algebraic/index.html">imodels.algebraic</a></code>
+                        </li>
+                        <li><code><a title="imodels.tree" href="tree/index.html">imodels.tree</a></code></li>
+                        <li><code><a title="imodels.util" href="util/index.html">imodels.util</a></code></li>
+                    </ul>
+                </li>
+            </ul>
+            <p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+        </nav>
+    </main>
+
+    <footer id="footer">
+    </footer>
+</body>
+
+</html>
