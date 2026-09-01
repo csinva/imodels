@@ -589,8 +589,7 @@ model.interaction_terms()                # the pairs the model chose
 
                     <p>Across four regression benchmark suites &mdash; 113 datasets in total, ranging from 50
                         to 72,000 rows and up to 1,024 features &mdash; AddGP is the strongest interpretable
-                        model on every suite, ahead of explainable boosting machines, random forests and
-                        gradient boosting.</p>
+                        model on three suites and ties explainable boosting machines on the fourth.</p>
 
                     <table>
                         <thead>
@@ -601,8 +600,8 @@ model.interaction_terms()                # the pairs the model chose
                                 <td>mean rank, capped at 1k training rows</td></tr>
                             <tr><td>Classic-7 (full size)</td><td><b>2.43</b></td><td>3.43</td>
                                 <td>wins 6 of 7 head-to-head</td></tr>
-                            <tr><td>TabArena-13</td><td><b>2.62</b></td><td>2.85</td>
-                                <td>first of six models</td></tr>
+                            <tr><td>TabArena-13</td><td>2.69</td><td>2.69</td>
+                                <td>tied with EBM; wins 6 of 13</td></tr>
                             <tr><td>OpenML-CTR23 (28)</td><td><b>2.11</b></td><td>2.32</td>
                                 <td>held out; interpretable-model pool</td></tr>
                         </tbody>

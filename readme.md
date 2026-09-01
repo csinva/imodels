@@ -377,7 +377,7 @@ grid, values = model.shape_function(0)     # feature 0's fitted curve
 model.interaction_terms()                  # the pairs it chose to include
 ```
 
-Across four regression benchmark suites (113 datasets), AddGP ranks ahead of explainable boosting machines, random forests and gradient boosting, and is the strongest interpretable model on each suite. On OpenML-CTR23 — held out entirely, and used for no design decision — it places first among interpretable models with a mean rank of 2.11 against EBM's 2.32.
+Across four regression benchmark suites (113 datasets), AddGP is the strongest interpretable model on three and ties explainable boosting machines on the fourth. On OpenML-CTR23 — held out entirely, and used for no design decision — it places first among interpretable models with a mean rank of 2.11 against EBM's 2.32.
 
 ### Hierarchical shrinkage: post-hoc regularization for tree-based methods
 
