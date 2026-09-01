@@ -1,23 +1,23 @@
-"""Additive Gaussian-process GAM fit from binned sufficient statistics.
+"""A GAM whose shape functions are Gaussian processes over binned features.
 
-A generalized additive model with pairwise interactions (a GA2M) in which every
-component is a Gaussian process over the quantile bins of its feature(s).
+The model is a GA2M. It sums one function of each feature plus functions of a
+few feature pairs, and gives every one of those functions a Gaussian process
+prior over the quantile bins of its feature.
 
-The useful consequence of binning is that the *exact* GP marginal likelihood
-stops depending on the sample size. Writing ``Z`` for the indicator matrix that
-records which bin each row falls in, the likelihood touches the data only
-through the bin co-occurrence counts ``C = Z.T @ Z``, the bin sums
-``b = Z.T @ y`` and ``y.T @ y``. One pass over the data builds those; every
-optimizer step afterwards costs ``O(P^3)`` in the total number of bins ``P``,
-regardless of how many rows there were.
+Binning is what makes the exact marginal likelihood cheap to compute. Let ``Z``
+be the indicator matrix recording which bin each row falls into. The likelihood
+depends on the data only through three quantities: the bin co-occurrence counts
+``C = Z.T @ Z``, the bin sums ``b = Z.T @ y``, and ``y.T @ y``. One pass over
+the data computes all three. Every optimizer step after that costs ``O(P^3)``,
+where ``P`` is the total number of bins, no matter how many rows the data has.
 
-All kernel amplitudes and the noise level are chosen by maximizing that
-likelihood, which makes the model free of the usual tuning knobs: smoothness is
-inferred per feature from a two-kernel mixture, irrelevant features are pruned
-because their amplitudes go to zero (automatic relevance determination), and the
-resolution of each interaction grid is picked by comparing marginal likelihoods.
-Nothing is chosen by cross-validation, so the fit is deterministic -- no splits,
-no seeds, no bagging.
+Maximizing that likelihood sets every kernel amplitude and the noise level. It
+also settles the choices a GAM usually asks the user to make. How smooth each
+shape function should be follows from the mixture of two kernels. Features that
+explain nothing get amplitudes near zero and drop out of the model. The grid
+resolution for each interaction is chosen by comparing likelihoods. None of this
+uses cross-validation, so fitting is deterministic: no splits, no seeds, no
+bagging, and two fits on the same data give the same model.
 
 Reference implementation: https://github.com/csinva/imodels
 """
@@ -33,52 +33,55 @@ from imodels.util.arguments import check_predict_X, set_feature_names_in
 
 
 class GPGamRegressor(RegressorMixin, BaseEstimator):
-    """Additive Gaussian-process GAM with pairwise interactions.
+    """A GAM with pairwise interactions, fit as a Gaussian process.
 
-    The fitted model is ``y = sum_j f_j(x_j) + sum_(a,b) f_ab(x_a, x_b)``, where
-    every term is a lookup table over quantile bins, so the model can be read off
-    directly (see :meth:`shape_function`).
+    The fitted model is ``y = sum_j f_j(x_j) + sum_(a,b) f_ab(x_a, x_b)``. Every
+    term is a lookup table over quantile bins, so you can read the model itself
+    rather than explain it after the fact (see :meth:`shape_function`).
 
     Parameters
     ----------
     schedule : bool, default=True
-        Scale model capacity with the sample size. Small problems get a lean
-        64-bin model with few interactions; larger ones get 256 bins and more.
-        Set ``False`` to control capacity yourself with the parameters below.
+        Set model capacity from the sample size. Data with at most 1000 rows gets
+        64 bins per feature and few interactions. Larger data gets 256 bins and
+        more interactions. Pass ``False`` to set capacity yourself with the
+        parameters below.
     n_bins : int, default=64
-        Maximum quantile bins per feature.
+        The most quantile bins to give one feature.
     p_budget : int or None, default=None
-        Total-bin budget. The per-feature bin count is the budget divided by the
-        number of features (capped by ``n_bins``), which keeps the fit tractable
-        on wide data.
+        Budget for the total number of bins. Each feature gets the budget divided
+        by the number of features, capped at ``n_bins``. This keeps the fit
+        tractable when the data has many columns.
     scales : tuple, default=(0.05,)
-        Lengthscales for the Matern-1/2 kernels on each feature's bin grid, in
-        units of the grid width. These produce rough, locally adaptive shapes.
+        Lengthscales for the Matern 1/2 kernels on each feature's bin grid, as a
+        fraction of the grid width. These kernels produce rough shapes that can
+        turn sharply.
     rbf_scales : tuple, default=(0.25,)
-        Lengthscales for the squared-exponential kernels, which produce smooth
-        shapes. The marginal likelihood decides the mixture per feature.
+        Lengthscales for the squared exponential kernels, which produce smooth
+        shapes. The marginal likelihood decides how much of each kernel to use,
+        one feature at a time.
     n_pairs : int, default=6
-        Maximum number of pairwise interaction terms.
+        The most interaction terms to include.
     pair_bins : int, default=12
-        Bins per axis for interaction grids.
+        Bins along each axis of an interaction grid.
     pair_res : tuple or None, default=None
-        Candidate interaction-grid resolutions. Each block of interactions is fit
-        at every candidate and the marginal likelihood keeps the best.
+        Candidate resolutions for interaction grids. Each block of interactions is
+        fit at every candidate, and the marginal likelihood keeps the best one.
     pair_scales : tuple, default=(0.05, 0.3)
-        Lengthscales for the product kernels used by interaction terms.
+        Lengthscales for the product kernels that interaction terms use.
     screen_bins : int, default=8
-        Grid resolution used when screening candidate interactions.
+        Grid resolution used to screen candidate interactions.
     pair_shrink : float, default=8.0
-        Shrinkage applied to sparsely populated cells during screening.
+        Shrinkage applied to cells holding few points while screening.
     n_steps : int, default=200
-        Gradient steps on the marginal likelihood. The step count is a real part
-        of the model: stopping here regularizes the fit, and running the
-        likelihood to convergence overfits.
+        Gradient steps taken on the marginal likelihood. This count is part of the
+        model, not just a budget: stopping here regularizes the fit, and running
+        the likelihood to convergence overfits.
     lr : float, default=0.05
-        Adam step size for the log-amplitudes and log-noise.
+        Adam step size for the log amplitudes and the log noise level.
     log_target : {'auto', True, False}, default='auto'
-        Fit on ``log(y)`` when the target is positive and taking logs reduces its
-        skew substantially. Predictions are returned on the original scale.
+        Fit on ``log(y)`` when ``y`` is positive and taking logs makes it much
+        less skewed. Predictions come back on the original scale.
     n_features_in_ : int
         Set after fitting.
 
@@ -89,7 +92,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
     >>> X, y = make_friedman1(n_samples=500, random_state=0)
     >>> model = GPGamRegressor().fit(X, y)
     >>> preds = model.predict(X)
-    >>> grid, values = model.shape_function(0)   # feature 0's fitted curve
+    >>> grid, values = model.shape_function(0)   # the curve fit for feature 0
     """
 
     def __init__(
@@ -136,7 +139,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
     # capacity
     # ------------------------------------------------------------------
     def _p(self, name):
-        """Effective capacity parameter; the size-derived schedule wins if on."""
+        """The capacity value to use. The schedule wins when it is turned on."""
         return self._sched.get(name, getattr(self, name))
 
     # ------------------------------------------------------------------
@@ -145,7 +148,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
     def _feature_kernels(self, n_bins):
         """Covariance kernels for one feature's bin grid."""
         if n_bins <= 3:
-            # a delta kernel already spans every function on so few points
+            # on so few points a delta kernel already spans every function
             return [np.eye(n_bins)]
         grid = np.linspace(0.0, 1.0, n_bins)
         dist = np.abs(grid[:, None] - grid[None, :])
@@ -168,10 +171,11 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
     def _nll_and_grad(self, blocks, offsets, C, b, yy, n, log_amps, log_noise):
         """Negative log marginal likelihood and its gradient.
 
-        Everything is expressed in the sufficient statistics, so the cost is
-        independent of ``n``. Returns ``(nll, grad_log_amps, grad_log_noise,
-        state)`` where ``state`` carries the factorization needed downstream, or
-        ``None`` if the parameters produced a non-positive-definite matrix.
+        Everything here is written in terms of the sufficient statistics, so the
+        cost does not depend on ``n``. Returns ``(nll, grad_log_amps,
+        grad_log_noise, state)``, where ``state`` holds the factorization used
+        later, or ``None`` if the parameters gave a matrix that is not positive
+        definite.
         """
         P = int(offsets[-1])
         sig2 = float(np.exp(log_noise))
@@ -208,8 +212,8 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         if not np.isfinite(nll):
             return None
 
-        # gradients: M = Z' Sigma^-1 Z and r = Z' Sigma^-1 y, both built from
-        # the sufficient statistics, so this stays independent of the sample size
+        # gradients: M = Z' Sigma^-1 Z and r = Z' Sigma^-1 y. Both come from the
+        # sufficient statistics, so this cost does not grow with the sample size.
         with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
             T = ginv @ C                       # P x P
             r = (b - C @ mu) / sig2
@@ -222,18 +226,18 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                 g = np.empty(len(kernels))
                 for s_, K in enumerate(kernels):
                     g[s_] = 0.5 * (float(np.sum(K * Muu)) - float(ru @ K @ ru))
-                grad_a.append(g * amps)        # chain rule for the log-amplitudes
+                grad_a.append(g * amps)        # chain rule, since we fit log amplitudes
 
             tr_sinv = (n - float(np.trace(T)) / sig2) / sig2
             alpha_sq = (yy - 2.0 * float(b @ mu) + float(mu @ C @ mu)) / sig2 ** 2
             grad_noise = 0.5 * (tr_sinv - alpha_sq) * sig2
 
         if not (np.isfinite(grad_noise) and all(np.all(np.isfinite(g)) for g in grad_a)):
-            return None                        # ill-conditioned: back off on noise
+            return None                        # ill conditioned, so raise the noise
         return nll, grad_a, float(grad_noise), (binv, ginv)
 
     def _fit_ml(self, blocks, offsets, C, b, yy, n):
-        """Maximize the marginal likelihood with Adam on the log-parameters."""
+        """Maximize the marginal likelihood with Adam on the log parameters."""
         n_kernels = sum(len(k) for k in blocks)
         init = float(np.log(0.5 / max(n_kernels, 1)))
         log_amps = [np.full(len(k), init) for k in blocks]
@@ -246,7 +250,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         t = 0
         for _ in range(self.n_steps):
             out = self._nll_and_grad(blocks, offsets, C, b, yy, n, log_amps, log_noise)
-            if out is None:                # non-PD: back off toward more noise
+            if out is None:                # not positive definite, so raise the noise
                 log_noise += 0.25
                 continue
             nll, grad_a, grad_n, _ = out
@@ -363,7 +367,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                 y = np.log(y)
         q1, med, q3 = np.percentile(y, [25, 50, 75])
         iqr = q3 - q1
-        if iqr > 0:                            # winsorize only genuine outliers
+        if iqr > 0:                            # clip only true outliers
             lo, hi = med - 8.0 * iqr, med + 8.0 * iqr
             if 0.0 < np.mean((y < lo) | (y > hi)) <= 0.01:
                 y = np.clip(y, lo, hi)
@@ -408,7 +412,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         self.pairs_ = []
         self.pair_values_ = []
 
-        # 5. screen interactions, 6. fit them blockwise-jointly
+        # 5. screen interactions, 6. fit them in blocks
         n_pairs = self._p("n_pairs")
         if n_pairs > 0 and len(units) >= 2:
             resid = yn.copy()
@@ -430,9 +434,9 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         return self
 
     def _screen_pairs(self, X, units, resid, n_pairs, amps):
-        """Rank candidate interactions by shrunken residual cell means (FAST)."""
+        """Rank candidate interactions by their shrunken residual cell means."""
         feats = units
-        if len(units) * (len(units) - 1) // 2 > 5000:      # keep wide data tractable
+        if len(units) * (len(units) - 1) // 2 > 5000:      # too many pairs to score
             strength = {j: float(np.sum(amps[u])) for u, j in enumerate(units)}
             feats = sorted(sorted(units, key=lambda j: -strength[j])[:100])
         binned = {}
@@ -457,9 +461,9 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                    main_vals, selected, yn):
         """Fit interaction terms in blocks, alternating with the main effects.
 
-        Interactions are fit in chunks so that terms in a chunk share shrinkage,
-        and each chunk is fit at every candidate grid resolution with the
-        marginal likelihood keeping the winner.
+        Terms are fit in chunks so that the terms within a chunk share shrinkage.
+        Each chunk is fit at every candidate grid resolution, and the marginal
+        likelihood picks which resolution to keep.
         """
         resolutions = sorted(set(self._p("pair_res") or (self._p("pair_bins"),)), reverse=True)
         chunk = max(1, 3600 // (max(resolutions) ** 2))
@@ -484,8 +488,8 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
 
         for _ in range(2):
             for ch in chunks:
-                # what this chunk must explain: the target minus the main
-                # effects and minus every interaction outside the chunk
+                # what this chunk has to explain: the target, minus the main
+                # effects, minus every interaction outside the chunk
                 target = yn.copy()
                 for u, j in enumerate(units):
                     target -= main_vals[offsets[u]:offsets[u + 1]][bidx[:, j]]
@@ -548,10 +552,10 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
 
     # ------------------------------------------------------------------
     def shape_function(self, feature):
-        """Return ``(grid, values)``: the fitted curve for one feature.
+        """Return ``(grid, values)``, the fitted curve for one feature.
 
-        The values are on the (standardized, possibly log) fitting scale, which
-        is the scale on which the model is additive.
+        The values are on the scale the model was fit on, which is standardized
+        and may be logged. That is the scale on which the model is additive.
         """
         check_is_fitted(self, "main_values_")
         j = int(feature)

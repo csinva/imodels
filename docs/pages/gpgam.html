@@ -15,20 +15,22 @@
                             href="https://github.com/csinva/imodels">🔗 Github</a></p>
 
                     <p><b>GPGam</b> fits a generalized additive model with pairwise interactions
-                        (a GA<sup>2</sup>M) in which every shape function is a Gaussian process over the
-                        quantile bins of its feature. Every structural choice the model makes &mdash; how
-                        smooth each curve should be, which features matter, which interactions to include and
-                        how finely to grid them &mdash; is made by maximizing one quantity, the exact GP
-                        marginal likelihood. There is no cross-validation, no train/validation split, no
-                        bagging and no seed, so two fits on the same data give the same model.</p>
+                        (a GA<sup>2</sup>M). Every shape function in it is a Gaussian process over the
+                        quantile bins of its feature.</p>
+
+                    <p>One quantity settles every choice the model makes: the exact GP marginal
+                        likelihood. It sets how smooth each curve should be, which features matter,
+                        which interactions to include, and how finely to grid them. Nothing is chosen
+                        by cross-validation, there is no validation split, no bagging and no seed, so
+                        two fits on the same data give the same model.</p>
 
                     <h2>Why binning makes an exact GP cheap</h2>
 
                     <p>Fitting a GAM as a Gaussian process normally means an <i>n</i>&times;<i>n</i> kernel
-                        matrix, which is hopeless past a few thousand rows. But every component of a
-                        GA<sup>2</sup>M is one-dimensional (or a two-dimensional grid), so once each feature is
-                        quantile-binned, each component is just a function on a small grid &mdash; one value
-                        per bin.</p>
+                        matrix, which is hopeless past a few thousand rows. Every component of a
+                        GA<sup>2</sup>M is a function of one feature, or of two on a grid. So once the
+                        features are binned, each component is just a function on a small grid, holding
+                        one value per bin.</p>
 
                     <p>Write <code>Z</code> for the indicator matrix recording which bin each row falls in.
                         Then the exact marginal likelihood touches the data <i>only</i> through three
@@ -38,26 +40,28 @@
 b = Z.T @ y      # bin sums
 y.T @ y</code></pre>
 
-                    <p>Those are <code>P&times;P</code> and <code>P</code> numbers, where <code>P</code> is the
-                        total number of bins &mdash; a few thousand, fixed by a budget. A single pass over the
-                        data builds them, and every optimizer step afterwards works on them alone. The fit
-                        therefore costs <code>O(P³)</code> per step <b>regardless of the sample size</b>:
-                        a hundred thousand rows cost the same as a thousand.</p>
+                    <p>That is <code>P&times;P</code> numbers plus <code>P</code> more, where
+                        <code>P</code> is the total number of bins. A budget holds <code>P</code> to a few
+                        thousand. One pass over the data computes all of it, and every optimizer step after
+                        that uses those numbers alone. So each step costs <code>O(P³)</code>
+                        <b>no matter how many rows there are</b>. A hundred thousand rows cost what a
+                        thousand rows cost.</p>
 
                     <h2>What the likelihood decides</h2>
 
-                    <p>Each feature's prior is built from exactly two covariance kernels on its bin grid: a
-                        Matérn-½ at a short lengthscale, which produces rough, locally adaptive shapes, and a
-                        squared-exponential at a longer one, which produces smooth shapes. Their amplitudes are
-                        free parameters, so maximizing the likelihood chooses the blend per feature. Smoothness
-                        is inferred rather than tuned, and a feature needing a step and a feature needing a
-                        gentle curve are both served without a lengthscale search.</p>
+                    <p>Each feature gets a prior built from two covariance kernels on its bin grid. A
+                        Matérn ½ kernel at a short lengthscale produces rough shapes that can turn
+                        sharply. A squared exponential kernel at a longer lengthscale produces smooth
+                        shapes. Their amplitudes are free parameters, so maximizing the likelihood picks
+                        the blend for each feature separately. Smoothness is inferred, not tuned. A
+                        feature that needs a step and a feature that needs a gentle curve are both
+                        handled, and neither requires a search over lengthscales.</p>
 
-                    <p>The same amplitudes perform feature selection. A feature that explains nothing has its
-                        amplitude driven toward zero and drops out &mdash; automatic relevance determination,
-                        obtained for free from the same objective. Interactions are screened on the residual,
-                        then fit in blocks that share shrinkage, with each block's grid resolution chosen by
-                        comparing marginal likelihoods.</p>
+                    <p>Those same amplitudes also select features. A feature that explains nothing has
+                        its amplitude driven toward zero and drops out of the model. This is automatic
+                        relevance determination, and it comes free from the same objective. Interactions
+                        are screened on the residual and then fit in blocks that share shrinkage, and the
+                        grid resolution for each block is chosen by comparing marginal likelihoods.</p>
 
                     <h2>An example using GPGam</h2>
 
@@ -71,22 +75,22 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 model = GPGamRegressor().fit(X_train, y_train)
 preds = model.predict(X_test)</code></pre>
 
-                    <p>The fitted model is a set of lookup tables, so it can be read directly rather than
-                        explained after the fact:</p>
+                    <p>The fitted model is a set of lookup tables, so you can read it directly instead of
+                        explaining it after the fact:</p>
 
                     <pre><code class="language-python">grid, values = model.shape_function(0)   # feature 0's fitted curve
 model.interaction_terms()                # the pairs the model chose
 # [(0, 1), (6, 7), (4, 6), (3, 8)]</code></pre>
 
-                    <p>On this data the first interaction GPGam selects is <code>(0, 1)</code> &mdash; which is
-                        the interaction Friedman&rsquo;s function actually contains, since its first term is
+                    <p>On this data the first interaction GPGam selects is <code>(0, 1)</code>. That is
+                        the interaction Friedman&rsquo;s function contains, since its first term is
                         <code>10&nbsp;sin(&pi;&nbsp;x&#8320;&nbsp;x&#8321;)</code>.</p>
 
                     <h2>How well does it do?</h2>
 
-                    <p>Across four regression benchmark suites &mdash; 113 datasets in total, ranging from 50
-                        to 72,000 rows and up to 1,024 features &mdash; GPGam is the strongest interpretable
-                        model on three suites and ties explainable boosting machines on the fourth.</p>
+                    <p>Four regression benchmark suites were used, covering 113 datasets that range from
+                        50 to 72,000 rows and up to 1,024 features. GPGam is the strongest interpretable
+                        model on three of them, and ties explainable boosting machines on the fourth.</p>
 
                     <table>
                         <thead>
@@ -96,24 +100,25 @@ model.interaction_terms()                # the pairs the model chose
                             <tr><td>imodels (65 datasets)</td><td><b>4.60</b></td><td>5.00</td>
                                 <td>mean rank, capped at 1k training rows</td></tr>
                             <tr><td>Classic-7 (full size)</td><td><b>2.43</b></td><td>3.43</td>
-                                <td>wins 6 of 7 head-to-head</td></tr>
+                                <td>wins 6 of 7 against EBM</td></tr>
                             <tr><td>TabArena-13</td><td>2.69</td><td>2.69</td>
                                 <td>tied with EBM; wins 6 of 13</td></tr>
                             <tr><td>OpenML-CTR23 (28)</td><td><b>2.11</b></td><td>2.32</td>
-                                <td>held out; interpretable-model pool</td></tr>
+                                <td>held out; pool of interpretable models</td></tr>
                         </tbody>
                     </table>
 
-                    <p>CTR23 matters most of the four: it was downloaded after the method was finished and was
-                        used for no design decision, so it measures whether the model generalizes rather than
-                        whether it was tuned. Only TabPFN, a black-box foundation model, ranks higher overall,
-                        and it cannot fit several of the wider datasets at all.</p>
+                    <p>CTR23 is the most informative of the four. It was downloaded after the method was
+                        finished and was used for no design decision, so it measures whether the model
+                        generalizes rather than whether it was tuned. Only TabPFN ranks higher overall, and
+                        TabPFN is a black box that cannot fit several of the wider datasets at all.</p>
 
-                    <p>The model&rsquo;s failure mode is consistent and worth knowing: it loses on smooth
-                        deterministic simulations and heavy-interaction data &mdash; wave-energy converters,
-                        building-energy simulation, robot arm dynamics &mdash; where the target depends on three
-                        or more inputs jointly. No sum of pairwise pieces can represent that, and this is a
-                        limit of the model class rather than of the fitting procedure.</p>
+                    <p>The model fails in the same way on every suite, which is worth knowing before you
+                        use it. It loses on smooth simulations and on data with strong interactions, such
+                        as wave energy converters, building energy simulation, and robot arm dynamics. In
+                        all of those the target depends on three or more inputs at once, and no sum of
+                        pairwise pieces can represent that. This is a limit of the model class, not of the
+                        fitting procedure.</p>
 
                 </div>
             </section>
