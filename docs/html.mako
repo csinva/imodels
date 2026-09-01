@@ -366,6 +366,16 @@
   <style media="screen and (min-width: 700px)">${css.desktop()}</style>
   <style media="print">${css.print()}</style>
 
+  <style>
+    /* A heading inside <summary> is a block element, so by default it drops onto
+       the line below the disclosure triangle and leaves a gap. Keep it inline. */
+    summary > h1, summary > h2, summary > h3, summary > h4, summary > h5 {
+      display: inline;
+      margin: 0;
+    }
+    summary { cursor: pointer; }
+  </style>
+
   % if google_analytics:
     <script>
     window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;

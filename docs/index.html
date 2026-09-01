@@ -10,6 +10,15 @@
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<style>
+/* A heading inside <summary> is a block element, so by default it drops onto
+the line below the disclosure triangle and leaves a gap. Keep it inline. */
+summary > h1, summary > h2, summary > h3, summary > h4, summary > h5 {
+display: inline;
+margin: 0;
+}
+summary { cursor: pointer; }
+</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
@@ -329,7 +338,7 @@ Regression
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
 | Tree GAM | [TreeGAMClassifier](https://csinva.io/imodels/algebraic/tree_gam.html) | [TreeGAMRegressor](https://csinva.io/imodels/algebraic/tree_gam.html) | |
 | Additive GP GAM (GPGam) |
-| [GPGamRegressor](https://csinva.io/imodels/algebraic/gp_gam.html) | Pairwise-interaction GAM; no tuning, deterministic |
+| [GPGamRegressor](https://csinva.io/imodels/algebraic/gp_gam.html) | GAM with pairwise interactions; nothing to tune, and deterministic |
 | Greedy tree sums (FIGS) | [FIGSClassifier](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier) | [FIGSRegressor](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor) |
 |
 | Hierarchical shrinkage | [HSTreeClassifierCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV) | [HSTreeRegressorCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV) | Wraps any sklearn tree-based model |
@@ -470,39 +479,6 @@ Fit an interpretable model to explain a previous model's errors (ex. in <a href=
 <summary><a href="https://csinva.io/imodels/util/index.html">Rule-based utils</a> for customizing models</summary>
 The code here contains many useful and customizable functions for rule-based learning in the <a href="https://csinva.io/imodels/util/index.html">util folder</a>. This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.
 </details>
-<h2 id="our-favorite-models">Our favorite models</h2>
-<p>After developing and playing with <code><a title="imodels" href="#imodels">imodels</a></code>, we developed a few new models to overcome limitations of existing interpretable models.</p>
-<h3 id="figs-fast-interpretable-greedy-tree-sums">FIGS: Fast interpretable greedy-tree sums</h3>
-<p><a href="https://arxiv.org/abs/2201.11931">📄 Paper</a>, <a href="https://csinva.io/imodels/figs.html">🔗 Post</a>, <a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C5&amp;q=fast+interpretable+greedy-tree+sums&amp;oq=fast#d=gs_cit&amp;u=%2Fscholar%3Fq%3Dinfo%3ADnPVL74Rop0J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌 Citation</a></p>
-<p>Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models. Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation. The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable. Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).</p>
-<p align="center">
-<img src="https://demos.csinva.io/figs/diabetes_figs.svg?sanitize=True" width="50%">
-</p>
-<p align="center">
-<i><b>Example FIGS model.</b> FIGS learns a sum of trees with a flexible number of trees; to make its prediction, it sums the result from each tree.</i>
-</p>
-<h3 id="gpgam-additive-gaussian-processes-over-binned-features">GPGam: additive Gaussian processes over binned features</h3>
-<p><a href="https://csinva.io/imodels/gpgam.html">🔗 Post</a>, <a href="https://csinva.io/imodels/algebraic/gp_gam.html">🗂️ API</a></p>
-<p>GPGam fits a generalized additive model with pairwise interactions in which every shape function is a Gaussian process over the quantile bins of its feature. Binning is what makes this practical: once features are binned, the <em>exact</em> GP marginal likelihood depends on the data only through the bin co-occurrence counts <code>Z'Z</code>, the bin sums <code>Z'y</code> and <code>y'y</code>, so one pass over the data reduces any dataset to a small set of sufficient statistics and every subsequent optimizer step costs the same whether there were a thousand rows or a hundred thousand.</p>
-<p>Because the same likelihood chooses everything, the model has no tuning knobs and no randomness — smoothness is inferred per feature from a two-kernel mixture, irrelevant features are pruned by their amplitudes going to zero (ARD), and each interaction grid's resolution is picked by comparing marginal likelihoods. There is no cross-validation, no train/validation split and no seed, so two fits on the same data give the same model.</p>
-<pre><code class="language-python">from imodels import GPGamRegressor
-model = GPGamRegressor().fit(X_train, y_train)
-grid, values = model.shape_function(0)     # feature 0's fitted curve
-model.interaction_terms()                  # the pairs it chose to include
-</code></pre>
-<p>Across four regression benchmark suites (113 datasets), GPGam is the strongest interpretable model on three and ties explainable boosting machines on the fourth. On OpenML-CTR23 — held out entirely, and used for no design decision — it places first among interpretable models with a mean rank of 2.11 against EBM's 2.32.</p>
-<h3 id="hierarchical-shrinkage-post-hoc-regularization-for-tree-based-methods">Hierarchical shrinkage: post-hoc regularization for tree-based methods</h3>
-<p><a href="https://arxiv.org/abs/2202.00858">📄 Paper</a> (ICML 2022), <a href="https://csinva.io/imodels/shrinkage.html">🔗 Post</a>, <a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C5&amp;q=hierarchical+shrinkage+singh&amp;btnG=&amp;oq=hierar#d=gs_cit&amp;u=%2Fscholar%3Fq%3Dinfo%3Azc6gtLx-aL4J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌 Citation</a></p>
-<p>Hierarchical shrinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter). Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.</p>
-<p align="center">
-<img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" width="75%">
-</p>
-<p align="center">
-<i><b>HS Example.</b> HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent.</i>
-</p>
-<h3 id="mdi-flexible-tree-based-feature-importance">MDI+: Flexible Tree-Based Feature Importance</h3>
-<p><a href="https://arxiv.org/pdf/2307.01932.pdf">📄 Paper</a>, <a href="https://csinva.io/imodels/mdi_plus.html">🔗 Post</a>, <a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C23&amp;q=MDI%2B%3A+A+Flexible+Random+Forest-Based+Feature+Importance+Framework&amp;btnG=#d=gs_cit&amp;t=1690399844081&amp;u=%2Fscholar%3Fq%3Dinfo%3Axc0LcHXE_lUJ%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌 Citation</a></p>
-<p>MDI+ is a novel feature importance framework, which generalizes the popular mean decrease in impurity (MDI) importance score for random forests. At its core, MDI+ expands upon a recently discovered connection between linear regression and decision trees. In doing so, MDI+ enables practitioners to (1) tailor the feature importance computation to the data/problem structure and (2) incorporate additional features or knowledge to mitigate known biases of decision trees. In both real data case studies and extensive real-data-inspired simulations, MDI+ outperforms commonly used feature importance measures (e.g., MDI, permutation-based scores, and TreeSHAP) by substantional margins.</p>
 <h2 id="references">References</h2>
 <details>
 <summary>Readings</summary>
@@ -8288,50 +8264,53 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>(</span><span>schedule=True, n_bins=64, p_budget=None, scales=(0.05,), rbf_scales=(0.25,), n_pairs=6, pair_bins=12, pair_res=None, pair_scales=(0.05, 0.3), screen_bins=8, pair_shrink=8.0, n_steps=200, lr=0.05, noise_init=0.3, noise_floor=0.0001, jitter=1e-06, log_target='auto', cat_max_levels=32)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Additive Gaussian-process GAM with pairwise interactions.</p>
-<p>The fitted model is <code>y = sum_j f_j(x_j) + sum_(a,b) f_ab(x_a, x_b)</code>, where
-every term is a lookup table over quantile bins, so the model can be read off
-directly (see :meth:<code>shape_function</code>).</p>
+<div class="desc"><p>A GAM with pairwise interactions, fit as a Gaussian process.</p>
+<p>The fitted model is <code>y = sum_j f_j(x_j) + sum_(a,b) f_ab(x_a, x_b)</code>. Every
+term is a lookup table over quantile bins, so you can read the model itself
+rather than explain it after the fact (see :meth:<code>shape_function</code>).</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>schedule</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
-<dd>Scale model capacity with the sample size. Small problems get a lean
-64-bin model with few interactions; larger ones get 256 bins and more.
-Set <code>False</code> to control capacity yourself with the parameters below.</dd>
+<dd>Set model capacity from the sample size. Data with at most 1000 rows gets
+64 bins per feature and few interactions. Larger data gets 256 bins and
+more interactions. Pass <code>False</code> to set capacity yourself with the
+parameters below.</dd>
 <dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code>, default=<code>64</code></dt>
-<dd>Maximum quantile bins per feature.</dd>
+<dd>The most quantile bins to give one feature.</dd>
 <dt><strong><code>p_budget</code></strong> :&ensp;<code>int</code> or <code>None</code>, default=<code>None</code></dt>
-<dd>Total-bin budget. The per-feature bin count is the budget divided by the
-number of features (capped by <code>n_bins</code>), which keeps the fit tractable
-on wide data.</dd>
+<dd>Budget for the total number of bins. Each feature gets the budget divided
+by the number of features, capped at <code>n_bins</code>. This keeps the fit
+tractable when the data has many columns.</dd>
 <dt><strong><code>scales</code></strong> :&ensp;<code>tuple</code>, default=<code>(0.05,)</code></dt>
-<dd>Lengthscales for the Matern-1/2 kernels on each feature's bin grid, in
-units of the grid width. These produce rough, locally adaptive shapes.</dd>
+<dd>Lengthscales for the Matern 1/2 kernels on each feature's bin grid, as a
+fraction of the grid width. These kernels produce rough shapes that can
+turn sharply.</dd>
 <dt><strong><code>rbf_scales</code></strong> :&ensp;<code>tuple</code>, default=<code>(0.25,)</code></dt>
-<dd>Lengthscales for the squared-exponential kernels, which produce smooth
-shapes. The marginal likelihood decides the mixture per feature.</dd>
+<dd>Lengthscales for the squared exponential kernels, which produce smooth
+shapes. The marginal likelihood decides how much of each kernel to use,
+one feature at a time.</dd>
 <dt><strong><code>n_pairs</code></strong> :&ensp;<code>int</code>, default=<code>6</code></dt>
-<dd>Maximum number of pairwise interaction terms.</dd>
+<dd>The most interaction terms to include.</dd>
 <dt><strong><code>pair_bins</code></strong> :&ensp;<code>int</code>, default=<code>12</code></dt>
-<dd>Bins per axis for interaction grids.</dd>
+<dd>Bins along each axis of an interaction grid.</dd>
 <dt><strong><code>pair_res</code></strong> :&ensp;<code>tuple</code> or <code>None</code>, default=<code>None</code></dt>
-<dd>Candidate interaction-grid resolutions. Each block of interactions is fit
-at every candidate and the marginal likelihood keeps the best.</dd>
+<dd>Candidate resolutions for interaction grids. Each block of interactions is
+fit at every candidate, and the marginal likelihood keeps the best one.</dd>
 <dt><strong><code>pair_scales</code></strong> :&ensp;<code>tuple</code>, default=<code>(0.05, 0.3)</code></dt>
-<dd>Lengthscales for the product kernels used by interaction terms.</dd>
+<dd>Lengthscales for the product kernels that interaction terms use.</dd>
 <dt><strong><code>screen_bins</code></strong> :&ensp;<code>int</code>, default=<code>8</code></dt>
-<dd>Grid resolution used when screening candidate interactions.</dd>
+<dd>Grid resolution used to screen candidate interactions.</dd>
 <dt><strong><code>pair_shrink</code></strong> :&ensp;<code>float</code>, default=<code>8.0</code></dt>
-<dd>Shrinkage applied to sparsely populated cells during screening.</dd>
+<dd>Shrinkage applied to cells holding few points while screening.</dd>
 <dt><strong><code>n_steps</code></strong> :&ensp;<code>int</code>, default=<code>200</code></dt>
-<dd>Gradient steps on the marginal likelihood. The step count is a real part
-of the model: stopping here regularizes the fit, and running the
-likelihood to convergence overfits.</dd>
+<dd>Gradient steps taken on the marginal likelihood. This count is part of the
+model, not just a budget: stopping here regularizes the fit, and running
+the likelihood to convergence overfits.</dd>
 <dt><strong><code>lr</code></strong> :&ensp;<code>float</code>, default=<code>0.05</code></dt>
-<dd>Adam step size for the log-amplitudes and log-noise.</dd>
+<dd>Adam step size for the log amplitudes and the log noise level.</dd>
 <dt><strong><code>log_target</code></strong> :&ensp;<code>{'auto', True, False}</code>, default=<code>'auto'</code></dt>
-<dd>Fit on <code>log(y)</code> when the target is positive and taking logs reduces its
-skew substantially. Predictions are returned on the original scale.</dd>
+<dd>Fit on <code>log(y)</code> when <code>y</code> is positive and taking logs makes it much
+less skewed. Predictions come back on the original scale.</dd>
 <dt><strong><code>n_features_in_</code></strong> :&ensp;<code>int</code></dt>
 <dd>Set after fitting.</dd>
 </dl>
@@ -8341,59 +8320,62 @@ skew substantially. Predictions are returned on the original scale.</dd>
 &gt;&gt;&gt; X, y = make_friedman1(n_samples=500, random_state=0)
 &gt;&gt;&gt; model = GPGamRegressor().fit(X, y)
 &gt;&gt;&gt; preds = model.predict(X)
-&gt;&gt;&gt; grid, values = model.shape_function(0)   # feature 0's fitted curve
+&gt;&gt;&gt; grid, values = model.shape_function(0)   # the curve fit for feature 0
 </code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GPGamRegressor(RegressorMixin, BaseEstimator):
-    &#34;&#34;&#34;Additive Gaussian-process GAM with pairwise interactions.
+    &#34;&#34;&#34;A GAM with pairwise interactions, fit as a Gaussian process.
 
-    The fitted model is ``y = sum_j f_j(x_j) + sum_(a,b) f_ab(x_a, x_b)``, where
-    every term is a lookup table over quantile bins, so the model can be read off
-    directly (see :meth:`shape_function`).
+    The fitted model is ``y = sum_j f_j(x_j) + sum_(a,b) f_ab(x_a, x_b)``. Every
+    term is a lookup table over quantile bins, so you can read the model itself
+    rather than explain it after the fact (see :meth:`shape_function`).
 
     Parameters
     ----------
     schedule : bool, default=True
-        Scale model capacity with the sample size. Small problems get a lean
-        64-bin model with few interactions; larger ones get 256 bins and more.
-        Set ``False`` to control capacity yourself with the parameters below.
+        Set model capacity from the sample size. Data with at most 1000 rows gets
+        64 bins per feature and few interactions. Larger data gets 256 bins and
+        more interactions. Pass ``False`` to set capacity yourself with the
+        parameters below.
     n_bins : int, default=64
-        Maximum quantile bins per feature.
+        The most quantile bins to give one feature.
     p_budget : int or None, default=None
-        Total-bin budget. The per-feature bin count is the budget divided by the
-        number of features (capped by ``n_bins``), which keeps the fit tractable
-        on wide data.
+        Budget for the total number of bins. Each feature gets the budget divided
+        by the number of features, capped at ``n_bins``. This keeps the fit
+        tractable when the data has many columns.
     scales : tuple, default=(0.05,)
-        Lengthscales for the Matern-1/2 kernels on each feature&#39;s bin grid, in
-        units of the grid width. These produce rough, locally adaptive shapes.
+        Lengthscales for the Matern 1/2 kernels on each feature&#39;s bin grid, as a
+        fraction of the grid width. These kernels produce rough shapes that can
+        turn sharply.
     rbf_scales : tuple, default=(0.25,)
-        Lengthscales for the squared-exponential kernels, which produce smooth
-        shapes. The marginal likelihood decides the mixture per feature.
+        Lengthscales for the squared exponential kernels, which produce smooth
+        shapes. The marginal likelihood decides how much of each kernel to use,
+        one feature at a time.
     n_pairs : int, default=6
-        Maximum number of pairwise interaction terms.
+        The most interaction terms to include.
     pair_bins : int, default=12
-        Bins per axis for interaction grids.
+        Bins along each axis of an interaction grid.
     pair_res : tuple or None, default=None
-        Candidate interaction-grid resolutions. Each block of interactions is fit
-        at every candidate and the marginal likelihood keeps the best.
+        Candidate resolutions for interaction grids. Each block of interactions is
+        fit at every candidate, and the marginal likelihood keeps the best one.
     pair_scales : tuple, default=(0.05, 0.3)
-        Lengthscales for the product kernels used by interaction terms.
+        Lengthscales for the product kernels that interaction terms use.
     screen_bins : int, default=8
-        Grid resolution used when screening candidate interactions.
+        Grid resolution used to screen candidate interactions.
     pair_shrink : float, default=8.0
-        Shrinkage applied to sparsely populated cells during screening.
+        Shrinkage applied to cells holding few points while screening.
     n_steps : int, default=200
-        Gradient steps on the marginal likelihood. The step count is a real part
-        of the model: stopping here regularizes the fit, and running the
-        likelihood to convergence overfits.
+        Gradient steps taken on the marginal likelihood. This count is part of the
+        model, not just a budget: stopping here regularizes the fit, and running
+        the likelihood to convergence overfits.
     lr : float, default=0.05
-        Adam step size for the log-amplitudes and log-noise.
+        Adam step size for the log amplitudes and the log noise level.
     log_target : {&#39;auto&#39;, True, False}, default=&#39;auto&#39;
-        Fit on ``log(y)`` when the target is positive and taking logs reduces its
-        skew substantially. Predictions are returned on the original scale.
+        Fit on ``log(y)`` when ``y`` is positive and taking logs makes it much
+        less skewed. Predictions come back on the original scale.
     n_features_in_ : int
         Set after fitting.
 
@@ -8404,7 +8386,7 @@ skew substantially. Predictions are returned on the original scale.</dd>
     &gt;&gt;&gt; X, y = make_friedman1(n_samples=500, random_state=0)
     &gt;&gt;&gt; model = GPGamRegressor().fit(X, y)
     &gt;&gt;&gt; preds = model.predict(X)
-    &gt;&gt;&gt; grid, values = model.shape_function(0)   # feature 0&#39;s fitted curve
+    &gt;&gt;&gt; grid, values = model.shape_function(0)   # the curve fit for feature 0
     &#34;&#34;&#34;
 
     def __init__(
@@ -8451,7 +8433,7 @@ skew substantially. Predictions are returned on the original scale.</dd>
     # capacity
     # ------------------------------------------------------------------
     def _p(self, name):
-        &#34;&#34;&#34;Effective capacity parameter; the size-derived schedule wins if on.&#34;&#34;&#34;
+        &#34;&#34;&#34;The capacity value to use. The schedule wins when it is turned on.&#34;&#34;&#34;
         return self._sched.get(name, getattr(self, name))
 
     # ------------------------------------------------------------------
@@ -8460,7 +8442,7 @@ skew substantially. Predictions are returned on the original scale.</dd>
     def _feature_kernels(self, n_bins):
         &#34;&#34;&#34;Covariance kernels for one feature&#39;s bin grid.&#34;&#34;&#34;
         if n_bins &lt;= 3:
-            # a delta kernel already spans every function on so few points
+            # on so few points a delta kernel already spans every function
             return [np.eye(n_bins)]
         grid = np.linspace(0.0, 1.0, n_bins)
         dist = np.abs(grid[:, None] - grid[None, :])
@@ -8483,10 +8465,11 @@ skew substantially. Predictions are returned on the original scale.</dd>
     def _nll_and_grad(self, blocks, offsets, C, b, yy, n, log_amps, log_noise):
         &#34;&#34;&#34;Negative log marginal likelihood and its gradient.
 
-        Everything is expressed in the sufficient statistics, so the cost is
-        independent of ``n``. Returns ``(nll, grad_log_amps, grad_log_noise,
-        state)`` where ``state`` carries the factorization needed downstream, or
-        ``None`` if the parameters produced a non-positive-definite matrix.
+        Everything here is written in terms of the sufficient statistics, so the
+        cost does not depend on ``n``. Returns ``(nll, grad_log_amps,
+        grad_log_noise, state)``, where ``state`` holds the factorization used
+        later, or ``None`` if the parameters gave a matrix that is not positive
+        definite.
         &#34;&#34;&#34;
         P = int(offsets[-1])
         sig2 = float(np.exp(log_noise))
@@ -8523,8 +8506,8 @@ skew substantially. Predictions are returned on the original scale.</dd>
         if not np.isfinite(nll):
             return None
 
-        # gradients: M = Z&#39; Sigma^-1 Z and r = Z&#39; Sigma^-1 y, both built from
-        # the sufficient statistics, so this stays independent of the sample size
+        # gradients: M = Z&#39; Sigma^-1 Z and r = Z&#39; Sigma^-1 y. Both come from the
+        # sufficient statistics, so this cost does not grow with the sample size.
         with np.errstate(over=&#34;ignore&#34;, invalid=&#34;ignore&#34;, divide=&#34;ignore&#34;):
             T = ginv @ C                       # P x P
             r = (b - C @ mu) / sig2
@@ -8537,18 +8520,18 @@ skew substantially. Predictions are returned on the original scale.</dd>
                 g = np.empty(len(kernels))
                 for s_, K in enumerate(kernels):
                     g[s_] = 0.5 * (float(np.sum(K * Muu)) - float(ru @ K @ ru))
-                grad_a.append(g * amps)        # chain rule for the log-amplitudes
+                grad_a.append(g * amps)        # chain rule, since we fit log amplitudes
 
             tr_sinv = (n - float(np.trace(T)) / sig2) / sig2
             alpha_sq = (yy - 2.0 * float(b @ mu) + float(mu @ C @ mu)) / sig2 ** 2
             grad_noise = 0.5 * (tr_sinv - alpha_sq) * sig2
 
         if not (np.isfinite(grad_noise) and all(np.all(np.isfinite(g)) for g in grad_a)):
-            return None                        # ill-conditioned: back off on noise
+            return None                        # ill conditioned, so raise the noise
         return nll, grad_a, float(grad_noise), (binv, ginv)
 
     def _fit_ml(self, blocks, offsets, C, b, yy, n):
-        &#34;&#34;&#34;Maximize the marginal likelihood with Adam on the log-parameters.&#34;&#34;&#34;
+        &#34;&#34;&#34;Maximize the marginal likelihood with Adam on the log parameters.&#34;&#34;&#34;
         n_kernels = sum(len(k) for k in blocks)
         init = float(np.log(0.5 / max(n_kernels, 1)))
         log_amps = [np.full(len(k), init) for k in blocks]
@@ -8561,7 +8544,7 @@ skew substantially. Predictions are returned on the original scale.</dd>
         t = 0
         for _ in range(self.n_steps):
             out = self._nll_and_grad(blocks, offsets, C, b, yy, n, log_amps, log_noise)
-            if out is None:                # non-PD: back off toward more noise
+            if out is None:                # not positive definite, so raise the noise
                 log_noise += 0.25
                 continue
             nll, grad_a, grad_n, _ = out
@@ -8678,7 +8661,7 @@ skew substantially. Predictions are returned on the original scale.</dd>
                 y = np.log(y)
         q1, med, q3 = np.percentile(y, [25, 50, 75])
         iqr = q3 - q1
-        if iqr &gt; 0:                            # winsorize only genuine outliers
+        if iqr &gt; 0:                            # clip only true outliers
             lo, hi = med - 8.0 * iqr, med + 8.0 * iqr
             if 0.0 &lt; np.mean((y &lt; lo) | (y &gt; hi)) &lt;= 0.01:
                 y = np.clip(y, lo, hi)
@@ -8723,7 +8706,7 @@ skew substantially. Predictions are returned on the original scale.</dd>
         self.pairs_ = []
         self.pair_values_ = []
 
-        # 5. screen interactions, 6. fit them blockwise-jointly
+        # 5. screen interactions, 6. fit them in blocks
         n_pairs = self._p(&#34;n_pairs&#34;)
         if n_pairs &gt; 0 and len(units) &gt;= 2:
             resid = yn.copy()
@@ -8745,9 +8728,9 @@ skew substantially. Predictions are returned on the original scale.</dd>
         return self
 
     def _screen_pairs(self, X, units, resid, n_pairs, amps):
-        &#34;&#34;&#34;Rank candidate interactions by shrunken residual cell means (FAST).&#34;&#34;&#34;
+        &#34;&#34;&#34;Rank candidate interactions by their shrunken residual cell means.&#34;&#34;&#34;
         feats = units
-        if len(units) * (len(units) - 1) // 2 &gt; 5000:      # keep wide data tractable
+        if len(units) * (len(units) - 1) // 2 &gt; 5000:      # too many pairs to score
             strength = {j: float(np.sum(amps[u])) for u, j in enumerate(units)}
             feats = sorted(sorted(units, key=lambda j: -strength[j])[:100])
         binned = {}
@@ -8772,9 +8755,9 @@ skew substantially. Predictions are returned on the original scale.</dd>
                    main_vals, selected, yn):
         &#34;&#34;&#34;Fit interaction terms in blocks, alternating with the main effects.
 
-        Interactions are fit in chunks so that terms in a chunk share shrinkage,
-        and each chunk is fit at every candidate grid resolution with the
-        marginal likelihood keeping the winner.
+        Terms are fit in chunks so that the terms within a chunk share shrinkage.
+        Each chunk is fit at every candidate grid resolution, and the marginal
+        likelihood picks which resolution to keep.
         &#34;&#34;&#34;
         resolutions = sorted(set(self._p(&#34;pair_res&#34;) or (self._p(&#34;pair_bins&#34;),)), reverse=True)
         chunk = max(1, 3600 // (max(resolutions) ** 2))
@@ -8799,8 +8782,8 @@ skew substantially. Predictions are returned on the original scale.</dd>
 
         for _ in range(2):
             for ch in chunks:
-                # what this chunk must explain: the target minus the main
-                # effects and minus every interaction outside the chunk
+                # what this chunk has to explain: the target, minus the main
+                # effects, minus every interaction outside the chunk
                 target = yn.copy()
                 for u, j in enumerate(units):
                     target -= main_vals[offsets[u]:offsets[u + 1]][bidx[:, j]]
@@ -8863,10 +8846,10 @@ skew substantially. Predictions are returned on the original scale.</dd>
 
     # ------------------------------------------------------------------
     def shape_function(self, feature):
-        &#34;&#34;&#34;Return ``(grid, values)``: the fitted curve for one feature.
+        &#34;&#34;&#34;Return ``(grid, values)``, the fitted curve for one feature.
 
-        The values are on the (standardized, possibly log) fitting scale, which
-        is the scale on which the model is additive.
+        The values are on the scale the model was fit on, which is standardized
+        and may be logged. That is the scale on which the model is additive.
         &#34;&#34;&#34;
         check_is_fitted(self, &#34;main_values_&#34;)
         j = int(feature)
@@ -8948,7 +8931,7 @@ skew substantially. Predictions are returned on the original scale.</dd>
             y = np.log(y)
     q1, med, q3 = np.percentile(y, [25, 50, 75])
     iqr = q3 - q1
-    if iqr &gt; 0:                            # winsorize only genuine outliers
+    if iqr &gt; 0:                            # clip only true outliers
         lo, hi = med - 8.0 * iqr, med + 8.0 * iqr
         if 0.0 &lt; np.mean((y &lt; lo) | (y &gt; hi)) &lt;= 0.01:
             y = np.clip(y, lo, hi)
@@ -8993,7 +8976,7 @@ skew substantially. Predictions are returned on the original scale.</dd>
     self.pairs_ = []
     self.pair_values_ = []
 
-    # 5. screen interactions, 6. fit them blockwise-jointly
+    # 5. screen interactions, 6. fit them in blocks
     n_pairs = self._p(&#34;n_pairs&#34;)
     if n_pairs &gt; 0 and len(units) &gt;= 2:
         resid = yn.copy()
@@ -9262,18 +9245,18 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">shape_function</span></span>(<span>self, feature)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return <code>(grid, values)</code>: the fitted curve for one feature.</p>
-<p>The values are on the (standardized, possibly log) fitting scale, which
-is the scale on which the model is additive.</p></div>
+<div class="desc"><p>Return <code>(grid, values)</code>, the fitted curve for one feature.</p>
+<p>The values are on the scale the model was fit on, which is standardized
+and may be logged. That is the scale on which the model is additive.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def shape_function(self, feature):
-    &#34;&#34;&#34;Return ``(grid, values)``: the fitted curve for one feature.
+    &#34;&#34;&#34;Return ``(grid, values)``, the fitted curve for one feature.
 
-    The values are on the (standardized, possibly log) fitting scale, which
-    is the scale on which the model is additive.
+    The values are on the scale the model was fit on, which is standardized
+    and may be logged. That is the scale on which the model is additive.
     &#34;&#34;&#34;
     check_is_fitted(self, &#34;main_values_&#34;)
     j = int(feature)
@@ -16686,13 +16669,6 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><a href="#demo-notebooks">Demo notebooks</a></li>
 <li><a href="#whats-the-difference-between-the-models">What's the difference between the models?</a><ul>
 <li><a href="#extras">Extras</a></li>
-</ul>
-</li>
-<li><a href="#our-favorite-models">Our favorite models</a><ul>
-<li><a href="#figs-fast-interpretable-greedy-tree-sums">FIGS: Fast interpretable greedy-tree sums</a></li>
-<li><a href="#gpgam-additive-gaussian-processes-over-binned-features">GPGam: additive Gaussian processes over binned features</a></li>
-<li><a href="#hierarchical-shrinkage-post-hoc-regularization-for-tree-based-methods">Hierarchical shrinkage: post-hoc regularization for tree-based methods</a></li>
-<li><a href="#mdi-flexible-tree-based-feature-importance">MDI+: Flexible Tree-Based Feature Importance</a></li>
 </ul>
 </li>
 <li><a href="#references">References</a></li>
