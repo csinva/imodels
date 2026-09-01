@@ -32,7 +32,7 @@ from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 from imodels.util.arguments import check_predict_X, set_feature_names_in
 
 
-class AddGPRegressor(RegressorMixin, BaseEstimator):
+class GPGamRegressor(RegressorMixin, BaseEstimator):
     """Additive Gaussian-process GAM with pairwise interactions.
 
     The fitted model is ``y = sum_j f_j(x_j) + sum_(a,b) f_ab(x_a, x_b)``, where
@@ -84,10 +84,10 @@ class AddGPRegressor(RegressorMixin, BaseEstimator):
 
     Examples
     --------
-    >>> from imodels import AddGPRegressor
+    >>> from imodels import GPGamRegressor
     >>> from sklearn.datasets import make_friedman1
     >>> X, y = make_friedman1(n_samples=500, random_state=0)
-    >>> model = AddGPRegressor().fit(X, y)
+    >>> model = GPGamRegressor().fit(X, y)
     >>> preds = model.predict(X)
     >>> grid, values = model.shape_function(0)   # feature 0's fitted curve
     """

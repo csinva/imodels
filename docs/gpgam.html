@@ -509,15 +509,15 @@
 
                 <div class="article" style="padding-right: 2%; padding-left: 2%;">
                     <p align="center">
-                    <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> AddGP: Additive Gaussian
+                    <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> GPGam: Additive Gaussian
                         Processes over Binned Features </h1>
                     </p>
                     <hr>
 
-                    <p><a href="https://csinva.io/imodels/algebraic/binned_additive_gp.html">🗂️ API</a>, <a
+                    <p><a href="https://csinva.io/imodels/algebraic/gp_gam.html">🗂️ API</a>, <a
                             href="https://github.com/csinva/imodels">🔗 Github</a></p>
 
-                    <p><b>AddGP</b> fits a generalized additive model with pairwise interactions
+                    <p><b>GPGam</b> fits a generalized additive model with pairwise interactions
                         (a GA<sup>2</sup>M) in which every shape function is a Gaussian process over the
                         quantile bins of its feature. Every structural choice the model makes &mdash; how
                         smooth each curve should be, which features matter, which interactions to include and
@@ -562,16 +562,16 @@ y.T @ y</code></pre>
                         then fit in blocks that share shrinkage, with each block's grid resolution chosen by
                         comparing marginal likelihoods.</p>
 
-                    <h2>An example using AddGP</h2>
+                    <h2>An example using GPGam</h2>
 
-                    <pre><code class="language-python">from imodels import AddGPRegressor
+                    <pre><code class="language-python">from imodels import GPGamRegressor
 from sklearn.datasets import make_friedman1
 from sklearn.model_selection import train_test_split
 
 X, y = make_friedman1(n_samples=800, noise=1.0, random_state=0)
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 
-model = AddGPRegressor().fit(X_train, y_train)
+model = GPGamRegressor().fit(X_train, y_train)
 preds = model.predict(X_test)</code></pre>
 
                     <p>The fitted model is a set of lookup tables, so it can be read directly rather than
@@ -581,19 +581,19 @@ preds = model.predict(X_test)</code></pre>
 model.interaction_terms()                # the pairs the model chose
 # [(0, 1), (6, 7), (4, 6), (3, 8)]</code></pre>
 
-                    <p>On this data the first interaction AddGP selects is <code>(0, 1)</code> &mdash; which is
+                    <p>On this data the first interaction GPGam selects is <code>(0, 1)</code> &mdash; which is
                         the interaction Friedman&rsquo;s function actually contains, since its first term is
                         <code>10&nbsp;sin(&pi;&nbsp;x&#8320;&nbsp;x&#8321;)</code>.</p>
 
                     <h2>How well does it do?</h2>
 
                     <p>Across four regression benchmark suites &mdash; 113 datasets in total, ranging from 50
-                        to 72,000 rows and up to 1,024 features &mdash; AddGP is the strongest interpretable
+                        to 72,000 rows and up to 1,024 features &mdash; GPGam is the strongest interpretable
                         model on three suites and ties explainable boosting machines on the fourth.</p>
 
                     <table>
                         <thead>
-                            <tr><th>Suite</th><th>AddGP</th><th>EBM</th><th>Notes</th></tr>
+                            <tr><th>Suite</th><th>GPGam</th><th>EBM</th><th>Notes</th></tr>
                         </thead>
                         <tbody>
                             <tr><td>imodels (65 datasets)</td><td><b>4.60</b></td><td>5.00</td>
@@ -636,7 +636,7 @@ model.interaction_terms()                # the pairs the model chose
                 <li>
                     <h3>Our favorite models</h3>
                     <ul>
-                        <li><a href="https://csinva.io/imodels/addgp.html">AddGP: additive Gaussian processes
+                        <li><a href="https://csinva.io/imodels/gpgam.html">GPGam: additive Gaussian processes
                                 over binned features</a></li>
                         <li><a href="https://csinva.io/imodels/shrinkage.html">Hierarchical shrinkage: post-hoc
                                 regularization for tree-based methods</a></li>
