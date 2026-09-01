@@ -34,9 +34,10 @@ from sklearn.utils import check_X_y
 
 from imodels.util.arguments import check_fit_arguments, check_predict_X
 from sklearn.utils.validation import check_is_fitted
+from imodels.util.introspection import RuleInspectionMixin
 
 
-class TaoTree(BaseEstimator):
+class TaoTree(RuleInspectionMixin, BaseEstimator):
 
     def __init__(self, model_type: str = &#39;CART&#39;,
                  n_iters: int = 20,
@@ -393,16 +394,6 @@ class TaoTree(BaseEstimator):
                 &#34;&#34;&#34;
 
         return num_updates
-
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
 
     @property
     def feature_importances_(self):
@@ -449,42 +440,7 @@ class TaoTreeClassifier(TaoTree, ClassifierMixin):
 <span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
-<p>Inheriting from this class provides default implementations of:</p>
-<ul>
-<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
-<li>textual and HTML representation displayed in terminals and IDEs;</li>
-<li>estimator serialization;</li>
-<li>parameters validation;</li>
-<li>data validation;</li>
-<li>feature names validation.</li>
-</ul>
-<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
-<h2 id="notes">Notes</h2>
-<p>All estimators should specify all the parameters that can be set
-at the class level in their <code>__init__</code> as explicit keyword
-arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
-<h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; from sklearn.base import BaseEstimator
-&gt;&gt;&gt; class MyEstimator(BaseEstimator):
-...     def __init__(self, *, param=1):
-...         self.param = param
-...     def fit(self, X, y=None):
-...         self.is_fitted_ = True
-...         return self
-...     def predict(self, X):
-...         return np.full(shape=X.shape[0], fill_value=self.param)
-&gt;&gt;&gt; estimator = MyEstimator(param=2)
-&gt;&gt;&gt; estimator.get_params()
-{'param': 2}
-&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
-&gt;&gt;&gt; y = np.array([1, 0, 1])
-&gt;&gt;&gt; estimator.fit(X, y).predict(X)
-array([2, 2, 2])
-&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
-array([3, 3, 3])
-</code></pre>
+<div class="desc"><p>Both of the above, for tree-based models that support each.</p>
 <p>TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
 <a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a>
 Note: this implementation learns single-feature splits rather than oblique trees.</p>
@@ -526,7 +482,7 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TaoTree(BaseEstimator):
+<pre><code class="python">class TaoTree(RuleInspectionMixin, BaseEstimator):
 
     def __init__(self, model_type: str = &#39;CART&#39;,
                  n_iters: int = 20,
@@ -884,16 +840,6 @@ Note: this implementation learns single-feature splits rather than oblique trees
 
         return num_updates
 
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
-
     @property
     def feature_importances_(self):
         &#34;&#34;&#34;Mean decrease in impurity of the fitted tree, as in sklearn.&#34;&#34;&#34;
@@ -918,9 +864,11 @@ Note: this implementation learns single-feature splits rather than oblique trees
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -946,21 +894,6 @@ def feature_importances_(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.tao.TaoTree.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def apply(self, X):
-    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-    from imodels.util.apply import apply_leaves
-    return apply_leaves(self, X)</code></pre>
-</details>
-</dd>
 <dt id="imodels.tree.tao.TaoTree.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, sample_weight=None)</span>
 </code></dt>
@@ -1020,21 +953,6 @@ are ignored while searching for a split in each node.</p></div>
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.tao.TaoTree.get_rules"><code class="name flex">
-<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_rules(self, feature_names=None):
-    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-    from imodels.util.get_rules import get_rules
-    return get_rules(self, feature_names=feature_names)</code></pre>
-</details>
-</dd>
 <dt id="imodels.tree.tao.TaoTree.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
@@ -1076,11 +994,10 @@ are ignored while searching for a split in each node.</p></div>
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a>, *, feature_names: bool | str | None = '$UNCHANGED$', sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1103,6 +1020,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1122,11 +1045,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1170,48 +1092,22 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="imodels.tree.tao.TaoTreeClassifier"><code class="flex name class">
 <span>class <span class="ident">TaoTreeClassifier</span></span>
 <span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
-<p>Inheriting from this class provides default implementations of:</p>
-<ul>
-<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
-<li>textual and HTML representation displayed in terminals and IDEs;</li>
-<li>estimator serialization;</li>
-<li>parameters validation;</li>
-<li>data validation;</li>
-<li>feature names validation.</li>
-</ul>
-<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
-<h2 id="notes">Notes</h2>
-<p>All estimators should specify all the parameters that can be set
-at the class level in their <code>__init__</code> as explicit keyword
-arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
-<h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; from sklearn.base import BaseEstimator
-&gt;&gt;&gt; class MyEstimator(BaseEstimator):
-...     def __init__(self, *, param=1):
-...         self.param = param
-...     def fit(self, X, y=None):
-...         self.is_fitted_ = True
-...         return self
-...     def predict(self, X):
-...         return np.full(shape=X.shape[0], fill_value=self.param)
-&gt;&gt;&gt; estimator = MyEstimator(param=2)
-&gt;&gt;&gt; estimator.get_params()
-{'param': 2}
-&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
-&gt;&gt;&gt; y = np.array([1, 0, 1])
-&gt;&gt;&gt; estimator.fit(X, y).predict(X)
-array([2, 2, 2])
-&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
-array([3, 3, 3])
-</code></pre>
+<div class="desc"><p>Both of the above, for tree-based models that support each.</p>
 <p>TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
 <a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a>
 Note: this implementation learns single-feature splits rather than oblique trees.</p>
@@ -1259,9 +1155,11 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></li>
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
@@ -1271,11 +1169,10 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.tao.TaoTreeClassifier" href="#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.tao.TaoTreeClassifier" href="#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1298,6 +1195,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1314,11 +1217,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1366,10 +1268,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.tao.TaoTree.apply" href="#imodels.tree.tao.TaoTree.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.feature_importances_" href="#imodels.tree.tao.TaoTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.tao.TaoTree.get_rules" href="#imodels.tree.tao.TaoTree.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.set_fit_request" href="#imodels.tree.tao.TaoTree.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
@@ -1380,42 +1282,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>(</span><span>model_type: str = 'CART', n_iters: int = 20, model_args: dict = None, randomize_tree=False, update_scoring='accuracy', min_node_samples_tao=3, min_leaf_samples_tao=2, node_model='stump', node_model_args: dict = None, reg_param: float = 0.001, weight_errors: bool = False, verbose: int = 0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
-<p>Inheriting from this class provides default implementations of:</p>
-<ul>
-<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
-<li>textual and HTML representation displayed in terminals and IDEs;</li>
-<li>estimator serialization;</li>
-<li>parameters validation;</li>
-<li>data validation;</li>
-<li>feature names validation.</li>
-</ul>
-<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
-<h2 id="notes">Notes</h2>
-<p>All estimators should specify all the parameters that can be set
-at the class level in their <code>__init__</code> as explicit keyword
-arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
-<h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; from sklearn.base import BaseEstimator
-&gt;&gt;&gt; class MyEstimator(BaseEstimator):
-...     def __init__(self, *, param=1):
-...         self.param = param
-...     def fit(self, X, y=None):
-...         self.is_fitted_ = True
-...         return self
-...     def predict(self, X):
-...         return np.full(shape=X.shape[0], fill_value=self.param)
-&gt;&gt;&gt; estimator = MyEstimator(param=2)
-&gt;&gt;&gt; estimator.get_params()
-{'param': 2}
-&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
-&gt;&gt;&gt; y = np.array([1, 0, 1])
-&gt;&gt;&gt; estimator.fit(X, y).predict(X)
-array([2, 2, 2])
-&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
-array([3, 3, 3])
-</code></pre>
+<div class="desc"><p>Both of the above, for tree-based models that support each.</p>
 <p>TAO: Alternating optimization of decision trees, with application to learning sparse oblique trees (Neurips 2018)
 <a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html</a>
 Note: this implementation learns single-feature splits rather than oblique trees.</p>
@@ -1463,9 +1330,11 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></li>
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>
@@ -1475,11 +1344,10 @@ Note: this implementation learns single-feature splits rather than oblique trees
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.tao.TaoTreeRegressor" href="#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.tao.TaoTreeRegressor" href="#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1502,6 +1370,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1518,11 +1392,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1570,10 +1443,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.tao.TaoTree.apply" href="#imodels.tree.tao.TaoTree.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.feature_importances_" href="#imodels.tree.tao.TaoTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.tao.TaoTree.get_rules" href="#imodels.tree.tao.TaoTree.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.tree.tao.TaoTree.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.set_fit_request" href="#imodels.tree.tao.TaoTree.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
@@ -1598,10 +1471,8 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li>
 <h4><code><a title="imodels.tree.tao.TaoTree" href="#imodels.tree.tao.TaoTree">TaoTree</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.tao.TaoTree.apply" href="#imodels.tree.tao.TaoTree.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.feature_importances_" href="#imodels.tree.tao.TaoTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.fit" href="#imodels.tree.tao.TaoTree.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.tao.TaoTree.get_rules" href="#imodels.tree.tao.TaoTree.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.predict" href="#imodels.tree.tao.TaoTree.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.predict_proba" href="#imodels.tree.tao.TaoTree.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.tao.TaoTree.set_fit_request" href="#imodels.tree.tao.TaoTree.set_fit_request">set_fit_request</a></code></li>

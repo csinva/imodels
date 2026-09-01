@@ -24,6 +24,7 @@
 <pre><code class="python">from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 import numpy as np
+from imodels.util.arguments import explicit_get_params, explicit_set_params
 
 
 class ShapGAM(BaseEstimator):
@@ -144,17 +145,13 @@ class ShapGAM(BaseEstimator):
 
             return preds
 
+    _PARAM_NAMES = (&#34;n_estimators&#34;, &#34;feature_fraction&#34;, &#34;random_state&#34;)
+
     def get_params(self, deep=True):
-        return {
-            &#34;n_estimators&#34;: self.n_estimators,
-            &#34;feature_fraction&#34;: self.feature_fraction,
-            &#34;random_state&#34;: self.random_state
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
-        for param, value in params.items():
-            setattr(self, param, value)
-        return self
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
 
 
 class ShapGAMRegressor(ShapGAM, RegressorMixin):
@@ -342,23 +339,18 @@ array([3, 3, 3])
 
             return preds
 
+    _PARAM_NAMES = (&#34;n_estimators&#34;, &#34;feature_fraction&#34;, &#34;random_state&#34;)
+
     def get_params(self, deep=True):
-        return {
-            &#34;n_estimators&#34;: self.n_estimators,
-            &#34;feature_fraction&#34;: self.feature_fraction,
-            &#34;random_state&#34;: self.random_state
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
-        for param, value in params.items():
-            setattr(self, param, value)
-        return self</code></pre>
+        return explicit_set_params(self, self._PARAM_NAMES, **params)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -430,11 +422,7 @@ contained subobjects that are estimators.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_params(self, deep=True):
-    return {
-        &#34;n_estimators&#34;: self.n_estimators,
-        &#34;feature_fraction&#34;: self.feature_fraction,
-        &#34;random_state&#34;: self.random_state
-    }</code></pre>
+    return explicit_get_params(self, self._PARAM_NAMES, deep=deep)</code></pre>
 </details>
 </dd>
 <dt id="imodels.algebraic.gam_shap.ShapGAM.predict"><code class="name flex">
@@ -551,9 +539,7 @@ possible to update each component of a nested object.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_params(self, **params):
-    for param, value in params.items():
-        setattr(self, param, value)
-    return self</code></pre>
+    return explicit_set_params(self, self._PARAM_NAMES, **params)</code></pre>
 </details>
 </dd>
 </dl>
@@ -615,8 +601,7 @@ array([3, 3, 3])
 <ul class="hlist">
 <li><a title="imodels.algebraic.gam_shap.ShapGAM" href="#imodels.algebraic.gam_shap.ShapGAM">ShapGAM</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
@@ -626,11 +611,10 @@ array([3, 3, 3])
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.gam_shap.ShapGAMClassifier" href="#imodels.algebraic.gam_shap.ShapGAMClassifier">ShapGAMClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.gam_shap.ShapGAMClassifier" href="#imodels.algebraic.gam_shap.ShapGAMClassifier">ShapGAMClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -653,6 +637,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -669,11 +659,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -787,8 +776,7 @@ array([3, 3, 3])
 <ul class="hlist">
 <li><a title="imodels.algebraic.gam_shap.ShapGAM" href="#imodels.algebraic.gam_shap.ShapGAM">ShapGAM</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>
@@ -798,11 +786,10 @@ array([3, 3, 3])
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.gam_shap.ShapGAMRegressor" href="#imodels.algebraic.gam_shap.ShapGAMRegressor">ShapGAMRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.gam_shap.ShapGAMRegressor" href="#imodels.algebraic.gam_shap.ShapGAMRegressor">ShapGAMRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -825,6 +812,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -841,11 +834,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(

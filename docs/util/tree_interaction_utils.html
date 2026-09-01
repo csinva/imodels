@@ -21,11 +21,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import itertools
-from typing import Set, Tuple
-
-import numpy as np
-import pandas as pd
+<pre><code class="python">import numpy as np
 
 
 def make_rj(n=300, p=50):
@@ -84,64 +80,7 @@ def make_vp(n=100, p=100):
 
     y = effects + interactions + np.random.normal(scale=0.14, size=n)
 
-    return X, y
-
-
-def get_gt(dataset_name):
-    important_features = []
-    interactions = []
-    if dataset_name == &#34;friedman1&#34;:
-        important_features = [0, 1, 2, 3, 4]
-        interactions = [(0, 1)]
-    elif dataset_name == &#34;radchenko_james&#34;:
-        important_features = [0, 1, 2, 3, 4]
-        interactions = [(0, 1), (0, 2)]
-    elif dataset_name == &#34;vo_pati&#34;:
-        important_features = [0, 1, 2, 3, 4]
-        interactions = [(0, 1), (1, 2), (2, 3)]
-
-    return set(important_features), set(interactions)
-
-
-def get_important_features(importance, k):
-    return set(np.argsort(importance)[0:k])
-
-
-def get_interacting_features(interaction, k):
-    scores_list = []
-    for ind_1, ind_2 in itertools.combinations(range(interaction.shape[0]), 2):
-        scores_list.append([interaction[ind_1, ind_2], ind_1, ind_2])
-    df = pd.DataFrame(scores_list)
-    df = df.sort_values(0, ascending=False)
-    interactions = []
-    for i in range(k):
-        interactions.append((df.iloc[i, 1], df.iloc[i, 2]))
-    return set(interactions)
-
-
-def interaction_fpr(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
-    if len(i_gt) == 0:
-        return
-    n_pairs = 0.5 * p * (p - 1)
-    n_non_interacting_pairs = (n_pairs - len(i_gt))
-    return len(i_hat.difference(i_gt)) / n_non_interacting_pairs
-
-
-def interaction_tpr(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
-    if len(i_gt) == 0:
-        return
-    n_interactions = len(i_gt)
-    return len(i_hat.intersection(i_gt)) / n_interactions
-
-
-def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
-    if len(i_gt) == 0:
-        return
-    recall = len(i_gt.intersection(i_hat)) / len(i_gt)
-    precision = interaction_tpr(i_hat, i_gt, p)
-    if recall + precision == 0:
-        return 0
-    return 2 * ((precision * recall) / (precision + recall))</code></pre>
+    return X, y</code></pre>
 </details>
 </section>
 <section>
@@ -151,117 +90,6 @@ def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="imodels.util.tree_interaction_utils.get_gt"><code class="name flex">
-<span>def <span class="ident">get_gt</span></span>(<span>dataset_name)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_gt(dataset_name):
-    important_features = []
-    interactions = []
-    if dataset_name == &#34;friedman1&#34;:
-        important_features = [0, 1, 2, 3, 4]
-        interactions = [(0, 1)]
-    elif dataset_name == &#34;radchenko_james&#34;:
-        important_features = [0, 1, 2, 3, 4]
-        interactions = [(0, 1), (0, 2)]
-    elif dataset_name == &#34;vo_pati&#34;:
-        important_features = [0, 1, 2, 3, 4]
-        interactions = [(0, 1), (1, 2), (2, 3)]
-
-    return set(important_features), set(interactions)</code></pre>
-</details>
-</dd>
-<dt id="imodels.util.tree_interaction_utils.get_important_features"><code class="name flex">
-<span>def <span class="ident">get_important_features</span></span>(<span>importance, k)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_important_features(importance, k):
-    return set(np.argsort(importance)[0:k])</code></pre>
-</details>
-</dd>
-<dt id="imodels.util.tree_interaction_utils.get_interacting_features"><code class="name flex">
-<span>def <span class="ident">get_interacting_features</span></span>(<span>interaction, k)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_interacting_features(interaction, k):
-    scores_list = []
-    for ind_1, ind_2 in itertools.combinations(range(interaction.shape[0]), 2):
-        scores_list.append([interaction[ind_1, ind_2], ind_1, ind_2])
-    df = pd.DataFrame(scores_list)
-    df = df.sort_values(0, ascending=False)
-    interactions = []
-    for i in range(k):
-        interactions.append((df.iloc[i, 1], df.iloc[i, 2]))
-    return set(interactions)</code></pre>
-</details>
-</dd>
-<dt id="imodels.util.tree_interaction_utils.interaction_f1"><code class="name flex">
-<span>def <span class="ident">interaction_f1</span></span>(<span>i_gt: Set[Tuple], i_hat: Set[Tuple], p: int)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def interaction_f1(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
-    if len(i_gt) == 0:
-        return
-    recall = len(i_gt.intersection(i_hat)) / len(i_gt)
-    precision = interaction_tpr(i_hat, i_gt, p)
-    if recall + precision == 0:
-        return 0
-    return 2 * ((precision * recall) / (precision + recall))</code></pre>
-</details>
-</dd>
-<dt id="imodels.util.tree_interaction_utils.interaction_fpr"><code class="name flex">
-<span>def <span class="ident">interaction_fpr</span></span>(<span>i_gt: Set[Tuple], i_hat: Set[Tuple], p: int)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def interaction_fpr(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
-    if len(i_gt) == 0:
-        return
-    n_pairs = 0.5 * p * (p - 1)
-    n_non_interacting_pairs = (n_pairs - len(i_gt))
-    return len(i_hat.difference(i_gt)) / n_non_interacting_pairs</code></pre>
-</details>
-</dd>
-<dt id="imodels.util.tree_interaction_utils.interaction_tpr"><code class="name flex">
-<span>def <span class="ident">interaction_tpr</span></span>(<span>i_gt: Set[Tuple], i_hat: Set[Tuple], p: int)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def interaction_tpr(i_gt: Set[Tuple], i_hat: Set[Tuple], p: int):
-    if len(i_gt) == 0:
-        return
-    n_interactions = len(i_gt)
-    return len(i_hat.intersection(i_gt)) / n_interactions</code></pre>
-</details>
-</dd>
 <dt id="imodels.util.tree_interaction_utils.make_rj"><code class="name flex">
 <span>def <span class="ident">make_rj</span></span>(<span>n=300, p=50)</span>
 </code></dt>
@@ -382,12 +210,6 @@ y = x1 + x2^2 + x3 + x4^2 + x5 + x1x2 + x2x3 + x3x4 + N(0, 0.14)</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="imodels.util.tree_interaction_utils.get_gt" href="#imodels.util.tree_interaction_utils.get_gt">get_gt</a></code></li>
-<li><code><a title="imodels.util.tree_interaction_utils.get_important_features" href="#imodels.util.tree_interaction_utils.get_important_features">get_important_features</a></code></li>
-<li><code><a title="imodels.util.tree_interaction_utils.get_interacting_features" href="#imodels.util.tree_interaction_utils.get_interacting_features">get_interacting_features</a></code></li>
-<li><code><a title="imodels.util.tree_interaction_utils.interaction_f1" href="#imodels.util.tree_interaction_utils.interaction_f1">interaction_f1</a></code></li>
-<li><code><a title="imodels.util.tree_interaction_utils.interaction_fpr" href="#imodels.util.tree_interaction_utils.interaction_fpr">interaction_fpr</a></code></li>
-<li><code><a title="imodels.util.tree_interaction_utils.interaction_tpr" href="#imodels.util.tree_interaction_utils.interaction_tpr">interaction_tpr</a></code></li>
 <li><code><a title="imodels.util.tree_interaction_utils.make_rj" href="#imodels.util.tree_interaction_utils.make_rj">make_rj</a></code></li>
 <li><code><a title="imodels.util.tree_interaction_utils.make_vp" href="#imodels.util.tree_interaction_utils.make_vp">make_vp</a></code></li>
 </ul>

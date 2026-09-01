@@ -26,7 +26,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin
-from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
+from sklearn.utils.validation import check_X_y, check_is_fitted
 from sklearn.utils.multiclass import check_classification_targets
 import scipy.sparse
 
@@ -143,6 +143,44 @@ def check_predict_X(model, X):
     return X
 
 
+def explicit_get_params(model, names, deep=True):
+    &#34;&#34;&#34;get_params for a model whose __init__ takes *args/**kwargs.
+
+    sklearn builds get_params by introspecting __init__, and refuses to do so
+    when the signature has varargs; such models have to spell their parameters
+    out. This keeps them honoring ``deep``, which is what lets a search tune a
+    nested estimator via ``&lt;param&gt;__&lt;subparam&gt;``.
+    &#34;&#34;&#34;
+    params = {name: getattr(model, name) for name in names}
+    if deep:
+        for name, value in list(params.items()):
+            if hasattr(value, &#39;get_params&#39;):
+                params.update({f&#39;{name}__{k}&#39;: v
+                               for k, v in value.get_params().items()})
+    return params
+
+
+def explicit_set_params(model, names, **params):
+    &#34;&#34;&#34;The counterpart to `explicit_get_params`, handling nested parameters.
+
+    Split on the known parameter names rather than on the first ``__``: several
+    of these parameters are themselves named with a trailing underscore (e.g.
+    ``estimator_``), so ``estimator___max_depth`` would otherwise be read as
+    ``estimator`` plus ``_max_depth``.
+    &#34;&#34;&#34;
+    nested = {}
+    for key, value in params.items():
+        for name in sorted(names, key=len, reverse=True):
+            if key.startswith(name + &#39;__&#39;):
+                nested.setdefault(name, {})[key[len(name) + 2:]] = value
+                break
+        else:
+            setattr(model, key, value)
+    for name, subparams in nested.items():
+        getattr(model, name).set_params(**subparams)
+    return model
+
+
 def set_feature_names_in(model, X):
     &#34;&#34;&#34;Set the sklearn-standard ``feature_names_in_`` if X carries string column names.
 
@@ -154,15 +192,6 @@ def set_feature_names_in(model, X):
         model.feature_names_in_ = np.asarray(X.columns, dtype=object)
         return True
     return False
-
-
-def check_fit_X(X):
-    &#34;&#34;&#34;Process X argument for fit and predict methods.
-    &#34;&#34;&#34;
-    if scipy.sparse.issparse(X):
-        X = X.toarray()
-    X = check_array(X)
-    return X
 
 
 def decode_labels(model, preds):
@@ -213,24 +242,6 @@ predict_proba returns two columns rather than one per class
             &#34;multiclass include FIGSClassifier, GreedyTreeClassifier, &#34;
             &#34;HSTreeClassifier, TaoTreeClassifier and BoostedRulesClassifier.&#34;
         )</code></pre>
-</details>
-</dd>
-<dt id="imodels.util.arguments.check_fit_X"><code class="name flex">
-<span>def <span class="ident">check_fit_X</span></span>(<span>X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Process X argument for fit and predict methods.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def check_fit_X(X):
-    &#34;&#34;&#34;Process X argument for fit and predict methods.
-    &#34;&#34;&#34;
-    if scipy.sparse.issparse(X):
-        X = X.toarray()
-    X = check_array(X)
-    return X</code></pre>
 </details>
 </dd>
 <dt id="imodels.util.arguments.check_fit_arguments"><code class="name flex">
@@ -376,6 +387,70 @@ drawn from <code>classes_</code> (which may be strings, or ints that aren't 0/1)
     return classes[preds.astype(int)]</code></pre>
 </details>
 </dd>
+<dt id="imodels.util.arguments.explicit_get_params"><code class="name flex">
+<span>def <span class="ident">explicit_get_params</span></span>(<span>model, names, deep=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>get_params for a model whose <strong>init</strong> takes <em>args/</em>*kwargs.</p>
+<p>sklearn builds get_params by introspecting <strong>init</strong>, and refuses to do so
+when the signature has varargs; such models have to spell their parameters
+out. This keeps them honoring <code>deep</code>, which is what lets a search tune a
+nested estimator via <code>&lt;param&gt;__&lt;subparam&gt;</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def explicit_get_params(model, names, deep=True):
+    &#34;&#34;&#34;get_params for a model whose __init__ takes *args/**kwargs.
+
+    sklearn builds get_params by introspecting __init__, and refuses to do so
+    when the signature has varargs; such models have to spell their parameters
+    out. This keeps them honoring ``deep``, which is what lets a search tune a
+    nested estimator via ``&lt;param&gt;__&lt;subparam&gt;``.
+    &#34;&#34;&#34;
+    params = {name: getattr(model, name) for name in names}
+    if deep:
+        for name, value in list(params.items()):
+            if hasattr(value, &#39;get_params&#39;):
+                params.update({f&#39;{name}__{k}&#39;: v
+                               for k, v in value.get_params().items()})
+    return params</code></pre>
+</details>
+</dd>
+<dt id="imodels.util.arguments.explicit_set_params"><code class="name flex">
+<span>def <span class="ident">explicit_set_params</span></span>(<span>model, names, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The counterpart to <code><a title="imodels.util.arguments.explicit_get_params" href="#imodels.util.arguments.explicit_get_params">explicit_get_params()</a></code>, handling nested parameters.</p>
+<p>Split on the known parameter names rather than on the first <code>__</code>: several
+of these parameters are themselves named with a trailing underscore (e.g.
+<code>estimator_</code>), so <code>estimator___max_depth</code> would otherwise be read as
+<code>estimator</code> plus <code>_max_depth</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def explicit_set_params(model, names, **params):
+    &#34;&#34;&#34;The counterpart to `explicit_get_params`, handling nested parameters.
+
+    Split on the known parameter names rather than on the first ``__``: several
+    of these parameters are themselves named with a trailing underscore (e.g.
+    ``estimator_``), so ``estimator___max_depth`` would otherwise be read as
+    ``estimator`` plus ``_max_depth``.
+    &#34;&#34;&#34;
+    nested = {}
+    for key, value in params.items():
+        for name in sorted(names, key=len, reverse=True):
+            if key.startswith(name + &#39;__&#39;):
+                nested.setdefault(name, {})[key[len(name) + 2:]] = value
+                break
+        else:
+            setattr(model, key, value)
+    for name, subparams in nested.items():
+        getattr(model, name).set_params(**subparams)
+    return model</code></pre>
+</details>
+</dd>
 <dt id="imodels.util.arguments.set_feature_names_in"><code class="name flex">
 <span>def <span class="ident">set_feature_names_in</span></span>(<span>model, X)</span>
 </code></dt>
@@ -420,10 +495,11 @@ again afterwards.</p></div>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="imodels.util.arguments.check_binary_target" href="#imodels.util.arguments.check_binary_target">check_binary_target</a></code></li>
-<li><code><a title="imodels.util.arguments.check_fit_X" href="#imodels.util.arguments.check_fit_X">check_fit_X</a></code></li>
 <li><code><a title="imodels.util.arguments.check_fit_arguments" href="#imodels.util.arguments.check_fit_arguments">check_fit_arguments</a></code></li>
 <li><code><a title="imodels.util.arguments.check_predict_X" href="#imodels.util.arguments.check_predict_X">check_predict_X</a></code></li>
 <li><code><a title="imodels.util.arguments.decode_labels" href="#imodels.util.arguments.decode_labels">decode_labels</a></code></li>
+<li><code><a title="imodels.util.arguments.explicit_get_params" href="#imodels.util.arguments.explicit_get_params">explicit_get_params</a></code></li>
+<li><code><a title="imodels.util.arguments.explicit_set_params" href="#imodels.util.arguments.explicit_set_params">explicit_set_params</a></code></li>
 <li><code><a title="imodels.util.arguments.set_feature_names_in" href="#imodels.util.arguments.set_feature_names_in">set_feature_names_in</a></code></li>
 </ul>
 </li>

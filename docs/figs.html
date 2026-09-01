@@ -220,6 +220,7 @@
 </li>
 <li><a href="index.html#our-favorite-models">Our favorite models</a><ul>
 <li><a href="index.html#figs-fast-interpretable-greedy-tree-sums">FIGS: Fast interpretable greedy-tree sums</a></li>
+<li><a href="index.html#gpgam-additive-gaussian-processes-over-binned-features">GPGam: additive Gaussian processes over binned features</a></li>
 <li><a href="index.html#hierarchical-shrinkage-post-hoc-regularization-for-tree-based-methods">Hierarchical shrinkage: post-hoc regularization for tree-based methods</a></li>
 <li><a href="index.html#mdi-flexible-tree-based-feature-importance">MDI+: Flexible Tree-Based Feature Importance</a></li>
 </ul>
@@ -233,6 +234,7 @@
 <li><a href="https://csinva.io/imodels/shrinkage.html">Hierarchical shrinkage: post-hoc regularization for tree-based methods</a></li>
 <li><a href="https://csinva.io/imodels/figs.html">FIGS: Fast interpretable greedy-tree sums</a></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html">MDI+: Flexible tree-based feature importance</a></li>
+<li><a href="https://csinva.io/imodels/gpgam.html">GPGam: Additive Gaussian processes over binned features</a></li>
 </ul>
 </li>
 <li><h3><a href="index.html#header-submodules">Sub-modules</a></h3>
@@ -246,6 +248,376 @@
 <li><code><a title="imodels.rule_set" href="rule_set/index.html">imodels.rule_set</a></code></li>
 <li><code><a title="imodels.tree" href="tree/index.html">imodels.tree</a></code></li>
 <li><code><a title="imodels.util" href="util/index.html">imodels.util</a></code></li>
+</ul>
+</li>
+<li><h3><a href="index.html#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="imodels.explain_classification_errors" href="index.html#imodels.explain_classification_errors">explain_classification_errors</a></code></li>
+<li><code><a title="imodels.get_clean_dataset" href="index.html#imodels.get_clean_dataset">get_clean_dataset</a></code></li>
+<li><code><a title="imodels.get_rules" href="index.html#imodels.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.shadow_tree" href="index.html#imodels.shadow_tree">shadow_tree</a></code></li>
+</ul>
+</li>
+<li><h3><a href="index.html#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.AutoInterpretableClassifier" href="index.html#imodels.AutoInterpretableClassifier">AutoInterpretableClassifier</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.AutoInterpretableRegressor" href="index.html#imodels.AutoInterpretableRegressor">AutoInterpretableRegressor</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.BART" href="index.html#imodels.BART">BART</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.BART.sample_complexity" href="index.html#imodels.BART.sample_complexity">sample_complexity</a></code></li>
+<li><code><a title="imodels.BART.sub_forest" href="index.html#imodels.BART.sub_forest">sub_forest</a></code></li>
+<li><code><a title="imodels.BART.trees" href="index.html#imodels.BART.trees">trees</a></code></li>
+<li><code><a title="imodels.BART.update_complexity" href="index.html#imodels.BART.update_complexity">update_complexity</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.BRLDiscretizer" href="index.html#imodels.BRLDiscretizer">BRLDiscretizer</a></code></h4>
+<ul class="two-column">
+<li><code><a title="imodels.BRLDiscretizer.data" href="index.html#imodels.BRLDiscretizer.data">data</a></code></li>
+<li><code><a title="imodels.BRLDiscretizer.discretize" href="index.html#imodels.BRLDiscretizer.discretize">discretize</a></code></li>
+<li><code><a title="imodels.BRLDiscretizer.fit" href="index.html#imodels.BRLDiscretizer.fit">fit</a></code></li>
+<li><code><a title="imodels.BRLDiscretizer.fit_transform" href="index.html#imodels.BRLDiscretizer.fit_transform">fit_transform</a></code></li>
+<li><code><a title="imodels.BRLDiscretizer.get_onehot_df" href="index.html#imodels.BRLDiscretizer.get_onehot_df">get_onehot_df</a></code></li>
+<li><code><a title="imodels.BRLDiscretizer.onehot_df" href="index.html#imodels.BRLDiscretizer.onehot_df">onehot_df</a></code></li>
+<li><code><a title="imodels.BRLDiscretizer.transform" href="index.html#imodels.BRLDiscretizer.transform">transform</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.BasicDiscretizer" href="index.html#imodels.BasicDiscretizer">BasicDiscretizer</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.BasicDiscretizer.fit" href="index.html#imodels.BasicDiscretizer.fit">fit</a></code></li>
+<li><code><a title="imodels.BasicDiscretizer.transform" href="index.html#imodels.BasicDiscretizer.transform">transform</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.BayesianRuleListClassifier" href="index.html#imodels.BayesianRuleListClassifier">BayesianRuleListClassifier</a></code></h4>
+<ul class="two-column">
+<li><code><a title="imodels.BayesianRuleListClassifier.fit" href="index.html#imodels.BayesianRuleListClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.BayesianRuleListClassifier.predict" href="index.html#imodels.BayesianRuleListClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.BayesianRuleListClassifier.predict_proba" href="index.html#imodels.BayesianRuleListClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.BayesianRuleListClassifier.seed" href="index.html#imodels.BayesianRuleListClassifier.seed">seed</a></code></li>
+<li><code><a title="imodels.BayesianRuleListClassifier.set_fit_request" href="index.html#imodels.BayesianRuleListClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.BayesianRuleListClassifier.set_predict_request" href="index.html#imodels.BayesianRuleListClassifier.set_predict_request">set_predict_request</a></code></li>
+<li><code><a title="imodels.BayesianRuleListClassifier.set_score_request" href="index.html#imodels.BayesianRuleListClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.BayesianRuleSetClassifier" href="index.html#imodels.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.BayesianRuleSetClassifier.fit" href="index.html#imodels.BayesianRuleSetClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.BayesianRuleSetClassifier.predict" href="index.html#imodels.BayesianRuleSetClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.BayesianRuleSetClassifier.predict_proba" href="index.html#imodels.BayesianRuleSetClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.BayesianRuleSetClassifier.set_fit_request" href="index.html#imodels.BayesianRuleSetClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.BayesianRuleSetClassifier.set_score_request" href="index.html#imodels.BayesianRuleSetClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.BoostedRulesClassifier" href="index.html#imodels.BoostedRulesClassifier">BoostedRulesClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.BoostedRulesClassifier.fit" href="index.html#imodels.BoostedRulesClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.BoostedRulesClassifier.set_fit_request" href="index.html#imodels.BoostedRulesClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.BoostedRulesClassifier.set_score_request" href="index.html#imodels.BoostedRulesClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.BoostedRulesRegressor" href="index.html#imodels.BoostedRulesRegressor">BoostedRulesRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.BoostedRulesRegressor.fit" href="index.html#imodels.BoostedRulesRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.BoostedRulesRegressor.set_fit_request" href="index.html#imodels.BoostedRulesRegressor.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.BoostedRulesRegressor.set_score_request" href="index.html#imodels.BoostedRulesRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.C45TreeClassifier" href="index.html#imodels.C45TreeClassifier">C45TreeClassifier</a></code></h4>
+<ul class="two-column">
+<li><code><a title="imodels.C45TreeClassifier.fit" href="index.html#imodels.C45TreeClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.C45TreeClassifier.grow_tree" href="index.html#imodels.C45TreeClassifier.grow_tree">grow_tree</a></code></li>
+<li><code><a title="imodels.C45TreeClassifier.impute_nodes" href="index.html#imodels.C45TreeClassifier.impute_nodes">impute_nodes</a></code></li>
+<li><code><a title="imodels.C45TreeClassifier.predict" href="index.html#imodels.C45TreeClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.C45TreeClassifier.predict_proba" href="index.html#imodels.C45TreeClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.C45TreeClassifier.raw_preds" href="index.html#imodels.C45TreeClassifier.raw_preds">raw_preds</a></code></li>
+<li><code><a title="imodels.C45TreeClassifier.root" href="index.html#imodels.C45TreeClassifier.root">root</a></code></li>
+<li><code><a title="imodels.C45TreeClassifier.set_fit_request" href="index.html#imodels.C45TreeClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.C45TreeClassifier.set_score_request" href="index.html#imodels.C45TreeClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.DecisionTreeCCPClassifier" href="index.html#imodels.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.DecisionTreeCCPClassifier.feature_importances_" href="index.html#imodels.DecisionTreeCCPClassifier.feature_importances_">feature_importances_</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPClassifier.fit" href="index.html#imodels.DecisionTreeCCPClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPClassifier.get_params" href="index.html#imodels.DecisionTreeCCPClassifier.get_params">get_params</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPClassifier.predict" href="index.html#imodels.DecisionTreeCCPClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPClassifier.predict_proba" href="index.html#imodels.DecisionTreeCCPClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPClassifier.score" href="index.html#imodels.DecisionTreeCCPClassifier.score">score</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPClassifier.set_fit_request" href="index.html#imodels.DecisionTreeCCPClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPClassifier.set_params" href="index.html#imodels.DecisionTreeCCPClassifier.set_params">set_params</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.DecisionTreeCCPRegressor" href="index.html#imodels.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.DecisionTreeCCPRegressor.feature_importances_" href="index.html#imodels.DecisionTreeCCPRegressor.feature_importances_">feature_importances_</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPRegressor.fit" href="index.html#imodels.DecisionTreeCCPRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPRegressor.get_params" href="index.html#imodels.DecisionTreeCCPRegressor.get_params">get_params</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPRegressor.predict" href="index.html#imodels.DecisionTreeCCPRegressor.predict">predict</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPRegressor.score" href="index.html#imodels.DecisionTreeCCPRegressor.score">score</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPRegressor.set_fit_request" href="index.html#imodels.DecisionTreeCCPRegressor.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.DecisionTreeCCPRegressor.set_params" href="index.html#imodels.DecisionTreeCCPRegressor.set_params">set_params</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.DistilledRegressor" href="index.html#imodels.DistilledRegressor">DistilledRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.DistilledRegressor.fit" href="index.html#imodels.DistilledRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.DistilledRegressor.predict" href="index.html#imodels.DistilledRegressor.predict">predict</a></code></li>
+<li><code><a title="imodels.DistilledRegressor.set_score_request" href="index.html#imodels.DistilledRegressor.set_score_request">set_score_request</a></code></li>
+<li><code><a title="imodels.DistilledRegressor.set_student_params" href="index.html#imodels.DistilledRegressor.set_student_params">set_student_params</a></code></li>
+<li><code><a title="imodels.DistilledRegressor.set_teacher_params" href="index.html#imodels.DistilledRegressor.set_teacher_params">set_teacher_params</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.FIGSClassifier" href="index.html#imodels.FIGSClassifier">FIGSClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.FIGSClassifier.class_map" href="index.html#imodels.FIGSClassifier.class_map">class_map</a></code></li>
+<li><code><a title="imodels.FIGSClassifier.decision_function" href="index.html#imodels.FIGSClassifier.decision_function">decision_function</a></code></li>
+<li><code><a title="imodels.FIGSClassifier.set_score_request" href="index.html#imodels.FIGSClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.FIGSClassifierCV" href="index.html#imodels.FIGSClassifierCV">FIGSClassifierCV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.FIGSClassifierCV.set_score_request" href="index.html#imodels.FIGSClassifierCV.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.FIGSRegressor" href="index.html#imodels.FIGSRegressor">FIGSRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.FIGSRegressor.set_score_request" href="index.html#imodels.FIGSRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.FIGSRegressorCV" href="index.html#imodels.FIGSRegressorCV">FIGSRegressorCV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.FIGSRegressorCV.set_score_request" href="index.html#imodels.FIGSRegressorCV.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.FPLassoClassifier" href="index.html#imodels.FPLassoClassifier">FPLassoClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.FPLassoClassifier.set_score_request" href="index.html#imodels.FPLassoClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.FPLassoRegressor" href="index.html#imodels.FPLassoRegressor">FPLassoRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.FPLassoRegressor.set_score_request" href="index.html#imodels.FPLassoRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.FPSkopeClassifier" href="index.html#imodels.FPSkopeClassifier">FPSkopeClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.FPSkopeClassifier.set_fit_request" href="index.html#imodels.FPSkopeClassifier.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.FastFrugalTreeClassifier" href="index.html#imodels.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.FastFrugalTreeClassifier.fit" href="index.html#imodels.FastFrugalTreeClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.FastFrugalTreeClassifier.predict" href="index.html#imodels.FastFrugalTreeClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.FastFrugalTreeClassifier.predict_proba" href="index.html#imodels.FastFrugalTreeClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.FastFrugalTreeClassifier.set_fit_request" href="index.html#imodels.FastFrugalTreeClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.FastFrugalTreeClassifier.set_score_request" href="index.html#imodels.FastFrugalTreeClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.GPGamRegressor" href="index.html#imodels.GPGamRegressor">GPGamRegressor</a></code></h4>
+<ul class="two-column">
+<li><code><a title="imodels.GPGamRegressor.fit" href="index.html#imodels.GPGamRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.GPGamRegressor.interaction_terms" href="index.html#imodels.GPGamRegressor.interaction_terms">interaction_terms</a></code></li>
+<li><code><a title="imodels.GPGamRegressor.predict" href="index.html#imodels.GPGamRegressor.predict">predict</a></code></li>
+<li><code><a title="imodels.GPGamRegressor.set_fit_request" href="index.html#imodels.GPGamRegressor.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.GPGamRegressor.set_score_request" href="index.html#imodels.GPGamRegressor.set_score_request">set_score_request</a></code></li>
+<li><code><a title="imodels.GPGamRegressor.shape_function" href="index.html#imodels.GPGamRegressor.shape_function">shape_function</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.GreedyRuleListClassifier" href="index.html#imodels.GreedyRuleListClassifier">GreedyRuleListClassifier</a></code></h4>
+<ul class="two-column">
+<li><code><a title="imodels.GreedyRuleListClassifier.fit" href="index.html#imodels.GreedyRuleListClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.GreedyRuleListClassifier.fit_node_recursive" href="index.html#imodels.GreedyRuleListClassifier.fit_node_recursive">fit_node_recursive</a></code></li>
+<li><code><a title="imodels.GreedyRuleListClassifier.predict" href="index.html#imodels.GreedyRuleListClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.GreedyRuleListClassifier.predict_proba" href="index.html#imodels.GreedyRuleListClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.GreedyRuleListClassifier.set_fit_request" href="index.html#imodels.GreedyRuleListClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.GreedyRuleListClassifier.set_score_request" href="index.html#imodels.GreedyRuleListClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.GreedyTreeClassifier" href="index.html#imodels.GreedyTreeClassifier">GreedyTreeClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.GreedyTreeClassifier.fit" href="index.html#imodels.GreedyTreeClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.GreedyTreeClassifier.set_fit_request" href="index.html#imodels.GreedyTreeClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.GreedyTreeClassifier.set_predict_proba_request" href="index.html#imodels.GreedyTreeClassifier.set_predict_proba_request">set_predict_proba_request</a></code></li>
+<li><code><a title="imodels.GreedyTreeClassifier.set_predict_request" href="index.html#imodels.GreedyTreeClassifier.set_predict_request">set_predict_request</a></code></li>
+<li><code><a title="imodels.GreedyTreeClassifier.set_score_request" href="index.html#imodels.GreedyTreeClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.GreedyTreeRegressor" href="index.html#imodels.GreedyTreeRegressor">GreedyTreeRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.GreedyTreeRegressor.fit" href="index.html#imodels.GreedyTreeRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.GreedyTreeRegressor.set_fit_request" href="index.html#imodels.GreedyTreeRegressor.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.GreedyTreeRegressor.set_predict_request" href="index.html#imodels.GreedyTreeRegressor.set_predict_request">set_predict_request</a></code></li>
+<li><code><a title="imodels.GreedyTreeRegressor.set_score_request" href="index.html#imodels.GreedyTreeRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.HSDecisionTreeCCPClassifierCV" href="index.html#imodels.HSDecisionTreeCCPClassifierCV">HSDecisionTreeCCPClassifierCV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.HSDecisionTreeCCPClassifierCV.fit" href="index.html#imodels.HSDecisionTreeCCPClassifierCV.fit">fit</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.HSDecisionTreeCCPRegressorCV" href="index.html#imodels.HSDecisionTreeCCPRegressorCV">HSDecisionTreeCCPRegressorCV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.HSDecisionTreeCCPRegressorCV.fit" href="index.html#imodels.HSDecisionTreeCCPRegressorCV.fit">fit</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.HSTreeClassifier" href="index.html#imodels.HSTreeClassifier">HSTreeClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.HSTreeClassifier.set_score_request" href="index.html#imodels.HSTreeClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.HSTreeClassifierCV" href="index.html#imodels.HSTreeClassifierCV">HSTreeClassifierCV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.HSTreeClassifierCV.fit" href="index.html#imodels.HSTreeClassifierCV.fit">fit</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.HSTreeRegressor" href="index.html#imodels.HSTreeRegressor">HSTreeRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.HSTreeRegressor.set_score_request" href="index.html#imodels.HSTreeRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.HSTreeRegressorCV" href="index.html#imodels.HSTreeRegressorCV">HSTreeRegressorCV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.HSTreeRegressorCV.fit" href="index.html#imodels.HSTreeRegressorCV.fit">fit</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.MDLPDiscretizer" href="index.html#imodels.MDLPDiscretizer">MDLPDiscretizer</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.MDLPDiscretizer.MDLPC_criterion" href="index.html#imodels.MDLPDiscretizer.MDLPC_criterion">MDLPC_criterion</a></code></li>
+<li><code><a title="imodels.MDLPDiscretizer.fit" href="index.html#imodels.MDLPDiscretizer.fit">fit</a></code></li>
+<li><code><a title="imodels.MDLPDiscretizer.fit_transform" href="index.html#imodels.MDLPDiscretizer.fit_transform">fit_transform</a></code></li>
+<li><code><a title="imodels.MDLPDiscretizer.transform" href="index.html#imodels.MDLPDiscretizer.transform">transform</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.MarginalShrinkageLinearModelRegressor" href="index.html#imodels.MarginalShrinkageLinearModelRegressor">MarginalShrinkageLinearModelRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.MarginalShrinkageLinearModelRegressor.set_score_request" href="index.html#imodels.MarginalShrinkageLinearModelRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.OneRClassifier" href="index.html#imodels.OneRClassifier">OneRClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.OneRClassifier.fit" href="index.html#imodels.OneRClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.OneRClassifier.set_fit_request" href="index.html#imodels.OneRClassifier.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.RFDiscretizer" href="index.html#imodels.RFDiscretizer">RFDiscretizer</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.RFDiscretizer.fit" href="index.html#imodels.RFDiscretizer.fit">fit</a></code></li>
+<li><code><a title="imodels.RFDiscretizer.reweight_n_bins" href="index.html#imodels.RFDiscretizer.reweight_n_bins">reweight_n_bins</a></code></li>
+<li><code><a title="imodels.RFDiscretizer.transform" href="index.html#imodels.RFDiscretizer.transform">transform</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.RuleFitClassifier" href="index.html#imodels.RuleFitClassifier">RuleFitClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.RuleFitClassifier.set_score_request" href="index.html#imodels.RuleFitClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.RuleFitRegressor" href="index.html#imodels.RuleFitRegressor">RuleFitRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.RuleFitRegressor.set_score_request" href="index.html#imodels.RuleFitRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.SLIMClassifier" href="index.html#imodels.SLIMClassifier">SLIMClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.SLIMClassifier.fit" href="index.html#imodels.SLIMClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.SLIMClassifier.predict" href="index.html#imodels.SLIMClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.SLIMClassifier.predict_proba" href="index.html#imodels.SLIMClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.SLIMClassifier.set_fit_request" href="index.html#imodels.SLIMClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.SLIMClassifier.set_score_request" href="index.html#imodels.SLIMClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.SLIMRegressor" href="index.html#imodels.SLIMRegressor">SLIMRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.SLIMRegressor.fit" href="index.html#imodels.SLIMRegressor.fit">fit</a></code></li>
+<li><code><a title="imodels.SLIMRegressor.predict" href="index.html#imodels.SLIMRegressor.predict">predict</a></code></li>
+<li><code><a title="imodels.SLIMRegressor.set_fit_request" href="index.html#imodels.SLIMRegressor.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.SLIMRegressor.set_score_request" href="index.html#imodels.SLIMRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.SkopeRulesClassifier" href="index.html#imodels.SkopeRulesClassifier">SkopeRulesClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.SkopeRulesClassifier.fit" href="index.html#imodels.SkopeRulesClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.SkopeRulesClassifier.predict" href="index.html#imodels.SkopeRulesClassifier.predict">predict</a></code></li>
+<li><code><a title="imodels.SkopeRulesClassifier.predict_proba" href="index.html#imodels.SkopeRulesClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.SkopeRulesClassifier.set_fit_request" href="index.html#imodels.SkopeRulesClassifier.set_fit_request">set_fit_request</a></code></li>
+<li><code><a title="imodels.SkopeRulesClassifier.set_score_request" href="index.html#imodels.SkopeRulesClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.SlipperClassifier" href="index.html#imodels.SlipperClassifier">SlipperClassifier</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.StableClustering" href="index.html#imodels.StableClustering">StableClustering</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.StableClustering.fit" href="index.html#imodels.StableClustering.fit">fit</a></code></li>
+<li><code><a title="imodels.StableClustering.predict" href="index.html#imodels.StableClustering.predict">predict</a></code></li>
+<li><code><a title="imodels.StableClustering.predict_closest_points_to_centroids" href="index.html#imodels.StableClustering.predict_closest_points_to_centroids">predict_closest_points_to_centroids</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.TaoTreeClassifier" href="index.html#imodels.TaoTreeClassifier">TaoTreeClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.TaoTreeClassifier.set_score_request" href="index.html#imodels.TaoTreeClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.TaoTreeRegressor" href="index.html#imodels.TaoTreeRegressor">TaoTreeRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.TaoTreeRegressor.set_score_request" href="index.html#imodels.TaoTreeRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.TreeGAMClassifier" href="index.html#imodels.TreeGAMClassifier">TreeGAMClassifier</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.TreeGAMClassifier.set_score_request" href="index.html#imodels.TreeGAMClassifier.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.TreeGAMRegressor" href="index.html#imodels.TreeGAMRegressor">TreeGAMRegressor</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.TreeGAMRegressor.set_score_request" href="index.html#imodels.TreeGAMRegressor.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

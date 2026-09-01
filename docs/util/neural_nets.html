@@ -90,7 +90,6 @@ Example
     assert np.isclose(preds_dt, preds_net).all(), &#39;preds are not close&#39;
 
 &#34;&#34;&#34;
-import time
 from copy import deepcopy
 
 import numpy as np
@@ -157,7 +156,6 @@ class Net(nn.Module):
         #     t0 = time.perf_counter()
         x = x.reshape(x.shape[0], -1)
         x = self.layers[0](x)
-        t1 = time.perf_counter()
         x[x &lt; 0] = -1
         x[x &gt;= 0] = 1
 
@@ -304,7 +302,6 @@ class Net(nn.Module):
         #     t0 = time.perf_counter()
         x = x.reshape(x.shape[0], -1)
         x = self.layers[0](x)
-        t1 = time.perf_counter()
         x[x &lt; 0] = -1
         x[x &gt;= 0] = 1
 
@@ -482,7 +479,6 @@ registered hooks while the latter silently ignores them.</p>
     #     t0 = time.perf_counter()
     x = x.reshape(x.shape[0], -1)
     x = self.layers[0](x)
-    t1 = time.perf_counter()
     x[x &lt; 0] = -1
     x[x &gt;= 0] = 1
 

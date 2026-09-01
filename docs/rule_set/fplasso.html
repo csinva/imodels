@@ -204,12 +204,12 @@ the trees are grown, so tuning them on the generator has no effect.</dd>
 <ul class="hlist">
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -222,11 +222,10 @@ the trees are grown, so tuning them on the generator has no effect.</dd>
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_set.fplasso.FPLasso" href="#imodels.rule_set.fplasso.FPLasso">FPLasso</a>, *, feature_names: bool | str | None = '$UNCHANGED$', undiscretized_features: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.fplasso.FPLasso" href="#imodels.rule_set.fplasso.FPLasso">FPLasso</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -249,6 +248,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -268,11 +273,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -321,7 +325,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><b><a title="imodels.rule_set.rule_fit.RuleFit" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.fit" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="rule_set.html#imodels.rule_set.rule_set.RuleSet.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.rule_set.rule_fit.RuleFit.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.predict" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.set_transform_request" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>
 <li><code><a title="imodels.rule_set.rule_fit.RuleFit.transform" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit.transform">transform</a></code></li>
@@ -395,12 +399,12 @@ the trees are grown, so tuning them on the generator has no effect.</dd>
 <li><a title="imodels.rule_set.fplasso.FPLasso" href="#imodels.rule_set.fplasso.FPLasso">FPLasso</a></li>
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
 <h3>Methods</h3>
@@ -409,11 +413,10 @@ the trees are grown, so tuning them on the generator has no effect.</dd>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.fplasso.FPLassoClassifier" href="#imodels.rule_set.fplasso.FPLassoClassifier">FPLassoClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.fplasso.FPLassoClassifier" href="#imodels.rule_set.fplasso.FPLassoClassifier">FPLassoClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -436,6 +439,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -452,11 +461,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -505,7 +513,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><b><a title="imodels.rule_set.fplasso.FPLasso" href="#imodels.rule_set.fplasso.FPLasso">FPLasso</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.fplasso.FPLasso.fit" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.fplasso.FPLasso.get_rules" href="rule_set.html#imodels.rule_set.rule_set.RuleSet.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.rule_set.fplasso.FPLasso.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.fplasso.FPLasso.predict" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
 <li><code><a title="imodels.rule_set.fplasso.FPLasso.set_fit_request" href="#imodels.rule_set.fplasso.FPLasso.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.rule_set.fplasso.FPLasso.set_transform_request" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>
@@ -580,12 +588,12 @@ the trees are grown, so tuning them on the generator has no effect.</dd>
 <li><a title="imodels.rule_set.fplasso.FPLasso" href="#imodels.rule_set.fplasso.FPLasso">FPLasso</a></li>
 <li><a title="imodels.rule_set.rule_fit.RuleFit" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit">RuleFit</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.TransformerMixin</li>
 <li>sklearn.utils._set_output._SetOutputMixin</li>
 <li><a title="imodels.rule_set.rule_set.RuleSet" href="rule_set.html#imodels.rule_set.rule_set.RuleSet">RuleSet</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>
 <h3>Methods</h3>
@@ -594,11 +602,10 @@ the trees are grown, so tuning them on the generator has no effect.</dd>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.fplasso.FPLassoRegressor" href="#imodels.rule_set.fplasso.FPLassoRegressor">FPLassoRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.fplasso.FPLassoRegressor" href="#imodels.rule_set.fplasso.FPLassoRegressor">FPLassoRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -621,6 +628,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -637,11 +650,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -690,7 +702,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><b><a title="imodels.rule_set.fplasso.FPLasso" href="#imodels.rule_set.fplasso.FPLasso">FPLasso</a></b></code>:
 <ul class="hlist">
 <li><code><a title="imodels.rule_set.fplasso.FPLasso.fit" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.fplasso.FPLasso.get_rules" href="rule_set.html#imodels.rule_set.rule_set.RuleSet.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.rule_set.fplasso.FPLasso.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.fplasso.FPLasso.predict" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit.predict">predict</a></code></li>
 <li><code><a title="imodels.rule_set.fplasso.FPLasso.set_fit_request" href="#imodels.rule_set.fplasso.FPLasso.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.rule_set.fplasso.FPLasso.set_transform_request" href="rule_fit.html#imodels.rule_set.rule_fit.RuleFit.set_transform_request">set_transform_request</a></code></li>

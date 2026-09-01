@@ -30,28 +30,26 @@ from sklearn.model_selection import cross_val_score
 
 from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifier
 from imodels.util.tree import compute_tree_complexity
+from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.arguments import explicit_get_params, explicit_set_params
 
 
-class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
+class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
 
+    #: __init__ takes *args/**kwargs, which sklearn&#39;s introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = (&#34;estimator_&#34;, &#34;desired_complexity&#34;, &#34;complexity_measure&#34;)
+
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
-        # automatic parameter introspection rejects
-        return {
-            &#34;estimator_&#34;: self.estimator_,
-            &#34;desired_complexity&#34;: self.desired_complexity,
-            &#34;complexity_measure&#34;: self.complexity_measure,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
-        for key, value in params.items():
-            setattr(self, key, value)
-        return self
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
 
     def _copy_fitted_attributes(self):
         &#34;&#34;&#34;Mirror the wrapped estimator&#39;s fitted sklearn attributes onto self.&#34;&#34;&#34;
@@ -101,20 +99,10 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
         self._copy_fitted_attributes()
         return self
 
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
     @property
     def feature_importances_(self):
         &#34;&#34;&#34;Mean decrease in impurity of the pruned tree, as in sklearn.&#34;&#34;&#34;
         return self.estimator_.feature_importances_
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
-
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
 
@@ -134,7 +122,7 @@ class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
             return NotImplemented
 
 
-class DecisionTreeCCPRegressor(BaseEstimator):
+class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
@@ -143,19 +131,15 @@ class DecisionTreeCCPRegressor(BaseEstimator):
         self.alpha = 0.0
         self.complexity_measure = complexity_measure
 
+    #: __init__ takes *args/**kwargs, which sklearn&#39;s introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = (&#34;estimator_&#34;, &#34;desired_complexity&#34;, &#34;complexity_measure&#34;)
+
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
-        # automatic parameter introspection rejects
-        return {
-            &#34;estimator_&#34;: self.estimator_,
-            &#34;desired_complexity&#34;: self.desired_complexity,
-            &#34;complexity_measure&#34;: self.complexity_measure,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
-        for key, value in params.items():
-            setattr(self, key, value)
-        return self
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
 
     def _copy_fitted_attributes(self):
         &#34;&#34;&#34;Mirror the wrapped estimator&#39;s fitted sklearn attributes onto self.&#34;&#34;&#34;
@@ -211,16 +195,6 @@ class DecisionTreeCCPRegressor(BaseEstimator):
     def feature_importances_(self):
         &#34;&#34;&#34;Mean decrease in impurity of the pruned tree, as in sklearn.&#34;&#34;&#34;
         return self.estimator_.feature_importances_
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
-
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
 
@@ -290,59 +264,27 @@ class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
-<p>This mixin defines the following functionality:</p>
-<ul>
-<li>set estimator type to <code>"classifier"</code> through the <code>estimator_type</code> tag;</li>
-<li><code>score</code> method that default to :func:<code>~sklearn.metrics.accuracy_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
-which is done by setting the classifier type tag.</li>
-</ul>
-<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
-<h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; from sklearn.base import BaseEstimator, ClassifierMixin
-&gt;&gt;&gt; # Mixin classes should always be on the left-hand side for a correct MRO
-&gt;&gt;&gt; class MyEstimator(ClassifierMixin, BaseEstimator):
-...     def __init__(self, *, param=1):
-...         self.param = param
-...     def fit(self, X, y=None):
-...         self.is_fitted_ = True
-...         return self
-...     def predict(self, X):
-...         return np.full(shape=X.shape[0], fill_value=self.param)
-&gt;&gt;&gt; estimator = MyEstimator(param=1)
-&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
-&gt;&gt;&gt; y = np.array([1, 0, 1])
-&gt;&gt;&gt; estimator.fit(X, y).predict(X)
-array([1, 1, 1])
-&gt;&gt;&gt; estimator.score(X, y)
-0.66...
-</code></pre></div>
+<div class="desc"><p>Both of the above, for tree-based models that support each.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DecisionTreeCCPClassifier(ClassifierMixin, BaseEstimator):
+<pre><code class="python">class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
         self.desired_complexity = desired_complexity
         self.estimator_ = estimator_
         self.complexity_measure = complexity_measure
 
+    #: __init__ takes *args/**kwargs, which sklearn&#39;s introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = (&#34;estimator_&#34;, &#34;desired_complexity&#34;, &#34;complexity_measure&#34;)
+
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
-        # automatic parameter introspection rejects
-        return {
-            &#34;estimator_&#34;: self.estimator_,
-            &#34;desired_complexity&#34;: self.desired_complexity,
-            &#34;complexity_measure&#34;: self.complexity_measure,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
-        for key, value in params.items():
-            setattr(self, key, value)
-        return self
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
 
     def _copy_fitted_attributes(self):
         &#34;&#34;&#34;Mirror the wrapped estimator&#39;s fitted sklearn attributes onto self.&#34;&#34;&#34;
@@ -392,20 +334,10 @@ array([1, 1, 1])
         self._copy_fitted_attributes()
         return self
 
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
     @property
     def feature_importances_(self):
         &#34;&#34;&#34;Mean decrease in impurity of the pruned tree, as in sklearn.&#34;&#34;&#34;
         return self.estimator_.feature_importances_
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
-
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, complexity_measure)
 
@@ -426,10 +358,12 @@ array([1, 1, 1])
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Instance variables</h3>
@@ -450,21 +384,6 @@ def feature_importances_(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def apply(self, X):
-    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-    from imodels.util.apply import apply_leaves
-    return apply_leaves(self, X)</code></pre>
-</details>
-</dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None, *args, **kwargs)</span>
 </code></dt>
@@ -508,28 +427,7 @@ contained subobjects that are estimators.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_params(self, deep=True):
-    # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
-    # automatic parameter introspection rejects
-    return {
-        &#34;estimator_&#34;: self.estimator_,
-        &#34;desired_complexity&#34;: self.desired_complexity,
-        &#34;complexity_measure&#34;: self.complexity_measure,
-    }</code></pre>
-</details>
-</dd>
-<dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_rules"><code class="name flex">
-<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_rules(self, feature_names=None):
-    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-    from imodels.util.get_rules import get_rules
-    return get_rules(self, feature_names=feature_names)</code></pre>
+    return explicit_get_params(self, self._PARAM_NAMES, deep=deep)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict"><code class="name flex">
@@ -565,7 +463,7 @@ contained subobjects that are estimators.</dd>
 <span>def <span class="ident">score</span></span>(<span>self, X, y, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return :ref:<code>accuracy &lt;accuracy_score&gt;</code> on provided data and labels.</p>
+<div class="desc"><p>Return the mean accuracy on the given test data and labels.</p>
 <p>In multi-label classification, this is the subset accuracy
 which is a harsh metric since you require for each sample that
 each label set be correctly predicted.</p>
@@ -598,11 +496,10 @@ each label set be correctly predicted.</p>
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -625,6 +522,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -641,11 +544,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -712,59 +614,31 @@ possible to update each component of a nested object.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_params(self, **params):
-    for key, value in params.items():
-        setattr(self, key, value)
-    return self</code></pre>
+    return explicit_set_params(self, self._PARAM_NAMES, **params)</code></pre>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor"><code class="flex name class">
 <span>class <span class="ident">DecisionTreeCCPRegressor</span></span>
 <span>(</span><span>estimator_: sklearn.base.BaseEstimator, desired_complexity: int = 1, complexity_measure='max_rules', *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
-<p>Inheriting from this class provides default implementations of:</p>
-<ul>
-<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
-<li>textual and HTML representation displayed in terminals and IDEs;</li>
-<li>estimator serialization;</li>
-<li>parameters validation;</li>
-<li>data validation;</li>
-<li>feature names validation.</li>
-</ul>
-<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
-<h2 id="notes">Notes</h2>
-<p>All estimators should specify all the parameters that can be set
-at the class level in their <code>__init__</code> as explicit keyword
-arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
-<h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; from sklearn.base import BaseEstimator
-&gt;&gt;&gt; class MyEstimator(BaseEstimator):
-...     def __init__(self, *, param=1):
-...         self.param = param
-...     def fit(self, X, y=None):
-...         self.is_fitted_ = True
-...         return self
-...     def predict(self, X):
-...         return np.full(shape=X.shape[0], fill_value=self.param)
-&gt;&gt;&gt; estimator = MyEstimator(param=2)
-&gt;&gt;&gt; estimator.get_params()
-{'param': 2}
-&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
-&gt;&gt;&gt; y = np.array([1, 0, 1])
-&gt;&gt;&gt; estimator.fit(X, y).predict(X)
-array([2, 2, 2])
-&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
-array([3, 3, 3])
-</code></pre></div>
+<div class="desc"><p>Both of the above, for tree-based models that support each.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DecisionTreeCCPRegressor(BaseEstimator):
+<pre><code class="python">class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
     def __init__(self, estimator_: BaseEstimator, desired_complexity: int = 1, complexity_measure=&#39;max_rules&#39;, *args,
                  **kwargs):
@@ -773,19 +647,15 @@ array([3, 3, 3])
         self.alpha = 0.0
         self.complexity_measure = complexity_measure
 
+    #: __init__ takes *args/**kwargs, which sklearn&#39;s introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = (&#34;estimator_&#34;, &#34;desired_complexity&#34;, &#34;complexity_measure&#34;)
+
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
-        # automatic parameter introspection rejects
-        return {
-            &#34;estimator_&#34;: self.estimator_,
-            &#34;desired_complexity&#34;: self.desired_complexity,
-            &#34;complexity_measure&#34;: self.complexity_measure,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
-        for key, value in params.items():
-            setattr(self, key, value)
-        return self
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
 
     def _copy_fitted_attributes(self):
         &#34;&#34;&#34;Mirror the wrapped estimator&#39;s fitted sklearn attributes onto self.&#34;&#34;&#34;
@@ -841,16 +711,6 @@ array([3, 3, 3])
     def feature_importances_(self):
         &#34;&#34;&#34;Mean decrease in impurity of the pruned tree, as in sklearn.&#34;&#34;&#34;
         return self.estimator_.feature_importances_
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
-
     def _get_complexity(self, BaseEstimator, complexity_measure):
         return compute_tree_complexity(BaseEstimator.tree_, self.complexity_measure)
 
@@ -865,9 +725,11 @@ array([3, 3, 3])
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Instance variables</h3>
@@ -888,21 +750,6 @@ def feature_importances_(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def apply(self, X):
-    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-    from imodels.util.apply import apply_leaves
-    return apply_leaves(self, X)</code></pre>
-</details>
-</dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, sample_weight=None)</span>
 </code></dt>
@@ -945,28 +792,7 @@ contained subobjects that are estimators.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_params(self, deep=True):
-    # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
-    # automatic parameter introspection rejects
-    return {
-        &#34;estimator_&#34;: self.estimator_,
-        &#34;desired_complexity&#34;: self.desired_complexity,
-        &#34;complexity_measure&#34;: self.complexity_measure,
-    }</code></pre>
-</details>
-</dd>
-<dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_rules"><code class="name flex">
-<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_rules(self, feature_names=None):
-    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-    from imodels.util.get_rules import get_rules
-    return get_rules(self, feature_names=feature_names)</code></pre>
+    return explicit_get_params(self, self._PARAM_NAMES, deep=deep)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict"><code class="name flex">
@@ -1002,11 +828,10 @@ contained subobjects that are estimators.</dd>
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1029,6 +854,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1045,11 +876,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1116,12 +946,19 @@ possible to update each component of a nested object.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_params(self, **params):
-    for key, value in params.items():
-        setattr(self, key, value)
-    return self</code></pre>
+    return explicit_set_params(self, self._PARAM_NAMES, **params)</code></pre>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV"><code class="flex name class">
 <span>class <span class="ident">HSDecisionTreeCCPClassifierCV</span></span>
@@ -1131,10 +968,9 @@ possible to update each component of a nested object.</p>
 <div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li>set estimator type to <code>"classifier"</code> through the <code>estimator_type</code> tag;</li>
+<li><code>_estimator_type</code> class attribute defaulting to <code>"classifier"</code>;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.accuracy_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
-which is done by setting the classifier type tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -1186,9 +1022,11 @@ array([1, 1, 1])
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -1219,10 +1057,10 @@ array([1, 1, 1])
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.apply" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.feature_importances_" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_params" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_rules" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_fit_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
@@ -1237,10 +1075,9 @@ array([1, 1, 1])
 <div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li>set estimator type to <code>"regressor"</code> through the <code>estimator_type</code> tag;</li>
+<li><code>_estimator_type</code> class attribute defaulting to <code>"regressor"</code>;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.r2_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
-which is done by setting the regressor type tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -1292,9 +1129,11 @@ array([0, 0, 0])
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
 <li>sklearn.base.RegressorMixin</li>
 <li><a title="imodels.tree.hierarchical_shrinkage.HSTree" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree">HSTree</a></li>
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -1325,10 +1164,10 @@ array([0, 0, 0])
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.apply" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.feature_importances_" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_params" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_params">get_params</a></code></li>
-<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_rules" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_fit_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTree.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request" href="hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor.set_score_request">set_score_request</a></code></li>
 </ul>
@@ -1354,11 +1193,9 @@ array([0, 0, 0])
 <li>
 <h4><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.apply" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.feature_importances_" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_params" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_params">get_params</a></code></li>
-<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_rules" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict_proba" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPClassifier.score" href="#imodels.tree.cart_ccp.DecisionTreeCCPClassifier.score">score</a></code></li>
@@ -1369,11 +1206,9 @@ array([0, 0, 0])
 <li>
 <h4><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.apply" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.feature_importances_" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.fit" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_params" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_params">get_params</a></code></li>
-<li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_rules" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.score" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.score">score</a></code></li>
 <li><code><a title="imodels.tree.cart_ccp.DecisionTreeCCPRegressor.set_fit_request" href="#imodels.tree.cart_ccp.DecisionTreeCCPRegressor.set_fit_request">set_fit_request</a></code></li>

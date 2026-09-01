@@ -21,7 +21,12 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .sklearnmodel import BART, ShrunkBART, ShrunkBARTCV</code></pre>
+<pre><code class="python">from .sklearnmodel import BART, ShrunkBART, ShrunkBARTCV
+
+# re-exported for callers; listed so the intent is explicit
+__all__ = [
+    &#34;BART&#34;, &#34;ShrunkBART&#34;, &#34;ShrunkBARTCV&#34;,
+]</code></pre>
 </details>
 </section>
 <section>
@@ -106,6 +111,424 @@
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.experimental.bartpy.BART"><code class="flex name class">
+<span>class <span class="ident">BART</span></span>
+<span>(</span><span>n_trees: int = 200, n_chains: int = 4, sigma_a: float = 0.001, sigma_b: float = 0.001, n_samples: int = 200, n_burn: int = 200, thin: float = 0.1, alpha: float = 0.95, beta: float = 2.0, store_in_sample_predictions: bool = False, store_acceptance_trace: bool = False, tree_sampler: <a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler" href="samplers/treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler">TreeMutationSampler</a> = &lt;imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler object&gt;, initializer: <a title="imodels.experimental.bartpy.initializers.initializer.Initializer" href="initializers/initializer.html#imodels.experimental.bartpy.initializers.initializer.Initializer">Initializer</a> | None = None, n_jobs=-1, classification: bool = False, max_rules=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The main access point to building BART models in BartPy</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>n_trees</code></strong> :&ensp;<code>int</code></dt>
+<dd>the number of trees to use, more trees will make a smoother fit, but slow training and fitting</dd>
+<dt><strong><code>n_chains</code></strong> :&ensp;<code>int</code></dt>
+<dd>the number of independent chains to run
+more chains will improve the quality of the samples, but will require more computation</dd>
+<dt><strong><code>sigma_a</code></strong> :&ensp;<code>float</code></dt>
+<dd>shape parameter of the prior on sigma</dd>
+<dt><strong><code>sigma_b</code></strong> :&ensp;<code>float</code></dt>
+<dd>scale parameter of the prior on sigma</dd>
+<dt><strong><code>n_samples</code></strong> :&ensp;<code>int</code></dt>
+<dd>how many recorded samples to take</dd>
+<dt><strong><code>n_burn</code></strong> :&ensp;<code>int</code></dt>
+<dd>how many samples to run without recording to reach convergence</dd>
+<dt><strong><code>thin</code></strong> :&ensp;<code>float</code></dt>
+<dd>percentage of samples to store.
+use this to save memory when running large models</dd>
+<dt><strong><code>p_grow</code></strong> :&ensp;<code>float</code></dt>
+<dd>probability of choosing a grow mutation in tree mutation sampling</dd>
+<dt><strong><code>p_prune</code></strong> :&ensp;<code>float</code></dt>
+<dd>probability of choosing a prune mutation in tree mutation sampling</dd>
+<dt><strong><code>alpha</code></strong> :&ensp;<code>float</code></dt>
+<dd>prior parameter on tree structure</dd>
+<dt><strong><code>beta</code></strong> :&ensp;<code>float</code></dt>
+<dd>prior parameter on tree structure</dd>
+<dt><strong><code>store_in_sample_predictions</code></strong> :&ensp;<code>bool</code></dt>
+<dd>whether to store full prediction samples
+set to False if you don't need in sample results - saves a lot of memory</dd>
+<dt><strong><code>store_acceptance_trace</code></strong> :&ensp;<code>bool</code></dt>
+<dd>whether to store acceptance rates of the gibbs samples
+unless you're very memory constrained, you wouldn't want to set this to false
+useful for diagnostics</dd>
+<dt><strong><code>tree_sampler</code></strong> :&ensp;<code>TreeMutationSampler</code></dt>
+<dd>Method of sampling used on trees
+defaults to <code>bartpy.samplers.unconstrainedtree</code></dd>
+<dt><strong><code>initializer</code></strong> :&ensp;<code>Initializer</code></dt>
+<dd>Class that handles the initialization of tree structure and leaf values</dd>
+<dt><strong><code>n_jobs</code></strong> :&ensp;<code>int</code></dt>
+<dd>how many cores to use when computing MCMC samples
+set to <code>-1</code> to use all cores</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BART(SklearnModel):
+
+    @staticmethod
+    def _get_n_nodes(trees):
+        nodes = 0
+        for tree in trees:
+            nodes += len(tree.decision_nodes)
+        return nodes
+
+    @property
+    def sample_complexity(self):
+        # samples = self._model_samples
+        # trees = [s.trees for s in samples]
+        complexities = [self._get_n_nodes(t) for t in self.trees]
+        return np.sum(complexities)
+
+    @staticmethod
+    def sub_forest(trees, n_nodes):
+        nodes = 0
+        for i, tree in enumerate(trees):
+            nodes += len(tree.decision_nodes)
+            if nodes &gt;= n_nodes:
+                return trees[0:i + 1]
+
+    @property
+    def trees(self):
+        trs = [s.trees for s in self._model_samples]
+        return trs
+
+    def update_complexity(self, i):
+        samples_complexity = [self._get_n_nodes(t) for t in self.trees]
+
+        # complexity_sum = 0
+        arg_sort_complexity = np.argsort(samples_complexity)
+        self._model_samples = self._model_samples[arg_sort_complexity[:i + 1]]
+
+        return self</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel">SklearnModel</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+<li>sklearn.base.RegressorMixin</li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.BART.sub_forest"><code class="name flex">
+<span>def <span class="ident">sub_forest</span></span>(<span>trees, n_nodes)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def sub_forest(trees, n_nodes):
+    nodes = 0
+    for i, tree in enumerate(trees):
+        nodes += len(tree.decision_nodes)
+        if nodes &gt;= n_nodes:
+            return trees[0:i + 1]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.BART.sample_complexity"><code class="name">var <span class="ident">sample_complexity</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def sample_complexity(self):
+    # samples = self._model_samples
+    # trees = [s.trees for s in samples]
+    complexities = [self._get_n_nodes(t) for t in self.trees]
+    return np.sum(complexities)</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.BART.trees"><code class="name">var <span class="ident">trees</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def trees(self):
+    trs = [s.trees for s in self._model_samples]
+    return trs</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.BART.update_complexity"><code class="name flex">
+<span>def <span class="ident">update_complexity</span></span>(<span>self, i)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_complexity(self, i):
+    samples_complexity = [self._get_n_nodes(t) for t in self.trees]
+
+    # complexity_sum = 0
+    arg_sort_complexity = np.argsort(samples_complexity)
+    self._model_samples = self._model_samples[arg_sort_complexity[:i + 1]]
+
+    return self</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel">SklearnModel</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.acceptance_trace" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.acceptance_trace">acceptance_trace</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_chains" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_chains">f_chains</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_delayed_chains" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.f_delayed_chains">f_delayed_chains</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.fit" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.fit">fit</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.from_extract" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.from_extract">from_extract</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.l2_error" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.l2_error">l2_error</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.likelihood" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.likelihood">likelihood</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.model_samples" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.model_samples">model_samples</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.predict">predict</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.prediction_samples" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.prediction_samples">prediction_samples</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.probs" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.probs">probs</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.residuals" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.residuals">residuals</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.rmse" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.rmse">rmse</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.sklearnmodel.SklearnModel.set_score_request" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.SklearnModel.set_score_request">set_score_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.experimental.bartpy.ShrunkBART"><code class="flex name class">
+<span>class <span class="ident">ShrunkBART</span></span>
+<span>(</span><span>estimator_, reg_param, scheme)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<p>Inheriting from this class provides default implementations of:</p>
+<ul>
+<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
+<li>textual and HTML representation displayed in terminals and IDEs;</li>
+<li>estimator serialization;</li>
+<li>parameters validation;</li>
+<li>data validation;</li>
+<li>feature names validation.</li>
+</ul>
+<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
+<h2 id="notes">Notes</h2>
+<p>All estimators should specify all the parameters that can be set
+at the class level in their <code>__init__</code> as explicit keyword
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.base import BaseEstimator
+&gt;&gt;&gt; class MyEstimator(BaseEstimator):
+...     def __init__(self, *, param=1):
+...         self.param = param
+...     def fit(self, X, y=None):
+...         self.is_fitted_ = True
+...         return self
+...     def predict(self, X):
+...         return np.full(shape=X.shape[0], fill_value=self.param)
+&gt;&gt;&gt; estimator = MyEstimator(param=2)
+&gt;&gt;&gt; estimator.get_params()
+{'param': 2}
+&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
+&gt;&gt;&gt; y = np.array([1, 0, 1])
+&gt;&gt;&gt; estimator.fit(X, y).predict(X)
+array([2, 2, 2])
+&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
+array([3, 3, 3])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShrunkBART(ImputedBART):
+
+    def __init__(self, estimator_, reg_param, scheme):
+        super(ShrunkBART, self).__init__(estimator_)
+        self.reg_param = reg_param
+        self.scheme = scheme
+
+    def shrink_tree(self, tree):
+        root = get_root_node(tree)
+        tree_d_node = shrink_node(root, self.reg_param, parent_val=None, parent_num=None, cum_sum=0, scheme=self.scheme,
+                                  constant=np.mean(self.estimator_.data.y.values))
+        d, l = get_nodes(tree_d_node)
+        tree._nodes = d + l
+        return tree
+
+    def fit(self, *args, **kwargs):
+        if not self.estimator_.fitted:
+            self.estimator_.fit(*args, **kwargs)
+        samples = []
+        for s in self.estimator_.model_samples:
+            for i, tree in enumerate(s._trees):
+                s_tree = self.shrink_tree(expand_tree(copy.deepcopy(tree)))
+                s._trees[i] = s_tree
+            samples.append(s)
+        self.estimator_._model_samples = samples
+        self.fitted_ = True</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.experimental.bartpy.sklearnmodel.ImputedBART" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.ImputedBART">ImputedBART</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="imodels.experimental.bartpy.sklearnmodel.ShrunkBARTCV" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.ShrunkBARTCV">ShrunkBARTCV</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.ShrunkBART.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, *args, **kwargs):
+    if not self.estimator_.fitted:
+        self.estimator_.fit(*args, **kwargs)
+    samples = []
+    for s in self.estimator_.model_samples:
+        for i, tree in enumerate(s._trees):
+            s_tree = self.shrink_tree(expand_tree(copy.deepcopy(tree)))
+            s._trees[i] = s_tree
+        samples.append(s)
+    self.estimator_._model_samples = samples
+    self.fitted_ = True</code></pre>
+</details>
+</dd>
+<dt id="imodels.experimental.bartpy.ShrunkBART.shrink_tree"><code class="name flex">
+<span>def <span class="ident">shrink_tree</span></span>(<span>self, tree)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def shrink_tree(self, tree):
+    root = get_root_node(tree)
+    tree_d_node = shrink_node(root, self.reg_param, parent_val=None, parent_num=None, cum_sum=0, scheme=self.scheme,
+                              constant=np.mean(self.estimator_.data.y.values))
+    d, l = get_nodes(tree_d_node)
+    tree._nodes = d + l
+    return tree</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.experimental.bartpy.ShrunkBARTCV"><code class="flex name class">
+<span>class <span class="ident">ShrunkBARTCV</span></span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, scheme: str, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], cv: int = 3, scoring=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
+<p>Inheriting from this class provides default implementations of:</p>
+<ul>
+<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
+<li>textual and HTML representation displayed in terminals and IDEs;</li>
+<li>estimator serialization;</li>
+<li>parameters validation;</li>
+<li>data validation;</li>
+<li>feature names validation.</li>
+</ul>
+<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
+<h2 id="notes">Notes</h2>
+<p>All estimators should specify all the parameters that can be set
+at the class level in their <code>__init__</code> as explicit keyword
+arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from sklearn.base import BaseEstimator
+&gt;&gt;&gt; class MyEstimator(BaseEstimator):
+...     def __init__(self, *, param=1):
+...         self.param = param
+...     def fit(self, X, y=None):
+...         self.is_fitted_ = True
+...         return self
+...     def predict(self, X):
+...         return np.full(shape=X.shape[0], fill_value=self.param)
+&gt;&gt;&gt; estimator = MyEstimator(param=2)
+&gt;&gt;&gt; estimator.get_params()
+{'param': 2}
+&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
+&gt;&gt;&gt; y = np.array([1, 0, 1])
+&gt;&gt;&gt; estimator.fit(X, y).predict(X)
+array([2, 2, 2])
+&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
+array([3, 3, 3])
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ShrunkBARTCV(ShrunkBART):
+    def __init__(self, estimator_: BaseEstimator, scheme: str,
+                 reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
+                 cv: int = 3, scoring=None):
+        super(ShrunkBARTCV, self).__init__(estimator_, None, scheme)
+        self.reg_param_list = np.array(reg_param_list)
+        self.cv = cv
+        self.scoring = scoring
+
+    def fit(self, X, y, *args, **kwargs):
+        self.scores_ = []
+        for reg_param in self.reg_param_list:
+            est = ShrunkBART(deepcopy(self.estimator_), reg_param, self.scheme)
+            cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+            self.scores_.append(np.mean(cv_scores))
+        self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        super().fit(X=X, y=y)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.experimental.bartpy.sklearnmodel.ShrunkBART" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.ShrunkBART">ShrunkBART</a></li>
+<li><a title="imodels.experimental.bartpy.sklearnmodel.ImputedBART" href="sklearnmodel.html#imodels.experimental.bartpy.sklearnmodel.ImputedBART">ImputedBART</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.experimental.bartpy.ShrunkBARTCV.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, *args, **kwargs):
+    self.scores_ = []
+    for reg_param in self.reg_param_list:
+        est = ShrunkBART(deepcopy(self.estimator_), reg_param, self.scheme)
+        cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
+        self.scores_.append(np.mean(cv_scores))
+    self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+    super().fit(X=X, y=y)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -124,6 +547,7 @@
 <li><a href="https://csinva.io/imodels/shrinkage.html">Hierarchical shrinkage: post-hoc regularization for tree-based methods</a></li>
 <li><a href="https://csinva.io/imodels/figs.html">FIGS: Fast interpretable greedy-tree sums</a></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html">MDI+: Flexible tree-based feature importance</a></li>
+<li><a href="https://csinva.io/imodels/gpgam.html">GPGam: Additive Gaussian processes over binned features</a></li>
 </ul>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
@@ -146,6 +570,32 @@
 <li><code><a title="imodels.experimental.bartpy.splitcondition" href="splitcondition.html">imodels.experimental.bartpy.splitcondition</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.trace" href="trace.html">imodels.experimental.bartpy.trace</a></code></li>
 <li><code><a title="imodels.experimental.bartpy.tree" href="tree.html">imodels.experimental.bartpy.tree</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.experimental.bartpy.BART" href="#imodels.experimental.bartpy.BART">BART</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.experimental.bartpy.BART.sample_complexity" href="#imodels.experimental.bartpy.BART.sample_complexity">sample_complexity</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.BART.sub_forest" href="#imodels.experimental.bartpy.BART.sub_forest">sub_forest</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.BART.trees" href="#imodels.experimental.bartpy.BART.trees">trees</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.BART.update_complexity" href="#imodels.experimental.bartpy.BART.update_complexity">update_complexity</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.experimental.bartpy.ShrunkBART" href="#imodels.experimental.bartpy.ShrunkBART">ShrunkBART</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.experimental.bartpy.ShrunkBART.fit" href="#imodels.experimental.bartpy.ShrunkBART.fit">fit</a></code></li>
+<li><code><a title="imodels.experimental.bartpy.ShrunkBART.shrink_tree" href="#imodels.experimental.bartpy.ShrunkBART.shrink_tree">shrink_tree</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.experimental.bartpy.ShrunkBARTCV" href="#imodels.experimental.bartpy.ShrunkBARTCV">ShrunkBARTCV</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.experimental.bartpy.ShrunkBARTCV.fit" href="#imodels.experimental.bartpy.ShrunkBARTCV.fit">fit</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

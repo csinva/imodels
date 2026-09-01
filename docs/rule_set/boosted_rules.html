@@ -25,9 +25,10 @@
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from imodels.util.arguments import check_fit_arguments
+from imodels.util.introspection import RuleInspectionMixin
 
 
-class BoostedRulesClassifier(AdaBoostClassifier):
+class BoostedRulesClassifier(RuleInspectionMixin, AdaBoostClassifier):
     &#39;&#39;&#39;An easy-interpretable classifier optimizing simple logical rules.
 
     Params
@@ -63,16 +64,6 @@ class BoostedRulesClassifier(AdaBoostClassifier):
 
 
 
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
-
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         classes = self.classes_  # super().fit overwrites this with the encoded labels
@@ -85,7 +76,7 @@ class BoostedRulesClassifier(AdaBoostClassifier):
         return self
 
 
-class BoostedRulesRegressor(AdaBoostRegressor):
+class BoostedRulesRegressor(RuleInspectionMixin, AdaBoostRegressor):
     &#39;&#39;&#39;An easy-interpretable regressor optimizing simple logical rules.
 
     Params
@@ -118,16 +109,6 @@ class BoostedRulesRegressor(AdaBoostRegressor):
             )
             self.estimator = estimator
 
-
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
 
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
@@ -162,7 +143,7 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BoostedRulesClassifier(AdaBoostClassifier):
+<pre><code class="python">class BoostedRulesClassifier(RuleInspectionMixin, AdaBoostClassifier):
     &#39;&#39;&#39;An easy-interpretable classifier optimizing simple logical rules.
 
     Params
@@ -198,16 +179,6 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 
 
 
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
-
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         classes = self.classes_  # super().fit overwrites this with the encoded labels
@@ -221,6 +192,9 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.ensemble._weight_boosting.AdaBoostClassifier</li>
 <li>sklearn.utils._metadata_requests._RoutingNotSupportedMixin</li>
 <li>sklearn.base.ClassifierMixin</li>
@@ -228,8 +202,7 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 <li>sklearn.ensemble._base.BaseEnsemble</li>
 <li>sklearn.base.MetaEstimatorMixin</li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -238,21 +211,6 @@ For SLIPPER, should pass estimator=imodels.SlipperBaseEstimator</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def apply(self, X):
-    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-    from imodels.util.apply import apply_leaves
-    return apply_leaves(self, X)</code></pre>
-</details>
-</dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, **kwargs)</span>
 </code></dt>
@@ -290,30 +248,14 @@ DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.get_rules"><code class="name flex">
-<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_rules(self, feature_names=None):
-    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-    from imodels.util.get_rules import get_rules
-    return get_rules(self, feature_names=feature_names)</code></pre>
-</details>
-</dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_fit_request"><code class="name flex">
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a>, *, feature_names: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -336,6 +278,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -352,11 +300,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -403,11 +350,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -430,6 +376,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -446,11 +398,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -494,6 +445,15 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor"><code class="flex name class">
 <span>class <span class="ident">BoostedRulesRegressor</span></span>
@@ -508,7 +468,7 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BoostedRulesRegressor(AdaBoostRegressor):
+<pre><code class="python">class BoostedRulesRegressor(RuleInspectionMixin, AdaBoostRegressor):
     &#39;&#39;&#39;An easy-interpretable regressor optimizing simple logical rules.
 
     Params
@@ -542,16 +502,6 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
             self.estimator = estimator
 
 
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
-
     def fit(self, X, y, feature_names=None, **kwargs):
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         names_in = getattr(self, &#39;feature_names_in_&#39;, None)
@@ -563,6 +513,9 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.ensemble._weight_boosting.AdaBoostRegressor</li>
 <li>sklearn.utils._metadata_requests._RoutingNotSupportedMixin</li>
 <li>sklearn.base.RegressorMixin</li>
@@ -570,27 +523,11 @@ Defaults to DecisionTreeRegressor with AdaBoost.</p></div>
 <li>sklearn.ensemble._base.BaseEnsemble</li>
 <li>sklearn.base.MetaEstimatorMixin</li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def apply(self, X):
-    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-    from imodels.util.apply import apply_leaves
-    return apply_leaves(self, X)</code></pre>
-</details>
-</dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None, **kwargs)</span>
 </code></dt>
@@ -626,30 +563,14 @@ DOK, or LIL. COO, DOK, and LIL are converted to CSR.</dd>
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor.get_rules"><code class="name flex">
-<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_rules(self, feature_names=None):
-    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-    from imodels.util.get_rules import get_rules
-    return get_rules(self, feature_names=feature_names)</code></pre>
-</details>
-</dd>
 <dt id="imodels.rule_set.boosted_rules.BoostedRulesRegressor.set_fit_request"><code class="name flex">
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a>, *, feature_names: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -672,6 +593,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -688,11 +615,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -739,11 +665,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -766,6 +691,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -782,11 +713,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -830,6 +760,15 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -850,9 +789,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li>
 <h4><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.apply" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.apply">apply</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.get_rules" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_fit_request" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_score_request" href="#imodels.rule_set.boosted_rules.BoostedRulesClassifier.set_score_request">set_score_request</a></code></li>
 </ul>
@@ -860,9 +797,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li>
 <h4><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor.apply" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor.apply">apply</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor.fit" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor.fit">fit</a></code></li>
-<li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor.get_rules" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor.set_fit_request" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.rule_set.boosted_rules.BoostedRulesRegressor.set_score_request" href="#imodels.rule_set.boosted_rules.BoostedRulesRegressor.set_score_request">set_score_request</a></code></li>
 </ul>

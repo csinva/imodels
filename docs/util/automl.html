@@ -40,9 +40,10 @@ import numpy as np
 from sklearn.pipeline import Pipeline
 from imodels.util.arguments import set_feature_names_in
 from sklearn.utils.validation import check_is_fitted
+from imodels.util.introspection import RuleInspectionMixin
 
 
-class AutoInterpretableModel(BaseEstimator):
+class AutoInterpretableModel(RuleInspectionMixin, BaseEstimator):
     &#34;&#34;&#34;Automatically fit and select a classifier that is interpretable.
     Note that all preprocessing should be done beforehand.
     This is basically a wrapper around GridSearchCV, with some preselected models.
@@ -84,19 +85,6 @@ class AutoInterpretableModel(BaseEstimator):
     def score(self, X, y):
         check_is_fitted(self, &#39;est_&#39;)
         return self.est_.score(X, y)
-
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).
-
-        The rules are those of the model the search selected.
-        &#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
 
     PARAM_GRID_LINEAR_CLASSIFICATION = [
         {
@@ -210,9 +198,11 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></li>
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
@@ -220,8 +210,8 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <ul class="hlist">
 <li><code><b><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.util.automl.AutoInterpretableModel.apply" href="#imodels.util.automl.AutoInterpretableModel.apply">apply</a></code></li>
-<li><code><a title="imodels.util.automl.AutoInterpretableModel.get_rules" href="#imodels.util.automl.AutoInterpretableModel.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.apply" href="introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.get_rules" href="introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.set_fit_request" href="#imodels.util.automl.AutoInterpretableModel.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
@@ -239,7 +229,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AutoInterpretableModel(BaseEstimator):
+<pre><code class="python">class AutoInterpretableModel(RuleInspectionMixin, BaseEstimator):
     &#34;&#34;&#34;Automatically fit and select a classifier that is interpretable.
     Note that all preprocessing should be done beforehand.
     This is basically a wrapper around GridSearchCV, with some preselected models.
@@ -281,19 +271,6 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
     def score(self, X, y):
         check_is_fitted(self, &#39;est_&#39;)
         return self.est_.score(X, y)
-
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).
-
-        The rules are those of the model the search selected.
-        &#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
 
     PARAM_GRID_LINEAR_CLASSIFICATION = [
         {
@@ -373,9 +350,11 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -404,21 +383,6 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.util.automl.AutoInterpretableModel.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def apply(self, X):
-    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-    from imodels.util.apply import apply_leaves
-    return apply_leaves(self, X)</code></pre>
-</details>
-</dd>
 <dt id="imodels.util.automl.AutoInterpretableModel.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y, cv=5)</span>
 </code></dt>
@@ -442,25 +406,6 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
         self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit)
     self.est_.fit(X, y)
     return self</code></pre>
-</details>
-</dd>
-<dt id="imodels.util.automl.AutoInterpretableModel.get_rules"><code class="name flex">
-<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p>
-<p>The rules are those of the model the search selected.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_rules(self, feature_names=None):
-    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).
-
-    The rules are those of the model the search selected.
-    &#34;&#34;&#34;
-    from imodels.util.get_rules import get_rules
-    return get_rules(self, feature_names=feature_names)</code></pre>
 </details>
 </dd>
 <dt id="imodels.util.automl.AutoInterpretableModel.predict"><code class="name flex">
@@ -509,11 +454,10 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a>, *, cv: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -536,6 +480,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>cv</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -552,11 +502,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -600,6 +549,15 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.introspection.RuleInspectionMixin" href="introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.apply" href="introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.get_rules" href="introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="imodels.util.automl.AutoInterpretableRegressor"><code class="flex name class">
 <span>class <span class="ident">AutoInterpretableRegressor</span></span>
@@ -619,9 +577,11 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></li>
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.RegressorMixin</li>
 </ul>
@@ -629,8 +589,8 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <ul class="hlist">
 <li><code><b><a title="imodels.util.automl.AutoInterpretableModel" href="#imodels.util.automl.AutoInterpretableModel">AutoInterpretableModel</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.util.automl.AutoInterpretableModel.apply" href="#imodels.util.automl.AutoInterpretableModel.apply">apply</a></code></li>
-<li><code><a title="imodels.util.automl.AutoInterpretableModel.get_rules" href="#imodels.util.automl.AutoInterpretableModel.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.apply" href="introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
+<li><code><a title="imodels.util.automl.AutoInterpretableModel.get_rules" href="introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.set_fit_request" href="#imodels.util.automl.AutoInterpretableModel.set_fit_request">set_fit_request</a></code></li>
 </ul>
 </li>
@@ -662,9 +622,7 @@ This is basically a wrapper around GridSearchCV, with some preselected models.</
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_DEFAULT_REGRESSION" href="#imodels.util.automl.AutoInterpretableModel.PARAM_GRID_DEFAULT_REGRESSION">PARAM_GRID_DEFAULT_REGRESSION</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_CLASSIFICATION" href="#imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_CLASSIFICATION">PARAM_GRID_LINEAR_CLASSIFICATION</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_REGRESSION" href="#imodels.util.automl.AutoInterpretableModel.PARAM_GRID_LINEAR_REGRESSION">PARAM_GRID_LINEAR_REGRESSION</a></code></li>
-<li><code><a title="imodels.util.automl.AutoInterpretableModel.apply" href="#imodels.util.automl.AutoInterpretableModel.apply">apply</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.fit" href="#imodels.util.automl.AutoInterpretableModel.fit">fit</a></code></li>
-<li><code><a title="imodels.util.automl.AutoInterpretableModel.get_rules" href="#imodels.util.automl.AutoInterpretableModel.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.predict" href="#imodels.util.automl.AutoInterpretableModel.predict">predict</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.predict_proba" href="#imodels.util.automl.AutoInterpretableModel.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.util.automl.AutoInterpretableModel.score" href="#imodels.util.automl.AutoInterpretableModel.score">score</a></code></li>

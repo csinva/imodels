@@ -21,7 +21,12 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from .figs_ensembles import FIGSExtRegressor, FIGSExtClassifier</code></pre>
+<pre><code class="python">from .figs_ensembles import FIGSExtRegressor, FIGSExtClassifier
+
+# re-exported for callers; listed so the intent is explicit
+__all__ = [
+    &#34;FIGSExtClassifier&#34;, &#34;FIGSExtRegressor&#34;,
+]</code></pre>
 </details>
 </section>
 <section>
@@ -62,6 +67,91 @@
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.experimental.FIGSExtClassifier"><code class="flex name class">
+<span>class <span class="ident">FIGSExtClassifier</span></span>
+<span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False, max_features=None, min_impurity_decrease: float = 0.0, k1: int = 0, k2: int = 0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>FIGSExt (sum of trees) classifier.
+Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
+Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
+The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
+Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
+<a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p>
+<p>max_features
+The number of features to consider when looking for the best split
+k1: number of iterations of tree-prediction backfitting to do after making each split
+k2: number of iterations of tree-prediction backfitting to do after the end of the entire
+tree-growing phase</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FIGSExtClassifier(FIGSExt):
+    def _init_prediction_task(self):
+        self.prediction_task = &#39;classification&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.experimental.figs_ensembles.FIGSExt" href="figs_ensembles.html#imodels.experimental.figs_ensembles.FIGSExt">FIGSExt</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.experimental.figs_ensembles.FIGSExt" href="figs_ensembles.html#imodels.experimental.figs_ensembles.FIGSExt">FIGSExt</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.experimental.figs_ensembles.FIGSExt.fit" href="figs_ensembles.html#imodels.experimental.figs_ensembles.FIGSExt.fit">fit</a></code></li>
+<li><code><a title="imodels.experimental.figs_ensembles.FIGSExt.set_fit_request" href="figs_ensembles.html#imodels.experimental.figs_ensembles.FIGSExt.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="imodels.experimental.FIGSExtRegressor"><code class="flex name class">
+<span>class <span class="ident">FIGSExtRegressor</span></span>
+<span>(</span><span>max_rules: int = None, posthoc_ridge: bool = False, include_linear: bool = False, max_features=None, min_impurity_decrease: float = 0.0, k1: int = 0, k2: int = 0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>FIGSExt (sum of trees) classifier.
+Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
+Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
+The total number of splits across all the trees can be restricted by a pre-specified threshold, keeping the model interpretable.
+Experiments across a wide array of real-world datasets show that FIGS achieves state-of-the-art prediction performance when restricted to just a few splits (e.g. less than 20).
+<a href="https://arxiv.org/abs/2201.11931">https://arxiv.org/abs/2201.11931</a></p>
+<p>max_features
+The number of features to consider when looking for the best split
+k1: number of iterations of tree-prediction backfitting to do after making each split
+k2: number of iterations of tree-prediction backfitting to do after the end of the entire
+tree-growing phase</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FIGSExtRegressor(FIGSExt):
+    def _init_prediction_task(self):
+        self.prediction_task = &#39;regression&#39;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.experimental.figs_ensembles.FIGSExt" href="figs_ensembles.html#imodels.experimental.figs_ensembles.FIGSExt">FIGSExt</a></li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.experimental.figs_ensembles.FIGSExt" href="figs_ensembles.html#imodels.experimental.figs_ensembles.FIGSExt">FIGSExt</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.experimental.figs_ensembles.FIGSExt.fit" href="figs_ensembles.html#imodels.experimental.figs_ensembles.FIGSExt.fit">fit</a></code></li>
+<li><code><a title="imodels.experimental.figs_ensembles.FIGSExt.set_fit_request" href="figs_ensembles.html#imodels.experimental.figs_ensembles.FIGSExt.set_fit_request">set_fit_request</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -80,6 +170,7 @@
 <li><a href="https://csinva.io/imodels/shrinkage.html">Hierarchical shrinkage: post-hoc regularization for tree-based methods</a></li>
 <li><a href="https://csinva.io/imodels/figs.html">FIGS: Fast interpretable greedy-tree sums</a></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html">MDI+: Flexible tree-based feature importance</a></li>
+<li><a href="https://csinva.io/imodels/gpgam.html">GPGam: Additive Gaussian processes over binned features</a></li>
 </ul>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
@@ -91,6 +182,16 @@
 <li><code><a title="imodels.experimental.stableskope" href="stableskope.html">imodels.experimental.stableskope</a></code></li>
 <li><code><a title="imodels.experimental.tree_gam_simple" href="tree_gam_simple.html">imodels.experimental.tree_gam_simple</a></code></li>
 <li><code><a title="imodels.experimental.util" href="util.html">imodels.experimental.util</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.experimental.FIGSExtClassifier" href="#imodels.experimental.FIGSExtClassifier">FIGSExtClassifier</a></code></h4>
+</li>
+<li>
+<h4><code><a title="imodels.experimental.FIGSExtRegressor" href="#imodels.experimental.FIGSExtRegressor">FIGSExtRegressor</a></code></h4>
+</li>
 </ul>
 </li>
 </ul>

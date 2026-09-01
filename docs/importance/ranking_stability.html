@@ -55,7 +55,6 @@ def tauAP_b(x, y, decreasing=True):
 
 
 def _tauAP_b_ties(x, y):
-    n = len(x)
     rx = rankdata(x)
     ry = rankdata(y, method=&#34;ordinal&#34;)
     p = rankdata(y, method=&#34;min&#34;)
