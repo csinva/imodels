@@ -143,9 +143,12 @@ model.interaction_terms()                # the pairs the model chose
                           showlegend: false, type: 'scatter', xaxis: ax, yaxis: ay,
                           hovertemplate: name + ' %{x}<br>adds %{y:.3f}<extra></extra>' });
                         owner.push(name);
-                        layout['xaxis' + n] = { domain: col, anchor: ay, nticks: 4,
+                        /* plotly's first axis is 'xaxis', not 'xaxis1'; a layout key
+                           called 'xaxis1' is ignored and the panel loses its domain */
+                        var sfx = (n === 1 ? '' : n);
+                        layout['xaxis' + sfx] = { domain: col, anchor: ay, nticks: 4,
                           tickfont: { size: 9 }, zeroline: false };
-                        layout['yaxis' + n] = { domain: row, anchor: ax, nticks: 4,
+                        layout['yaxis' + sfx] = { domain: row, anchor: ax, nticks: 4,
                           tickfont: { size: 9 }, zeroline: true, zerolinecolor: '#ddd' };
                         ann.push({ text: name + ' <span style="color:#888">' +
                             (f.amplitude * 100).toFixed(0) + 'k</span>',
