@@ -88,6 +88,15 @@ class TestGPGamRegressor:
         assert model.log_target_ is True
         assert np.all(model.predict(X) > 0)
 
+    def test_explicit_parameters_beat_the_schedule(self):
+        """A value passed to the constructor must not be overridden by the schedule."""
+        rng = np.random.RandomState(8)
+        X = rng.randn(1200, 4)                       # over the 1000-row threshold
+        y = X[:, 0] + X[:, 1] * X[:, 2] + rng.randn(1200) * 0.3
+        model = _GPGam(n_pairs=2, n_steps=15).fit(X, y)
+        assert len(model.interaction_terms()) == 2
+        assert model.n_steps == 15
+
     def test_constant_feature_is_dropped(self):
         X, y = _additive_data(n=200, seed=4)
         X = np.column_stack([X, np.ones(len(X))])

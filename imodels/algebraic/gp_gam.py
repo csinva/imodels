@@ -22,6 +22,7 @@ bagging, and two fits on the same data give the same model.
 Reference implementation: https://github.com/csinva/imodels
 """
 
+import inspect
 from itertools import combinations
 
 import numpy as np
@@ -363,16 +364,21 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
             set_feature_names_in(self, X_original)
         n, d = X.shape
 
-        # capacity grows with the sample size
+        # Capacity grows with the sample size, but only for the knobs the caller
+        # left alone: anything passed to the constructor takes precedence, so
+        # asking for n_pairs=2 gets two pairs rather than the schedule's count.
+        self._sched = {}
         if self.schedule:
-            if n <= 1000:
-                self._sched = dict(n_bins=64, p_budget=1500, pair_bins=12,
-                                   n_pairs=min(2 * d, 12), pair_res=(12,))
+            if len(y) <= 1000:
+                sched = dict(n_bins=64, p_budget=1500, pair_bins=12,
+                             n_pairs=min(2 * d, 12), pair_res=(12,))
             else:
-                self._sched = dict(n_bins=256, p_budget=4200, pair_bins=28,
-                                   n_pairs=min(3 * d, 48), pair_res=(28, 24, 16))
-        else:
-            self._sched = {}
+                sched = dict(n_bins=256, p_budget=4200, pair_bins=28,
+                             n_pairs=min(3 * d, 48), pair_res=(28, 24, 16))
+            defaults = {k: v.default for k, v in
+                        inspect.signature(type(self).__init__).parameters.items()}
+            self._sched = {k: v for k, v in sched.items()
+                           if getattr(self, k) == defaults.get(k)}
 
         # 1. condition the target
         self.log_target_ = False
