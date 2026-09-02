@@ -287,17 +287,33 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                 Ai = np.linalg.pinv(A)
             i0, i1 = offsets[u], offsets[u + 1]
             G[i0:i1, i0:i1] += Ai
+        post_var = None
         for ridge in (0.0, 1e-4, 1e-3, 1e-2):
             try:
                 cf = cho_factor(G + ridge * np.eye(P), lower=True)
                 fhat = cho_solve(cf, b / sig2)
                 if np.isfinite(fhat).all() and np.abs(fhat).max() < 1e6:
+                    # The posterior covariance of the bin values is the inverse
+                    # of this same matrix. A shape function is only identified up
+                    # to a constant, though, because any level shift can be
+                    # absorbed by the intercept, so report the variance of the
+                    # curve about its own mean rather than the raw diagonal.
+                    cov = cho_solve(cf, np.eye(P))
+                    post_var = np.empty(P)
+                    for u in range(len(blocks)):
+                        i0, i1 = int(offsets[u]), int(offsets[u + 1])
+                        S = cov[i0:i1, i0:i1]
+                        row_mean = S.mean(axis=1)
+                        post_var[i0:i1] = np.diag(S) - 2 * row_mean + S.mean()
+                    post_var = np.clip(post_var, 0.0, None)
                     break
             except np.linalg.LinAlgError:
                 continue
         else:
             fhat = np.linalg.lstsq(G + np.eye(P), b / sig2, rcond=None)[0]
-        return fhat, amps, (nll_best if np.isfinite(nll_best) else np.inf)
+        if post_var is None:
+            post_var = np.full(P, np.nan)
+        return fhat, amps, (nll_best if np.isfinite(nll_best) else np.inf), post_var
 
     # ------------------------------------------------------------------
     @staticmethod
@@ -406,9 +422,10 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         cols = [bidx[:, j] for j in units]
         C, b, offsets = self._suffstats(cols, sizes, yn)
         blocks = [self._feature_kernels(s) for s in sizes]
-        fhat, amps, _ = self._fit_ml(blocks, offsets, C, b, yy, n)
+        fhat, amps, _, post_var = self._fit_ml(blocks, offsets, C, b, yy, n)
         self.main_offsets_ = offsets
         self.main_values_ = fhat
+        self.main_var_ = post_var
         self.pairs_ = []
         self.pair_values_ = []
 
@@ -420,10 +437,11 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                 resid -= fhat[offsets[u]:offsets[u + 1]][bidx[:, j]]
             selected = self._screen_pairs(X, units, resid, n_pairs, amps)
             if selected:
-                fhat, self.pairs_, self.pair_values_ = self._fit_pairs(
+                fhat, self.pairs_, self.pair_values_, post_var = self._fit_pairs(
                     X, bidx, units, sizes, blocks, C, b, yy, n, offsets,
                     fhat, selected, yn)
                 self.main_values_ = fhat
+                self.main_var_ = post_var
 
         rng = float(np.max(y) - np.min(y))
         self.clip_ = (float(np.min(y)) - 0.05 * rng, float(np.max(y)) + 0.05 * rng)
@@ -503,8 +521,8 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                         continue
                     Cc, bc, offc = self._suffstats(cc, ss, target)
                     kern = [self._pair_kernels(t["na"], t["nb"]) for t in dd]
-                    fc, _, nll = self._fit_ml(kern, offc, Cc, bc,
-                                              float(np.sum(target ** 2)), n)
+                    fc, _, nll, _ = self._fit_ml(kern, offc, Cc, bc,
+                                                 float(np.sum(target ** 2)), n)
                     if best is None or nll < best[0]:
                         best = (nll, fc, offc, cc, dd)
                 if best is None:
@@ -522,10 +540,10 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                     adj -= vals[p][cols[p]]
             bm = np.concatenate([np.bincount(bidx[:, j], weights=adj, minlength=sizes[u])
                                  for u, j in enumerate(units)])
-            main_vals, _, _ = self._fit_ml(blocks, offsets, C, bm,
-                                           float(np.sum(adj ** 2)), n)
+            main_vals, _, _, main_var = self._fit_ml(blocks, offsets, C, bm,
+                                                     float(np.sum(adj ** 2)), n)
         keep = [p for p in selected if defs[p] is not None]
-        return main_vals, [defs[p] for p in keep], [vals[p] for p in keep]
+        return (main_vals, [defs[p] for p in keep], [vals[p] for p in keep], main_var)
 
     # ------------------------------------------------------------------
     def predict(self, X):
@@ -551,8 +569,17 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         return np.exp(out) if self.log_target_ else out
 
     # ------------------------------------------------------------------
-    def shape_function(self, feature):
+    def shape_function(self, feature, return_std=False):
         """Return ``(grid, values)``, the fitted curve for one feature.
+
+        Pass ``return_std=True`` to also get ``std``, the posterior standard
+        deviation of the curve at each bin. The Gaussian process supplies this
+        from the same fit, at no extra cost beyond one solve.
+
+        The standard deviation is for the curve measured about its own mean. A
+        shape function is only identified up to a constant, since any level shift
+        can be absorbed by the intercept, so the raw per-bin variance is mostly a
+        shared offset and would overstate how uncertain the shape is.
 
         The values are on the scale the model was fit on, which is standardized
         and may be logged. That is the scale on which the model is additive.
@@ -562,8 +589,13 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         if j not in self.edges_:
             raise ValueError(f"feature {j} was constant and carries no shape function")
         u = self.units_.index(j)
-        offs = self.main_offsets_
-        return self.grids_[j].copy(), self.main_values_[offs[u]:offs[u + 1]].copy() * self.y_std_
+        i0, i1 = self.main_offsets_[u], self.main_offsets_[u + 1]
+        grid = self.grids_[j].copy()
+        values = self.main_values_[i0:i1].copy() * self.y_std_
+        if not return_std:
+            return grid, values
+        std = np.sqrt(self.main_var_[i0:i1]) * self.y_std_
+        return grid, values, std
 
     def interaction_terms(self):
         """List the fitted pairwise interactions as ``(feature_a, feature_b)``."""

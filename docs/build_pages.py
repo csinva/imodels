@@ -34,7 +34,11 @@ PAGES = {
         "    <script type=\"text/javascript\">window.PlotlyConfig = { MathJaxConfig: 'local' };</script>\n",
     ),
     "mdi_plus": ("MDI+", ""),
-    "gpgam": ("GPGam", ""),
+    "gpgam": (
+        "GPGam",
+        '    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>\n'
+        "    <script type=\"text/javascript\">window.PlotlyConfig = { MathJaxConfig: 'local' };</script>\n",
+    ),
 }
 
 

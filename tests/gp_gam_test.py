@@ -62,6 +62,24 @@ class TestGPGamRegressor:
         # feature 0 carries a strong linear effect, feature 2 is noise
         assert np.ptp(values) > np.ptp(model.shape_function(2)[1])
 
+    def test_shape_function_reports_uncertainty(self):
+        """The GP supplies a posterior band for each curve."""
+        X, y = _additive_data(n=400, seed=6)
+        model = _GPGam(**FAST).fit(X, y)
+        grid, values = model.shape_function(0)
+        grid2, values2, std = model.shape_function(0, return_std=True)
+        np.testing.assert_allclose(grid, grid2)
+        np.testing.assert_allclose(values, values2)
+        assert std.shape == values.shape
+        assert np.all(np.isfinite(std)) and np.all(std >= 0)
+
+    def test_uncertainty_is_small_next_to_a_strong_effect(self):
+        """A band wider than the curve itself would say the curve means nothing."""
+        X, y = _additive_data(n=600, seed=7)
+        model = _GPGam(**FAST).fit(X, y)
+        values, std = model.shape_function(0, return_std=True)[1:]
+        assert 2 * std.mean() < np.ptp(values)
+
     def test_log_target_rule_handles_skewed_positive_targets(self):
         rng = np.random.RandomState(7)
         X = rng.randn(400, 2)

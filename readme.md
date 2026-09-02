@@ -375,9 +375,12 @@ That one likelihood also settles every choice a GAM usually leaves to the user. 
 ```python
 from imodels import GPGamRegressor
 model = GPGamRegressor().fit(X_train, y_train)
-grid, values = model.shape_function(0)     # the curve fit for feature 0
-model.interaction_terms()                  # the pairs it chose to include
+
+grid, values, std = model.shape_function(0, return_std=True)   # feature 0's curve, with its band
+model.interaction_terms()                                      # the pairs it chose to include
 ```
+
+Because the model is a Gaussian process, each curve arrives with a posterior band, so you can see which parts of a shape function the data actually pins down. The [post](https://csinva.io/imodels/gpgam.html) walks through a fitted model feature by feature.
 
 Across four regression benchmark suites covering 113 datasets, GPGam is the strongest interpretable model on three of them and ties explainable boosting machines on the fourth. OpenML-CTR23 is the most informative of the four, since it was held out and used for no design decision. There GPGam places first among interpretable models, with a mean rank of 2.11 against EBM's 2.32.
 
