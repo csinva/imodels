@@ -14,12 +14,12 @@
                     <p><a href="https://csinva.io/imodels/algebraic/gp_gam.html">&#128451; API</a>, <a
                             href="https://github.com/csinva/imodels">&#128279; Github</a></p>
 
-                    <ol class="toc-main">
-                      <li><a href="#gam-intro">Why additive models</a></li>
-                      <li><a href="#how-it-works">How GPGam works</a></li>
-                      <li><a href="#results">How well it does, and how it was found</a></li>
-                      <li><a href="#using-it">Using it</a></li>
-                    </ol>
+                    <nav class="toc-main">
+                      <a href="#gam-intro"><span>1</span> Why additive models</a>
+                      <a href="#how-it-works"><span>2</span> How GPGam works</a>
+                      <a href="#results"><span>3</span> How well it does</a>
+                      <a href="#using-it"><span>4</span> Using it</a>
+                    </nav>
 
                     <h2 id="gam-intro">1. Why additive models</h2>
 
@@ -190,26 +190,33 @@ y.T @ y</code></pre>
                         50 to 72,000 rows and up to 1,024 features. GPGam is the strongest interpretable
                         model on three of them, and ties explainable boosting machines on the fourth.</p>
 
-                    <table>
+                    <table class="ranktbl">
                         <thead>
-                            <tr><th>Suite</th><th>GPGam</th><th>EBM</th><th>Notes</th></tr>
+                            <tr><th>model</th><th>imodels-65</th><th>classic-7</th><th>TabArena-13</th><th>CTR23-28</th></tr>
+                            <tr><th></th><th style="font-weight:normal;color:#777">65 sets</th><th style="font-weight:normal;color:#777">7 sets</th><th style="font-weight:normal;color:#777">13 sets</th><th style="font-weight:normal;color:#777">28 sets</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td>imodels (65 datasets)</td><td><b>4.60</b></td><td>5.00</td>
-                                <td>mean rank, capped at 1k training rows</td></tr>
-                            <tr><td>Classic-7 (full size)</td><td><b>2.43</b></td><td>3.43</td>
-                                <td>wins 6 of 7 against EBM</td></tr>
-                            <tr><td>TabArena-13</td><td>2.69</td><td>2.69</td>
-                                <td>tied with EBM; wins 6 of 13</td></tr>
-                            <tr><td>OpenML-CTR23 (28)</td><td><b>2.11</b></td><td>2.32</td>
-                                <td>held out; pool of interpretable models</td></tr>
+                            <tr class="tblsec"><td colspan="5">Interpretable</td></tr>
+                            <tr><td>GPGam</td><td><b>3.58</b></td><td><b>2.57</b></td><td>2.85</td><td><b>3.36</b></td></tr>
+                            <tr><td>EBM</td><td>3.91</td><td>3.57</td><td><b>2.77</b></td><td>3.46</td></tr>
+                            <tr><td>FIGS</td><td>7.83</td><td>7.29</td><td>6.69</td><td>6.64</td></tr>
+                            <tr><td>RuleFit</td><td>6.74</td><td>7.86</td><td>7.38</td><td>7.61</td></tr>
+                            <tr><td>Ridge</td><td>6.83</td><td>9.43</td><td>8.77</td><td>7.75</td></tr>
+                            <tr><td>Hierarchical shrinkage</td><td>7.71</td><td>8.43</td><td>8.23</td><td>7.96</td></tr>
+                            <tr><td>Decision tree</td><td>8.14</td><td>8.29</td><td>8.46</td><td>8.71</td></tr>
+                            <tr class="tblsec"><td colspan="5">Not interpretable</td></tr>
+                            <tr><td>TabPFN</td><td><b>2.52</b></td><td><b>1.86</b></td><td>3.54</td><td><b>2.46</b></td></tr>
+                            <tr><td>Gradient boosting</td><td>4.78</td><td>4.71</td><td>4.69</td><td>4.61</td></tr>
+                            <tr><td>Random forest</td><td>5.15</td><td>3.29</td><td><b>3.46</b></td><td>4.68</td></tr>
+                            <tr><td>Neural net</td><td>8.80</td><td>8.71</td><td>9.15</td><td>8.75</td></tr>
                         </tbody>
                     </table>
 
-                    <p>CTR23 is the most informative of the four. It was downloaded after the method was
-                        finished and was used for no design decision, so it measures whether the model
-                        generalizes rather than whether it was tuned. Only TabPFN ranks higher overall, and
-                        TabPFN is a black box that cannot fit several of the wider datasets at all.</p>
+                    <p class="tblnote">Mean rank across the datasets of each suite, lower is better,
+                        over the same eleven models everywhere. Ranks are only comparable down a column,
+                        not across rows of different pools. Bold marks the best model within its
+                        section. TabPFN could not be fit on two TabArena datasets, one with 1,024
+                        features and one with 81, and is ranked last on those.</p>
 
                     <p>The model fails in the same way on every suite, which is worth knowing before you
                         use it. It loses on smooth simulations and on data with strong interactions, such
@@ -259,21 +266,9 @@ y.T @ y</code></pre>
                         put back. Automatic relevance determination, the interaction fitting, and the
                         log target rule all survived that way, having failed to be removable.</p>
 
-                    <p>The prompts that drove the search, the benchmark harnesses, and the per-dataset
-                        results are all kept alongside the model in
-                        <a href="https://github.com/csinva/agentic-imodels/tree/main/evolve_gam"><code>evolve_gam/</code></a>.
-                        If you use any of this in academic work, please cite the paper:</p>
-
-                    <pre><code>@misc{singh2026agenticimodels,
-      title={Agentic-imodels: Evolving agentic interpretability tools via autoresearch},
-      author={Chandan Singh and Yan Shuo Tan and Weijia Xu and Zelalem Gero and
-              Weiwei Yang and Michel Galley and Jianfeng Gao},
-      year={2026},
-      eprint={2605.03808},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2605.03808},
-}</code></pre>
+                    <p>The prompts that drove the search, the benchmark harnesses, and the
+                        per-dataset results are all kept alongside the model in
+                        <a href="https://github.com/csinva/agentic-imodels/tree/main/evolve_gam"><code>evolve_gam/</code></a>.</p>
 
 
                     <script>
@@ -485,8 +480,19 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
                       .gam-readings li { margin: 0.45em 0; }
                     </style>
                     <style>
-                      ol.toc-main { font-size: 15px; margin: 0.8em 0 1.6em; padding-left: 1.4em; }
-                      ol.toc-main li { margin: 0.25em 0; }
+                      nav.toc-main { display: flex; flex-wrap: wrap; gap: 8px;
+                        margin: 1em 0 1.8em; border-top: 1px solid #ddd;
+                        border-bottom: 1px solid #ddd; padding: 9px 0; }
+                      nav.toc-main a { font-size: 14px; padding: 3px 10px; border-radius: 3px;
+                        white-space: nowrap; }
+                      nav.toc-main a:hover { background: #f0f5f8; }
+                      nav.toc-main span { display: inline-block; min-width: 16px; color: #999;
+                        font-variant-numeric: tabular-nums; }
+                      table.ranktbl td:not(:first-child), table.ranktbl th:not(:first-child) {
+                        text-align: right; font-variant-numeric: tabular-nums; }
+                      table.ranktbl tr.tblsec td { background: #eef2f4; font-weight: bold;
+                        font-size: 13px; letter-spacing: .03em; }
+                      p.tblnote { font-size: 13px; color: #666; }
                       h3 { margin-top: 1.6em; }
                     </style>
 
