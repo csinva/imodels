@@ -276,9 +276,13 @@ model.interaction_terms()                # the pairs the model chose
 
                     <h2>How the model was found</h2>
 
-                    <p>GPGam was not designed by hand. It came out of a search loop that was given a
-                        benchmark, a rule that the model stay additive with at most pairwise terms, and
-                        one instruction: beat explainable boosting machines. The loop proposed a change,
+                    <p>GPGam was not designed by hand. It came out of the autoresearch loop described
+                        in <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels: Evolving agentic
+                        interpretability tools via autoresearch</a>, and the code that produced it is in
+                        the <a href="https://github.com/csinva/agentic-imodels">agentic-imodels</a>
+                        repository, under <code>evolve_gam/</code>. The loop was given a benchmark, a
+                        rule that the model stay additive with at most pairwise terms, and one
+                        instruction: beat explainable boosting machines. The loop proposed a change,
                         measured it on 65 regression datasets, and kept it only if the numbers held.
                         Every idea that failed was recorded with the cost of failing, which is why the
                         parameter list is short: anything that could not pay for itself was removed.</p>
@@ -310,6 +314,22 @@ model.interaction_terms()                # the pairs the model chose
                         pool. Each removal was measured first, and the ones that cost real accuracy were
                         put back. Automatic relevance determination, the interaction fitting, and the
                         log target rule all survived that way, having failed to be removable.</p>
+
+                    <p>The prompts that drove the search, the benchmark harnesses, and the per-dataset
+                        results are all kept alongside the model in
+                        <a href="https://github.com/csinva/agentic-imodels/tree/main/evolve_gam"><code>evolve_gam/</code></a>.
+                        If you use any of this in academic work, please cite the paper:</p>
+
+                    <pre><code>@misc{singh2026agenticimodels,
+      title={Agentic-imodels: Evolving agentic interpretability tools via autoresearch},
+      author={Chandan Singh and Yan Shuo Tan and Weijia Xu and Zelalem Gero and
+              Weiwei Yang and Michel Galley and Jianfeng Gao},
+      year={2026},
+      eprint={2605.03808},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2605.03808},
+}</code></pre>
 
                     <script>
                     (function () {
