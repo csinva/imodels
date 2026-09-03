@@ -375,6 +375,17 @@
       margin: 0;
     }
     summary { cursor: pointer; }
+
+    /* pdoc leaves tables unruled, which makes wide result tables hard to follow */
+    .article table, #content table { border-collapse: collapse; margin: 1em 0; }
+    .article table th, .article table td,
+    #content table th, #content table td {
+      border: 1px solid #ddd; padding: 5px 10px; text-align: left;
+    }
+    .article table th, #content table th { background: #f5f5f5; font-weight: bold; }
+    .article table tr:nth-child(even) td, #content table tr:nth-child(even) td {
+      background: #fafafa;
+    }
   </style>
 
   % if google_analytics:
