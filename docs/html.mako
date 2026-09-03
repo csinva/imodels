@@ -282,11 +282,23 @@
       ${show_column_list(variables)}
     </li>
     % endif
-    % if classes:
-    <li><h3><a href="#header-classes">Classes</a></h3>
+    <%
+      # a module lists its own classes; a package has none of its own, so it
+      # lists the ones its sub-modules define, which is what makes the sidebar
+      # useful for navigating now that the sub-module list itself is gone
+      index_classes = list(classes)
+      if not index_classes:
+          for _m in submodules:
+              index_classes += _m.classes(sort=sort_identifiers)
+              if not _m.classes():
+                  for _m2 in _m.submodules():
+                      index_classes += _m2.classes(sort=sort_identifiers)
+    %>
+    % if index_classes:
+    <li><h3>Classes</h3>
       <ul>
-      % for c in classes:
-        <li><h4><code>${link(c)}</code></h4></li>
+      % for c in index_classes:
+        <li>${link(c)}</li>
       % endfor
       </ul>
     </li>

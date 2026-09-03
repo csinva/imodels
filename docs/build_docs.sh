@@ -1,8 +1,11 @@
 cd ../imodels
 uv run pdoc --html . --output-dir ../docs --template-dir ../docs
-cp -rf ../docs/imodels/* ../docs/
-rm -rf ../docs/imodels
 cd ../docs
+# drop pages for modules pdoc no longer builds, so deleting a module from the
+# package removes its page instead of leaving it to rot on an old template
+uv run python prune_orphans.py
+cp -rf imodels/* .
+rm -rf imodels
 rm -rf tests
 uv run python style_docs.py
 

@@ -293,7 +293,7 @@ FPSkope and SkopeRules differ only in the way they generate candidate rules: FPS
 </details>
 <details>
 <summary><h3>Support for different tasks</h3></summary>
-Different models support different machine-learning tasks. Current support for different models is given below (each of these models can be imported directly from imodels (e.g. <code>from <a title="imodels" href="#imodels">imodels</a> import <a title="imodels.RuleFitClassifier" href="#imodels.RuleFitClassifier">RuleFitClassifier</a></code>):
+Different models support different machine-learning tasks. Current support for different models is given below (each of these models can be imported directly from imodels (e.g. <code>from <a title="imodels" href="#imodels">imodels</a> import <a title="imodels.RuleFitClassifier" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></code>):
 All of these models follow the standard sklearn estimator API, which is checked for every model in [tests/model_api_test.py](tests/model_api_test.py): <code>fit</code> returns the estimator, <code>predict</code> returns labels drawn from <code>classes\_</code> (strings included), <code>predict\_proba</code> returns an <code>(n\_samples, n\_classes)</code> matrix whose rows sum to 1, DataFrame input sets <code>feature\_names\_in\_</code>,, models can be <code>clone</code>d and configured with <code>get\_params</code>/<code>set\_params</code>, and every model works inside sklearn pipelines and grid searches.
 | Model
 |
@@ -313,7 +313,7 @@ Regression
 | [FPSkopeClassifier](https://csinva.io/imodels/rule_set/fpskope.html#imodels.rule_set.fpskope.FPSkopeClassifier) |
 | Like Skope, but generates candidate rules with FPGrowth; requires discretized features |
 | Rulefit rule set (XGBoost)
-| pass `tree_generator=XGBClassifier(...)` to <code><a title="imodels.RuleFitClassifier" href="#imodels.RuleFitClassifier">RuleFitClassifier</a></code> | pass `tree_generator=XGBRegressor(...)` to <code><a title="imodels.RuleFitRegressor" href="#imodels.RuleFitRegressor">RuleFitRegressor</a></code> | Requires [xgboost](https://pypi.org/project/xgboost/) |
+| pass `tree_generator=XGBClassifier(...)` to <code><a title="imodels.RuleFitClassifier" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></code> | pass `tree_generator=XGBRegressor(...)` to <code><a title="imodels.RuleFitRegressor" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></code> | Requires [xgboost](https://pypi.org/project/xgboost/) |
 | FPLasso rule set
 | [FPLassoClassifier](https://csinva.io/imodels/rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoClassifier) | [FPLassoRegressor](https://csinva.io/imodels/rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoRegressor) | Lasso over rules mined with FPGrowth; requires discretized features |
 | Boosted rule set
@@ -369,14 +369,14 @@ Regression
 | [DistilledRegressor](https://csinva.io/imodels/util/distillation.html#imodels.util.distillation.DistilledRegressor) | Wraps any sklearn-compatible models |
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)
 | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
-**Feature scaling.** Most models here work on raw features. <code><a title="imodels.SLIMClassifier" href="#imodels.SLIMClassifier">SLIMClassifier</a></code> and
-<code><a title="imodels.SLIMRegressor" href="#imodels.SLIMRegressor">SLIMRegressor</a></code> are the exception: their coefficients are integers, so features
+**Feature scaling.** Most models here work on raw features. <code><a title="imodels.SLIMClassifier" href="algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></code> and
+<code><a title="imodels.SLIMRegressor" href="algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></code> are the exception: their coefficients are integers, so features
 on very different scales collapse to zero when rounded. Standardize X before
 fitting them (they warn if rounding has removed most of the model).
-**Multiclass.** These classifiers handle more than two classes: <code><a title="imodels.FIGSClassifier" href="#imodels.FIGSClassifier">FIGSClassifier</a></code>,
-<code><a title="imodels.GreedyTreeClassifier" href="#imodels.GreedyTreeClassifier">GreedyTreeClassifier</a></code>, <code><a title="imodels.HSTreeClassifier" href="#imodels.HSTreeClassifier">HSTreeClassifier</a></code>, <code><a title="imodels.TaoTreeClassifier" href="#imodels.TaoTreeClassifier">TaoTreeClassifier</a></code>,
-<code><a title="imodels.BoostedRulesClassifier" href="#imodels.BoostedRulesClassifier">BoostedRulesClassifier</a></code>, <code><a title="imodels.SLIMClassifier" href="#imodels.SLIMClassifier">SLIMClassifier</a></code>, <code><a title="imodels.C45TreeClassifier" href="#imodels.C45TreeClassifier">C45TreeClassifier</a></code>,
-<code><a title="imodels.DecisionTreeCCPClassifier" href="#imodels.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></code> and the <code>CV</code> variants. The rule-set and rule-list models are binary-only and raise a
+**Multiclass.** These classifiers handle more than two classes: <code><a title="imodels.FIGSClassifier" href="tree/figs.html#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></code>,
+<code><a title="imodels.GreedyTreeClassifier" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></code>, <code><a title="imodels.HSTreeClassifier" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></code>, <code><a title="imodels.TaoTreeClassifier" href="tree/tao.html#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></code>,
+<code><a title="imodels.BoostedRulesClassifier" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></code>, <code><a title="imodels.SLIMClassifier" href="algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></code>, <code><a title="imodels.C45TreeClassifier" href="tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></code>,
+<code><a title="imodels.DecisionTreeCCPClassifier" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></code> and the <code>CV</code> variants. The rule-set and rule-list models are binary-only and raise a
 clear error if given a multiclass target, rather than silently treating it as
 binary.
 **Categorical features.** <code>FIGS</code> takes them directly — pass the column names and
@@ -392,7 +392,7 @@ columns that a rule model needs binarized).
 <details>
 <summary><h3>Plotting trees with dtreeviz</h3></summary>
 Tree-based models can be drawn with [dtreeviz](https://github.com/parrt/dtreeviz).
-<code><a title="imodels.shadow_tree" href="#imodels.shadow_tree">shadow\_tree()</a></code> builds the <code>ShadowDecTree</code> it needs from any imodels tree model:
+<code><a title="imodels.shadow_tree" href="util/tree_viz.html#imodels.util.tree_viz.shadow_tree">shadow\_tree()</a></code> builds the <code>ShadowDecTree</code> it needs from any imodels tree model:
 <pre><code class="language-python">import dtreeviz
 from imodels import FIGSClassifier, shadow_tree
 
@@ -407,7 +407,7 @@ dtreeviz is not a dependency and is imported only when this is called.
 <details>
 <summary><h3>Inspecting the rules a model learned</h3></summary>
 Every rule-based model exposes its rules the same way, as a <code>pandas</code> DataFrame with
-one row per rule, via <code><a title="imodels.get_rules" href="#imodels.get_rules">get\_rules()</a></code>:
+one row per rule, via <code><a title="imodels.get_rules" href="util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get\_rules()</a></code>:
 <pre><code class="language-python">from imodels import FIGSClassifier
 
 model = FIGSClassifier(max_rules=4).fit(X_train, y_train, feature_names=feature_names)
@@ -431,7 +431,7 @@ of the matching rules sum to the model's output.
 This works across rule sets, rule lists and tree-based models (RuleFit, SkopeRules,
 SLIPPER, greedy and Bayesian rule lists, FIGS, CART, C4.5, TAO, boosted rules, and
 hierarchical shrinkage, including the <code>CV</code> variants). It is also available as a
-function, <code><a title="imodels.get_rules" href="#imodels.get_rules">get\_rules()</a>(model)</code>, and takes an optional <code>feature\_names</code> argument
+function, <code><a title="imodels.get_rules" href="util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get\_rules()</a>(model)</code>, and takes an optional <code>feature\_names</code> argument
 to rename the features. Models that aren't rule-based raise a clear error.
 </details>
 <details>
@@ -702,6 +702,56 @@ __all__ = [
 <li><a href="https://csinva.io/imodels/gpgam.html"><b>GPGam</b>: Additive Gaussian processes over binned features</a></li>
 <li><a href="https://csinva.io/imodels/shrinkage.html"><b>Hierarchical shrinkage</b>: post-hoc regularization for tree-based methods</a></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html"><b>MDI+</b>: Flexible tree-based feature importance</a></li>
+</ul>
+</li>
+<li><h3>Classes</h3>
+<ul>
+<li><a title="imodels.AutoInterpretableClassifier" href="util/automl.html#imodels.util.automl.AutoInterpretableClassifier">AutoInterpretableClassifier</a></li>
+<li><a title="imodels.AutoInterpretableRegressor" href="util/automl.html#imodels.util.automl.AutoInterpretableRegressor">AutoInterpretableRegressor</a></li>
+<li><a title="imodels.BART" href="experimental/bartpy/index.html#imodels.experimental.bartpy.BART">BART</a></li>
+<li><a title="imodels.BRLDiscretizer" href="discretization/index.html#imodels.discretization.BRLDiscretizer">BRLDiscretizer</a></li>
+<li><a title="imodels.BasicDiscretizer" href="discretization/index.html#imodels.discretization.BasicDiscretizer">BasicDiscretizer</a></li>
+<li><a title="imodels.BayesianRuleListClassifier" href="rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">BayesianRuleListClassifier</a></li>
+<li><a title="imodels.BayesianRuleSetClassifier" href="rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></li>
+<li><a title="imodels.BoostedRulesClassifier" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></li>
+<li><a title="imodels.BoostedRulesRegressor" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a></li>
+<li><a title="imodels.C45TreeClassifier" href="tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></li>
+<li><a title="imodels.DecisionTreeCCPClassifier" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></li>
+<li><a title="imodels.DecisionTreeCCPRegressor" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></li>
+<li><a title="imodels.DistilledRegressor" href="util/distillation.html#imodels.util.distillation.DistilledRegressor">DistilledRegressor</a></li>
+<li><a title="imodels.FIGSClassifier" href="tree/figs.html#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></li>
+<li><a title="imodels.FIGSClassifierCV" href="tree/figs.html#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a></li>
+<li><a title="imodels.FIGSRegressor" href="tree/figs.html#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></li>
+<li><a title="imodels.FIGSRegressorCV" href="tree/figs.html#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a></li>
+<li><a title="imodels.FPLassoClassifier" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoClassifier">FPLassoClassifier</a></li>
+<li><a title="imodels.FPLassoRegressor" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoRegressor">FPLassoRegressor</a></li>
+<li><a title="imodels.FPSkopeClassifier" href="rule_set/fpskope.html#imodels.rule_set.fpskope.FPSkopeClassifier">FPSkopeClassifier</a></li>
+<li><a title="imodels.FastFrugalTreeClassifier" href="rule_list/fast_frugal_tree.html#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a></li>
+<li><a title="imodels.GPGamRegressor" href="algebraic/gp_gam.html#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a></li>
+<li><a title="imodels.GreedyRuleListClassifier" href="rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></li>
+<li><a title="imodels.GreedyTreeClassifier" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></li>
+<li><a title="imodels.GreedyTreeRegressor" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor">GreedyTreeRegressor</a></li>
+<li><a title="imodels.HSDecisionTreeCCPClassifierCV" href="tree/cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV">HSDecisionTreeCCPClassifierCV</a></li>
+<li><a title="imodels.HSDecisionTreeCCPRegressorCV" href="tree/cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV">HSDecisionTreeCCPRegressorCV</a></li>
+<li><a title="imodels.HSTreeClassifier" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
+<li><a title="imodels.HSTreeClassifierCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></li>
+<li><a title="imodels.HSTreeRegressor" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
+<li><a title="imodels.HSTreeRegressorCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></li>
+<li><a title="imodels.MDLPDiscretizer" href="discretization/mdlp.html#imodels.discretization.mdlp.MDLPDiscretizer">MDLPDiscretizer</a></li>
+<li><a title="imodels.MarginalShrinkageLinearModelRegressor" href="algebraic/marginal_shrinkage_linear_model.html#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor">MarginalShrinkageLinearModelRegressor</a></li>
+<li><a title="imodels.OneRClassifier" href="rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier">OneRClassifier</a></li>
+<li><a title="imodels.RFDiscretizer" href="discretization/index.html#imodels.discretization.RFDiscretizer">RFDiscretizer</a></li>
+<li><a title="imodels.RuleFitClassifier" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></li>
+<li><a title="imodels.RuleFitRegressor" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></li>
+<li><a title="imodels.SLIMClassifier" href="algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></li>
+<li><a title="imodels.SLIMRegressor" href="algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></li>
+<li><a title="imodels.SkopeRulesClassifier" href="rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></li>
+<li><a title="imodels.SlipperClassifier" href="rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SlipperClassifier</a></li>
+<li><a title="imodels.StableClustering" href="clustering/stableclustering.html#imodels.clustering.stableclustering.StableClustering">StableClustering</a></li>
+<li><a title="imodels.TaoTreeClassifier" href="tree/tao.html#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></li>
+<li><a title="imodels.TaoTreeRegressor" href="tree/tao.html#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></li>
+<li><a title="imodels.TreeGAMClassifier" href="algebraic/tree_gam.html#imodels.algebraic.tree_gam.TreeGAMClassifier">TreeGAMClassifier</a></li>
+<li><a title="imodels.TreeGAMRegressor" href="algebraic/tree_gam.html#imodels.algebraic.tree_gam.TreeGAMRegressor">TreeGAMRegressor</a></li>
 </ul>
 </li>
 </ul>

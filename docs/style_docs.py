@@ -77,6 +77,31 @@ data = drop(r'<li><a href="#our-favorite-methods">.*?</ul>\s*</li>\s*', data,
 
 # data += '<link rel="stylesheet" href="github.css">'
 
+# The index lists every re-exported class in its sidebar, and pdoc points those
+# at anchors on this page, which no longer exist now that the class sections are
+# cut. Repoint each one at the module page that documents it.
+import glob
+import os
+
+anchors = {}
+for page in glob.glob('**/*.html', recursive=True):
+    if page == 'index.html' or page.startswith('pages' + os.sep):
+        continue
+    for ref in re.findall(r'<dt id="(imodels\.[\w.]+)">', open(page).read()):
+        anchors.setdefault(ref.rsplit('.', 1)[-1], (page, ref))
+
+
+def _repoint(match):
+    name = match.group(1).rsplit('.', 1)[-1]
+    target = anchors.get(name)
+    if target is None:
+        return match.group(0)
+    return f'href="{target[0]}#{target[1]}"'
+
+
+data, n_repointed = re.subn(r'href="#(imodels\.\w+)"', _repoint, data)
+print(f'  style_docs.py: repointed {n_repointed} sidebar class links to their module pages')
+
 # Write the file out again
 with open('index.html', 'w') as f:
     f.write(data)
