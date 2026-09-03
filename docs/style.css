@@ -1,0 +1,109 @@
+/* imodels documentation styling.
+ *
+ * Every page links this file, generated and hand-written alike, so the two
+ * cannot drift apart. pdoc's own stylesheet still handles the two-column
+ * layout; this file sets the palette, the type and the navbar on top of it.
+ */
+
+:root {
+  --ink: #1b1f23;
+  --muted: #6a737d;
+  --line: #e3e6e8;
+  --line-soft: #eef1f2;
+  --accent: #0b6ea8;
+  --accent-dark: #084d75;
+  --surface: #ffffff;
+  --surface-alt: #f7f9fa;
+  --code-bg: #f4f6f8;
+}
+
+body {
+  color: var(--ink);
+  background: var(--surface);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.62;
+}
+
+/* one link colour everywhere, rather than a different one per page */
+a, a:visited { color: var(--accent); text-decoration: none; }
+a:hover, a:focus { color: var(--accent-dark); text-decoration: underline; }
+
+h1, h2, h3, h4, h5 { color: var(--ink); font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: 2.1em; line-height: 1.15; }
+h2 { font-size: 1.5em; margin: 1.9em 0 0.6em; padding-bottom: 0.25em;
+     border-bottom: 1px solid var(--line-soft); }
+h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
+
+/* ---------- navbar ---------- */
+#site-header {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0.55rem 1.25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 50;
+}
+#site-header .nav-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  color: var(--muted); background: transparent;
+  border: 1px solid transparent; flex: 0 0 auto;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+#site-header .nav-icon:hover {
+  background: var(--surface-alt); color: var(--accent);
+  border-color: var(--line); text-decoration: none;
+}
+#site-header .nav-icon svg { width: 18px; height: 18px; display: block; }
+#site-logo { flex: 0 0 auto; line-height: 0; }
+#site-logo img { height: 34px; width: auto; display: block; }
+#site-tagline {
+  margin: 0; flex: 1 1 auto; min-width: 0;
+  font-size: 0.8rem; line-height: 1.35; color: var(--muted);
+}
+@media (max-width: 760px) {
+  #site-tagline { display: none; }
+  #site-header { gap: 0.6rem; }
+}
+
+/* ---------- layout ---------- */
+#content { padding: 1.6em 2em 4em; }
+#sidebar { padding: 1.6em 1.4em; background: var(--surface-alt);
+           border-right: 1px solid var(--line); }
+#sidebar h1, #sidebar h3 { font-size: 0.78rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted); font-weight: 600;
+  border-bottom: 1px solid var(--line); padding-bottom: 0.35em; }
+#sidebar .toc ul, #sidebar #index { font-size: 0.88rem; }
+#sidebar li { margin: 0.18em 0; }
+
+/* ---------- tables ---------- */
+#content table, .article table {
+  border-collapse: collapse; margin: 1.2em 0; font-size: 0.92em;
+}
+#content table th, #content table td,
+.article table th, .article table td {
+  border: 1px solid var(--line); padding: 6px 11px; text-align: left;
+}
+#content table th, .article table th {
+  background: var(--surface-alt); font-weight: 600;
+}
+#content table tr:nth-child(even) td, .article table tr:nth-child(even) td {
+  background: #fbfcfd;
+}
+
+/* ---------- code ---------- */
+code { background: var(--code-bg); border-radius: 3px; padding: 1px 5px;
+       font-size: 0.9em; }
+pre { background: var(--code-bg); border: 1px solid var(--line);
+      border-radius: 4px; margin: 1.1em 0; }
+pre code { background: transparent; padding: 0; }
+
+/* headings inside a <details> summary must not drop below the arrow */
+summary > h1, summary > h2, summary > h3, summary > h4, summary > h5 {
+  display: inline; margin: 0;
+}
+summary { cursor: pointer; }
+
+/* ---------- footer ---------- */
+#footer { border-top: 1px solid var(--line); color: var(--muted);
+          font-size: 0.8rem; }

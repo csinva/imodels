@@ -336,6 +336,13 @@
   </nav>
 </%def>
 
+<%
+    # generated pages mirror the module tree, so a page nested N directories deep
+    # needs N steps back up to reach the docs root
+    _depth = (len(module.refname.split('.')) - 1 - (0 if module.is_package else 1)
+              if 'module' in context.keys() else 0)
+    _root = '../' * max(_depth, 0)
+%>
 <!doctype html>
 <html lang="${html_lang}">
 <head>
@@ -366,43 +373,7 @@
   <style media="screen and (min-width: 700px)">${css.desktop()}</style>
   <style media="print">${css.print()}</style>
 
-  <style>
-    /* A heading inside <summary> is a block element, so by default it drops onto
-       the line below the disclosure triangle and leaves a gap. Keep it inline. */
-    summary > h1, summary > h2, summary > h3, summary > h4, summary > h5 {
-      display: inline;
-      margin: 0;
-    }
-    summary { cursor: pointer; }
-
-    /* site header: a full-width bar above the content and the sidebar */
-    #site-header { display: flex; align-items: center; gap: 1.2em;
-                   padding: 0.6em 1.4em; border-bottom: 1px solid #ddd;
-                   background: #fff; position: relative; }
-    #site-logo { flex: 0 0 auto; line-height: 0; }
-    #site-logo img { height: 42px; width: auto; display: block; }
-    #site-tagline { margin: 0; font-size: 0.84em; line-height: 1.4; color: #666; flex: 1 1 auto; }
-    #site-header .github-corner { flex: 0 0 auto; color: #fff; line-height: 0; }
-    #site-header .github-corner svg { fill: #70B7FD; display: block; }
-    #site-header .github-corner:hover .octo-arm { animation: octocat-wave 560ms ease-in-out; }
-    @keyframes octocat-wave { 0%,100% { transform: rotate(0) }
-      20%,60% { transform: rotate(-25deg) } 40%,80% { transform: rotate(10deg) } }
-    @media (max-width: 700px) {
-      #site-header { flex-wrap: wrap; gap: 0.6em; }
-      #site-tagline { font-size: 0.78em; }
-    }
-
-    /* pdoc leaves tables unruled, which makes wide result tables hard to follow */
-    .article table, #content table { border-collapse: collapse; margin: 1em 0; }
-    .article table th, .article table td,
-    #content table th, #content table td {
-      border: 1px solid #ddd; padding: 5px 10px; text-align: left;
-    }
-    .article table th, #content table th { background: #f5f5f5; font-weight: bold; }
-    .article table tr:nth-child(even) td, #content table tr:nth-child(even) td {
-      background: #fafafa;
-    }
-  </style>
+  <link rel="stylesheet" href="${_root}style.css">
 
   % if google_analytics:
     <script>
@@ -432,27 +403,30 @@
   <%include file="head.mako"/>
 </head>
 <body>
-<%
-  # generated pages mirror the module tree, so a page nested N directories deep
-  # needs N steps back up to reach the docs root
-  _depth = len(module.refname.split('.')) - 1 - (0 if module.is_package else 1)
-  _root = '../' * _depth
-%>
 <header id="site-header">
+  <a href="${_root}index.html" class="nav-icon" aria-label="Home" title="Home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 10.5 12 3l9 7.5"></path>
+      <path d="M5 9.5V21h14V9.5"></path>
+      <path d="M9.5 21v-6h5v6"></path>
+    </svg>
+  </a>
   <a href="${_root}index.html" id="site-logo">
     <img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
          alt="imodels">
   </a>
   <p id="site-tagline">Concise, transparent, accurate predictive modeling.
     All sklearn-compatible and easy to use.</p>
-  <a href="https://github.com/csinva/imodels" class="github-corner"
-     aria-label="View source on GitHub">
-    <svg width="58" height="58" viewBox="0 0 250 250" aria-hidden="true">
-      <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
-      <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2"
-            fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
-      <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z"
-            fill="currentColor" class="octo-body"></path>
+  <a href="https://github.com/csinva/imodels" class="nav-icon"
+     aria-label="View source on GitHub" title="GitHub">
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+        0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01
+        1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+        0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04
+        2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+        0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
     </svg>
   </a>
 </header>
@@ -487,7 +461,6 @@
 </body>
 </html>
 <!-- add github corner -->
-<a href="https://github.com/csinva/imodels" class="github-corner" aria-label="View source on GitHub"><svg width="120" height="120" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="m128.3,109.0 c113.8,99.7 119.0,89.6 119.0,89.6 c122.0,82.7 120.5,78.6 120.5,78.6 c119.2,72.0 123.4,76.3 123.4,76.3 c127.3,80.9 125.5,87.3 125.5,87.3 c122.9,97.6 130.6,101.9 134.4,103.2" fill="currentcolor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
 <!-- add wave animation stylesheet -->
 ## <link href="wave.css" rel="stylesheet">
 <link rel="stylesheet" href="github.css">
