@@ -24,12 +24,12 @@ stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 <path d="M9.5 21v-6h5v6"></path>
 </svg>
 </a>
+<p id="site-tagline">Concise, transparent, accurate predictive modeling.
+All sklearn-compatible and easy to use.</p>
 <a href="../index.html" id="site-logo">
 <img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
 alt="imodels">
 </a>
-<p id="site-tagline">Concise, transparent, accurate predictive modeling.
-All sklearn-compatible and easy to use.</p>
 <a href="https://github.com/csinva/imodels" class="nav-icon"
 aria-label="View source on GitHub" title="GitHub">
 <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -2203,7 +2203,7 @@ the node values of the resulting engineered features.</dd>
 <li><code><a title="imodels" href="../index.html">imodels</a></code></li>
 </ul>
 </li>
-<li><h3>Our favorite models</h3>
+<li><h3>Our favorite methods</h3>
 <ul>
 <li><a href="https://csinva.io/imodels/figs.html"><b>FIGS</b>: Fast interpretable greedy-tree sums</a></li>
 <li><a href="https://csinva.io/imodels/gpgam.html"><b>GPGam</b>: Additive Gaussian processes over binned features</a></li>
@@ -2211,96 +2211,25 @@ the node values of the resulting engineered features.</dd>
 <li><a href="https://csinva.io/imodels/mdi_plus.html"><b>MDI+</b>: Flexible tree-based feature importance</a></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="imodels.importance.block_transformers" href="block_transformers.html">imodels.importance.block_transformers</a></code></li>
-<li><code><a title="imodels.importance.block_transformers_ys" href="block_transformers_ys.html">imodels.importance.block_transformers_ys</a></code></li>
-<li><code><a title="imodels.importance.local_stumps" href="local_stumps.html">imodels.importance.local_stumps</a></code></li>
-<li><code><a title="imodels.importance.mdi_plus" href="mdi_plus.html">imodels.importance.mdi_plus</a></code></li>
-<li><code><a title="imodels.importance.ppms" href="ppms.html">imodels.importance.ppms</a></code></li>
-<li><code><a title="imodels.importance.ranking_stability" href="ranking_stability.html">imodels.importance.ranking_stability</a></code></li>
-<li><code><a title="imodels.importance.rf_plus" href="rf_plus.html">imodels.importance.rf_plus</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li>
-<h4><code><a title="imodels.importance.CompositeTransformer" href="#imodels.importance.CompositeTransformer">CompositeTransformer</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.ForestMDIPlus" href="#imodels.importance.ForestMDIPlus">ForestMDIPlus</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.importance.ForestMDIPlus.get_scores" href="#imodels.importance.ForestMDIPlus.get_scores">get_scores</a></code></li>
-<li><code><a title="imodels.importance.ForestMDIPlus.get_stability_scores" href="#imodels.importance.ForestMDIPlus.get_stability_scores">get_stability_scores</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.importance.GenericClassifierPPM" href="#imodels.importance.GenericClassifierPPM">GenericClassifierPPM</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.importance.GenericClassifierPPM.predict_proba" href="#imodels.importance.GenericClassifierPPM.predict_proba">predict_proba</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.importance.GenericRegressorPPM" href="#imodels.importance.GenericRegressorPPM">GenericRegressorPPM</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.GlmClassifierPPM" href="#imodels.importance.GlmClassifierPPM">GlmClassifierPPM</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.importance.GlmClassifierPPM.predict_proba" href="#imodels.importance.GlmClassifierPPM.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.importance.GlmClassifierPPM.predict_proba_loo" href="#imodels.importance.GlmClassifierPPM.predict_proba_loo">predict_proba_loo</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.importance.GlmRegressorPPM" href="#imodels.importance.GlmRegressorPPM">GlmRegressorPPM</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.IdentityTransformer" href="#imodels.importance.IdentityTransformer">IdentityTransformer</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.LassoRegressorPPM" href="#imodels.importance.LassoRegressorPPM">LassoRegressorPPM</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.LogisticClassifierPPM" href="#imodels.importance.LogisticClassifierPPM">LogisticClassifierPPM</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.MDIPlusDefaultTransformer" href="#imodels.importance.MDIPlusDefaultTransformer">MDIPlusDefaultTransformer</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.RandomForestPlusClassifier" href="#imodels.importance.RandomForestPlusClassifier">RandomForestPlusClassifier</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.importance.RandomForestPlusClassifier.set_fit_request" href="#imodels.importance.RandomForestPlusClassifier.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.importance.RandomForestPlusClassifier.set_score_request" href="#imodels.importance.RandomForestPlusClassifier.set_score_request">set_score_request</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.importance.RandomForestPlusRegressor" href="#imodels.importance.RandomForestPlusRegressor">RandomForestPlusRegressor</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.importance.RandomForestPlusRegressor.set_fit_request" href="#imodels.importance.RandomForestPlusRegressor.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.importance.RandomForestPlusRegressor.set_score_request" href="#imodels.importance.RandomForestPlusRegressor.set_score_request">set_score_request</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.importance.RidgeClassifierPPM" href="#imodels.importance.RidgeClassifierPPM">RidgeClassifierPPM</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.importance.RidgeClassifierPPM.predict_proba" href="#imodels.importance.RidgeClassifierPPM.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.importance.RidgeClassifierPPM.predict_proba_loo" href="#imodels.importance.RidgeClassifierPPM.predict_proba_loo">predict_proba_loo</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.importance.RidgeRegressorPPM" href="#imodels.importance.RidgeRegressorPPM">RidgeRegressorPPM</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.RobustRegressorPPM" href="#imodels.importance.RobustRegressorPPM">RobustRegressorPPM</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.TreeMDIPlus" href="#imodels.importance.TreeMDIPlus">TreeMDIPlus</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.importance.TreeMDIPlus.get_scores" href="#imodels.importance.TreeMDIPlus.get_scores">get_scores</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.importance.TreeTransformer" href="#imodels.importance.TreeTransformer">TreeTransformer</a></code></h4>
-</li>
+<li><h4><code><a title="imodels.importance.CompositeTransformer" href="#imodels.importance.CompositeTransformer">CompositeTransformer</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.ForestMDIPlus" href="#imodels.importance.ForestMDIPlus">ForestMDIPlus</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.GenericClassifierPPM" href="#imodels.importance.GenericClassifierPPM">GenericClassifierPPM</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.GenericRegressorPPM" href="#imodels.importance.GenericRegressorPPM">GenericRegressorPPM</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.GlmClassifierPPM" href="#imodels.importance.GlmClassifierPPM">GlmClassifierPPM</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.GlmRegressorPPM" href="#imodels.importance.GlmRegressorPPM">GlmRegressorPPM</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.IdentityTransformer" href="#imodels.importance.IdentityTransformer">IdentityTransformer</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.LassoRegressorPPM" href="#imodels.importance.LassoRegressorPPM">LassoRegressorPPM</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.LogisticClassifierPPM" href="#imodels.importance.LogisticClassifierPPM">LogisticClassifierPPM</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.MDIPlusDefaultTransformer" href="#imodels.importance.MDIPlusDefaultTransformer">MDIPlusDefaultTransformer</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.RandomForestPlusClassifier" href="#imodels.importance.RandomForestPlusClassifier">RandomForestPlusClassifier</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.RandomForestPlusRegressor" href="#imodels.importance.RandomForestPlusRegressor">RandomForestPlusRegressor</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.RidgeClassifierPPM" href="#imodels.importance.RidgeClassifierPPM">RidgeClassifierPPM</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.RidgeRegressorPPM" href="#imodels.importance.RidgeRegressorPPM">RidgeRegressorPPM</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.RobustRegressorPPM" href="#imodels.importance.RobustRegressorPPM">RobustRegressorPPM</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.TreeMDIPlus" href="#imodels.importance.TreeMDIPlus">TreeMDIPlus</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.TreeTransformer" href="#imodels.importance.TreeTransformer">TreeTransformer</a></code></h4></li>
 </ul>
 </li>
 </ul>

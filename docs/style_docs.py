@@ -11,7 +11,7 @@ data = data.replace('&lt;https://doi.org/10.5281/zenodo.4026887}&gt;',
                     'https://doi.org/10.5281/zenodo.4026887}')
 
 
-# Drop "Our favorite models" from the index.
+# Drop "Our favorite methods" from the index.
 #
 # Each model in that section has its own page, and the sidebar already lists
 # those pages under a heading of the same name (see html.mako). Leaving the
@@ -36,12 +36,12 @@ data = drop(r'<img align="center" width=60% src="[^"]*imodels_logo[^"]*">\s*</im
             'the readme logo')
 
 # the section body, from its heading up to the next top-level heading
-data = drop(r'<h2 id="our-favorite-models">.*?(?=<h2[ >])', data,
-            'the "Our favorite models" section')
+data = drop(r'<h2 id="our-favorite-methods">.*?(?=<h2[ >])', data,
+            'the "Our favorite methods" section')
 
 # its entry in the generated table of contents, including the nested model list
-data = drop(r'<li><a href="#our-favorite-models">.*?</ul>\s*</li>\s*', data,
-            'the "Our favorite models" contents entry')
+data = drop(r'<li><a href="#our-favorite-methods">.*?</ul>\s*</li>\s*', data,
+            'the "Our favorite methods" contents entry')
 
 # data = data.replace('<h1>Index</h1>',
 #                     '<h1>Index 🔍</h1>')

@@ -268,56 +268,25 @@
       </ul>
     </li>
     % endif
-    % if submodules:
-##         Note put custom stuff here!
-##     <hr>
-    <li><h3>Our favorite models</h3>
+    <li><h3>Our favorite methods</h3>
         <ul>
-        <%doc>Keep this list in the same order as the "Our favorite models" section of the readme.</%doc>
+        <%doc>Keep this list in the same order as the "Our favorite methods" section of the readme.</%doc>
         <li><a href="https://csinva.io/imodels/figs.html"><b>FIGS</b>: Fast interpretable greedy-tree sums</a></li>
         <li><a href="https://csinva.io/imodels/gpgam.html"><b>GPGam</b>: Additive Gaussian processes over binned features</a></li>
         <li><a href="https://csinva.io/imodels/shrinkage.html"><b>Hierarchical shrinkage</b>: post-hoc regularization for tree-based methods</a></li>
         <li><a href="https://csinva.io/imodels/mdi_plus.html"><b>MDI+</b>: Flexible tree-based feature importance</a></li>
         </ul>
     </li>
-    <li><h3><a href="#header-submodules">Sub-modules</a></h3>
-      <ul>
-      % for m in submodules:
-        <li><code>${link(m)}</code></li>
-      % endfor
-      </ul>
-    </li>
-    % endif
     % if variables:
     <li><h3><a href="#header-variables">Global variables</a></h3>
       ${show_column_list(variables)}
-    </li>
-    % endif
-    % if functions:
-    <li><h3><a href="#header-functions">Functions</a></h3>
-      ${show_column_list(functions)}
     </li>
     % endif
     % if classes:
     <li><h3><a href="#header-classes">Classes</a></h3>
       <ul>
       % for c in classes:
-        <li>
-        <h4><code>${link(c)}</code></h4>
-        <%
-            members = c.functions(sort=sort_identifiers) + c.methods(sort=sort_identifiers)
-            if list_class_variables_in_index:
-                members += (c.instance_variables(sort=sort_identifiers) +
-                            c.class_variables(sort=sort_identifiers))
-            if not show_inherited_members:
-                members = [i for i in members if not i.inherits]
-            if sort_identifiers:
-              members = sorted(members)
-        %>
-        % if members:
-          ${show_column_list(members)}
-        % endif
-        </li>
+        <li><h4><code>${link(c)}</code></h4></li>
       % endfor
       </ul>
     </li>
@@ -412,12 +381,12 @@
       <path d="M9.5 21v-6h5v6"></path>
     </svg>
   </a>
+  <p id="site-tagline">Concise, transparent, accurate predictive modeling.
+    All sklearn-compatible and easy to use.</p>
   <a href="${_root}index.html" id="site-logo">
     <img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
          alt="imodels">
   </a>
-  <p id="site-tagline">Concise, transparent, accurate predictive modeling.
-    All sklearn-compatible and easy to use.</p>
   <a href="https://github.com/csinva/imodels" class="nav-icon"
      aria-label="View source on GitHub" title="GitHub">
     <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">

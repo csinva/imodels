@@ -24,12 +24,12 @@ stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 <path d="M9.5 21v-6h5v6"></path>
 </svg>
 </a>
+<p id="site-tagline">Concise, transparent, accurate predictive modeling.
+All sklearn-compatible and easy to use.</p>
 <a href="../index.html" id="site-logo">
 <img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
 alt="imodels">
 </a>
-<p id="site-tagline">Concise, transparent, accurate predictive modeling.
-All sklearn-compatible and easy to use.</p>
 <a href="https://github.com/csinva/imodels" class="nav-icon"
 aria-label="View source on GitHub" title="GitHub">
 <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -501,6 +501,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         self.main_offsets_ = offsets
         self.main_values_ = fhat
         self.main_var_ = post_var
+        self.main_amps_ = amps
         self.pairs_ = []
         self.pair_values_ = []
 
@@ -512,11 +513,12 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                 resid -= fhat[offsets[u]:offsets[u + 1]][bidx[:, j]]
             selected = self._screen_pairs(X, units, resid, n_pairs, amps)
             if selected:
-                fhat, self.pairs_, self.pair_values_, post_var = self._fit_pairs(
+                fhat, self.pairs_, self.pair_values_, post_var, amps = self._fit_pairs(
                     X, bidx, units, sizes, blocks, C, b, yy, n, offsets,
                     fhat, selected, yn)
                 self.main_values_ = fhat
                 self.main_var_ = post_var
+                self.main_amps_ = amps
 
         rng = float(np.max(y) - np.min(y))
         self.clip_ = (float(np.min(y)) - 0.05 * rng, float(np.max(y)) + 0.05 * rng)
@@ -615,10 +617,11 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                     adj -= vals[p][cols[p]]
             bm = np.concatenate([np.bincount(bidx[:, j], weights=adj, minlength=sizes[u])
                                  for u, j in enumerate(units)])
-            main_vals, _, _, main_var = self._fit_ml(blocks, offsets, C, bm,
-                                                     float(np.sum(adj ** 2)), n)
+            main_vals, main_amps, _, main_var = self._fit_ml(blocks, offsets, C, bm,
+                                                             float(np.sum(adj ** 2)), n)
         keep = [p for p in selected if defs[p] is not None]
-        return (main_vals, [defs[p] for p in keep], [vals[p] for p in keep], main_var)
+        return (main_vals, [defs[p] for p in keep], [vals[p] for p in keep],
+                main_var, main_amps)
 
     # ------------------------------------------------------------------
     def predict(self, X):
@@ -671,6 +674,29 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
             return grid, values
         std = np.sqrt(self.main_var_[i0:i1]) * self.y_std_
         return grid, values, std
+
+    def kernel_weights(self, feature):
+        &#34;&#34;&#34;Return ``{kernel: amplitude}`` for one feature&#39;s prior.
+
+        The amplitudes are what the marginal likelihood chose, and their balance
+        is how the model expresses smoothness: weight on the short Matern kernel
+        buys a curve that can turn sharply, weight on the squared exponential
+        buys a gentle one. A feature that explains nothing ends up with every
+        amplitude near zero, which is how irrelevant features drop out.
+        &#34;&#34;&#34;
+        check_is_fitted(self, &#34;main_amps_&#34;)
+        j = int(feature)
+        if j not in self.edges_:
+            raise ValueError(f&#34;feature {j} was constant and carries no shape function&#34;)
+        u = self.units_.index(j)
+        n_bins = len(self.grids_[j])
+        if n_bins &lt;= 3:
+            names = [&#34;delta&#34;]
+        else:
+            names = [&#34;matern-%g&#34; % s for s in self.scales]
+            names += [&#34;rbf-%g&#34; % s for s in self.rbf_scales]
+        amps = np.asarray(self.main_amps_[u], dtype=float)
+        return {nm: float(a) for nm, a in zip(names, amps[:len(names)])}
 
     def interaction_terms(self):
         &#34;&#34;&#34;List the fitted pairwise interactions as ``(feature_a, feature_b)``.&#34;&#34;&#34;
@@ -1153,6 +1179,7 @@ less skewed. Predictions come back on the original scale.</dd>
         self.main_offsets_ = offsets
         self.main_values_ = fhat
         self.main_var_ = post_var
+        self.main_amps_ = amps
         self.pairs_ = []
         self.pair_values_ = []
 
@@ -1164,11 +1191,12 @@ less skewed. Predictions come back on the original scale.</dd>
                 resid -= fhat[offsets[u]:offsets[u + 1]][bidx[:, j]]
             selected = self._screen_pairs(X, units, resid, n_pairs, amps)
             if selected:
-                fhat, self.pairs_, self.pair_values_, post_var = self._fit_pairs(
+                fhat, self.pairs_, self.pair_values_, post_var, amps = self._fit_pairs(
                     X, bidx, units, sizes, blocks, C, b, yy, n, offsets,
                     fhat, selected, yn)
                 self.main_values_ = fhat
                 self.main_var_ = post_var
+                self.main_amps_ = amps
 
         rng = float(np.max(y) - np.min(y))
         self.clip_ = (float(np.min(y)) - 0.05 * rng, float(np.max(y)) + 0.05 * rng)
@@ -1267,10 +1295,11 @@ less skewed. Predictions come back on the original scale.</dd>
                     adj -= vals[p][cols[p]]
             bm = np.concatenate([np.bincount(bidx[:, j], weights=adj, minlength=sizes[u])
                                  for u, j in enumerate(units)])
-            main_vals, _, _, main_var = self._fit_ml(blocks, offsets, C, bm,
-                                                     float(np.sum(adj ** 2)), n)
+            main_vals, main_amps, _, main_var = self._fit_ml(blocks, offsets, C, bm,
+                                                             float(np.sum(adj ** 2)), n)
         keep = [p for p in selected if defs[p] is not None]
-        return (main_vals, [defs[p] for p in keep], [vals[p] for p in keep], main_var)
+        return (main_vals, [defs[p] for p in keep], [vals[p] for p in keep],
+                main_var, main_amps)
 
     # ------------------------------------------------------------------
     def predict(self, X):
@@ -1323,6 +1352,29 @@ less skewed. Predictions come back on the original scale.</dd>
             return grid, values
         std = np.sqrt(self.main_var_[i0:i1]) * self.y_std_
         return grid, values, std
+
+    def kernel_weights(self, feature):
+        &#34;&#34;&#34;Return ``{kernel: amplitude}`` for one feature&#39;s prior.
+
+        The amplitudes are what the marginal likelihood chose, and their balance
+        is how the model expresses smoothness: weight on the short Matern kernel
+        buys a curve that can turn sharply, weight on the squared exponential
+        buys a gentle one. A feature that explains nothing ends up with every
+        amplitude near zero, which is how irrelevant features drop out.
+        &#34;&#34;&#34;
+        check_is_fitted(self, &#34;main_amps_&#34;)
+        j = int(feature)
+        if j not in self.edges_:
+            raise ValueError(f&#34;feature {j} was constant and carries no shape function&#34;)
+        u = self.units_.index(j)
+        n_bins = len(self.grids_[j])
+        if n_bins &lt;= 3:
+            names = [&#34;delta&#34;]
+        else:
+            names = [&#34;matern-%g&#34; % s for s in self.scales]
+            names += [&#34;rbf-%g&#34; % s for s in self.rbf_scales]
+        amps = np.asarray(self.main_amps_[u], dtype=float)
+        return {nm: float(a) for nm, a in zip(names, amps[:len(names)])}
 
     def interaction_terms(self):
         &#34;&#34;&#34;List the fitted pairwise interactions as ``(feature_a, feature_b)``.&#34;&#34;&#34;
@@ -1444,6 +1496,7 @@ less skewed. Predictions come back on the original scale.</dd>
     self.main_offsets_ = offsets
     self.main_values_ = fhat
     self.main_var_ = post_var
+    self.main_amps_ = amps
     self.pairs_ = []
     self.pair_values_ = []
 
@@ -1455,11 +1508,12 @@ less skewed. Predictions come back on the original scale.</dd>
             resid -= fhat[offsets[u]:offsets[u + 1]][bidx[:, j]]
         selected = self._screen_pairs(X, units, resid, n_pairs, amps)
         if selected:
-            fhat, self.pairs_, self.pair_values_, post_var = self._fit_pairs(
+            fhat, self.pairs_, self.pair_values_, post_var, amps = self._fit_pairs(
                 X, bidx, units, sizes, blocks, C, b, yy, n, offsets,
                 fhat, selected, yn)
             self.main_values_ = fhat
             self.main_var_ = post_var
+            self.main_amps_ = amps
 
     rng = float(np.max(y) - np.min(y))
     self.clip_ = (float(np.min(y)) - 0.05 * rng, float(np.max(y)) + 0.05 * rng)
@@ -1483,6 +1537,44 @@ less skewed. Predictions come back on the original scale.</dd>
     &#34;&#34;&#34;List the fitted pairwise interactions as ``(feature_a, feature_b)``.&#34;&#34;&#34;
     check_is_fitted(self, &#34;main_values_&#34;)
     return [(t[&#34;i&#34;], t[&#34;j&#34;]) for t in self.pairs_]</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.gp_gam.GPGamRegressor.kernel_weights"><code class="name flex">
+<span>def <span class="ident">kernel_weights</span></span>(<span>self, feature)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return <code>{kernel: amplitude}</code> for one feature's prior.</p>
+<p>The amplitudes are what the marginal likelihood chose, and their balance
+is how the model expresses smoothness: weight on the short Matern kernel
+buys a curve that can turn sharply, weight on the squared exponential
+buys a gentle one. A feature that explains nothing ends up with every
+amplitude near zero, which is how irrelevant features drop out.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def kernel_weights(self, feature):
+    &#34;&#34;&#34;Return ``{kernel: amplitude}`` for one feature&#39;s prior.
+
+    The amplitudes are what the marginal likelihood chose, and their balance
+    is how the model expresses smoothness: weight on the short Matern kernel
+    buys a curve that can turn sharply, weight on the squared exponential
+    buys a gentle one. A feature that explains nothing ends up with every
+    amplitude near zero, which is how irrelevant features drop out.
+    &#34;&#34;&#34;
+    check_is_fitted(self, &#34;main_amps_&#34;)
+    j = int(feature)
+    if j not in self.edges_:
+        raise ValueError(f&#34;feature {j} was constant and carries no shape function&#34;)
+    u = self.units_.index(j)
+    n_bins = len(self.grids_[j])
+    if n_bins &lt;= 3:
+        names = [&#34;delta&#34;]
+    else:
+        names = [&#34;matern-%g&#34; % s for s in self.scales]
+        names += [&#34;rbf-%g&#34; % s for s in self.rbf_scales]
+    amps = np.asarray(self.main_amps_[u], dtype=float)
+    return {nm: float(a) for nm, a in zip(names, amps[:len(names)])}</code></pre>
 </details>
 </dd>
 <dt id="imodels.algebraic.gp_gam.GPGamRegressor.predict"><code class="name flex">
@@ -1775,19 +1867,17 @@ and may be logged. That is the scale on which the model is additive.</p></div>
 <li><code><a title="imodels.algebraic" href="index.html">imodels.algebraic</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-classes">Classes</a></h3>
+<li><h3>Our favorite methods</h3>
 <ul>
-<li>
-<h4><code><a title="imodels.algebraic.gp_gam.GPGamRegressor" href="#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a></code></h4>
-<ul class="two-column">
-<li><code><a title="imodels.algebraic.gp_gam.GPGamRegressor.fit" href="#imodels.algebraic.gp_gam.GPGamRegressor.fit">fit</a></code></li>
-<li><code><a title="imodels.algebraic.gp_gam.GPGamRegressor.interaction_terms" href="#imodels.algebraic.gp_gam.GPGamRegressor.interaction_terms">interaction_terms</a></code></li>
-<li><code><a title="imodels.algebraic.gp_gam.GPGamRegressor.predict" href="#imodels.algebraic.gp_gam.GPGamRegressor.predict">predict</a></code></li>
-<li><code><a title="imodels.algebraic.gp_gam.GPGamRegressor.set_fit_request" href="#imodels.algebraic.gp_gam.GPGamRegressor.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.algebraic.gp_gam.GPGamRegressor.set_score_request" href="#imodels.algebraic.gp_gam.GPGamRegressor.set_score_request">set_score_request</a></code></li>
-<li><code><a title="imodels.algebraic.gp_gam.GPGamRegressor.shape_function" href="#imodels.algebraic.gp_gam.GPGamRegressor.shape_function">shape_function</a></code></li>
+<li><a href="https://csinva.io/imodels/figs.html"><b>FIGS</b>: Fast interpretable greedy-tree sums</a></li>
+<li><a href="https://csinva.io/imodels/gpgam.html"><b>GPGam</b>: Additive Gaussian processes over binned features</a></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html"><b>Hierarchical shrinkage</b>: post-hoc regularization for tree-based methods</a></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html"><b>MDI+</b>: Flexible tree-based feature importance</a></li>
 </ul>
 </li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li><h4><code><a title="imodels.algebraic.gp_gam.GPGamRegressor" href="#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a></code></h4></li>
 </ul>
 </li>
 </ul>

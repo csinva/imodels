@@ -24,12 +24,12 @@ stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 <path d="M9.5 21v-6h5v6"></path>
 </svg>
 </a>
+<p id="site-tagline">Concise, transparent, accurate predictive modeling.
+All sklearn-compatible and easy to use.</p>
 <a href="../../index.html" id="site-logo">
 <img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
 alt="imodels">
 </a>
-<p id="site-tagline">Concise, transparent, accurate predictive modeling.
-All sklearn-compatible and easy to use.</p>
 <a href="https://github.com/csinva/imodels" class="nav-icon"
 aria-label="View source on GitHub" title="GitHub">
 <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -1354,57 +1354,19 @@ def values(self):
 <li><code><a title="imodels.experimental.bartpy" href="index.html">imodels.experimental.bartpy</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="imodels.experimental.bartpy.data.ensure_float_array" href="#imodels.experimental.bartpy.data.ensure_float_array">ensure_float_array</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.ensure_numpy_array" href="#imodels.experimental.bartpy.data.ensure_numpy_array">ensure_numpy_array</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.format_covariate_matrix" href="#imodels.experimental.bartpy.data.format_covariate_matrix">format_covariate_matrix</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.is_not_constant" href="#imodels.experimental.bartpy.data.is_not_constant">is_not_constant</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.make_bartpy_data" href="#imodels.experimental.bartpy.data.make_bartpy_data">make_bartpy_data</a></code></li>
+<li><h3>Our favorite methods</h3>
+<ul>
+<li><a href="https://csinva.io/imodels/figs.html"><b>FIGS</b>: Fast interpretable greedy-tree sums</a></li>
+<li><a href="https://csinva.io/imodels/gpgam.html"><b>GPGam</b>: Additive Gaussian processes over binned features</a></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html"><b>Hierarchical shrinkage</b>: post-hoc regularization for tree-based methods</a></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html"><b>MDI+</b>: Flexible tree-based feature importance</a></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li>
-<h4><code><a title="imodels.experimental.bartpy.data.CovariateMatrix" href="#imodels.experimental.bartpy.data.CovariateMatrix">CovariateMatrix</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.get_column" href="#imodels.experimental.bartpy.data.CovariateMatrix.get_column">get_column</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.is_at_least_one_splittable_variable" href="#imodels.experimental.bartpy.data.CovariateMatrix.is_at_least_one_splittable_variable">is_at_least_one_splittable_variable</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.is_column_unique" href="#imodels.experimental.bartpy.data.CovariateMatrix.is_column_unique">is_column_unique</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.mask" href="#imodels.experimental.bartpy.data.CovariateMatrix.mask">mask</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.max_value_of_column" href="#imodels.experimental.bartpy.data.CovariateMatrix.max_value_of_column">max_value_of_column</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.n_obsv" href="#imodels.experimental.bartpy.data.CovariateMatrix.n_obsv">n_obsv</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.n_splittable_variables" href="#imodels.experimental.bartpy.data.CovariateMatrix.n_splittable_variables">n_splittable_variables</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.proportion_of_value_in_variable" href="#imodels.experimental.bartpy.data.CovariateMatrix.proportion_of_value_in_variable">proportion_of_value_in_variable</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.random_splittable_value" href="#imodels.experimental.bartpy.data.CovariateMatrix.random_splittable_value">random_splittable_value</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.random_splittable_variable" href="#imodels.experimental.bartpy.data.CovariateMatrix.random_splittable_variable">random_splittable_variable</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.splittable_variables" href="#imodels.experimental.bartpy.data.CovariateMatrix.splittable_variables">splittable_variables</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.update_mask" href="#imodels.experimental.bartpy.data.CovariateMatrix.update_mask">update_mask</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.values" href="#imodels.experimental.bartpy.data.CovariateMatrix.values">values</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.CovariateMatrix.variables" href="#imodels.experimental.bartpy.data.CovariateMatrix.variables">variables</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.experimental.bartpy.data.Data" href="#imodels.experimental.bartpy.data.Data">Data</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.experimental.bartpy.data.Data.X" href="#imodels.experimental.bartpy.data.Data.X">X</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.Data.mask" href="#imodels.experimental.bartpy.data.Data.mask">mask</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.Data.update_y" href="#imodels.experimental.bartpy.data.Data.update_y">update_y</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.Data.y" href="#imodels.experimental.bartpy.data.Data.y">y</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.experimental.bartpy.data.Target" href="#imodels.experimental.bartpy.data.Target">Target</a></code></h4>
-<ul class="two-column">
-<li><code><a title="imodels.experimental.bartpy.data.Target.normalize_y" href="#imodels.experimental.bartpy.data.Target.normalize_y">normalize_y</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.Target.normalizing_scale" href="#imodels.experimental.bartpy.data.Target.normalizing_scale">normalizing_scale</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.Target.summed_y" href="#imodels.experimental.bartpy.data.Target.summed_y">summed_y</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.Target.unnormalize_y" href="#imodels.experimental.bartpy.data.Target.unnormalize_y">unnormalize_y</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.Target.unnormalized_y" href="#imodels.experimental.bartpy.data.Target.unnormalized_y">unnormalized_y</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.Target.update_y" href="#imodels.experimental.bartpy.data.Target.update_y">update_y</a></code></li>
-<li><code><a title="imodels.experimental.bartpy.data.Target.values" href="#imodels.experimental.bartpy.data.Target.values">values</a></code></li>
-</ul>
-</li>
+<li><h4><code><a title="imodels.experimental.bartpy.data.CovariateMatrix" href="#imodels.experimental.bartpy.data.CovariateMatrix">CovariateMatrix</a></code></h4></li>
+<li><h4><code><a title="imodels.experimental.bartpy.data.Data" href="#imodels.experimental.bartpy.data.Data">Data</a></code></h4></li>
+<li><h4><code><a title="imodels.experimental.bartpy.data.Target" href="#imodels.experimental.bartpy.data.Target">Target</a></code></h4></li>
 </ul>
 </li>
 </ul>

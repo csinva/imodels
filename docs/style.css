@@ -55,15 +55,19 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
   border-color: var(--line); text-decoration: none;
 }
 #site-header .nav-icon svg { width: 18px; height: 18px; display: block; }
-#site-logo { flex: 0 0 auto; line-height: 0; }
-#site-logo img { height: 34px; width: auto; display: block; }
+/* the logo sits on the right, next to the github icon, at icon scale */
+#site-logo { flex: 0 0 auto; line-height: 0; margin-left: auto; opacity: 0.9;
+             transition: opacity 0.15s ease; }
+#site-logo:hover { opacity: 1; }
+#site-logo img { height: 22px; width: auto; display: block; }
 #site-tagline {
-  margin: 0; flex: 1 1 auto; min-width: 0;
+  margin: 0; min-width: 0;
   font-size: 0.8rem; line-height: 1.35; color: var(--muted);
 }
 @media (max-width: 760px) {
   #site-tagline { display: none; }
   #site-header { gap: 0.6rem; }
+  #site-logo { margin-left: auto; }
 }
 
 /* ---------- layout ---------- */

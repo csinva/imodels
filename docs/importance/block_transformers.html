@@ -24,12 +24,12 @@ stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 <path d="M9.5 21v-6h5v6"></path>
 </svg>
 </a>
+<p id="site-tagline">Concise, transparent, accurate predictive modeling.
+All sklearn-compatible and easy to use.</p>
 <a href="../index.html" id="site-logo">
 <img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
 alt="imodels">
 </a>
-<p id="site-tagline">Concise, transparent, accurate predictive modeling.
-All sklearn-compatible and easy to use.</p>
 <a href="https://github.com/csinva/imodels" class="nav-icon"
 aria-label="View source on GitHub" title="GitHub">
 <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -2051,43 +2051,22 @@ the node values of the resulting engineered features.</dd>
 <li><code><a title="imodels.importance" href="index.html">imodels.importance</a></code></li>
 </ul>
 </li>
+<li><h3>Our favorite methods</h3>
+<ul>
+<li><a href="https://csinva.io/imodels/figs.html"><b>FIGS</b>: Fast interpretable greedy-tree sums</a></li>
+<li><a href="https://csinva.io/imodels/gpgam.html"><b>GPGam</b>: Additive Gaussian processes over binned features</a></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html"><b>Hierarchical shrinkage</b>: post-hoc regularization for tree-based methods</a></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html"><b>MDI+</b>: Flexible tree-based feature importance</a></li>
+</ul>
+</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li>
-<h4><code><a title="imodels.importance.block_transformers.BlockPartitionedData" href="#imodels.importance.block_transformers.BlockPartitionedData">BlockPartitionedData</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_all_data" href="#imodels.importance.block_transformers.BlockPartitionedData.get_all_data">get_all_data</a></code></li>
-<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_all_except_block" href="#imodels.importance.block_transformers.BlockPartitionedData.get_all_except_block">get_all_except_block</a></code></li>
-<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_all_except_block_indices" href="#imodels.importance.block_transformers.BlockPartitionedData.get_all_except_block_indices">get_all_except_block_indices</a></code></li>
-<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_block" href="#imodels.importance.block_transformers.BlockPartitionedData.get_block">get_block</a></code></li>
-<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_block_indices" href="#imodels.importance.block_transformers.BlockPartitionedData.get_block_indices">get_block_indices</a></code></li>
-<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.get_modified_data" href="#imodels.importance.block_transformers.BlockPartitionedData.get_modified_data">get_modified_data</a></code></li>
-<li><code><a title="imodels.importance.block_transformers.BlockPartitionedData.train_test_split" href="#imodels.importance.block_transformers.BlockPartitionedData.train_test_split">train_test_split</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.importance.block_transformers.BlockTransformerBase" href="#imodels.importance.block_transformers.BlockTransformerBase">BlockTransformerBase</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted" href="#imodels.importance.block_transformers.BlockTransformerBase.check_is_fitted">check_is_fitted</a></code></li>
-<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit" href="#imodels.importance.block_transformers.BlockTransformerBase.fit">fit</a></code></li>
-<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit_transform" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform">fit_transform</a></code></li>
-<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.fit_transform_one_feature">fit_transform_one_feature</a></code></li>
-<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.transform" href="#imodels.importance.block_transformers.BlockTransformerBase.transform">transform</a></code></li>
-<li><code><a title="imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature" href="#imodels.importance.block_transformers.BlockTransformerBase.transform_one_feature">transform_one_feature</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.importance.block_transformers.CompositeTransformer" href="#imodels.importance.block_transformers.CompositeTransformer">CompositeTransformer</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.block_transformers.IdentityTransformer" href="#imodels.importance.block_transformers.IdentityTransformer">IdentityTransformer</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.block_transformers.MDIPlusDefaultTransformer" href="#imodels.importance.block_transformers.MDIPlusDefaultTransformer">MDIPlusDefaultTransformer</a></code></h4>
-</li>
-<li>
-<h4><code><a title="imodels.importance.block_transformers.TreeTransformer" href="#imodels.importance.block_transformers.TreeTransformer">TreeTransformer</a></code></h4>
-</li>
+<li><h4><code><a title="imodels.importance.block_transformers.BlockPartitionedData" href="#imodels.importance.block_transformers.BlockPartitionedData">BlockPartitionedData</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.block_transformers.BlockTransformerBase" href="#imodels.importance.block_transformers.BlockTransformerBase">BlockTransformerBase</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.block_transformers.CompositeTransformer" href="#imodels.importance.block_transformers.CompositeTransformer">CompositeTransformer</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.block_transformers.IdentityTransformer" href="#imodels.importance.block_transformers.IdentityTransformer">IdentityTransformer</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.block_transformers.MDIPlusDefaultTransformer" href="#imodels.importance.block_transformers.MDIPlusDefaultTransformer">MDIPlusDefaultTransformer</a></code></h4></li>
+<li><h4><code><a title="imodels.importance.block_transformers.TreeTransformer" href="#imodels.importance.block_transformers.TreeTransformer">TreeTransformer</a></code></h4></li>
 </ul>
 </li>
 </ul>

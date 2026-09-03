@@ -24,12 +24,12 @@ stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 <path d="M9.5 21v-6h5v6"></path>
 </svg>
 </a>
+<p id="site-tagline">Concise, transparent, accurate predictive modeling.
+All sklearn-compatible and easy to use.</p>
 <a href="../index.html" id="site-logo">
 <img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
 alt="imodels">
 </a>
-<p id="site-tagline">Concise, transparent, accurate predictive modeling.
-All sklearn-compatible and easy to use.</p>
 <a href="https://github.com/csinva/imodels" class="nav-icon"
 aria-label="View source on GitHub" title="GitHub">
 <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -4038,72 +4038,23 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><code><a title="imodels.tree" href="index.html">imodels.tree</a></code></li>
 </ul>
 </li>
+<li><h3>Our favorite methods</h3>
+<ul>
+<li><a href="https://csinva.io/imodels/figs.html"><b>FIGS</b>: Fast interpretable greedy-tree sums</a></li>
+<li><a href="https://csinva.io/imodels/gpgam.html"><b>GPGam</b>: Additive Gaussian processes over binned features</a></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html"><b>Hierarchical shrinkage</b>: post-hoc regularization for tree-based methods</a></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html"><b>MDI+</b>: Flexible tree-based feature importance</a></li>
+</ul>
+</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li>
-<h4><code><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.tree.figs.FIGS.feature_importances_" href="#imodels.tree.figs.FIGS.feature_importances_">feature_importances_</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.plot" href="#imodels.tree.figs.FIGS.plot">plot</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.predict" href="#imodels.tree.figs.FIGS.predict">predict</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.print_tree" href="#imodels.tree.figs.FIGS.print_tree">print_tree</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.set_fit_request" href="#imodels.tree.figs.FIGS.set_fit_request">set_fit_request</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.set_predict_proba_request" href="#imodels.tree.figs.FIGS.set_predict_proba_request">set_predict_proba_request</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.set_predict_request" href="#imodels.tree.figs.FIGS.set_predict_request">set_predict_request</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.tree.figs.FIGSCV.feature_importances_" href="#imodels.tree.figs.FIGSCV.feature_importances_">feature_importances_</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.fit" href="#imodels.tree.figs.FIGSCV.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.max_depth" href="#imodels.tree.figs.FIGSCV.max_depth">max_depth</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.max_rules" href="#imodels.tree.figs.FIGSCV.max_rules">max_rules</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.max_trees" href="#imodels.tree.figs.FIGSCV.max_trees">max_trees</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.min_impurity_decrease" href="#imodels.tree.figs.FIGSCV.min_impurity_decrease">min_impurity_decrease</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.predict" href="#imodels.tree.figs.FIGSCV.predict">predict</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.predict_proba" href="#imodels.tree.figs.FIGSCV.predict_proba">predict_proba</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.set_params" href="#imodels.tree.figs.FIGSCV.set_params">set_params</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.set_predict_request" href="#imodels.tree.figs.FIGSCV.set_predict_request">set_predict_request</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.trees_" href="#imodels.tree.figs.FIGSCV.trees_">trees_</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.tree.figs.FIGSClassifier" href="#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.tree.figs.FIGSClassifier.class_map" href="#imodels.tree.figs.FIGSClassifier.class_map">class_map</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSClassifier.decision_function" href="#imodels.tree.figs.FIGSClassifier.decision_function">decision_function</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSClassifier.set_score_request" href="#imodels.tree.figs.FIGSClassifier.set_score_request">set_score_request</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.tree.figs.FIGSClassifierCV" href="#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.tree.figs.FIGSClassifierCV.set_score_request" href="#imodels.tree.figs.FIGSClassifierCV.set_score_request">set_score_request</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.tree.figs.FIGSRegressor" href="#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.tree.figs.FIGSRegressor.set_score_request" href="#imodels.tree.figs.FIGSRegressor.set_score_request">set_score_request</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.tree.figs.FIGSRegressorCV" href="#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.tree.figs.FIGSRegressorCV.set_score_request" href="#imodels.tree.figs.FIGSRegressorCV.set_score_request">set_score_request</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="imodels.tree.figs.Node" href="#imodels.tree.figs.Node">Node</a></code></h4>
-<ul class="">
-<li><code><a title="imodels.tree.figs.Node.print_root" href="#imodels.tree.figs.Node.print_root">print_root</a></code></li>
-<li><code><a title="imodels.tree.figs.Node.setattrs" href="#imodels.tree.figs.Node.setattrs">setattrs</a></code></li>
-</ul>
-</li>
+<li><h4><code><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></code></h4></li>
+<li><h4><code><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></code></h4></li>
+<li><h4><code><a title="imodels.tree.figs.FIGSClassifier" href="#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></code></h4></li>
+<li><h4><code><a title="imodels.tree.figs.FIGSClassifierCV" href="#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a></code></h4></li>
+<li><h4><code><a title="imodels.tree.figs.FIGSRegressor" href="#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></code></h4></li>
+<li><h4><code><a title="imodels.tree.figs.FIGSRegressorCV" href="#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a></code></h4></li>
+<li><h4><code><a title="imodels.tree.figs.Node" href="#imodels.tree.figs.Node">Node</a></code></h4></li>
 </ul>
 </li>
 </ul>

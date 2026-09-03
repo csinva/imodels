@@ -78,20 +78,20 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | Bayesian rule set           | [🗂️](https://csinva.io/imodels/rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier), [📄](https://www.jmlr.org/papers/volume18/16-003/16-003.pdf), [🔗](https://github.com/wangtongada/BOA) | Finds concise rule set with Bayesian sampling (slow)  |
 | Bayesian rule list          | [🗂️](https://csinva.io/imodels/rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier), [📄](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-9/issue-3/Interpretable-classifiers-using-rules-and-Bayesian-analysis--Building-a/10.1214/15-AOAS848.full), [🔗](https://github.com/tmadl/sklearn-expertsys) | Fits compact rule list distribution with Bayesian sampling (slow) |
 | Greedy rule list            | [🗂️](https://csinva.io/imodels/rule_list/greedy_rule_list.html), [🔗](https://medium.com/@penggongting/implementing-decision-tree-from-scratch-in-python-c732e7c69aea) | Uses CART to fit a list (only a single path), rather than a tree |
-| Fast-and-frugal tree        | [🗂️](https://csinva.io/imodels/rule_list/fast_frugal_tree.html) [🔗](https://github.com/fasttrees/fasttrees)|  | One cue per level, each able to decide |
+| FFTree rule list | [🗂️](https://csinva.io/imodels/rule_list/fast_frugal_tree.html) [🔗](https://github.com/fasttrees/fasttrees)| Heuristic for fitting fast and frugal rule lists |
 | OneR rule list              | [🗂️](https://csinva.io/imodels/rule_list/one_r.html), [📄](https://link.springer.com/article/10.1023/A:1022631118932) | Fits rule list restricted to only one feature              |
 | Greedy rule tree            | [🗂️](https://csinva.io/imodels/tree/cart_wrapper.html), [📄](https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone), [🔗](https://scikit-learn.org/stable/modules/tree.html)  | Greedily fits tree using CART                              |
 | C4.5 rule tree        | [🗂️](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier), [📄](https://link.springer.com/article/10.1007/BF00993309), [🔗](https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier) | Greedily fits tree using C4.5                           |
 | TAO rule tree        | [🗂️](https://csinva.io/imodels/tree/tao.html), [📄](https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html) | Fits tree using alternating optimization                    |
 | Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
 | Tree GAM | [🗂️](https://csinva.io/imodels/algebraic/tree_gam.html), [📄](https://dl.acm.org/doi/abs/10.1145/2339530.2339556), [🔗](https://github.com/interpretml/interpret) | Generalized additive model fit with short boosted trees                           |
-| <b>Additive GP<br/>GAM (GPGam)</b> | [🗂️](https://csinva.io/imodels/gpgam.html),ㅤ[📄](https://csinva.io/imodels/gpgam.html) | Additive model whose shapes are Gaussian processes over bins, fit by exact marginal likelihood |
+| **GP GAM** | [🗂️](https://csinva.io/imodels/gpgam.html),ㅤ[📄](https://csinva.io/imodels/gpgam.html) | Adaptive GAM based on Gaussian processes |
 | <b>Greedy tree</br>sums (FIGS)</b> | [🗂️](https://csinva.io/imodels/figs.html),ㅤ[📄](https://arxiv.org/abs/2201.11931) | Sum of small trees with very few total rules (FIGS)                          |
 | <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/shrinkage.html), [📄](https://arxiv.org/abs/2202.00858) | Improve a decision tree, random forest, or<br/>gradient-boosting ensemble with ultra-fast, post-hoc regularization |
 | <b>RF+ (MDI+)</b> | [🗂️](https://csinva.io/imodels/mdi_plus.html), [📄](https://arxiv.org/pdf/2307.01932) | Flexible random forest-based feature importance |
 | Distillation<br/>wrapper | [🗂️](https://csinva.io/imodels/util/distillation.html)  | Train a black-box model,<br/>then distill it into an interpretable model |
 | AutoML wrapper | [🗂️](https://csinva.io/imodels/util/automl.html)  | Automatically fit and select an interpretable model |
-| More models                 | ⌛                                                            | (Coming soon!) Lightweight Rule Induction, MLRules, ... |
+| More models                 | ⌛                                                            | (Coming soon!) Lightweight Rule Induction, MLRules, <Your model!> |
 
 ## Demo notebooks
 
@@ -175,7 +175,7 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | TAO rule tree              | [TaoTreeClassifier](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeClassifier) |   [TaoTreeRegressor](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeRegressor)        |  |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
 | Tree GAM | [TreeGAMClassifier](https://csinva.io/imodels/algebraic/tree_gam.html) | [TreeGAMRegressor](https://csinva.io/imodels/algebraic/tree_gam.html) | |
-| Additive GP GAM (GPGam) |  | [GPGamRegressor](https://csinva.io/imodels/algebraic/gp_gam.html) | GAM with pairwise interactions; nothing to tune, and deterministic |
+| GP GAM |  | [GPGamRegressor](https://csinva.io/imodels/algebraic/gp_gam.html) | GAM with pairwise interactions; nothing to tune, and deterministic |
 | Greedy tree sums (FIGS) | [FIGSClassifier](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier) | [FIGSRegressor](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor) |                                                              |
 | Hierarchical shrinkage | [HSTreeClassifierCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV) | [HSTreeRegressorCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV) | Wraps any sklearn tree-based model |
 | Marginal shrinkage<br/>linear model |  | [MarginalShrinkageLinearModelRegressor](https://csinva.io/imodels/algebraic/marginal_shrinkage_linear_model.html) | Linear model shrunk towards its marginal effects |
@@ -345,7 +345,7 @@ Fit an interpretable model to explain a previous model's errors (ex. in <a href=
 The code here contains many useful and customizable functions for rule-based learning in the <a href="https://csinva.io/imodels/util/index.html">util folder</a>. This includes functions / classes for rule deduplication, rule screening, and converting between trees, rulesets, and neural networks.
 </details>
 
-## Our favorite models
+## Our favorite methods
 
 After developing and playing with `imodels`, we developed a few new models to overcome limitations of existing interpretable models.
 
