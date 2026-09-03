@@ -22,10 +22,15 @@ data = data.replace('&lt;https://doi.org/10.5281/zenodo.4026887}&gt;',
 # version of this script compared against a fixed string, which silently stopped
 # matching as soon as a model was added to the readme.
 
-def drop(pattern, text, what):
-    """Remove `pattern` from `text`, complaining if it is not there."""
+def drop(pattern, text, what, required=True):
+    """Remove `pattern` from `text`.
+
+    Complains when a pattern that should be there finds nothing, which is how
+    this script used to fail silently. Pass ``required=False`` for a section
+    that legitimately may not exist on a given build.
+    """
     new_text, n = re.subn(pattern, '', text, flags=re.S)
-    if n == 0:
+    if n == 0 and required:
         print(f'  style_docs.py: nothing removed for {what}; has the readme changed?')
     return new_text
 
@@ -34,6 +39,17 @@ def drop(pattern, text, what):
 # the copy that lands in the index body.
 data = drop(r'<img align="center" width=60% src="[^"]*imodels_logo[^"]*">\s*</img>', data,
             'the readme logo')
+
+# The main page is the readme. Everything pdoc appends after it, the sub-module
+# list and the re-exported functions and classes, belongs on the individual
+# module pages instead, so cut from the Sub-modules heading to the end of the
+# article, and drop the matching sidebar entries so nothing links into the gap.
+data = drop(r'<section>\s*<h2 class="section-title" id="header-submodules">.*?(?=</article>)',
+            data, 'the sub-modules section and everything after it')
+data = drop(r'<li><h3><a href="#header-variables">.*?</li>\s*(?=<li>|</ul>)', data,
+            'the sidebar global-variables entry', required=False)
+data = drop(r'<li><h3><a href="#header-classes">.*?</ul>\s*</li>\s*(?=</ul>)', data,
+            'the sidebar classes entry', required=False)
 
 # the section body, from its heading up to the next top-level heading
 data = drop(r'<h2 id="our-favorite-methods">.*?(?=<h2[ >])', data,

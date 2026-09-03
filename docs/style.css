@@ -36,12 +36,9 @@ h2 { font-size: 1.5em; margin: 1.9em 0 0.6em; padding-bottom: 0.25em;
 h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
 
 /* ---------- navbar ---------- */
-/* pdoc caps #content at 100ch and packs main to the left, so the bar is capped
-   to match rather than stretching the full viewport on a wide screen */
 #site-header {
   display: flex; align-items: center; gap: 1rem;
-  max-width: 1380px;
-  padding: 0.5rem 1.25rem;
+  padding: 0.35rem 1.25rem;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
   position: sticky; top: 0; z-index: 50;

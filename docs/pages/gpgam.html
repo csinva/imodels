@@ -233,6 +233,29 @@ y.T @ y</code></pre>
                         section. TabPFN could not be fit on two TabArena datasets, one with 1,024
                         features and one with 81, and is ranked last on those.</p>
 
+                    <p class="tblnote"><b>What was subsampled.</b> The four columns do not measure the
+                        same thing, and it is worth being precise about how. The imodels suite cuts
+                        every dataset down to at most 1,000 training rows and 50 features at a fixed
+                        seed, so that column measures the small data regime rather than the datasets at
+                        their real size. The other three suites use every row and column, from 517 rows
+                        up to 72,000, and up to 1,024 features.</p>
+
+                    <p class="tblnote">TabPFN is handicapped in the three full-size suites. It is
+                        capped at 2,500 training rows by GPU memory, and on a dataset wider than 500
+                        features only the first 500 are passed to it. Where it still ranks first, it
+                        does so on a fraction of the data the other models saw; where it ranks last on
+                        two TabArena datasets, that is because no fit was possible at all. Its numbers
+                        should be read as a lower bound on what the method can do rather than a
+                        measurement of it.</p>
+
+                    <p class="tblnote">Every result here is one 80/20 split at a fixed seed with all
+                        models at library defaults, which is not how these benchmarks are meant to be
+                        scored. TabArena and CTR23 both define protocols with repeated folds and
+                        hyperparameter search, so none of these numbers are comparable to published
+                        leaderboard entries. CTR23 is also cut from 35 datasets to 28, dropping the
+                        seven it shares with TabArena so the two columns stay independent.</p>
+
+
                     <p>The model fails in the same way on every suite, which is worth knowing before you
                         use it. It loses on smooth simulations and on data with strong interactions, such
                         as wave energy converters, building energy simulation, and robot arm dynamics. In
