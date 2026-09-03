@@ -36,9 +36,12 @@ h2 { font-size: 1.5em; margin: 1.9em 0 0.6em; padding-bottom: 0.25em;
 h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
 
 /* ---------- navbar ---------- */
+/* pdoc caps #content at 100ch and packs main to the left, so the bar is capped
+   to match rather than stretching the full viewport on a wide screen */
 #site-header {
   display: flex; align-items: center; gap: 1rem;
-  padding: 0.55rem 1.25rem;
+  max-width: 1380px;
+  padding: 0.5rem 1.25rem;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
   position: sticky; top: 0; z-index: 50;
@@ -79,6 +82,10 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
   border-bottom: 1px solid var(--line); padding-bottom: 0.35em; }
 #sidebar .toc ul, #sidebar #index { font-size: 0.88rem; }
 #sidebar li { margin: 0.18em 0; }
+/* class entries are <h4>, which pdoc renders at 105% and bold; bring them back
+   in line with everything else in the index */
+#sidebar #index h4 { font-size: 1em; font-weight: 500; margin: 0.2em 0; }
+#sidebar #index h4 code { background: transparent; padding: 0; font-size: 1em; }
 
 /* ---------- tables ---------- */
 #content table, .article table {
