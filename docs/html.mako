@@ -259,7 +259,19 @@
     % if lunr_search is not None:
       <%include file="_lunr_search.inc.mako"/>
     % endif
-    <h1>Index 🔍</h1>
+    <div id="site-header">
+      <%
+        # generated pages mirror the module tree, so a page nested N directories
+        # deep needs N steps back up to reach the docs root
+        _depth = len(module.refname.split('.')) - 1 - (0 if module.is_package else 1)
+      %>
+      <a href="${'../' * _depth}index.html" id="site-logo">
+        <img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
+             alt="imodels">
+      </a>
+      <p id="site-tagline">Concise, transparent, accurate predictive modeling.
+        All sklearn-compatible and easy to use.</p>
+    </div>
     ${extract_toc(module.docstring) if extract_module_toc_into_sidebar else ''}
     <ul id="index">
     % if supermodule:
@@ -375,6 +387,13 @@
       margin: 0;
     }
     summary { cursor: pointer; }
+
+    /* site header, which stands in for pdoc's "Index" heading at the top of the sidebar */
+    #site-header { margin: 0 0 1.4em; padding-bottom: 1em; border-bottom: 1px solid #ddd; }
+    #site-logo { display: block; }
+    #site-logo img { width: 100%; max-width: 260px; display: block; margin: 0 auto 0.6em; }
+    #site-tagline { margin: 0; font-size: 0.82em; line-height: 1.45; color: #666;
+                    text-align: center; }
 
     /* pdoc leaves tables unruled, which makes wide result tables hard to follow */
     .article table, #content table { border-collapse: collapse; margin: 1em 0; }

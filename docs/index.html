@@ -18,6 +18,12 @@ display: inline;
 margin: 0;
 }
 summary { cursor: pointer; }
+/* site header, which stands in for pdoc's "Index" heading at the top of the sidebar */
+#site-header { margin: 0 0 1.4em; padding-bottom: 1em; border-bottom: 1px solid #ddd; }
+#site-logo { display: block; }
+#site-logo img { width: 100%; max-width: 260px; display: block; margin: 0 auto 0.6em; }
+#site-tagline { margin: 0; font-size: 0.82em; line-height: 1.45; color: #666;
+text-align: center; }
 /* pdoc leaves tables unruled, which makes wide result tables hard to follow */
 .article table, #content table { border-collapse: collapse; margin: 1em 0; }
 .article table th, .article table td,
@@ -37,7 +43,7 @@ background: #fafafa;
 <article id="content">
 <section id="section-intro">
 <p align="center">
-<img align="center" width=60% src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"> </img>
+
 <br/>
 Python package for concise, transparent, and accurate predictive modeling. <br/>
 All sklearn-compatible and easy to use. <br/>
@@ -142,9 +148,9 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 <td>Uses CART to fit a list (only a single path), rather than a tree</td>
 </tr>
 <tr>
-<td style="text-align: left;">Fast-and-frugal tree</td>
+<td style="text-align: left;">FFTree rule list</td>
 <td><a href="https://csinva.io/imodels/rule_list/fast_frugal_tree.html">🗂️</a> <a href="https://github.com/fasttrees/fasttrees">🔗</a></td>
-<td></td>
+<td>Heuristic for fitting fast and frugal rule lists</td>
 </tr>
 <tr>
 <td style="text-align: left;">OneR rule list</td>
@@ -177,9 +183,9 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 <td>Generalized additive model fit with short boosted trees</td>
 </tr>
 <tr>
-<td style="text-align: left;"><b>Additive GP<br/>GAM (GPGam)</b></td>
+<td style="text-align: left;"><strong>GP GAM</strong></td>
 <td><a href="https://csinva.io/imodels/gpgam.html">🗂️</a>,ㅤ<a href="https://csinva.io/imodels/gpgam.html">📄</a></td>
-<td>Additive model whose shapes are Gaussian processes over bins, fit by exact marginal likelihood</td>
+<td>Adaptive GAM based on Gaussian processes</td>
 </tr>
 <tr>
 <td style="text-align: left;"><b>Greedy tree</br>sums (FIGS)</b></td>
@@ -209,7 +215,7 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 <tr>
 <td style="text-align: left;">More models</td>
 <td>⌛</td>
-<td>(Coming soon!) Lightweight Rule Induction, MLRules, &hellip;</td>
+<td>(Coming soon!) Lightweight Rule Induction, MLRules, <Your model!></td>
 </tr>
 </tbody>
 </table>
@@ -347,7 +353,7 @@ Regression
 |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
 | Tree GAM | [TreeGAMClassifier](https://csinva.io/imodels/algebraic/tree_gam.html) | [TreeGAMRegressor](https://csinva.io/imodels/algebraic/tree_gam.html) | |
-| Additive GP GAM (GPGam) |
+| GP GAM |
 | [GPGamRegressor](https://csinva.io/imodels/algebraic/gp_gam.html) | GAM with pairwise interactions; nothing to tune, and deterministic |
 | Greedy tree sums (FIGS) | [FIGSClassifier](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier) | [FIGSRegressor](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor) |
 |
@@ -16736,7 +16742,14 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </section>
 </article>
 <nav id="sidebar">
-<h1>Index 🔍</h1>
+<div id="site-header">
+<a href="index.html" id="site-logo">
+<img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
+alt="imodels">
+</a>
+<p id="site-tagline">Concise, transparent, accurate predictive modeling.
+All sklearn-compatible and easy to use.</p>
+</div>
 <div class="toc">
 <ul>
 <li><a href="#installation">Installation</a></li>

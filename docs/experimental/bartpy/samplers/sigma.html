@@ -18,6 +18,12 @@ display: inline;
 margin: 0;
 }
 summary { cursor: pointer; }
+/* site header, which stands in for pdoc's "Index" heading at the top of the sidebar */
+#site-header { margin: 0 0 1.4em; padding-bottom: 1em; border-bottom: 1px solid #ddd; }
+#site-logo { display: block; }
+#site-logo img { width: 100%; max-width: 260px; display: block; margin: 0 auto 0.6em; }
+#site-tagline { margin: 0; font-size: 0.82em; line-height: 1.45; color: #666;
+text-align: center; }
 /* pdoc leaves tables unruled, which makes wide result tables hard to follow */
 .article table, #content table { border-collapse: collapse; margin: 1em 0; }
 .article table th, .article table td,
@@ -143,7 +149,14 @@ def sample(model: Model, sigma: Sigma) -&gt; float:
 </section>
 </article>
 <nav id="sidebar">
-<h1>Index 🔍</h1>
+<div id="site-header">
+<a href="../../../index.html" id="site-logo">
+<img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
+alt="imodels">
+</a>
+<p id="site-tagline">Concise, transparent, accurate predictive modeling.
+All sklearn-compatible and easy to use.</p>
+</div>
 <div class="toc">
 <ul></ul>
 </div>
