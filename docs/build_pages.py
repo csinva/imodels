@@ -65,6 +65,17 @@ def shared_head(index_html, title, extra):
     return head.rstrip() + "\n" + extra + "</head>"
 
 
+def shared_header(index_html):
+    """The site header bar, lifted whole from the index.
+
+    The hand-written pages sit in the docs root next to index.html, so the
+    header's link back to the root needs no adjusting.
+    """
+    start = index_html.index('<header id="site-header">')
+    end = index_html.index("</header>", start) + len("</header>")
+    return index_html[start:end]
+
+
 def shared_sidebar(index_html):
     """The index page's sidebar, with its in-page anchors pointed back at it."""
     start = index_html.index('<nav id="sidebar">')
@@ -78,12 +89,15 @@ def main():
     index_html = _read("index.html")
     head = index_html[index_html.index("<head>"):index_html.index("</head>")]
     sidebar = shared_sidebar(index_html)
+    header = shared_header(index_html)
     for name, (title, extra) in PAGES.items():
         content = _read(os.path.join("pages", f"{name}.html")).strip()
         page = (
             "<!doctype html>\n<html lang=\"en\">\n\n"
             + shared_head(index_html, title, extra)
-            + "\n\n<body>\n    <main>\n        <article id=\"content\">\n"
+            + "\n\n<body>\n"
+            + header
+            + "\n<main>\n        <article id=\"content\">\n"
             + content
             + "\n        </article>\n"
             + sidebar
