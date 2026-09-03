@@ -274,9 +274,11 @@
 ##     <hr>
     <li><h3>Our favorite models</h3>
         <ul>
-        <li><a href="https://csinva.io/imodels/shrinkage.html">Hierarchical shrinkage: post-hoc regularization for tree-based methods</a></li>
-        <li><a href="https://csinva.io/imodels/figs.html">FIGS: Fast interpretable greedy-tree sums</a></li>
-        <li><a href="https://csinva.io/imodels/mdi_plus.html">MDI+: Flexible tree-based feature importance</a></li>
+        <%doc>Keep this list in the same order as the "Our favorite models" section of the readme.</%doc>
+        <li><a href="https://csinva.io/imodels/figs.html"><b>FIGS</b>: Fast interpretable greedy-tree sums</a></li>
+        <li><a href="https://csinva.io/imodels/gpgam.html"><b>GPGam</b>: Additive Gaussian processes over binned features</a></li>
+        <li><a href="https://csinva.io/imodels/shrinkage.html"><b>Hierarchical shrinkage</b>: post-hoc regularization for tree-based methods</a></li>
+        <li><a href="https://csinva.io/imodels/mdi_plus.html"><b>MDI+</b>: Flexible tree-based feature importance</a></li>
         </ul>
     </li>
     <li><h3><a href="#header-submodules">Sub-modules</a></h3>
@@ -364,6 +366,16 @@
   <style>${css.mobile()}</style>
   <style media="screen and (min-width: 700px)">${css.desktop()}</style>
   <style media="print">${css.print()}</style>
+
+  <style>
+    /* A heading inside <summary> is a block element, so by default it drops onto
+       the line below the disclosure triangle and leaves a gap. Keep it inline. */
+    summary > h1, summary > h2, summary > h3, summary > h4, summary > h5 {
+      display: inline;
+      margin: 0;
+    }
+    summary { cursor: pointer; }
+  </style>
 
   % if google_analytics:
     <script>

@@ -10,6 +10,15 @@
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<style>
+/* A heading inside <summary> is a block element, so by default it drops onto
+the line below the disclosure triangle and leaves a gap. Keep it inline. */
+summary > h1, summary > h2, summary > h3, summary > h4, summary > h5 {
+display: inline;
+margin: 0;
+}
+summary { cursor: pointer; }
+</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
@@ -42,6 +51,8 @@ from scipy.special import softmax
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 from imodels.util.arguments import check_fit_arguments, check_predict_X
 from imodels.util.data_util import encode_categories
+from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.arguments import explicit_get_params
 
 
 class Node:
@@ -123,7 +134,7 @@ class Node:
         return self.__str__()
 
 
-class FIGS(BaseEstimator):
+class FIGS(RuleInspectionMixin, BaseEstimator):
     &#34;&#34;&#34;FIGS (sum of trees) classifier.
     Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
     Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
@@ -185,15 +196,6 @@ class FIGS(BaseEstimator):
         self.need_to_reshape = False
 
 
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
     def _fit_candidate_stumps(self, X, potential_splits, y_residuals_per_tree,
                               sample_weight):
         &#34;&#34;&#34;Re-fit the stump for every candidate split, in parallel if asked.&#34;&#34;&#34;
@@ -877,7 +879,7 @@ class FIGSClassifier(ClassifierMixin, FIGS):
         return proba[:, 1]
 
 
-class FIGSCV(BaseEstimator):
+class FIGSCV(RuleInspectionMixin, BaseEstimator):
     def __init__(
         self,
         figs,
@@ -901,31 +903,17 @@ class FIGSCV(BaseEstimator):
         self.scoring = scoring
 
 
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
     @property
     def feature_importances_(self):
         &#34;&#34;&#34;Mean decrease in impurity of the selected FIGS model.&#34;&#34;&#34;
         return self.figs.feature_importances_
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
+    #: __init__ takes *args/**kwargs, which sklearn&#39;s introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = (&#34;n_rules_list&#34;, &#34;n_trees_list&#34;, &#34;depth_list&#34;,
+                    &#34;min_impurity_decrease_list&#34;, &#34;cv&#34;, &#34;scoring&#34;)
 
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
-        # automatic parameter introspection rejects
-        return {
-            &#34;n_rules_list&#34;: self.n_rules_list,
-            &#34;n_trees_list&#34;: self.n_trees_list,
-            &#34;depth_list&#34;: self.depth_list,
-            &#34;min_impurity_decrease_list&#34;: self.min_impurity_decrease_list,
-            &#34;cv&#34;: self.cv,
-            &#34;scoring&#34;: self.scoring,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
         for key, value in params.items():
@@ -1112,7 +1100,7 @@ when both are given.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FIGS(BaseEstimator):
+<pre><code class="python">class FIGS(RuleInspectionMixin, BaseEstimator):
     &#34;&#34;&#34;FIGS (sum of trees) classifier.
     Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise rule-based models.
     Specifically, FIGS generalizes CART to simultaneously grow a flexible number of trees in a summation.
@@ -1174,15 +1162,6 @@ when both are given.</p></div>
         self.need_to_reshape = False
 
 
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
     def _fit_candidate_stumps(self, X, potential_splits, y_residuals_per_tree,
                               sample_weight):
         &#34;&#34;&#34;Re-fit the stump for every candidate split, in parallel if asked.&#34;&#34;&#34;
@@ -1840,9 +1819,11 @@ when both are given.</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -1874,21 +1855,6 @@ def feature_importances_(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.figs.FIGS.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def apply(self, X):
-    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-    from imodels.util.apply import apply_leaves
-    return apply_leaves(self, X)</code></pre>
-</details>
-</dd>
 <dt id="imodels.tree.figs.FIGS.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y=None, feature_names=None, verbose=None, sample_weight=None, categorical_features=None)</span>
 </code></dt>
@@ -2194,21 +2160,6 @@ are ignored while searching for a split in each node.</p></div>
     return self</code></pre>
 </details>
 </dd>
-<dt id="imodels.tree.figs.FIGS.get_rules"><code class="name flex">
-<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_rules(self, feature_names=None):
-    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-    from imodels.util.get_rules import get_rules
-    return get_rules(self, feature_names=feature_names)</code></pre>
-</details>
-</dd>
 <dt id="imodels.tree.figs.FIGS.plot"><code class="name flex">
 <span>def <span class="ident">plot</span></span>(<span>self, cols=2, feature_names=None, filename=None, label='all', impurity=False, tree_number=None, dpi=150, fig_size=None)</span>
 </code></dt>
@@ -2372,11 +2323,10 @@ Set use_clipped_prediction=True to use prior behavior of clipping between 0 and 
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a>, *, categorical_features: bool | str | None = '$UNCHANGED$', feature_names: bool | str | None = '$UNCHANGED$', sample_weight: bool | str | None = '$UNCHANGED$', verbose: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -2398,6 +2348,12 @@ existing request. This allows you to change the request for some
 parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
 </div>
 <h2 id="parameters">Parameters</h2>
 <dl>
@@ -2424,11 +2380,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -2475,11 +2430,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">set_predict_proba_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a>, *, categorical_features: bool | str | None = '$UNCHANGED$', use_clipped_prediction: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>predict_proba</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>predict_proba</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -2502,6 +2456,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>categorical_features</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -2521,11 +2481,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -2572,11 +2531,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">set_predict_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a>, *, by_tree: bool | str | None = '$UNCHANGED$', categorical_features: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>predict</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>predict</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -2599,6 +2557,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>by_tree</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -2618,11 +2582,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -2666,53 +2629,27 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="imodels.tree.figs.FIGSCV"><code class="flex name class">
 <span>class <span class="ident">FIGSCV</span></span>
 <span>(</span><span>figs, n_rules_list: List[int] = [6, 12, 24, 30, 50], n_trees_list: List[int] = [5, 10, 15], depth_list: List[int] = [3, 4], min_impurity_decrease_list: List[float] = [0], cv: int = 3, scoring=None, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Base class for all estimators in scikit-learn.</p>
-<p>Inheriting from this class provides default implementations of:</p>
-<ul>
-<li>setting and getting parameters used by <code>GridSearchCV</code> and friends;</li>
-<li>textual and HTML representation displayed in terminals and IDEs;</li>
-<li>estimator serialization;</li>
-<li>parameters validation;</li>
-<li>data validation;</li>
-<li>feature names validation.</li>
-</ul>
-<p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
-<h2 id="notes">Notes</h2>
-<p>All estimators should specify all the parameters that can be set
-at the class level in their <code>__init__</code> as explicit keyword
-arguments (no <code>*args</code> or <code>**kwargs</code>).</p>
-<h2 id="examples">Examples</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
-&gt;&gt;&gt; from sklearn.base import BaseEstimator
-&gt;&gt;&gt; class MyEstimator(BaseEstimator):
-...     def __init__(self, *, param=1):
-...         self.param = param
-...     def fit(self, X, y=None):
-...         self.is_fitted_ = True
-...         return self
-...     def predict(self, X):
-...         return np.full(shape=X.shape[0], fill_value=self.param)
-&gt;&gt;&gt; estimator = MyEstimator(param=2)
-&gt;&gt;&gt; estimator.get_params()
-{'param': 2}
-&gt;&gt;&gt; X = np.array([[1, 2], [2, 3], [3, 4]])
-&gt;&gt;&gt; y = np.array([1, 0, 1])
-&gt;&gt;&gt; estimator.fit(X, y).predict(X)
-array([2, 2, 2])
-&gt;&gt;&gt; estimator.set_params(param=3).fit(X, y).predict(X)
-array([3, 3, 3])
-</code></pre></div>
+<div class="desc"><p>Both of the above, for tree-based models that support each.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FIGSCV(BaseEstimator):
+<pre><code class="python">class FIGSCV(RuleInspectionMixin, BaseEstimator):
     def __init__(
         self,
         figs,
@@ -2736,31 +2673,17 @@ array([3, 3, 3])
         self.scoring = scoring
 
 
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
-
     @property
     def feature_importances_(self):
         &#34;&#34;&#34;Mean decrease in impurity of the selected FIGS model.&#34;&#34;&#34;
         return self.figs.feature_importances_
-    def apply(self, X):
-        &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-        from imodels.util.apply import apply_leaves
-        return apply_leaves(self, X)
+    #: __init__ takes *args/**kwargs, which sklearn&#39;s introspection rejects,
+    #: so the parameters are spelled out here instead
+    _PARAM_NAMES = (&#34;n_rules_list&#34;, &#34;n_trees_list&#34;, &#34;depth_list&#34;,
+                    &#34;min_impurity_decrease_list&#34;, &#34;cv&#34;, &#34;scoring&#34;)
 
     def get_params(self, deep=True):
-        # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
-        # automatic parameter introspection rejects
-        return {
-            &#34;n_rules_list&#34;: self.n_rules_list,
-            &#34;n_trees_list&#34;: self.n_trees_list,
-            &#34;depth_list&#34;: self.depth_list,
-            &#34;min_impurity_decrease_list&#34;: self.min_impurity_decrease_list,
-            &#34;cv&#34;: self.cv,
-            &#34;scoring&#34;: self.scoring,
-        }
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
 
     def set_params(self, **params):
         for key, value in params.items():
@@ -2817,9 +2740,11 @@ array([3, 3, 3])
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -2905,21 +2830,6 @@ def trees_(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.tree.figs.FIGSCV.apply"><code class="name flex">
-<span>def <span class="ident">apply</span></span>(<span>self, X)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def apply(self, X):
-    &#34;&#34;&#34;Return the leaf each sample reaches (see imodels.util.apply.apply_leaves).&#34;&#34;&#34;
-    from imodels.util.apply import apply_leaves
-    return apply_leaves(self, X)</code></pre>
-</details>
-</dd>
 <dt id="imodels.tree.figs.FIGSCV.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self, X, y)</span>
 </code></dt>
@@ -2971,31 +2881,7 @@ contained subobjects that are estimators.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_params(self, deep=True):
-    # defined explicitly because __init__ takes *args/**kwargs, which sklearn&#39;s
-    # automatic parameter introspection rejects
-    return {
-        &#34;n_rules_list&#34;: self.n_rules_list,
-        &#34;n_trees_list&#34;: self.n_trees_list,
-        &#34;depth_list&#34;: self.depth_list,
-        &#34;min_impurity_decrease_list&#34;: self.min_impurity_decrease_list,
-        &#34;cv&#34;: self.cv,
-        &#34;scoring&#34;: self.scoring,
-    }</code></pre>
-</details>
-</dd>
-<dt id="imodels.tree.figs.FIGSCV.get_rules"><code class="name flex">
-<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_rules(self, feature_names=None):
-    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-    from imodels.util.get_rules import get_rules
-    return get_rules(self, feature_names=feature_names)</code></pre>
+    return explicit_get_params(self, self._PARAM_NAMES, deep=deep)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.figs.FIGSCV.predict"><code class="name flex">
@@ -3059,11 +2945,10 @@ possible to update each component of a nested object.</p>
 <span>def <span class="ident">set_predict_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a>, *, by_tree: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>predict</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>predict</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -3086,6 +2971,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>by_tree</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -3102,11 +2993,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -3150,6 +3040,15 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="imodels.tree.figs.FIGSClassifier"><code class="flex name class">
 <span>class <span class="ident">FIGSClassifier</span></span>
@@ -3159,10 +3058,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li>set estimator type to <code>"classifier"</code> through the <code>estimator_type</code> tag;</li>
+<li><code>_estimator_type</code> class attribute defaulting to <code>"classifier"</code>;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.accuracy_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
-which is done by setting the classifier type tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -3239,9 +3137,11 @@ when both are given.</p></div>
 <ul class="hlist">
 <li>sklearn.base.ClassifierMixin</li>
 <li><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></li>
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Instance variables</h3>
@@ -3294,11 +3194,10 @@ before falling back to predict_proba.</p></div>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGSClassifier" href="#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGSClassifier" href="#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -3321,6 +3220,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -3337,11 +3242,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -3389,10 +3293,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.figs.FIGS.apply" href="#imodels.tree.figs.FIGS.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.feature_importances_" href="#imodels.tree.figs.FIGS.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.get_rules" href="#imodels.tree.figs.FIGS.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.set_fit_request" href="#imodels.tree.figs.FIGS.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.set_predict_proba_request" href="#imodels.tree.figs.FIGS.set_predict_proba_request">set_predict_proba_request</a></code></li>
@@ -3409,10 +3313,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <div class="desc"><p>Mixin class for all classifiers in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li>set estimator type to <code>"classifier"</code> through the <code>estimator_type</code> tag;</li>
+<li><code>_estimator_type</code> class attribute defaulting to <code>"classifier"</code>;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.accuracy_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
-which is done by setting the classifier type tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -3467,9 +3370,11 @@ array([1, 1, 1])
 <ul class="hlist">
 <li>sklearn.base.ClassifierMixin</li>
 <li><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></li>
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -3478,11 +3383,10 @@ array([1, 1, 1])
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGSClassifierCV" href="#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGSClassifierCV" href="#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -3505,6 +3409,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -3521,11 +3431,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -3573,10 +3482,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.figs.FIGSCV.apply" href="#imodels.tree.figs.FIGSCV.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.feature_importances_" href="#imodels.tree.figs.FIGSCV.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="#imodels.tree.figs.FIGSCV.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_params" href="#imodels.tree.figs.FIGSCV.set_params">set_params</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_predict_request" href="#imodels.tree.figs.FIGSCV.set_predict_request">set_predict_request</a></code></li>
 </ul>
@@ -3591,10 +3500,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li>set estimator type to <code>"regressor"</code> through the <code>estimator_type</code> tag;</li>
+<li><code>_estimator_type</code> class attribute defaulting to <code>"regressor"</code>;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.r2_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
-which is done by setting the regressor type tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -3652,9 +3560,11 @@ when both are given.</p></div>
 <ul class="hlist">
 <li>sklearn.base.RegressorMixin</li>
 <li><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></li>
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -3663,11 +3573,10 @@ when both are given.</p></div>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGSRegressor" href="#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGSRegressor" href="#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -3690,6 +3599,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -3706,11 +3621,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -3758,10 +3672,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.figs.FIGS.apply" href="#imodels.tree.figs.FIGS.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.feature_importances_" href="#imodels.tree.figs.FIGS.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.get_rules" href="#imodels.tree.figs.FIGS.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGS.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.set_fit_request" href="#imodels.tree.figs.FIGS.set_fit_request">set_fit_request</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.set_predict_proba_request" href="#imodels.tree.figs.FIGS.set_predict_proba_request">set_predict_proba_request</a></code></li>
@@ -3778,10 +3692,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <div class="desc"><p>Mixin class for all regression estimators in scikit-learn.</p>
 <p>This mixin defines the following functionality:</p>
 <ul>
-<li>set estimator type to <code>"regressor"</code> through the <code>estimator_type</code> tag;</li>
+<li><code>_estimator_type</code> class attribute defaulting to <code>"regressor"</code>;</li>
 <li><code>score</code> method that default to :func:<code>~sklearn.metrics.r2_score</code>.</li>
-<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag,
-which is done by setting the regressor type tag.</li>
+<li>enforce that <code>fit</code> requires <code>y</code> to be passed through the <code>requires_y</code> tag.</li>
 </ul>
 <p>Read more in the :ref:<code>User Guide &lt;rolling_your_own_estimator&gt;</code>.</p>
 <h2 id="examples">Examples</h2>
@@ -3836,9 +3749,11 @@ array([0, 0, 0])
 <ul class="hlist">
 <li>sklearn.base.RegressorMixin</li>
 <li><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></li>
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -3847,11 +3762,10 @@ array([0, 0, 0])
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.figs.FIGSRegressorCV" href="#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.figs.FIGSRegressorCV" href="#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -3874,6 +3788,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -3890,11 +3810,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -3942,10 +3861,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <ul class="hlist">
 <li><code><b><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></b></code>:
 <ul class="hlist">
-<li><code><a title="imodels.tree.figs.FIGSCV.apply" href="#imodels.tree.figs.FIGSCV.apply">apply</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.apply" href="../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.feature_importances_" href="#imodels.tree.figs.FIGSCV.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="#imodels.tree.figs.FIGSCV.get_rules">get_rules</a></code></li>
+<li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_params" href="#imodels.tree.figs.FIGSCV.set_params">set_params</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.set_predict_request" href="#imodels.tree.figs.FIGSCV.set_predict_request">set_predict_request</a></code></li>
 </ul>
@@ -4106,10 +4025,8 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li>
 <h4><code><a title="imodels.tree.figs.FIGS" href="#imodels.tree.figs.FIGS">FIGS</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.figs.FIGS.apply" href="#imodels.tree.figs.FIGS.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.feature_importances_" href="#imodels.tree.figs.FIGS.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.fit" href="#imodels.tree.figs.FIGS.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGS.get_rules" href="#imodels.tree.figs.FIGS.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.plot" href="#imodels.tree.figs.FIGS.plot">plot</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict" href="#imodels.tree.figs.FIGS.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGS.predict_proba" href="#imodels.tree.figs.FIGS.predict_proba">predict_proba</a></code></li>
@@ -4122,11 +4039,9 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li>
 <h4><code><a title="imodels.tree.figs.FIGSCV" href="#imodels.tree.figs.FIGSCV">FIGSCV</a></code></h4>
 <ul class="">
-<li><code><a title="imodels.tree.figs.FIGSCV.apply" href="#imodels.tree.figs.FIGSCV.apply">apply</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.feature_importances_" href="#imodels.tree.figs.FIGSCV.feature_importances_">feature_importances_</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.fit" href="#imodels.tree.figs.FIGSCV.fit">fit</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.get_params" href="#imodels.tree.figs.FIGSCV.get_params">get_params</a></code></li>
-<li><code><a title="imodels.tree.figs.FIGSCV.get_rules" href="#imodels.tree.figs.FIGSCV.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.max_depth" href="#imodels.tree.figs.FIGSCV.max_depth">max_depth</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.max_rules" href="#imodels.tree.figs.FIGSCV.max_rules">max_rules</a></code></li>
 <li><code><a title="imodels.tree.figs.FIGSCV.max_trees" href="#imodels.tree.figs.FIGSCV.max_trees">max_trees</a></code></li>

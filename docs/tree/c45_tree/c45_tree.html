@@ -10,6 +10,15 @@
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<style>
+/* A heading inside <summary> is a block element, so by default it drops onto
+the line below the disclosure triangle and leaves a gap. Keep it inline. */
+summary > h1, summary > h2, summary > h3, summary > h4, summary > h5 {
+display: inline;
+margin: 0;
+}
+summary { cursor: pointer; }
+</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
@@ -43,10 +52,12 @@ import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.utils.validation import check_array, check_is_fitted
-from imodels.util.arguments import check_fit_arguments, check_predict_X, decode_labels
+from imodels.util.arguments import (check_fit_arguments, check_predict_X, decode_labels,
+                                    explicit_get_params, explicit_set_params)
 
 from ..c45_tree.c45_utils import decision, is_numeric_feature, gain, gain_ratio, get_best_split, \
     set_as_leaf_node
+from imodels.util.introspection import RulesMixin
 
 
 def _add_label(node, label):
@@ -116,7 +127,7 @@ def _make_xml_safe_names(feature_names):
     return safe_names
 
 
-class C45TreeClassifier(BaseEstimator, ClassifierMixin):
+class C45TreeClassifier(RulesMixin, BaseEstimator, ClassifierMixin):
     &#34;&#34;&#34;A C4.5 tree classifier.
 
     Parameters
@@ -160,11 +171,6 @@ class C45TreeClassifier(BaseEstimator, ClassifierMixin):
         # print(&#39;self.tree_&#39;, self.tree_)
         self.dom_ = minidom.parseString(self.tree_)
         return self
-
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
 
     def impute_nodes(self, X, y):
         &#34;&#34;&#34;
@@ -388,6 +394,16 @@ class HSC45TreeClassifier(BaseEstimator):
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
 
+    #: spelled out because HSC45TreeClassifierCV&#39;s __init__ takes *args/**kwargs,
+    #: which sklearn&#39;s parameter introspection rejects
+    _PARAM_NAMES = (&#34;estimator_&#34;, &#34;reg_param&#34;, &#34;shrinkage_scheme_&#34;)
+
+    def get_params(self, deep=True):
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
+
+    def set_params(self, **params):
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
+
     def _calc_probs(self, node):
         self.estimator_._calc_probs(node)
 
@@ -417,13 +433,18 @@ class HSC45TreeClassifier(BaseEstimator):
 
 
 class HSC45TreeClassifierCV(HSC45TreeClassifier):
+    _PARAM_NAMES = (&#34;estimator_&#34;, &#34;reg_param_list&#34;, &#34;shrinkage_scheme_&#34;,
+                    &#34;cv&#34;, &#34;scoring&#34;)
+
     def __init__(self, estimator_: C45TreeClassifier,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = &#39;node_based&#39;,
                  cv: int = 3, scoring=&#39;accuracy&#39;, *args, **kwargs):
         &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
         &#34;&#34;&#34;
         super().__init__(estimator_, reg_param=None)
-        self.reg_param_list = np.array(reg_param_list)
+        # stored as passed: sklearn&#39;s clone checks that __init__ leaves each
+        # parameter identical, and np.array() would copy it
+        self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
         self.shrinkage_scheme_ = shrinkage_scheme_
@@ -514,7 +535,7 @@ class HSC45TreeClassifierCV(HSC45TreeClassifier):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class C45TreeClassifier(BaseEstimator, ClassifierMixin):
+<pre><code class="python">class C45TreeClassifier(RulesMixin, BaseEstimator, ClassifierMixin):
     &#34;&#34;&#34;A C4.5 tree classifier.
 
     Parameters
@@ -558,11 +579,6 @@ class HSC45TreeClassifierCV(HSC45TreeClassifier):
         # print(&#39;self.tree_&#39;, self.tree_)
         self.dom_ = minidom.parseString(self.tree_)
         return self
-
-    def get_rules(self, feature_names=None):
-        &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-        from imodels.util.get_rules import get_rules
-        return get_rules(self, feature_names=feature_names)
 
     def impute_nodes(self, X, y):
         &#34;&#34;&#34;
@@ -767,9 +783,9 @@ class HSC45TreeClassifierCV(HSC45TreeClassifier):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.RulesMixin" href="../../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 <li>sklearn.base.ClassifierMixin</li>
 </ul>
@@ -830,21 +846,6 @@ def root(self):
     # print(&#39;self.tree_&#39;, self.tree_)
     self.dom_ = minidom.parseString(self.tree_)
     return self</code></pre>
-</details>
-</dd>
-<dt id="imodels.tree.c45_tree.c45_tree.C45TreeClassifier.get_rules"><code class="name flex">
-<span>def <span class="ident">get_rules</span></span>(<span>self, feature_names=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return this model's rules as a DataFrame (see imodels.get_rules).</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_rules(self, feature_names=None):
-    &#34;&#34;&#34;Return this model&#39;s rules as a DataFrame (see imodels.get_rules).&#34;&#34;&#34;
-    from imodels.util.get_rules import get_rules
-    return get_rules(self, feature_names=feature_names)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.c45_tree.c45_tree.C45TreeClassifier.grow_tree"><code class="name flex">
@@ -1080,11 +1081,10 @@ def root(self):
 <span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a>, *, feature_names: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>fit</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1107,6 +1107,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1123,11 +1129,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1174,11 +1179,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure whether metadata should be requested to be passed to the <code>score</code> method.</p>
-<p>Note that this method is only relevant when this estimator is used as a
-sub-estimator within a :term:<code>meta-estimator</code> and metadata routing is enabled
-with <code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
-Please check the :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
 mechanism works.</p>
 <p>The options for each parameter are:</p>
 <ul>
@@ -1201,6 +1205,12 @@ parameters and not others.</p>
 <div class="admonition versionadded">
 <p class="admonition-title">Added in version:&ensp;1.3</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
 <h2 id="parameters">Parameters</h2>
 <dl>
 <dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
@@ -1217,11 +1227,10 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def func(*args, **kw):
-    &#34;&#34;&#34;Updates the `_metadata_request` attribute of the consumer (`instance`)
-    for the parameters provided as `**kw`.
+    &#34;&#34;&#34;Updates the request for provided parameters
 
     This docstring is overwritten below.
-    See REQUESTER_DOC for expected functionality.
+    See REQUESTER_DOC for expected functionality
     &#34;&#34;&#34;
     if not _routing_enabled():
         raise RuntimeError(
@@ -1265,6 +1274,14 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.introspection.RulesMixin" href="../../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.introspection.RulesMixin.get_rules" href="../../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier"><code class="flex name class">
 <span>class <span class="ident">HSC45TreeClassifier</span></span>
@@ -1339,6 +1356,16 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
         self.estimator_ = estimator_
         self.shrinkage_scheme_ = shrinkage_scheme_
 
+    #: spelled out because HSC45TreeClassifierCV&#39;s __init__ takes *args/**kwargs,
+    #: which sklearn&#39;s parameter introspection rejects
+    _PARAM_NAMES = (&#34;estimator_&#34;, &#34;reg_param&#34;, &#34;shrinkage_scheme_&#34;)
+
+    def get_params(self, deep=True):
+        return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
+
+    def set_params(self, **params):
+        return explicit_set_params(self, self._PARAM_NAMES, **params)
+
     def _calc_probs(self, node):
         self.estimator_._calc_probs(node)
 
@@ -1369,8 +1396,7 @@ Experimental: Used to experiment with different forms of shrinkage. options are:
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Subclasses</h3>
@@ -1412,6 +1438,30 @@ def complexity_(self):
     self.shrink_tree()</code></pre>
 </details>
 </dd>
+<dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.get_params"><code class="name flex">
+<span>def <span class="ident">get_params</span></span>(<span>self, deep=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get parameters for this estimator.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>deep</code></strong> :&ensp;<code>bool</code>, default=<code>True</code></dt>
+<dd>If True, will return the parameters for this estimator and
+contained subobjects that are estimators.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Parameter names mapped to their values.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_params(self, deep=True):
+    return explicit_get_params(self, self._PARAM_NAMES, deep=deep)</code></pre>
+</details>
+</dd>
 <dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.impute_nodes"><code class="name flex">
 <span>def <span class="ident">impute_nodes</span></span>(<span>self, X, y)</span>
 </code></dt>
@@ -1449,6 +1499,33 @@ def complexity_(self):
 </summary>
 <pre><code class="python">def predict_proba(self, X):
     return self.estimator_.predict_proba(X)</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.set_params"><code class="name flex">
+<span>def <span class="ident">set_params</span></span>(<span>self, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the parameters of this estimator.</p>
+<p>The method works on simple estimators as well as on nested objects
+(such as :class:<code>~sklearn.pipeline.Pipeline</code>). The latter have
+parameters of the form <code>&lt;component&gt;__&lt;parameter&gt;</code> so that it's
+possible to update each component of a nested object.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>**params</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Estimator parameters.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>estimator instance</code></dt>
+<dd>Estimator instance.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_params(self, **params):
+    return explicit_set_params(self, self._PARAM_NAMES, **params)</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.shrink_tree"><code class="name flex">
@@ -1513,13 +1590,18 @@ array([3, 3, 3])
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HSC45TreeClassifierCV(HSC45TreeClassifier):
+    _PARAM_NAMES = (&#34;estimator_&#34;, &#34;reg_param_list&#34;, &#34;shrinkage_scheme_&#34;,
+                    &#34;cv&#34;, &#34;scoring&#34;)
+
     def __init__(self, estimator_: C45TreeClassifier,
                  reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = &#39;node_based&#39;,
                  cv: int = 3, scoring=&#39;accuracy&#39;, *args, **kwargs):
         &#34;&#34;&#34;Note: args, kwargs are not used but left so that imodels-experiments can still pass redundant args
         &#34;&#34;&#34;
         super().__init__(estimator_, reg_param=None)
-        self.reg_param_list = np.array(reg_param_list)
+        # stored as passed: sklearn&#39;s clone checks that __init__ leaves each
+        # parameter identical, and np.array() would copy it
+        self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
         self.shrinkage_scheme_ = shrinkage_scheme_
@@ -1543,8 +1625,7 @@ array([3, 3, 3])
 <ul class="hlist">
 <li><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier">HSC45TreeClassifier</a></li>
 <li>sklearn.base.BaseEstimator</li>
-<li>sklearn.utils._repr_html.base.ReprHTMLMixin</li>
-<li>sklearn.utils._repr_html.base._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
 <li>sklearn.utils._metadata_requests._MetadataRequester</li>
 </ul>
 <h3>Methods</h3>
@@ -1570,6 +1651,15 @@ array([3, 3, 3])
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier">HSC45TreeClassifier</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.get_params" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.get_params">get_params</a></code></li>
+<li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.set_params" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.set_params">set_params</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -1596,7 +1686,6 @@ array([3, 3, 3])
 <h4><code><a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></code></h4>
 <ul class="two-column">
 <li><code><a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier.fit" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier.fit">fit</a></code></li>
-<li><code><a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier.get_rules" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier.get_rules">get_rules</a></code></li>
 <li><code><a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier.grow_tree" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier.grow_tree">grow_tree</a></code></li>
 <li><code><a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier.impute_nodes" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier.impute_nodes">impute_nodes</a></code></li>
 <li><code><a title="imodels.tree.c45_tree.c45_tree.C45TreeClassifier.predict" href="#imodels.tree.c45_tree.c45_tree.C45TreeClassifier.predict">predict</a></code></li>
@@ -1612,9 +1701,11 @@ array([3, 3, 3])
 <ul class="two-column">
 <li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.complexity_" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.complexity_">complexity_</a></code></li>
 <li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.fit" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.fit">fit</a></code></li>
+<li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.get_params" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.get_params">get_params</a></code></li>
 <li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.impute_nodes" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.impute_nodes">impute_nodes</a></code></li>
 <li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.predict" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.predict">predict</a></code></li>
 <li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.predict_proba" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.predict_proba">predict_proba</a></code></li>
+<li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.set_params" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.set_params">set_params</a></code></li>
 <li><code><a title="imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.shrink_tree" href="#imodels.tree.c45_tree.c45_tree.HSC45TreeClassifier.shrink_tree">shrink_tree</a></code></li>
 </ul>
 </li>

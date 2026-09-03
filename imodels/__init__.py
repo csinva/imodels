@@ -4,6 +4,7 @@
 # Python `imodels` package for interpretable models compatible with scikit-learn.
 # Github repo available [here](https://github.com/csinva/imodels)
 
+from .algebraic.gp_gam import GPGamRegressor
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
 from .algebraic.tree_gam import TreeGAMClassifier, TreeGAMRegressor
 from .algebraic.marginal_shrinkage_linear_model import (
@@ -73,6 +74,7 @@ CLASSIFIERS = [
     AutoInterpretableClassifier,
 ]
 REGRESSORS = [
+    GPGamRegressor,
     RuleFitRegressor,
     FPLassoRegressor,
     SLIMRegressor,
@@ -96,7 +98,8 @@ DISCRETIZERS = [RFDiscretizer, BasicDiscretizer,
 # The public API. Kept explicit so that `from imodels import *` brings in the
 # models and helpers rather than whatever each submodule happened to import.
 __all__ = [
-    "AutoInterpretableClassifier", "AutoInterpretableRegressor", "BART",
+    "GPGamRegressor", "AutoInterpretableClassifier",
+    "AutoInterpretableRegressor", "BART",
     "BRLDiscretizer", "BasicDiscretizer", "BayesianRuleListClassifier",
     "BayesianRuleSetClassifier", "BoostedRulesClassifier",
     "BoostedRulesRegressor", "C45TreeClassifier", "CLASSIFIERS",

@@ -15,6 +15,10 @@ FEATURE_NAMES = ["feat_a", "feat_b", "feat_c"]
 
 # keyword args that keep each model small (and deterministic where it supports a seed)
 MODEL_KWARGS = {
+    # the marginal-likelihood fit is O(P^3) per step in the total bin count, so
+    # the test config keeps the grids coarse and the step count small
+    "GPGamRegressor": dict(schedule=False, n_bins=8, n_pairs=1, pair_bins=4,
+                           n_steps=15),
     # max_depth_duplication dedups subsumed rules (e.g. both "x0" and "x0 and x1");
     # without it their weighted votes average out and dilute the good rule
     "SkopeRulesClassifier": dict(

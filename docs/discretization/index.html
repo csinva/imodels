@@ -10,6 +10,15 @@
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<style>
+/* A heading inside <summary> is a block element, so by default it drops onto
+the line below the disclosure triangle and leaves a gap. Keep it inline. */
+summary > h1, summary > h2, summary > h3, summary > h4, summary > h5 {
+display: inline;
+margin: 0;
+}
+summary { cursor: pointer; }
+</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
@@ -23,7 +32,13 @@
 </summary>
 <pre><code class="python">from .mdlp import BRLDiscretizer
 from .simple import SimpleDiscretizer
-from .discretizer import BasicDiscretizer, ExtraBasicDiscretizer, RFDiscretizer</code></pre>
+from .discretizer import BasicDiscretizer, ExtraBasicDiscretizer, RFDiscretizer
+
+# re-exported for callers; listed so the intent is explicit
+__all__ = [
+    &#34;BRLDiscretizer&#34;, &#34;BasicDiscretizer&#34;, &#34;ExtraBasicDiscretizer&#34;,
+    &#34;RFDiscretizer&#34;, &#34;SimpleDiscretizer&#34;,
+]</code></pre>
 </details>
 </section>
 <section>
@@ -49,6 +64,1839 @@ Python implementation of Fayyad and Irani's MDLP criterion discretization algori
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.discretization.BRLDiscretizer"><code class="flex name class">
+<span>class <span class="ident">BRLDiscretizer</span></span>
+<span>(</span><span>feature_labels, verbose=False)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BRLDiscretizer:
+
+    def __init__(self, feature_labels, verbose=False):
+        self.feature_labels_original = feature_labels
+        self.verbose = verbose
+
+    def fit(self, X, y, undiscretized_features=[]):
+
+        # check which features are numeric (to be discretized)
+        self.discretized_features = []
+
+        # _encode_strings indexes positionally, so a DataFrame has to be
+        # unwrapped here the same way transform does
+        if isinstance(X, (pd.DataFrame, pd.Series)):
+            X = X.values
+        X_str_disc = self._encode_strings(X)
+
+        for fi in range(X_str_disc.shape[1]):
+            # if not string, has values other than 0 and 1, and not specified as undiscretized
+            if (
+                    isinstance(X_str_disc[0][fi], numbers.Number)
+                    and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
+                    and (len(self.feature_labels) == 0 or
+                         len(undiscretized_features) == 0 or
+                         self.feature_labels[fi] not in undiscretized_features
+            )
+            ):
+                self.discretized_features.append(self.feature_labels[fi])
+
+        if len(self.discretized_features) &gt; 0:
+            if self.verbose:
+                print(
+                    &#34;Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to &#34;
+                    &#34;strings, and/or specify the argument &#39;undiscretized_features&#39;, to avoid this.)&#34;)
+            X_str_and_num_disc = self.discretize(X_str_disc, y)
+
+            self.discretized_X = X_str_and_num_disc
+        else:
+            self.discretizer = None
+        return self
+
+    def fit_transform(self, X, y, undiscretized_features=[], return_onehot=True):
+        return self.fit(X, y, undiscretized_features).transform(
+            X, return_onehot=return_onehot)
+
+    def discretize(self, X, y):
+        &#39;&#39;&#39;Discretize the features specified in self.discretized_features
+        &#39;&#39;&#39;
+        if self.verbose:
+            print(&#34;Discretizing &#34;, self.discretized_features, &#34;...&#34;)
+        D = pd.DataFrame(np.hstack((X, np.expand_dims(y, axis=1))), columns=list(self.feature_labels) + [&#34;y&#34;])
+        self.discretizer = MDLPDiscretizer(dataset=D, class_label=&#34;y&#34;, features=self.discretized_features)
+
+        # object dtype: the columns are filled with bin-label strings, which
+        # pandas refuses to write into the float frame np.zeros_like would give
+        cat_data = pd.DataFrame(np.zeros(np.shape(X), dtype=object))
+        for i in range(len(self.feature_labels)):
+            label = self.feature_labels[i]
+            if label in self.discretized_features:
+                new_column = label + &#34; : &#34; + self.discretizer._data[label].astype(str)
+                cat_data.iloc[:, i] = new_column
+            else:
+                cat_data.iloc[:, i] = D[label]
+
+        return np.array(cat_data).tolist()
+
+    def _encode_strings(self, X):
+        # handle string data
+        X_str_disc = pd.DataFrame([])
+        for fi in range(X.shape[1]):
+            if issubclass(type(X[0][fi]), str):
+                new_columns = pd.get_dummies(X[:, fi])
+                new_columns.columns = [self.feature_labels_original[fi] + &#39;_&#39; + value for value in new_columns.columns]
+                new_columns_colon_format = new_columns.apply(lambda s: s.name + &#39; : &#39; + s.astype(str))
+                X_str_disc = pd.concat([X_str_disc, new_columns_colon_format], axis=1)
+            else:
+                X_str_disc = pd.concat([X_str_disc, pd.Series(X[:, fi], name=self.feature_labels_original[fi])], axis=1)
+        self.feature_labels = list(X_str_disc.columns)
+        return X_str_disc.values
+
+    def transform(self, X, return_onehot=True):
+
+        if type(X) in [pd.DataFrame, pd.Series]:
+            X = X.values
+
+        if self.discretizer is None:
+            return pd.DataFrame(X, columns=self.feature_labels_original)
+
+        self.data = pd.DataFrame(self._encode_strings(X), columns=self.feature_labels)
+        self._apply_cutpoints()
+        D = np.array(self.data)
+
+        # prepend feature labels
+        Dl = np.copy(D).astype(str).tolist()
+        for i in range(len(Dl)):
+            for j in range(len(Dl[0])):
+                Dl[i][j] = self.feature_labels[j] + &#34; : &#34; + Dl[i][j]
+
+        if not return_onehot:
+            return Dl
+        else:
+            return self.get_onehot_df(Dl)
+
+    @property
+    def onehot_df(self):
+        return self.get_onehot_df(self.discretized_X)
+
+    def get_onehot_df(self, discretized_X):
+        &#39;&#39;&#39;Create readable one-hot encoded DataFrame from discretized features
+        &#39;&#39;&#39;
+        data = list(discretized_X[:])
+
+        X_colname_removed = data.copy()
+        replace_str_entries_func = lambda s: s.split(&#39; : &#39;)[1] if type(s) is str else s
+        for i in range(len(data)):
+            X_colname_removed[i] = list(map(replace_str_entries_func, X_colname_removed[i]))
+
+        X_df_categorical = pd.DataFrame(X_colname_removed, columns=self.feature_labels)
+        X_df_onehot = pd.get_dummies(X_df_categorical)
+        return X_df_onehot
+
+    @property
+    def data(self):
+        return self.discretizer._data
+
+    @data.setter
+    def data(self, value):
+        self.discretizer._data = value
+
+    def _apply_cutpoints(self):
+        return self.discretizer._apply_cutpoints()</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="imodels.discretization.BRLDiscretizer.data"><code class="name">var <span class="ident">data</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def data(self):
+    return self.discretizer._data</code></pre>
+</details>
+</dd>
+<dt id="imodels.discretization.BRLDiscretizer.onehot_df"><code class="name">var <span class="ident">onehot_df</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def onehot_df(self):
+    return self.get_onehot_df(self.discretized_X)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.discretization.BRLDiscretizer.discretize"><code class="name flex">
+<span>def <span class="ident">discretize</span></span>(<span>self, X, y)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Discretize the features specified in self.discretized_features</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def discretize(self, X, y):
+    &#39;&#39;&#39;Discretize the features specified in self.discretized_features
+    &#39;&#39;&#39;
+    if self.verbose:
+        print(&#34;Discretizing &#34;, self.discretized_features, &#34;...&#34;)
+    D = pd.DataFrame(np.hstack((X, np.expand_dims(y, axis=1))), columns=list(self.feature_labels) + [&#34;y&#34;])
+    self.discretizer = MDLPDiscretizer(dataset=D, class_label=&#34;y&#34;, features=self.discretized_features)
+
+    # object dtype: the columns are filled with bin-label strings, which
+    # pandas refuses to write into the float frame np.zeros_like would give
+    cat_data = pd.DataFrame(np.zeros(np.shape(X), dtype=object))
+    for i in range(len(self.feature_labels)):
+        label = self.feature_labels[i]
+        if label in self.discretized_features:
+            new_column = label + &#34; : &#34; + self.discretizer._data[label].astype(str)
+            cat_data.iloc[:, i] = new_column
+        else:
+            cat_data.iloc[:, i] = D[label]
+
+    return np.array(cat_data).tolist()</code></pre>
+</details>
+</dd>
+<dt id="imodels.discretization.BRLDiscretizer.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, undiscretized_features=[])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, undiscretized_features=[]):
+
+    # check which features are numeric (to be discretized)
+    self.discretized_features = []
+
+    # _encode_strings indexes positionally, so a DataFrame has to be
+    # unwrapped here the same way transform does
+    if isinstance(X, (pd.DataFrame, pd.Series)):
+        X = X.values
+    X_str_disc = self._encode_strings(X)
+
+    for fi in range(X_str_disc.shape[1]):
+        # if not string, has values other than 0 and 1, and not specified as undiscretized
+        if (
+                isinstance(X_str_disc[0][fi], numbers.Number)
+                and (not set(np.unique(X_str_disc[:, fi])).issubset({0, 1}))
+                and (len(self.feature_labels) == 0 or
+                     len(undiscretized_features) == 0 or
+                     self.feature_labels[fi] not in undiscretized_features
+        )
+        ):
+            self.discretized_features.append(self.feature_labels[fi])
+
+    if len(self.discretized_features) &gt; 0:
+        if self.verbose:
+            print(
+                &#34;Warning: non-categorical data found. Trying to discretize. (Please convert categorical values to &#34;
+                &#34;strings, and/or specify the argument &#39;undiscretized_features&#39;, to avoid this.)&#34;)
+        X_str_and_num_disc = self.discretize(X_str_disc, y)
+
+        self.discretized_X = X_str_and_num_disc
+    else:
+        self.discretizer = None
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.discretization.BRLDiscretizer.fit_transform"><code class="name flex">
+<span>def <span class="ident">fit_transform</span></span>(<span>self, X, y, undiscretized_features=[], return_onehot=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit_transform(self, X, y, undiscretized_features=[], return_onehot=True):
+    return self.fit(X, y, undiscretized_features).transform(
+        X, return_onehot=return_onehot)</code></pre>
+</details>
+</dd>
+<dt id="imodels.discretization.BRLDiscretizer.get_onehot_df"><code class="name flex">
+<span>def <span class="ident">get_onehot_df</span></span>(<span>self, discretized_X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create readable one-hot encoded DataFrame from discretized features</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_onehot_df(self, discretized_X):
+    &#39;&#39;&#39;Create readable one-hot encoded DataFrame from discretized features
+    &#39;&#39;&#39;
+    data = list(discretized_X[:])
+
+    X_colname_removed = data.copy()
+    replace_str_entries_func = lambda s: s.split(&#39; : &#39;)[1] if type(s) is str else s
+    for i in range(len(data)):
+        X_colname_removed[i] = list(map(replace_str_entries_func, X_colname_removed[i]))
+
+    X_df_categorical = pd.DataFrame(X_colname_removed, columns=self.feature_labels)
+    X_df_onehot = pd.get_dummies(X_df_categorical)
+    return X_df_onehot</code></pre>
+</details>
+</dd>
+<dt id="imodels.discretization.BRLDiscretizer.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, X, return_onehot=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, X, return_onehot=True):
+
+    if type(X) in [pd.DataFrame, pd.Series]:
+        X = X.values
+
+    if self.discretizer is None:
+        return pd.DataFrame(X, columns=self.feature_labels_original)
+
+    self.data = pd.DataFrame(self._encode_strings(X), columns=self.feature_labels)
+    self._apply_cutpoints()
+    D = np.array(self.data)
+
+    # prepend feature labels
+    Dl = np.copy(D).astype(str).tolist()
+    for i in range(len(Dl)):
+        for j in range(len(Dl[0])):
+            Dl[i][j] = self.feature_labels[j] + &#34; : &#34; + Dl[i][j]
+
+    if not return_onehot:
+        return Dl
+    else:
+        return self.get_onehot_df(Dl)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.discretization.BasicDiscretizer"><code class="flex name class">
+<span>class <span class="ident">BasicDiscretizer</span></span>
+<span>(</span><span>n_bins=2, dcols=[], encode='onehot', strategy='quantile', onehot_drop='if_binary')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Discretize numeric data into bins. Provides a wrapper around
+KBinsDiscretizer from sklearn</p>
+<h2 id="params">Params</h2>
+<p>n_bins : int or array-like of shape (len(dcols),), default=2
+Number of bins to discretize each feature into.</p>
+<p>dcols : list of strings
+The names of the columns to be discretized; by default,
+discretize all float and int columns in X.</p>
+<p>encode : {'onehot', 'ordinal'}, default='onehot'
+Method used to encode the transformed result.</p>
+<pre><code>onehot
+    Encode the transformed result with one-hot encoding and
+    return a dense array.
+ordinal
+    Return the bin identifier encoded as an integer value.
+</code></pre>
+<p>strategy : {'uniform', 'quantile', 'kmeans'}, default='quantile'
+Strategy used to define the widths of the bins.</p>
+<pre><code>uniform
+    All bins in each feature have identical widths.
+quantile
+    All bins in each feature have the same number of points.
+kmeans
+    Values in each bin have the same nearest center of a 1D
+    k-means cluster.
+</code></pre>
+<p>onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape
+(len(dcols),), default='if_binary'
+Specifies a methodology to use to drop one of the categories
+per feature when encode = "onehot".</p>
+<pre><code>None
+    Retain all features (the default).
+‘first’
+    Drop the first y_str in each feature. If only one y_str
+    is present, the feature will be dropped entirely.
+‘if_binary’
+    Drop the first y_str in each feature with two categories.
+    Features with 1 or more than 2 categories are left intact.
+</code></pre>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>discretizer_</code></strong> :&ensp;<code>object</code> of <code>class KBinsDiscretizer()</code></dt>
+<dd>Primary discretization method used to bin numeric data</dd>
+<dt><strong><code>manual_discretizer_</code></strong> :&ensp;<code>dictionary</code></dt>
+<dd>Provides bin_edges to feed into _quantile_discretization()
+and do quantile discretization manually for features where
+KBinsDiscretizer() failed. Ignored if strategy != 'quantile'
+or no errors in KBinsDiscretizer().</dd>
+<dt><strong><code>onehot_</code></strong> :&ensp;<code>object</code> of <code>class OneHotEncoder()</code></dt>
+<dd>One hot encoding fit. Ignored if encode != 'onehot'</dd>
+</dl>
+<h2 id="examples">Examples</h2></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BasicDiscretizer(AbstractDiscretizer):
+    &#34;&#34;&#34;
+    Discretize numeric data into bins. Provides a wrapper around
+    KBinsDiscretizer from sklearn
+
+    Params
+    ------
+    n_bins : int or array-like of shape (len(dcols),), default=2
+        Number of bins to discretize each feature into.
+
+    dcols : list of strings
+        The names of the columns to be discretized; by default,
+        discretize all float and int columns in X.
+
+    encode : {&#39;onehot&#39;, &#39;ordinal&#39;}, default=&#39;onehot&#39;
+        Method used to encode the transformed result.
+
+        onehot
+            Encode the transformed result with one-hot encoding and
+            return a dense array.
+        ordinal
+            Return the bin identifier encoded as an integer value.
+
+    strategy : {&#39;uniform&#39;, &#39;quantile&#39;, &#39;kmeans&#39;}, default=&#39;quantile&#39;
+        Strategy used to define the widths of the bins.
+
+        uniform
+            All bins in each feature have identical widths.
+        quantile
+            All bins in each feature have the same number of points.
+        kmeans
+            Values in each bin have the same nearest center of a 1D
+            k-means cluster.
+
+    onehot_drop : {‘first’, ‘if_binary’} or a array-like of shape  (len(dcols),), default=&#39;if_binary&#39;
+        Specifies a methodology to use to drop one of the categories
+        per feature when encode = &#34;onehot&#34;.
+
+        None
+            Retain all features (the default).
+        ‘first’
+            Drop the first y_str in each feature. If only one y_str
+            is present, the feature will be dropped entirely.
+        ‘if_binary’
+            Drop the first y_str in each feature with two categories.
+            Features with 1 or more than 2 categories are left intact.
+
+    Attributes
+    ----------
+    discretizer_ : object of class KBinsDiscretizer()
+        Primary discretization method used to bin numeric data
+
+    manual_discretizer_ : dictionary
+        Provides bin_edges to feed into _quantile_discretization()
+        and do quantile discretization manually for features where
+        KBinsDiscretizer() failed. Ignored if strategy != &#39;quantile&#39;
+        or no errors in KBinsDiscretizer().
+
+    onehot_ : object of class OneHotEncoder()
+        One hot encoding fit. Ignored if encode != &#39;onehot&#39;
+
+    Examples
+    --------
+    &#34;&#34;&#34;
+
+    def __init__(self, n_bins=2, dcols=[],
+                 encode=&#39;onehot&#39;, strategy=&#39;quantile&#39;,
+                 onehot_drop=&#39;if_binary&#39;):
+        super().__init__(n_bins=n_bins, dcols=dcols,
+                         encode=encode, strategy=strategy,
+                         onehot_drop=onehot_drop)
+
+    def fit(self, X, y=None):
+        &#34;&#34;&#34;
+        Fit the estimator.
+
+        Parameters
+        ----------
+        X : data frame of shape (n_samples, n_features)
+            (Training) data to be discretized.
+
+        y : Ignored. This parameter exists only for compatibility with
+            :class:`~sklearn.pipeline.Pipeline` and fit_transform method
+
+        Returns
+        -------
+        self
+        &#34;&#34;&#34;
+
+        # initialization and error checking
+        self._fit_preprocessing(X)
+
+        # apply KBinsDiscretizer to the selected columns
+        discretizer = KBinsDiscretizer(n_bins=self.n_bins_,
+                                       encode=&#39;ordinal&#39;,
+                                       strategy=self.strategy)
+
+        discretizer.fit(X[self.dcols_])
+        self.discretizer_ = discretizer
+
+        if (self.encode == &#39;onehot&#39;) | (self.strategy == &#39;quantile&#39;):
+            discretized_df = discretizer.transform(X[self.dcols_])
+
+            discretized_df = pd.DataFrame(discretized_df,
+                                          columns=self.dcols_,
+                                          index=X.index).astype(int)
+
+        # fix KBinsDiscretizer errors if any when strategy = &#34;quantile&#34;
+        if self.strategy == &#34;quantile&#34;:
+            err_idx = np.where(discretized_df.nunique() != self.n_bins_)[0]
+            self.manual_discretizer_ = dict()
+            for idx in err_idx:
+                col = self.dcols_[idx]
+                if X[col].nunique() &gt; 1:
+                    q_values = np.linspace(0, 1, self.n_bins_[idx] + 1)
+                    bin_edges = np.quantile(X[col], q_values)
+                    discretized_df[col] = self._discretize_to_bins(X[col], bin_edges,
+                                                                   keep_pointwise_bins=True)
+                    self.manual_discretizer_[col] = bin_edges
+
+        # fit onehot encoded X if specified
+        if self.encode == &#34;onehot&#34;:
+            onehot = OneHotEncoder(drop=self.onehot_drop)  # , sparse=False)
+            onehot.fit(discretized_df.astype(str))
+            self.onehot_ = onehot
+
+        return self
+
+    def transform(self, X):
+        &#34;&#34;&#34;
+        Discretize the data.
+
+        Parameters
+        ----------
+        X : data frame of shape (n_samples, n_features)
+            Data to be discretized.
+
+        Returns
+        -------
+        X_discretized : data frame
+            Data with features in dcols transformed to the
+            binned space. All other features remain unchanged.
+        &#34;&#34;&#34;
+
+        check_is_fitted(self)
+
+        # transform using KBinsDiscretizer
+        discretized_df = self.discretizer_.transform(
+            X[self.dcols_]).astype(int)
+        discretized_df = pd.DataFrame(discretized_df,
+                                      columns=self.dcols_,
+                                      index=X.index)
+
+        # fix KBinsDiscretizer errors (if any) when strategy = &#34;quantile&#34;
+        if self.strategy == &#34;quantile&#34;:
+            for col in self.manual_discretizer_.keys():
+                bin_edges = self.manual_discretizer_[col]
+                discretized_df[col] = self._discretize_to_bins(X[col], bin_edges,
+                                                               keep_pointwise_bins=True)
+
+        # return onehot encoded data if specified and
+        # join discretized columns with rest of X
+        X_discretized = self._transform_postprocessing(discretized_df, X)
+
+        return X_discretized</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.discretization.discretizer.AbstractDiscretizer" href="discretizer.html#imodels.discretization.discretizer.AbstractDiscretizer">AbstractDiscretizer</a></li>
+<li>sklearn.base.TransformerMixin</li>
+<li>sklearn.utils._set_output._SetOutputMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.discretization.BasicDiscretizer.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fit the estimator.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>data frame</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>(Training) data to be discretized.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>Ignored. This parameter exists only for compatibility with</code></dt>
+<dd>:class:<code>~sklearn.pipeline.Pipeline</code> and fit_transform method</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>self</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y=None):
+    &#34;&#34;&#34;
+    Fit the estimator.
+
+    Parameters
+    ----------
+    X : data frame of shape (n_samples, n_features)
+        (Training) data to be discretized.
+
+    y : Ignored. This parameter exists only for compatibility with
+        :class:`~sklearn.pipeline.Pipeline` and fit_transform method
+
+    Returns
+    -------
+    self
+    &#34;&#34;&#34;
+
+    # initialization and error checking
+    self._fit_preprocessing(X)
+
+    # apply KBinsDiscretizer to the selected columns
+    discretizer = KBinsDiscretizer(n_bins=self.n_bins_,
+                                   encode=&#39;ordinal&#39;,
+                                   strategy=self.strategy)
+
+    discretizer.fit(X[self.dcols_])
+    self.discretizer_ = discretizer
+
+    if (self.encode == &#39;onehot&#39;) | (self.strategy == &#39;quantile&#39;):
+        discretized_df = discretizer.transform(X[self.dcols_])
+
+        discretized_df = pd.DataFrame(discretized_df,
+                                      columns=self.dcols_,
+                                      index=X.index).astype(int)
+
+    # fix KBinsDiscretizer errors if any when strategy = &#34;quantile&#34;
+    if self.strategy == &#34;quantile&#34;:
+        err_idx = np.where(discretized_df.nunique() != self.n_bins_)[0]
+        self.manual_discretizer_ = dict()
+        for idx in err_idx:
+            col = self.dcols_[idx]
+            if X[col].nunique() &gt; 1:
+                q_values = np.linspace(0, 1, self.n_bins_[idx] + 1)
+                bin_edges = np.quantile(X[col], q_values)
+                discretized_df[col] = self._discretize_to_bins(X[col], bin_edges,
+                                                               keep_pointwise_bins=True)
+                self.manual_discretizer_[col] = bin_edges
+
+    # fit onehot encoded X if specified
+    if self.encode == &#34;onehot&#34;:
+        onehot = OneHotEncoder(drop=self.onehot_drop)  # , sparse=False)
+        onehot.fit(discretized_df.astype(str))
+        self.onehot_ = onehot
+
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.discretization.BasicDiscretizer.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Discretize the data.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>data frame</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Data to be discretized.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>X_discretized</code></strong> :&ensp;<code>data frame</code></dt>
+<dd>Data with features in dcols transformed to the
+binned space. All other features remain unchanged.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, X):
+    &#34;&#34;&#34;
+    Discretize the data.
+
+    Parameters
+    ----------
+    X : data frame of shape (n_samples, n_features)
+        Data to be discretized.
+
+    Returns
+    -------
+    X_discretized : data frame
+        Data with features in dcols transformed to the
+        binned space. All other features remain unchanged.
+    &#34;&#34;&#34;
+
+    check_is_fitted(self)
+
+    # transform using KBinsDiscretizer
+    discretized_df = self.discretizer_.transform(
+        X[self.dcols_]).astype(int)
+    discretized_df = pd.DataFrame(discretized_df,
+                                  columns=self.dcols_,
+                                  index=X.index)
+
+    # fix KBinsDiscretizer errors (if any) when strategy = &#34;quantile&#34;
+    if self.strategy == &#34;quantile&#34;:
+        for col in self.manual_discretizer_.keys():
+            bin_edges = self.manual_discretizer_[col]
+            discretized_df[col] = self._discretize_to_bins(X[col], bin_edges,
+                                                           keep_pointwise_bins=True)
+
+    # return onehot encoded data if specified and
+    # join discretized columns with rest of X
+    X_discretized = self._transform_postprocessing(discretized_df, X)
+
+    return X_discretized</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.discretization.ExtraBasicDiscretizer"><code class="flex name class">
+<span>class <span class="ident">ExtraBasicDiscretizer</span></span>
+<span>(</span><span>dcols, n_bins=4, strategy='quantile', onehot_drop='if_binary')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Discretize provided columns into bins and return in one-hot format.
+Generates meaningful column names based on bin edges.
+Wraps KBinsDiscretizer from sklearn.</p>
+<h2 id="params">Params</h2>
+<p>dcols : list of strings
+The names of the columns to be discretized.</p>
+<p>n_bins : int or array-like of shape (len(dcols),), default=4
+Number of bins to discretize each feature into.</p>
+<p>strategy : {'uniform', 'quantile', 'kmeans'}, default='quantile'
+Strategy used to define the widths of the bins.</p>
+<pre><code>uniform
+    All bins in each feature have identical widths.
+quantile
+    All bins in each feature have the same number of points.
+kmeans
+    Values in each bin have the same nearest center of a 1D
+    k-means cluster.
+</code></pre>
+<p>onehot_drop : {'first', 'if_binary'} or a array-like of shape
+(len(dcols),), default='if_binary'
+Specifies a methodology to use to drop one of the categories
+per feature when encode = "onehot".</p>
+<pre><code>None
+    Retain all features (the default).
+'first'
+    Drop the first y_str in each feature. If only one y_str
+    is present, the feature will be dropped entirely.
+'if_binary'
+    Drop the first y_str in each feature with two categories.
+    Features with 1 or more than 2 categories are left intact.
+</code></pre>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>discretizer_</code></strong> :&ensp;<code>object</code> of <code>class KBinsDiscretizer()</code></dt>
+<dd>Primary discretization method used to bin numeric data</dd>
+</dl>
+<h2 id="examples">Examples</h2></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ExtraBasicDiscretizer(TransformerMixin):
+    &#34;&#34;&#34;
+    Discretize provided columns into bins and return in one-hot format. 
+    Generates meaningful column names based on bin edges.
+    Wraps KBinsDiscretizer from sklearn.
+
+    Params
+    ------
+    dcols : list of strings
+        The names of the columns to be discretized.
+
+    n_bins : int or array-like of shape (len(dcols),), default=4
+        Number of bins to discretize each feature into.
+
+    strategy : {&#39;uniform&#39;, &#39;quantile&#39;, &#39;kmeans&#39;}, default=&#39;quantile&#39;
+        Strategy used to define the widths of the bins.
+
+        uniform
+            All bins in each feature have identical widths.
+        quantile
+            All bins in each feature have the same number of points.
+        kmeans
+            Values in each bin have the same nearest center of a 1D
+            k-means cluster.
+
+    onehot_drop : {&#39;first&#39;, &#39;if_binary&#39;} or a array-like of shape  (len(dcols),), default=&#39;if_binary&#39;
+        Specifies a methodology to use to drop one of the categories
+        per feature when encode = &#34;onehot&#34;.
+
+        None
+            Retain all features (the default).
+        &#39;first&#39;
+            Drop the first y_str in each feature. If only one y_str
+            is present, the feature will be dropped entirely.
+        &#39;if_binary&#39;
+            Drop the first y_str in each feature with two categories.
+            Features with 1 or more than 2 categories are left intact.
+
+    Attributes
+    ----------
+    discretizer_ : object of class KBinsDiscretizer()
+        Primary discretization method used to bin numeric data
+
+    Examples
+    --------
+    &#34;&#34;&#34;
+
+    def __init__(self,
+                 dcols,
+                 n_bins=4,
+                 strategy=&#39;quantile&#39;,
+                 onehot_drop=&#39;if_binary&#39;):
+        self.dcols = dcols
+        self.n_bins = n_bins
+        self.strategy = strategy
+        self.onehot_drop = onehot_drop
+
+    def fit(self, X, y=None):
+        &#34;&#34;&#34;
+        Fit the estimator.
+
+        Parameters
+        ----------
+        X : data frame of shape (n_samples, n_features)
+            (Training) data to be discretized.
+
+        y : Ignored. This parameter exists only for compatibility with
+            :class:`~sklearn.pipeline.Pipeline` and fit_transform method
+
+        Returns
+        -------
+        self
+        &#34;&#34;&#34;
+
+        # Fit KBinsDiscretizer to the selected columns
+        discretizer = KBinsDiscretizer(
+            n_bins=self.n_bins, strategy=self.strategy, encode=&#39;ordinal&#39;)
+        discretizer.fit(X[self.dcols])
+        self.discretizer_ = discretizer
+
+        # Fit OneHotEncoder to the ordinal output of KBinsDiscretizer
+        disc_ordinal_np = discretizer.transform(X[self.dcols])
+        disc_ordinal_df = pd.DataFrame(disc_ordinal_np, columns=self.dcols)
+        disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
+
+        encoder = OneHotEncoder(drop=self.onehot_drop)  # , sparse=False)
+        encoder.fit(disc_ordinal_df_str)
+        self.encoder_ = encoder
+
+        return self
+
+    def transform(self, X):
+        &#34;&#34;&#34;
+        Discretize the data.
+
+        Parameters
+        ----------
+        X : data frame of shape (n_samples, n_features)
+            Data to be discretized.
+
+        Returns
+        -------
+        X_discretized : data frame
+            Data with features in dcols transformed to the
+            binned space. All other features remain unchanged.
+        &#34;&#34;&#34;
+
+        # Apply discretizer transform to get ordinally coded DF
+        disc_ordinal_np = self.discretizer_.transform(X[self.dcols])
+        disc_ordinal_df = pd.DataFrame(disc_ordinal_np, columns=self.dcols)
+        disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
+
+        # One-hot encode the ordinal DF
+        disc_onehot_np = self.encoder_.transform(disc_ordinal_df_str)
+        if scipy.sparse.issparse(disc_onehot_np):
+            # OneHotEncoder returns a sparse matrix by default, which pandas
+            # would otherwise store as a single column of sparse rows
+            disc_onehot_np = disc_onehot_np.toarray()
+        disc_onehot = pd.DataFrame(
+            disc_onehot_np, columns=self.encoder_.get_feature_names_out(),
+            index=X.index)
+
+        # Name columns after the interval they represent (e.g. 0.1_to_0.5)
+        for col, bin_edges in zip(self.dcols, self.discretizer_.bin_edges_):
+            bin_edges = bin_edges.astype(str)
+
+            # every bin learned during fit, not just the ones present in X, so
+            # that transform gives the same columns whatever data it is given
+            for ordinal_value in range(len(bin_edges) - 1):
+                bin_lb = bin_edges[int(ordinal_value)]
+                bin_ub = bin_edges[int(ordinal_value) + 1]
+                interval_string = f&#39;{bin_lb}_to_{bin_ub}&#39;
+
+                disc_onehot = disc_onehot.rename(
+                    columns={f&#39;{col}_{ordinal_value}&#39;: f&#39;{col}_&#39; + interval_string})
+
+        # Join discretized columns with rest of X
+        non_dcols = [col for col in X.columns if col not in self.dcols]
+        X_discretized = pd.concat([disc_onehot, X[non_dcols]], axis=1)
+
+        return X_discretized</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.TransformerMixin</li>
+<li>sklearn.utils._set_output._SetOutputMixin</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.discretization.ExtraBasicDiscretizer.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fit the estimator.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>data frame</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>(Training) data to be discretized.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>Ignored. This parameter exists only for compatibility with</code></dt>
+<dd>:class:<code>~sklearn.pipeline.Pipeline</code> and fit_transform method</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>self</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y=None):
+    &#34;&#34;&#34;
+    Fit the estimator.
+
+    Parameters
+    ----------
+    X : data frame of shape (n_samples, n_features)
+        (Training) data to be discretized.
+
+    y : Ignored. This parameter exists only for compatibility with
+        :class:`~sklearn.pipeline.Pipeline` and fit_transform method
+
+    Returns
+    -------
+    self
+    &#34;&#34;&#34;
+
+    # Fit KBinsDiscretizer to the selected columns
+    discretizer = KBinsDiscretizer(
+        n_bins=self.n_bins, strategy=self.strategy, encode=&#39;ordinal&#39;)
+    discretizer.fit(X[self.dcols])
+    self.discretizer_ = discretizer
+
+    # Fit OneHotEncoder to the ordinal output of KBinsDiscretizer
+    disc_ordinal_np = discretizer.transform(X[self.dcols])
+    disc_ordinal_df = pd.DataFrame(disc_ordinal_np, columns=self.dcols)
+    disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
+
+    encoder = OneHotEncoder(drop=self.onehot_drop)  # , sparse=False)
+    encoder.fit(disc_ordinal_df_str)
+    self.encoder_ = encoder
+
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.discretization.ExtraBasicDiscretizer.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Discretize the data.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>data frame</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Data to be discretized.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>X_discretized</code></strong> :&ensp;<code>data frame</code></dt>
+<dd>Data with features in dcols transformed to the
+binned space. All other features remain unchanged.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, X):
+    &#34;&#34;&#34;
+    Discretize the data.
+
+    Parameters
+    ----------
+    X : data frame of shape (n_samples, n_features)
+        Data to be discretized.
+
+    Returns
+    -------
+    X_discretized : data frame
+        Data with features in dcols transformed to the
+        binned space. All other features remain unchanged.
+    &#34;&#34;&#34;
+
+    # Apply discretizer transform to get ordinally coded DF
+    disc_ordinal_np = self.discretizer_.transform(X[self.dcols])
+    disc_ordinal_df = pd.DataFrame(disc_ordinal_np, columns=self.dcols)
+    disc_ordinal_df_str = disc_ordinal_df.astype(int).astype(str)
+
+    # One-hot encode the ordinal DF
+    disc_onehot_np = self.encoder_.transform(disc_ordinal_df_str)
+    if scipy.sparse.issparse(disc_onehot_np):
+        # OneHotEncoder returns a sparse matrix by default, which pandas
+        # would otherwise store as a single column of sparse rows
+        disc_onehot_np = disc_onehot_np.toarray()
+    disc_onehot = pd.DataFrame(
+        disc_onehot_np, columns=self.encoder_.get_feature_names_out(),
+        index=X.index)
+
+    # Name columns after the interval they represent (e.g. 0.1_to_0.5)
+    for col, bin_edges in zip(self.dcols, self.discretizer_.bin_edges_):
+        bin_edges = bin_edges.astype(str)
+
+        # every bin learned during fit, not just the ones present in X, so
+        # that transform gives the same columns whatever data it is given
+        for ordinal_value in range(len(bin_edges) - 1):
+            bin_lb = bin_edges[int(ordinal_value)]
+            bin_ub = bin_edges[int(ordinal_value) + 1]
+            interval_string = f&#39;{bin_lb}_to_{bin_ub}&#39;
+
+            disc_onehot = disc_onehot.rename(
+                columns={f&#39;{col}_{ordinal_value}&#39;: f&#39;{col}_&#39; + interval_string})
+
+    # Join discretized columns with rest of X
+    non_dcols = [col for col in X.columns if col not in self.dcols]
+    X_discretized = pd.concat([disc_onehot, X[non_dcols]], axis=1)
+
+    return X_discretized</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.discretization.RFDiscretizer"><code class="flex name class">
+<span>class <span class="ident">RFDiscretizer</span></span>
+<span>(</span><span>rf_model=None, classification=False, n_bins=2, dcols=[], encode='onehot', strategy='quantile', backup_strategy='quantile', onehot_drop='if_binary')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Discretize numeric data into bins using RF splits.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>rf_model</code></strong> :&ensp;<code>RandomForestClassifer()</code> or <code>RandomForestRegressor()</code></dt>
+<dd>RF model from which to extract splits for discretization.
+Default is RandomForestClassifer(n_estimators = 500) or
+RandomForestRegressor(n_estimators = 500)</dd>
+<dt><strong><code>classification</code></strong> :&ensp;<code>boolean; default=False</code></dt>
+<dd>Used only if rf_model=None. If True,
+rf_model=RandomForestClassifier(n_estimators = 500).
+Else, rf_model=RandomForestRegressor(n_estimators = 500)</dd>
+<dt><strong><code>n_bins</code></strong> :&ensp;<code>int</code> or <code>array-like</code> of <code>shape (len(dcols),)</code>, default=<code>2</code></dt>
+<dd>Number of bins to discretize each feature into.</dd>
+<dt><strong><code>dcols</code></strong> :&ensp;<code>list</code> of <code>strings</code></dt>
+<dd>The names of the columns to be discretized; by default,
+discretize all float and int columns in X.</dd>
+<dt><strong><code>encode</code></strong> :&ensp;<code>{‘onehot’, ‘ordinal’}</code>, default=<code>’onehot’</code></dt>
+<dd>
+<p>Method used to encode the transformed result.</p>
+<p>onehot - Encode the transformed result with one-hot encoding and
+return a dense array.
+ordinal - Return the bin identifier encoded as an integer value.</p>
+</dd>
+<dt><strong><code>strategy</code></strong> :&ensp;<code>{‘uniform’, ‘quantile’}</code>, default=<code>’quantile’</code></dt>
+<dd>Strategy used to choose RF split points.
+uniform - RF split points chosen to be uniformly spaced out.
+quantile - RF split points chosen based on equally-spaced quantiles.</dd>
+<dt><strong><code>backup_strategy</code></strong> :&ensp;<code>{‘uniform’, ‘quantile’, ‘kmeans’}</code>, default=<code>’quantile’</code></dt>
+<dd>Strategy used to define the widths of the bins if no rf splits exist for
+that feature. Used in KBinsDiscretizer.
+uniform
+All bins in each feature have identical widths.
+quantile
+All bins in each feature have the same number of points.
+kmeans
+Values in each bin have the same nearest center of a 1D
+k-means cluster.</dd>
+<dt><strong><code>onehot_drop</code></strong> :&ensp;<code>{‘first’, ‘if_binary’}</code> or <code>array-like</code> of <code>shape
+(len(dcols),)</code>, default=<code>'if_binary'</code></dt>
+<dd>Specifies a methodology to use to drop one of the categories
+per feature when encode = "onehot".
+None
+Retain all features (the default).
+‘first’
+Drop the first y_str in each feature. If only one y_str
+is present, the feature will be dropped entirely.
+‘if_binary’
+Drop the first y_str in each feature with two categories.
+Features with 1 or more than 2 categories are left intact.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>rf_splits</code></strong> :&ensp;<code>dictionary where</code></dt>
+<dd>key = feature name
+value = array of all RF split threshold values</dd>
+<dt><strong><code>bin_edges_</code></strong> :&ensp;<code>dictionary where</code></dt>
+<dd>key = feature name
+value = array of bin edges used for discretization, taken from
+RF split values</dd>
+<dt><strong><code>missing_rf_cols_</code></strong> :&ensp;<code>array-like</code></dt>
+<dd>List of features that were not used in RF</dd>
+<dt><strong><code>backup_discretizer_</code></strong> :&ensp;<code>object</code> of <code>class <a title="imodels.discretization.BasicDiscretizer" href="#imodels.discretization.BasicDiscretizer">BasicDiscretizer</a></code></dt>
+<dd>Discretization method used to bin numeric data for features
+in missing_rf_cols_</dd>
+<dt><strong><code>onehot_</code></strong> :&ensp;<code>object</code> of <code>class OneHotEncoder()</code></dt>
+<dd>One hot encoding fit. Ignored if encode != 'onehot'</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RFDiscretizer(AbstractDiscretizer):
+    &#34;&#34;&#34;
+    Discretize numeric data into bins using RF splits.
+
+    Parameters
+    ----------
+    rf_model : RandomForestClassifer() or RandomForestRegressor()
+        RF model from which to extract splits for discretization.
+        Default is RandomForestClassifer(n_estimators = 500) or
+        RandomForestRegressor(n_estimators = 500)
+
+    classification : boolean; default=False
+        Used only if rf_model=None. If True,
+        rf_model=RandomForestClassifier(n_estimators = 500).
+        Else, rf_model=RandomForestRegressor(n_estimators = 500)
+
+    n_bins : int or array-like of shape (len(dcols),), default=2
+        Number of bins to discretize each feature into.
+
+    dcols : list of strings
+        The names of the columns to be discretized; by default,
+        discretize all float and int columns in X.
+
+    encode : {‘onehot’, ‘ordinal’}, default=’onehot’
+        Method used to encode the transformed result.
+
+        onehot - Encode the transformed result with one-hot encoding and
+            return a dense array.
+        ordinal - Return the bin identifier encoded as an integer value.
+
+    strategy : {‘uniform’, ‘quantile’}, default=’quantile’
+        Strategy used to choose RF split points.
+        uniform - RF split points chosen to be uniformly spaced out.
+        quantile - RF split points chosen based on equally-spaced quantiles.
+
+    backup_strategy : {‘uniform’, ‘quantile’, ‘kmeans’}, default=’quantile’
+        Strategy used to define the widths of the bins if no rf splits exist for
+        that feature. Used in KBinsDiscretizer.
+        uniform
+            All bins in each feature have identical widths.
+        quantile
+            All bins in each feature have the same number of points.
+        kmeans
+            Values in each bin have the same nearest center of a 1D
+            k-means cluster.
+
+    onehot_drop : {‘first’, ‘if_binary’} or array-like of shape  (len(dcols),), default=&#39;if_binary&#39;
+        Specifies a methodology to use to drop one of the categories
+        per feature when encode = &#34;onehot&#34;.
+        None
+            Retain all features (the default).
+        ‘first’
+            Drop the first y_str in each feature. If only one y_str
+            is present, the feature will be dropped entirely.
+        ‘if_binary’
+            Drop the first y_str in each feature with two categories.
+            Features with 1 or more than 2 categories are left intact.
+
+    Attributes
+    ----------
+    rf_splits : dictionary where
+        key = feature name
+        value = array of all RF split threshold values
+
+    bin_edges_ : dictionary where
+        key = feature name
+        value = array of bin edges used for discretization, taken from
+            RF split values
+
+    missing_rf_cols_ : array-like
+        List of features that were not used in RF
+
+    backup_discretizer_ : object of class BasicDiscretizer()
+        Discretization method used to bin numeric data for features
+        in missing_rf_cols_
+
+    onehot_ : object of class OneHotEncoder()
+        One hot encoding fit. Ignored if encode != &#39;onehot&#39;
+
+    &#34;&#34;&#34;
+
+    def __init__(self, rf_model=None, classification=False,
+                 n_bins=2, dcols=[], encode=&#39;onehot&#39;,
+                 strategy=&#39;quantile&#39;, backup_strategy=&#39;quantile&#39;,
+                 onehot_drop=&#39;if_binary&#39;):
+        super().__init__(n_bins=n_bins, dcols=dcols,
+                         encode=encode, strategy=strategy,
+                         onehot_drop=onehot_drop)
+        self.backup_strategy = backup_strategy
+        self.rf_model = rf_model
+        if rf_model is None:
+            self.classification = classification
+
+    def _validate_args(self):
+        &#34;&#34;&#34;
+        Check if encode, strategy, backup_strategy arguments are valid.
+        &#34;&#34;&#34;
+        super()._validate_args()
+        valid_backup_strategy = (&#39;uniform&#39;, &#39;quantile&#39;, &#39;kmeans&#39;)
+        if (self.backup_strategy not in valid_backup_strategy):
+            raise ValueError(&#34;Valid options for &#39;strategy&#39; are {}. Got strategy={!r} instead.&#34;
+                             .format(valid_backup_strategy, self.backup_strategy))
+
+    def _get_rf_splits(self, col_names):
+        &#34;&#34;&#34;
+        Get all splits in random forest ensemble
+
+        Parameters
+        ----------
+        col_names : array-like of shape (n_features,)
+            Column names for X used to train rf_model
+
+        Returns
+        -------
+        rule_dict : dictionary where
+            key = feature name
+            value = array of all RF split threshold values
+        &#34;&#34;&#34;
+
+        rule_dict = {}
+        for model in self.rf_model.estimators_:
+            tree = model.tree_
+            tree_it = enumerate(zip(tree.children_left,
+                                    tree.children_right,
+                                    tree.feature,
+                                    tree.threshold))
+            for node_idx, data in tree_it:
+                left, right, feature, th = data
+                if (left != -1) | (right != -1):
+                    feature = col_names[feature]
+                    if feature in rule_dict:
+                        rule_dict[feature].append(th)
+                    else:
+                        rule_dict[feature] = [th]
+        return rule_dict
+
+    def _fit_rf(self, X, y=None):
+        &#34;&#34;&#34;
+        Fit random forest (if necessary) and obtain RF split thresholds
+
+        Parameters
+        ----------
+        X : data frame of shape (n_samples, n_features)
+            Training data used to fit RF
+
+        y : array-like of shape (n_samples,)
+            Training response vector used to fit RF
+
+        Returns
+        -------
+        rf_splits : dictionary where
+            key = feature name
+            value = array of all RF split threshold values
+        &#34;&#34;&#34;
+
+        # If no rf_model given, train default random forest model
+        if self.rf_model is None:
+            if y is None:
+                raise ValueError(&#34;Must provide y if rf_model is not given.&#34;)
+            if self.classification:
+                self.rf_model = RandomForestClassifier(n_estimators=500)
+            else:
+                self.rf_model = RandomForestRegressor(n_estimators=500)
+            self.rf_model.fit(X, y)
+
+        else:
+            # provided rf model has not yet been trained
+            if not check_is_fitted(self.rf_model):
+                if y is None:
+                    raise ValueError(
+                        &#34;Must provide y if rf_model has not been trained.&#34;)
+                self.rf_model.fit(X, y)
+
+        # get all random forest split points
+        self.rf_splits = self._get_rf_splits(list(X.columns))
+
+    def reweight_n_bins(self, X, y=None, by=&#34;nsplits&#34;):
+        &#34;&#34;&#34;
+        Reallocate number of bins per feature.
+
+        Parameters
+        ----------
+        X : data frame of shape (n_samples, n_features)
+            (Training) data to be discretized.
+
+        y : array-like of shape (n_samples,)
+            (Training) response vector. Required only if
+            rf_model = None or rf_model has not yet been fitted
+
+        by : {&#39;nsplits&#39;}, default=&#39;nsplits&#39;
+            Specifies how to reallocate number of bins per feature.
+
+            nsplits
+                Reallocate number of bins so that each feature
+                in dcols get at a minimum of 2 bins with the
+                remaining bins distributed proportionally to the
+                number of RF splits using that feature
+
+        Returns
+        -------
+        self.n_bins : array of shape (len(dcols),)
+            number of bins per feature reallocated according to
+            &#39;by&#39; argument
+        &#34;&#34;&#34;
+        # initialization and error checking
+        self._fit_preprocessing(X)
+
+        # get all random forest split points
+        self._fit_rf(X=X, y=y)
+
+        # get total number of bins to reallocate
+        total_bins = np.asarray(self.n_bins_).sum()
+
+        # reweight n_bins
+        if by == &#34;nsplits&#34;:
+            # each col gets at least 2 bins; remaining bins get
+            # reallocated based on number of RF splits using that feature
+            n_rules = np.array([len(self.rf_splits[col])
+                               for col in self.dcols_])
+            self.n_bins = np.round(n_rules / n_rules.sum() *
+                                   (total_bins - 2 * len(self.dcols_))) + 2
+        else:
+            valid_by = (&#39;nsplits&#39;)
+            raise ValueError(&#34;Valid options for &#39;by&#39; are {}. Got by={!r} instead.&#34;
+                             .format(valid_by, by))
+
+    def fit(self, X, y=None):
+        &#34;&#34;&#34;
+        Fit the estimator.
+
+        Parameters
+        ----------
+        X : data frame of shape (n_samples, n_features)
+            (Training) data to be discretized.
+
+        y : array-like of shape (n_samples,)
+            (Training) response vector. Required only if
+            rf_model = None or rf_model has not yet been fitted
+
+        Returns
+        -------
+        self
+        &#34;&#34;&#34;
+        # initialization and error checking
+        self._fit_preprocessing(X)
+
+        # get all random forest split points
+        self._fit_rf(X=X, y=y)
+
+        # features that were not used in the rf but need to be discretized
+        self.missing_rf_cols_ = list(set(self.dcols_) -
+                                     set(self.rf_splits.keys()))
+        if len(self.missing_rf_cols_) &gt; 0:
+            print(&#34;{} did not appear in random forest so were discretized via {} discretization&#34;
+                  .format(self.missing_rf_cols_, self.strategy))
+            missing_n_bins = np.array([self.n_bins_[np.array(self.dcols_) == col][0]
+                                       for col in self.missing_rf_cols_])
+
+            backup_discretizer = BasicDiscretizer(n_bins=missing_n_bins,
+                                                  dcols=self.missing_rf_cols_,
+                                                  encode=&#39;ordinal&#39;,
+                                                  strategy=self.backup_strategy)
+            backup_discretizer.fit(X[self.missing_rf_cols_])
+            self.backup_discretizer_ = backup_discretizer
+        else:
+            self.backup_discretizer_ = None
+
+        if self.encode == &#39;onehot&#39;:
+            if len(self.missing_rf_cols_) &gt; 0:
+                discretized_df = backup_discretizer.transform(
+                    X[self.missing_rf_cols_])
+            else:
+                discretized_df = pd.DataFrame({}, index=X.index)
+
+        # do discretization based on rf split thresholds
+        self.bin_edges_ = dict()
+        for col in self.dcols_:
+            if col in self.rf_splits.keys():
+                # .item(): numpy no longer converts a size-1 array to a scalar
+                b = self.n_bins_[np.array(self.dcols_) == col].item()
+                if self.strategy == &#34;quantile&#34;:
+                    q_values = np.linspace(0, 1, int(b) + 1)
+                    bin_edges = np.quantile(self.rf_splits[col], q_values)
+                elif self.strategy == &#34;uniform&#34;:
+                    width = (max(self.rf_splits[col]) -
+                             min(self.rf_splits[col])) / b
+                    bin_edges = width * \
+                        np.arange(0, b + 1) + min(self.rf_splits[col])
+                self.bin_edges_[col] = bin_edges
+                if self.encode == &#39;onehot&#39;:
+                    discretized_df[col] = self._discretize_to_bins(
+                        X[col], bin_edges)
+
+        # fit onehot encoded X if specified
+        if self.encode == &#34;onehot&#34;:
+            onehot = OneHotEncoder(drop=self.onehot_drop)  # , sparse=False)
+            onehot.fit(discretized_df[self.dcols_].astype(str))
+            self.onehot_ = onehot
+
+        return self
+
+    def transform(self, X):
+        &#34;&#34;&#34;
+        Discretize the data.
+
+        Parameters
+        ----------
+        X : data frame of shape (n_samples, n_features)
+            Data to be discretized.
+
+        Returns
+        -------
+        X_discretized : data frame
+            Data with features in dcols transformed to the
+            binned space. All other features remain unchanged.
+        &#34;&#34;&#34;
+
+        check_is_fitted(self)
+
+        # transform features that did not appear in RF
+        if len(self.missing_rf_cols_) &gt; 0:
+            discretized_df = self.backup_discretizer_.transform(
+                X[self.missing_rf_cols_])
+            discretized_df = pd.DataFrame(discretized_df,
+                                          columns=self.missing_rf_cols_,
+                                          index=X.index)
+        else:
+            discretized_df = pd.DataFrame({}, index=X.index)
+
+        # do discretization based on rf split thresholds
+        for col in self.bin_edges_.keys():
+            discretized_df[col] = self._discretize_to_bins(
+                X[col], self.bin_edges_[col])
+
+        # return onehot encoded data if specified and
+        # join discretized columns with rest of X
+        X_discretized = self._transform_postprocessing(discretized_df, X)
+
+        return X_discretized</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="imodels.discretization.discretizer.AbstractDiscretizer" href="discretizer.html#imodels.discretization.discretizer.AbstractDiscretizer">AbstractDiscretizer</a></li>
+<li>sklearn.base.TransformerMixin</li>
+<li>sklearn.utils._set_output._SetOutputMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.discretization.RFDiscretizer.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fit the estimator.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>data frame</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>(Training) data to be discretized.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>(Training) response vector. Required only if
+rf_model = None or rf_model has not yet been fitted</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>self</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y=None):
+    &#34;&#34;&#34;
+    Fit the estimator.
+
+    Parameters
+    ----------
+    X : data frame of shape (n_samples, n_features)
+        (Training) data to be discretized.
+
+    y : array-like of shape (n_samples,)
+        (Training) response vector. Required only if
+        rf_model = None or rf_model has not yet been fitted
+
+    Returns
+    -------
+    self
+    &#34;&#34;&#34;
+    # initialization and error checking
+    self._fit_preprocessing(X)
+
+    # get all random forest split points
+    self._fit_rf(X=X, y=y)
+
+    # features that were not used in the rf but need to be discretized
+    self.missing_rf_cols_ = list(set(self.dcols_) -
+                                 set(self.rf_splits.keys()))
+    if len(self.missing_rf_cols_) &gt; 0:
+        print(&#34;{} did not appear in random forest so were discretized via {} discretization&#34;
+              .format(self.missing_rf_cols_, self.strategy))
+        missing_n_bins = np.array([self.n_bins_[np.array(self.dcols_) == col][0]
+                                   for col in self.missing_rf_cols_])
+
+        backup_discretizer = BasicDiscretizer(n_bins=missing_n_bins,
+                                              dcols=self.missing_rf_cols_,
+                                              encode=&#39;ordinal&#39;,
+                                              strategy=self.backup_strategy)
+        backup_discretizer.fit(X[self.missing_rf_cols_])
+        self.backup_discretizer_ = backup_discretizer
+    else:
+        self.backup_discretizer_ = None
+
+    if self.encode == &#39;onehot&#39;:
+        if len(self.missing_rf_cols_) &gt; 0:
+            discretized_df = backup_discretizer.transform(
+                X[self.missing_rf_cols_])
+        else:
+            discretized_df = pd.DataFrame({}, index=X.index)
+
+    # do discretization based on rf split thresholds
+    self.bin_edges_ = dict()
+    for col in self.dcols_:
+        if col in self.rf_splits.keys():
+            # .item(): numpy no longer converts a size-1 array to a scalar
+            b = self.n_bins_[np.array(self.dcols_) == col].item()
+            if self.strategy == &#34;quantile&#34;:
+                q_values = np.linspace(0, 1, int(b) + 1)
+                bin_edges = np.quantile(self.rf_splits[col], q_values)
+            elif self.strategy == &#34;uniform&#34;:
+                width = (max(self.rf_splits[col]) -
+                         min(self.rf_splits[col])) / b
+                bin_edges = width * \
+                    np.arange(0, b + 1) + min(self.rf_splits[col])
+            self.bin_edges_[col] = bin_edges
+            if self.encode == &#39;onehot&#39;:
+                discretized_df[col] = self._discretize_to_bins(
+                    X[col], bin_edges)
+
+    # fit onehot encoded X if specified
+    if self.encode == &#34;onehot&#34;:
+        onehot = OneHotEncoder(drop=self.onehot_drop)  # , sparse=False)
+        onehot.fit(discretized_df[self.dcols_].astype(str))
+        self.onehot_ = onehot
+
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.discretization.RFDiscretizer.reweight_n_bins"><code class="name flex">
+<span>def <span class="ident">reweight_n_bins</span></span>(<span>self, X, y=None, by='nsplits')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reallocate number of bins per feature.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>data frame</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>(Training) data to be discretized.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>(Training) response vector. Required only if
+rf_model = None or rf_model has not yet been fitted</dd>
+<dt><strong><code>by</code></strong> :&ensp;<code>{'nsplits'}</code>, default=<code>'nsplits'</code></dt>
+<dd>
+<p>Specifies how to reallocate number of bins per feature.</p>
+<p>nsplits
+Reallocate number of bins so that each feature
+in dcols get at a minimum of 2 bins with the
+remaining bins distributed proportionally to the
+number of RF splits using that feature</p>
+</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>self.n_bins : array</code> of <code>shape (len(dcols),)</code></dt>
+<dd>number of bins per feature reallocated according to
+'by' argument</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reweight_n_bins(self, X, y=None, by=&#34;nsplits&#34;):
+    &#34;&#34;&#34;
+    Reallocate number of bins per feature.
+
+    Parameters
+    ----------
+    X : data frame of shape (n_samples, n_features)
+        (Training) data to be discretized.
+
+    y : array-like of shape (n_samples,)
+        (Training) response vector. Required only if
+        rf_model = None or rf_model has not yet been fitted
+
+    by : {&#39;nsplits&#39;}, default=&#39;nsplits&#39;
+        Specifies how to reallocate number of bins per feature.
+
+        nsplits
+            Reallocate number of bins so that each feature
+            in dcols get at a minimum of 2 bins with the
+            remaining bins distributed proportionally to the
+            number of RF splits using that feature
+
+    Returns
+    -------
+    self.n_bins : array of shape (len(dcols),)
+        number of bins per feature reallocated according to
+        &#39;by&#39; argument
+    &#34;&#34;&#34;
+    # initialization and error checking
+    self._fit_preprocessing(X)
+
+    # get all random forest split points
+    self._fit_rf(X=X, y=y)
+
+    # get total number of bins to reallocate
+    total_bins = np.asarray(self.n_bins_).sum()
+
+    # reweight n_bins
+    if by == &#34;nsplits&#34;:
+        # each col gets at least 2 bins; remaining bins get
+        # reallocated based on number of RF splits using that feature
+        n_rules = np.array([len(self.rf_splits[col])
+                           for col in self.dcols_])
+        self.n_bins = np.round(n_rules / n_rules.sum() *
+                               (total_bins - 2 * len(self.dcols_))) + 2
+    else:
+        valid_by = (&#39;nsplits&#39;)
+        raise ValueError(&#34;Valid options for &#39;by&#39; are {}. Got by={!r} instead.&#34;
+                         .format(valid_by, by))</code></pre>
+</details>
+</dd>
+<dt id="imodels.discretization.RFDiscretizer.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Discretize the data.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>data frame</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>Data to be discretized.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>X_discretized</code></strong> :&ensp;<code>data frame</code></dt>
+<dd>Data with features in dcols transformed to the
+binned space. All other features remain unchanged.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, X):
+    &#34;&#34;&#34;
+    Discretize the data.
+
+    Parameters
+    ----------
+    X : data frame of shape (n_samples, n_features)
+        Data to be discretized.
+
+    Returns
+    -------
+    X_discretized : data frame
+        Data with features in dcols transformed to the
+        binned space. All other features remain unchanged.
+    &#34;&#34;&#34;
+
+    check_is_fitted(self)
+
+    # transform features that did not appear in RF
+    if len(self.missing_rf_cols_) &gt; 0:
+        discretized_df = self.backup_discretizer_.transform(
+            X[self.missing_rf_cols_])
+        discretized_df = pd.DataFrame(discretized_df,
+                                      columns=self.missing_rf_cols_,
+                                      index=X.index)
+    else:
+        discretized_df = pd.DataFrame({}, index=X.index)
+
+    # do discretization based on rf split thresholds
+    for col in self.bin_edges_.keys():
+        discretized_df[col] = self._discretize_to_bins(
+            X[col], self.bin_edges_[col])
+
+    # return onehot encoded data if specified and
+    # join discretized columns with rest of X
+    X_discretized = self._transform_postprocessing(discretized_df, X)
+
+    return X_discretized</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="imodels.discretization.SimpleDiscretizer"><code class="flex name class">
+<span>class <span class="ident">SimpleDiscretizer</span></span>
+<span>(</span><span>n_bins: int = 8, strategy: str = 'uniform')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SimpleDiscretizer:
+
+    def __init__(self, n_bins: int = 8, strategy: str = &#39;uniform&#39;):
+        self.n_bins = n_bins
+        self.strategy = strategy
+
+    def fit(self, X: np.array, feature_labels: np.array):
+        self.is_categorical = np.array([set(np.unique(X[:, i])).issubset({0, 1}) for i in np.arange(X.shape[1])])
+
+        if False not in self.is_categorical:
+            self.feature_labels = feature_labels
+            self.discretizer = None
+            return
+
+        if isinstance(feature_labels, list):
+            feature_labels = np.array(feature_labels)
+
+        # X_categorical = X[:, self.is_categorical]
+        X_categorical_columns = feature_labels[self.is_categorical]
+        # X_numeric = X[:, ~self.is_categorical]
+        X_numeric_columns = feature_labels[~self.is_categorical]
+
+        self.discretizer = KBinsDiscretizer(n_bins=self.n_bins, encode=&#39;onehot&#39;, strategy=self.strategy)
+        # X_numeric_discretized = self.discretizer.fit(X_numeric)
+
+        discretized_featnames = []
+        for feat_name, bin_edges in zip(X_numeric_columns, self.discretizer.bin_edges_):
+            be_str = bin_edges.astype(str)
+            discretized_featnames += (
+                [f&#39;{feat_name}_&#39; + &#39;_to_&#39;.join([be_str[i], be_str[i + 1]]) for i in range(bin_edges.shape[0] - 1)]
+            )
+        self.featnames_after_disc = np.append(discretized_featnames, X_categorical_columns)
+
+    def transform(self, X: np.array):
+        if self.discretizer is None:
+            return pd.DataFrame(X, columns=self.feature_labels)
+
+        X_categorical = X[:, self.is_categorical]
+        X_numeric = X[:, ~self.is_categorical]
+
+        X_numeric_discretized = self.discretizer.transform(X_numeric).toarray()
+        X_concat = np.concatenate((X_numeric_discretized, X_categorical), axis=1)
+        X_df_onehot = pd.DataFrame(X_concat, columns=self.featnames_after_disc)
+
+        return X_df_onehot
+
+    def fit_transform(self, X: np.array, feature_labels: np.array):
+        self.fit(X, feature_labels)
+        return self.transform(X)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.discretization.SimpleDiscretizer.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X: <built-in function array>, feature_labels: <built-in function array>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X: np.array, feature_labels: np.array):
+    self.is_categorical = np.array([set(np.unique(X[:, i])).issubset({0, 1}) for i in np.arange(X.shape[1])])
+
+    if False not in self.is_categorical:
+        self.feature_labels = feature_labels
+        self.discretizer = None
+        return
+
+    if isinstance(feature_labels, list):
+        feature_labels = np.array(feature_labels)
+
+    # X_categorical = X[:, self.is_categorical]
+    X_categorical_columns = feature_labels[self.is_categorical]
+    # X_numeric = X[:, ~self.is_categorical]
+    X_numeric_columns = feature_labels[~self.is_categorical]
+
+    self.discretizer = KBinsDiscretizer(n_bins=self.n_bins, encode=&#39;onehot&#39;, strategy=self.strategy)
+    # X_numeric_discretized = self.discretizer.fit(X_numeric)
+
+    discretized_featnames = []
+    for feat_name, bin_edges in zip(X_numeric_columns, self.discretizer.bin_edges_):
+        be_str = bin_edges.astype(str)
+        discretized_featnames += (
+            [f&#39;{feat_name}_&#39; + &#39;_to_&#39;.join([be_str[i], be_str[i + 1]]) for i in range(bin_edges.shape[0] - 1)]
+        )
+    self.featnames_after_disc = np.append(discretized_featnames, X_categorical_columns)</code></pre>
+</details>
+</dd>
+<dt id="imodels.discretization.SimpleDiscretizer.fit_transform"><code class="name flex">
+<span>def <span class="ident">fit_transform</span></span>(<span>self, X: <built-in function array>, feature_labels: <built-in function array>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit_transform(self, X: np.array, feature_labels: np.array):
+    self.fit(X, feature_labels)
+    return self.transform(X)</code></pre>
+</details>
+</dd>
+<dt id="imodels.discretization.SimpleDiscretizer.transform"><code class="name flex">
+<span>def <span class="ident">transform</span></span>(<span>self, X: <built-in function array>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transform(self, X: np.array):
+    if self.discretizer is None:
+        return pd.DataFrame(X, columns=self.feature_labels)
+
+    X_categorical = X[:, self.is_categorical]
+    X_numeric = X[:, ~self.is_categorical]
+
+    X_numeric_discretized = self.discretizer.transform(X_numeric).toarray()
+    X_concat = np.concatenate((X_numeric_discretized, X_categorical), axis=1)
+    X_df_onehot = pd.DataFrame(X_concat, columns=self.featnames_after_disc)
+
+    return X_df_onehot</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -64,9 +1912,10 @@ Python implementation of Fayyad and Irani's MDLP criterion discretization algori
 </li>
 <li><h3>Our favorite models</h3>
 <ul>
-<li><a href="https://csinva.io/imodels/shrinkage.html">Hierarchical shrinkage: post-hoc regularization for tree-based methods</a></li>
-<li><a href="https://csinva.io/imodels/figs.html">FIGS: Fast interpretable greedy-tree sums</a></li>
-<li><a href="https://csinva.io/imodels/mdi_plus.html">MDI+: Flexible tree-based feature importance</a></li>
+<li><a href="https://csinva.io/imodels/figs.html"><b>FIGS</b>: Fast interpretable greedy-tree sums</a></li>
+<li><a href="https://csinva.io/imodels/gpgam.html"><b>GPGam</b>: Additive Gaussian processes over binned features</a></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html"><b>Hierarchical shrinkage</b>: post-hoc regularization for tree-based methods</a></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html"><b>MDI+</b>: Flexible tree-based feature importance</a></li>
 </ul>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
@@ -74,6 +1923,52 @@ Python implementation of Fayyad and Irani's MDLP criterion discretization algori
 <li><code><a title="imodels.discretization.discretizer" href="discretizer.html">imodels.discretization.discretizer</a></code></li>
 <li><code><a title="imodels.discretization.mdlp" href="mdlp.html">imodels.discretization.mdlp</a></code></li>
 <li><code><a title="imodels.discretization.simple" href="simple.html">imodels.discretization.simple</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="imodels.discretization.BRLDiscretizer" href="#imodels.discretization.BRLDiscretizer">BRLDiscretizer</a></code></h4>
+<ul class="two-column">
+<li><code><a title="imodels.discretization.BRLDiscretizer.data" href="#imodels.discretization.BRLDiscretizer.data">data</a></code></li>
+<li><code><a title="imodels.discretization.BRLDiscretizer.discretize" href="#imodels.discretization.BRLDiscretizer.discretize">discretize</a></code></li>
+<li><code><a title="imodels.discretization.BRLDiscretizer.fit" href="#imodels.discretization.BRLDiscretizer.fit">fit</a></code></li>
+<li><code><a title="imodels.discretization.BRLDiscretizer.fit_transform" href="#imodels.discretization.BRLDiscretizer.fit_transform">fit_transform</a></code></li>
+<li><code><a title="imodels.discretization.BRLDiscretizer.get_onehot_df" href="#imodels.discretization.BRLDiscretizer.get_onehot_df">get_onehot_df</a></code></li>
+<li><code><a title="imodels.discretization.BRLDiscretizer.onehot_df" href="#imodels.discretization.BRLDiscretizer.onehot_df">onehot_df</a></code></li>
+<li><code><a title="imodels.discretization.BRLDiscretizer.transform" href="#imodels.discretization.BRLDiscretizer.transform">transform</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.discretization.BasicDiscretizer" href="#imodels.discretization.BasicDiscretizer">BasicDiscretizer</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.discretization.BasicDiscretizer.fit" href="#imodels.discretization.BasicDiscretizer.fit">fit</a></code></li>
+<li><code><a title="imodels.discretization.BasicDiscretizer.transform" href="#imodels.discretization.BasicDiscretizer.transform">transform</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.discretization.ExtraBasicDiscretizer" href="#imodels.discretization.ExtraBasicDiscretizer">ExtraBasicDiscretizer</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.discretization.ExtraBasicDiscretizer.fit" href="#imodels.discretization.ExtraBasicDiscretizer.fit">fit</a></code></li>
+<li><code><a title="imodels.discretization.ExtraBasicDiscretizer.transform" href="#imodels.discretization.ExtraBasicDiscretizer.transform">transform</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.discretization.RFDiscretizer" href="#imodels.discretization.RFDiscretizer">RFDiscretizer</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.discretization.RFDiscretizer.fit" href="#imodels.discretization.RFDiscretizer.fit">fit</a></code></li>
+<li><code><a title="imodels.discretization.RFDiscretizer.reweight_n_bins" href="#imodels.discretization.RFDiscretizer.reweight_n_bins">reweight_n_bins</a></code></li>
+<li><code><a title="imodels.discretization.RFDiscretizer.transform" href="#imodels.discretization.RFDiscretizer.transform">transform</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="imodels.discretization.SimpleDiscretizer" href="#imodels.discretization.SimpleDiscretizer">SimpleDiscretizer</a></code></h4>
+<ul class="">
+<li><code><a title="imodels.discretization.SimpleDiscretizer.fit" href="#imodels.discretization.SimpleDiscretizer.fit">fit</a></code></li>
+<li><code><a title="imodels.discretization.SimpleDiscretizer.fit_transform" href="#imodels.discretization.SimpleDiscretizer.fit_transform">fit_transform</a></code></li>
+<li><code><a title="imodels.discretization.SimpleDiscretizer.transform" href="#imodels.discretization.SimpleDiscretizer.transform">transform</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

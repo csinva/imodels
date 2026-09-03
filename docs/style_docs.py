@@ -1,3 +1,5 @@
+import re
+
 # Read in the file
 with open('index.html', 'r') as f:
     data = f.read()
@@ -9,15 +11,32 @@ data = data.replace('&lt;https://doi.org/10.5281/zenodo.4026887}&gt;',
                     'https://doi.org/10.5281/zenodo.4026887}')
 
 
-# remove "our favorite models" from index
-favs = '''
-<li><a href="#our-favorite-models">Our favorite models</a><ul>
-<li><a href="#figs-fast-interpretable-greedy-tree-sums">FIGS: Fast interpretable greedy-tree sums</a></li>
-<li><a href="#hierarchical-shrinkage-post-hoc-regularization-for-tree-based-methods">Hierarchical shrinkage: post-hoc regularization for tree-based methods</a></li>
-</ul>
-</li>
-'''
-data = data.replace(favs, '')
+# Drop "Our favorite models" from the index.
+#
+# Each model in that section has its own page, and the sidebar already lists
+# those pages under a heading of the same name (see html.mako). Leaving the
+# readme section in as well means the index shows the heading twice, once from
+# the generated table of contents and once from the hand-written list.
+#
+# Both patterns below are matched rather than pasted in literally: the previous
+# version of this script compared against a fixed string, which silently stopped
+# matching as soon as a model was added to the readme.
+
+def drop(pattern, text, what):
+    """Remove `pattern` from `text`, complaining if it is not there."""
+    new_text, n = re.subn(pattern, '', text, flags=re.S)
+    if n == 0:
+        print(f'  style_docs.py: nothing removed for {what}; has the readme changed?')
+    return new_text
+
+
+# the section body, from its heading up to the next top-level heading
+data = drop(r'<h2 id="our-favorite-models">.*?(?=<h2[ >])', data,
+            'the "Our favorite models" section')
+
+# its entry in the generated table of contents, including the nested model list
+data = drop(r'<li><a href="#our-favorite-models">.*?</ul>\s*</li>\s*', data,
+            'the "Our favorite models" contents entry')
 
 # data = data.replace('<h1>Index</h1>',
 #                     '<h1>Index 🔍</h1>')

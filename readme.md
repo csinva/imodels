@@ -85,6 +85,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | TAO rule tree        | [🗂️](https://csinva.io/imodels/tree/tao.html), [📄](https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html) | Fits tree using alternating optimization                    |
 | Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
 | Tree GAM | [🗂️](https://csinva.io/imodels/algebraic/tree_gam.html), [📄](https://dl.acm.org/doi/abs/10.1145/2339530.2339556), [🔗](https://github.com/interpretml/interpret) | Generalized additive model fit with short boosted trees                           |
+| <b>Additive GP<br/>GAM (GPGam)</b> | [🗂️](https://csinva.io/imodels/gpgam.html),ㅤ[📄](https://csinva.io/imodels/gpgam.html) | Additive model whose shapes are Gaussian processes over bins, fit by exact marginal likelihood |
 | <b>Greedy tree</br>sums (FIGS)</b> | [🗂️](https://csinva.io/imodels/figs.html),ㅤ[📄](https://arxiv.org/abs/2201.11931) | Sum of small trees with very few total rules (FIGS)                          |
 | <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/shrinkage.html), [📄](https://arxiv.org/abs/2202.00858) | Improve a decision tree, random forest, or<br/>gradient-boosting ensemble with ultra-fast, post-hoc regularization |
 | <b>RF+ (MDI+)</b> | [🗂️](https://csinva.io/imodels/mdi_plus.html), [📄](https://arxiv.org/pdf/2307.01932) | Flexible random forest-based feature importance |
@@ -174,6 +175,7 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | TAO rule tree              | [TaoTreeClassifier](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeClassifier) |   [TaoTreeRegressor](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeRegressor)        |  |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
 | Tree GAM | [TreeGAMClassifier](https://csinva.io/imodels/algebraic/tree_gam.html) | [TreeGAMRegressor](https://csinva.io/imodels/algebraic/tree_gam.html) | |
+| Additive GP GAM (GPGam) |  | [GPGamRegressor](https://csinva.io/imodels/algebraic/gp_gam.html) | GAM with pairwise interactions; nothing to tune, and deterministic |
 | Greedy tree sums (FIGS) | [FIGSClassifier](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier) | [FIGSRegressor](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor) |                                                              |
 | Hierarchical shrinkage | [HSTreeClassifierCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV) | [HSTreeRegressorCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV) | Wraps any sklearn tree-based model |
 | Marginal shrinkage<br/>linear model |  | [MarginalShrinkageLinearModelRegressor](https://csinva.io/imodels/algebraic/marginal_shrinkage_linear_model.html) | Linear model shrunk towards its marginal effects |
@@ -359,6 +361,28 @@ Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise r
 <p align="center">	
 	<i><b>Example FIGS model.</b> FIGS learns a sum of trees with a flexible number of trees; to make its prediction, it sums the result from each tree.</i>
 </p>
+
+### GPGam: additive Gaussian processes over binned features
+
+[🔗 Post](https://csinva.io/imodels/gpgam.html), [🗂️ API](https://csinva.io/imodels/algebraic/gp_gam.html)
+
+GPGam fits a generalized additive model with pairwise interactions. Every shape function in it is a Gaussian process over the quantile bins of its feature.
+
+Binning is what makes this practical. Once the features are binned, the exact GP marginal likelihood depends on the data only through the bin co-occurrence counts `Z'Z`, the bin sums `Z'y`, and `y'y`. One pass over the data computes those, and every optimizer step after that costs the same whether the data had a thousand rows or a hundred thousand.
+
+That one likelihood also settles every choice a GAM usually leaves to the user. How smooth each shape function should be follows from a mixture of two kernels. Features that explain nothing get amplitudes near zero and drop out. The grid resolution for each interaction is picked by comparing likelihoods. Nothing is set by cross-validation and nothing is random, so two fits on the same data give the same model.
+
+```python
+from imodels import GPGamRegressor
+model = GPGamRegressor().fit(X_train, y_train)
+
+grid, values, std = model.shape_function(0, return_std=True)   # feature 0's curve, with its band
+model.interaction_terms()                                      # the pairs it chose to include
+```
+
+Because the model is a Gaussian process, each curve arrives with a posterior band, so you can see which parts of a shape function the data actually pins down. The [post](https://csinva.io/imodels/gpgam.html) walks through a model fit to California housing, curve by curve and interaction by interaction, including the latitude-by-longitude surface drawn over the state itself.
+
+Across four regression benchmark suites covering 113 datasets, GPGam is the strongest interpretable model on three of them and ties explainable boosting machines on the fourth. OpenML-CTR23 is the most informative of the four, since it was held out and used for no design decision. There GPGam places first among interpretable models, with a mean rank of 2.11 against EBM's 2.32.
 
 ### Hierarchical shrinkage: post-hoc regularization for tree-based methods
 

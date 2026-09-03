@@ -1,0 +1,181 @@
+<section id="section-intro">
+                <p align="center">
+                    <img align="center" width=60%
+                        src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"> </img>
+                    <br />
+
+                <div class="article" style="padding-right: 2%; padding-left: 2%;">
+                    <p align="center">
+                    <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> MDI+: A Flexible Feature
+                        Importance Framework for Random Forests</h1>
+                    <h3 style="color:gray;padding-top:0px;">Abhineet Agarwal*, Ana M. Kenney*, Yan Shuo Tan*, Tiffany
+                        Tang*, Bin Yu</h3>
+                    </p>
+                    <hr>
+                    <!-- partial -->
+                    <script src='https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js'></script>
+                    <script src='https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/addons/p5.dom.min.js'></script>
+                    <script src='https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/addons/p5.sound.min.js'></script>
+                    <script src='https://unpkg.com/matter-js@0.14.2/build/matter.min.js'></script>
+                    <script src="https://demos.csinva.io/figs/script.js"></script>
+
+                    <p><a href="https://arxiv.org/pdf/2307.01932">📄 Paper</a>, <a
+                            href="https://csinva.io/imodels/importance/mdi_plus.html">🗂 Doc</a>, <a
+                            href="https://scholar.google.com/scholar?hl=en&as_sdt=0%2C48&q=mdi%2B&btnG=#d=gs_cit&t=1716649449337&u=%2Fscholar%3Fq%3Dinfo%3Axc0LcHXE_lUJ%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌
+                            Citation</a></p>
+
+                    <p>MDI+ is a novel feature importance framework, which generalizes the popular mean decrease in
+                        impurity (MDI) importance score for random forests. At its core, MDI+ expands upon a recently
+                        discovered connection between linear regression and decision trees. In doing so, MDI+ enables
+                        practitioners to (1) tailor the feature importance computation to the data/problem structure and
+                        (2) incorporate additional features or knowledge to mitigate known biases of decision trees. In
+                        both real data case studies and extensive real-data-inspired simulations, MDI+ outperforms
+                        commonly used feature importance measures (e.g., MDI, permutation-based scores, and TreeSHAP) by
+                        substantial margins.</p>
+
+                    <p>For further details, we refer to <a href="https://arxiv.org/pdf/2307.01932.pdf">Agarwal et al.
+                            (2023)</a>.</p>
+
+                    <h2>Regression Example Usage:</h2>
+
+                    <pre>
+                        <code>
+from imodels.importance import RandomForestPlusRegressor
+
+rf_plus_model = RandomForestPlusRegressor()
+rf_plus_model.fit(X, y)
+mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
+                            </code>
+                        </pre>
+
+                    <h2>Classification Example Usage:</h2>
+
+                    <pre>
+<code>
+from imodels.importance import RandomForestPlusClassifier
+
+rf_plus_model = RandomForestPlusClassifier()
+rf_plus_model.fit(X, y)
+mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
+</code>
+                        </pre>
+
+                    <h2>Demo notebooks</h2>
+
+                    <details>
+                        <summary><a
+                                href="https://github.com/csinva/imodels/blob/master/notebooks/mdi_plus_demo.ipynb">MDI+
+                                demo</a></summary>
+                        <ul>
+                            <li>Shows how to compute MDI+ importance scores for different tasks (regression and
+                                classification) and configurations (with flexible GLMs, scoring metrics, and custom
+                                transformations).</li>
+                            <li>Provides starter code on how to choose the GLM and scoring metric within MDI+ via a
+                                stability metric and/or combine these fits in an ensemble.</li>
+                        </ul>
+                    </details>
+
+                    <h2>Overview of MDI+</h2>
+
+                    <p><strong>Input:</strong> a collection of fitted trees (e.g., a random forest), data <code>X</code>
+                        and <code>y</code></p>
+
+                    <p>For each fitted tree in the forest:</p>
+
+                    <ol>
+                        <li>Transform <code>X</code> using the learnt "stump" features from the fitted tree, and append
+                            any additional engineered features (e.g., the raw <code>X</code> features) to this
+                            transformed dataset.</li>
+                        <li>Fit a prediction model on this augmented transformed dataset to predict <code>y</code>.
+                            Here, we recommend fitting a generalized linear model (GLM) to leverage computational
+                            speed-ups.</li>
+                        <li>Use this fitted prediction model to make partial model predictions for each feature k. That
+                            is, for each feature k, get the model's predictions if the contribution of all other
+                            features (except feature k) were zeroed out. Put differently, the kth partial model
+                            predictions are the predictions we get when using only the engineered features that are
+                            related to feature k.</li>
+                        <li>For each feature k, evaluate the similarity between the observed <code>y</code> and the kth
+                            partial model predictions using any user-defined similarity metric (i.e., a larger value
+                            should indicate greater feature importance).</li>
+                    </ol>
+
+                    <p>This gives the MDI+ scores for a single tree. To get the MDI+ scores for the forest, these scores
+                        are averaged across all trees in the forest.</p>
+
+                    <!-- <p align="center">
+                                <img src="" width="80%">
+                            </p>  
+                            <p align="center">	
+                                <i>Overview of MDI+.</i>
+                            </p> -->
+
+                    <h2>Practical Considerations</h2>
+
+                    <p>We show in <a href="https://arxiv.org/abs/2307.01932">Agarwal et al. (2023)</a> that this
+                        framework is indeed a proper generalization of the popular MDI feature importance score.
+                        However, as a result of the increased flexibility provided by MDI+, there are several choices
+                        that must be made by the analyst to run MDI+ in practice. In particular,</p>
+
+                    <ol>
+                        <li><strong>In Step 1: What feature engineering/transformations to include?</strong>
+                            <ul>
+                                <li>We recommend including the raw feature (i.e., <code>X</code>) in this transformed
+                                    dataset. This is done by default via
+                                    <code>RandomForestPlus*(include_raw=True)</code>. To include additional
+                                    transformations, create custom <code>BlockTransformerBase</code> object(s) and use
+                                    the <code>add_transformers</code> argument in <code>RandomForestPlus*()</code>.
+                                </li>
+                            </ul>
+                        </li>
+                        <li><strong>In Step 2: Which GLM?</strong>
+                            <ul>
+                                <li>We recommend using <code>RidgeRegressorPPM()</code> for regression tasks and
+                                    <code>LogisticClassifierPPM()</code> for classification tasks and thus set these to
+                                    be the defaults. To use a custom prediction model, use the
+                                    <code>prediction_model</code> argument in <code>RandomForestPlus*()</code>.
+                                </li>
+                            </ul>
+                        </li>
+                        <li><strong>In Step 3: Which sample splitting strategy (if any) to use when making the partial
+                                model predictions?</strong>
+                            <ul>
+                                <li>We recommend using a leave-one-out (<code>"loo"</code>) sample splitting strategy as
+                                    it overcomes the known correlation and entropy biases suffered by MDI. Out-of-bag
+                                    (<code>"oob"</code>) can also be used to overcome these biases but tends to be more
+                                    unstable than leave-one-out across different random forest fits. MDI uses an in-bag
+                                    sample splitting scheme and is not recommended. The sample splitting strategy is set
+                                    to <code>"loo"</code> by default but can be changed via the
+                                    <code>sample_split</code> argument in <code>RandomForestPlus*()</code>.
+                                </li>
+                            </ul>
+                        </li>
+                        <li><strong>In Step 4: Which similarity metric to use?</strong>
+                            <ul>
+                                <li>We recommend using r-squared for regression tasks and log-loss for classification
+                                    tasks, which are the defaults. To use a custom metric, use the
+                                    <code>scoring_fns</code> argument in the <code>get_mdi_plus_scores()</code> method.
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+
+                    <p>These recommendations are based on extensive simulations across a wide variety of data-generating
+                        processes, data sets, noise levels, and misspecifications.</p>
+
+                    <p>Nevertheless, different choices may be better for different problems. For examples on how to
+                        implement some of these custom options, see the <a
+                            href="https://github.com/csinva/imodels/blob/master/notebooks/mdi_plus_demo.ipynb">MDI+
+                            Demo</a> notebook. This demo also includes examples on how to aggregate feature importances
+                        from multiple MDI+ configurations in an ensemble as well as how to choose the "best" GLM and
+                        metric in a data-driven manner based upon a stability score.</p>
+
+
+
+            </section>
+
+            <section>
+            </section>
+            <section>
+            </section>
+            <section>
+            </section>
