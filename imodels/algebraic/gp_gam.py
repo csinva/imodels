@@ -432,6 +432,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         self.main_offsets_ = offsets
         self.main_values_ = fhat
         self.main_var_ = post_var
+        self.main_amps_ = amps
         self.pairs_ = []
         self.pair_values_ = []
 
@@ -443,11 +444,12 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                 resid -= fhat[offsets[u]:offsets[u + 1]][bidx[:, j]]
             selected = self._screen_pairs(X, units, resid, n_pairs, amps)
             if selected:
-                fhat, self.pairs_, self.pair_values_, post_var = self._fit_pairs(
+                fhat, self.pairs_, self.pair_values_, post_var, amps = self._fit_pairs(
                     X, bidx, units, sizes, blocks, C, b, yy, n, offsets,
                     fhat, selected, yn)
                 self.main_values_ = fhat
                 self.main_var_ = post_var
+                self.main_amps_ = amps
 
         rng = float(np.max(y) - np.min(y))
         self.clip_ = (float(np.min(y)) - 0.05 * rng, float(np.max(y)) + 0.05 * rng)
@@ -546,10 +548,11 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
                     adj -= vals[p][cols[p]]
             bm = np.concatenate([np.bincount(bidx[:, j], weights=adj, minlength=sizes[u])
                                  for u, j in enumerate(units)])
-            main_vals, _, _, main_var = self._fit_ml(blocks, offsets, C, bm,
-                                                     float(np.sum(adj ** 2)), n)
+            main_vals, main_amps, _, main_var = self._fit_ml(blocks, offsets, C, bm,
+                                                             float(np.sum(adj ** 2)), n)
         keep = [p for p in selected if defs[p] is not None]
-        return (main_vals, [defs[p] for p in keep], [vals[p] for p in keep], main_var)
+        return (main_vals, [defs[p] for p in keep], [vals[p] for p in keep],
+                main_var, main_amps)
 
     # ------------------------------------------------------------------
     def predict(self, X):
@@ -602,6 +605,29 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
             return grid, values
         std = np.sqrt(self.main_var_[i0:i1]) * self.y_std_
         return grid, values, std
+
+    def kernel_weights(self, feature):
+        """Return ``{kernel: amplitude}`` for one feature's prior.
+
+        The amplitudes are what the marginal likelihood chose, and their balance
+        is how the model expresses smoothness: weight on the short Matern kernel
+        buys a curve that can turn sharply, weight on the squared exponential
+        buys a gentle one. A feature that explains nothing ends up with every
+        amplitude near zero, which is how irrelevant features drop out.
+        """
+        check_is_fitted(self, "main_amps_")
+        j = int(feature)
+        if j not in self.edges_:
+            raise ValueError(f"feature {j} was constant and carries no shape function")
+        u = self.units_.index(j)
+        n_bins = len(self.grids_[j])
+        if n_bins <= 3:
+            names = ["delta"]
+        else:
+            names = ["matern-%g" % s for s in self.scales]
+            names += ["rbf-%g" % s for s in self.rbf_scales]
+        amps = np.asarray(self.main_amps_[u], dtype=float)
+        return {nm: float(a) for nm, a in zip(names, amps[:len(names)])}
 
     def interaction_terms(self):
         """List the fitted pairwise interactions as ``(feature_a, feature_b)``."""
