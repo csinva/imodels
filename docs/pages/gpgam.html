@@ -15,37 +15,52 @@
                             href="https://github.com/csinva/imodels">&#128279; Github</a></p>
 
                     <nav class="toc-main">
-                      <a href="#gam-intro"><span>1</span> Why additive models</a>
+                      <a href="#gam-intro"><span>1</span> Overview</a>
                       <a href="#how-it-works"><span>2</span> How GPGam works</a>
                       <a href="#results"><span>3</span> How well it does</a>
                       <a href="#using-it"><span>4</span> Using it</a>
                     </nav>
 
-                    <h2 id="gam-intro">1. Why additive models</h2>
+                    <h2 id="gam-intro">1. Overview</h2>
 
-                    <p>A generalized additive model predicts by adding up one function per feature:</p>
+                    <p>A generalized additive model predicts by adding up one function per feature,
+                        <code>y = f&#8321;(x&#8321;) + f&#8322;(x&#8322;) + ... + f&#8340;(x&#8340;)</code>. Each
+                        <code>f</code> can take any shape, so the model can say that income matters
+                        greatly up to a point and hardly at all beyond it, or that risk rises at both
+                        ends of a range. A linear model gets one number per feature and has to spend it
+                        on a slope. What makes the form worth having is that the sum can be read: one
+                        curve per feature, that curve is the whole story for that feature, and reading
+                        all of them leaves nothing out. With a boosted ensemble you can compute an
+                        explanation afterwards, but the explanation is a summary of the model rather
+                        than the model itself, and two reasonable summary methods can disagree about the
+                        same prediction. Here the thing you read and the thing that predicts are one
+                        object.</p>
 
-                    <pre><code>y = f&#8321;(x&#8321;) + f&#8322;(x&#8322;) + ... + f&#8340;(x&#8340;)</code></pre>
+                    <p><b>GPGam</b> makes every one of those curves a Gaussian process over the
+                        quantile bins of its feature. Binning is what makes this practical: once the
+                        features are binned, the exact GP marginal likelihood depends on the data only
+                        through the bin co-occurrence counts, the bin sums, and <code>y'y</code>, so
+                        every optimizer step costs the same whether the data has a thousand rows or a
+                        hundred thousand. That one likelihood then settles every choice a GAM usually
+                        leaves to its user: how smooth each curve should be, which features earn a curve
+                        at all, which pairs of features get an interaction surface, and how finely to
+                        grid it. There is nothing to tune, nothing is chosen by cross-validation, and no
+                        seed enters anywhere, so two fits on the same data give the same model.</p>
 
-                    <p>Each <code>f</code> can be any shape at all, so the model is free to say that
-                        income matters a great deal up to a point and hardly at all beyond it, or that
-                        risk rises at both ends of a range. A linear model cannot say either of those
-                        things. It gets one number per feature and has to spend it on a slope.</p>
+                    <p>Across four regression benchmarks covering 113 datasets, GPGam is the strongest
+                        interpretable model on three of them and second by a small margin on the fourth,
+                        ahead of explainable boosting machines, rule sets, shrunk trees and linear
+                        models. Only TabPFN, a black box that cannot be fit at all on several of the
+                        wider datasets, ranks higher overall. The model was not designed by hand: it was
+                        found by an autoresearch loop, and the section on how it was found shows what
+                        that loop added and later took away.</p>
 
-                    <p>What makes the form worth having is that the sum can be read. There is one curve
-                        per feature, that curve is the complete story for that feature, and reading all
-                        of them leaves nothing out. That is a stronger claim than it sounds. With a
-                        random forest or a boosted ensemble you can compute an explanation afterwards,
-                        but the explanation is a summary of the model rather than the model itself, and
-                        two reasonable summary methods can disagree about the same prediction. Here the
-                        thing you read and the thing that predicts are the same object.</p>
-
-                    <p>The cost is additivity. A pure additive model cannot represent a feature whose
-                        effect depends on another feature. GPGam is a GA<sup>2</sup>M, which buys back
-                        part of that by allowing a few two-feature surfaces alongside the curves, and it
-                        picks which pairs to spend them on. What it still cannot represent is an effect
-                        that depends on three or more features at once, and the results section is
-                        specific about where that limit shows up.</p>
+                    <p>The cost of the form is additivity. A pure additive model cannot represent a
+                        feature whose effect depends on another feature. GPGam is a GA<sup>2</sup>M,
+                        which buys back part of that with a few two-feature surfaces and picks which
+                        pairs to spend them on. What it still cannot represent is an effect that depends
+                        on three or more features at once, and the results section is specific about
+                        where that limit shows up.</p>
 
                     <h2 id="how-it-works">2. How GPGam works</h2>
 
