@@ -43,3 +43,7 @@ experiments/*.txt
 .imodels
 data
 **.joblib
+
+# pdoc stages its output here before build_docs.sh copies it into docs/ and
+# removes it; it should never be committed
+docs/imodels/
