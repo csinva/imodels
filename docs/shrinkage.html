@@ -79,12 +79,7 @@ aria-label="View source on GitHub" title="GitHub">
                     <p align="center">
                         <img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" width="90%">
                     </p>
-                    <p align="center">
-                        <i><b>Fig 1.</b> HS applies post-hoc regularization to any decision tree by shrinking each node
-                            towards its parent. This is done after a tree has been trained. The amount of shrinkage can
-                            be varied using a regularization param
-                            (this works best if the parameter is chosen via cross-validation). </i>
-                    </p>
+                    <p class="caption"><b>Fig 1.</b> HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent. This is done after a tree has been trained. The amount of shrinkage can be varied using a regularization param (this works best if the parameter is chosen via cross-validation).</p>
 
                     <h2>An example using HS</h2>
 
@@ -123,10 +118,8 @@ plot_tree(model.estimator_, feature_names=feat_names)
                     <p style="text-align:center;">
                         <a href="https://github.com/csinva/imodels"><img
                                 src="https://demos.csinva.io/shrinkage/shrinkage_csi_model.svg?sanitize=True"
-                                width="100%"></a>
-                        <br>
-                        <i><b>Fig 2.</b> Simple model learned by HS for predicting risk of cervical spinal injury. </i>
-                    </p>
+                                width="100%"></a></p>
+                    <p class="caption"><b>Fig 2.</b> Simple model learned by HS for predicting risk of cervical spinal injury.</p>
 
                     <h2>Examples with HS on synthetic data</h2>
                     <p>See some examples of how hierarchical shrinkage works on one-dimensional functions which are
@@ -138,9 +131,7 @@ plot_tree(model.estimator_, feature_names=feat_names)
                     <div id="4db2fbb0-073d-492f-8f30-3e9fe37bf9f2" class="plotly-graph-div"
                         style="height:60%; width:100%;"></div>
                     <script type="text/javascript" src="https://demos.csinva.io/shrinkage/shrinkage_steps.js"></script>
-                    <p style="text-align:center;">
-                        <i><b>Fig 3.</b> Step function. </i>
-                    </p>
+                    <p class="caption"><b>Fig 3.</b> Step function.</p>
                     <!--        <link rel="stylesheet"-->
                     <!--              href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-clean-blog/5.0.10/css/clean-blog.min.css">-->
 
@@ -148,9 +139,7 @@ plot_tree(model.estimator_, feature_names=feat_names)
                         style="height:60%; width:100%;"></div>
                     <script type="text/javascript" src="https://demos.csinva.io/shrinkage/shrinkage_linear.js"></script>
                     <!--        </div>-->
-                    <p style="text-align:center;">
-                        <i><b>Fig 4.</b> Linear function. </i>
-                    </p>
+                    <p class="caption"><b>Fig 4.</b> Linear function.</p>
                 </div>
 
                 <h2>Applying HS to tree ensembles</h2>

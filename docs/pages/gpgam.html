@@ -105,6 +105,8 @@ y.T @ y</code></pre>
 
                     <div id="synth-plot"></div>
 
+                    <p class="caption"><b>Fig 1.</b> One GPGam fit to a synthetic dataset whose five features differ only in how smooth their effect is. The same model, untuned, handles all five.</p>
+
                     <ul class="gam-readings">
                         <li><b>Slow wave and straight line.</b> Almost all the weight goes to the smooth
                             kernel: 722 times as much for the wave, 339 times for the line. There is
@@ -201,6 +203,7 @@ y.T @ y</code></pre>
                         50 to 72,000 rows and up to 1,024 features. GPGam is the strongest interpretable
                         model on three of them, and ties explainable boosting machines on the fourth.</p>
 
+                    <p class="caption caption-above"><b>Table 1.</b> Where GPGam ranks against ten other regression models on four benchmark suites.</p>
                     <table class="ranktbl">
                         <thead>
                             <tr><th>model</th><th>imodels-65</th><th>classic-7</th><th>TabArena-13</th><th>CTR23-28</th></tr>
@@ -276,6 +279,8 @@ y.T @ y</code></pre>
                         likelihood. Those came out of the search.</p>
 
                     <div id="hist-plot"></div>
+
+                    <p class="caption"><b>Fig 2.</b> Lines of code and mean rank at each version of the search. The loop added capability up to v38, then spent the rest of its budget removing whatever could not pay for itself.</p>
 
                     <p>The two halves of that plot are different activities. Up to v38 the loop was
                         adding capability: v35 is the first version that fit a GAM as a Gaussian
@@ -372,6 +377,8 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
                         there is nothing else to explain. Click any panel to read it.</p>
 
                     <div id="gam-all"></div>
+
+                    <p class="caption"><b>Fig 3.</b> The whole model: a GPGam fit to California housing. Eight shape functions, each with its posterior drawn two standard deviations wide, and two interaction terms.</p>
 
                     <ul class="gam-readings">
                         <li><b>Longitude.</b> Peaks near &minus;122.5&deg;, San Francisco, and falls away eastward. At $452k the widest single curve here.</li>
