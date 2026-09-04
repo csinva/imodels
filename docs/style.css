@@ -6,6 +6,11 @@
  */
 
 :root {
+  /* the sidebar width, and the widest comfortable line of text; the two
+     together decide how much horizontal room the article really has */
+  --sidebar-w: 15rem;
+  --measure: 100ch;
+
   --ink: #1b1f23;
   --muted: #6a737d;
   --line: #e3e6e8;
@@ -74,11 +79,22 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
 #content { padding: 1.6em 2em 4em; }
 #sidebar { padding: 1.6em 1.4em; background: var(--surface-alt);
            border-right: 1px solid var(--line); }
-/* pdoc sizes the sidebar at 30% of the window, which is far wider than its
-   contents need; keep the override inside pdoc's own breakpoint so the
-   stacked mobile layout is left alone */
+/* pdoc sizes the sidebar at 30% of the window and the article at 70% capped to
+   100ch, and packs both to the left. Once the sidebar is narrowed, whatever the
+   article does not use collects as dead space against the right edge instead of
+   being shared out. Let the article fill the row and spend the surplus on its
+   own left and right padding, so the text sits centered in the space it has and
+   still never runs wider than a comfortable line. Kept inside pdoc's own
+   breakpoint so the stacked mobile layout is left alone. */
 @media screen and (min-width: 700px) {
-  #sidebar { width: 15rem; }
+  #sidebar { width: var(--sidebar-w); }
+  #content {
+    width: auto;
+    max-width: none;
+    flex: 1 1 auto;
+    padding-left:  max(2.5rem, (100vw - var(--sidebar-w) - var(--measure)) / 2);
+    padding-right: max(2.5rem, (100vw - var(--sidebar-w) - var(--measure)) / 2);
+  }
 }
 #sidebar h1, #sidebar h3 { font-size: 0.78rem; text-transform: uppercase;
   letter-spacing: 0.06em; color: var(--muted); font-weight: 600;
