@@ -74,11 +74,20 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
 #content { padding: 1.6em 2em 4em; }
 #sidebar { padding: 1.6em 1.4em; background: var(--surface-alt);
            border-right: 1px solid var(--line); }
+/* pdoc sizes the sidebar at 30% of the window, which is far wider than its
+   contents need; keep the override inside pdoc's own breakpoint so the
+   stacked mobile layout is left alone */
+@media screen and (min-width: 700px) {
+  #sidebar { width: 15rem; }
+}
 #sidebar h1, #sidebar h3 { font-size: 0.78rem; text-transform: uppercase;
   letter-spacing: 0.06em; color: var(--muted); font-weight: 600;
   border-bottom: 1px solid var(--line); padding-bottom: 0.35em; }
 #sidebar .toc ul, #sidebar #index { font-size: 0.88rem; }
 #sidebar li { margin: 0.18em 0; }
+/* super-module entries are full dotted paths with nothing to wrap at, so let
+   them break rather than push the sidebar wider than everything else needs */
+#sidebar a { overflow-wrap: break-word; }
 
 /* ---------- figure and table captions ---------- */
 .caption {
