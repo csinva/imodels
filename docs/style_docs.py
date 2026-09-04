@@ -35,11 +35,6 @@ def drop(pattern, text, what, required=True):
     return new_text
 
 
-# The readme opens with the logo, which the sidebar header now carries, so drop
-# the copy that lands in the index body.
-data = drop(r'<img align="center" width=60% src="[^"]*imodels_logo[^"]*">\s*</img>', data,
-            'the readme logo')
-
 # The main page is the readme. Everything pdoc appends after it, the sub-module
 # list and the re-exported functions and classes, belongs on the individual
 # module pages instead, so cut from the Sub-modules heading to the end of the

@@ -1,7 +1,16 @@
 <%
   import os
+  import re
   import pdoc
   from pdoc.html_helpers import extract_toc, glimpse, to_html as _to_html, format_git_link
+  def strip_markup(text):
+      """Plain prose for the description meta tag.
+
+      The imodels docstring is the readme, which opens with the logo <img>, and
+      an escaped tag makes a useless description in search results and link
+      previews.
+      """
+      return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', text or '')).strip()
   def link(dobj: pdoc.Doc, name=None):
     name = name or dobj.qualname + ('()' if isinstance(dobj, pdoc.Function) else '')
     if isinstance(dobj, pdoc.External) and not external_links:
@@ -335,13 +344,16 @@
     module_list = 'modules' in context.keys()  # Whether we're showing module list in server mode
 %>
 
-##   % if module_list:
-##     <title>Python module list</title>
-##     <meta name="description" content="A list of documented Python modules." />
-##   % else:
-##     <title>${module.name} API documentation</title>
-##     <meta name="description" content="${module.docstring | glimpse, trim, h}" />
-##   % endif
+  % if module_list:
+    <title>Python module list</title>
+    <meta name="description" content="A list of documented Python modules." />
+  % else:
+    <%doc>The dotted name already starts with "imodels", so it reads as an
+    identity in the browser tab without a suffix, and matches how the
+    hand-written pages title themselves in build_pages.py.</%doc>
+    <title>${module.name}</title>
+    <meta name="description" content="${module.docstring | strip_markup, glimpse, trim, h}" />
+  % endif
 
   <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
   <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
