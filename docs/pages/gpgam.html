@@ -170,6 +170,109 @@ y.T @ y</code></pre>
                     })();
                     </script>
 
+
+                    <h3 id="related-work">Related work</h3>
+
+                    <p>GPGam sits at the meeting point of three lines of work: the GAM literature,
+                        which fixes the model class; additive and scalable Gaussian processes, which
+                        supply the prior and the trick that makes it cheap; and the marginal
+                        likelihood, which decides everything a GAM usually asks a user to choose.</p>
+
+                    <table class="reltbl">
+                        <thead>
+                            <tr><th>Work</th><th>How it relates</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="tblsec"><td colspan="2">Additive models</td></tr>
+                            <tr>
+                              <td>Hastie &amp; Tibshirani, <a href="https://doi.org/10.1214/ss/1177013604">Generalized Additive Models</a> (1986)</td>
+                              <td>Defines the model class. GPGam is a GAM; everything below differs only in how the shape functions are fit.</td>
+                            </tr>
+                            <tr>
+                              <td>Wood, <a href="https://doi.org/10.1111/j.1467-9868.2010.00749.x">penalized splines with REML</a> (2011), <code>mgcv</code></td>
+                              <td>The closest classical relative: smoothness chosen by maximizing a marginal likelihood rather than by cross-validation. GPGam does the same thing through per-feature kernel amplitudes on a bin grid, and gets interaction selection and feature selection out of the same objective.</td>
+                            </tr>
+                            <tr>
+                              <td>Lou, Caruana, Gehrke &amp; Hooker, <a href="https://doi.org/10.1145/2487575.2487579">GA<sup>2</sup>M with FAST</a> (2013); EBM in InterpretML</td>
+                              <td>The main baseline. Identical outer shape — main effects plus a small number of pairwise terms, screened before fitting — with boosted trees where GPGam puts a GP posterior, and the FAST heuristic where GPGam compares marginal likelihoods.</td>
+                            </tr>
+
+                            <tr class="tblsec"><td colspan="2">GAMs with learned shape functions</td></tr>
+                            <tr>
+                              <td>Agarwal et al., <a href="https://arxiv.org/abs/2004.13912">Neural Additive Models</a> (NeurIPS 2021)</td>
+                              <td>One neural network per feature. Same goal and same reading of the fitted model, but trained by gradient descent and with no closed-form uncertainty on a curve.</td>
+                            </tr>
+                            <tr>
+                              <td>Chang &amp; Caruana, <a href="https://arxiv.org/abs/2106.01613">NODE-GAM</a> (ICLR 2022)</td>
+                              <td>Differentiable oblivious trees as shape functions, scaled to large data by minibatching. GPGam does not need that: its fit cost is already independent of the number of rows.</td>
+                            </tr>
+                            <tr>
+                              <td>Radenovic, Dubey &amp; Mahajan, <a href="https://arxiv.org/abs/2205.14120">Neural Basis Models</a> (NeurIPS 2022)</td>
+                              <td>Shares one basis across features to cut parameters. GPGam shares a two-kernel prior instead and lets only the amplitudes differ per feature.</td>
+                            </tr>
+                            <tr>
+                              <td>Zhang, Barr &amp; Paisley, <a href="https://arxiv.org/abs/2402.12518">Gaussian Process Neural Additive Models</a> (AAAI 2024)</td>
+                              <td>The nearest neighbour by construction: GP shape functions, reached through random Fourier features, giving a convex objective. GPGam keeps the exact GP posterior over quantile bins rather than approximating the kernel, and fits its amplitudes by exact marginal likelihood.</td>
+                            </tr>
+
+                            <tr class="tblsec"><td colspan="2">Additive Gaussian processes</td></tr>
+                            <tr>
+                              <td>Duvenaud, Nickisch &amp; Rasmussen, <a href="https://arxiv.org/abs/1112.4394">Additive Gaussian Processes</a> (NeurIPS 2011)</td>
+                              <td>Sums kernels over orders of interaction, with one amplitude per order. GPGam stops at order two and gives every feature its own amplitudes, which is what turns the prior into a per-feature smoothness choice.</td>
+                            </tr>
+                            <tr>
+                              <td>Lu, Boukouvalas &amp; Hensman, <a href="https://arxiv.org/abs/2206.09861">orthogonal additive kernels</a> (ICML 2022)</td>
+                              <td>Imposes orthogonality between components so the decomposition is identifiable. GPGam does not constrain its components; it sidesteps only the constant offset, by reporting each curve's uncertainty about that curve's own mean.</td>
+                            </tr>
+                            <tr>
+                              <td>Cheng et al., <a href="https://doi.org/10.1038/s41467-019-09785-8">additive GP regression for longitudinal data</a> (2019)</td>
+                              <td>Reads an additive GP decomposition as the explanation itself, in an applied setting — the same use of additivity that GPGam relies on.</td>
+                            </tr>
+
+                            <tr class="tblsec"><td colspan="2">Making a Gaussian process cheap</td></tr>
+                            <tr>
+                              <td>Wilson &amp; Nickisch, <a href="https://arxiv.org/abs/1503.01057">KISS-GP / structured kernel interpolation</a> (ICML 2015)</td>
+                              <td>Places inducing points on a grid and interpolates onto it. GPGam's quantile bins are the one-dimensional case, but each row is assigned to a bin exactly, so <code>Z'Z</code>, <code>Z'y</code> and <code>y'y</code> are sufficient statistics rather than an interpolation error.</td>
+                            </tr>
+                            <tr>
+                              <td>Smith, &Aacute;lvarez &amp; Lawrence, <a href="https://arxiv.org/abs/1809.02010">Gaussian Process Regression for Binned Data</a> (2018)</td>
+                              <td>The same observation from the other direction: when data arrive binned, the cost of exact GP inference is set by the number of bins, not the number of samples. GPGam bins on purpose to obtain that.</td>
+                            </tr>
+
+                            <tr class="tblsec"><td colspan="2">What the marginal likelihood buys</td></tr>
+                            <tr>
+                              <td>MacKay (1995) and Neal (1996), automatic relevance determination</td>
+                              <td>Where the feature selection comes from. Maximizing the marginal likelihood drives the amplitude of a feature that explains nothing toward zero, so GPGam does not need a separate selection step.</td>
+                            </tr>
+
+                            <tr class="tblsec"><td colspan="2">Caveats on reading a GAM</td></tr>
+                            <tr>
+                              <td>Zhang, Martinelli &amp; John, <a href="https://arxiv.org/abs/2504.10169">Challenges in interpretability of additive models</a> (2025)</td>
+                              <td>Catalogues the ways a GAM's components fail to be identified, starting with shape functions being fixed only up to a constant. That is precisely why the bands in Fig 1 and Fig 3 are computed about each curve's own mean.</td>
+                            </tr>
+
+                            <tr class="tblsec"><td colspan="2">The comparison it is measured against</td></tr>
+                            <tr>
+                              <td>Hollmann et al., <a href="https://doi.org/10.1038/s41586-024-08328-6">TabPFN</a> (Nature 2025)</td>
+                              <td>The strongest non-interpretable model in the table above, and the one GPGam does not beat on three of the four suites. A transformer fitted to a synthetic prior, with no additive structure to read.</td>
+                            </tr>
+
+                            <tr class="tblsec"><td colspan="2">How it was found</td></tr>
+                            <tr>
+                              <td>Romera-Paredes et al., <a href="https://doi.org/10.1038/s41586-023-06924-6">FunSearch</a> (Nature 2024)</td>
+                              <td>Establishes the pattern the search loop used: a language model proposing programs, an evaluator keeping only what scores better.</td>
+                            </tr>
+                            <tr>
+                              <td>Novikov et al., <a href="https://arxiv.org/abs/2506.13131">AlphaEvolve</a> (2025)</td>
+                              <td>Extends that pattern from single functions to whole programs, which is the regime GPGam was found in: the loop rewrote the entire model file each round.</td>
+                            </tr>
+                            <tr>
+                              <td>Singh et al., <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (2026)</td>
+                              <td>The loop that produced GPGam, and the source of the version history plotted in Fig 2.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
                     <h2 id="results">2. Experimental results</h2>
 
                     <h3>Benchmarks</h3>
@@ -498,8 +601,14 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
                     <style>
                       table.ranktbl td:not(:first-child), table.ranktbl th:not(:first-child) {
                         text-align: right; font-variant-numeric: tabular-nums; }
-                      table.ranktbl tr.tblsec td { background: #eef2f4; font-weight: bold;
+                      table.ranktbl tr.tblsec td, table.reltbl tr.tblsec td {
+                        background: #eef2f4; font-weight: bold;
                         font-size: 13px; letter-spacing: .03em; }
+                      /* the related-work table is two columns of prose, so it
+                         wants the full measure rather than shrink-to-fit */
+                      table.reltbl { width: 100%; font-size: 0.88em; }
+                      table.reltbl td:first-child { width: 32%; }
+                      table.reltbl td { vertical-align: top; }
                       p.tblnote { font-size: 13px; color: #666; }
                       h3 { margin-top: 1.6em; }
                     </style>
