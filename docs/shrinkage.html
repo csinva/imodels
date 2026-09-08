@@ -249,6 +249,11 @@ model = model.fit(X_train, y_train)
 
     <footer id="footer">
     </footer>
+    <script>
+      window.addEventListener('load', function () {
+        window.dispatchEvent(new Event('resize'));
+      });
+    </script>
 </body>
 
 </html>

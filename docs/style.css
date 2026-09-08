@@ -11,9 +11,10 @@
      26.5rem is where the last entry stops wrapping: the widest on the site is
      imodels.experimental.bartpy.samplers.unconstrainedtree, 54 characters
      with nothing to break at, once the padding, the 1em indent on nested
-     lists and a scrollbar are counted. 54rem leaves that far clear; it is set
-     for the look of the thing rather than to fit anything. */
-  --sidebar-w: 54rem;
+     lists and a scrollbar are counted. 34rem leaves that comfortably clear
+     while still leaving the article a full 800px measure on a 1440px screen;
+     54rem, once the sidebar actually held its width, left only 496px. */
+  --sidebar-w: 34rem;
   --measure: 100ch;
 
   --ink: #1b1f23;
@@ -95,16 +96,23 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
    still never runs wider than a comfortable line. Kept inside pdoc's own
    breakpoint so the stacked mobile layout is left alone. */
 @media screen and (min-width: 700px) {
-  /* The cap decides the width people actually see, since a 54rem sidebar only
-     fits outright on a very large display: at 60vw it is full from about a
-     1440px window and proportional below that. Text still never wraps on the
-     way down, which needs the sidebar under 26.5rem, or a window narrower
-     than 710px. */
-  #sidebar { width: min(var(--sidebar-w), 60vw); }
+  /* The cap decides the width people actually see on a smaller window: at
+     38vw the sidebar is full from about a 1430px window and proportional
+     below that. Text still never wraps on the way down, which needs the
+     sidebar under 26.5rem, or a window narrower than 1120px. */
+  /* flex-shrink defaults to 1, so without this the sidebar is the thing that
+     gives when the article is wide, and it was: measured in a browser it came
+     out at 46px on figs.html and 207px on the index, never the width asked
+     for here. It must hold its width and let the article take the strain. */
+  #sidebar { width: min(var(--sidebar-w), 38vw); flex: 0 0 auto; }
   #content {
     width: auto;
     max-width: none;
     flex: 1 1 auto;
+    /* a flex item will not shrink below its min-content width unless told it
+       may, and a single wide figure or code line is enough to push the whole
+       layout past the window otherwise */
+    min-width: 0;
     padding-left:  max(2.5rem, (100vw - var(--sidebar-w) - var(--measure)) / 2);
     padding-right: max(2.5rem, (100vw - var(--sidebar-w) - var(--measure)) / 2);
   }
@@ -117,6 +125,23 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
 /* super-module entries are full dotted paths with nothing to wrap at, so let
    them break rather than push the sidebar wider than everything else needs */
 #sidebar a { overflow-wrap: break-word; }
+
+/* Anything that cannot be made narrower -- a long code line, a wide table --
+   scrolls inside its own box, so it never forces the article wider than the
+   window and never squeezes the sidebar. */
+#content pre, #content table, .article pre, .article table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+/* Plotly sizes a chart to its container when it draws and keeps that width
+   inline; a canvas sketch sizes itself to the window. Either will sit outside
+   the article and scroll the whole page sideways if left unbounded. */
+#content .plotly-graph-div, #content .js-plotly-plot,
+#content canvas, .article canvas {
+  max-width: 100%;
+}
+/* a chart that did not re-fit scrolls in its own box rather than the page */
+#content .plotly-graph-div, #content .js-plotly-plot { overflow-x: auto; }
 
 /* ---------- abstract ---------- */
 /* the lead paragraph of a page, set like a paper's abstract: inset from the

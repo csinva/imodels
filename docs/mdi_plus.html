@@ -305,6 +305,11 @@ mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
 
     <footer id="footer">
     </footer>
+    <script>
+      window.addEventListener('load', function () {
+        window.dispatchEvent(new Event('resize'));
+      });
+    </script>
 </body>
 
 </html>

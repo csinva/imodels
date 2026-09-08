@@ -301,6 +301,11 @@ aria-label="View source on GitHub" title="GitHub">
 
     <footer id="footer">
     </footer>
+    <script>
+      window.addEventListener('load', function () {
+        window.dispatchEvent(new Event('resize'));
+      });
+    </script>
 </body>
 
 </html>

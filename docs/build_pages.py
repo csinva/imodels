@@ -20,6 +20,18 @@ import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+# Plotly fixes a chart's width when it draws, which is before the stylesheet has
+# settled the article's width, so a chart can end up wider than the column it
+# sits in and scroll the whole page sideways. A resize event makes every chart
+# built with responsive:true re-fit its container; the max-width and overflow
+# rules in style.css catch any that were not.
+PLOT_RESIZE = """    <script>
+      window.addEventListener('load', function () {
+        window.dispatchEvent(new Event('resize'));
+      });
+    </script>
+"""
+
 # title, plus any page-specific <head> additions
 PAGES = {
     "figs": (
@@ -101,7 +113,9 @@ def main():
             + content
             + "\n        </article>\n"
             + sidebar
-            + "\n    </main>\n\n    <footer id=\"footer\">\n    </footer>\n</body>\n\n</html>\n"
+            + "\n    </main>\n\n    <footer id=\"footer\">\n    </footer>\n"
+            + PLOT_RESIZE
+            + "</body>\n\n</html>\n"
         )
         with open(os.path.join(HERE, f"{name}.html"), "w") as f:
             f.write(page)
