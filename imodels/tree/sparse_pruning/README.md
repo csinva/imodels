@@ -82,6 +82,38 @@ each training state's HS strength is selected by conditional fixed-tree GCV,
 then reselected after full-data pruning. GCV requires uniform positive weights
 and node-based shrinkage; it does not account for learning the tree structure.
 
+## Binary classification
+
+Use `SPTreeClassifierCV` for pruning alone or `SHSTreeClassifierCV` to add
+hierarchical shrinkage after pruning. Both can be imported directly from
+`imodels` and provide `predict` and `predict_proba`. Their non-CV counterparts,
+`SPTreeClassifier` and `SHSTreeClassifier`, take a fixed `sp_alpha`.
+
+Classification uses the APA-APG2 logistic solver and numeric-grid CV, not the
+exact structural or coefficient paths for squared-error regression. With
+`sp_alpha_list="auto"`, it uses the historical numeric grid. CV defaults to
+accuracy; set `scoring` to choose another supported scorer. HS strengths must
+be numeric: automatic GCV is regression-only. Multiclass classification is
+not supported.
+
+## Automatic HS with GCV
+
+For a single regression tree, automatic node-based HS is available through
+`HSTreeRegressor(reg_param="gcv")` or `SHSTreeRegressor(reg_param="gcv")`.
+The latter selects HS after sparse pruning; `reg_param=None` is a compatibility
+alias in sparse-HS wrappers, while ordinary `HSTreeRegressor` requires the
+explicit `"gcv"` value. Inspect `reg_param_` for the selected strength and
+`gcv_results_` for candidate scores, effective degrees of freedom, and search
+diagnostics. A selected strength of infinity means root-mean predictions.
+
+GCV uses retained node statistics without constructing a dense training design.
+It supports single-output trees with `squared_error` or `friedman_mse` criteria,
+uniform positive observation weights, and no active monotonic constraints.
+This is **conditional-on-the-fitted-tree GCV**: it does not account for choosing
+the tree or pruning it from the same targets, and is not exact leave-one-out
+refitting. Ordinary CV remains the default; forests, classifiers, nonuniform
+weights, and other shrinkage schemes require explicit strengths or CV.
+
 ## Optional coefficients
 
 ```python

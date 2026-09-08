@@ -88,21 +88,11 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | Tree GAM | [🗂️](https://csinva.io/imodels/algebraic/tree_gam.html), [📄](https://dl.acm.org/doi/abs/10.1145/2339530.2339556), [🔗](https://github.com/interpretml/interpret) | Generalized additive model fit with short boosted trees                           |
 | <b>Greedy tree</br>sums (FIGS)</b> | [🗂️](https://csinva.io/imodels/figs.html),ㅤ[📄](https://arxiv.org/abs/2201.11931) | Sum of small trees with very few total rules (FIGS)                          |
 | <b>Hierarchical<br/> shrinkage wrapper</b> | [🗂️](https://csinva.io/imodels/shrinkage.html), [📄](https://arxiv.org/abs/2202.00858) | Improve a decision tree, random forest, or<br/>gradient-boosting ensemble with ultra-fast, post-hoc regularization |
+| Sparse-pruned trees | [🗂️](imodels/tree/sparse_pruning/README.md) | Prune decision trees with optional hierarchical shrinkage |
 | <b>RF+ (MDI+)</b> | [🗂️](https://csinva.io/imodels/mdi_plus.html), [📄](https://arxiv.org/pdf/2307.01932) | Flexible random forest-based feature importance |
 | Distillation<br/>wrapper | [🗂️](https://csinva.io/imodels/util/distillation.html)  | Train a black-box model,<br/>then distill it into an interpretable model |
 | AutoML wrapper | [🗂️](https://csinva.io/imodels/util/automl.html)  | Automatically fit and select an interpretable model |
 | More models                 | ⌛                                                            | (Coming soon!) Lightweight Rule Induction, MLRules, ... |
-
-### Sparse-pruned trees
-
-`SPTreeRegressorCV()` and `SHSTreeRegressorCV()` default to infinity-hiCAP
-structural-knot CV for eligible regression trees, without calculating full
-coefficient paths. Choose `solver="proximal"` for coefficients at the selected
-penalty, `solver="coefficient_path"` for all coefficient knots, or
-`solver="apa_apg2"` for the legacy approximate solver. Numerical implementations
-are organized in `imodels/tree/sparse_pruning/optimization/`.
-See the [sparse-pruning guide](imodels/tree/sparse_pruning/README.md) for solver
-eligibility, CV behavior, coefficient access, and the source layout.
 
 ## Demo notebooks
 
@@ -187,6 +177,8 @@ Different models support different machine-learning tasks. Current support for d
 | Tree GAM | [TreeGAMClassifier](https://csinva.io/imodels/algebraic/tree_gam.html) | [TreeGAMRegressor](https://csinva.io/imodels/algebraic/tree_gam.html) | |
 | Greedy tree sums (FIGS) | [FIGSClassifier](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier) | [FIGSRegressor](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor) |                                                              |
 | Hierarchical shrinkage | [HSTreeClassifierCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV) | [HSTreeRegressorCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV) | Wraps any sklearn tree-based model |
+| Sparse-pruned trees | [SPTreeClassifierCV](imodels/tree/sparse_pruning/README.md#binary-classification) | [SPTreeRegressorCV](imodels/tree/sparse_pruning/README.md#cross-validation) | Prunes whole subtrees; exact structural-knot CV for eligible regression trees |
+| Sparse pruning + hierarchical shrinkage | [SHSTreeClassifierCV](imodels/tree/sparse_pruning/README.md#binary-classification) | [SHSTreeRegressorCV](imodels/tree/sparse_pruning/README.md#cross-validation) | Adds hierarchical shrinkage after pruning |
 | Distillation |  | [DistilledRegressor](https://csinva.io/imodels/util/distillation.html#imodels.util.distillation.DistilledRegressor) | Wraps any sklearn-compatible models |
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
 
@@ -261,19 +253,7 @@ Fast Interpretable Greedy-Tree Sums (FIGS) is an algorithm for fitting concise r
 
 Hierarchical shrinkage is an extremely fast post-hoc regularization method which works on any decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree structure, and instead regularizes the tree by shrinking the prediction over each node towards the sample means of its ancestors (using a single regularization parameter). Experiments over a wide variety of datasets show that hierarchical shrinkage substantially increases the predictive performance of individual decision trees and decision-tree ensembles.
 
-For a single regression tree, automatic node-based HS is also available through
-`HSTreeRegressor(reg_param="gcv")` or `SHSTreeRegressor(reg_param="gcv")`.
-The latter selects HS after sparse pruning; `reg_param=None` is a compatibility
-alias in sparse-HS wrappers. Inspect `reg_param_` for the selected strength and
-`gcv_results_` for candidate scores, effective degrees of freedom, and search
-diagnostics. A selected strength of infinity means root-mean predictions.
-GCV uses retained node statistics without constructing a dense training design.
-It supports single-output trees with `squared_error` or `friedman_mse` criteria,
-uniform positive observation weights, and no active monotonic constraints.
-This is **conditional-on-the-fitted-tree GCV**: it does not account for choosing
-the tree or pruning it from the same targets, and is not exact leave-one-out
-refitting. Ordinary CV remains the default; forests, classifiers, nonuniform
-weights, and other shrinkage schemes require explicit strengths or CV.
+For eligible regression trees, [automatic shrinkage selection](imodels/tree/sparse_pruning/README.md#automatic-hs-with-gcv) is also available using GCV conditional on the fitted tree.
 
 <p align="center">
 	<img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" width="75%">
