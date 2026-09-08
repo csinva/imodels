@@ -29,13 +29,13 @@
 
                     <h2 id="methods">1. Methods: GPGam</h2>
 
-                    <p>Every curve in GPGam is a Gaussian process over the quantile bins of its
+                    <p>Every curve in GPGam is a GP over the quantile bins of its
                         feature, and those curves are fit by maximizing the exact GP
                         marginal likelihood. There is no randomness, so re-fitting on the same data returns the same model.</p>
 
                     <h3>Binning makes the exact likelihood cheap</h3>
 
-                    <p>Fitting a GAM as a Gaussian process normally means an <i>n</i>&times;<i>n</i>
+                    <p>Fitting a GAM as a GP normally means an <i>n</i>&times;<i>n</i>
                         kernel matrix, which is infeasible past a few thousand rows. Every component of a
                         GA<sup>2</sup>M is a function of one feature, or of two on a grid, so once the
                         features are binned each component holds one value per bin.</p>
@@ -166,7 +166,7 @@ y.T @ y</code></pre>
 
                     <h3 id="related-work">Related work</h3>
 
-                    <p>Every work below fits a Gaussian process inside an additive model. They differ from GPGam, and from each other, on two questions: what the additive components are, and how the Gaussian process is made cheap enough to fit one per feature.</p>
+                    <p>Every work below fits a GP inside an additive model. They differ from GPGam, and from each other, on two questions: what the additive components are, and how the GP is made cheap enough to fit one per feature.</p>
 
                     <table class="reltbl">
                         <thead>
@@ -183,7 +183,7 @@ y.T @ y</code></pre>
                               <td>GP prior on each term of an ANOVA decomposition, posterior by MCMC. Same decomposition as GPGam, which gets it in closed form from the sufficient statistics.</td>
                             </tr>
                             <tr>
-                              <td>Additive Gaussian processes (<a href="https://arxiv.org/abs/1112.4394">Duvenaud et al. 2011</a>)</td>
+                              <td>Additive GPs (<a href="https://arxiv.org/abs/1112.4394">Duvenaud et al. 2011</a>)</td>
                               <td>One amplitude per interaction order, shared across features. GPGam gives each feature its own amplitudes and stops at order two.</td>
                             </tr>
                             <tr>
@@ -195,7 +195,7 @@ y.T @ y</code></pre>
                               <td>Centred hierarchical ANOVA kernel with main and pairwise terms, made fast by Kronecker structure on gridded data. GPGam bins to a grid too, but reduces to <code>Z'Z</code>, <code>Z'y</code> and <code>y'y</code>, and does not centre.</td>
                             </tr>
 
-                            <tr class="tblsec"><td colspan="2">How the Gaussian process is made affordable</td></tr>
+                            <tr class="tblsec"><td colspan="2">How the GP is made affordable</td></tr>
                             <tr>
                               <td>KISS-GP (<a href="https://arxiv.org/abs/1503.01057">Wilson et al. 2015</a>)</td>
                               <td>Places inducing points on a grid and interpolates onto it. GPGam assigns each row to a bin exactly, so its statistics carry no interpolation error.</td>
@@ -223,7 +223,7 @@ y.T @ y</code></pre>
                               <td>Uses the additive GP decomposition itself as the interpretation, on longitudinal covariates.</td>
                             </tr>
                             <tr>
-                              <td>Geographical Gaussian Process GAM (<a href="https://doi.org/10.1080/13658816.2023.2270285">Comber et al. 2023</a>)</td>
+                              <td>Geographical GP GAM (<a href="https://doi.org/10.1080/13658816.2023.2270285">Comber et al. 2023</a>)</td>
                               <td>GP smooths parameterised by location, which makes the coefficients vary over space. Same construction as GPGam, applied to spatial rather than tabular features.</td>
                             </tr>
                         </tbody>
@@ -296,7 +296,7 @@ y.T @ y</code></pre>
 
                     <h3>How the model was found</h3>
 
-                    <p>GPGam was not designed by hand. It came out of the autoresearch loop described
+                    <p>GPGam was produced by the autoresearch loop described
                         in <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels: Evolving agentic
                         interpretability tools via autoresearch</a>, and the code that produced it is in
                         the <a href="https://github.com/csinva/agentic-imodels">agentic-imodels</a>
@@ -307,7 +307,7 @@ y.T @ y</code></pre>
                         Every failed idea was recorded with its cost, and anything that did not improve
                         the benchmark was removed, which is why the parameter list is short.</p>
 
-                    <p>Nothing in that instruction mentions Gaussian processes, binning, or marginal
+                    <p>Nothing in that instruction mentions GPs, binning, or marginal
                         likelihood. Those came out of the search.</p>
 
                     <span class="fig-anchor" id="fig2"></span>
