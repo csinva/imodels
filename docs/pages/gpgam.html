@@ -11,12 +11,12 @@
                             href="https://github.com/csinva/imodels">&#128279; Github</a></p>
 
                     <nav class="toc-main">
-                      <a href="#how-it-works"><span>2</span> Methods: GPGam</a>
-                      <a href="#results"><span>3</span> Experimental results</a>
-                      <a href="#using-it"><span>4</span> Quickstart &amp; example usage</a>
+                      <a href="#methods"><span>1</span> Methods: GPGam</a>
+                      <a href="#results"><span>2</span> Experimental results</a>
+                      <a href="#quickstart"><span>3</span> Quickstart &amp; example usage</a>
                     </nav>
 
-                    <h2 id="gam-intro">1. Overview</h2>
+                    <h2 id="overview">Overview</h2>
 
                     <p>A GAM (<a href="https://en.wikipedia.org/wiki/Generalized_additive_model">generalized additive model</a>) predicts by adding up one function per feature,
                         <code>y = f&#8321;(x&#8321;) + f&#8322;(x&#8322;) + ... + f&#8340;(x&#8340;)</code>.
@@ -30,7 +30,7 @@
                         achieves significant improvents over the SOTA on limited-size held-out tabular regression.
                     </p>
 
-                    <h2 id="how-it-works">2. Methods: GPGam</h2>
+                    <h2 id="methods">1. Methods: GPGam</h2>
 
                     <p>Every curve in GPGam is a Gaussian process over the quantile bins of its
                         feature, and every choice about those curves is made by maximizing one quantity:
@@ -172,7 +172,7 @@ y.T @ y</code></pre>
                     })();
                     </script>
 
-                    <h2 id="results">3. Experimental results</h2>
+                    <h2 id="results">2. Experimental results</h2>
 
                     <h3>Benchmarks</h3>
 
@@ -322,7 +322,7 @@ y.T @ y</code></pre>
                       }, { displayModeBar: false, responsive: true });
                     })();
                     </script>
-                    <h2 id="using-it">4. Quickstart &amp; example usage</h2>
+                    <h2 id="quickstart">3. Quickstart &amp; example usage</h2>
 
                     <pre><code class="language-python">from imodels import GPGamRegressor
 from sklearn.datasets import fetch_california_housing
