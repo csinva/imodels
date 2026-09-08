@@ -146,10 +146,13 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
    link line, and the contents bar. The old markup tried to do this with
    align="center" on a <p> that the parser closes before the <h1>, and with a
    text-align attribute that does not exist, so none of it ever took. */
-.article h1, .post-authors, .post-date { text-align: center; }
+.article h1, .post-authors, .post-links { text-align: center; }
+/* the title carried display:inline in its own style attribute, which made any
+   text-align on it inert; it is a block again so it can centre */
+.article h1 { display: block; }
 .post-authors { margin-bottom: 0; }
-.post-date { color: var(--muted); font-size: 0.9rem; margin: 0.4em 0 0; }
-.post-date a { white-space: nowrap; }
+.post-links { color: var(--muted); font-size: 0.9rem; margin: 0.4em 0 0; }
+.post-links a { white-space: nowrap; }
 
 /* the horizontal contents bar under the abstract; lived inline in gpgam.html
    until the other posts wanted it too */
