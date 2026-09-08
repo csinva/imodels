@@ -18,6 +18,9 @@
 
   --ink: #1b1f23;
   --muted: #6a737d;
+  /* between --ink and --muted: quieter than body text, still comfortable
+     to read a full paragraph in */
+  --ink-soft: #3b4045;
   --line: #e3e6e8;
   --line-soft: #eef1f2;
   --accent: #0b6ea8;
@@ -114,6 +117,22 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
 /* super-module entries are full dotted paths with nothing to wrap at, so let
    them break rather than push the sidebar wider than everything else needs */
 #sidebar a { overflow-wrap: break-word; }
+
+/* ---------- abstract ---------- */
+/* the lead paragraph of a page, set like a paper's abstract: inset from the
+   measure on both sides and a little quieter than body text, so it reads as a
+   summary of what follows rather than the first thing said */
+.abstract {
+  margin: 1.4em auto 2.4em;
+  padding: 0 2.4em;
+  max-width: 44rem;
+  font-size: 0.95em;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  text-align: justify;
+  hyphens: auto;
+}
+.abstract code { font-size: 0.9em; }
 
 /* ---------- figure and table captions ---------- */
 .caption {
