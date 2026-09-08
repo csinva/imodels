@@ -60,6 +60,16 @@ for j, (name, f) in enumerate(EFFECTS):
         'true_x': r(grid_x, 3), 'true_y': r(f(grid_x)),
     })
 
+# order the panels from smoothest to roughest, by the balance the likelihood
+# chose between the two kernels. A feature whose amplitudes both collapsed has
+# no effect to be smooth or rough, and its balance is noise between two numbers
+# near zero, so it goes last instead of being ranked on a scale it is not on.
+_max_amp = max(f['rough'] + f['smooth'] for f in features)
+features.sort(key=lambda f: (
+    (f['rough'] + f['smooth']) < 0.01 * _max_amp,          # no-effect features last
+    f['rough'] / (f['rough'] + f['smooth']),               # then rough share, ascending
+))
+
 page = 'gpgam.html'
 src = open(page).read()
 new, n_sub = re.subn(r'var S = \{.*?\};',
