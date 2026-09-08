@@ -148,7 +148,7 @@ class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
-        m = DecisionTreeCCPRegressor(self.estimator_, desired_complexity=self.desired_complexity)
+        m = DecisionTreeCCPRegressor(self._fresh_estimator(), desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
@@ -156,6 +156,7 @@ class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        self.set_params(estimator_=m.estimator_)
         super().fit(X=X, y=y)
 
 
@@ -169,7 +170,7 @@ class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
-        m = DecisionTreeCCPClassifier(self.estimator_, desired_complexity=self.desired_complexity)
+        m = DecisionTreeCCPClassifier(self._fresh_estimator(), desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
         for reg_param in self.reg_param_list:
@@ -177,6 +178,7 @@ class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
         self.reg_param = self.reg_param_list[np.argmax(self.scores_)]
+        self.set_params(estimator_=m.estimator_)
         super().fit(X=X, y=y)
 
 

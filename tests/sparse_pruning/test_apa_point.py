@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
+from imodels.tree.sparse_pruning.optimization._quadratic import _make_quadratic_regression_loss
 from imodels.tree.sparse_pruning.optimizations import (
     get_gcv_reg_param,
     get_reg_set,
@@ -10,10 +11,142 @@ from imodels.tree.sparse_pruning.optimizations import (
 )
 
 
-def test_deprecated_gcv_name_remains_importable_but_disabled():
-    with pytest.warns(DeprecationWarning, match="GCV"):
-        with pytest.raises(NotImplementedError, match="disabled"):
-            get_gcv_reg_param(None, np.ones((2, 1)), np.ones(2))
+def test_shared_input_validation_preserves_point_and_path_copy_contracts():
+    from imodels.tree.sparse_pruning.optimization import _problem, apa_point
+
+    X = np.arange(6.0).reshape(3, 2)
+    y = np.arange(3.0)
+    groups = [np.array([0, 1], dtype=np.intp)]
+    beta_init = np.ones(2)
+    weights = np.ones(3)
+    path = _problem._prepare_problem(X, y, groups, beta_init, weights, np.inf)
+    point = apa_point._validate_solver_inputs(
+        X, y, groups, 0.5, beta_init, weights, 1.0, 1.0, 10, 1e-8, np.inf
+    )
+
+    assert not np.shares_memory(path[2][0], groups[0])
+    assert not np.shares_memory(path[3], beta_init)
+    assert not np.shares_memory(path[4], weights)
+    assert np.shares_memory(point[2][0], groups[0])
+    assert not np.shares_memory(point[4], beta_init)
+    assert np.shares_memory(point[5], weights)
+    assert path[-1] == point[-1] == "inf"
+    assert apa_point._group_penalty is _problem._group_penalty
+
+
+@pytest.mark.parametrize("solver", [hiCAP_regression, hiCAP_classification])
+@pytest.mark.parametrize("field", ["X", "y", "beta_init", "sample_weight"])
+def test_point_solvers_reject_complex_inputs_before_float_conversion(solver, field):
+    inputs = dict(
+        X=np.array([[1.0], [2.0], [3.0]]),
+        y=np.array([0.0, 1.0, 1.0]),
+        groups=[np.array([0])],
+        beta_init=np.zeros(1),
+        sample_weight=np.ones(3),
+        lam=1.0,
+    )
+    inputs[field] = inputs[field].astype(complex) + 1j
+    with pytest.raises(ValueError, match=f"{field} must contain real values"):
+        solver(**inputs)
+
+
+def test_diagonal_detection_is_scale_relative_for_tiny_correlated_column():
+    first = np.array([-1.0, 1.0, -1.0, 1.0])
+    X = np.column_stack((first, 1e-14 * first))
+    loss = _make_quadratic_regression_loss(
+        X, np.arange(4.0), np.ones(X.shape[0])
+    )
+
+    assert loss.backend == "gram"
+    assert loss.max_off_diagonal < 1e-12
+    assert loss.max_off_diagonal_correlation == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize("scales", [(1e100, 1e100), (1e-100, 1e-100),
+                                   (1e150, 1e-150)])
+def test_diagonal_detection_handles_extreme_finite_column_scales(scales):
+    X = np.array([[1.0, 1.0], [2.0, 1.0], [3.0, 1.0]]) * scales
+    with np.errstate(over="raise", invalid="raise", divide="raise"):
+        loss = _make_quadratic_regression_loss(X, np.arange(1.0, 4.0), np.ones(3))
+
+    assert loss.backend == "gram"
+    assert loss.max_off_diagonal_correlation == pytest.approx(np.sqrt(6.0 / 7.0))
+
+
+def test_quadratic_cache_preserves_representable_large_diagonal():
+    X = 1.5e154 * np.eye(2)
+    with np.errstate(over="raise", invalid="raise", divide="raise"):
+        loss = _make_quadratic_regression_loss(X, np.ones(2), np.ones(2))
+
+    assert loss.backend == "diagonal"
+    np.testing.assert_allclose(loss.diagonal, [1.125e308, 1.125e308])
+    assert loss.max_off_diagonal_correlation == 0.0
+
+
+@pytest.mark.parametrize("assume_diagonal", [False, True])
+@pytest.mark.parametrize("field", ["X", "y"])
+def test_quadratic_cache_rejects_unrepresentable_statistics(assume_diagonal, field):
+    X, y = np.eye(2), np.ones(2)
+    if field == "X":
+        X *= 1e200
+    else:
+        y *= 1e200
+    with np.errstate(over="raise", invalid="raise", divide="raise"):
+        with pytest.raises(ValueError, match="quadratic.*representable"):
+            _make_quadratic_regression_loss(
+                X, y, np.ones(2), assume_diagonal_gram=assume_diagonal
+            )
+
+
+def test_public_topology_path_rejects_large_correlated_design():
+    from imodels.tree.sparse_pruning.optimization import laminar_group_linf_exact_topology_path
+
+    X = 1e100 * np.array([[1.0, 1.0], [2.0, 1.0], [3.0, 1.0]])
+    with pytest.raises(ValueError, match="diagonal"):
+        laminar_group_linf_exact_topology_path(
+            X, np.arange(1.0, 4.0), [[0, 1], [1]], fit_intercept=False
+        )
+
+
+def test_assumed_diagonal_quadratic_cache_does_not_store_full_gram():
+    X = np.array(
+        [
+            [1.0, 2.0, -1.0],
+            [3.0, -2.0, 0.5],
+            [-4.0, 1.0, 2.0],
+            [0.5, 3.0, -2.0],
+        ]
+    )
+    y = np.array([2.0, -1.0, 4.0, 0.5])
+    weights = np.array([1.0, 3.0, 2.0, 4.0])
+    loss = _make_quadratic_regression_loss(
+        X, y, weights, assume_diagonal_gram=True
+    )
+    normalized_weights = weights / weights.sum()
+
+    assert loss.gram is None
+    assert loss.backend == "diagonal"
+    assert loss.assumed_diagonal_gram
+    assert loss.max_off_diagonal is None
+    assert loss.max_off_diagonal_correlation is None
+    np.testing.assert_allclose(
+        loss.diagonal,
+        np.sum(normalized_weights[:, None] * X**2, axis=0),
+    )
+    np.testing.assert_allclose(loss.linear, X.T @ (normalized_weights * y))
+    assert loss.response_squared == pytest.approx(normalized_weights @ (y**2))
+
+
+def test_assumed_diagonal_quadratic_cache_flag_requires_boolean():
+    with pytest.raises(ValueError, match="assume_diagonal_gram"):
+        _make_quadratic_regression_loss(
+            np.eye(2), np.ones(2), np.ones(2), assume_diagonal_gram="yes"
+        )
+
+
+def test_gcv_rejects_missing_tree():
+    with pytest.raises((TypeError, ValueError), match="regression|Regressor|fitted"):
+        get_gcv_reg_param(None, np.ones((2, 1)), np.ones(2))
 
 
 def test_deprecated_reg_set_name_remains_functional():
@@ -225,6 +358,7 @@ def test_classification_expit_is_stable_for_extreme_linear_predictors():
     "kwargs,match",
     [
         ({"lam": 0.0}, "lam"),
+        ({"lam": np.complex128(1.0 + 2.0j)}, "lam"),
         ({"groups": []}, "groups"),
         ({"ord": 1}, "ord"),
         ({"groups": [np.array([3])]}, "outside"),
@@ -236,8 +370,11 @@ def test_classification_expit_is_stable_for_extreme_linear_predictors():
             "total weight",
         ),
         ({"gamma1": "1"}, "gamma1"),
+        ({"gamma1": np.complex128(1.0 + 2.0j)}, "gamma1"),
         ({"a": np.array([1.0])}, "a"),
+        ({"a": np.complex128(1.0 + 2.0j)}, "a"),
         ({"tol": True}, "tol"),
+        ({"tol": np.complex128(1.0 + 2.0j)}, "tol"),
         ({"max_iter": 1.5}, "max_iter"),
     ],
 )

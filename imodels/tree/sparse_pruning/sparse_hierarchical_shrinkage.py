@@ -35,11 +35,18 @@ from sklearn.utils.validation import check_is_fitted
 from imodels.util import checks
 from imodels.util.arguments import check_fit_arguments, check_fit_X
 from imodels.util.tree import compute_tree_complexity
+from imodels.tree._hs_gcv import apply_node_based_hs, select_hs_reg_param
 
 from imodels.importance.local_stumps import make_stumps, tree_feature_transform
 from .optimizations import (
+    get_gcv_reg_param,
     hiCAP_classification,
     hiCAP_regression,
+)
+from ._solver import (
+    _callable_accepts_keyword, _native_tree_eligible, coefficient_path_solution,
+    iter_fitted_tree_solutions, resolve_solver,
+    solve_design, solve_fitted_tree, validate_solver,
 )
 
 _DEFAULT_SP_ALPHA_GRID = (
@@ -76,38 +83,34 @@ except ImportError:  # pragma: no cover
 
 def _find_subtrees(tree, idx: int, ids: np.ndarray) -> list[np.ndarray]:
     id_lookup = {node_id: pos for pos, node_id in enumerate(ids, start=1)}
-
-    def explore(current_idx: int) -> list[int]:
-        if tree.feature[current_idx] == -2:
-            return []
-        left_subtrees = explore(tree.children_left[current_idx])
-        right_subtrees = explore(tree.children_right[current_idx])
-        current = [current_idx] + left_subtrees + right_subtrees
-        positions = [id_lookup[node_id] for node_id in current if node_id in id_lookup]
-        if positions:
-            all_groups.append(np.array(positions, dtype=int))
-        return current
-
     all_groups: list[np.ndarray] = []
-    explore(idx)
+    descendants = {}
+    stack = [(idx, False)]
+    while stack:
+        node, visited = stack.pop()
+        if tree.feature[node] == -2:
+            continue
+        left, right = tree.children_left[node], tree.children_right[node]
+        if not visited:
+            stack.extend(((node, True), (right, False), (left, False)))
+            continue
+        positions = ([id_lookup[node]] if node in id_lookup else [])
+        positions += descendants.pop(left, []) + descendants.pop(right, [])
+        descendants[node] = positions
+        if positions:
+            all_groups.append(np.asarray(positions, dtype=int))
     return all_groups
 
 
 def _collect_internal_node_ids(tree) -> np.ndarray:
     node_ids: list[int] = []
-
-    def traverse(node_idx: int) -> None:
+    stack = [0]
+    while stack:
+        node_idx = stack.pop()
         if tree.feature[node_idx] == -2:
-            return
+            continue
         node_ids.append(node_idx)
-        left = tree.children_left[node_idx]
-        right = tree.children_right[node_idx]
-        if left != -1:
-            traverse(left)
-        if right != -1:
-            traverse(right)
-
-    traverse(0)
+        stack.extend((tree.children_right[node_idx], tree.children_left[node_idx]))
     return np.array(node_ids, dtype=int)
 
 
@@ -188,47 +191,124 @@ def _summarize_optimization_state(results, tol):
     return certified, stable, changing
 
 
-def _callable_accepts_keyword(function, keyword):
-    try:
-        signature = inspect.signature(function)
-    except (TypeError, ValueError):
-        return False
-    keyword_parameter = signature.parameters.get(keyword)
-    return (
-        keyword_parameter is not None
-        and keyword_parameter.kind != inspect.Parameter.POSITIONAL_ONLY
-    ) or any(
-        parameter.kind == inspect.Parameter.VAR_KEYWORD
-        for parameter in signature.parameters.values()
-    )
-
-
 class SHSTree(BaseEstimator):
     """Tree pruned by hierarchical-LASSO support, with optional shrinkage.
 
-    APA-APG coefficients are used only to select a hierarchy-safe tree
+    Penalized coefficients or exact structural knots select a hierarchy-safe tree
     topology. Predictions continue to use the fitted CART node values on that
     topology, optionally transformed by hierarchical shrinkage; they are not
     ``X_opt @ beta_stars_``. The sparse penalty ``sp_alpha`` is relative to
     mean weighted loss, while ``reg_param`` retains HST's pseudo-count
     interpretation through weighted node sample counts.
+
+    For a single squared-error regression tree, ``reg_param="gcv"`` (or
+    ``None``) selects node-based HS after pruning. This is conditional-on-the-
+    tree GCV, not cross-validation of tree construction or pruning. Only
+    uniform observation weights are supported. The selected strength is in
+    ``reg_param_`` (possibly infinity for root-mean predictions), and
+    ``gcv_results_`` records the search without changing ``reg_param``.
+
+    ``solver='auto'`` uses exact structural knots for eligible single
+    regression trees under their fitting measure and an infinity penalty.
+    Other infinity-regression problems use ``'proximal'``; classification and
+    the two-norm penalty use ``'apa_apg2'``. Explicit ``'coefficient_path'``
+    and ``'hicap'`` expose full coefficient paths. Structural fits leave
+    ``coef_`` as None; coefficient solvers expose original-node coefficients
+    in ``coef_``, ``coef_node_ids_`` and ``intercept_`` for single trees.
+
+    Parameters
+    ----------
+    estimator_ : sklearn tree or forest, optional
+        Tree template. Each fit uses a fresh clone; ``prefit=True`` instead
+        prunes a copy of an already fitted estimator. With no template, use
+        a decision tree with 20 leaves unless ``max_leaf_nodes`` overrides it.
+    sp_alpha : float, default=1
+        Nonnegative hiCAP penalty relative to mean weighted loss. Zero keeps
+        every original split, including splits with zero coefficient.
+    reg_param : float, "gcv", or None, default=0
+        HS pseudo-count; zero disables HS. Regression-only ``"gcv"`` or None
+        selects conditional fixed-tree GCV after pruning, requiring uniform
+        positive weights. Subclasses may use a different numeric default.
+    solver : {"auto", "topology", "proximal", "coefficient_path", "hicap", "apa_apg2"}, default="auto"
+        ``topology`` computes exact structural events only. ``proximal``
+        computes coefficients at the selected penalty. ``coefficient_path``
+        computes the native complete coefficient path; ``hicap`` is the
+        generic reference homotopy. ``apa_apg2`` is the approximate legacy
+        solver, also used for classification and ``ord=2``. Native solvers
+        require a mean-based unconstrained single-output regression tree,
+        its fitting rows/weights, and zero support tolerance.
+    ord : {2, numpy.inf, "inf"}, default=numpy.inf
+        Norm within each descendant group. Exact path solvers require infinity.
+    max_iter : int, default=2000
+        APA/FISTA iteration budget. For ``coefficient_path`` and ``hicap``,
+        this instead caps coefficient-path events. Native topology and
+        proximal sweeps are noniterative and ignore this budget.
+    tol : float, default=1e-6
+        Positive numerical convergence/certificate tolerance. Exact paths are
+        certified in floating-point arithmetic, not symbolic arithmetic.
+    support_tol : float or None, default=None
+        Relative coefficient-zero threshold, scaled by response standard
+        deviation (one for classification). Native paths use structural
+        events when None or zero. General solvers default to a numerical
+        threshold based on ``tol``; literal zero there is roundoff-sensitive.
+        A positive threshold disables native structural-path selection.
+    prune_set : {"auto", "full", "ib", "oob"}, default="auto"
+        Pruning observations: full data for a single tree; auto uses OOB
+        observations for a bootstrap forest. IB/OOB membership is reconstructed
+        per tree and cannot be verified for externally supplied prefit forests.
+    max_leaf_nodes : int or None, default=None
+        Optional leaf cap overriding the unfitted tree template.
+    random_state : int or None, default=None
+        Seed for tree fitting and, in CV subclasses, fold construction.
+    gamma1, a : float, default=1
+        Positive legacy APA smoothing-schedule controls; unused by exact solvers.
+    prefit : bool, default=False
+        Whether the supplied estimator is already fitted. Native geometry is
+        not assumed for external prefit data. Incompatible with CV tuning.
+
+    Attributes
+    ----------
+    estimator_ : fitted sklearn estimator
+        Independently owned, compact pruned tree, after any HS transformation.
+    solver_ : str
+        Resolved final-fit backend, distinct from the constructor's "auto".
+    coef_, coef_node_ids_, intercept_ : array, array, float, or None
+        Optional penalized coefficients of unnormalized original-tree stumps,
+        original split IDs, and intercept, before HS. Not prediction weights
+        of the compact pruned tree. Topology-only fits have ``coef_=None``.
+    pruning_path_ : TreeTopologyPath or None
+        Exact structural events, when eligible fitted geometry is available.
+    coefficient_path_ : RegularizationPath or None
+        Complete coefficient path for the two homotopy solvers on single trees.
+    beta_stars_ : list of arrays
+        Legacy intercept-first per-tree coefficients; empty for topology fits.
+    optimization_results_ : list
+        Per-tree numerical diagnostics. Inspect ``optimization_certified_``
+        as well as ``optimization_stable_`` for approximate solves.
+    reg_param_ : float
+        Effective HS strength, possibly infinity for a GCV root-only limit.
+    gcv_results_ : dict or None
+        Conditional GCV candidates, scores, and effective degrees of freedom.
+    complexity_ : int
+        Number of retained split nodes (summed over a forest).
     """
 
     def __init__(
         self,
         estimator_: BaseEstimator | None = None,
         sp_alpha: float = 1,
-        reg_param: float | None = 0,
+        reg_param: float | str | None = 0,
         gamma1: float = 1.0,
         a: float = 1.0,
         max_iter: int = 2000,
         tol: float = 1e-6,
-        ord: int | str = 2,
+        ord: int | str = np.inf,
         prune_set: str = "auto",
         max_leaf_nodes: int | None = None,
         random_state: int | None = None,
         support_tol: float | None = None,
         prefit: bool = False,
+        solver: str = "auto",
     ) -> None:
         super().__init__()
         self.sp_alpha = sp_alpha
@@ -247,6 +327,7 @@ class SHSTree(BaseEstimator):
         self.random_state = random_state
         self.support_tol = support_tol
         self.prefit = prefit
+        self.solver = solver
         self.shrinkage_scheme_ = "node_based"
         self.hiCAP = hiCAP_regression
 
@@ -316,6 +397,7 @@ class SHSTree(BaseEstimator):
         return numeric_value
 
     def _validate_hyperparameters(self, *, allow_unset: bool = False) -> None:
+        validate_solver(self.solver)
         if (
             isinstance(self.ord, (bool, np.bool_))
             or not np.isscalar(self.ord)
@@ -355,13 +437,14 @@ class SHSTree(BaseEstimator):
                 self.sp_alpha, "sp_alpha", nonnegative=True
             )
 
-        if self.reg_param is None:
-            if not allow_unset:
-                raise ValueError(
-                    "Automatic GCV shrinkage is disabled because it is not "
-                    "validated for sparse-pruned trees; provide an explicit "
-                    "nonnegative reg_param."
-                )
+        if self.reg_param is None or (
+            isinstance(self.reg_param, str) and self.reg_param == "gcv"
+        ):
+            if not (allow_unset and self.reg_param is None):
+                if not isinstance(self, RegressorMixin):
+                    raise ValueError("Automatic GCV HS supports regression only")
+                if self.shrinkage_scheme_ != "node_based":
+                    raise ValueError("Automatic GCV HS requires node_based shrinkage")
         else:
             self._validate_finite_scalar(
                 self.reg_param, "reg_param", nonnegative=True
@@ -382,6 +465,7 @@ class SHSTree(BaseEstimator):
             "random_state": self.random_state,
             "support_tol": self.support_tol,
             "prefit": self.prefit,
+            "solver": self.solver,
         }
         if deep:
             for name, value in list(params.items()):
@@ -439,6 +523,17 @@ class SHSTree(BaseEstimator):
         self.estimator_ = estimator_template
         for fitted_attribute in (
             "beta_stars_",
+            "coef_",
+            "coef_node_ids_",
+            "intercept_",
+            "coefficient_path_",
+            "pruning_path_",
+            "solver_",
+            "cv_solver_",
+            "cv_path_mode_",
+            "cv_sp_alphas_",
+            "cv_path_results_",
+            "cv_n_pruning_states_",
             "classes_",
             "complexity_",
             "cv_complexities_",
@@ -453,6 +548,7 @@ class SHSTree(BaseEstimator):
             "cv_weight_fractions_",
             "feature_names_in_",
             "feature_names_",
+            "gcv_results_",
             "best_index_",
             "best_score_",
             "best_sp_alpha_",
@@ -478,6 +574,17 @@ class SHSTree(BaseEstimator):
                 delattr(self, fitted_attribute)
         self._wrapper_is_fitted = False
         return self
+
+    def _resolved_solver(self):
+        return resolve_solver(
+            self.solver, estimator=self.estimator_, ord=self.ord,
+            matched_training=(
+                not self.prefit
+                or getattr(self, "_pruning_training_measure_matched", False)
+            ),
+            support_tol=self.support_tol,
+            custom_solver=self.hiCAP not in (hiCAP_regression, hiCAP_classification),
+        )
 
     def _fresh_estimator(self):
         template = self._base_estimator_template()
@@ -559,6 +666,8 @@ class SHSTree(BaseEstimator):
     def _validated_sample_weight(sample_weight, n_samples):
         if sample_weight is None:
             return None
+        if np.iscomplexobj(sample_weight):
+            raise ValueError("sample_weight must contain real values")
         sample_weight = np.asarray(sample_weight, dtype=float)
         if sample_weight.ndim != 1 or sample_weight.shape[0] != n_samples:
             raise ValueError(
@@ -638,6 +747,7 @@ class SHSTree(BaseEstimator):
         **kwargs,
     ):
         self._wrapper_is_fitted = False
+        self.gcv_results_ = None
         if decimals != 0:
             warnings.warn(
                 "decimals is deprecated and no longer controls sparse support; "
@@ -665,6 +775,8 @@ class SHSTree(BaseEstimator):
             isinstance(name, str) for name in feature_names
         ):
             self.feature_names_in_ = np.asarray(feature_names, dtype=object)
+        elif hasattr(self, "feature_names_in_"):
+            del self.feature_names_in_
 
         sample_weight = self._validated_sample_weight(sample_weight, len(y))
         is_classifier = isinstance(self, ClassifierMixin)
@@ -742,7 +854,7 @@ class SHSTree(BaseEstimator):
             verbose=verbose,
         )
         self._update_optimization_diagnostics(warn=True)
-        self._shrink(X, y)
+        self._shrink(X, y, sample_weight=sample_weight)
         self._update_estimator_metadata()
         return self
 
@@ -796,7 +908,8 @@ class SHSTree(BaseEstimator):
         model_changed = (
             self.sp_alpha is not None and self.sp_alpha > 0
         ) or (
-            self.reg_param is not None and self.reg_param > 0
+            getattr(self, "reg_param_", self.reg_param) is not None
+            and getattr(self, "reg_param_", self.reg_param) > 0
         )
         if not model_changed:
             return
@@ -821,14 +934,34 @@ class SHSTree(BaseEstimator):
         decimals: int = 0,
         beta_init=None,
         verbose: bool = False,
+        coefficient_path=None,
     ):
-        if sp_alpha is None or sp_alpha <= 0:
+        if sp_alpha is None or (
+            sp_alpha <= 0 and self.solver_ not in {"proximal", "hicap"}
+        ):
             return tree
 
         ids = _collect_internal_node_ids(tree)
         if ids.size == 0:
             # Degenerate tree with a single leaf: nothing to prune.
-            self.beta_stars_.append(np.array([0.0]))
+            intercept = float(tree.value[0, 0, 0]) if isinstance(self, RegressorMixin) else 0.0
+            if isinstance(self, RegressorMixin) and (
+                sample_weight is None or np.any(np.asarray(sample_weight) > 0)
+            ):
+                intercept = float(np.average(y, weights=sample_weight))
+            self.beta_stars_.append(np.array([intercept]))
+            if isinstance(self, RegressorMixin) and hasattr(self.estimator_, "tree_"):
+                self.coef_ = np.empty(0)
+                self.coef_node_ids_ = ids
+                self.intercept_ = intercept
+                if self.solver_ == "hicap":
+                    from .optimization import RegularizationPath
+
+                    self.coefficient_path_ = RegularizationPath(
+                        lambdas=np.array([0.0]), coefficients=np.empty((1, 0)),
+                        intercepts=np.array([intercept]), exact=True,
+                        method="hicap", metadata={"tree_node_ids": ()},
+                    )
             self.support_thresholds_.append(np.nan)
             self.optimization_results_.append(
                 {
@@ -886,66 +1019,32 @@ class SHSTree(BaseEstimator):
                 )
                 return tree
 
-        tree_stumps = make_stumps(tree)
-        X_tree = tree_feature_transform(tree_stumps, X)
-        X_opt = np.concatenate((np.ones(len(y)).reshape(-1, 1), X_tree), axis=1)
-
-        groups = _find_subtrees(tree, 0, ids)
-        solver_kwargs = {
-            "X": X_opt,
-            "y": y,
-            "groups": groups,
-            "lam": sp_alpha,
-            "beta_init": beta_init,
-            "gamma1": self.gamma1,
-            "a": self.a,
-            "max_iter": self.max_iter,
-            "tol": self.tol,
-            "ord": self.ord,
-            "verbose": verbose,
-            "sample_weight": sample_weight,
-        }
-        if self.hiCAP in (hiCAP_regression, hiCAP_classification):
-            solver_result = self.hiCAP(return_info=True, **solver_kwargs)
-        else:
-            custom_solver_kwargs = solver_kwargs.copy()
-            if sample_weight is None:
-                # Preserve the original fixed-signature custom-solver API.
-                custom_solver_kwargs.pop("sample_weight")
-            elif not _callable_accepts_keyword(
-                self.hiCAP, "sample_weight"
-            ):
-                raise TypeError(
-                    "A custom hiCAP solver used with sample_weight must accept "
-                    "a sample_weight keyword argument"
-                )
-            solver_result = self.hiCAP(**custom_solver_kwargs)
-        if (
-            isinstance(solver_result, tuple)
-            and len(solver_result) == 2
-            and isinstance(solver_result[1], dict)
-        ):
-            beta_star, solver_info = solver_result
-        else:
-            beta_star, solver_info = solver_result, None
-        beta_star = np.asarray(beta_star, dtype=float)
-        if beta_star.shape != (X_opt.shape[1],):
-            raise ValueError(
-                "hiCAP solver returned coefficients with shape "
-                f"{beta_star.shape}; expected ({X_opt.shape[1]},)"
+        if coefficient_path is None:
+            X_tree = tree_feature_transform(make_stumps(tree), X)
+            groups = _find_subtrees(tree, 0, ids)
+            beta_star, solver_info, path = solve_design(
+                X_tree, y, [group - 1 for group in groups], sp_alpha, self.solver_,
+                point_solver=self.hiCAP, sample_weight=sample_weight,
+                beta_init=beta_init, gamma1=self.gamma1, a=self.a,
+                max_iter=self.max_iter, tol=self.tol, ord=self.ord, verbose=verbose,
             )
-        if not np.all(np.isfinite(beta_star)):
-            raise FloatingPointError(
-                "hiCAP solver returned non-finite coefficients"
-            )
+        else:
+            beta_star, solver_info, path = coefficient_path_solution(coefficient_path, sp_alpha)
+        if hasattr(self.estimator_, "tree_"):
+            self.coefficient_path_ = path
 
         self.beta_stars_.append(beta_star)
+        if hasattr(self.estimator_, "tree_"):
+            self.coef_ = beta_star[1:].copy()
+            self.intercept_ = float(beta_star[0])
+            self.coef_node_ids_ = ids.copy()
         self.optimization_results_.append(solver_info)
         if solver_info is not None:
             self.n_iter_ = max(self.n_iter_, int(solver_info["n_iter"]))
 
-        # ``decimals`` is retained for call compatibility, but support is now
-        # determined by a response-scale-aware numerical tolerance.
+        # Matched native geometry supplies exact structural support. General
+        # coefficient solves use a response-scaled numerical threshold unless
+        # the caller requests a specific tolerance (including literal zero).
         _ = decimals
         if isinstance(self, ClassifierMixin):
             response_scale = 1.0
@@ -961,20 +1060,35 @@ class SHSTree(BaseEstimator):
                 )
             )
         response_scale = max(response_scale, np.finfo(float).tiny)
-        relative_tol = (
-            max(10 * self.tol, np.sqrt(np.finfo(float).eps))
-            if self.support_tol is None
-            else self.support_tol
-        )
+        relative_tol = self.support_tol
+        if relative_tol is None:
+            relative_tol = (
+                0.0 if self.pruning_path_ is not None
+                else max(10 * self.tol, np.sqrt(np.finfo(float).eps))
+            )
         support_threshold = relative_tol * response_scale
         self.support_thresholds_.append(support_threshold)
 
-        inactive = np.abs(beta_star[1:]) <= support_threshold
-        candidate_ids = {
-            int(ids[int(group[0]) - 1])
-            for group in groups
-            if np.all(inactive[group - 1])
-        }
+        if sp_alpha == 0:
+            return tree
+
+        if self.pruning_path_ is not None:
+            # A generic homotopy's affine coefficients can contain roundoff at
+            # an exact knot. Use the fitted-tree structural events to choose
+            # its topology, just as CV does, without thresholding away a small
+            # genuinely active coefficient immediately before that knot.
+            retained = set(self.pruning_path_.tree_nodes_at(sp_alpha))
+            candidate_ids = set(ids) - retained
+        else:
+            # Bottom-up support propagation avoids materializing descendant
+            # groups when reading a cached coefficient path.
+            active = dict(zip(ids, np.abs(beta_star[1:]) > support_threshold))
+            for node in reversed(ids):
+                active[node] = (
+                    active[node] or active.get(tree.children_left[node], False)
+                    or active.get(tree.children_right[node], False)
+                )
+            candidate_ids = {node for node in ids if not active[node]}
 
         # Prune only maximal inactive subtrees. An ancestor is retained if any
         # descendant coefficient is active, even when its own coefficient is
@@ -988,17 +1102,7 @@ class SHSTree(BaseEstimator):
             if right != TREE_LEAF:
                 parent[int(right)] = int(node_id)
 
-        pruned_ids = []
-        for node_id in sorted(candidate_ids):
-            ancestor = parent.get(node_id)
-            has_pruned_ancestor = False
-            while ancestor is not None:
-                if ancestor in candidate_ids:
-                    has_pruned_ancestor = True
-                    break
-                ancestor = parent.get(ancestor)
-            if not has_pruned_ancestor:
-                pruned_ids.append(node_id)
+        pruned_ids = [node for node in candidate_ids if parent.get(node) not in candidate_ids]
 
         for nid in pruned_ids:
             tree.children_left[nid] = TREE_LEAF
@@ -1056,19 +1160,72 @@ class SHSTree(BaseEstimator):
         decimals: int = 0,
         verbose: bool = False,
         beta_init=None,
+        fitted_solution=None,
+        coefficient_path=None,
     ):
         self.beta_stars_ = []
         self.support_thresholds_ = []
         self.optimization_results_ = []
         self.n_iter_ = 0
-        if self.sp_alpha is None or self.sp_alpha <= 0:
+        self.coef_ = self.coef_node_ids_ = self.intercept_ = None
+        self.pruning_path_ = self.coefficient_path_ = None
+        self.solver_ = self._resolved_solver()
+        if (
+            hasattr(self.estimator_, "tree_")
+            and self._resolved_prune_set() != "full"
+        ):
+            raise ValueError(
+                "prune_set='ib' and prune_set='oob' require a bootstrap "
+                "forest; use prune_set='full' for a single tree."
+            )
+        native = self.solver_ in {"topology", "coefficient_path"}
+        if self.solver_ in {"proximal", "hicap"}:
+            fitted_geometry = resolve_solver(
+                "auto", estimator=self.estimator_, ord=self.ord,
+                matched_training=(
+                    not self.prefit
+                    or getattr(self, "_pruning_training_measure_matched", False)
+                ),
+                support_tol=self.support_tol,
+            ) == "topology"
+            native = self.solver_ == "proximal" and fitted_geometry
+            if self.solver_ == "hicap" and fitted_geometry:
+                from .fitted_tree import fitted_tree_linf_exact_topology_path
+
+                self.pruning_path_ = (
+                    fitted_solution.topology_path if fitted_solution is not None
+                    else fitted_tree_linf_exact_topology_path(self.estimator_)
+                )
+        if native:
+            result = fitted_solution if fitted_solution is not None else solve_fitted_tree(
+                self.estimator_, self.sp_alpha, self.solver_,
+                tol=self.tol, max_iter=self.max_iter,
+            )
+            self.pruning_path_ = result.topology_path
+            self.coefficient_path_ = result.coefficient_path
+            self.coef_ = result.coefficients
+            self.coef_node_ids_ = result.node_ids
+            self.intercept_ = result.intercept
+            if result.coefficients is not None:
+                self.beta_stars_.append(np.r_[result.intercept, result.coefficients])
+            self.support_thresholds_.append(0.0)
+            self.optimization_results_.append(result.info)
+            self.n_iter_ = int(result.info["n_iter"])
+            retained = set(result.retained_node_ids)
+            tree = self.estimator_.tree_
+            for node in result.node_ids:
+                if node not in retained:
+                    tree.children_left[node] = tree.children_right[node] = TREE_LEAF
+                    tree.feature[node] = -2
+                    tree.threshold[node] = -2
+            if len(retained) != len(result.node_ids):
+                _compact_tree(tree)
+            return
+        if self.sp_alpha is None or (
+            self.sp_alpha <= 0 and self.solver not in {"proximal", "hicap"}
+        ):
             return
         if hasattr(self.estimator_, "tree_"):
-            if self._resolved_prune_set() != "full":
-                raise ValueError(
-                    "prune_set='ib' and prune_set='oob' require a bootstrap "
-                    "forest; use prune_set='full' for a single tree."
-                )
             self._prune_tree(
                 self.estimator_.tree_,
                 X,
@@ -1078,6 +1235,7 @@ class SHSTree(BaseEstimator):
                 decimals=decimals,
                 beta_init=beta_init,
                 verbose=verbose,
+                coefficient_path=coefficient_path,
             )
         elif hasattr(self.estimator_, "estimators_"):
             if not isinstance(self.estimator_, BaseForest):
@@ -1193,21 +1351,39 @@ class SHSTree(BaseEstimator):
             )
         return tree
 
-    def _shrink(self, X, y):
-        if self.reg_param is None:
-            raise ValueError(
-                "Automatic GCV shrinkage is disabled because it is not "
-                "validated for sparse-pruned trees; provide an explicit "
-                "nonnegative reg_param."
-            )
-        if not np.isscalar(self.reg_param) or not np.isfinite(self.reg_param):
-            raise ValueError("reg_param must be a nonnegative finite scalar")
-        if self.reg_param < 0:
-            raise ValueError("reg_param must be nonnegative")
-        if self.reg_param == 0:
+    def _shrink(self, X, y, sample_weight=None):
+        self.gcv_results_ = None
+        automatic = self.reg_param is None or (
+            isinstance(self.reg_param, str) and self.reg_param == "gcv"
+        )
+        if automatic:
+            if not isinstance(self, RegressorMixin):
+                raise ValueError("Automatic GCV HS supports regression only")
+            if self.shrinkage_scheme_ != "node_based":
+                raise ValueError("Automatic GCV HS requires node_based shrinkage")
+            if self.prefit:
+                # Verify that the supplied observations really describe the
+                # stored fitting statistics; held-out data are not a GCV fit.
+                self.reg_param_, self.gcv_results_ = get_gcv_reg_param(
+                    self.estimator_, X, y, sample_weight=sample_weight,
+                    return_info=True,
+                )
+            else:
+                self.reg_param_, self.gcv_results_ = select_hs_reg_param(
+                    self.estimator_, sample_weight=sample_weight, y=y
+                )
+            apply_node_based_hs(self.estimator_.tree_, self.reg_param_)
             return
-        if hasattr(self.estimator_, "tree_"):
-            self._shrink_tree(self.estimator_.tree_, self.reg_param)
+        self.reg_param_ = self._validate_finite_scalar(
+            self.reg_param, "reg_param", nonnegative=True
+        )
+        if self.reg_param_ == 0:
+            return
+        if (isinstance(self.estimator_, DecisionTreeRegressor)
+                and self.shrinkage_scheme_ == "node_based"):
+            apply_node_based_hs(self.estimator_.tree_, self.reg_param_)
+        elif hasattr(self.estimator_, "tree_"):
+            self._shrink_tree(self.estimator_.tree_, self.reg_param_)
         elif hasattr(self.estimator_, "estimators_"):
             if not isinstance(self.estimator_, BaseForest):
                 raise NotImplementedError(
@@ -1222,7 +1398,7 @@ class SHSTree(BaseEstimator):
                             "Multi-tree boosting stages are not supported"
                         )
                     t = t[0]
-                self._shrink_tree(t.tree_, self.reg_param)
+                self._shrink_tree(t.tree_, self.reg_param_)
 
     def _validated_prediction_X(self, X):
         original_X = X
@@ -1258,21 +1434,51 @@ class SHSTree(BaseEstimator):
         return self.estimator_.score(X, y, *args, **kwargs)
 
 class SHSTreeRegressor(RegressorMixin, SHSTree):
+    """Sparse-pruned regression tree with hierarchical shrinkage.
+
+    Parameters
+    ----------
+    sp_alpha : float, default=1
+        HiCAP pruning penalty relative to mean weighted squared loss.
+    reg_param : float, "gcv", or None, default=1
+        HS pseudo-count; zero disables HS. "gcv" or None chooses conditional
+        fixed-tree GCV after pruning; it does not tune tree construction.
+    solver : str, default="auto"
+        Defaults to exact structural pruning for eligible infinity-penalty
+        trees. "proximal" exposes point coefficients; "coefficient_path"
+        and "hicap" expose complete coefficient paths.
+
+    Other parameters and fitted attributes are documented in :class:`SHSTree`.
+    In particular, ``max_iter`` caps path events for homotopy solvers and
+    ``coef_`` describes original-tree stumps, not the final tree's predictions.
+
+    Examples
+    --------
+    >>> model = SHSTreeRegressor(sp_alpha=0.1, reg_param="gcv", random_state=0)
+    >>> model.get_params()["solver"]
+    'auto'
+
+    See Also
+    --------
+    SHSTree : Shared parameters, solver restrictions, and fitted attributes.
+    SHSTreeRegressorCV : Select pruning and HS strengths using held-out scores.
+    """
     def __init__(
         self,
         estimator_: BaseEstimator | None = None,
         sp_alpha: float = 1,
-        reg_param: float | None = 1,
+        reg_param: float | str | None = 1,
         prune_set: str = "auto",
         gamma1: float = 1.0,
         a: float = 1.0,
         max_iter: int = 2000,
         tol: float = 1e-6,
-        ord: int | str = 2,
+        ord: int | str = np.inf,
         max_leaf_nodes: int | None = None,
         random_state: int | None = None,
         support_tol: float | None = None,
         prefit: bool = False,
+        solver: str = "auto",
     ) -> None:
         super().__init__(
             estimator_=estimator_,
@@ -1288,11 +1494,22 @@ class SHSTreeRegressor(RegressorMixin, SHSTree):
             random_state=random_state,
             support_tol=support_tol,
             prefit=prefit,
+            solver=solver,
         )
         self.hiCAP = hiCAP_regression
 
 
 class SHSTreeClassifier(ClassifierMixin, SHSTree):
+    """Sparse-pruned binary classification tree with hierarchical shrinkage.
+
+    ``solver="auto"`` uses APA-APG2 with the infinity-group penalty by default.
+    Classification uses logistic pruning, not the squared-error objective of
+    the exact regression paths. ``reg_param`` is a numeric HS pseudo-count
+    (default 1); automatic GCV and the native regression solvers are unsupported.
+
+    See :class:`SHSTree` for parameters and fitted attributes. Predictions use
+    retained node class probabilities after HS, not penalized logistic weights.
+    """
     def __init__(
         self,
         estimator_: BaseEstimator | None = None,
@@ -1303,11 +1520,12 @@ class SHSTreeClassifier(ClassifierMixin, SHSTree):
         a: float = 1.0,
         max_iter: int = 2000,
         tol: float = 1e-6,
-        ord: int | str = 2,
+        ord: int | str = np.inf,
         max_leaf_nodes: int | None = None,
         random_state: int | None = None,
         support_tol: float | None = None,
         prefit: bool = False,
+        solver: str = "auto",
     ) -> None:
         super().__init__(
             estimator_=estimator_,
@@ -1323,6 +1541,7 @@ class SHSTreeClassifier(ClassifierMixin, SHSTree):
             random_state=random_state,
             support_tol=support_tol,
             prefit=prefit,
+            solver=solver,
         )
         self.hiCAP = hiCAP_classification
 
@@ -1432,12 +1651,56 @@ def _validated_nonnegative_grid(values, name: str) -> list[float]:
     for value in candidates:
         if value is None:
             raise ValueError(
-                f"{name} cannot contain None because automatic GCV is disabled"
+                f"{name} must contain numeric values; use reg_param='gcv' "
+                "or reg_param_list='gcv' for automatic HS"
             )
         SHSTree._validate_finite_scalar(
             value, name, nonnegative=True
         )
     return candidates
+
+
+def _auto_alpha_grid(values) -> bool:
+    if isinstance(values, str):
+        if values != "auto":
+            raise ValueError("sp_alpha_list must be 'auto' or a numeric sequence")
+        return True
+    return False
+
+
+def _alpha_grid_or_legacy(values):
+    return _DEFAULT_SP_ALPHA_GRID if _auto_alpha_grid(values) else values
+
+
+def _validated_hs_grid(values, *, classification):
+    if not isinstance(values, str) and values is not None:
+        try:
+            values = list(values)
+        except TypeError as exc:
+            raise ValueError("reg_param_list must be 'gcv' or a numeric sequence") from exc
+    automatic = (isinstance(values, str) and values == "gcv") or (
+        isinstance(values, list) and len(values) == 1
+        and isinstance(values[0], str) and values[0] == "gcv"
+    )
+    if automatic:
+        if classification:
+            raise ValueError("Automatic GCV HS supports regression only")
+        return ["gcv"]
+    return _validated_nonnegative_grid(values, "reg_param_list")
+
+
+def _uses_structural_cv(estimator) -> bool:
+    return bool(
+        _auto_alpha_grid(estimator.sp_alpha_list)
+        and estimator.solver != "apa_apg2"
+        and estimator.hiCAP is hiCAP_regression
+        and estimator.ord in ("inf", np.inf)
+        and estimator.support_tol in (None, 0)
+        and estimator.prune_set in ("auto", "full")
+        and _native_tree_eligible(
+            estimator._base_estimator_template(), require_fitted=False
+        )
+    )
 
 
 def _validated_n_splits(cv) -> int:
@@ -1495,6 +1758,8 @@ def _fold_reg_param(
     not have scaling root masses. Constant shrinkage is already independent of
     node sample counts.
     """
+    if reg_param == "gcv":
+        return "gcv"
     if (
         estimator.reg_param_mode == "normalized"
         and estimator.shrinkage_scheme_ != "constant"
@@ -1520,6 +1785,16 @@ def _initialize_cv_tracking(estimator, param_list) -> None:
     estimator.cv_weight_fractions_ = []
 
 
+def _reset_cv_path_tracking(estimator) -> None:
+    # A direct refit can switch from automatic structural CV to a grid.
+    for name in (
+        "cv_solver_", "cv_path_mode_", "cv_sp_alphas_",
+        "cv_path_results_", "cv_n_pruning_states_",
+    ):
+        if hasattr(estimator, name):
+            delattr(estimator, name)
+
+
 def _evaluate_cached_cv_fold(
     estimator,
     wrapper_class,
@@ -1540,6 +1815,26 @@ def _evaluate_cached_cv_fold(
 ) -> None:
     """Prune once per alpha, then score fresh shrinkage copies."""
     n_reg_params = len(reg_param_list)
+    resolved_solver = resolve_solver(
+        estimator.solver, estimator=base_estimator, ord=estimator.ord,
+        matched_training=isinstance(base_estimator, DecisionTreeRegressor),
+        support_tol=estimator.support_tol,
+        custom_solver=estimator.hiCAP not in (hiCAP_regression, hiCAP_classification),
+    )
+    native = resolved_solver in {"topology", "coefficient_path"} or (
+        resolved_solver == "proximal"
+        and _native_tree_eligible(base_estimator)
+        and estimator.support_tol in (None, 0)
+    )
+    reference_native = (
+        resolved_solver == "hicap" and _native_tree_eligible(base_estimator)
+        and estimator.support_tol in (None, 0)
+    )
+    solutions = iter_fitted_tree_solutions(
+        base_estimator, sp_alpha_list, "topology" if reference_native else resolved_solver,
+        tol=estimator.tol, max_iter=estimator.max_iter,
+    ) if native or reference_native else None
+    reference_path = None
     for alpha_index, sp_alpha in enumerate(sp_alpha_list):
         pruned = wrapper_class(
             estimator_=deepcopy(base_estimator),
@@ -1554,6 +1849,10 @@ def _evaluate_cached_cv_fold(
             ord=estimator.ord,
             support_tol=estimator.support_tol,
             prefit=True,
+            solver=estimator.solver,
+        )
+        pruned._pruning_training_measure_matched = isinstance(
+            base_estimator, DecisionTreeRegressor
         )
         pruned.hiCAP = estimator.hiCAP
         pruned.shrinkage_scheme_ = estimator.shrinkage_scheme_
@@ -1566,9 +1865,14 @@ def _evaluate_cached_cv_fold(
             sample_weight=weight_in,
             decimals=decimals,
             beta_init=None,
+            fitted_solution=None if solutions is None else next(solutions),
+            coefficient_path=reference_path,
         )
+        if resolved_solver == "hicap" and hasattr(base_estimator, "tree_"):
+            reference_path = pruned.coefficient_path_
         pruned.prune_set_ = pruned._resolved_prune_set()
         pruned._update_optimization_diagnostics(warn=False)
+        estimator.cv_solver_ = pruned.solver_
         pruned._update_estimator_metadata()
         pruning_results = deepcopy(pruned.optimization_results_)
 
@@ -1577,9 +1881,16 @@ def _evaluate_cached_cv_fold(
             effective_reg_param = _fold_reg_param(
                 estimator, reg_param, fold_weight_fraction
             )
-            candidate = deepcopy(pruned)
+            # Path arrays are immutable snapshots. Share those potentially
+            # O(p*K) results; each scored candidate still owns its tree and
+            # other mutable estimator state.
+            path_memo = {
+                id(path): path for path in (pruned.pruning_path_, pruned.coefficient_path_)
+                if path is not None
+            }
+            candidate = deepcopy(pruned, path_memo)
             candidate.reg_param = effective_reg_param
-            candidate._shrink(X=X_in, y=y_shrink)
+            candidate._shrink(X=X_in, y=y_shrink, sample_weight=weight_in)
             candidate._update_estimator_metadata()
 
             score = _score_with_optional_sample_weight(
@@ -1590,7 +1901,7 @@ def _evaluate_cached_cv_fold(
                 float(candidate.complexity_)
             )
             estimator.cv_reg_params_[candidate_index].append(
-                effective_reg_param
+                candidate.reg_param_
             )
             estimator.cv_optimization_results_[candidate_index].append(
                 deepcopy(pruning_results)
@@ -1698,7 +2009,15 @@ def _finalize_cv_selection(estimator, param_list) -> None:
 
 
 class SHSTreeClassifierCV(SHSTreeClassifier):
-    """Joint CV for sparse pruning and hierarchical shrinkage.
+    """Stratified grid CV for sparse pruning and HS in binary classification.
+
+    Parameters follow :class:`SHSTreeRegressorCV`, with two differences:
+    ``sp_alpha_list="auto"`` always uses the historical numeric grid, and
+    ``reg_param_list`` must contain numeric strengths (no GCV). Scoring defaults
+    to accuracy. The solver is ``"auto"``/``"apa_apg2"``; exact
+    squared-error regression paths cannot solve the logistic objective.
+    ``cv_path_mode_`` is "grid"; ``cv_params_``, ``cv_scores_``, and
+    ``cv_optimization_results_`` expose candidate/fold diagnostics.
 
     The default one-standard-error rule chooses the lowest observed mean split
     complexity whose score is within one standard error of the best candidate.
@@ -1713,8 +2032,8 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
     def __init__(
         self,
         estimator_: BaseEstimator | None = None,
-        sp_alpha_list: Sequence[float] = _DEFAULT_SP_ALPHA_GRID,
-        reg_param_list: Sequence[float | None] | None = (0, 0.1, 1, 10, 50, 100, 500),
+        sp_alpha_list: Sequence[float] | str = "auto",
+        reg_param_list: Sequence[float] = (0, 0.1, 1, 10, 50, 100, 500),
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
@@ -1726,9 +2045,10 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
         a: float = 1.0,
         max_iter: int = 2000,
         tol: float = 1e-6,
-        ord: int | str = 2,
+        ord: int | str = np.inf,
         support_tol: float | None = None,
         prefit: bool = False,
+        solver: str = "auto",
     ) -> None:
         super().__init__(
             estimator_=estimator_,
@@ -1744,6 +2064,7 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
             max_leaf_nodes=max_leaf_nodes,
             support_tol=support_tol,
             prefit=prefit,
+            solver=solver,
         )
         self.sp_alpha_list = sp_alpha_list
         self.reg_param_list = reg_param_list
@@ -1766,6 +2087,7 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
             raise ValueError(
                 "prefit=True is incompatible with cross-validation tuning"
             )
+        _reset_cv_path_tracking(self)
         self._validate_hyperparameters(allow_unset=True)
         _validate_cv_policy(self.selection_rule, self.reg_param_mode)
         self._fresh_estimator()
@@ -1794,10 +2116,12 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
                 "stratified sparse-pruning CV"
             )
         sp_alpha_list = _validated_nonnegative_grid(
-            self.sp_alpha_list, "sp_alpha_list"
+            _alpha_grid_or_legacy(self.sp_alpha_list), "sp_alpha_list"
         )
-        reg_param_list = _validated_nonnegative_grid(
-            self.reg_param_list, "reg_param_list"
+        self.cv_path_mode_ = "grid"
+        self.cv_sp_alphas_ = np.asarray(sp_alpha_list)
+        reg_param_list = _validated_hs_grid(
+            self.reg_param_list, classification=isinstance(self, ClassifierMixin)
         )
         param_list = list(itertools.product(sp_alpha_list, reg_param_list))
         _initialize_cv_tracking(self, param_list)
@@ -1993,6 +2317,15 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
 class SHSTreeRegressorCV(SHSTreeRegressor):
     """Joint CV for sparse pruning and hierarchical shrinkage.
 
+    With ``sp_alpha_list='auto'`` (the default), eligible infinity-penalty
+    regression trees are evaluated at every distinct training-fold structural
+    state using the exact topology solver. Scores are aligned at the union of
+    fold knots; no full-data tree is used to generate CV candidates. Numeric
+    alpha lists remain supported. Ineligible problems and ``solver='apa_apg2'``
+    use the historical numeric alpha grid when ``sp_alpha_list='auto'``.
+    Set ``reg_param_list='gcv'`` to select HS within each training state;
+    the default still tunes a numeric HS grid by held-out scores.
+
     The default one-standard-error rule chooses the lowest observed mean split
     complexity whose score is within one standard error of the best candidate.
     Score and complexity ties prefer stronger shrinkage and sparse penalties.
@@ -2001,13 +2334,62 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
     training-weight fraction. This is dataset-mass, not per-tree root-mass,
     normalization. Set ``selection_rule='best'`` and
     ``reg_param_mode='raw'`` for the historical joint-argmax behavior.
+
+    Parameters
+    ----------
+    sp_alpha_list : "auto" or sequence of float, default="auto"
+        Training-fold structural events, or an explicit nonnegative penalty
+        grid. Ineligible objectives use a fixed historical grid for "auto".
+    reg_param_list : sequence of float or "gcv", default=(0, 0.1, 1, 10, 50, 100, 500)
+        Reference HS strengths, or training-only GCV within each pruning state.
+        A singleton ["gcv"] is equivalent to "gcv"; mixed numeric/GCV grids
+        are unsupported. Full-data GCV is reselected after final pruning.
+    cv : int, default=3
+        Number of shuffled training/validation folds.
+    scoring : str or callable, optional
+        sklearn scoring name/callable; defaults to negative mean squared error.
+        Structural score reuse requires dependence on predictions or tree
+        structure, not the numerical penalty label or coefficient diagnostics.
+    selection_rule : {"one_se", "best"}, default="one_se"
+        Select the simplest competitive tree, or the highest mean CV score.
+    reg_param_mode : {"normalized", "raw"}, default="normalized"
+        Scale count-based HS by training-fold mass, or use literal grid values.
+    max_leaf_nodes : int, default=20
+        Leaf cap used for each fold tree and the final tree.
+    solver : str, default="auto"
+        Final-fit solver. Eligible automatic CV uses structural events even
+        when the final fit requests a coefficient-producing exact solver.
+
+    Other parameters follow :class:`SHSTree`; ``prefit=True`` is unsupported.
+
+    Attributes
+    ----------
+    sp_alpha_, reg_param_ : float
+        Selected pruning penalty and effective full-data HS strength.
+    cv_path_mode_, cv_solver_ : str
+        "structural" versus "grid" CV, and the backend used within CV.
+    cv_params_, cv_scores_, cv_complexities_, cv_reg_params_ : list or array
+        Candidate parameters and per-candidate/per-fold scores, split counts,
+        and effective HS strengths. Scores use higher-is-better convention.
+    cv_sp_alphas_ : ndarray
+        Evaluated penalties, including the union of fold events in structural CV.
+    cv_path_results_, cv_n_pruning_states_ : list, ndarray
+        Fold structural paths and numbers of local states, only in structural CV.
+    coefficient_path_, coef_ : object or None
+        Optional final-fit coefficients; see :class:`SHSTree` for their meaning.
+
+    Examples
+    --------
+    >>> model = SHSTreeRegressorCV(reg_param_list="gcv", random_state=0)
+    >>> model.sp_alpha_list
+    'auto'
     """
 
     def __init__(
         self,
         estimator_: BaseEstimator | None = None,
-        sp_alpha_list: Sequence[float] = _DEFAULT_SP_ALPHA_GRID,
-        reg_param_list: Sequence[float | None] | None = (
+        sp_alpha_list: Sequence[float] | str = "auto",
+        reg_param_list: Sequence[float] | str = (
             0,
             0.1,
             1,
@@ -2027,9 +2409,10 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
         a: float = 1.0,
         max_iter: int = 2000,
         tol: float = 1e-6,
-        ord: int | str = 2,
+        ord: int | str = np.inf,
         support_tol: float | None = None,
         prefit: bool = False,
+        solver: str = "auto",
     ) -> None:
         super().__init__(
             estimator_=estimator_,
@@ -2045,6 +2428,7 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
             max_leaf_nodes=max_leaf_nodes,
             support_tol=support_tol,
             prefit=prefit,
+            solver=solver,
         )
         self.sp_alpha_list = sp_alpha_list
         self.reg_param_list = reg_param_list
@@ -2067,6 +2451,7 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
             raise ValueError(
                 "prefit=True is incompatible with cross-validation tuning"
             )
+        _reset_cv_path_tracking(self)
         self._validate_hyperparameters(allow_unset=True)
         _validate_cv_policy(self.selection_rule, self.reg_param_mode)
         self._fresh_estimator()
@@ -2074,11 +2459,36 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
         X, y, feature_names = _prepare_cv_data(X, y, feature_names)
         sample_weight = self._validated_sample_weight(sample_weight, len(y))
         n_splits = _validated_n_splits(self.cv)
+        if _uses_structural_cv(self):
+            from ._cv import evaluate_structural_cv
+
+            reg_param_list = _validated_hs_grid(self.reg_param_list, classification=False)
+            if reg_param_list == ["gcv"] and self.shrinkage_scheme_ != "node_based":
+                raise ValueError("Automatic GCV HS requires node_based shrinkage")
+            scorer = _resolve_cv_scorer(
+                kwargs.pop("scoring", self.scoring), classification=False
+            )
+            param_list = evaluate_structural_cv(
+                self, X=X, y=y, sample_weight=sample_weight,
+                reg_param_list=reg_param_list, scorer=scorer, n_splits=n_splits,
+                fit_args=args, fit_kwargs=kwargs,
+            )
+            self.cv_optimization_certified_ = True
+            self.cv_optimization_stable_ = True
+            _finalize_cv_selection(self, param_list)
+            self.sp_alpha = self.sp_alpha_
+            self.reg_param = self.reg_param_
+            return super().fit(
+                X=X, y=y, sample_weight=sample_weight, decimals=decimals,
+                *args, feature_names=feature_names, **kwargs,
+            )
         sp_alpha_list = _validated_nonnegative_grid(
-            self.sp_alpha_list, "sp_alpha_list"
+            _alpha_grid_or_legacy(self.sp_alpha_list), "sp_alpha_list"
         )
-        reg_param_list = _validated_nonnegative_grid(
-            self.reg_param_list, "reg_param_list"
+        self.cv_path_mode_ = "grid"
+        self.cv_sp_alphas_ = np.asarray(sp_alpha_list)
+        reg_param_list = _validated_hs_grid(
+            self.reg_param_list, classification=isinstance(self, ClassifierMixin)
         )
         param_list = list(itertools.product(sp_alpha_list, reg_param_list))
         _initialize_cv_tracking(self, param_list)
@@ -2222,6 +2632,23 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
 
 
 class SPTreeRegressor(SHSTreeRegressor):
+    """Sparse-pruned regression tree, with hierarchical shrinkage off by default.
+
+    ``sp_alpha`` (default 1) is the normalized hiCAP penalty; ``reg_param``
+    defaults to zero. All solver choices and other parameters follow
+    :class:`SHSTreeRegressor` and :class:`SHSTree`. ``solver="auto"`` uses
+    exact structural events for eligible infinity-penalty regression trees.
+
+    The fitted ``estimator_`` predicts using retained CART node means. Optional
+    ``coef_`` and ``coefficient_path_`` describe the penalized original-stump
+    problem, not the compact pruned tree's prediction values.
+
+    Examples
+    --------
+    >>> model = SPTreeRegressor(solver="coefficient_path", random_state=0)
+    >>> model.reg_param
+    0
+    """
     def __init__(
         self,
         estimator_: BaseEstimator | None = None,
@@ -2232,11 +2659,12 @@ class SPTreeRegressor(SHSTreeRegressor):
         a: float = 1.0,
         max_iter: int = 2000,
         tol: float = 1e-6,
-        ord: int | str = 2,
+        ord: int | str = np.inf,
         max_leaf_nodes: int | None = None,
         random_state: int | None = None,
         support_tol: float | None = None,
         prefit: bool = False,
+        solver: str = "auto",
     ) -> None:
         super().__init__(
             estimator_=estimator_,
@@ -2252,10 +2680,18 @@ class SPTreeRegressor(SHSTreeRegressor):
             random_state=random_state,
             support_tol=support_tol,
             prefit=prefit,
+            solver=solver,
         )
 
 
 class SPTreeClassifier(SHSTreeClassifier):
+    """Sparse-pruned binary classifier, with HS disabled by default.
+
+    Parameters follow :class:`SHSTreeClassifier` and :class:`SHSTree`, except
+    ``reg_param`` defaults to zero. ``solver="auto"`` selects APA-APG2; the
+    native squared-error regression paths and GCV are not classification
+    solvers. ``sp_alpha=0`` retains the original tree structure.
+    """
     def __init__(
         self,
         estimator_: BaseEstimator | None = None,
@@ -2266,11 +2702,12 @@ class SPTreeClassifier(SHSTreeClassifier):
         a: float = 1.0,
         max_iter: int = 2000,
         tol: float = 1e-6,
-        ord: int | str = 2,
+        ord: int | str = np.inf,
         max_leaf_nodes: int | None = None,
         random_state: int | None = None,
         support_tol: float | None = None,
         prefit: bool = False,
+        solver: str = "auto",
     ) -> None:
         super().__init__(
             estimator_=estimator_,
@@ -2286,15 +2723,31 @@ class SPTreeClassifier(SHSTreeClassifier):
             random_state=random_state,
             support_tol=support_tol,
             prefit=prefit,
+            solver=solver,
         )
 
 
 class SPTreeRegressorCV(SHSTreeRegressorCV):
+    """Select a sparse-pruned regression tree by structural-path CV.
+
+    Parameters and fitted attributes follow :class:`SHSTreeRegressorCV`.
+    The only changed default is ``reg_param_list=(0,)``, which disables HS.
+    ``sp_alpha_list="auto"`` scores training-fold structural states; numeric
+    lists request grid CV. ``solver`` selects the final-fit backend, so
+    ``solver="coefficient_path"`` exposes final ``coef_`` and all coefficient
+    knots while keeping eligible automatic CV structural-only.
+
+    Examples
+    --------
+    >>> model = SPTreeRegressorCV(max_leaf_nodes=128, random_state=0)
+    >>> model.sp_alpha_list, model.reg_param_list
+    ('auto', (0,))
+    """
     def __init__(
         self,
         estimator_: BaseEstimator | None = None,
-        sp_alpha_list: Sequence[float] = _DEFAULT_SP_ALPHA_GRID,
-        reg_param_list: Sequence[float] | None = (0,),
+        sp_alpha_list: Sequence[float] | str = "auto",
+        reg_param_list: Sequence[float] | str = (0,),
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
@@ -2306,9 +2759,10 @@ class SPTreeRegressorCV(SHSTreeRegressorCV):
         a: float = 1.0,
         max_iter: int = 2000,
         tol: float = 1e-6,
-        ord: int | str = 2,
+        ord: int | str = np.inf,
         support_tol: float | None = None,
         prefit: bool = False,
+        solver: str = "auto",
     ) -> None:
         super().__init__(
             estimator_=estimator_,
@@ -2328,15 +2782,23 @@ class SPTreeRegressorCV(SHSTreeRegressorCV):
             ord=ord,
             support_tol=support_tol,
             prefit=prefit,
+            solver=solver,
         )
 
 
 class SPTreeClassifierCV(SHSTreeClassifierCV):
+    """Select a sparse-pruned binary classifier by grid CV, without default HS.
+
+    Parameters and fitted attributes follow :class:`SHSTreeClassifierCV`,
+    with ``reg_param_list=(0,)`` by default. ``sp_alpha_list="auto"`` uses
+    the historical numeric grid: exact structural regression paths do not
+    apply to the logistic classification objective.
+    """
     def __init__(
         self,
         estimator_: BaseEstimator | None = None,
-        sp_alpha_list: Sequence[float] = _DEFAULT_SP_ALPHA_GRID,
-        reg_param_list: Sequence[float] | None = (0,),
+        sp_alpha_list: Sequence[float] | str = "auto",
+        reg_param_list: Sequence[float] = (0,),
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
@@ -2348,9 +2810,10 @@ class SPTreeClassifierCV(SHSTreeClassifierCV):
         a: float = 1.0,
         max_iter: int = 2000,
         tol: float = 1e-6,
-        ord: int | str = 2,
+        ord: int | str = np.inf,
         support_tol: float | None = None,
         prefit: bool = False,
+        solver: str = "auto",
     ) -> None:
         super().__init__(
             estimator_=estimator_,
@@ -2370,4 +2833,5 @@ class SPTreeClassifierCV(SHSTreeClassifierCV):
             ord=ord,
             support_tol=support_tol,
             prefit=prefit,
+            solver=solver,
         )

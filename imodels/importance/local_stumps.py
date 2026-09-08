@@ -32,10 +32,15 @@ class LocalDecisionStump:
         List of signs indicating whether the current node is in the left child
         (False) or right child (True) of the ancestor nodes (ordered from
         highest ancestor to lowest)
+    missing_go_to_left: bool
+        Whether a missing value follows the left branch at this split.
+    a_missing_go_to_left: list of bools
+        Missing-value directions for the ancestor splits.
     """
 
     def __init__(self, feature, threshold, left_val, right_val, a_features,
-                 a_thresholds, a_signs):
+                 a_thresholds, a_signs, missing_go_to_left=True,
+                 a_missing_go_to_left=None):
         self.feature = feature
         self.threshold = threshold
         self.left_val = left_val
@@ -43,6 +48,10 @@ class LocalDecisionStump:
         self.a_features = a_features
         self.a_thresholds = a_thresholds
         self.a_signs = a_signs
+        self.missing_go_to_left = bool(missing_go_to_left)
+        if a_missing_go_to_left is None:
+            a_missing_go_to_left = [True] * len(a_features)
+        self.a_missing_go_to_left = list(a_missing_go_to_left)
 
     def __call__(self, data):
         """
@@ -59,12 +68,29 @@ class LocalDecisionStump:
         values: array-like of shape (n_samples,)
             Function values on the data
         """
+        threshold = self.threshold
+        if getattr(self, "_sklearn_tree_input", False):
+            # sklearn routes float32 observations against float64 thresholds.
+            # A 1D threshold array prevents NumPy's scalar-promotion rules
+            # from rounding a midpoint threshold back to float32.
+            data = np.asarray(data, dtype=np.float32)
+            threshold = np.asarray([threshold], dtype=np.float64)
 
         root_to_stump_path_indicators = \
             _compare_all(data, self.a_features, np.array(self.a_thresholds),
-                         np.array(self.a_signs))
+                         np.array(self.a_signs),
+                         np.array(getattr(
+                             self,
+                             "a_missing_go_to_left",
+                             [True] * len(self.a_features),
+                         )))
         in_node = np.all(root_to_stump_path_indicators, axis=1).astype(int)
-        is_right = _compare(data, self.feature, self.threshold).astype(int)
+        is_right = _compare(
+            data,
+            self.feature,
+            threshold,
+            missing_go_to_left=getattr(self, "missing_go_to_left", True),
+        ).astype(int)
         values = in_node * (is_right * self.right_val +
                             (1 - is_right) * self.left_val)
 
@@ -75,7 +101,9 @@ class LocalDecisionStump:
                f"threshold={self.threshold}, left_val={self.left_val}, " \
                f"right_val={self.right_val}, a_features={self.a_features}, " \
                f"a_thresholds={self.a_thresholds}, " \
-               f"a_signs={self.a_signs})"
+               f"a_signs={self.a_signs}, " \
+               f"missing_go_to_left=" \
+               f"{getattr(self, 'missing_go_to_left', True)})"
 
     def get_depth(self):
         """
@@ -92,7 +120,13 @@ def make_stump(node_no, tree_struct, parent_stump, is_right_child,
     Create a single local decision stump corresponding to a node in a
     scikit-learn tree structure object. The nonzero values of the stump are
     chosen so that the vector of local decision stump values over the training
-    set (used to fit the tree) is orthogonal to those of all ancestor nodes.
+    set (used to fit the tree) is orthogonal to those of all ancestor nodes
+    when reapplying the fitted routes reproduces the fitting partition.
+    On some sklearn releases, native-NaN best-first fits can store child
+    statistics that differ from the later prediction-time routing; callers
+    using NaNs should verify the reconstructed weighted Gram explicitly.
+    Inputs are converted to float32 when evaluating these sklearn-derived
+    stumps, matching sklearn's own routing convention.
 
     Parameters
     ----------
@@ -108,10 +142,10 @@ def make_stump(node_no, tree_struct, parent_stump, is_right_child,
         otherwise
     normalize: bool
         Flag. If set to True, then divide the nonzero function values by
-        sqrt(n_samples in node) so that the vector of function values on the
-        training set has unit norm. If False, then do not divide, so that the
-        vector of function values on the training set has norm equal to
-        n_samples in node.
+        sqrt(weighted samples in node) so that the vector of function values
+        has unit norm under the tree-fitting weights. If False, then do not
+        divide, so its squared weighted norm equals the weighted samples in
+        the node.
 
     Returns
     -------
@@ -122,10 +156,16 @@ def make_stump(node_no, tree_struct, parent_stump, is_right_child,
         a_features = []
         a_thresholds = []
         a_signs = []
+        a_missing_go_to_left = []
     else:
         a_features = parent_stump.a_features + [parent_stump.feature]
         a_thresholds = parent_stump.a_thresholds + [parent_stump.threshold]
         a_signs = parent_stump.a_signs + [is_right_child]
+        a_missing_go_to_left = getattr(
+            parent_stump,
+            "a_missing_go_to_left",
+            [True] * len(parent_stump.a_features),
+        ) + [getattr(parent_stump, "missing_go_to_left", True)]
     # Get indices for left and right children of the node in question
     left_child = tree_struct.children_left[node_no]
     right_child = tree_struct.children_right[node_no]
@@ -135,12 +175,26 @@ def make_stump(node_no, tree_struct, parent_stump, is_right_child,
     left_size = tree_struct.weighted_n_node_samples[left_child]
     right_size = tree_struct.weighted_n_node_samples[right_child]
     parent_size = tree_struct.weighted_n_node_samples[node_no]
-    normalization = parent_size if normalize else 1
-    left_val = - np.sqrt(right_size / (left_size * normalization))
-    right_val = np.sqrt(left_size / (right_size * normalization))
+    sqrt_left_size = np.sqrt(left_size)
+    sqrt_right_size = np.sqrt(right_size)
+    left_val = -sqrt_right_size / sqrt_left_size
+    right_val = sqrt_left_size / sqrt_right_size
+    if normalize:
+        sqrt_parent_size = np.sqrt(parent_size)
+        left_val /= sqrt_parent_size
+        right_val /= sqrt_parent_size
+    missing_directions = getattr(tree_struct, "missing_go_to_left", None)
+    missing_go_to_left = (
+        True
+        if missing_directions is None
+        else bool(missing_directions[node_no])
+    )
 
-    return LocalDecisionStump(feature, threshold, left_val, right_val,
-                              a_features, a_thresholds, a_signs)
+    stump = LocalDecisionStump(feature, threshold, left_val, right_val,
+                              a_features, a_thresholds, a_signs,
+                              missing_go_to_left, a_missing_go_to_left)
+    stump._sklearn_tree_input = True
+    return stump
 
 
 def make_stumps(tree_struct, normalize=False):
@@ -154,10 +208,10 @@ def make_stumps(tree_struct, normalize=False):
         The scikit-learn tree object
     normalize: bool
         Flag. If set to True, then divide the nonzero function values by
-        sqrt(n_samples in node) so that the vector of function values on the
-        training set has unit norm. If False, then do not divide, so that the
-        vector of function values on the training set has norm equal to
-        n_samples in node.
+        sqrt(weighted samples in node) so that the vector of function values
+        has unit norm under the tree-fitting weights. If False, then do not
+        divide, so its squared weighted norm equals the weighted samples in
+        the node.
 
     Returns
     -------
@@ -210,27 +264,43 @@ def tree_feature_transform(stumps, X):
         Transformed data matrix
     """
     transformed_feature_vectors = [np.empty((X.shape[0], 0))]
+    tree_input = None
     for stump in stumps:
-        transformed_feature_vec = stump(X)[:, np.newaxis]
+        stump_input = X
+        if getattr(stump, "_sklearn_tree_input", False):
+            if tree_input is None:
+                tree_input = np.asarray(X, dtype=np.float32)
+            stump_input = tree_input
+        transformed_feature_vec = stump(stump_input)[:, np.newaxis]
         transformed_feature_vectors.append(transformed_feature_vec)
     X_transformed = np.hstack(transformed_feature_vectors)
 
     return X_transformed
 
 
-def _compare(data, k, threshold, sign=True):
+def _compare(data, k, threshold, sign=True, missing_go_to_left=True):
     """
     Obtain indicator vector for the samples with k-th feature > threshold
     """
-    if sign:
-        return data[:, k] > threshold
-    else:
-        return data[:, k] <= threshold
+    values = data[:, k]
+    goes_right = values > threshold
+    if not missing_go_to_left:
+        goes_right = np.logical_or(goes_right, np.isnan(values))
+    return goes_right if sign else np.logical_not(goes_right)
 
 
-def _compare_all(data, ks, thresholds, signs):
+def _compare_all(
+        data, ks, thresholds, signs, missing_go_to_left=None):
     """
     Obtain indicator vector for the samples with k-th feature > threshold or
     <= threshold (depending on sign) for all k in ks
     """
-    return ~np.logical_xor(data[:, ks] > thresholds, signs)
+    selected = data[:, ks]
+    goes_right = selected > thresholds
+    if missing_go_to_left is not None:
+        missing_go_to_left = np.asarray(missing_go_to_left, dtype=bool)
+        goes_right = np.logical_or(
+            goes_right,
+            np.isnan(selected) & ~missing_go_to_left,
+        )
+    return ~np.logical_xor(goes_right, signs)

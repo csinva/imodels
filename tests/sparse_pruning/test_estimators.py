@@ -75,13 +75,60 @@ def test_default_instances_do_not_share_base_estimator(estimator_cls):
     assert first.prune_set == second.prune_set == "auto"
 
 
-def test_defaults_match_normalized_alpha_scale_and_iteration_budget():
+def test_defaults_select_infinity_structural_path_and_normalized_hs():
     model = SPTreeRegressorCV()
 
     assert model.max_iter == 2000
-    assert {0.3, 3, 30}.issubset(model.sp_alpha_list)
+    assert model.sp_alpha_list == "auto"
+    assert model.solver == "auto"
+    assert model.ord == np.inf
     assert model.selection_rule == "one_se"
     assert model.reg_param_mode == "normalized"
+
+
+@pytest.mark.parametrize("estimator_cls", [
+    SHSTreeRegressor, SHSTreeClassifier, SHSTreeRegressorCV, SHSTreeClassifierCV,
+    SPTreeRegressor, SPTreeClassifier, SPTreeRegressorCV, SPTreeClassifierCV,
+])
+def test_public_estimators_have_their_own_api_documentation(estimator_cls):
+    import inspect
+
+    assert estimator_cls.__doc__
+    doc = inspect.getdoc(estimator_cls)
+    assert "Mixin class" not in doc
+    assert "solver" in doc or "SHSTreeClassifierCV" in doc
+
+
+def test_group_collection_handles_deep_trees_without_recursion():
+    from types import SimpleNamespace
+    from imodels.tree.sparse_pruning.sparse_hierarchical_shrinkage import (
+        _collect_internal_node_ids, _find_subtrees,
+    )
+
+    p = 1100
+    feature = np.full(2 * p + 1, -2)
+    left = np.full(2 * p + 1, -1)
+    right = left.copy()
+    ids = np.arange(0, 2 * p, 2)
+    feature[ids], left[ids], right[ids] = 0, ids + 1, ids + 2
+    tree = SimpleNamespace(feature=feature, children_left=left, children_right=right)
+    assert_array_equal(_collect_internal_node_ids(tree), ids)
+    groups = _find_subtrees(tree, 0, ids)
+    assert len(groups) == p
+    assert_array_equal(groups[0], [p])
+    assert_array_equal(groups[-1], np.arange(1, p + 1))
+
+
+def test_gcv_cv_accepts_a_single_string_or_singleton_grid_on_refit():
+    X, y = _regression_tree_data()
+    common = dict(cv=2, max_leaf_nodes=3, random_state=0)
+    expected = SHSTreeRegressorCV(reg_param_list="gcv", **common).fit(X, y)
+    model = SHSTreeRegressorCV(reg_param_list=["gcv"], **common)
+    for _ in range(2):
+        model.fit(X, y)
+        assert_allclose(model.cv_scores_, expected.cv_scores_)
+        assert_allclose(model.predict(X), expected.predict(X))
+        assert model.reg_param_ == expected.reg_param_
 
 
 def test_repeated_fit_rebuilds_tree_from_new_data():
@@ -212,7 +259,7 @@ def test_classifier_rejects_multiclass_targets():
         model.fit(X, y)
 
 
-@pytest.mark.parametrize("reg_param", [None, -1.0])
+@pytest.mark.parametrize("reg_param", ["invalid", -1.0])
 def test_unvalidated_or_negative_shrinkage_is_rejected(reg_param):
     X, y = _regression_tree_data()
     model = SHSTreeRegressor(
@@ -693,6 +740,7 @@ def test_cv_retains_diagnostics_for_unselected_unstable_candidates():
     X, y = _regression_tree_data()
     with pytest.warns(ConvergenceWarning, match="CV candidate"):
         model = SPTreeRegressorCV(
+            solver="apa_apg2",
             sp_alpha_list=(0, 1),
             reg_param_list=(0,),
             cv=2,
@@ -786,7 +834,10 @@ def test_default_estimator_is_lazy_and_fitted_state_is_correct():
     assert model.get_params(deep=False)["estimator_"] is None
     assert not hasattr(model, "predict_proba")
     assert model.n_iter_ == 1
-    assert model.optimization_results_ == []
+    assert model.solver_ == "topology"
+    assert model.optimization_results_[0]["converged"]
+    assert model.coef_ is None
+    assert model.beta_stars_ == []
     assert model.prune_set_ == "full"
 
 
@@ -934,6 +985,7 @@ def test_wrapper_exposes_solver_diagnostics():
     X, y = _regression_tree_data()
     with pytest.warns(ConvergenceWarning, match="max_iter"):
         model = SPTreeRegressor(
+            solver="apa_apg2",
             estimator_=DecisionTreeRegressor(max_depth=2, random_state=0),
             sp_alpha=0.1,
             reg_param=0,
@@ -954,6 +1006,7 @@ def test_small_apa_step_does_not_claim_overlapping_support_convergence():
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         model = SPTreeRegressor(
+            solver="apa_apg2",
             estimator_=DecisionTreeRegressor(max_depth=2, random_state=0),
             sp_alpha=0.1,
             reg_param=0,
@@ -1252,7 +1305,7 @@ def test_bootstrap_forest_uses_tree_specific_oob_pruning_sets():
         sp_alpha=0.1,
         reg_param=0,
         prune_set="oob",
-        max_iter=10,
+        max_iter=2000,
         random_state=0,
     ).fit(X, y)
 
@@ -1494,10 +1547,12 @@ def test_degenerate_tree_diagnostics_remain_aligned(task):
 
     model.fit(X, y)
 
-    assert len(model.beta_stars_) == 1
+    assert len(model.beta_stars_) == (0 if task == "regression" else 1)
     assert len(model.support_thresholds_) == 1
     assert len(model.optimization_results_) == 1
-    assert model.optimization_results_[0]["status"] == "no_internal_nodes"
+    assert model.optimization_results_[0]["status"] == (
+        "complete" if task == "regression" else "no_internal_nodes"
+    )
 
 
 def test_single_tree_rejects_bootstrap_only_pruning_sets():
@@ -1605,7 +1660,10 @@ def test_sparse_pruning_is_invariant_to_uniform_weight_rescaling():
             X, y, sample_weight=np.full(len(y), 100.0)
         )
 
-    assert_allclose(unit_weights.beta_stars_[0], scaled_weights.beta_stars_[0])
+    assert_allclose(
+        unit_weights.pruning_path_.activation_lambdas,
+        scaled_weights.pruning_path_.activation_lambdas,
+    )
     assert_array_equal(
         unit_weights.estimator_.tree_.children_left,
         scaled_weights.estimator_.tree_.children_left,
