@@ -1,9 +1,31 @@
 # Sparse pruning and hierarchical shrinkage
 
-These estimators prune whole subtrees using the hiCAP descendant-group penalty.
+These estimators prune whole subtrees using the
+[CAP/hiCAP penalty](https://arxiv.org/abs/0909.0411):
+each group contains a split and all of its descendant splits.
 Predictions use the retained CART node values, optionally followed by
 hierarchical shrinkage (HS). Penalized coefficients determine pruning; they are
 not the prediction weights of the resulting tree.
+
+Use `SPTree*` for pruning alone and `SHSTree*` for pruning with HS. The
+`sp_alpha` parameter controls pruning strength; `reg_param` controls HS without
+changing the retained structure. Classes ending in `CV` select these strengths
+using training/validation folds; non-CV classes accept fixed strengths.
+
+## Quick start
+
+```python
+from sklearn.datasets import load_diabetes
+from imodels import SPTreeRegressorCV, SHSTreeRegressorCV
+
+X, y = load_diabetes(return_X_y=True)
+pruned = SPTreeRegressorCV(max_leaf_nodes=32, random_state=0).fit(X, y)
+shrunk = SHSTreeRegressorCV(max_leaf_nodes=32, random_state=0).fit(X, y)
+predictions = pruned.predict(X)
+```
+
+The following sections describe automatic penalty selection, optional
+coefficients, and the separate requirements for binary classification.
 
 ## Defaults and solver choices
 
@@ -13,69 +35,53 @@ tree fitted by the wrapper with `squared_error` or `friedman_mse`, this chooses
 the exact **structural** path. It uses fitted node statistics, not a dense
 sample-by-split design matrix. Positive `support_tol` disables this shortcut.
 
+The structural path lists penalties where the retained tree changes. Each such
+penalty is a **structural knot**. It is sufficient for comparing pruned trees;
+computing the penalized coefficients themselves is optional.
+
 | `solver` | Result for an eligible fitted regression tree |
 | --- | --- |
-| `"auto"` | Structural path; otherwise proximal infinity-regression or APA |
-| `"topology"` | Exact structural knots (green); no coefficient calculation |
-| `"proximal"` | Certified coefficients at the chosen penalty (dark blue) |
-| `"coefficient_path"` | Complete certified coefficient path (orange) |
+| `"auto"` | Structural path for eligible trees; otherwise `"proximal"` for regression with `ord=np.inf`, or `"apa_apg2"` |
+| `"topology"` | Exact structural knots; no coefficient calculation |
+| `"proximal"` | Certified coefficients at the chosen penalty; no full coefficient path |
+| `"coefficient_path"` | Complete certified coefficient path using the fitted tree's diagonal structure |
 | `"hicap"` | Generic, slower, certified coefficient-path reference |
 | `"apa_apg2"` | Legacy approximate point solver; also supports `ord=2` and binary classification |
 
-Native structural/coefficient paths require the tree's original fitting measure;
-the wrappers do not assume this for externally supplied `prefit=True` trees or
-forest OOB data. General infinity-regression problems instead use design-based
-proximal solves. Explicitly incompatible solver choices raise an error, as do
+The tree-specific `"topology"` and `"coefficient_path"` solvers require the
+samples and weights used to fit the tree. The wrappers do not assume this for
+externally supplied `prefit=True` trees or forest out-of-bag data. Other
+regression problems with `ord=np.inf` use design-based proximal solves under
+`solver="auto"`. Explicitly incompatible solver choices raise an error, as do
 failed exact-solver certificates; there is no silent numerical fallback.
-
-`max_iter` caps APA/FISTA iterations for iterative point solves, but caps
-coefficient-continuation events for `"coefficient_path"` and `"hicap"`.
-The native diagonal point solve and structural path are noniterative. `tol`
-sets numerical accuracy/certificate tolerances for exact coefficient solvers;
-for APA it is a stopping tolerance, not an exactness guarantee. `support_tol`
-controls pruning support separately and must be zero/default for native paths.
-
-On eligible fitting data, all exact solvers use the same structural events for
-pruning, including right at a knot. Tiny floating-point residuals in generic
-hiCAP coefficients cannot change that topology. Elsewhere, coefficient-based
-pruning uses a response-scaled numerical threshold by default. `support_tol=0`
-requests literal coefficient zero there, which can be sensitive to roundoff.
-For compatibility, `sp_alpha=0` always preserves the original topology, including
-zero-gain splits.
 
 ## Cross-validation
 
-```python
-from imodels import SPTreeRegressorCV, SHSTreeRegressorCV
-
-pruned = SPTreeRegressorCV(max_leaf_nodes=128, random_state=0).fit(X, y)
-shrunk = SHSTreeRegressorCV(max_leaf_nodes=128, random_state=0).fit(X, y)
-auto_hs = SHSTreeRegressorCV(
-    max_leaf_nodes=128, reg_param_list="gcv", random_state=0,
-).fit(X, y)
-```
-
-The default `sp_alpha_list="auto"` fits one tree per training fold and scores
-each distinct structural state once per HS choice. Scores are aligned on the
-union of training-fold knots. The final tree uses the selected absolute penalty;
+For eligible regression trees, the default `sp_alpha_list="auto"` fits one
+tree per training fold and scores each distinct retained tree once per HS
+choice. Scores are aligned on the union of training-fold knots.
+The final tree uses the selected absolute penalty;
 it is not snapped to a full-data knot. No full-data tree generates CV candidates.
 Custom scorers must depend on predictions/tree structure, not on the numerical
 penalty label, for structural-state score reuse to be valid.
 
-Numeric alpha lists still request grid CV. Classification, `ord=2`, custom
-legacy solver hooks, and other ineligible cases use the historical numeric grid
-when given `"auto"`. `cv_path_mode_` distinguishes `"structural"` from `"grid"`;
+Regression CV defaults to negative mean squared error and the one-standard-error
+rule: choose the simplest tree whose mean score is within one standard error
+of the best. Use `selection_rule="best"` to select the highest mean CV score.
+Inspect `sp_alpha_` and `reg_param_` for the selected strengths.
+
+Numeric `sp_alpha_list` values request grid CV. Classification, `ord=2`,
+`solver="apa_apg2"`, custom point solvers, and other ineligible cases use a
+fixed numeric grid when given `"auto"`.
+`cv_path_mode_` distinguishes `"structural"` from `"grid"`;
 `cv_solver_` records the CV algorithm and `solver_` the final-fit algorithm.
 `cv_sp_alphas_`, `cv_scores_`, and `cv_params_` describe the evaluated candidates;
 structural CV also exposes `cv_path_results_` and `cv_n_pruning_states_`.
 
-With the exact backends, an explicit grid on eligible fitting data reuses the
-fitted sufficient statistics and path once per fold. Single-tree generic hiCAP
-also reuses its complete path across grid penalties. APA retains its historical
-point-solve behavior. The proximal backend constructs its group
-operator lazily for interior penalties and reuses it across the grid;
-unpenalized/fully pruned endpoints need no proximal solve. This reuse does not
-remove the cost of copying candidates or predicting on validation rows.
+For eligible single-tree regression, exact solvers reuse their setup or complete
+path across explicit grid penalties within each fold. APA instead solves each
+candidate separately. All CV modes still pay for candidate evaluation and
+prediction on validation rows.
 
 Numeric HS strengths remain the default for SHS CV. With `reg_param_list="gcv"`,
 each training state's HS strength is selected by conditional fixed-tree GCV,
@@ -98,6 +104,14 @@ not supported.
 
 ## Automatic HS with GCV
 
+To select HS by GCV within each training fold's pruning state:
+
+```python
+auto_hs = SHSTreeRegressorCV(
+    max_leaf_nodes=32, reg_param_list="gcv", random_state=0,
+).fit(X, y)
+```
+
 For a single regression tree, automatic node-based HS is available through
 `HSTreeRegressor(reg_param="gcv")` or `SHSTreeRegressor(reg_param="gcv")`.
 The latter selects HS after sparse pruning; `reg_param=None` is a compatibility
@@ -116,9 +130,15 @@ weights, and other shrinkage schemes require explicit strengths or CV.
 
 ## Optional coefficients
 
+For squared-error regression with `ord=np.inf`, a complete coefficient path is
+piecewise linear in `sp_alpha`. A **coefficient knot** is a penalty where a
+coefficient's slope changes, not every point where its value changes. Such a knot need not change
+the retained tree, so structural knots alone are insufficient for exact
+coefficient interpolation.
+
 ```python
 model = SHSTreeRegressorCV(
-    solver="coefficient_path", max_leaf_nodes=128, random_state=0,
+    solver="coefficient_path", max_leaf_nodes=32, random_state=0,
 ).fit(X, y)
 beta = model.coef_                  # coefficients at the selected penalty
 original_node_ids = model.coef_node_ids_
@@ -126,18 +146,86 @@ path = model.coefficient_path_      # all coefficient-direction knots
 beta_elsewhere, intercept_elsewhere = path.at(0.5 * path.lambdas[0])
 ```
 
-Automatic CV still scores green structural states, while the final fit honors
-the requested coefficient solver. Coefficients refer to **unnormalized local
-stumps of the original, unpruned tree**, before HS; original node IDs are not
-the renumbered IDs in the compact pruned tree. Preserve the original tree if
+For eligible regression trees, automatic CV still scores structural states
+when `solver="coefficient_path"`, while the final fit computes coefficients.
+Coefficients refer to **unnormalized local stumps of the original, unpruned
+tree**, before HS. Original node IDs are not the renumbered IDs in the compact
+pruned tree. Preserve the original tree if
 you need to reconstruct its feature matrix. `"topology"` leaves `coef_` and
 `coefficient_path_` as `None` and exposes `pruning_path_` instead.
 
-The green path itself takes `O(p log p)` time after fitting and `O(p)` space
-for `p` split nodes. CV still pays for held-out prediction and one compact tree
-copy per local state; it is not an `O(p log p)` end-to-end procedure. Complete
+## Numerical behavior and performance
+
+`max_iter` caps APA/FISTA iterations for iterative point solves, but caps
+coefficient-path events for `"coefficient_path"` and `"hicap"`. The tree-specific
+diagonal point solve and structural path do not use iterative optimization.
+`tol` sets numerical accuracy/certificate tolerances for exact coefficient
+solvers; for APA it is a stopping tolerance, not an exactness guarantee.
+"Exact" and "certified" refer to floating-point numerical tolerances, not
+symbolic arithmetic. `support_tol` controls coefficient thresholding separately
+and must be zero/default for the tree-specific paths.
+
+On eligible fitting data, all exact solvers use the same structural events for
+pruning, including right at a knot. Tiny floating-point residuals in generic
+hiCAP coefficients cannot change that topology. Elsewhere, coefficient-based
+pruning uses a response-scaled numerical threshold by default. `support_tol=0`
+requests literal coefficient zero there, which can be sensitive to roundoff.
+For compatibility, `sp_alpha=0` always preserves the original topology, including
+zero-gain splits.
+
+The fitted-tree structural path takes `O(p log p)` time after fitting and `O(p)`
+space for `p` split nodes. CV still pays for held-out prediction and one compact
+tree copy per local state; it is not an `O(p log p)` end-to-end procedure. Complete
 coefficient paths additionally store dense coefficient rows and rebuild faces;
 they are optional precisely because pruning does not need that work.
+
+## Algorithms and references
+
+The penalty and original hiCAP path algorithm come from Zhao, Rocha, and Yu
+(2009), [*The composite absolute penalties family for grouped and hierarchical
+variable selection*](https://arxiv.org/abs/0909.0411), especially Section 3.1.2.
+The solvers here target that objective through different computational methods:
+
+- `hicap` represents the infinity-norm penalties as linear constraints and
+  follows intervals where the active constraints satisfy the optimality (KKT)
+  conditions. It is independently implemented from the convex formulation,
+  not a translation of the authors' MATLAB code.
+- `apa_apg2` combines accelerated loss-gradient steps with an average of
+  individual group-proximal updates, decreasing the approximation parameter
+  over iterations. It applies Algorithm 2 of
+  [Shen et al. (2017), *Adaptive Proximal Average Approximation for Composite
+  Convex Minimization*](https://ojs.aaai.org/index.php/AAAI/article/view/10873).
+  The proximal-average predecessor is
+  [Yu (2013), *Better Approximation and Faster Algorithm Using the Proximal
+  Average*](https://papers.nips.cc/paper_files/paper/2013/hash/49182f81e6a13cf5eaa496d51fea6406-Abstract.html).
+  Warm-start path functions sample a supplied penalty grid; they do not
+  enumerate exact knots.
+- `proximal` composes group-proximal maps from children to parents, following
+  [Jenatton et al. (2011), *Proximal Methods for Hierarchical Sparse
+  Coding*](https://jmlr.org/papers/v12/jenatton11a.html), Section 3.4.
+  For a general design, these maps are used inside
+  [Beck and Teboulle's FISTA (2009)](https://doi.org/10.1137/080716542).
+  Our diagonal-tree specialization rescales coordinates and uses weighted
+  projections to solve each penalty in one proximal sweep.
+- `topology` converts fitted-tree statistics into activation penalties through
+  weighted tree-isotonic pooling: adjacent blocks are merged until their
+  values respect the parent-child order. Heap-based tree pooling is described
+  by [Pardalos and Xue (1999), *Algorithms for a Class of Isotonic Regression
+  Problems*](https://doi.org/10.1007/PL00009258). The reduction from this CAP
+  objective to activation penalties is documented in the
+  [tree-specific derivation](optimization/README.md#why-the-fitted-tree-gram-matrix-is-diagonal);
+  it is not the original hiCAP coefficient-path algorithm.
+- `coefficient_path` combines the structural bounds with exact diagonal point
+  solves. At each step, it identifies which coefficient constraints are
+  active and calculates the full penalty interval where they remain valid.
+  This is an implementation-specific diagonal-tree continuation method; see
+  the [coefficient-path derivation](optimization/README.md#full-coefficient-path-for-a-fitted-tree).
+
+HS after pruning follows [Agarwal et al. (2022), *Hierarchical
+Shrinkage*](https://arxiv.org/abs/2202.00858). Automatic HS applies the
+[GCV criterion of Golub, Heath, and Wahba (1979)](https://doi.org/10.1080/00401706.1979.10489751)
+to the retained fixed-tree smoother; it does not account for learning or
+selecting the tree itself.
 
 ## Source layout
 
