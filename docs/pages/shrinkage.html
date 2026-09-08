@@ -4,32 +4,37 @@
                     <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> Hierarchical shrinkage:
                         improving the accuracy and interpretability
                         of tree-based methods </h1>
-                    <h3 style="color:gray;padding-top:0px;">Abhineet Agarwal*, Yan Shuo Tan*, Omer Ronen, Chandan Singh,
+                    <h3 class="post-authors" style="color:gray;padding-top:0px;">Abhineet Agarwal*, Yan Shuo Tan*, Omer Ronen, Chandan Singh,
                         Bin
                         Yu </h3>
-                    <hr>
                     </p>
+                    <p class="post-date">February 2022 &middot; <a href="https://arxiv.org/abs/2202.00858">📄 Paper (ICML 2022)</a>, <a href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html">🗂 Doc</a>, <a href="#citation">📌 Citation</a></p>
+                    <hr>
 
-                    <p><a href="https://arxiv.org/abs/2202.00858">📄 Paper (ICML 2022)</a>, <a
-                            href="https://csinva.io/imodels/tree/hierarchical_shrinkage.html">🗂 Doc</a>, <a
-                            href="https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=hierarchical+shrinkage+singh&btnG=&oq=hierar#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3Azc6gtLx-aL4J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌
-                            Citation</a></p>
 
-                    Hierarchical shrinkage is an extremely fast post-hoc regularization method which works on any
+                    <p class="abstract">Hierarchical shrinkage is an extremely fast post-hoc regularization method which works on any
                     decision tree (or tree-based ensemble, such as Random Forest). It does not modify the tree
                     structure, and instead regularizes the tree by shrinking the prediction over each node towards the
                     sample means of its ancestors (using a single regularization parameter). Experiments over a wide
                     variety of datasets show that hierarchical shrinkage substantially increases the predictive
-                    performance of individual decision trees and decision-tree ensembles.
+                    performance of individual decision trees and decision-tree ensembles.</p>
 
-                    <h2>How does Hierarchical shrinkage work? </h2>
+
+                    <nav class="toc-main">
+                      <a href="#how-it-works"><span>1</span> How HS works</a>
+                      <a href="#example"><span>2</span> An example using HS</a>
+                      <a href="#synthetic"><span>3</span> Synthetic data</a>
+                      <a href="#ensembles"><span>4</span> Tree ensembles</a>
+                    </nav>
+
+                    <h2 id="how-it-works">1. How does Hierarchical shrinkage work? </h2>
 
                     <p align="center">
                         <img src="https://demos.csinva.io/shrinkage/shrinkage_intro.svg?sanitize=True" width="90%">
                     </p>
                     <p class="caption"><b>Fig 1.</b> HS applies post-hoc regularization to any decision tree by shrinking each node towards its parent. This is done after a tree has been trained. The amount of shrinkage can be varied using a regularization param (this works best if the parameter is chosen via cross-validation).</p>
 
-                    <h2>An example using HS</h2>
+                    <h2 id="example">2. An example using HS</h2>
 
                     HS can be used in the same way as standard scikit-learn models: simply import a classifier or
                     regressor and use the <code>fit</code> and <code>predict</code> methods.
@@ -69,7 +74,7 @@ plot_tree(model.estimator_, feature_names=feat_names)
                                 width="100%"></a></p>
                     <p class="caption"><b>Fig 2.</b> Simple model learned by HS for predicting risk of cervical spinal injury.</p>
 
-                    <h2>Examples with HS on synthetic data</h2>
+                    <h2 id="synthetic">3. Examples with HS on synthetic data</h2>
                     <p>See some examples of how hierarchical shrinkage works on one-dimensional functions which are
                         fitted with a CART decision tree.</p>
                     <!--    <div class="justify-content-center" align="center">-->
@@ -88,9 +93,8 @@ plot_tree(model.estimator_, feature_names=feat_names)
                     <script type="text/javascript" src="https://demos.csinva.io/shrinkage/shrinkage_linear.js"></script>
                     <!--        </div>-->
                     <p class="caption"><b>Fig 4.</b> Linear function.</p>
-                </div>
 
-                <h2>Applying HS to tree ensembles</h2>
+                    <h2 id="ensembles">4. Applying HS to tree ensembles</h2>
 
                 HS can also be used on tree ensembles to regularize each tree in an ensemble (e.g. in a Random Forest).
                 We must simply pass the desired estimator during initialization.
@@ -105,7 +109,17 @@ model = model.fit(X_train, y_train)
         </code>
 </pre>
 
+                    <h3 id="citation">Citation</h3>
 
+                    <pre><code>@inproceedings{agarwal2022hierarchical,
+      title={Hierarchical Shrinkage: Improving the accuracy and interpretability of tree-based methods},
+      author={Abhineet Agarwal and Yan Shuo Tan and Omer Ronen and Chandan Singh and Bin Yu},
+      booktitle={International Conference on Machine Learning},
+      year={2022},
+      url={https://arxiv.org/abs/2202.00858},
+}</code></pre>
+
+                </div>
 
             </section>
 

@@ -141,6 +141,33 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
 /* a chart that did not re-fit scrolls in its own box rather than the page */
 #content .plotly-graph-div, #content .js-plotly-plot { overflow-x: auto; }
 
+/* ---------- blog post header ---------- */
+/* everything above the first section is centred: title, authors, the date and
+   link line, and the contents bar. The old markup tried to do this with
+   align="center" on a <p> that the parser closes before the <h1>, and with a
+   text-align attribute that does not exist, so none of it ever took. */
+.article h1, .post-authors, .post-date { text-align: center; }
+.post-authors { margin-bottom: 0; }
+.post-date { color: var(--muted); font-size: 0.9rem; margin: 0.4em 0 0; }
+.post-date a { white-space: nowrap; }
+
+/* the horizontal contents bar under the abstract; lived inline in gpgam.html
+   until the other posts wanted it too */
+nav.toc-main {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  margin: 1em 0 1.8em;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  padding: 9px 0;
+}
+nav.toc-main a {
+  font-size: 14px; padding: 3px 10px; border-radius: 3px; white-space: nowrap;
+}
+nav.toc-main a:hover { background: var(--surface-alt); }
+nav.toc-main span {
+  display: inline-block; min-width: 16px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- abstract ---------- */
 /* the lead paragraph of a page, set like a paper's abstract: inset from the
    measure on both sides and a little quieter than body text, so it reads as a

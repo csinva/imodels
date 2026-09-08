@@ -56,7 +56,10 @@ aria-label="View source on GitHub" title="GitHub">
                     <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> FIGS: Fast Interpretable
                         Greedy-Tree
                         Sums </h1>
+                    <h3 class="post-authors" style="color:gray;padding-top:0px;">Yan Shuo Tan*, Chandan Singh*, Keyan Nasseri*, Abhineet
+                        Agarwal*, James Duncan, Omer Ronen, Matthew Epland, Aaron Kornblith, Bin Yu</h3>
                     </p>
+                    <p class="post-date">January 2022 &middot; <a href="https://arxiv.org/abs/2201.11931">📄 Paper</a>, <a href="https://csinva.io/imodels/tree/figs.html#imodels.tree.figs">🗂 Doc</a>, <a href="#citation">📌 Citation</a></p>
                     <hr>
                     <nav class="nav">
                         <!--  <button class="js-reset butt">Reset</button>-->
@@ -72,15 +75,8 @@ aria-label="View source on GitHub" title="GitHub">
                     <script src='https://unpkg.com/matter-js@0.14.2/build/matter.min.js'></script>
                     <script src="https://demos.csinva.io/figs/script.js"></script>
 
-                    <p><a href="https://arxiv.org/abs/2202.00858">📄 Paper</a>, <a
-                            href="https://csinva.io/imodels/tree/figs.html#imodels.tree.figs">🗂 Doc</a>, <a
-                            href="https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=fast+interpretable+greedy-tree+sums&oq=fast#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3ADnPVL74Rop0J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌
-                            Citation</a></p>
 
-                    <h3 style="color:gray;padding-top:0px;">Yan Shuo Tan*, Chandan Singh*, Keyan Nasseri*, Abhineet
-                        Agarwal*, James Duncan, Omer Ronen, Matthew Epland, Aaron Kornblith, Bin Yu</h3>
-
-                    <p>
+                    <p class="abstract">
                         Modern machine learning has achieved impressive prediction performance, but often sacrifices
                         interpretability, a
                         critical consideration in many problems.
@@ -107,7 +103,14 @@ aria-label="View source on GitHub" title="GitHub">
                         All code and models are released in a full-fledged package available on Github.
                     </p>
 
-                    <h2>How does FIGS work? </h2>
+
+                    <nav class="toc-main">
+                      <a href="#how-it-works"><span>1</span> How FIGS works</a>
+                      <a href="#example"><span>2</span> An example using FIGS</a>
+                      <a href="#another-example"><span>3</span> Another example</a>
+                    </nav>
+
+                    <h2 id="how-it-works">1. How does FIGS work? </h2>
 
                     Intuitively, FIGS works by extending CART, a typical greedy algorithm for growing a decision tree,
                     to consider growing a <i>sum</i> of trees <i>simultaneously</i> (see Fig 1). At each iteration, FIGS
@@ -128,7 +131,7 @@ aria-label="View source on GitHub" title="GitHub">
                     <p class="caption"><b>Fig 1.</b> High-level intuition for how FIGS fits a model.</p>
 
 
-                    <h2>An example using FIGS</h2>
+                    <h2 id="example">2. An example using FIGS</h2>
 
                     FIGS can be used in the same way as standard scikit-learn models: simply import a classifier or
                     regressor and use the <code>fit</code> and <code>predict</code> methods. Here's a full example of
@@ -182,7 +185,7 @@ aria-label="View source on GitHub" title="GitHub">
                     <p class="caption"><b>Fig 3.</b> Slightly larger model learned by FIGS for predicting risk of cervical spinal injury.</p>
 
 
-                    <h2>Another example of using FIGS</h2>
+                    <h2 id="another-example">3. Another example of using FIGS</h2>
                     <p>
                         Here, we examine the <a
                             href="https://www.sciencedirect.com/science/article/pii/S0140673671923038">Diabetes
@@ -208,6 +211,18 @@ aria-label="View source on GitHub" title="GitHub">
                     <p style="text-align:center;">
                         <img width=60% src="https://demos.csinva.io/figs/diabetes_figs.svg" title="diabetes FIGS"></img></p>
                     <p class="caption"><b>Fig 4.</b> Simple model learned by FIGS for diabetes risk prediction.</p>
+
+
+                    <h3 id="citation">Citation</h3>
+
+                    <pre><code>@misc{tan2022figs,
+      title={Fast Interpretable Greedy-Tree Sums},
+      author={Yan Shuo Tan and Chandan Singh and Keyan Nasseri and Abhineet Agarwal and James Duncan and Omer Ronen and Matthew Epland and Aaron Kornblith and Bin Yu},
+      year={2022},
+      eprint={2201.11931},
+      archivePrefix={arXiv},
+      url={https://arxiv.org/abs/2201.11931},
+}</code></pre>
 
                 </div>
 

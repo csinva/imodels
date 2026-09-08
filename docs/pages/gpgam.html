@@ -2,20 +2,13 @@
 
                 <div class="article" style="padding-right: 2%; padding-left: 2%;">
                     <p align="center">
-                    <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> GPGam: Additive Gaussian
-                        Processes over Binned Features </h1>
-                    <h3 style="color:gray;padding-top:0px;">Chandan Singh</h3>
+                    <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> GPGam: SOTA interpretable tabular prediction found via Autoresearch</h1>
+                    <h3 class="post-authors" style="color:gray;padding-top:0px;">Chandan Singh</h3>
                     </p>
+                    <p class="post-date">September 2026 &middot; <a href="https://arxiv.org/abs/2605.03808">📄 Paper</a>, <a href="https://csinva.io/imodels/algebraic/gp_gam.html">🗂 Doc</a>, <a href="#citation">📌 Citation</a></p>
                     <hr>
 
-                    <p><a href="https://csinva.io/imodels/algebraic/gp_gam.html">🗂 Doc</a>, <a
-                            href="https://github.com/csinva/imodels">&#128279; Github</a></p>
 
-                    <nav class="toc-main">
-                      <a href="#methods"><span>1</span> Methods: GPGam</a>
-                      <a href="#results"><span>2</span> Experimental results</a>
-                      <a href="#quickstart"><span>3</span> Quickstart &amp; example usage</a>
-                    </nav>
 
                     <p class="abstract">A GAM (<a href="https://en.wikipedia.org/wiki/Generalized_additive_model">generalized additive model</a>) predicts by adding up one function per feature,
                         <code>y = f&#8321;(x&#8321;) + f&#8322;(x&#8322;) + ... + f&#8340;(x&#8340;)</code>.
@@ -28,6 +21,12 @@
                         in <a href="https://en.wikipedia.org/wiki/Gaussian_process">Gaussian processes</a>. GPGAM is discovered through autoresearch using frontier agents and
                         achieves significant improvents over the SOTA on limited-size held-out tabular regression.
                     </p>
+
+                    <nav class="toc-main">
+                      <a href="#methods"><span>1</span> Methods: GPGam</a>
+                      <a href="#results"><span>2</span> Experimental results</a>
+                      <a href="#quickstart"><span>3</span> Quickstart &amp; example usage</a>
+                    </nav>
 
                     <h2 id="methods">1. Methods: GPGam</h2>
 
@@ -497,14 +496,6 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
                       .gam-readings li { margin: 0.45em 0; }
                     </style>
                     <style>
-                      nav.toc-main { display: flex; flex-wrap: wrap; gap: 8px;
-                        margin: 1em 0 1.8em; border-top: 1px solid #ddd;
-                        border-bottom: 1px solid #ddd; padding: 9px 0; }
-                      nav.toc-main a { font-size: 14px; padding: 3px 10px; border-radius: 3px;
-                        white-space: nowrap; }
-                      nav.toc-main a:hover { background: #f0f5f8; }
-                      nav.toc-main span { display: inline-block; min-width: 16px; color: #999;
-                        font-variant-numeric: tabular-nums; }
                       table.ranktbl { margin-left: auto; margin-right: auto; }
                       table.ranktbl td:not(:first-child), table.ranktbl th:not(:first-child) {
                         text-align: right; font-variant-numeric: tabular-nums; }

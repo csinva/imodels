@@ -3,9 +3,10 @@
                     <p align="center">
                     <h1 text-align="center" style="display: inline;padding-bottom: 0px;"> MDI+: A Flexible Feature
                         Importance Framework for Random Forests</h1>
-                    <h3 style="color:gray;padding-top:0px;">Abhineet Agarwal*, Ana M. Kenney*, Yan Shuo Tan*, Tiffany
+                    <h3 class="post-authors" style="color:gray;padding-top:0px;">Abhineet Agarwal*, Ana M. Kenney*, Yan Shuo Tan*, Tiffany
                         Tang*, Bin Yu</h3>
                     </p>
+                    <p class="post-date">July 2023 &middot; <a href="https://arxiv.org/pdf/2307.01932">📄 Paper</a>, <a href="https://csinva.io/imodels/importance/mdi_plus.html">🗂 Doc</a>, <a href="#citation">📌 Citation</a></p>
                     <hr>
                     <!-- partial -->
                     <script src='https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js'></script>
@@ -14,12 +15,8 @@
                     <script src='https://unpkg.com/matter-js@0.14.2/build/matter.min.js'></script>
                     <script src="https://demos.csinva.io/figs/script.js"></script>
 
-                    <p><a href="https://arxiv.org/pdf/2307.01932">📄 Paper</a>, <a
-                            href="https://csinva.io/imodels/importance/mdi_plus.html">🗂 Doc</a>, <a
-                            href="https://scholar.google.com/scholar?hl=en&as_sdt=0%2C48&q=mdi%2B&btnG=#d=gs_cit&t=1716649449337&u=%2Fscholar%3Fq%3Dinfo%3Axc0LcHXE_lUJ%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den">📌
-                            Citation</a></p>
 
-                    <p>MDI+ is a novel feature importance framework, which generalizes the popular mean decrease in
+                    <p class="abstract">MDI+ is a novel feature importance framework, which generalizes the popular mean decrease in
                         impurity (MDI) importance score for random forests. At its core, MDI+ expands upon a recently
                         discovered connection between linear regression and decision trees. In doing so, MDI+ enables
                         practitioners to (1) tailor the feature importance computation to the data/problem structure and
@@ -31,7 +28,16 @@
                     <p>For further details, we refer to <a href="https://arxiv.org/pdf/2307.01932.pdf">Agarwal et al.
                             (2023)</a>.</p>
 
-                    <h2>Regression Example Usage:</h2>
+
+                    <nav class="toc-main">
+                      <a href="#regression"><span>1</span> Regression example</a>
+                      <a href="#classification"><span>2</span> Classification example</a>
+                      <a href="#notebooks"><span>3</span> Demo notebooks</a>
+                      <a href="#overview"><span>4</span> Overview of MDI+</a>
+                      <a href="#practical"><span>5</span> Practical considerations</a>
+                    </nav>
+
+                    <h2 id="regression">1. Regression Example Usage:</h2>
 
                     <pre>
                         <code>
@@ -43,7 +49,7 @@ mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
                             </code>
                         </pre>
 
-                    <h2>Classification Example Usage:</h2>
+                    <h2 id="classification">2. Classification Example Usage:</h2>
 
                     <pre>
 <code>
@@ -55,7 +61,7 @@ mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
 </code>
                         </pre>
 
-                    <h2>Demo notebooks</h2>
+                    <h2 id="notebooks">3. Demo notebooks</h2>
 
                     <details>
                         <summary><a
@@ -70,7 +76,7 @@ mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
                         </ul>
                     </details>
 
-                    <h2>Overview of MDI+</h2>
+                    <h2 id="overview">4. Overview of MDI+</h2>
 
                     <p><strong>Input:</strong> a collection of fitted trees (e.g., a random forest), data <code>X</code>
                         and <code>y</code></p>
@@ -104,7 +110,7 @@ mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
                                 <i>Overview of MDI+.</i>
                             </p> -->
 
-                    <h2>Practical Considerations</h2>
+                    <h2 id="practical">5. Practical Considerations</h2>
 
                     <p>We show in <a href="https://arxiv.org/abs/2307.01932">Agarwal et al. (2023)</a> that this
                         framework is indeed a proper generalization of the popular MDI feature importance score.
@@ -164,7 +170,18 @@ mdi_plus_scores = rf_plus_model.get_mdi_plus_scores(X, y)
                         from multiple MDI+ configurations in an ensemble as well as how to choose the "best" GLM and
                         metric in a data-driven manner based upon a stability score.</p>
 
+                    <h3 id="citation">Citation</h3>
 
+                    <pre><code>@misc{agarwal2023mdiplus,
+      title={MDI+: A Flexible Random Forest-Based Feature Importance Framework},
+      author={Abhineet Agarwal and Ana M. Kenney and Yan Shuo Tan and Tiffany M. Tang and Bin Yu},
+      year={2023},
+      eprint={2307.01932},
+      archivePrefix={arXiv},
+      url={https://arxiv.org/abs/2307.01932},
+}</code></pre>
+
+                </div>
 
             </section>
 
