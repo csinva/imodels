@@ -31,6 +31,28 @@ def _values_are_normalized(tree):
 
 
 class HSTree(RuleInspectionMixin, BaseEstimator):
+    """Hierarchical shrinkage: post-hoc regularization for any decision tree
+    or tree ensemble.
+
+    ### SHAP values
+
+    `shap.TreeExplainer` dispatches on the model class, so it does not
+    recognize this wrapper. Pass the shrunk estimator it wraps:
+
+    ```python
+    import shap
+
+    model = HSTreeClassifier(...).fit(X, y)
+    explainer = shap.TreeExplainer(model.estimator_)   # not model itself
+    shap_values = explainer.shap_values(X)
+    ```
+
+    Shrinkage rewrites the node values of that tree in place, so the explainer
+    sees the shrunk model: the SHAP values differ from the unshrunk tree's and
+    sum, with the expected value, to `model.predict_proba(X)`. This reproduces the SHAP
+    summary plots in the [paper](https://arxiv.org/abs/2202.00858).
+    """
+
     def __init__(
         self,
         estimator_: BaseEstimator = None,
@@ -341,6 +363,28 @@ class HSTree(RuleInspectionMixin, BaseEstimator):
 
 
 class HSTreeRegressor(RegressorMixin, HSTree):
+    """Hierarchical shrinkage: post-hoc regularization for any decision tree
+    or tree ensemble.
+
+    ### SHAP values
+
+    `shap.TreeExplainer` dispatches on the model class, so it does not
+    recognize this wrapper. Pass the shrunk estimator it wraps:
+
+    ```python
+    import shap
+
+    model = HSTreeRegressor(...).fit(X, y)
+    explainer = shap.TreeExplainer(model.estimator_)   # not model itself
+    shap_values = explainer.shap_values(X)
+    ```
+
+    Shrinkage rewrites the node values of that tree in place, so the explainer
+    sees the shrunk model: the SHAP values differ from the unshrunk tree's and
+    sum, with the expected value, to `model.predict(X)`. This reproduces the SHAP
+    summary plots in the [paper](https://arxiv.org/abs/2202.00858).
+    """
+
     def __init__(
         self,
         estimator_: BaseEstimator = None,
@@ -363,6 +407,28 @@ class HSTreeRegressor(RegressorMixin, HSTree):
 
 
 class HSTreeClassifier(ClassifierMixin, HSTree):
+    """Hierarchical shrinkage: post-hoc regularization for any decision tree
+    or tree ensemble.
+
+    ### SHAP values
+
+    `shap.TreeExplainer` dispatches on the model class, so it does not
+    recognize this wrapper. Pass the shrunk estimator it wraps:
+
+    ```python
+    import shap
+
+    model = HSTreeClassifier(...).fit(X, y)
+    explainer = shap.TreeExplainer(model.estimator_)   # not model itself
+    shap_values = explainer.shap_values(X)
+    ```
+
+    Shrinkage rewrites the node values of that tree in place, so the explainer
+    sees the shrunk model: the SHAP values differ from the unshrunk tree's and
+    sum, with the expected value, to `model.predict_proba(X)`. This reproduces the SHAP
+    summary plots in the [paper](https://arxiv.org/abs/2202.00858).
+    """
+
     def __init__(
         self,
         estimator_: BaseEstimator = None,
@@ -405,6 +471,28 @@ def _get_cv_criterion(scorer):
 
 
 class HSTreeClassifierCV(HSTreeClassifier):
+    """Hierarchical shrinkage: post-hoc regularization for any decision tree
+    or tree ensemble.
+
+    ### SHAP values
+
+    `shap.TreeExplainer` dispatches on the model class, so it does not
+    recognize this wrapper. Pass the shrunk estimator it wraps:
+
+    ```python
+    import shap
+
+    model = HSTreeClassifierCV(...).fit(X, y)
+    explainer = shap.TreeExplainer(model.estimator_)   # not model itself
+    shap_values = explainer.shap_values(X)
+    ```
+
+    Shrinkage rewrites the node values of that tree in place, so the explainer
+    sees the shrunk model: the SHAP values differ from the unshrunk tree's and
+    sum, with the expected value, to `model.predict_proba(X)`. This reproduces the SHAP
+    summary plots in the [paper](https://arxiv.org/abs/2202.00858).
+    """
+
     def __init__(
         self,
         estimator_: BaseEstimator = None,
@@ -495,6 +583,28 @@ class HSTreeClassifierCV(HSTreeClassifier):
 
 
 class HSTreeRegressorCV(HSTreeRegressor):
+    """Hierarchical shrinkage: post-hoc regularization for any decision tree
+    or tree ensemble.
+
+    ### SHAP values
+
+    `shap.TreeExplainer` dispatches on the model class, so it does not
+    recognize this wrapper. Pass the shrunk estimator it wraps:
+
+    ```python
+    import shap
+
+    model = HSTreeRegressorCV(...).fit(X, y)
+    explainer = shap.TreeExplainer(model.estimator_)   # not model itself
+    shap_values = explainer.shap_values(X)
+    ```
+
+    Shrinkage rewrites the node values of that tree in place, so the explainer
+    sees the shrunk model: the SHAP values differ from the unshrunk tree's and
+    sum, with the expected value, to `model.predict(X)`. This reproduces the SHAP
+    summary plots in the [paper](https://arxiv.org/abs/2202.00858).
+    """
+
     def __init__(
         self,
         estimator_: BaseEstimator = None,
