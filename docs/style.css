@@ -11,9 +11,8 @@
      26.5rem is where the last entry stops wrapping: the widest on the site is
      imodels.experimental.bartpy.samplers.unconstrainedtree, 54 characters
      with nothing to break at, once the padding, the 1em indent on nested
-     lists and a scrollbar are counted. 32rem clears that with real room to
-     spare, so entries sit comfortably rather than just barely fitting. */
-  --sidebar-w: 32rem;
+     lists and a scrollbar are counted. 40rem leaves that well clear. */
+  --sidebar-w: 40rem;
   --measure: 100ch;
 
   --ink: #1b1f23;
@@ -92,10 +91,12 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
    still never runs wider than a comfortable line. Kept inside pdoc's own
    breakpoint so the stacked mobile layout is left alone. */
 @media screen and (min-width: 700px) {
-  /* the sidebar should be at its full width nearly all the time, so cap it
-     only generously: it is full from about a 1140px window up, and gives way
-     proportionally below that rather than crowding out the article */
-  #sidebar { width: min(var(--sidebar-w), 45vw); }
+  /* Full width from about a 1230px window up. Below that it gives way
+     proportionally rather than crowding out the article, and text still does
+     not wrap on the way down: wrapping needs the sidebar under 26.5rem, which
+     at 52vw means a window narrower than 815px. So nothing wraps at any
+     laptop size, whether or not the sidebar is at its full width. */
+  #sidebar { width: min(var(--sidebar-w), 52vw); }
   #content {
     width: auto;
     max-width: none;

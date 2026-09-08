@@ -19,18 +19,17 @@
 
                     <h2 id="gam-intro">1. Overview</h2>
 
-                    <p>A generalized additive model predicts by adding up one function per feature,
-                        <code>y = f&#8321;(x&#8321;) + f&#8322;(x&#8322;) + ... + f&#8340;(x&#8340;)</code>. Each
-                        <code>f</code> can take any shape, so the model can say that income matters
-                        greatly up to a point and hardly at all beyond it, or that risk rises at both
-                        ends of a range. A linear model gets one number per feature and has to spend it
-                        on a slope. What makes the form worth having is that the sum can be read: one
-                        curve per feature, that curve is the whole story for that feature, and reading
-                        all of them leaves nothing out. With a boosted ensemble you can compute an
-                        explanation afterwards, but the explanation is a summary of the model rather
-                        than the model itself, and two reasonable summary methods can disagree about the
-                        same prediction. Here the thing you read and the thing that predicts are one
-                        object.</p>
+                    <p>A GAM (<a href="https://en.wikipedia.org/wiki/Generalized_additive_model">generalized additive model</a>) predicts by adding up one function per feature,
+                        <code>y = f&#8321;(x&#8321;) + f&#8322;(x&#8322;) + ... + f&#8340;(x&#8340;)</code>.
+                        This form allows *complete interpretability*, as the contribution of each feature can 
+                        be visualized as a curve. Nevertheless,
+                        GAMs maintain fairly strong performance, as <code>f</code> can be modeled by any algorithm,
+                        and SOTA GAMs generally use gradient-boosted trees to learn the curve for each feature.
+                        Improving the GAM-learning algorithm has been a longstanding open research question.
+                        Here, we introduce <b>GPGam</b>, a new GAM-learning algorithm the leverages improvements
+                        in <a href="https://en.wikipedia.org/wiki/Gaussian_process">Gaussian processes</a>. GPGAM is discovered through autoresearch using frontier agents and
+                        achieves significant improvents over the SOTA on limited-size held-out tabular regression.
+                    </p>
 
                     <p><b>GPGam</b> makes every one of those curves a Gaussian process over the
                         quantile bins of its feature. Binning is what makes this practical: once the
