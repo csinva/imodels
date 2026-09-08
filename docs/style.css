@@ -7,8 +7,12 @@
 
 :root {
   /* the sidebar width, and the widest comfortable line of text; the two
-     together decide how much horizontal room the article really has */
-  --sidebar-w: 15rem;
+     together decide how much horizontal room the article really has.
+     23rem is measured, not guessed: it is the width at which every sidebar
+     entry sits on one line except the two deepest vendored bartpy paths,
+     which are 54 characters with nothing to break at and would want 26.5rem
+     to themselves. */
+  --sidebar-w: 23rem;
   --measure: 100ch;
 
   --ink: #1b1f23;
@@ -87,7 +91,9 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
    still never runs wider than a comfortable line. Kept inside pdoc's own
    breakpoint so the stacked mobile layout is left alone. */
 @media screen and (min-width: 700px) {
-  #sidebar { width: var(--sidebar-w); }
+  /* below about 1080px a fixed 23rem would eat the window, so let it give
+     way proportionally there and take its full width once there is room */
+  #sidebar { width: min(var(--sidebar-w), 34vw); }
   #content {
     width: auto;
     max-width: none;
