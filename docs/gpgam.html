@@ -68,7 +68,7 @@ aria-label="View source on GitHub" title="GitHub">
                         GAMs maintain fairly strong performance, as <code>f</code> can be modeled nonlinearly,
                         with SOTA GAMs generally modeling them via gradient-boosted trees.
                         Improving the GAM-learning algorithm has been a longstanding open research question.
-                        Here, we introduce <b>GPGam</b>, a new GAM-learning algorithm based on <a href="https://en.wikipedia.org/wiki/Gaussian_process">Gaussian processes</a>. GPGAM is discovered through autoresearch using frontier agents and
+                        Here, we introduce GPGam, a new GAM-learning algorithm based on <a href="https://en.wikipedia.org/wiki/Gaussian_process">Gaussian processes</a>. GPGAM is discovered through autoresearch using frontier agents and
                         achieves significant improvents over the SOTA on limited-size held-out tabular regression.
                     </p>
 
@@ -144,8 +144,7 @@ y.T @ y</code></pre>
                     </ul>
 
                     <p>Those same amplitudes select features. A feature that explains nothing has its
-                        amplitude driven to zero and drops out, which is automatic relevance
-                        determination, and it comes from the same objective. Interactions are
+                        amplitude driven to zero and drops out. Interactions are
                         screened on the residual and then fit in blocks that share shrinkage, with the
                         grid resolution for each block chosen by comparing marginal likelihoods.</p>
 
@@ -217,7 +216,7 @@ y.T @ y</code></pre>
 
                     <h3 id="related-work">Related work</h3>
 
-                    <p>Every work below fits a GP inside an additive model. They differ from GPGam, and from each other, on two questions: what the additive components are, and how the GP is made cheap enough to fit one per feature.</p>
+                    <p>GP-GAM extends a line of work that that fits a GP inside an additive model.</p>
 
                     <table class="reltbl">
                         <thead>
@@ -284,8 +283,9 @@ y.T @ y</code></pre>
 
                     <h3>Benchmarks</h3>
 
-                    <p>Four regression benchmark suites were used, covering 113 datasets that range from
-                        50 to 72,000 rows and up to 1,024 features. GPGam is the strongest interpretable
+                    <p>Four regression benchmark suites were used, 113 dataset slots in total, ranging
+                        from 50 to 72,000 rows and up to 1,024 features. The suites are not disjoint, so
+                        the distinct count is lower; see the note below. GPGam is the strongest interpretable
                         model on three of them, and ties explainable boosting machines on the fourth.</p>
 
                     <p class="caption caption-above"><b>Table 1.</b> Where GPGam ranks against ten other regression models on four benchmark suites.</p>
@@ -304,7 +304,7 @@ y.T @ y</code></pre>
                             <tr><td>Hierarchical shrinkage</td><td>7.71</td><td>8.43</td><td>8.23</td><td>7.96</td></tr>
                             <tr><td>Decision tree</td><td>8.14</td><td>8.29</td><td>8.46</td><td>8.71</td></tr>
                             <tr class="tblsec"><td colspan="5">Not interpretable</td></tr>
-                            <tr><td>TabPFN</td><td><b>2.52</b></td><td><b>1.86</b></td><td>3.54</td><td><b>2.46</b></td></tr>
+                            <tr><td>TabPFN*</td><td><b>2.52</b></td><td><b>1.86</b></td><td>3.54</td><td><b>2.46</b></td></tr>
                             <tr><td>Gradient boosting</td><td>4.78</td><td>4.71</td><td>4.69</td><td>4.61</td></tr>
                             <tr><td>Random forest</td><td>5.15</td><td>3.29</td><td><b>3.46</b></td><td>4.68</td></tr>
                             <tr><td>Neural net</td><td>8.80</td><td>8.71</td><td>9.15</td><td>8.75</td></tr>
@@ -324,7 +324,7 @@ y.T @ y</code></pre>
                         their real size. The other three suites use every row and column, from 517 rows
                         up to 72,000, and up to 1,024 features.</p>
 
-                    <p class="tblnote">TabPFN is handicapped in the three full-size suites. It is
+                    <p class="tblnote">*TabPFN is handicapped in the three full-size suites. It is
                         capped at 2,500 training rows by GPU memory, and on a dataset wider than 500
                         features only the first 500 are passed to it. Where it still ranks first, it
                         does so on a fraction of the data the other models saw; where it ranks last on
@@ -335,8 +335,15 @@ y.T @ y</code></pre>
                         models at library defaults, which is not how these benchmarks are meant to be
                         scored. TabArena and CTR23 both define protocols with repeated folds and
                         hyperparameter search, so none of these numbers are comparable to published
-                        leaderboard entries. CTR23 is also cut from 35 datasets to 28, dropping the
-                        seven it shares with TabArena so the two columns stay independent.</p>
+                        leaderboard entries. CTR23 is also cut from 35 datasets to 28, dropping seven
+                            that TabArena also uses. That cut is incomplete, and the suites overlap in
+                            ways the columns do not account for. All seven classic datasets are in the
+                            imodels suite. CTR23 still shares five with the imodels suite (abalone,
+                            california housing, cpu activity, kin8nm, geographical origin of music) and
+                            three with TabArena (california housing again, and white and red wine, which
+                            TabArena carries as one combined set). California housing is in all four.
+                            Removing those seven from CTR23 leaves 21 and moves the ranks by up to 0.33,
+                            enough to reorder GPGam and EBM on that column.</p>
 
 
                     <p>The model fails in the same way on every suite. It loses on smooth simulations and on data with strong interactions, such
