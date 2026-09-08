@@ -14,11 +14,10 @@
                         <code>y = f&#8321;(x&#8321;) + f&#8322;(x&#8322;) + ... + f&#8340;(x&#8340;)</code>.
                         This form allows <i>complete interpretability</i>, as the contribution of each feature can 
                         be visualized as a curve. Nevertheless,
-                        GAMs maintain fairly strong performance, as <code>f</code> can be modeled by any algorithm,
-                        and SOTA GAMs generally use gradient-boosted trees to learn the curve for each feature.
+                        GAMs maintain fairly strong performance, as <code>f</code> can be modeled nonlinearly,
+                        with SOTA GAMs generally modeling them via gradient-boosted trees.
                         Improving the GAM-learning algorithm has been a longstanding open research question.
-                        Here, we introduce <b>GPGam</b>, a new GAM-learning algorithm the leverages improvements
-                        in <a href="https://en.wikipedia.org/wiki/Gaussian_process">Gaussian processes</a>. GPGAM is discovered through autoresearch using frontier agents and
+                        Here, we introduce <b>GPGam</b>, a new GAM-learning algorithm based on <a href="https://en.wikipedia.org/wiki/Gaussian_process">Gaussian processes</a>. GPGAM is discovered through autoresearch using frontier agents and
                         achieves significant improvents over the SOTA on limited-size held-out tabular regression.
                     </p>
 

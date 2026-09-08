@@ -302,12 +302,45 @@
               if not _m.classes():
                   for _m2 in _m.submodules():
                       index_classes += _m2.classes(sort=sort_identifiers)
+
+      # A class is tagged by the sub-package it is defined in, which is how the
+      # library is already organised. Read it off __module__ rather than the
+      # documented name, so a class re-exported from imodels/__init__.py is
+      # still tagged with where it actually lives.
+      CATEGORY_LABELS = {
+          'tree': 'trees',
+          'rule_set': 'rule sets',
+          'rule_list': 'rule lists',
+          'algebraic': 'algebraic',
+          'discretization': 'discretization',
+          'importance': 'importance',
+          'clustering': 'clustering',
+          'util': 'util',
+          'experimental': 'experimental',
+      }
+
+      def _category(c):
+          mod = getattr(getattr(c, 'obj', None), '__module__', '') or ''
+          parts = mod.split('.')
+          if len(parts) > 1 and parts[0] == 'imodels' and parts[1] in CATEGORY_LABELS:
+              return parts[1]
+          return ''
+
+      _tagged = [(c, _category(c)) for c in index_classes]
+      _cats = sorted({k for _, k in _tagged if k}, key=lambda k: CATEGORY_LABELS[k])
     %>
     % if index_classes:
     <li><h3>Classes</h3>
-      <ul>
-      % for c in index_classes:
-        <li>${link(c)}</li>
+      % if _cats:
+      <ul class="cat-legend">
+        % for k in _cats:
+        <li><span class="cat-dot cat-${k}"></span>${CATEGORY_LABELS[k]}</li>
+        % endfor
+      </ul>
+      % endif
+      <ul class="class-list">
+      % for c, k in _tagged:
+        <li><span class="cat-dot${' cat-' + k if k else ''}" title="${CATEGORY_LABELS[k] if k else 'uncategorized'}"></span>${link(c)}</li>
       % endfor
       </ul>
     </li>

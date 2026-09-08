@@ -196,6 +196,51 @@ nav.toc-main span {
 .caption-above { margin: 1.8em auto 0.7em; }
 .caption b { color: var(--ink); font-weight: 600; }
 
+/* ---------- class category tags ---------- */
+/* Each class in the sidebar carries a dot for the sub-package it comes from,
+   with a legend above the list. Both are emitted by html.mako, so they come
+   back on every pdoc run. */
+:root {
+  --cat-tree:           #2f7d5b;
+  --cat-rule-set:       #c05621;
+  --cat-rule-list:      #b7791f;
+  --cat-algebraic:      #2b6cb0;
+  --cat-discretization: #6b46c1;
+  --cat-importance:     #b83280;
+  --cat-clustering:     #0f8b8d;
+  --cat-util:           #718096;
+  --cat-experimental:   #7c7a3f;
+}
+
+.cat-dot {
+  flex: 0 0 auto;
+  width: 7px; height: 7px; border-radius: 50%;
+  margin-right: 0.55em;
+  background: var(--line);
+  /* nudge onto the text baseline rather than the line box */
+  position: relative; top: -0.1em;
+}
+.cat-tree           { background: var(--cat-tree); }
+.cat-rule_set       { background: var(--cat-rule-set); }
+.cat-rule_list      { background: var(--cat-rule-list); }
+.cat-algebraic      { background: var(--cat-algebraic); }
+.cat-discretization { background: var(--cat-discretization); }
+.cat-importance     { background: var(--cat-importance); }
+.cat-clustering     { background: var(--cat-clustering); }
+.cat-util           { background: var(--cat-util); }
+.cat-experimental   { background: var(--cat-experimental); }
+
+/* a flex row keeps a wrapped class name aligned past its dot */
+#sidebar .class-list li { display: flex; align-items: baseline; }
+
+#sidebar .cat-legend {
+  display: flex; flex-wrap: wrap; gap: 0.1em 0.85em;
+  margin: 0.5em 0 0.7em; padding: 0.45em 0.6em;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+  font-size: 0.76rem; color: var(--muted);
+}
+#sidebar .cat-legend li { display: flex; align-items: baseline; margin: 0; }
+
 /* ---------- tables ---------- */
 #content table, .article table {
   /* auto side margins centre a table narrower than its column; a full-width
