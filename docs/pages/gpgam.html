@@ -183,92 +183,70 @@ y.T @ y</code></pre>
                             <tr><th>Work</th><th>How it relates</th></tr>
                         </thead>
                         <tbody>
-                            <tr class="tblsec"><td colspan="2">Additive models</td></tr>
-                            <tr>
-                              <td>Hastie &amp; Tibshirani, <a href="https://doi.org/10.1214/ss/1177013604">Generalized Additive Models</a> (1986)</td>
-                              <td>Defines the model class. GPGam is a GAM; everything below differs only in how the shape functions are fit.</td>
-                            </tr>
-                            <tr>
-                              <td>Wood, <a href="https://doi.org/10.1111/j.1467-9868.2010.00749.x">penalized splines with REML</a> (2011), <code>mgcv</code></td>
-                              <td>The closest classical relative: smoothness chosen by maximizing a marginal likelihood rather than by cross-validation. GPGam does the same thing through per-feature kernel amplitudes on a bin grid, and gets interaction selection and feature selection out of the same objective.</td>
-                            </tr>
-                            <tr>
-                              <td>Lou, Caruana, Gehrke &amp; Hooker, <a href="https://doi.org/10.1145/2487575.2487579">GA<sup>2</sup>M with FAST</a> (2013); EBM in InterpretML</td>
-                              <td>The main baseline. Identical outer shape — main effects plus a small number of pairwise terms, screened before fitting — with boosted trees where GPGam puts a GP posterior, and the FAST heuristic where GPGam compares marginal likelihoods.</td>
-                            </tr>
-
                             <tr class="tblsec"><td colspan="2">GAMs with learned shape functions</td></tr>
                             <tr>
-                              <td>Agarwal et al., <a href="https://arxiv.org/abs/2004.13912">Neural Additive Models</a> (NeurIPS 2021)</td>
+                              <td>Neural Additive Models: Interpretable Machine Learning with Neural Nets (<a href="https://arxiv.org/abs/2004.13912">Agarwal et al. 2021</a>)</td>
                               <td>One neural network per feature. Same goal and same reading of the fitted model, but trained by gradient descent and with no closed-form uncertainty on a curve.</td>
                             </tr>
                             <tr>
-                              <td>Chang &amp; Caruana, <a href="https://arxiv.org/abs/2106.01613">NODE-GAM</a> (ICLR 2022)</td>
+                              <td>NODE-GAM: Neural Generalized Additive Model for Interpretable Deep Learning (<a href="https://arxiv.org/abs/2106.01613">Chang et al. 2022</a>)</td>
                               <td>Differentiable oblivious trees as shape functions, scaled to large data by minibatching. GPGam does not need that: its fit cost is already independent of the number of rows.</td>
                             </tr>
                             <tr>
-                              <td>Radenovic, Dubey &amp; Mahajan, <a href="https://arxiv.org/abs/2205.14120">Neural Basis Models</a> (NeurIPS 2022)</td>
+                              <td>Neural Basis Models for Interpretability (<a href="https://arxiv.org/abs/2205.14120">Radenovic et al. 2022</a>)</td>
                               <td>Shares one basis across features to cut parameters. GPGam shares a two-kernel prior instead and lets only the amplitudes differ per feature.</td>
                             </tr>
                             <tr>
-                              <td>Zhang, Barr &amp; Paisley, <a href="https://arxiv.org/abs/2402.12518">Gaussian Process Neural Additive Models</a> (AAAI 2024)</td>
+                              <td>Gaussian Process Neural Additive Models (<a href="https://arxiv.org/abs/2402.12518">Zhang et al. 2024</a>)</td>
                               <td>The nearest neighbour by construction: GP shape functions, reached through random Fourier features, giving a convex objective. GPGam keeps the exact GP posterior over quantile bins rather than approximating the kernel, and fits its amplitudes by exact marginal likelihood.</td>
                             </tr>
 
                             <tr class="tblsec"><td colspan="2">Additive Gaussian processes</td></tr>
                             <tr>
-                              <td>Duvenaud, Nickisch &amp; Rasmussen, <a href="https://arxiv.org/abs/1112.4394">Additive Gaussian Processes</a> (NeurIPS 2011)</td>
+                              <td>Accuracy versus interpretability in flexible modeling: implementing a tradeoff using Gaussian process models (<a href="https://doi.org/10.2333/bhmk.26.29">Plate 1999</a>)</td>
+                              <td>The earliest statement of what GPGam rests on: constrain a GP to be additive and every input can be read on its own. Plate sweeps a dial between fully flexible and fully additive to trade accuracy for interpretability; GPGam fixes the dial at additive-plus-pairwise and spends the freedom on per-feature smoothness instead.</td>
+                            </tr>
+                            <tr>
+                              <td>Bayesian functional ANOVA modeling using Gaussian process prior distributions (<a href="https://doi.org/10.1214/10-BA505">Kaufman et al. 2010</a>)</td>
+                              <td>Puts a GP prior on each term of an ANOVA decomposition and samples the posterior by MCMC. The same decomposition GPGam fits, at a cost that grows with the sample; GPGam has it in closed form from the sufficient statistics.</td>
+                            </tr>
+                            <tr>
+                              <td>Additive Gaussian Processes (<a href="https://arxiv.org/abs/1112.4394">Duvenaud et al. 2011</a>)</td>
                               <td>Sums kernels over orders of interaction, with one amplitude per order. GPGam stops at order two and gives every feature its own amplitudes, which is what turns the prior into a per-feature smoothness choice.</td>
                             </tr>
                             <tr>
-                              <td>Lu, Boukouvalas &amp; Hensman, <a href="https://arxiv.org/abs/2206.09861">orthogonal additive kernels</a> (ICML 2022)</td>
+                              <td>Scalable GAM using sparse variational Gaussian processes (<a href="https://arxiv.org/abs/1812.11106">Adam et al. 2018</a>)</td>
+                              <td>GPGam's model written down directly: a GAM in which every shape function is a GP, with the posterior coupling between components kept rather than assumed away. It reaches scale through sparse variational inducing points; GPGam avoids the variational bound entirely, because binning makes the exact marginal likelihood cheap.</td>
+                            </tr>
+                            <tr>
+                              <td>An additive Gaussian process regression model for interpretable non-parametric analysis of longitudinal data (<a href="https://doi.org/10.1038/s41467-019-09785-8">Cheng et al. 2019</a>)</td>
+                              <td>Reads an additive GP decomposition as the explanation itself, in an applied setting — the same use of additivity that GPGam relies on.</td>
+                            </tr>
+                            <tr>
+                              <td>Additive Gaussian Processes Revisited (<a href="https://arxiv.org/abs/2206.09861">Lu et al. 2022</a>)</td>
                               <td>Imposes orthogonality between components so the decomposition is identifiable. GPGam does not constrain its components; it sidesteps only the constant offset, by reporting each curve's uncertainty about that curve's own mean.</td>
                             </tr>
                             <tr>
-                              <td>Cheng et al., <a href="https://doi.org/10.1038/s41467-019-09785-8">additive GP regression for longitudinal data</a> (2019)</td>
-                              <td>Reads an additive GP decomposition as the explanation itself, in an applied setting — the same use of additivity that GPGam relies on.</td>
+                              <td>Multiscale spatially varying coefficient modelling using a Geographical Gaussian Process GAM (<a href="https://doi.org/10.1080/13658816.2023.2270285">Comber et al. 2023</a>)</td>
+                              <td>A GAM whose smooths are GP splines parameterised by location, which turns it into a spatially varying coefficient model and beats geographically weighted regression on simulated surfaces. The same GP-inside-a-GAM construction as GPGam, aimed at geography rather than ordinary tabular features.</td>
+                            </tr>
+                            <tr>
+                              <td>Hierarchical additive interaction modelling with Gaussian process prior and its efficient implementation for multidimensional grid data (<a href="https://arxiv.org/abs/2305.07073">Ishida et al. 2023</a>)</td>
+                              <td>The nearest relative on the prior side: a hierarchical ANOVA kernel carrying main and pairwise effects under marginality, centred so the decomposition is identifiable, and made fast by Kronecker structure once the data lie on a grid. GPGam also puts its data on a grid, but reduces to sufficient statistics rather than Kronecker algebra, and does not centre &mdash; which is why its bands are reported about each curve's own mean.</td>
                             </tr>
 
                             <tr class="tblsec"><td colspan="2">Making a Gaussian process cheap</td></tr>
                             <tr>
-                              <td>Wilson &amp; Nickisch, <a href="https://arxiv.org/abs/1503.01057">KISS-GP / structured kernel interpolation</a> (ICML 2015)</td>
+                              <td>Kernel Interpolation for Scalable Structured Gaussian Processes (KISS-GP) (<a href="https://arxiv.org/abs/1503.01057">Wilson et al. 2015</a>)</td>
                               <td>Places inducing points on a grid and interpolates onto it. GPGam's quantile bins are the one-dimensional case, but each row is assigned to a bin exactly, so <code>Z'Z</code>, <code>Z'y</code> and <code>y'y</code> are sufficient statistics rather than an interpolation error.</td>
                             </tr>
                             <tr>
-                              <td>Smith, &Aacute;lvarez &amp; Lawrence, <a href="https://arxiv.org/abs/1809.02010">Gaussian Process Regression for Binned Data</a> (2018)</td>
+                              <td>Hilbert space methods for reduced-rank Gaussian process regression (<a href="https://arxiv.org/abs/1401.5508">Solin et al. 2020</a>)</td>
+                              <td>Replaces a GP with a finite basis expansion, which is how GP terms are usually made affordable inside Bayesian GAM software. GPGam's bin grid is also a finite basis, but it is exact for the piecewise-constant function it defines rather than a truncation of the intended kernel.</td>
+                            </tr>
+                            <tr>
+                              <td>Gaussian Process Regression for Binned Data (<a href="https://arxiv.org/abs/1809.02010">Smith et al. 2018</a>)</td>
                               <td>The same observation from the other direction: when data arrive binned, the cost of exact GP inference is set by the number of bins, not the number of samples. GPGam bins on purpose to obtain that.</td>
-                            </tr>
-
-                            <tr class="tblsec"><td colspan="2">What the marginal likelihood buys</td></tr>
-                            <tr>
-                              <td>MacKay (1995) and Neal (1996), automatic relevance determination</td>
-                              <td>Where the feature selection comes from. Maximizing the marginal likelihood drives the amplitude of a feature that explains nothing toward zero, so GPGam does not need a separate selection step.</td>
-                            </tr>
-
-                            <tr class="tblsec"><td colspan="2">Caveats on reading a GAM</td></tr>
-                            <tr>
-                              <td>Zhang, Martinelli &amp; John, <a href="https://arxiv.org/abs/2504.10169">Challenges in interpretability of additive models</a> (2025)</td>
-                              <td>Catalogues the ways a GAM's components fail to be identified, starting with shape functions being fixed only up to a constant. That is precisely why the bands in Fig 1 and Fig 3 are computed about each curve's own mean.</td>
-                            </tr>
-
-                            <tr class="tblsec"><td colspan="2">The comparison it is measured against</td></tr>
-                            <tr>
-                              <td>Hollmann et al., <a href="https://doi.org/10.1038/s41586-024-08328-6">TabPFN</a> (Nature 2025)</td>
-                              <td>The strongest non-interpretable model in the table above, and the one GPGam does not beat on three of the four suites. A transformer fitted to a synthetic prior, with no additive structure to read.</td>
-                            </tr>
-
-                            <tr class="tblsec"><td colspan="2">How it was found</td></tr>
-                            <tr>
-                              <td>Romera-Paredes et al., <a href="https://doi.org/10.1038/s41586-023-06924-6">FunSearch</a> (Nature 2024)</td>
-                              <td>Establishes the pattern the search loop used: a language model proposing programs, an evaluator keeping only what scores better.</td>
-                            </tr>
-                            <tr>
-                              <td>Novikov et al., <a href="https://arxiv.org/abs/2506.13131">AlphaEvolve</a> (2025)</td>
-                              <td>Extends that pattern from single functions to whole programs, which is the regime GPGam was found in: the loop rewrote the entire model file each round.</td>
-                            </tr>
-                            <tr>
-                              <td>Singh et al., <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (2026)</td>
-                              <td>The loop that produced GPGam, and the source of the version history plotted in Fig 2.</td>
                             </tr>
                         </tbody>
                     </table>
