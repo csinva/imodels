@@ -1,5 +1,5 @@
 {% set name = "imodels" %}
-{% set version = "1.0.2" %}
+{% set version = "2.0.4" %}
 
 
 package:
@@ -8,39 +8,55 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/imodels-{{ version }}.tar.gz
-  sha256: 76082d76c19e58045367199cb307dd1bd02a1c7ea0bbe101da4b2cec3c765ad4
+  sha256: 6aadab17ff176033022264a70c3571fa300bd2584590aec80bbf0254d91f58ab
 
 build:
   number: 0
   noarch: python
-  script: {{ PYTHON }} -m pip install . -vv
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
 
 requirements:
   host:
     - pip
-    - python >=3.6
+    - python >={{ python_min }}
+    - setuptools >=64
+    - wheel
   run:
-    - mlxtend >=0.18.0
+    - python >={{ python_min }}
+    - matplotlib-base
+    # upper bound forced by packaging, not by imodels: mlxtend 0.24/0.25 declare
+    # requirements (numpy >=2.3.5, scikit-learn >=1.8, scipy >=1.16.3) that their
+    # conda packages don't enforce, so `pip check` fails below python 3.11.
+    # imodels only uses fpgrowth from mlxtend, which 0.23 provides. Drop the
+    # bound once mlxtend's conda metadata is consistent.
+    - mlxtend <0.24
     - numpy
     - pandas
-    - python >=3.6
-    - scikit-learn >=0.23.0
+    - requests
+    - scikit-learn
     - scipy
+    - tqdm
 
 test:
   imports:
-    - experiments.config
     - imodels
   commands:
     - pip check
   requires:
     - pip
+    - python {{ python_min }}
 
 about:
   home: https://github.com/csinva/imodels
   summary: Implementations of various interpretable models
+  description: |
+    imodels provides a simple interface for fitting and using state-of-the-art
+    interpretable models -- rule sets, rule lists and trees -- all compatible
+    with scikit-learn.
   license: MIT
   license_file: license.md
+  doc_url: https://csinva.io/imodels/
+  dev_url: https://github.com/csinva/imodels
 
 extra:
   recipe-maintainers:

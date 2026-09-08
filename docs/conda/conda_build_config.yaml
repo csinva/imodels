@@ -1,0 +1,5 @@
+# python_min is supplied by conda-forge's global pinning when the recipe is built
+# there. Defining it here as well lets `conda build .` work from a local checkout,
+# which otherwise fails to render the recipe.
+python_min:
+  - "3.9"
