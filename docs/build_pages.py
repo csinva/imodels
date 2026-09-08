@@ -85,12 +85,34 @@ def shared_sidebar(index_html):
     return re.sub(r'href="#', 'href="index.html#', nav)
 
 
+def hand_edited():
+    """Page names listed in docs/.hand-edited, one per line.
+
+    A page named there is being edited directly in its built form, so this
+    script leaves it alone rather than regenerating it from pages/<name>.html
+    and throwing the edits away. Shared styling still reaches it, since every
+    page links style.css rather than inlining it; what it stops receiving is
+    changes to the head, navbar and sidebar, which arrive only by regeneration.
+    Remove the name once the edits are folded back into pages/<name>.html.
+    """
+    path = os.path.join(HERE, ".hand-edited")
+    if not os.path.exists(path):
+        return set()
+    with open(path) as f:
+        return {ln.strip() for ln in f
+                if ln.strip() and not ln.startswith("#")}
+
+
 def main():
     index_html = _read("index.html")
+    skip = hand_edited()
     head = index_html[index_html.index("<head>"):index_html.index("</head>")]
     sidebar = shared_sidebar(index_html)
     header = shared_header(index_html)
     for name, (title, extra) in PAGES.items():
+        if name in skip:
+            print(f"  skipped {name}.html: listed in .hand-edited, left as it is")
+            continue
         content = _read(os.path.join("pages", f"{name}.html")).strip()
         page = (
             "<!doctype html>\n<html lang=\"en\">\n\n"

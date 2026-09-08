@@ -8,11 +8,12 @@
 :root {
   /* the sidebar width, and the widest comfortable line of text; the two
      together decide how much horizontal room the article really has.
-     27rem is measured, not guessed: the widest entry in the whole site is
+     26.5rem is where the last entry stops wrapping: the widest on the site is
      imodels.experimental.bartpy.samplers.unconstrainedtree, 54 characters
-     with nothing to break at, which needs 26.5rem once the padding, the 1em
-     indent on nested lists and a scrollbar are counted. Nothing wraps. */
-  --sidebar-w: 27rem;
+     with nothing to break at, once the padding, the 1em indent on nested
+     lists and a scrollbar are counted. 32rem clears that with real room to
+     spare, so entries sit comfortably rather than just barely fitting. */
+  --sidebar-w: 32rem;
   --measure: 100ch;
 
   --ink: #1b1f23;
@@ -92,9 +93,9 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
    breakpoint so the stacked mobile layout is left alone. */
 @media screen and (min-width: 700px) {
   /* the sidebar should be at its full width nearly all the time, so cap it
-     only generously: it is full from about a 1030px window up, and gives way
+     only generously: it is full from about a 1140px window up, and gives way
      proportionally below that rather than crowding out the article */
-  #sidebar { width: min(var(--sidebar-w), 42vw); }
+  #sidebar { width: min(var(--sidebar-w), 45vw); }
   #content {
     width: auto;
     max-width: none;

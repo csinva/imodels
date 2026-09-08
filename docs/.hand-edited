@@ -1,0 +1,5 @@
+# Pages being edited directly in their built form, which build_pages.py must
+# not regenerate from pages/<name>.html. Remove a name once its edits have been
+# folded back into the source fragment, or the page stops receiving changes to
+# the shared head, navbar and sidebar.
+gpgam
