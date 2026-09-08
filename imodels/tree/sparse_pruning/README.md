@@ -1,16 +1,26 @@
 # Sparse pruning and hierarchical shrinkage
 
-Use `SPTree*` to prune a tree, or `SHSTree*` to prune and then apply hierarchical
-shrinkage (HS). `sp_alpha` controls pruning; `reg_param` controls HS without
-changing the retained structure. Classes ending in `CV` select these strengths;
-non-CV classes use the strengths you supply.
+Prune a CART tree with the [CAP/hiCAP penalty](https://arxiv.org/abs/0909.0411),
+optionally followed by hierarchical shrinkage (HS). `sp_alpha` controls pruning
+strength; `reg_param` controls shrinkage without changing the retained structure.
+The penalty groups each split with all its descendant splits.
 
-Pruning uses the [CAP/hiCAP penalty](https://arxiv.org/abs/0909.0411), with each
-group containing a split and all its descendant splits. The resulting model
-predicts with retained CART node values, optionally shrunk by HS—not with the
-penalized coefficients used to decide pruning.
+[Fit a model](#fit-a-model) · [Tune strengths](#tune-regularization-strengths) ·
+[Solution paths](#solution-paths) · [Choose a solver](#solver-reference) ·
+[Implementation and references](#implementation-and-references)
 
-## Quick start
+## Fit a model
+
+### Regression
+
+| Task | Supply strengths yourself | Select strengths by CV |
+| --- | --- | --- |
+| Pruning only | `SPTreeRegressor` | `SPTreeRegressorCV` |
+| Pruning + HS | `SHSTreeRegressor` | `SHSTreeRegressorCV` |
+
+All classes import directly from `imodels`. Non-CV models take `sp_alpha` and,
+for HS, `reg_param`. CV models select those strengths and expose `sp_alpha_`
+and `reg_param_` after fitting.
 
 ```python
 from sklearn.datasets import load_diabetes
@@ -23,41 +33,54 @@ predictions = shrunk.predict(X)
 selected_strengths = shrunk.sp_alpha_, shrunk.reg_param_
 ```
 
-For ordinary regression trees, the defaults are `ord=np.inf, solver="auto"`:
-fast exact **structural knots**, the penalties where the retained tree changes.
-This is all pruning needs; computing a full coefficient path is optional.
+Defaults are `ord=np.inf, solver="auto"`. For eligible regression trees this
+computes the fast structural path: all distinct pruned trees, without solving
+for every coefficient. Predictions use retained CART node values, optionally
+shrunk by HS—not the penalized coefficients used to decide pruning.
 
-## Cross-validation
+### Binary classification
 
-All four SP/SHS CV classes support k-fold selection through integer `cv`
-(default: 3). Regression uses shuffled KFold; classification uses shuffled
-StratifiedKFold. Non-CV classes do not run folds internally: use their CV
-counterparts, or wrap a non-CV estimator with `prefit=False` in sklearn's
-`GridSearchCV` for custom splitters.
+Use `SPTreeClassifier` / `SPTreeClassifierCV` for pruning, or
+`SHSTreeClassifier` / `SHSTreeClassifierCV` to add HS. All provide `predict`
+and `predict_proba`. Classification uses APA-APG2 with logistic loss and
+numeric-grid CV, not the exact squared-error paths below.
+HS strengths must be numeric; GCV and multiclass classification are unsupported.
 
-For eligible regression trees, `sp_alpha_list="auto"` grows one tree per training
-fold and evaluates every distinct pruned structure, once per HS choice.
-Candidates come from training-fold knots, never a full-data tree.
-SHS defaults to a numeric HS grid; SP disables HS by default.
-A numeric `sp_alpha_list` instead requests grid CV. Classification, `ord=2`,
-explicit APA, and other ineligible cases also use grid CV.
+## Tune regularization strengths
 
-The default `selection_rule="one_se"` favors the simplest tree within one
-standard error of the best mean score; `"best"` chooses the highest mean score.
-Regression defaults to negative mean squared error; classification to accuracy.
-Set `scoring` to change this. Structural-state score reuse requires scorers
-that depend on predictions/tree structure, not the numerical penalty label.
+### Cross-validation
 
-Inspect `sp_alpha_` and `reg_param_` for selected strengths, `cv_scores_` and
-`cv_params_` for fold scores and candidates, and `cv_path_mode_` for
-`"structural"` versus `"grid"`. The final fit uses the selected absolute penalty,
-not the nearest full-data knot. Solver choice and CV selection are separate:
-eligible automatic CV still scores structural states if the final-fit solver
-is `"coefficient_path"` or `"hicap"`.
+All four SP/SHS CV classes accept integer `cv` (default: 3): shuffled KFold for
+regression, shuffled StratifiedKFold for classification. Each training fold
+grows its own tree, prunes candidates, applies HS if requested, and scores
+predictions on held-out rows. The selected configuration is refitted on all data.
 
-## Automatic HS with GCV
+- `sp_alpha_list="auto"` evaluates distinct structural states for eligible
+  regression trees. Candidates come from training-fold knots, never a full-data
+  tree. Other cases, including classification and explicit APA, use a numeric grid.
+- A numeric `sp_alpha_list` requests grid CV.
+- SHS defaults to a numeric `reg_param_list`, selecting HS by held-out scores;
+  SP disables HS by default. `reg_param_list="gcv"` changes only HS selection
+  as described below.
+- `selection_rule="one_se"` favors the simplest tree within one standard error
+  of the best mean score; `"best"` selects the highest mean score.
+  `scoring` defaults to negative mean squared error for regression and accuracy
+  for classification.
 
-GCV is an **optional way to select HS**, not a replacement for outer pruning CV:
+Inspect `cv_params_` and `cv_scores_` for candidates and fold scores, and
+`cv_path_mode_` for `"structural"` versus `"grid"`. The final fit uses the
+selected absolute penalty, not the nearest full-data knot. Structural CV reuses
+scores for identical retained states; custom scorers must depend on predictions
+or structure, not the numerical penalty label.
+
+Non-CV classes do not run folds internally. For custom splitters, including
+grouped or time-ordered data, use sklearn's `GridSearchCV` around a non-CV
+estimator with `prefit=False`, rather than a wrapper with internal shuffled folds.
+
+### Automatic HS with GCV
+
+GCV selects HS from a fitted tree's node statistics. It is optional and does
+**not** replace held-out pruning selection in a CV model:
 
 ```python
 auto_hs = SHSTreeRegressorCV(
@@ -65,73 +88,87 @@ auto_hs = SHSTreeRegressorCV(
 ).fit(X, y)
 ```
 
-Here GCV selects HS on each training fold's pruned tree; held-out fold scores
-still select pruning. HS is reselected after full-data pruning. To select both
-strengths by held-out k-fold scores, use a numeric `reg_param_list` instead.
-For HS without pruning, `HSTreeRegressorCV` also offers k-fold selection over
-numeric HS strengths.
+Here GCV selects HS for each training fold's pruned tree; held-out fold scores
+still select `sp_alpha`. HS is reselected after full-data pruning.
+Without outer CV, `SHSTreeRegressor(sp_alpha=..., reg_param="gcv")` selects HS
+after fixed-penalty pruning. For HS alone, use `HSTreeRegressor(reg_param="gcv")`
+or `HSTreeRegressorCV` with numeric strengths for k-fold selection.
 
-Without outer CV, use `SHSTreeRegressor(reg_param="gcv", sp_alpha=...)` to select
-HS after fixed-penalty pruning, or `HSTreeRegressor(reg_param="gcv")` for HS alone.
-Sparse-HS wrappers also accept `reg_param=None` as an alias; ordinary HS requires
-the explicit `"gcv"` value. `reg_param_` stores the selected strength and
-`gcv_results_` stores scores, effective degrees of freedom, and diagnostics.
-An infinite selected strength means root-mean predictions.
+GCV requires node-based HS, a single-output tree with `squared_error` or
+`friedman_mse`, uniform positive weights, and no active monotonic constraints.
+Unsupported configurations, including forests, need numeric strengths or CV.
+`reg_param_` stores the selected strength; `gcv_results_` stores scores,
+effective degrees of freedom, and diagnostics. An infinite strength means
+root-mean predictions. Sparse-HS wrappers accept `reg_param=None` as a GCV
+compatibility alias; ordinary HS requires the explicit `"gcv"` value.
 
-GCV uses node statistics, without a dense training design. It requires node-based
-HS, a single-output regression tree with `squared_error` or `friedman_mse`,
-uniform positive weights, and no active monotonic constraints. Classifiers,
-forests, and other unsupported configurations need numeric strengths or CV.
+### K-fold CV versus GCV
 
-### K-fold CV versus GCV: benefits and limitations
+- **K-fold:** evaluates the grow/prune/shrink pipeline on held-out rows and
+  supports your prediction metric. It costs fold fits and candidate evaluation;
+  each fold trains on less data, and selected strengths can vary with the split.
+- **GCV:** usually cheaper for HS selection, without HS-specific fold refits or
+  held-out predictions. Its training-error correction accounts for a fixed
+  tree's effective degrees of freedom, but not for learning/pruning that tree
+  from the same targets. It can therefore be optimistic; it is not exact
+  leave-one-out refitting. Using it inside SHS CV still incurs pruning-fold costs.
 
-- **K-fold CV** evaluates the grow/prune/shrink pipeline on held-out rows and
-  supports your chosen prediction metric. The tradeoff is repeated fold fits
-  and candidate evaluation. Each fold trains on less data than the final model,
-  and selected strengths can vary with the split, especially on small datasets.
-- **GCV** is usually cheaper for HS selection: it uses retained node statistics
-  without HS-specific fold refits or held-out predictions. It corrects training
-  residual error for the **fixed tree's** effective degrees of freedom, but not
-  for learning splits or selecting pruning from the same targets. It can
-  therefore be optimistic; it is not exact leave-one-out refitting of the tree.
+Use k-fold when held-out selection justifies the computation; GCV is a fast
+approximation for eligible trees. Neither guarantees better strengths.
+Evaluate the selected model on an untouched test set or an additional outer CV
+loop, not its winning tuning score. See sklearn's
+[cross-validation guide](https://scikit-learn.org/stable/modules/cross_validation.html).
 
-Use k-fold when held-out model selection justifies the computation; use GCV for
-fast approximate HS selection on eligible trees. Neither is guaranteed to select
-better strengths. GCV inside an SHS CV wrapper still incurs pruning-fold costs.
-Do not treat the winning tuning score as an unbiased final performance estimate:
-use an untouched test set or an additional outer CV loop. See sklearn's
-[cross-validation guide](https://scikit-learn.org/stable/modules/cross_validation.html)
-for evaluation and appropriate splitters for grouped or time-ordered data.
+## Solution paths
 
-## Binary classification
+A pruning path varies `sp_alpha` (λ) on **one fixed fitted tree**, not `reg_param`.
+For squared-error regression with `ord=np.inf`, there are two useful outputs:
 
-Use `SPTreeClassifierCV` or `SHSTreeClassifierCV`, imported from `imodels`,
-for `predict` and `predict_proba`. Their non-CV counterparts take a fixed
-`sp_alpha`. Classification uses APA-APG2 with logistic loss and numeric-grid CV;
-it does not have the exact squared-error structural/coefficient paths.
-HS strengths must be numeric: GCV is regression-only. Multiclass is unsupported.
+- **Structural path:** penalties where the retained tree changes. This is enough
+  to traverse pruned trees and select pruning by CV; it is the regression default.
+- **Coefficient path:** every penalty where a penalized coefficient changes
+  **slope**. Between consecutive knots the coefficients are linear in λ, so the
+  full path supports exact interpolation. A coefficient knot need not change
+  the tree; interpolating only at structural knots can miss a bend.
 
-## Defaults and solver choices
+![Two-coefficient hiCAP example: at lambda 0.5 slopes change but both splits remain; at lambda 1.5 both splits disappear.](assets/solution_path.svg)
 
-| `solver` | What it computes |
-| --- | --- |
-| `"auto"` | Structural path for eligible trees; otherwise proximal for infinity-norm regression, APA for other supported objectives |
-| `"topology"` | Exact structural knots; no coefficients |
-| `"proximal"` | Certified coefficients at the chosen penalty; no full coefficient path |
-| `"coefficient_path"` | Complete certified coefficient path using the fitted tree's diagonal structure |
-| `"hicap"` | Generic, slower, certified coefficient-path reference |
-| `"apa_apg2"` | Approximate point solution; also supports `ord=2` and binary classification |
+This analytic example minimizes
+`0.5 * ||beta - [1, 2]||² + λ * (max(|beta₀|, |beta₁|) + |beta₁|)`.
+At λ = 0.5 the two coefficients meet and change slopes, without changing the
+tree. At λ = 1.5 both vanish, removing both splits. More generally, a split is
+retained while its descendant group is active—even if its own coefficient is zero.
 
-Tree-specific solvers require `ord=np.inf`, zero/default `support_tol`, and an
-unconstrained single-output mean-based regression tree evaluated on its fitting
-rows and weights. Wrappers do not assume this for externally supplied
-`prefit=True` trees or forest out-of-bag data. Incompatible explicit choices and
-failed exact-solver certificates raise errors rather than silently falling back.
+### Traverse and preview pruned trees
 
-## Optional coefficients
+With the structural solver, fitted wrappers expose `pruning_path_`;
+`coef_` and `coefficient_path_` are `None`. To plot states, keep the original
+CART tree and use the fitted-tree helpers directly:
 
-**A non-CV model still represents your supplied `sp_alpha`, even when its solver
-computes the full path.** Access the extra path without changing that model:
+```python
+from sklearn.tree import DecisionTreeRegressor, plot_tree
+from imodels.tree.sparse_pruning import (
+    fitted_tree_linf_exact_topology_path, materialize_fitted_tree_topology,
+)
+
+source = DecisionTreeRegressor(max_leaf_nodes=8, random_state=0).fit(X, y)
+structure = fitted_tree_linf_exact_topology_path(source)
+for alpha, removed_node_ids in structure.iter_node_pruning_events():
+    print(alpha, removed_node_ids)  # increasing penalty; remove each tied batch
+
+alpha = float(structure.lambdas[len(structure.lambdas) // 2])
+preview = materialize_fitted_tree_topology(source, structure, alpha)
+plot_tree(preview)
+```
+
+At a structural knot, the disappearing splits are already removed;
+`below=True` previews the state immediately below that knot. Previews leave
+`source` unchanged and show original CART values, without HS. They preserve
+original node IDs without compacting backing arrays: use
+`len(structure.tree_nodes_at(alpha))` for the retained split count, not preview
+array sizes. Stream previews rather than storing a copy at every knot.
+
+### Access the full coefficient path
 
 ```python
 from imodels import SPTreeRegressor
@@ -139,46 +176,59 @@ from imodels import SPTreeRegressor
 model = SPTreeRegressor(
     sp_alpha=1.0, solver="coefficient_path", max_leaf_nodes=32, random_state=0,
 ).fit(X, y)
-predictions = model.predict(X)      # pruned tree at sp_alpha=1.0
-beta = model.coef_                  # penalized coefficients at sp_alpha=1.0
+predictions = model.predict(X)      # tree at the supplied sp_alpha=1.0
+beta = model.coef_                  # coefficients at that same penalty
 path = model.coefficient_path_      # also available with solver="hicap"
 beta_elsewhere, intercept = path.at(0.5 * path.lambdas[0])
 ```
 
-`path.lambdas` contains coefficient knots; `path.coefficients` contains their
-coefficient vectors. `path.at(alpha)` interpolates within the stored range
-and returns a separate coefficient array plus intercept. It does **not**
-change `model.coef_`, the pruned tree, or `predict()`. To fit the tree at another
-penalty, fit another model with a different `sp_alpha`; changing a parameter
-alone does not re-prune. CV models expose the same attributes at their selected
-`sp_alpha_`.
+`path.lambdas` and `path.coefficients` store knots, endpoints, and their coefficient
+vectors. `path.at(alpha)` interpolates within that range and returns a separate
+array plus intercept. It does **not** change `model.coef_`, the fitted tree,
+or `predict()`. Fit another model with a different `sp_alpha` to change the
+prediction tree; setting the parameter alone does not re-prune.
 
-For squared-error regression with `ord=np.inf`, the full coefficient path is
-piecewise linear. A coefficient knot changes a coefficient's **slope**, not
-necessarily the retained tree. Structural knots alone are therefore insufficient
-for coefficient interpolation.
+CV models expose the same attributes at their selected `sp_alpha_`. Eligible
+automatic CV still scores structural states when the final-fit solver is
+`"coefficient_path"` or `"hicap"`; only the final fit needs the full path.
 
-Coefficients describe unnormalized local stumps of the original, unpruned tree,
-before HS. `coef_node_ids_` maps them to original split IDs, not IDs in the
-compacted pruned tree. Preserve that original tree to reconstruct its feature
-matrix. The structural solver instead exposes `pruning_path_` and leaves
-`coef_` and `coefficient_path_` as `None`.
+Coefficients refer to unnormalized local stumps of the original, unpruned tree,
+before HS. `coef_node_ids_` identifies those original splits, not the renumbered
+nodes of the compacted model. Keep the original tree if reconstructing its
+feature matrix. Classification/APA grid paths do not provide this exact
+piecewise-linear interpolation contract.
 
-## Numerical behavior and performance
+## Solver reference
 
-The structural path costs `O(p log p)` time and `O(p)` space after fitting,
-where `p` is the number of splits. CV additionally pays for retained-tree copies
-and held-out predictions. Complete coefficient paths store dense coefficient
-rows and do more work; use them only when you need coefficients.
+| `solver` | What it computes | Use when |
+| --- | --- | --- |
+| `"auto"` | Structural path when eligible; otherwise proximal for infinity-norm regression, APA for other supported objectives | Default for fitting and CV |
+| `"topology"` | Exact structural knots; no coefficients | You only need pruned trees |
+| `"proximal"` | Certified coefficients at one penalty | You need coefficients, but not their full path |
+| `"coefficient_path"` | Complete certified diagonal-tree coefficient path | You need all coefficient knots and interpolation |
+| `"hicap"` | Generic, slower, certified coefficient path | Small reference/validation problems |
+| `"apa_apg2"` | Approximate point solution | Binary classification or `ord=2` |
+
+Tree-specific paths require `ord=np.inf`, zero/default `support_tol`, and an
+unconstrained single-output mean-based regression tree on its fitting rows and
+weights. Wrappers do not assume this for external `prefit=True` trees or forest
+OOB data. Explicitly incompatible choices or failed certificates raise errors.
+
+For `p` splits, the structural path takes `O(p log p)` time and `O(p)` space
+after fitting. CV and previews still pay for copies and held-out predictions.
+Full coefficient paths additionally store dense coefficient rows and rebuild
+active constraints; they are optional because pruning does not need that work.
 
 "Exact" means within floating-point certificate tolerances, not symbolic
 arithmetic. `tol` controls those tolerances; for APA it only controls stopping.
-`max_iter` caps iterative point updates or coefficient-path events, depending
-on the solver. Eligible exact solvers agree on pruning at structural knots.
-For compatibility, `sp_alpha=0` preserves all original splits, even zero-gain
-ones. See the [optimization guide](optimization/README.md) for full contracts.
+`max_iter` caps point iterations or coefficient-path events, depending on the
+solver. For compatibility, wrapper `sp_alpha=0` preserves every original split;
+strict mathematical path queries omit zero-activation splits even at zero.
+See the [optimization guide](optimization/README.md) for numerical contracts.
 
-## Algorithms and references
+## Implementation and references
+
+### Algorithms
 
 - **Penalty and hiCAP:** [Zhao, Rocha, and Yu (2009)](https://arxiv.org/abs/0909.0411),
   Section 3.1.2. Our `hicap` follows active linear constraints of the infinity-norm
@@ -187,25 +237,23 @@ ones. See the [optimization guide](optimization/README.md) for full contracts.
   with decreasing approximation, following Algorithm 2 of
   [Shen et al. (2017)](https://ojs.aaai.org/index.php/AAAI/article/view/10873).
   The precursor is [Yu (2013)](https://papers.nips.cc/paper_files/paper/2013/hash/49182f81e6a13cf5eaa496d51fea6406-Abstract.html).
-  Warm starts sample a penalty grid; they do not enumerate exact knots.
+  Warm starts sample a grid; they do not enumerate exact knots.
 - **Proximal:** child-to-parent group updates from
   [Jenatton et al. (2011), Section 3.4](https://jmlr.org/papers/v12/jenatton11a.html),
   inside [FISTA (Beck and Teboulle, 2009)](https://doi.org/10.1137/080716542)
-  for general designs. The diagonal-tree specialization uses weighted
-  projections and solves each penalty in one sweep.
-- **Structural path:** a tree-specific reduction to weighted isotonic pooling
-  (merging blocks to respect parent-child order). Heap-based tree pooling:
-  [Pardalos and Xue (1999)](https://doi.org/10.1007/PL00009258).
-  Our CAP-to-activation reduction is explained in the
-  [tree-specific derivation](optimization/README.md#why-the-fitted-tree-gram-matrix-is-diagonal).
-- **Coefficient path:** our diagonal-tree continuation combines structural
-  bounds, exact point solves, and intervals with unchanged active constraints;
+  for general designs. The diagonal-tree specialization uses weighted projections
+  to solve each penalty in one sweep.
+- **Structural path:** a tree-specific reduction to weighted isotonic pooling.
+  Heap-based tree pooling: [Pardalos and Xue (1999)](https://doi.org/10.1007/PL00009258).
+  See our [CAP-to-activation derivation](optimization/README.md#why-the-fitted-tree-gram-matrix-is-diagonal).
+- **Coefficient path:** our diagonal-tree continuation combines structural bounds,
+  exact point solves, and intervals with unchanged active constraints;
   see the [derivation](optimization/README.md#full-coefficient-path-for-a-fitted-tree).
 - **HS and GCV:** [Agarwal et al. (2022)](https://arxiv.org/abs/2202.00858) for HS;
   [Golub, Heath, and Wahba (1979)](https://doi.org/10.1080/00401706.1979.10489751)
-  for the GCV criterion, applied here conditional on the retained tree.
+  for GCV, applied here conditional on the retained tree.
 
-## Source layout
+### Code layout
 
 ```text
 sparse_pruning/
@@ -218,6 +266,6 @@ sparse_pruning/
 ```
 
 Shared HS/GCV mathematics lives in `imodels/tree/_hs_gcv.py`.
-The standalone `tests/sparse_pruning_test.py` covers public behavior and core
-mathematical invariants; `tests/sparse_pruning/` holds extended development tests.
-Shared HS/GCV tests remain in `tests/hs_gcv_test.py`.
+`tests/sparse_pruning_test.py` is the compact standalone suite;
+`tests/sparse_pruning/` holds extended numerical tests, and
+`tests/hs_gcv_test.py` covers shared HS/GCV behavior.
