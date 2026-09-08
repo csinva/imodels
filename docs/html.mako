@@ -438,8 +438,7 @@
       <path d="M9.5 21v-6h5v6"></path>
     </svg>
   </a>
-  <p id="site-tagline">Concise, transparent, accurate predictive modeling.
-    All sklearn-compatible and easy to use.</p>
+  <p id="site-tagline">imodels. Sklearn-compatible interepretable models.</p>
   <a href="${_root}index.html" id="site-logo">
     <img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
          alt="imodels">

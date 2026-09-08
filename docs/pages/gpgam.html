@@ -30,18 +30,16 @@
                     <h2 id="methods">1. Methods: GPGam</h2>
 
                     <p>Every curve in GPGam is a Gaussian process over the quantile bins of its
-                        feature, and every choice about those curves is made by maximizing one quantity:
-                        the exact GP marginal likelihood. Nothing is chosen by cross-validation, there
-                        is no validation split, no bagging and no seed, so two fits on the same data
-                        give the same model.</p>
+                        feature, and every choice about those curves is made by maximizing the exact GP
+                        marginal likelihood. There is no cross-validation, validation split, bagging or
+                        random initialization, so two fits on the same data return the same model.</p>
 
                     <h3>Binning makes the exact likelihood cheap</h3>
 
                     <p>Fitting a GAM as a Gaussian process normally means an <i>n</i>&times;<i>n</i>
-                        kernel matrix, which is hopeless past a few thousand rows. Every component of a
-                        GA<sup>2</sup>M is a function of one feature, or of two on a grid. So once the
-                        features are binned, each component is just a function on a small grid, holding
-                        one value per bin.</p>
+                        kernel matrix, which is infeasible past a few thousand rows. Every component of a
+                        GA<sup>2</sup>M is a function of one feature, or of two on a grid, so once the
+                        features are binned each component holds one value per bin.</p>
 
                     <p>Write <code>Z</code> for the indicator matrix recording which bin each row falls
                         in. Then the exact marginal likelihood touches the data <i>only</i> through
@@ -52,11 +50,11 @@ b = Z.T @ y      # bin sums
 y.T @ y</code></pre>
 
                     <p>That is <code>P&times;P</code> numbers plus <code>P</code> more, where
-                        <code>P</code> is the total number of bins. A budget holds <code>P</code> to a
-                        few thousand. One pass over the data computes all of it, and every optimizer
-                        step after that uses those numbers alone. So each step costs <code>O(P&#179;)</code>
-                        <b>no matter how many rows there are</b>. A hundred thousand rows cost what a
-                        thousand rows cost.</p>
+                        <code>P</code> is the total number of bins, which a budget holds to a few
+                        thousand. One pass over the data computes all of it, and every optimizer step
+                        after that uses those numbers alone. Each step therefore costs
+                        <code>O(P&#179;)</code> <b>regardless of the number of rows</b>: a hundred
+                        thousand rows cost what a thousand rows cost.</p>
 
                     <h3 id="likelihood-decides">What the likelihood decides</h3>
 
@@ -66,13 +64,12 @@ y.T @ y</code></pre>
                         smooth ones. Their amplitudes are free parameters, so maximizing the likelihood
                         picks the blend for each feature separately.</p>
 
-                    <p>The figure below shows what that means in practice. It is one model fit to one
-                        synthetic dataset of 250 rows whose five features differ only in how smooth
+                    <p>Fig 1 fits one model to a synthetic dataset of 250 rows whose five features differ only in how smooth
                         their effect is: a slow wave, a rapid wave, a sharp step, a straight line, and a
-                        feature with no effect at all. The same model, with no tuning and no per-feature
-                        settings, has to handle all five. The sample is small on purpose: the shaded
-                        bands are the posterior two standard deviations wide, and they are worth showing
-                        only when there is enough uncertainty left to see.</p>
+                        feature with no effect. The same model, with no tuning and no per-feature
+                        settings, handles all five. The sample is small deliberately: the bands are the
+                        posterior two standard deviations wide, and at 4,000 rows they are narrower than
+                        the line drawn over them.</p>
 
                     <div id="synth-plot"></div>
 
@@ -84,23 +81,20 @@ y.T @ y</code></pre>
                             nothing sharp to fit, so the rough kernel is left unused.</li>
                         <li><b>Rapid wave.</b> The balance flips. The rough kernel takes 112 times the
                             weight of the smooth one, which is what lets the curve turn ten times across
-                            the range instead of smoothing the oscillation away. It is also the widest
-                            band of the five: ten turns is a lot to ask of 250 rows.</li>
-                        <li><b>Sharp step.</b> A mixture, and the interesting case. Most of the weight is
-                            smooth, because the function is flat almost everywhere, but the rough kernel
-                            gets 54 times more weight here than it does for the slow wave, and that is
-                            what buys the jump. The fitted step spans 1.44 against a true 1.40, and turns
+                            the range instead of smoothing the oscillation away. It also carries the
+                            widest band of the five, since ten turns have to be estimated from 250 rows.</li>
+                        <li><b>Sharp step.</b> A mixture. Most of the weight is smooth, because the function is flat almost everywhere, but the rough kernel
+                            gets 54 times more weight here than for the slow wave, which is what fits
+                            the jump. The fitted step spans 1.44 against a true 1.40, and turns
                             at 0.551 against a true 0.55.</li>
-                        <li><b>No effect.</b> Both amplitudes collapse toward zero, the curve is flat, and
-                            its band is the narrowest here, because a curve pinned at zero is the one
-                            thing this data is certain about. Nothing removed this feature; the same
-                            likelihood that fit the others simply found no reason to give it any
-                            amplitude.</li>
+                        <li><b>No effect.</b> Both amplitudes collapse toward zero and the curve is
+                            flat, with the narrowest band of the five. No selection step removed this
+                            feature: the same likelihood that fit the others gave it no amplitude.</li>
                     </ul>
 
-                    <p>Those same amplitudes are how the model selects features. A feature that explains
-                        nothing has its amplitude driven to zero and drops out, which is automatic
-                        relevance determination, obtained free from the same objective. Interactions are
+                    <p>Those same amplitudes select features. A feature that explains nothing has its
+                        amplitude driven to zero and drops out, which is automatic relevance
+                        determination, and it comes from the same objective. Interactions are
                         screened on the residual and then fit in blocks that share shrinkage, with the
                         grid resolution for each block chosen by comparing marginal likelihoods.</p>
 
@@ -287,7 +281,7 @@ y.T @ y</code></pre>
                         features and one with 81, and is ranked last on those.</p>
 
                     <p class="tblnote"><b>What was subsampled.</b> The four columns do not measure the
-                        same thing, and it is worth being precise about how. The imodels suite cuts
+                        same thing. The imodels suite cuts
                         every dataset down to at most 1,000 training rows and 50 features at a fixed
                         seed, so that column measures the small data regime rather than the datasets at
                         their real size. The other three suites use every row and column, from 517 rows
@@ -298,8 +292,7 @@ y.T @ y</code></pre>
                         features only the first 500 are passed to it. Where it still ranks first, it
                         does so on a fraction of the data the other models saw; where it ranks last on
                         two TabArena datasets, that is because no fit was possible at all. Its numbers
-                        should be read as a lower bound on what the method can do rather than a
-                        measurement of it.</p>
+                        are a lower bound on the method rather than a measurement of it.</p>
 
                     <p class="tblnote">Every result here is one 80/20 split at a fixed seed with all
                         models at library defaults, which is not how these benchmarks are meant to be
@@ -309,8 +302,7 @@ y.T @ y</code></pre>
                         seven it shares with TabArena so the two columns stay independent.</p>
 
 
-                    <p>The model fails in the same way on every suite, which is worth knowing before you
-                        use it. It loses on smooth simulations and on data with strong interactions, such
+                    <p>The model fails in the same way on every suite. It loses on smooth simulations and on data with strong interactions, such
                         as wave energy converters, building energy simulation, and robot arm dynamics. In
                         all of those the target depends on three or more inputs at once, and no sum of
                         pairwise pieces can represent that. This is a limit of the model class, not of the
@@ -326,8 +318,8 @@ y.T @ y</code></pre>
                         rule that the model stay additive with at most pairwise terms, and one
                         instruction: beat explainable boosting machines. The loop proposed a change,
                         measured it on 65 regression datasets, and kept it only if the numbers held.
-                        Every idea that failed was recorded with the cost of failing, which is why the
-                        parameter list is short: anything that could not pay for itself was removed.</p>
+                        Every failed idea was recorded with its cost, and anything that did not improve
+                        the benchmark was removed, which is why the parameter list is short.</p>
 
                     <p>Nothing in that instruction mentions Gaussian processes, binning, or marginal
                         likelihood. Those came out of the search.</p>
@@ -336,14 +328,13 @@ y.T @ y</code></pre>
 
                     <p class="caption"><b>Fig 2.</b> Lines of code and mean rank at each version of the search. The loop added capability up to v38, then spent the rest of its budget removing whatever could not pay for itself.</p>
 
-                    <p>The two halves of that plot are different activities. Up to v38 the loop was
-                        adding capability: v35 is the first version that fit a GAM as a Gaussian
+                    <p>The plot has two phases. Up to v38 the loop added capability: v35 is the first version that fit a GAM as a Gaussian
                         process, but it formed a kernel matrix over the training rows and so could only
                         handle small data. Versions 36 to 38 added the binned formulation that made the
-                        exact likelihood affordable at any size, then bolted a boosted tree stage onto
-                        the residual. The file roughly doubled, from 507 lines to 1,110.</p>
+                        exact likelihood affordable at any size, then added a boosted tree stage on the
+                        residual. The file roughly doubled, from 507 lines to 1,110.</p>
 
-                    <p>From v39 the instruction changed to making it simpler, and every later version
+                    <p>From v39 the instruction changed to simplification, and every later version
                         removed something. Thirteen rounds of ablation took out the boosted tree stage,
                         a second model class that handled small data separately, half the kernel
                         dictionary, both MAP priors, a binary search over bin counts, and several
@@ -351,13 +342,13 @@ y.T @ y</code></pre>
                         below where it started, while keeping the ability to scale that the middle
                         versions bought.</p>
 
-                    <p>That cost something, and the plot shows it honestly. Mean rank on the small
-                        benchmark drifts from 3.71 to 4.60 across the simplification rounds, almost all
+                    <p>Simplification cost accuracy. Mean rank on the small benchmark moves from 3.71 to
+                        4.60 across those rounds, almost all
                         of it from dropping the separate small-data model in v41. The trade was
-                        deliberate: one model instead of two, and still ahead of EBM at 5.00 on the same
-                        pool. Each removal was measured first, and the ones that cost real accuracy were
-                        put back. Automatic relevance determination, the interaction fitting, and the
-                        log target rule all survived that way, having failed to be removable.</p>
+                        deliberate: one model instead of two, still ahead of EBM at 5.00 on the same
+                        pool. Each removal was measured first and reverted if it cost accuracy, which is
+                        how automatic relevance determination, the interaction fitting and the
+                        log-target rule were kept.</p>
 
                     <p>The prompts that drove the search, the benchmark harnesses, and the
                         per-dataset results are all kept alongside the model in
@@ -425,10 +416,9 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
                         dollars. It was asked for two interaction terms, and nothing else was set. On a
                         held-out fifth of the data it reaches an <i>R</i><sup>2</sup> of 0.8247.</p>
 
-                    <p>This is the whole model. Eight curves, one per feature, each with the Gaussian
+                    <p>This is the whole model: eight curves, one per feature, each with the Gaussian
                         process posterior drawn two standard deviations wide, and two interaction
-                        surfaces, one of them over the state it describes. Nothing else is fitted, so
-                        there is nothing else to explain. Click any panel to read it.</p>
+                        surfaces, one of them over the state it describes. Nothing else is fitted.</p>
 
                     <div id="gam-all"></div>
 
@@ -436,15 +426,19 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
 
                     <ul class="gam-readings">
                         <li><b>Longitude.</b> Peaks near &minus;122.5&deg;, San Francisco, and falls away eastward. At $452k the widest single curve here.</li>
-                        <li><b>Latitude.</b> Falls from south to north and spans $422k, but read it with the map panel: most of the geography lives in the joint term.</li>
+                        <li><b>Latitude.</b> Falls from south to north and spans $422k, but read it with the map panel: most
+                            of the geographic effect sits in the joint term.</li>
                         <li><b>MedInc.</b> Rises across the whole income range, a spread of $203k, steepest through the middle and flattening at both ends.</li>
-                        <li><b>AveOccup.</b> Falls from about +0.5 at 1.4 people per household to &minus;0.4 by 4, then flattens. Crowding costs, but only up to a point.</li>
-                        <li><b>AveRooms.</b> Almost flat from 2 to 6 rooms, rising only at the top end. Room count separates mansions, not ordinary houses.</li>
-                        <li><b>HouseAge.</b> Weak alone, about $19k. Its real contribution is in the interaction panel, where age matters only at low occupancy.</li>
+                        <li><b>AveOccup.</b> Falls from about +0.5 at 1.4 people per household to &minus;0.4 by 4, then
+                            flattens: crowding lowers value only up to about four people per household.</li>
+                        <li><b>AveRooms.</b> Almost flat from 2 to 6 rooms, rising only at the top end,
+                            so room count separates the largest houses rather than ordinary ones.</li>
+                        <li><b>HouseAge.</b> Weak alone, about $19k. Its contribution is in the
+                            interaction panel, where age matters only at low occupancy.</li>
                         <li><b>AveBedrms.</b> Nearly flat, about $18k end to end. Its amplitude was driven near zero rather than removed by any selection step.</li>
                         <li><b>Population.</b> Nearly flat, about $7k, pruned by its own amplitude.</li>
                         <li><b>Latitude &times; Longitude.</b> The largest term in the model after the two geographic curves. It adds up to +1.14 over the Los Angeles basin and subtracts up to &minus;0.86 in rural northern California, which is what neither marginal curve can express: latitude alone calls the south expensive and misreads the Bay Area, longitude alone calls the coast expensive and misreads the far north. Only the joint term can say <i>coastal and southern</i>. Fewer than half its cells hold data, since the state is a diagonal strip inside its bounding box, and empty cells are left blank rather than drawn as zero.</li>
-                        <li><b>HouseAge &times; AveOccup.</b> Smaller and more specific: house age matters almost entirely among sparsely occupied block groups. Along the age axis at about 1.9 occupants the term swings from &minus;0.37 to +0.28; at a typical 2.8 occupants it barely moves.</li>
+                        <li><b>HouseAge &times; AveOccup.</b> Smaller and narrower: house age matters almost entirely among sparsely occupied block groups. Along the age axis at about 1.9 occupants the term swings from &minus;0.37 to +0.28; at a typical 2.8 occupants it barely moves.</li>
                     </ul>
 
                     <p>The curves are ordered by how far they move. The last two barely move at all:
