@@ -112,7 +112,7 @@ aria-label="View source on GitHub" title="GitHub">
                     <h2 id="how-it-works">1. How does FIGS work? </h2>
 
                     Intuitively, FIGS works by extending CART, a typical greedy algorithm for growing a decision tree,
-                    to consider growing a <i>sum</i> of trees <i>simultaneously</i> (see Fig 1). At each iteration, FIGS
+                    to consider growing a <i>sum</i> of trees <i>simultaneously</i> (see Fig <a href="#fig1">1</a>). At each iteration, FIGS
                     may grow any existing tree it has already started or start a new tree; it greedily selects whichever
                     rule reduces the total unexplained variance (or an alternative splitting criterion) the most. To
                     keep the trees in sync with one another, each tree is made to predict the <i>residuals</i> remaining
@@ -124,6 +124,7 @@ aria-label="View source on GitHub" title="GitHub">
                     underlying structure in the data. The number of trees and size/shape of each tree emerge
                     automatically from the data rather than being manually specified.
 
+                    <span class="fig-anchor" id="fig1"></span>
                     <p style="text-align:center;">
                         <a href="https://github.com/csinva/imodels"><img
                                 src="https://demos.csinva.io/figs/figs_fitting.gif?sanitize=True" width="90%"></a></p>
@@ -166,6 +167,7 @@ aria-label="View source on GitHub" title="GitHub">
                     and achieves ~84% accuracy.
 
 
+                    <span class="fig-anchor" id="fig2"></span>
                     <p style="text-align:center;">
                         <a href="https://github.com/csinva/imodels"><img
                                 src="https://demos.csinva.io/figs/figs_csi_model_small.svg?sanitize=True"
@@ -173,10 +175,11 @@ aria-label="View source on GitHub" title="GitHub">
                     <p class="caption"><b>Fig 2.</b> Simple model learned by FIGS for predicting risk of cervical spinal injury.</p>
 
                     If we want a more flexible model, we can also remove the constraint on the number of rules (changing
-                    the code to <code>model = FIGSClassifier()</code>), resulting in a larger model (see Fig 3). Note
+                    the code to <code>model = FIGSClassifier()</code>), resulting in a larger model (see Fig <a href="#fig3">3</a>). Note
                     that the number of trees and how balanced they are emerges from the structure of the data -- only
                     the total number of rules may be specified.
 
+                    <span class="fig-anchor" id="fig3"></span>
                     <p style="text-align:center;">
                         <a href="https://github.com/csinva/imodels"><img
                                 src="https://demos.csinva.io/figs/figs_csi_model_large.svg?sanitize=True"
@@ -196,7 +199,7 @@ aria-label="View source on GitHub" title="GitHub">
                     </p>
 
                     <p>
-                        For example, Fig 2 shows a model fitted using the FIGS algorithm which achieves a test-AUC of
+                        For example, Fig <a href="#fig2">2</a> shows a model fitted using the FIGS algorithm which achieves a test-AUC of
                         0.820 despite
                         being extremely simple. In this model, each feature contributes independently of the others, and
                         the final risks
@@ -207,6 +210,7 @@ aria-label="View source on GitHub" title="GitHub">
                         features being used for decision-making.
                     </p>
 
+                    <span class="fig-anchor" id="fig4"></span>
                     <p style="text-align:center;">
                         <img width=60% src="https://demos.csinva.io/figs/diabetes_figs.svg" title="diabetes FIGS"></img></p>
                     <p class="caption"><b>Fig 4.</b> Simple model learned by FIGS for diabetes risk prediction.</p>

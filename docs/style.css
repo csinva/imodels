@@ -187,6 +187,11 @@ nav.toc-main span {
 }
 .abstract code { font-size: 0.9em; }
 
+/* An empty anchor sits just before each figure so a "Fig 2" link lands on the
+   figure rather than on its caption, which would put the figure off-screen
+   above. The offset clears the sticky navbar. */
+.fig-anchor { display: block; scroll-margin-top: 4.5rem; }
+
 /* ---------- figure and table captions ---------- */
 .caption {
   font-size: 0.86rem; color: var(--muted); text-align: center;

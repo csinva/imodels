@@ -81,9 +81,8 @@ aria-label="View source on GitHub" title="GitHub">
                     <h2 id="methods">1. Methods: GPGam</h2>
 
                     <p>Every curve in GPGam is a Gaussian process over the quantile bins of its
-                        feature, and every choice about those curves is made by maximizing the exact GP
-                        marginal likelihood. There is no cross-validation, validation split, bagging or
-                        random initialization, so two fits on the same data return the same model.</p>
+                        feature, and those curves are fit by maximizing the exact GP
+                        marginal likelihood. There is no randomness, so re-fitting on the same data returns the same model.</p>
 
                     <h3>Binning makes the exact likelihood cheap</h3>
 
@@ -93,8 +92,8 @@ aria-label="View source on GitHub" title="GitHub">
                         features are binned each component holds one value per bin.</p>
 
                     <p>Write <code>Z</code> for the indicator matrix recording which bin each row falls
-                        in. Then the exact marginal likelihood touches the data <i>only</i> through
-                        three quantities:</p>
+                        in. Then the exact marginal likelihood touches the data only through
+                        3 quantities:</p>
 
                     <pre><code>C = Z.T @ Z      # bin co-occurrence counts
 b = Z.T @ y      # bin sums
@@ -115,13 +114,13 @@ y.T @ y</code></pre>
                         smooth ones. Their amplitudes are free parameters, so maximizing the likelihood
                         picks the blend for each feature separately.</p>
 
-                    <p>Fig 1 fits one model to a synthetic dataset of 250 rows whose five features differ only in how smooth
-                        their effect is: a slow wave, a rapid wave, a sharp step, a straight line, and a
-                        feature with no effect. The same model, with no tuning and no per-feature
+                    <p>Fig <a href="#fig1">1</a> fits one model to a synthetic dataset of 250 rows whose five features differ only in how smooth
+                        their effect is. The same model, with no tuning and no per-feature
                         settings, handles all five. The sample is small deliberately: the bands are the
                         posterior two standard deviations wide, and at 4,000 rows they are narrower than
                         the line drawn over them.</p>
 
+                    <span class="fig-anchor" id="fig1"></span>
                     <div id="synth-plot"></div>
 
                     <p class="caption"><b>Fig 1.</b> One GPGam fit to 250 rows whose five features differ only in how smooth their effect is. Dots are partial residuals, the dotted line is the truth, and the band is the posterior two standard deviations wide. The same model, untuned, handles all five.</p>
@@ -375,6 +374,7 @@ y.T @ y</code></pre>
                     <p>Nothing in that instruction mentions Gaussian processes, binning, or marginal
                         likelihood. Those came out of the search.</p>
 
+                    <span class="fig-anchor" id="fig2"></span>
                     <div id="hist-plot"></div>
 
                     <p class="caption"><b>Fig 2.</b> Lines of code and mean rank at each version of the search. The loop added capability up to v38, then spent the rest of its budget removing whatever could not pay for itself.</p>
@@ -471,6 +471,7 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
                         process posterior drawn two standard deviations wide, and two interaction
                         surfaces, one of them over the state it describes. Nothing else is fitted.</p>
 
+                    <span class="fig-anchor" id="fig3"></span>
                     <div id="gam-all"></div>
 
                     <p class="caption"><b>Fig 3.</b> The whole model: a GPGam fit to California housing. Eight shape functions, each with its posterior drawn two standard deviations wide, and two interaction terms.</p>
