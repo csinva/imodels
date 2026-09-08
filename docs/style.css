@@ -11,10 +11,9 @@
      26.5rem is where the last entry stops wrapping: the widest on the site is
      imodels.experimental.bartpy.samplers.unconstrainedtree, 54 characters
      with nothing to break at, once the padding, the 1em indent on nested
-     lists and a scrollbar are counted. 34rem leaves that comfortably clear
-     while still leaving the article a full 800px measure on a 1440px screen;
-     54rem, once the sidebar actually held its width, left only 496px. */
-  --sidebar-w: 34rem;
+     lists and a scrollbar are counted. 29rem stays clear of that while
+     leaving the article more of the window. */
+  --sidebar-w: 29rem;
   --measure: 100ch;
 
   --ink: #1b1f23;
@@ -97,14 +96,13 @@ h3 { font-size: 1.15em; margin: 1.5em 0 0.5em; }
    breakpoint so the stacked mobile layout is left alone. */
 @media screen and (min-width: 700px) {
   /* The cap decides the width people actually see on a smaller window: at
-     38vw the sidebar is full from about a 1430px window and proportional
-     below that. Text still never wraps on the way down, which needs the
-     sidebar under 26.5rem, or a window narrower than 1120px. */
+     32vw the sidebar is full from about a 1450px window and proportional
+     below that. */
   /* flex-shrink defaults to 1, so without this the sidebar is the thing that
      gives when the article is wide, and it was: measured in a browser it came
      out at 46px on figs.html and 207px on the index, never the width asked
      for here. It must hold its width and let the article take the strain. */
-  #sidebar { width: min(var(--sidebar-w), 38vw); flex: 0 0 auto; }
+  #sidebar { width: min(var(--sidebar-w), 32vw); flex: 0 0 auto; }
   #content {
     width: auto;
     max-width: none;
