@@ -143,17 +143,34 @@ retained while its descendant group is active—even if its own coefficient is z
 
 ### Traverse and preview pruned trees
 
+Here is a separate, small regression example: a four-leaf CART tree fitted to
+`x = [0, 1, 2, 3]`, `y = [-3, -1, 1, 4]`. The split count is a staircase;
+each A–D marker matches a tree below.
+
+![Retained splits decrease from three to two, one, and zero as the pruning penalty increases, with A–D marking the matching tree snapshots.](assets/structural_path.svg)
+
+![Four snapshots with fixed node positions: subtrees collapse into leaves at their original roots as the penalty increases.](assets/pruned_trees.svg)
+
+Pruning removes a whole subtree and turns its root into a leaf—descendants
+are **not moved upward**. The leaf predictions shown are pooled original CART
+means, not predictions reconstructed from penalized coefficients. Between
+structural knots, these previews stay the same even if coefficients change.
+
 With the structural solver, fitted wrappers expose `pruning_path_`;
 `coef_` and `coefficient_path_` are `None`. To plot states, keep the original
-CART tree and use the fitted-tree helpers directly:
+CART tree and use the fitted-tree helpers directly. This fits the example tree
+and previews one state:
 
 ```python
+import numpy as np
 from sklearn.tree import DecisionTreeRegressor, plot_tree
 from imodels.tree.sparse_pruning import (
     fitted_tree_linf_exact_topology_path, materialize_fitted_tree_topology,
 )
 
-source = DecisionTreeRegressor(max_leaf_nodes=8, random_state=0).fit(X, y)
+X = np.arange(4).reshape(-1, 1)  # replace this toy dataset with your own
+y = [-3, -1, 1, 4]
+source = DecisionTreeRegressor(max_leaf_nodes=4, random_state=0).fit(X, y)
 structure = fitted_tree_linf_exact_topology_path(source)
 for alpha, removed_node_ids in structure.iter_node_pruning_events():
     print(alpha, removed_node_ids)  # increasing penalty; remove each tied batch

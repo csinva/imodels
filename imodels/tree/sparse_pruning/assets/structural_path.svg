@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="350" viewBox="0 0 840 350" role="img" aria-labelledby="title description">
+  <title id="title">Retained splits versus pruning penalty</title>
+  <desc id="description">Exact structural path of a regression tree fitted to x = [0, 1, 2, 3] and y = [-3, -1, 1, 4]. Three splits remain below penalty 0.5, two from 0.5 to below 0.75, one from 0.75 to below 2.25, and zero at 2.25 and above. Markers A through D match the tree snapshots. At a knot the disappearing split is already removed. Displayed penalties are rounded from the stored knots.</desc>
+  <style>
+    text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: #243247; }
+    .title { font-size: 20px; font-weight: 650; }
+    .label { font-size: 13px; }
+    .small { font-size: 12px; fill: #526175; }
+    .marker { font-size: 15px; font-weight: 700; fill: #126d56; }
+    .grid { stroke: #e3e8ef; stroke-width: 1; }
+    .axis { stroke: #8a97a8; stroke-width: 1; }
+  </style>
+  <rect width="840" height="350" rx="12" fill="#ffffff"/>
+  <text x="30" y="32" class="title">Retained splits vs. pruning penalty</text>
+  <text x="30" y="55" class="small">Small regression example · one fixed fitted tree · exact structural path</text>
+
+  <!-- DecisionTreeRegressor(max_leaf_nodes=4, random_state=0), fitted to the data in desc.
+       States use structure.lambdas[::-1], not rounded decimal penalties.
+       Plot coordinates: x = 80 + 288λ; y = 245 − 45 * retained_splits. -->
+  <path d="M 80 110 H 800 M 80 155 H 800 M 80 200 H 800 M 80 245 H 800" class="grid"/>
+  <path d="M 80 95 V 245 H 800" fill="none" class="axis"/>
+  <text x="66" y="114" text-anchor="end" class="small">3</text>
+  <text x="66" y="159" text-anchor="end" class="small">2</text>
+  <text x="66" y="204" text-anchor="end" class="small">1</text>
+  <text x="66" y="249" text-anchor="end" class="small">0</text>
+  <text transform="translate(27 172) rotate(-90)" text-anchor="middle" class="label">Retained splits</text>
+  <path d="M 224 95 V 245 M 296 95 V 245 M 728 95 V 245" stroke="#c4ccd6" stroke-dasharray="4 4" fill="none"/>
+  <path d="M 80 110 H 224 V 155 H 296 V 200 H 728 V 245 H 800" stroke="#13886c" stroke-width="3" fill="none"/>
+  <g fill="#ffffff" stroke="#13886c" stroke-width="2">
+    <circle cx="224" cy="110" r="4"/>
+    <circle cx="296" cy="155" r="4"/>
+    <circle cx="728" cy="200" r="4"/>
+  </g>
+  <g fill="#13886c" stroke="#ffffff" stroke-width="1.5">
+    <circle cx="80" cy="110" r="5"/>
+    <circle cx="224" cy="155" r="5"/>
+    <circle cx="296" cy="200" r="5"/>
+    <circle cx="728" cy="245" r="5"/>
+  </g>
+  <text x="88" y="96" class="marker">A</text>
+  <text x="236" y="145" class="marker">B</text>
+  <text x="308" y="189" class="marker">C</text>
+  <text x="740" y="233" class="marker">D</text>
+  <text x="510" y="183" text-anchor="middle" class="small">Same tree throughout this interval</text>
+
+  <path d="M 80 250 V 255 M 224 250 V 255 M 296 250 V 255 M 368 250 V 255 M 512 250 V 255 M 656 250 V 255 M 728 250 V 255 M 800 250 V 255" class="axis"/>
+  <g text-anchor="middle" class="small">
+    <text x="80" y="273">0</text>
+    <text x="224" y="273">0.5</text>
+    <text x="296" y="273">0.75</text>
+    <text x="368" y="273">1</text>
+    <text x="512" y="273">1.5</text>
+    <text x="656" y="273">2</text>
+    <text x="728" y="273">2.25</text>
+    <text x="800" y="273">2.5</text>
+  </g>
+  <text x="440" y="300" text-anchor="middle" class="label">Pruning penalty λ → (linear scale)</text>
+  <text x="30" y="329" class="small">A–D match the trees below. Filled dots show the state at a knot; open dots show the state just below it.</text>
+</svg>
