@@ -53,7 +53,7 @@ aria-label="View source on GitHub" title="GitHub">
 
                 <div class="article" style="padding-right: 2%; padding-left: 2%;">
                     <p align="center">
-                    <h1 text-align="center" style="padding-bottom: 0px;"> GPGam: SOTA interpretable tabular prediction found via Autoresearch</h1>
+                    <h1 text-align="center" style="padding-bottom: 0px;"> GPGam: SOTA generalized additive models via Autoresearch</h1>
                     <h3 class="post-authors" style="color:gray;padding-top:0px;">Chandan Singh &middot; September 2026</h3>
                     </p>
                     <p class="post-links"><a href="https://arxiv.org/abs/2605.03808">📄 Paper</a>, <a href="https://csinva.io/imodels/algebraic/gp_gam.html">🗂 Doc</a>, <a href="#citation">📌 Citation</a></p>
@@ -216,7 +216,7 @@ y.T @ y</code></pre>
 
                     <h3 id="related-work">Related work</h3>
 
-                    <p>GP-GAM extends a line of work that that fits a GP inside an additive model.</p>
+                    <p>GP-GAM extends a line of work that that fits a GP-based additive model.</p>
 
                     <table class="reltbl">
                         <thead>
@@ -283,38 +283,39 @@ y.T @ y</code></pre>
 
                     <h3>Benchmarks</h3>
 
-                    <p>Four regression benchmark suites were used, 106 dataset slots covering 50 to
+                    <p>Four regression benchmark suites were used, 115 dataset slots covering 50 to
                         72,000 rows and up to 1,024 features. GPGam is the strongest interpretable model
-                        on two of them, and explainable boosting machines is ahead on the other two.</p>
+                        on the imodels and classic suites. Explainable boosting machines is ahead on
+                        TabArena, and ahead by 0.04 on CTR23, where the two are level.</p>
 
                     <p class="caption caption-above"><b>Table 1.</b> Where GPGam ranks against ten other regression models on four benchmark suites.</p>
                     <table class="ranktbl">
                         <thead>
-                            <tr><th>model</th><th>imodels-65</th><th>classic-7</th><th>TabArena-13</th><th>CTR23-21</th></tr>
-                            <tr><th></th><th style="font-weight:normal;color:#777">65 sets</th><th style="font-weight:normal;color:#777">7 sets</th><th style="font-weight:normal;color:#777">13 sets</th><th style="font-weight:normal;color:#777">21 sets</th></tr>
+                            <tr><th>model</th><th>imodels-65</th><th>classic-7</th><th>TabArena-13</th><th>CTR23-30</th></tr>
+                            <tr><th></th><th style="font-weight:normal;color:#777">65 sets</th><th style="font-weight:normal;color:#777">7 sets</th><th style="font-weight:normal;color:#777">13 sets</th><th style="font-weight:normal;color:#777">30 sets</th></tr>
                         </thead>
                         <tbody>
                             <tr class="tblsec"><td colspan="5">Interpretable</td></tr>
-                            <tr><td>GPGam</td><td><b>3.58</b></td><td><b>2.57</b></td><td>2.85</td><td>3.52</td></tr>
-                            <tr><td>EBM</td><td>3.91</td><td>3.57</td><td><b>2.77</b></td><td><b>3.29</b></td></tr>
-                            <tr><td>FIGS</td><td>7.83</td><td>7.29</td><td>6.69</td><td>6.76</td></tr>
-                            <tr><td>RuleFit</td><td>6.74</td><td>7.86</td><td>7.38</td><td>7.43</td></tr>
-                            <tr><td>Ridge</td><td>6.83</td><td>9.43</td><td>8.77</td><td>7.52</td></tr>
-                            <tr><td>Hierarchical shrinkage</td><td>7.71</td><td>8.43</td><td>8.23</td><td>7.38</td></tr>
-                            <tr><td>Decision tree</td><td>8.14</td><td>8.29</td><td>8.46</td><td>8.86</td></tr>
+                            <tr><td>GPGam</td><td><b>3.58</b></td><td><b>2.57</b></td><td>2.85</td><td>3.27</td></tr>
+                            <tr><td>EBM</td><td>3.91</td><td>3.57</td><td><b>2.77</b></td><td><b>3.23</b></td></tr>
+                            <tr><td>FIGS</td><td>7.83</td><td>7.29</td><td>6.69</td><td>6.57</td></tr>
+                            <tr><td>RuleFit</td><td>6.74</td><td>7.86</td><td>7.38</td><td>7.73</td></tr>
+                            <tr><td>Ridge</td><td>6.83</td><td>9.43</td><td>8.77</td><td>7.97</td></tr>
+                            <tr><td>Hierarchical shrinkage</td><td>7.71</td><td>8.43</td><td>8.23</td><td>7.47</td></tr>
+                            <tr><td>Decision tree</td><td>8.14</td><td>8.29</td><td>8.46</td><td>8.97</td></tr>
                             <tr class="tblsec"><td colspan="5">Not interpretable</td></tr>
-                            <tr><td>TabPFN*</td><td><b>2.52</b></td><td><b>1.86</b></td><td>3.54</td><td><b>2.71</b></td></tr>
-                            <tr><td>Gradient boosting</td><td>4.78</td><td>4.71</td><td>4.69</td><td>4.38</td></tr>
-                            <tr><td>Random forest</td><td>5.15</td><td>3.29</td><td><b>3.46</b></td><td>5.14</td></tr>
-                            <tr><td>Neural net</td><td>8.80</td><td>8.71</td><td>9.15</td><td>9.00</td></tr>
+                            <tr><td>TabPFN*</td><td><b>2.52</b></td><td><b>1.86</b></td><td>3.54</td><td><b>2.90</b></td></tr>
+                            <tr><td>Gradient boosting</td><td>4.78</td><td>4.71</td><td>4.69</td><td>4.60</td></tr>
+                            <tr><td>Random forest</td><td>5.15</td><td>3.29</td><td><b>3.46</b></td><td>4.33</td></tr>
+                            <tr><td>Neural net</td><td>8.80</td><td>8.71</td><td>9.15</td><td>8.97</td></tr>
                         </tbody>
                     </table>
 
                     <p class="tblnote">Mean rank across the datasets of each suite, lower is better,
                         over the same eleven models everywhere. Ranks are only comparable down a column,
                         not across rows of different pools. Bold marks the best model within its
-                        section. TabPFN could not be fit on two TabArena datasets, one with 1,024
-                        features and one with 81, and is ranked last on those.</p>
+                        section. TabPFN could not be fit on three datasets, two in TabArena with 1,024
+                            and 81 features and one in CTR23 with 81, and is ranked last on those.</p>
 
                     <p class="tblnote"><b>What was subsampled.</b> The four columns do not measure the
                         same thing. The imodels suite cuts
@@ -327,20 +328,19 @@ y.T @ y</code></pre>
                         capped at 2,500 training rows by GPU memory, and on a dataset wider than 500
                         features only the first 500 are passed to it. Where it still ranks first, it
                         does so on a fraction of the data the other models saw; where it ranks last on
-                        two TabArena datasets, that is because no fit was possible at all. Its numbers
+                            three datasets, that is because no fit was possible at all. Its numbers
                         are a lower bound on the method rather than a measurement of it.</p>
 
                     <p class="tblnote">Every result here is one 80/20 split at a fixed seed with all
                         models at library defaults, which is not how these benchmarks are meant to be
                         scored. TabArena and CTR23 both define protocols with repeated folds and
                         hyperparameter search, so none of these numbers are comparable to published
-                        leaderboard entries. CTR23 is cut from 35 datasets to 21, dropping every one
-                            that another suite also uses: seven shared with TabArena, five with the
-                            imodels suite (abalone, california housing, cpu activity, kin8nm,
-                            geographical origin of music), and white and red wine, which TabArena
-                            carries as a single combined set. Its column therefore shares no data with
-                            the other three. The classic seven are all in the imodels suite, so those
-                            two columns are not independent of each other.</p>
+                        leaderboard entries. CTR23 is cut from 35 datasets to 30, dropping the five the
+                            imodels suite also uses: abalone, california housing, cpu activity, kin8nm
+                            and geographical origin of music. It still shares eight datasets with
+                            TabArena, so those two columns are not independent, and neither are the
+                            imodels and classic columns, since all seven classic datasets are in the
+                            imodels suite.</p>
 
 
                     <p>The model fails in the same way on every suite. It loses on smooth simulations and on data with strong interactions, such
