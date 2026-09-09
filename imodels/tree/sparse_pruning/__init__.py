@@ -10,6 +10,8 @@ from .sparse_hierarchical_shrinkage import (
     SPTreeRegressorCV,
 )
 from .fitted_tree import (
+    fitted_tree_linf_classification,
+    fitted_tree_linf_classification_path,
     fitted_tree_linf_exact_coefficient_path,
     fitted_tree_linf_exact_topology_path,
     materialize_fitted_tree_topology,
@@ -24,6 +26,8 @@ __all__ = [
     "SPTreeClassifierCV",
     "SPTreeRegressor",
     "SPTreeRegressorCV",
+    "fitted_tree_linf_classification",
+    "fitted_tree_linf_classification_path",
     "fitted_tree_linf_exact_coefficient_path",
     "fitted_tree_linf_exact_topology_path",
     "materialize_fitted_tree_topology",

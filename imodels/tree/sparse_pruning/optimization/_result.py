@@ -32,9 +32,11 @@ class RegularizationPath:
     lambdas:
         Regularization strengths in nonincreasing order.
     coefficients:
-        Coefficient matrix with one row per value in ``lambdas``.
+        Coefficients with one row per value in ``lambdas``: shape
+        ``(n_points, n_features)`` or ``(n_points, n_features, n_classes)``.
     intercepts:
-        Optional intercept at each path point.  Solvers that receive an
+        Optional scalar or class-vector intercept at each path point, matching
+        the coefficient dimensions. Solvers that receive an
         explicit intercept column may leave this as ``None``.
     penalties:
         Optional values of the unscaled structured penalty.
@@ -60,10 +62,12 @@ class RegularizationPath:
         coefficients = _real_array_snapshot(self.coefficients, "coefficients")
         if lambdas.ndim != 1 or lambdas.size == 0:
             raise ValueError("lambdas must be a non-empty one-dimensional array")
-        if coefficients.ndim != 2 or coefficients.shape[0] != lambdas.size:
+        if coefficients.ndim not in (2, 3) or coefficients.shape[0] != lambdas.size:
             raise ValueError(
-                "coefficients must be two-dimensional with one row per lambda"
+                "coefficients must have two or three dimensions with one row per lambda"
             )
+        if coefficients.ndim == 3 and coefficients.shape[2] < 2:
+            raise ValueError("class-vector coefficients require at least two classes")
         if not np.all(np.isfinite(lambdas)) or np.any(lambdas < 0):
             raise ValueError("lambdas must be finite and nonnegative")
         if not np.all(np.isfinite(coefficients)):
@@ -74,10 +78,11 @@ class RegularizationPath:
         intercepts = self.intercepts
         if intercepts is not None:
             intercepts = _real_array_snapshot(intercepts, "intercepts")
-            if intercepts.shape != lambdas.shape or not np.all(
+            expected_shape = (lambdas.size,) + coefficients.shape[2:]
+            if intercepts.shape != expected_shape or not np.all(
                 np.isfinite(intercepts)
             ):
-                raise ValueError("intercepts must be finite with one value per lambda")
+                raise ValueError("intercepts must be finite and match the path's class dimensions")
 
         penalties = self.penalties
         if penalties is not None:
@@ -108,7 +113,7 @@ class RegularizationPath:
 
         return self.lambdas.size
 
-    def at(self, lam: float) -> tuple[np.ndarray, float | None]:
+    def at(self, lam: float) -> tuple[np.ndarray, float | np.ndarray | None]:
         """Linearly interpolate coefficients and the optional intercept.
 
         For sampled paths this is a numerical interpolation only.  Callers
@@ -151,7 +156,7 @@ class RegularizationPath:
         if xp[upper_position] == lam:
             intercept = (
                 None if self.intercepts is None
-                else float(self.intercepts[upper_row])
+                else self._intercept_copy(self.intercepts[upper_row])
             )
             return self.coefficients[upper_row].copy(), intercept
 
@@ -170,8 +175,12 @@ class RegularizationPath:
         )
         intercept = None
         if self.intercepts is not None:
-            intercept = float(
+            intercept = self._intercept_copy(
                 (1.0 - fraction) * self.intercepts[lower_row]
                 + fraction * self.intercepts[upper_row]
             )
         return beta, intercept
+
+    @staticmethod
+    def _intercept_copy(value: Any) -> float | np.ndarray:
+        return np.array(value, copy=True) if np.ndim(value) else float(value)

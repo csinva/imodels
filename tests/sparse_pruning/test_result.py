@@ -161,3 +161,22 @@ def test_lookup_does_not_copy_or_deduplicate_all_knots(monkeypatch):
     beta, intercept = path.at(499.5)
     assert_allclose(np.asarray(beta), [1001.0, 1002.0])
     assert intercept is None
+
+
+def test_multiclass_coefficients_and_intercepts_interpolate_owned_snapshots():
+    coefficients = np.arange(18.).reshape(2, 3, 3)
+    intercepts = np.array([[1., 2., 3.], [4., 5., 6.]])
+    path = RegularizationPath([2., 1.], coefficients, intercepts=intercepts)
+    beta, intercept = path.at(1.5)
+    assert_allclose(beta, coefficients.mean(axis=0))
+    assert_allclose(intercept, intercepts.mean(axis=0))
+    beta[:] = -1
+    intercept[:] = -1
+    assert_array_equal(path.at(2.)[1], intercepts[0])
+    path.at(2.)[1][:] = -2
+    assert_array_equal(path.intercepts, intercepts)
+    assert not path.exact
+    with pytest.raises(ValueError, match="class dimensions"):
+        RegularizationPath([2., 1.], coefficients, intercepts=[1., 2.])
+    with pytest.raises(ValueError, match="at least two classes"):
+        RegularizationPath([2., 1.], np.zeros((2, 3, 1)))

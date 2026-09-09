@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="450" viewBox="0 0 840 450" role="img" aria-labelledby="title description">
+  <title id="title">Illustrative two-split hiCAP solution path</title>
+  <desc id="description">As lambda increases from zero to 1.8, the parent coefficient stays at one until lambda 0.5, then declines linearly to zero at 1.5. The child coefficient falls from two to one by lambda 0.5, then follows the parent. The slope change at 0.5 does not change the tree: both splits remain. At 1.5, both coefficients reach zero and both splits are removed, leaving the root as a single leaf.</desc>
+  <style>
+    text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: #243247; }
+    .title { font-size: 20px; font-weight: 650; }
+    .label { font-size: 13px; }
+    .small { font-size: 12px; fill: #526175; }
+    .knot { font-size: 13px; font-weight: 600; }
+    .grid { stroke: #e3e8ef; stroke-width: 1; }
+    .axis { stroke: #8a97a8; stroke-width: 1; }
+  </style>
+  <rect width="840" height="450" rx="12" fill="#ffffff"/>
+  <text x="30" y="30" class="title">Illustrative two-split hiCAP solution path</text>
+  <text x="30" y="51" class="small">Squared-error objective · increasing λ means stronger pruning</text>
+  <path d="M 32 75 H 66" fill="none" stroke="#1768ac" stroke-width="7"/>
+  <text x="76" y="79" class="label">Parent split β₀</text>
+  <path d="M 230 75 H 264" fill="none" stroke="#d96d19" stroke-width="3.5" stroke-dasharray="7 5"/>
+  <text x="274" y="79" class="label">Child split β₁ (dashed; overlaps parent after λ = 0.5)</text>
+
+  <!-- Plot coordinates: x = 80 + 400λ; y = 302 − 80β. -->
+  <path d="M 80 142 H 800 M 80 222 H 800 M 80 302 H 800" class="grid"/>
+  <path d="M 80 132 V 302 H 800" fill="none" class="axis"/>
+  <text x="67" y="146" text-anchor="end" class="small">2</text>
+  <text x="67" y="226" text-anchor="end" class="small">1</text>
+  <text x="67" y="306" text-anchor="end" class="small">0</text>
+  <text transform="translate(27 220) rotate(-90)" text-anchor="middle" class="label">Coefficient</text>
+
+  <path d="M 280 130 V 302" stroke="#768294" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <path d="M 680 130 V 302" stroke="#6a4688" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <text x="280" y="105" text-anchor="middle" class="knot">Coefficient-only knot</text>
+  <text x="280" y="122" text-anchor="middle" class="small">Slopes change; same tree</text>
+  <text x="680" y="105" text-anchor="middle" class="knot">Coefficient + structural knot</text>
+  <text x="680" y="122" text-anchor="middle" class="small">Both splits are removed</text>
+
+  <path d="M 80 222 H 280 L 680 302 H 800" fill="none" stroke="#1768ac" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M 80 142 L 280 222 L 680 302 H 800" fill="none" stroke="#d96d19" stroke-width="3.5" stroke-dasharray="7 5" stroke-linejoin="round"/>
+  <circle cx="280" cy="222" r="5" fill="#ffffff" stroke="#526175" stroke-width="2"/>
+  <circle cx="680" cy="302" r="5" fill="#ffffff" stroke="#6a4688" stroke-width="2"/>
+
+  <path d="M 80 307 V 312 M 280 307 V 312 M 480 307 V 312 M 680 307 V 312 M 800 307 V 312" class="axis"/>
+  <text x="80" y="329" text-anchor="middle" class="small">0</text>
+  <text x="280" y="329" text-anchor="middle" class="small">0.5</text>
+  <text x="480" y="329" text-anchor="middle" class="small">1.0</text>
+  <text x="680" y="329" text-anchor="middle" class="small">1.5</text>
+  <text x="800" y="329" text-anchor="middle" class="small">1.8</text>
+  <text x="440" y="351" text-anchor="middle" class="label">Pruning penalty λ →</text>
+
+  <text x="80" y="379" class="label">Resulting tree structure</text>
+  <rect x="80" y="391" width="600" height="32" fill="#e8f2fa"/>
+  <rect x="680" y="391" width="120" height="32" fill="#eee7f4"/>
+  <text x="380" y="412" text-anchor="middle" class="label">2 retained splits · unchanged throughout 0 ≤ λ &lt; 1.5</text>
+  <text x="740" y="407" text-anchor="middle" class="small">0 splits</text>
+  <text x="740" y="420" text-anchor="middle" class="small">(root only)</text>
+</svg>

@@ -65,7 +65,7 @@ kept separate from this MIT-licensed implementation.
   path in linear output space. Coefficients at all knots are optional, because
   materializing `p` coefficients at `K` knots already costs `O(p K)`.
 - `fitted_tree_linf_exact_topology_path` is the large-tree specialization for
-  a fitted single-output `DecisionTreeRegressor`. It derives each local-stump
+  an eligible fitted single-output regressor or classifier. It derives each local-stump
   score directly from child weights and child predictions stored by sklearn,
   so it constructs neither an `n`-by-`p` stump matrix nor descendant groups.
   Its post-fit path cost is `O(p log p)` and does not depend on `n`.
@@ -302,8 +302,8 @@ beta_v(lambda) = sign(h_v) * min(c_v, q_B(lambda)).
 
 The maximal validity interval follows from the linear clipping,
 parent/child, nonnegativity, and dual-multiplier inequalities. Their roots
-include merges, splits, saturation, and structural events. Green supplies
-zero-group activation thresholds; dark blue identifies a face at an interior
+include merges, splits, saturation, and structural events. The structural path supplies
+zero-group activation thresholds; the proximal point solver identifies a face at an interior
 lambda; interval certificates establish coverage between samples. Legacy
 hiCAP is used in independent tests, not by the production solver.
 
@@ -341,9 +341,66 @@ explicitly nonexact prefix. Tree penalty values are computed by a bottom-up
 
 ## Classification and other losses
 
-The structural and full affine coefficient paths above solve a squared-error
-pruning objective. They are not logistic-loss paths. Binary classification
-uses the sampled APA solver; logistic coefficients are generally not
-piecewise affine in the penalty. For non-diagonal **squared-loss** problems,
-the exact laminar proximal map inside FISTA gives certified requested points,
-not a complete knot path.
+`classification.py` provides `laminar_group_linf_classification` and its
+`_path` counterpart for binary logistic and multiclass softmax loss. They use
+the exact laminar proximal operator inside accelerated proximal gradient with
+backtracking, an unpenalized intercept, and descending warm starts. Dense input
+accepts labels or probability rows, with optional sample weights. Every feature
+must have positive penalty coverage, and every class positive effective mass.
+The fitted-tree adapters use leaf class proportions and masses instead of
+reconstructing the observation-by-split design.
+
+For a coefficient matrix `B` (splits by classes), the multiclass penalty is
+
+```text
+sum_g a_g * max_{v in subtree(g)} (max_c B[v,c] - min_c B[v,c]).
+```
+
+Binary class contrasts reduce to scalar-logit hiCAP at the same lambda.
+Internally, optimizing twice the entrywise group infinity penalty over free
+rowwise class-common shifts is equivalent to this range penalty. **Fixing a
+sum-zero gauge during that infinity-norm optimization is not equivalent.**
+The returned multiclass coefficients are sum-zero contrasts, canonicalized
+only after solving. Column scaling uses the existing coordinate-weighted
+proximal map, changing the optimization metric without changing the objective.
+
+For a zero subtree in a fitted tree, outside logits are constant on its region.
+Weighted zero-mean stumps cancel the probability term in its gradient. The
+class-range dual activation mass at split `v` is therefore
+
+```text
+h_vc = sqrt(L_v*R_v) * (p_right[c] - p_left[c]) / W
+Q_v  = 0.5 * sum_c abs(h_vc).
+```
+
+The existing tree-isotonic pooling of `Q_v / a_v` yields structural knots.
+`fitted_tree_linf_exact_topology_path` exposes them for eligible classifiers;
+its point/path coefficient adapters screen splits inactive over the entire
+requested penalty interval. Their stationarity diagnostics concern the
+remaining coordinates, with the excluded zeros justified by that structural
+reduction. Statistics require original weighted child-mean probabilities,
+positive fitting leaf/class masses, and no active monotonic clipping. As in
+regression, these are the stored fitting partition's statistics, not an OOB
+or held-out objective; native missing-value routing may differ when reapplied.
+
+Forward and adjoint tree passes cost `O(nodes * classes)` per loss/gradient
+evaluation. The remaining explicit group memberships and proximal projections
+may cost quadratically in tree depth; the complete coefficient solver is not
+claimed to be near-linear. Stored multiclass samples cost
+`O(n_points * n_splits * n_classes)`.
+
+Classification coefficient paths are generally curved, as discussed for GLMs by
+[Park and Hastie (2007)](https://doi.org/10.1111/j.1467-9868.2007.00607.x).
+Accordingly, `exact=False` always. `status="complete"` means sampled points
+met the stationarity tolerance and any requested midpoint refinement finished,
+not that all coefficient events were enumerated. Adaptive refinement compares
+solved midpoints with interpolated coefficients/intercepts; it is a heuristic,
+not a uniform interpolation-error bound. `path.at(lam)` interpolates only;
+call a point API for a checked solution at an additional penalty.
+
+The diagnostic `certified` checks a scaled proximal-gradient residual and the
+proximal operator's dual certificate. It does not bound coefficient error or
+objective suboptimality, especially near separation. Positive penalties are
+required; a finite unpenalized coefficient endpoint may not exist. Requests
+that exceed the iteration or refinement budget return `status="partial"`.
+The existing binary APA API and SP/SHS classifier-wrapper defaults are unchanged.

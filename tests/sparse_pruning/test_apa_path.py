@@ -33,6 +33,8 @@ def test_sparse_pruning_exports_only_estimators_and_fitted_tree_helpers():
         "SPTreeRegressor", "SPTreeRegressorCV",
         "fitted_tree_linf_exact_coefficient_path",
         "fitted_tree_linf_exact_topology_path",
+        "fitted_tree_linf_classification",
+        "fitted_tree_linf_classification_path",
         "materialize_fitted_tree_topology",
     }
     assert set(sparse_pruning.__all__) == expected

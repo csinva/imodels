@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import hashlib
+import warnings
 from collections.abc import Sequence
 from copy import deepcopy
 from dataclasses import replace
 from typing import Any
 
 import numpy as np
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.tree._tree import TREE_LEAF, TREE_UNDEFINED
 from sklearn.utils.validation import check_is_fitted
 
@@ -42,11 +43,15 @@ def _update_fingerprint_array(
     digest.update(array.tobytes(order="C"))
 
 
-def _fitted_tree_fingerprint(estimator: DecisionTreeRegressor) -> str:
+def _fitted_tree_fingerprint(estimator: DecisionTreeRegressor | DecisionTreeClassifier) -> str:
     """Return a stable fingerprint of the source fitted-tree state."""
     tree = estimator.tree_
     digest = hashlib.sha256()
-    digest.update(b"imodels-fitted-regression-tree\0")
+    if isinstance(estimator, DecisionTreeClassifier):
+        digest.update(b"imodels-fitted-classification-tree\0")
+        digest.update(repr(estimator.classes_.tolist()).encode("utf-8"))
+    else:
+        digest.update(b"imodels-fitted-regression-tree\0")
     digest.update(_FITTED_TREE_FINGERPRINT_VERSION.encode("ascii"))
     digest.update(b"\0")
     scalar_state = (
@@ -111,12 +116,258 @@ def _internal_tree_nodes_and_parents(tree: Any) -> tuple[np.ndarray, np.ndarray]
     return np.asarray(node_ids, dtype=np.intp), np.asarray(parents, dtype=np.intp)
 
 
+class _FittedClassificationDesign:
+    """Snapshot of a tree's leaf statistics and matrix-free Haar operator.
+
+    Forward and adjoint passes cost O(nodes * classes). Neither the original
+    observations nor a leaf-by-split matrix are retained or reconstructed.
+    """
+
+    def __init__(self, estimator: DecisionTreeClassifier):
+        if not isinstance(estimator, DecisionTreeClassifier):
+            raise TypeError("estimator must be a fitted DecisionTreeClassifier")
+        check_is_fitted(estimator, attributes="tree_")
+        if estimator.n_outputs_ != 1 or len(estimator.classes_) < 2:
+            raise ValueError("classification paths require one output and at least two classes")
+        monotonic = getattr(estimator, "monotonic_cst", None)
+        if monotonic is not None and np.any(np.asarray(monotonic) != 0):
+            raise ValueError("classification sufficient statistics do not support monotonic constraints")
+        tree = estimator.tree_
+        self.node_ids, self.parents = _internal_tree_nodes_and_parents(tree)
+        self.left = np.array(tree.children_left[self.node_ids], copy=True)
+        self.right = np.array(tree.children_right[self.node_ids], copy=True)
+        reachable = np.unique(np.r_[0, self.node_ids, self.left, self.right])
+        self.leaf_ids = reachable[tree.children_left[reachable] == TREE_LEAF]
+        self.n_nodes = int(tree.node_count)
+        mass = np.asarray(tree.weighted_n_node_samples, dtype=float)
+        if np.any(~np.isfinite(mass[reachable])) or np.any(mass[reachable] <= 0):
+            raise ValueError("every reachable fitted node must have positive finite weight")
+        raw = np.asarray(tree.value, dtype=float)
+        if raw.shape[1:] != (1, len(estimator.classes_)):
+            raise ValueError("classification paths require single-output class counts or probabilities")
+        values = raw[reachable, 0]
+        if np.any(~np.isfinite(values)) or np.any(values < 0):
+            raise ValueError("fitted class values must be finite and nonnegative")
+        # Normalize before summation so old sklearn count encodings cannot
+        # overflow solely from a common rescaling of all sample weights.
+        scales = values.max(axis=1)
+        if np.any(scales <= 0):
+            raise ValueError("each fitted node must have positive class mass")
+        values = values / scales[:, None]
+        probabilities = np.zeros((self.n_nodes, values.shape[1]))
+        probabilities[reachable] = values / values.sum(axis=1, keepdims=True)
+        tolerance = max(4096., 8. * max(1, tree.n_node_samples[0])) * np.finfo(float).eps
+        child_mass = mass[self.left] + mass[self.right]
+        if np.any(~np.isfinite(child_mass)) or not np.allclose(
+            child_mass, mass[self.node_ids], rtol=tolerance, atol=0.
+        ):
+            raise ValueError("tree child weights do not sum to their parent")
+        reconstructed = (probabilities[self.left] * (mass[self.left] / child_mass)[:, None]
+                         + probabilities[self.right] * (mass[self.right] / child_mass)[:, None])
+        if not np.allclose(reconstructed, probabilities[self.node_ids], rtol=0., atol=tolerance):
+            raise ValueError("stored probabilities are not weighted child means; use an unmodified fitted tree")
+        self.targets = probabilities[self.leaf_ids].copy()
+        self.weights = np.array(mass[self.leaf_ids] / mass[0], copy=True)
+        if np.any(self.weights <= 0):
+            raise ValueError("normalized leaf weights underflow; tree weight ratios are unsupported")
+        if np.any(self.weights @ self.targets <= 0):
+            raise ValueError("every class must have positive effective training mass")
+        sqrt_left, sqrt_right = np.sqrt(mass[self.left]), np.sqrt(mass[self.right])
+        self.left_scale = -sqrt_right / sqrt_left
+        self.right_scale = sqrt_left / sqrt_right
+        self.coefficient_scale = np.sqrt(mass[0]) / np.sqrt(child_mass)
+        root_scale = (sqrt_left / np.sqrt(mass[0])) * (sqrt_right / np.sqrt(mass[0]))
+        self.scores = .5 * root_scale * np.abs(
+            probabilities[self.right] - probabilities[self.left]
+        ).sum(axis=1)
+        if not all(np.all(np.isfinite(a)) for a in (
+            self.left_scale, self.right_scale, self.coefficient_scale, self.scores
+        )):
+            raise ValueError("fitted Haar scales must be finite; tree weight ratios are unsupported")
+        self.shape = (len(self.leaf_ids), len(self.node_ids))
+        self.metadata = {
+            "problem": "fitted_classification_tree", "loss": "logistic" if values.shape[1] == 2 else "softmax",
+            "source": "fitted_tree_sufficient_statistics", "classes": tuple(estimator.classes_.tolist()),
+            "tree_node_ids": tuple(self.node_ids.tolist()), "tree_root_weight": float(mass[0]),
+            "local_stump_normalization": "unnormalized", "training_design_materialized": False,
+            "observation_count_after_fit_affects_path_cost": False,
+            "exactness_condition": "fitted_tree_training_measure", "penalty": "subtree_class_range",
+            "fitted_tree_fingerprint": _fitted_tree_fingerprint(estimator),
+            "fitted_tree_fingerprint_version": _FITTED_TREE_FINGERPRINT_VERSION,
+        }
+
+    def matmat(self, coefficients: np.ndarray) -> np.ndarray:
+        values = np.zeros((self.n_nodes, coefficients.shape[1]))
+        for j, node in enumerate(self.node_ids):
+            values[self.left[j]] = values[node] + self.left_scale[j] * coefficients[j]
+            values[self.right[j]] = values[node] + self.right_scale[j] * coefficients[j]
+        return values[self.leaf_ids]
+
+    def rmatmat(self, residuals: np.ndarray) -> np.ndarray:
+        values = np.zeros((self.n_nodes, residuals.shape[1]))
+        values[self.leaf_ids] = residuals
+        gradient = np.empty((self.shape[1], residuals.shape[1]))
+        for j in range(len(self.node_ids) - 1, -1, -1):
+            left, right = values[self.left[j]], values[self.right[j]]
+            gradient[j] = self.left_scale[j] * left + self.right_scale[j] * right
+            values[self.node_ids[j]] = left + right
+        return gradient
+
+
+class _SelectedTreeColumns:
+    """Restrict optimization to structurally possible split coordinates."""
+
+    def __init__(self, design: _FittedClassificationDesign, indices: np.ndarray):
+        self.design, self.indices = design, indices
+        self.shape = (design.shape[0], len(indices))
+        self.coefficient_scale = design.coefficient_scale[indices]
+
+    def matmat(self, beta: np.ndarray) -> np.ndarray:
+        full = np.zeros((self.design.shape[1], beta.shape[1]))
+        full[self.indices] = beta
+        return self.design.matmat(full)
+
+    def rmatmat(self, residuals: np.ndarray) -> np.ndarray:
+        return self.design.rmatmat(residuals)[self.indices]
+
+
+def _fitted_classifier_path(estimator, lambdas, *, group_weights, beta_init,
+                            intercept_init, max_iter, tol, adaptive_tol, max_points):
+    from .optimization.classification import _LaminarClassificationSolver, _classification_path
+    from .optimization.topology import _positive_node_weights
+
+    raw = np.asarray(lambdas)
+    if raw.ndim != 1 or not raw.size or raw.dtype.kind not in "iuf":
+        raise ValueError("lambdas must be a nonempty vector of positive finite penalties")
+    penalties = raw.astype(float)
+    if np.any(~np.isfinite(penalties)) or np.any(penalties <= 0):
+        raise ValueError("lambdas must be positive; finite classification coefficients may not exist at zero")
+    design = _FittedClassificationDesign(estimator)
+    weights = _positive_node_weights(group_weights, design.shape[1])
+    structural = tree_group_linf_exact_topology_path(design.scores, design.parents, group_weights=weights)
+    kept = np.flatnonzero(structural.activation_lambdas > penalties.min())
+    positions = np.full(design.shape[1], -1, dtype=int)
+    positions[kept] = np.arange(len(kept))
+    parents = np.array([-1 if design.parents[j] < 0 else positions[design.parents[j]] for j in kept], dtype=int)
+    sizes = np.ones(len(kept), dtype=int)
+    for j in range(len(kept) - 1, -1, -1):
+        if parents[j] >= 0:
+            sizes[parents[j]] += sizes[j]
+    # Retained nodes preserve preorder, so each descendant group is contiguous.
+    groups = [np.arange(j, j + sizes[j]) for j in range(len(kept))]
+    initial = None
+    if beta_init is not None:
+        initial = np.asarray(beta_init)
+        shape = (design.shape[1],) if len(estimator.classes_) == 2 else (design.shape[1], len(estimator.classes_))
+        if initial.shape != shape or initial.dtype.kind not in "iuf" or np.any(~np.isfinite(initial)):
+            raise ValueError(f"beta_init must be finite with shape {shape}")
+        initial = initial[kept]
+    solver = _LaminarClassificationSolver(
+        _SelectedTreeColumns(design, kept), design.targets, groups,
+        sample_weight=design.weights, group_weights=weights[kept], max_iter=max_iter, tol=tol,
+    )
+    path = _classification_path(solver, penalties, beta_init=initial, intercept_init=intercept_init,
+                                adaptive_tol=adaptive_tol, max_points=max_points)
+    coefficients = np.zeros((path.n_points, design.shape[1]) + path.coefficients.shape[2:])
+    coefficients[:, kept] = path.coefficients
+    metadata = {**path.metadata, **design.metadata,
+                "screened_coordinates": design.shape[1] - len(kept),
+                "screening_min_lambda": float(penalties.min()),
+                "stationarity_scope": "structurally_retained_coordinates",
+                "structural_activation_lambdas": tuple(structural.activation_lambdas.tolist()),
+                "descendant_groups_materialized": True}
+    diagnostics = tuple({**info, "classes": design.metadata["classes"],
+                         "stationarity_scope": metadata["stationarity_scope"]}
+                        for info in path.diagnostics)
+    return replace(path, coefficients=coefficients, diagnostics=diagnostics, metadata=metadata), design
+
+
+def fitted_tree_linf_classification_path(
+    estimator: DecisionTreeClassifier, lambdas: Sequence[float], *,
+    group_weights: float | Sequence[float] | None = None,
+    beta_init: np.ndarray | None = None, intercept_init=None,
+    max_iter: int = 5000, tol: float = 1e-8,
+    adaptive_tol: float | None = None, max_points: int = 100,
+) -> RegularizationPath:
+    """Warm-started logistic/softmax coefficient samples for a fitted tree.
+
+    Uses the original weighted fitting partition, an unpenalized intercept,
+    unnormalized local stumps, and the class-range hiCAP penalty. Coefficient
+    columns follow ``metadata['tree_node_ids']``. Binary coefficients have
+    shape ``(n_points, n_splits)``; multiclass coefficients have shape
+    ``(n_points, n_splits, n_classes)`` in a sum-zero class gauge.
+
+    All lambdas must be positive: pure leaves can have infinite unpenalized
+    logits. ``exact`` is always false. ``at(lam)`` only interpolates; request
+    a new point solve for a checked in-between solution. Adaptive refinement
+    checks midpoint interpolation error, not a uniform interval error bound.
+    Check ``status`` and per-point diagnostics, especially near zero penalty.
+
+    Leaf aggregation avoids observation-by-split matrices. Structural knots
+    screen coordinates that are zero throughout the requested interval.
+    Explicit remaining group memberships and stored coefficient samples can
+    still be large for deep trees. The source estimator is never modified.
+    """
+    path, _ = _fitted_classifier_path(
+        estimator, lambdas, group_weights=group_weights, beta_init=beta_init,
+        intercept_init=intercept_init, max_iter=max_iter, tol=tol,
+        adaptive_tol=adaptive_tol, max_points=max_points,
+    )
+    return path
+
+
+def fitted_tree_linf_classification(
+    estimator: DecisionTreeClassifier, lam: float, *,
+    group_weights: float | Sequence[float] | None = None,
+    beta_init: np.ndarray | None = None, intercept_init=None,
+    max_iter: int = 5000, tol: float = 1e-8, return_info: bool = False,
+):
+    """Solve one positive penalty; optionally return diagnostics and predictions.
+
+    ``(beta, info)`` with ``return_info=True`` includes the unpenalized
+    ``intercept`` and optimized ``leaf_probabilities`` aligned with sorted
+    ``leaf_node_ids``. These differ from the original CART frequencies.
+    Class columns follow ``info['classes']``. Warm starts use the same
+    coefficient/intercept convention as the fitted-tree path constructor.
+    """
+    from scipy.special import expit, softmax
+
+    if not isinstance(return_info, (bool, np.bool_)):
+        raise ValueError("return_info must be a boolean")
+    path, design = _fitted_classifier_path(
+        estimator, [lam], group_weights=group_weights, beta_init=beta_init,
+        intercept_init=intercept_init, max_iter=max_iter, tol=tol,
+        adaptive_tol=None, max_points=1,
+    )
+    beta = path.coefficients[0].copy()
+    if not return_info:
+        if not path.diagnostics[0]["converged"]:
+            warnings.warn("classification solver did not reach the requested tolerance", RuntimeWarning)
+        return beta
+    intercept = path.intercepts[0].copy() if path.intercepts.ndim == 2 else float(path.intercepts[0])
+    logits = design.matmat(beta[:, None] if beta.ndim == 1 else beta) + intercept
+    probability = softmax(logits, axis=1) if beta.ndim == 2 else expit(logits[:, 0])
+    if beta.ndim == 1:
+        probability = np.column_stack([1. - probability, probability])
+    info = {**path.diagnostics[0], **path.metadata, "intercept": intercept,
+            "leaf_node_ids": design.leaf_ids.copy(), "leaf_probabilities": probability}
+    return beta, info
+
+
 def fitted_tree_linf_exact_topology_path(
-    estimator: DecisionTreeRegressor,
+    estimator: DecisionTreeRegressor | DecisionTreeClassifier,
     *,
     group_weights: float | Sequence[float] | None = None,
 ) -> TreeTopologyPath:
-    r"""Compute the exact structural hiCAP path of a fitted regression tree.
+    r"""Compute the exact structural hiCAP path of an eligible fitted CART tree.
+
+    For classifiers the objective is binary logistic or multiclass softmax
+    loss, with the class-range descendant-group penalty. The activation score
+    is ``sqrt(L*R)/(2*W) * sum_c abs(p_right[c] - p_left[c])``. This gives
+    structural events only: logistic/softmax coefficients are not piecewise
+    affine. Classifiers require at least two positive-mass classes, positive
+    leaf masses, and no active monotonic constraints. Class probabilities
+    must be the original training-node frequencies, before HS or other edits.
 
     This is the scalable entry point for the standard local-stump tree
     problem.  It uses only statistics already stored in a fitted CART tree;
@@ -136,8 +387,9 @@ def fitted_tree_linf_exact_topology_path(
     Each returned event contains original sklearn node IDs through
     :meth:`TreeTopologyPath.iter_node_events`.
 
-    The estimator must be a fitted, single-output ``DecisionTreeRegressor``
-    whose criterion stores weighted means.  A path built this way is tied to
+    For regression, the estimator must be a fitted, single-output
+    ``DecisionTreeRegressor`` whose criterion stores weighted means.
+    A path built this way is tied to
     the in-bag rows and weights used to fit that tree; it is not an OOB or
     held-out pruning path. With ``criterion="poisson"``, the result is still
     the exact path for a subsequent quadratic pruning objective, not for
@@ -159,7 +411,13 @@ def fitted_tree_linf_exact_topology_path(
     a copy) when rendering multiple states, because in-place compaction can
     renumber nodes.
     """
-    scores, _, parents, node_ids, metadata = _fitted_tree_statistics(estimator)
+    if isinstance(estimator, DecisionTreeClassifier):
+        design = _FittedClassificationDesign(estimator)
+        scores, parents, node_ids, metadata = (
+            design.scores, design.parents, design.node_ids, design.metadata
+        )
+    else:
+        scores, _, parents, node_ids, metadata = _fitted_tree_statistics(estimator)
     path = tree_group_linf_exact_topology_path(
         scores, parents, group_weights=group_weights, node_ids=node_ids
     )
@@ -406,12 +664,12 @@ def fitted_tree_linf_exact_coefficient_path(
 
 
 def materialize_fitted_tree_topology(
-    estimator: DecisionTreeRegressor,
+    estimator: DecisionTreeRegressor | DecisionTreeClassifier,
     path: TreeTopologyPath,
     lam: float,
     *,
     below: bool = False,
-) -> DecisionTreeRegressor:
+) -> DecisionTreeRegressor | DecisionTreeClassifier:
     """Return a plot-ready copy of ``estimator`` at one topology-path state.
 
     Inactive internal nodes become leaves on a deep copy; the input estimator
@@ -424,12 +682,12 @@ def materialize_fitted_tree_topology(
 
     This helper materializes *topology*. Values displayed at the resulting
     leaves are the original fitted CART node values, not hiCAP-shrunken
-    coefficients. Use an exact coefficient point solve when penalized values
+    coefficients. Use a coefficient point solve when penalized values
     or predictions are required. The fitted-tree coefficient path can supply
     those coefficients without constructing the training design matrix.
     """
-    if not isinstance(estimator, DecisionTreeRegressor):
-        raise TypeError("estimator must be a fitted DecisionTreeRegressor")
+    if not isinstance(estimator, (DecisionTreeRegressor, DecisionTreeClassifier)):
+        raise TypeError("estimator must be a fitted DecisionTreeRegressor or DecisionTreeClassifier")
     check_is_fitted(estimator, attributes="tree_")
     if not isinstance(path, TreeTopologyPath):
         raise TypeError("path must be a TreeTopologyPath")
@@ -465,6 +723,12 @@ def materialize_fitted_tree_topology(
 
     rendered = deepcopy(estimator)
     tree = rendered.tree_
+    if isinstance(rendered, DecisionTreeClassifier):
+        # Older sklearn normalized class counts during predict_proba; modern
+        # releases expect stored probabilities. Probability rows work in both.
+        values = tree.value[:, 0, :]
+        values /= values.max(axis=1, keepdims=True)
+        values /= values.sum(axis=1, keepdims=True)
     for node_id in node_ids[~active_positions]:
         node_id = int(node_id)
         tree.children_left[node_id] = TREE_LEAF
@@ -478,6 +742,8 @@ def materialize_fitted_tree_topology(
 
 
 __all__ = [
+    "fitted_tree_linf_classification",
+    "fitted_tree_linf_classification_path",
     "fitted_tree_linf_exact_coefficient_path",
     "fitted_tree_linf_exact_topology_path",
     "materialize_fitted_tree_topology",

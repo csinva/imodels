@@ -100,6 +100,31 @@ def test_analytic_coefficient_knots_and_interpolation():
     assert not np.any(np.isclose(topology.lambdas, .5))
 
 
+def test_classification_coefficient_path_and_checked_in_between_point():
+    from imodels.tree.sparse_pruning import (
+        fitted_tree_linf_classification, fitted_tree_linf_classification_path,
+        fitted_tree_linf_exact_topology_path,
+    )
+
+    # Equal-mass leaves with P(class 1)=.2 and .8 have beta=logit(.8-lambda)
+    # for 0<lambda<.3, and beta=0 above .3. This is not a linear path.
+    X = np.repeat([[-1.], [1.]], 10, axis=0)
+    y = np.array([0] * 8 + [1] * 2 + [0] * 2 + [1] * 8)
+    tree = DecisionTreeClassifier(max_depth=1, random_state=0).fit(X, y)
+    original = tree.tree_.value.copy()
+    topology = fitted_tree_linf_exact_topology_path(tree)
+    assert_allclose(topology.lambdas, [.3, 0.], atol=1e-14)
+    path = fitted_tree_linf_classification_path(tree, [.4, .2, .1], tol=1e-9)
+    assert path.status == "complete" and not path.exact
+    assert_allclose(path.coefficients[:, 0], [0., np.log(.6 / .4), np.log(.7 / .3)], atol=1e-7)
+    beta, info = fitted_tree_linf_classification(tree, .15, tol=1e-9, return_info=True)
+    assert info["certified"]
+    assert_allclose(beta, [np.log(.65 / .35)], atol=1e-7)
+    assert_allclose(info["leaf_probabilities"][:, 1], [.35, .65], atol=1e-7)
+    assert not np.isclose(path.at(.15)[0][0], beta[0])
+    assert_array_equal(tree.tree_.value, original)
+
+
 def test_zero_coefficient_ancestor_is_retained_for_active_descendant():
     path = tree_group_linf_exact_coefficient_path([0, 2], [3, 1], [-1, 0])
     assert_allclose(path.at(.5)[0], [0, 1], atol=1e-10)

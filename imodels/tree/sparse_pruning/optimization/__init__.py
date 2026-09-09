@@ -3,6 +3,10 @@
 from ._result import RegularizationPath
 from .apa_point import hiCAP_classification, hiCAP_regression, proj_l1_ball
 from .apa import apa_apg_classification_path, apa_apg_regression_path
+from .classification import (
+    laminar_group_linf_classification,
+    laminar_group_linf_classification_path,
+)
 from .diagnostics import (
     group_linf_lambda_max,
     group_linf_quadratic_kkt_diagnostic,
@@ -29,6 +33,8 @@ __all__ = [
     "RegularizationPath",
     "apa_apg_classification_path",
     "apa_apg_regression_path",
+    "laminar_group_linf_classification",
+    "laminar_group_linf_classification_path",
     "group_linf_lambda_max",
     "group_linf_quadratic_kkt_diagnostic",
     "group_linf_regression_kkt_diagnostic",

@@ -42,9 +42,11 @@ shrunk by HS—not the penalized coefficients used to decide pruning.
 
 Use `SPTreeClassifier` / `SPTreeClassifierCV` for pruning, or
 `SHSTreeClassifier` / `SHSTreeClassifierCV` to add HS. All provide `predict`
-and `predict_proba`. Classification uses APA-APG2 with logistic loss and
-numeric-grid CV, not the exact squared-error paths below.
-HS strengths must be numeric; GCV and multiclass classification are unsupported.
+and `predict_proba`. These estimator wrappers currently use APA-APG2 with
+logistic loss and numeric-grid CV. Their HS strengths must be numeric; GCV
+and multiclass classification are unsupported in the wrappers.
+The separate [fitted-tree classification APIs](#classification-paths) below
+support binary and multiclass structural paths and coefficient samples.
 
 ## Tune regularization strengths
 
@@ -198,6 +200,49 @@ nodes of the compacted model. Keep the original tree if reconstructing its
 feature matrix. Classification/APA grid paths do not provide this exact
 piecewise-linear interpolation contract.
 
+### Classification paths
+
+For an eligible fitted `DecisionTreeClassifier`,
+`fitted_tree_linf_exact_topology_path` and `materialize_fitted_tree_topology`
+also provide all structural pruning states. The objective is logistic/softmax
+loss with a class-range extension of hiCAP, not a squared-error surrogate.
+Use the original fitted tree, before HS, with positive leaf/class masses and
+no monotonic constraints. Its stored fitting partition includes sample and
+class weights; it is not a held-out or OOB objective.
+
+Coefficient solutions are optional and separate from the preview's CART values:
+
+```python
+from imodels.tree.sparse_pruning import (
+    fitted_tree_linf_classification, fitted_tree_linf_classification_path,
+)
+
+# source is an already fitted binary or multiclass DecisionTreeClassifier.
+path = fitted_tree_linf_classification_path(
+    source, [0.1, 0.03, 0.01], tol=1e-8,
+    adaptive_tol=1e-3, max_points=100,  # optional midpoint refinement
+)
+beta, info = fitted_tree_linf_classification(source, 0.02, return_info=True)
+assert info["certified"]  # numerical stationarity check, not an error bound
+probabilities = info["leaf_probabilities"]
+leaf_ids = info["leaf_node_ids"]       # sorted original tree leaf IDs
+# Predictions on X_new: probabilities[np.searchsorted(leaf_ids, source.apply(X_new))]
+```
+
+Binary coefficients have shape `(n_points, n_splits)`; multiclass coefficients
+have shape `(n_points, n_splits, n_classes)`, with class order in
+`path.metadata['classes']`. Intercepts are stored separately. The tree is never
+modified. Check `path.status` and `path.diagnostics`: an iteration/refinement
+limit returns a partial path. `path.exact` is always false, and `path.at(alpha)`
+is **approximate interpolation**, not a new solve. Midpoint refinement is not
+a uniform error guarantee. Use the point API when a checked solution is needed.
+Penalties must be positive: pure leaves can require infinite logits at zero.
+
+These APIs reuse the exact laminar proximal operator and warm starts. Leaf
+aggregation avoids an observation-by-split matrix, but coefficient storage and
+explicit descendant groups can still be costly for large, deep trees.
+They do not change classifier-wrapper solver choices or CV defaults.
+
 ## Solver reference
 
 | `solver` | What it computes | Use when |
@@ -209,7 +254,7 @@ piecewise-linear interpolation contract.
 | `"hicap"` | Generic, slower, certified coefficient path | Small reference/validation problems |
 | `"apa_apg2"` | Approximate point solution | Binary classification or `ord=2` |
 
-Tree-specific paths require `ord=np.inf`, zero/default `support_tol`, and an
+Wrapper tree-specific solvers require `ord=np.inf`, zero/default `support_tol`, and an
 unconstrained single-output mean-based regression tree on its fitting rows and
 weights. Wrappers do not assume this for external `prefit=True` trees or forest
 OOB data. Explicitly incompatible choices or failed certificates raise errors.
