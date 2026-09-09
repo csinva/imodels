@@ -1,59 +1,92 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="840" height="350" viewBox="0 0 840 350" role="img" aria-labelledby="title description">
-  <title id="title">Retained splits versus pruning penalty</title>
-  <desc id="description">Exact structural path of a regression tree fitted to x = [0, 1, 2, 3] and y = [-3, -1, 1, 4]. Three splits remain below penalty 0.5, two from 0.5 to below 0.75, one from 0.75 to below 2.25, and zero at 2.25 and above. Markers A through D match the tree snapshots. At a knot the disappearing split is already removed. Displayed penalties are rounded from the stored knots.</desc>
-  <style>
-    text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: #243247; }
-    .title { font-size: 20px; font-weight: 650; }
-    .label { font-size: 13px; }
-    .small { font-size: 12px; fill: #526175; }
-    .marker { font-size: 15px; font-weight: 700; fill: #126d56; }
-    .grid { stroke: #e3e8ef; stroke-width: 1; }
-    .axis { stroke: #8a97a8; stroke-width: 1; }
-  </style>
-  <rect width="840" height="350" rx="12" fill="#ffffff"/>
-  <text x="30" y="32" class="title">Retained splits vs. pruning penalty</text>
-  <text x="30" y="55" class="small">Small regression example · one fixed fitted tree · exact structural path</text>
-
-  <!-- DecisionTreeRegressor(max_leaf_nodes=4, random_state=0), fitted to the data in desc.
-       States use structure.lambdas[::-1], not rounded decimal penalties.
-       Plot coordinates: x = 80 + 288λ; y = 245 − 45 * retained_splits. -->
-  <path d="M 80 110 H 800 M 80 155 H 800 M 80 200 H 800 M 80 245 H 800" class="grid"/>
-  <path d="M 80 95 V 245 H 800" fill="none" class="axis"/>
-  <text x="66" y="114" text-anchor="end" class="small">3</text>
-  <text x="66" y="159" text-anchor="end" class="small">2</text>
-  <text x="66" y="204" text-anchor="end" class="small">1</text>
-  <text x="66" y="249" text-anchor="end" class="small">0</text>
-  <text transform="translate(27 172) rotate(-90)" text-anchor="middle" class="label">Retained splits</text>
-  <path d="M 224 95 V 245 M 296 95 V 245 M 728 95 V 245" stroke="#c4ccd6" stroke-dasharray="4 4" fill="none"/>
-  <path d="M 80 110 H 224 V 155 H 296 V 200 H 728 V 245 H 800" stroke="#13886c" stroke-width="3" fill="none"/>
-  <g fill="#ffffff" stroke="#13886c" stroke-width="2">
-    <circle cx="224" cy="110" r="4"/>
-    <circle cx="296" cy="155" r="4"/>
-    <circle cx="728" cy="200" r="4"/>
-  </g>
-  <g fill="#13886c" stroke="#ffffff" stroke-width="1.5">
-    <circle cx="80" cy="110" r="5"/>
-    <circle cx="224" cy="155" r="5"/>
-    <circle cx="296" cy="200" r="5"/>
-    <circle cx="728" cy="245" r="5"/>
-  </g>
-  <text x="88" y="96" class="marker">A</text>
-  <text x="236" y="145" class="marker">B</text>
-  <text x="308" y="189" class="marker">C</text>
-  <text x="740" y="233" class="marker">D</text>
-  <text x="510" y="183" text-anchor="middle" class="small">Same tree throughout this interval</text>
-
-  <path d="M 80 250 V 255 M 224 250 V 255 M 296 250 V 255 M 368 250 V 255 M 512 250 V 255 M 656 250 V 255 M 728 250 V 255 M 800 250 V 255" class="axis"/>
-  <g text-anchor="middle" class="small">
-    <text x="80" y="273">0</text>
-    <text x="224" y="273">0.5</text>
-    <text x="296" y="273">0.75</text>
-    <text x="368" y="273">1</text>
-    <text x="512" y="273">1.5</text>
-    <text x="656" y="273">2</text>
-    <text x="728" y="273">2.25</text>
-    <text x="800" y="273">2.5</text>
-  </g>
-  <text x="440" y="300" text-anchor="middle" class="label">Pruning penalty λ → (linear scale)</text>
-  <text x="30" y="329" class="small">A–D match the trees below. Filled dots show the state at a knot; open dots show the state just below it.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="735" viewBox="0 0 960 735" role="img" aria-labelledby="title description">
+  <title id="title">Overfit to useful pruning to underfit</title>
+  <desc id="description">Synthetic binary classification, seed 42: 2 signal and 10 irrelevant features, 15 percent random label flips. A fully grown tree starts with 280 splits, 100 percent training accuracy and 73.525 percent validation accuracy. The validation-selected 3-split tree reaches peak validation accuracy 84.6 percent, and independent test accuracy 84.65 percent. Excess pruning reduces validation accuracy to 74.925 percent at 2 splits and 51.125 percent at the root-only tree. The upper panel shows training and validation accuracy, with independent test diamonds at only the unpruned, selected, and root-only states. The lower panel shows retained splits and an inset resolving the early rise in validation accuracy. All penalty axes are linear and normalized by the root-only penalty. A through D match the tree snapshots. Test data never select the penalty. Classification error, one minus accuracy, has the opposite U-shaped pattern.</desc>
+  <style>text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: #243247; } .title { font-size: 22px; font-weight: 650; } .heading { font-size: 16px; font-weight: 650; } .label { font-size: 14px; } .small { font-size: 12px; fill: #526175; } .stage { font-size: 16px; font-weight: 700; fill: #126d56; } .grid { stroke: #e3e8ef; stroke-width: 1; } .axis { fill: none; stroke: #8a97a8; stroke-width: 1; }</style>
+  <rect width="960" height="735" rx="12" fill="#ffffff"/>
+  <!-- Fixed-seed synthetic experiment. Reproduction code is in README.md. Curves use production structural knots, before HS. -->
+  <text x="30" y="32" class="title">Overfit → useful pruning → underfit</text>
+  <text x="30" y="56" class="label">Synthetic classification · 2 signal + 10 irrelevant features · 15% random label flips</text>
+  <text x="30" y="78" class="small">Fully grown CART · 2,000 train / 4,000 validation / 8,000 independent test · seed 42</text>
+  <path d="M 30 103 H 62" fill="none" stroke="#8755b5" stroke-width="2.5"/>
+  <text x="72" y="107" class="label">Validation accuracy</text>
+  <path d="M 275 103 H 307" fill="none" stroke="#8e9cab" stroke-width="2.5" stroke-dasharray="6 4"/>
+  <text x="317" y="107" class="label">Training accuracy</text>
+  <path d="M 524 97 L 530 103 L 524 109 L 518 103 Z" fill="#ffffff" stroke="#1b6fba" stroke-width="2"/>
+  <text x="540" y="107" class="label">Independent test (three states only)</text>
+  <path d="M 82 369.310 H 924" class="grid"/>
+  <text x="68" y="373.31" class="small" text-anchor="end">50</text>
+  <path d="M 82 327.931 H 924" class="grid"/>
+  <text x="68" y="331.931" class="small" text-anchor="end">60</text>
+  <path d="M 82 286.552 H 924" class="grid"/>
+  <text x="68" y="290.552" class="small" text-anchor="end">70</text>
+  <path d="M 82 245.172 H 924" class="grid"/>
+  <text x="68" y="249.172" class="small" text-anchor="end">80</text>
+  <path d="M 82 203.793 H 924" class="grid"/>
+  <text x="68" y="207.793" class="small" text-anchor="end">90</text>
+  <path d="M 82 162.414 H 924" class="grid"/>
+  <text x="68" y="166.414" class="small" text-anchor="end">100</text>
+  <path d="M 82 150 V 390 H 924" class="axis"/>
+  <text transform="translate(26 270) rotate(-90)" text-anchor="middle" class="label">Classification accuracy (%) ↑</text>
+  <path d="M 82 610.000 H 924" class="grid"/>
+  <text x="68" y="614" class="small" text-anchor="end">0</text>
+  <path d="M 82 561.667 H 924" class="grid"/>
+  <text x="68" y="565.667" class="small" text-anchor="end">100</text>
+  <path d="M 82 513.333 H 924" class="grid"/>
+  <text x="68" y="517.333" class="small" text-anchor="end">200</text>
+  <path d="M 82 465.000 H 924" class="grid"/>
+  <text x="68" y="469" class="small" text-anchor="end">300</text>
+  <path d="M 82 465 V 610 H 924" class="axis"/>
+  <text transform="translate(26 538) rotate(-90)" text-anchor="middle" class="label">Retained splits</text>
+  <path d="M 82.000 146 V 390 M 82.000 465 V 610" fill="none" stroke="#b8cfc5" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="84" y="139" class="stage" text-anchor="middle">A</text>
+  <path d="M 145.520 146 V 390 M 145.520 465 V 610" fill="none" stroke="#b8cfc5" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="147.52" y="139" class="stage" text-anchor="middle">B</text>
+  <path d="M 521.582 146 V 390 M 521.582 465 V 610" fill="none" stroke="#b8cfc5" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="523.582" y="139" class="stage" text-anchor="middle">C</text>
+  <path d="M 876.340 146 V 390 M 876.340 465 V 610" fill="none" stroke="#b8cfc5" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="878.34" y="139" class="stage" text-anchor="middle">D</text>
+  <path d="M 82.000 162.414 H 83.873 V 165.310 H 84.648 V 168.621 H 85.243 V 171.931 H 85.745 V 172.345 H 85.745 V 173.379 H 86.005 V 173.586 H 86.080 V 173.793 H 86.187 V 174.621 H 86.325 V 174.828 H 86.414 V 175.034 H 86.417 V 175.448 H 86.587 V 177.931 H 86.587 V 178.966 H 86.865 V 180.207 H 86.954 V 180.621 H 87.145 V 181.034 H 87.297 V 181.241 H 87.297 V 182.069 H 87.474 V 182.483 H 87.513 V 182.897 H 87.549 V 183.517 H 87.618 V 184.138 H 87.618 V 184.759 H 87.618 V 186.828 H 87.802 V 187.448 H 88.154 V 187.655 H 88.211 V 187.862 H 88.487 V 188.897 H 88.506 V 189.103 H 88.621 V 190.345 H 88.700 V 191.586 H 88.706 V 191.793 H 88.756 V 192.207 H 89.028 V 192.621 H 89.253 V 192.828 H 89.494 V 193.034 H 89.537 V 193.862 H 89.537 V 194.069 H 89.568 V 194.276 H 90.288 V 194.483 H 90.427 V 195.103 H 90.493 V 195.931 H 90.886 V 196.345 H 91.174 V 196.759 H 91.231 V 197.379 H 91.253 V 197.586 H 91.437 V 198.621 H 91.460 V 199.241 H 91.730 V 200.069 H 92.082 V 200.897 H 92.152 V 201.724 H 92.260 V 202.759 H 92.354 V 203.172 H 92.420 V 203.586 H 92.609 V 204.207 H 92.617 V 204.828 H 92.753 V 205.034 H 92.879 V 206.069 H 92.924 V 206.276 H 92.927 V 206.483 H 93.128 V 206.897 H 94.120 V 207.103 H 94.703 V 208.138 H 94.714 V 208.345 H 94.974 V 208.966 H 95.318 V 209.172 H 96.045 V 209.379 H 96.512 V 210.414 H 96.983 V 210.621 H 97.302 V 211.034 H 97.638 V 211.241 H 98.578 V 211.448 H 98.907 V 211.655 H 99.429 V 212.069 H 99.510 V 212.483 H 99.568 V 212.690 H 99.716 V 213.310 H 100.697 V 213.724 H 102.516 V 214.138 H 103.960 V 214.345 H 104.092 V 214.552 H 104.194 V 214.759 H 104.372 V 215.379 H 105.355 V 216.000 H 106.523 V 216.414 H 106.980 V 217.241 H 108.469 V 217.655 H 108.894 V 218.069 H 117.503 V 218.690 H 121.390 V 219.103 H 122.810 V 219.310 H 123.669 V 219.724 H 123.680 V 219.931 H 123.734 V 220.345 H 124.719 V 220.966 H 131.004 V 221.793 H 135.833 V 222.000 H 521.582 V 255.724 H 757.519 V 291.931 H 876.340 V 368.897 H 924.000" fill="none" stroke="#8e9cab" stroke-width="1.8" stroke-dasharray="6 4"/>
+  <path d="M 82.000 271.966 H 83.873 V 271.448 H 84.648 V 270.517 H 85.243 V 271.759 H 85.745 V 272.172 H 85.745 V 272.069 H 86.005 V 271.448 H 86.187 V 270.724 H 86.325 V 269.897 H 86.414 V 269.793 H 86.417 V 269.172 H 86.587 V 269.069 H 86.587 V 269.379 H 86.865 V 267.621 H 86.954 V 267.310 H 87.145 V 266.793 H 87.297 V 266.276 H 87.297 V 267.310 H 87.474 V 267.207 H 87.513 V 266.483 H 87.549 V 266.069 H 87.618 V 266.276 H 87.618 V 263.897 H 87.802 V 264.310 H 88.154 V 265.552 H 88.487 V 265.241 H 88.621 V 264.517 H 88.700 V 265.552 H 88.756 V 265.241 H 89.007 V 265.034 H 89.028 V 263.586 H 89.253 V 263.483 H 89.494 V 262.448 H 89.537 V 262.552 H 89.568 V 261.828 H 89.985 V 261.310 H 90.288 V 261.103 H 90.427 V 261.931 H 90.493 V 263.172 H 90.783 V 261.517 H 90.814 V 261.310 H 90.886 V 260.897 H 91.174 V 260.793 H 91.231 V 260.483 H 91.437 V 259.552 H 91.460 V 257.483 H 91.633 V 257.172 H 91.730 V 255.828 H 92.082 V 254.793 H 92.152 V 256.448 H 92.260 V 255.621 H 92.354 V 255.103 H 92.420 V 254.690 H 92.609 V 253.966 H 92.617 V 253.448 H 92.753 V 253.345 H 92.879 V 253.759 H 92.924 V 253.241 H 92.927 V 252.931 H 93.128 V 252.000 H 94.120 V 251.897 H 94.703 V 250.655 H 94.714 V 250.138 H 94.974 V 249.724 H 95.318 V 249.621 H 95.874 V 249.724 H 96.045 V 249.207 H 96.512 V 247.862 H 97.302 V 247.759 H 97.638 V 244.966 H 98.578 V 244.448 H 98.907 V 244.034 H 99.429 V 243.724 H 99.510 V 242.586 H 99.716 V 241.345 H 100.697 V 241.034 H 102.516 V 240.310 H 103.960 V 240.207 H 104.092 V 239.069 H 104.194 V 236.897 H 104.372 V 233.276 H 106.523 V 232.552 H 106.980 V 231.724 H 108.469 V 231.103 H 108.894 V 230.483 H 117.503 V 230.069 H 121.390 V 229.966 H 123.669 V 229.345 H 123.680 V 228.724 H 123.734 V 227.897 H 124.719 V 227.483 H 131.004 V 226.966 H 135.833 V 226.138 H 521.582 V 266.172 H 757.519 V 292.655 H 876.340 V 364.655 H 924.000" fill="none" stroke="#8755b5" stroke-width="2.7"/>
+  <path d="M 82.000 474.667 H 83.873 V 481.433 H 84.648 V 489.167 H 85.243 V 496.900 H 85.745 V 497.383 H 85.745 V 499.800 H 86.005 V 500.767 H 86.080 V 501.733 H 86.187 V 503.667 H 86.325 V 504.150 H 86.414 V 505.117 H 86.417 V 506.083 H 86.587 V 509.467 H 86.587 V 511.883 H 86.865 V 513.333 H 86.954 V 513.817 H 86.954 V 514.783 H 87.013 V 515.267 H 87.145 V 516.233 H 87.297 V 516.717 H 87.297 V 518.167 H 87.474 V 519.133 H 87.513 V 520.100 H 87.549 V 521.067 H 87.618 V 521.550 H 87.618 V 523.000 H 87.618 V 525.417 H 87.802 V 525.900 H 87.856 V 526.383 H 87.922 V 526.867 H 88.154 V 527.350 H 88.211 V 527.833 H 88.416 V 528.317 H 88.487 V 529.283 H 88.506 V 529.767 H 88.563 V 530.733 H 88.621 V 531.700 H 88.700 V 532.667 H 88.706 V 533.633 H 88.756 V 534.117 H 88.963 V 534.600 H 89.007 V 535.083 H 89.028 V 535.567 H 89.064 V 536.050 H 89.090 V 536.533 H 89.105 V 537.017 H 89.253 V 537.500 H 89.460 V 537.983 H 89.494 V 538.467 H 89.537 V 539.433 H 89.537 V 539.917 H 89.568 V 540.883 H 89.721 V 541.367 H 89.985 V 541.850 H 90.054 V 542.333 H 90.288 V 543.300 H 90.427 V 543.783 H 90.493 V 544.750 H 90.547 V 545.233 H 90.581 V 545.717 H 90.583 V 546.200 H 90.590 V 546.683 H 90.783 V 547.167 H 90.814 V 547.650 H 90.886 V 548.617 H 91.174 V 549.100 H 91.181 V 549.583 H 91.231 V 550.067 H 91.253 V 551.033 H 91.417 V 551.517 H 91.437 V 552.000 H 91.460 V 552.967 H 91.633 V 553.450 H 91.730 V 553.933 H 91.931 V 554.417 H 92.082 V 555.383 H 92.084 V 555.867 H 92.152 V 556.350 H 92.260 V 556.833 H 92.354 V 557.800 H 92.420 V 558.283 H 92.599 V 558.767 H 92.609 V 560.217 H 92.617 V 560.700 H 92.753 V 561.667 H 92.879 V 562.150 H 92.924 V 562.633 H 92.927 V 563.600 H 92.980 V 564.083 H 93.128 V 564.567 H 93.575 V 565.050 H 94.031 V 565.533 H 94.120 V 566.017 H 94.264 V 566.500 H 94.433 V 566.983 H 94.703 V 567.467 H 94.714 V 567.950 H 94.974 V 568.433 H 95.241 V 568.917 H 95.297 V 569.400 H 95.318 V 569.883 H 95.769 V 570.367 H 95.874 V 570.850 H 96.045 V 571.333 H 96.512 V 571.817 H 96.742 V 572.300 H 96.983 V 572.783 H 97.172 V 573.267 H 97.302 V 574.233 H 97.638 V 576.167 H 98.087 V 576.650 H 98.173 V 577.133 H 98.298 V 578.100 H 98.368 V 578.583 H 98.578 V 579.067 H 98.849 V 579.550 H 98.907 V 580.033 H 98.975 V 580.517 H 99.429 V 581.000 H 99.443 V 582.450 H 99.510 V 583.417 H 99.568 V 583.900 H 99.716 V 584.383 H 99.910 V 584.867 H 100.663 V 585.350 H 100.697 V 586.317 H 100.780 V 586.800 H 100.869 V 587.283 H 101.637 V 587.767 H 101.936 V 588.733 H 102.516 V 589.700 H 102.726 V 590.183 H 103.039 V 590.667 H 103.410 V 591.150 H 103.960 V 591.633 H 104.092 V 592.117 H 104.120 V 593.083 H 104.194 V 593.567 H 104.372 V 594.533 H 104.961 V 595.017 H 105.121 V 595.500 H 105.355 V 595.983 H 106.523 V 596.950 H 106.980 V 597.433 H 108.469 V 597.917 H 108.894 V 598.883 H 110.334 V 599.367 H 115.136 V 599.850 H 115.873 V 600.333 H 117.503 V 601.300 H 118.557 V 601.783 H 121.390 V 602.750 H 122.810 V 603.233 H 123.669 V 603.717 H 123.680 V 604.200 H 123.734 V 604.683 H 124.351 V 605.167 H 124.719 V 605.650 H 130.303 V 606.133 H 131.004 V 606.617 H 131.229 V 607.100 H 133.928 V 607.583 H 135.833 V 608.067 H 145.520 V 608.550 H 521.582 V 609.033 H 757.519 V 609.517 H 876.340 V 610.000 H 924.000" fill="none" stroke="#13886c" stroke-width="2.5"/>
+  <path d="M 82.000 264.224 L 87.000 269.224 L 82.000 274.224 L 77.000 269.224 Z" fill="#ffffff" stroke="#1b6fba" stroke-width="2"/>
+  <path d="M 145.520 220.931 L 150.520 225.931 L 145.520 230.931 L 140.520 225.931 Z" fill="#ffffff" stroke="#1b6fba" stroke-width="2"/>
+  <path d="M 876.340 364.621 L 881.340 369.621 L 876.340 374.621 L 871.340 369.621 Z" fill="#ffffff" stroke="#1b6fba" stroke-width="2"/>
+  <rect x="294" y="301" width="325" height="60" rx="8" fill="#f5fbf8" stroke="#c2ded3"/>
+  <text x="309" y="325" class="heading">B · Validation-selected: 3 splits</text>
+  <text x="309" y="348" class="label">84.6% validation · 84.65% independent test</text>
+  <path d="M 294 310 L 152.520 234.138" fill="none" stroke="#13886c" stroke-width="1.3"/>
+  <path d="M 152.520 241.138 L 152.520 234.138 L 159.520 235.138" fill="none" stroke="#13886c" stroke-width="1.3"/>
+  <path d="M 82.000 613 V 618" fill="none" stroke="#8a97a8" stroke-width="1"/>
+  <text x="82" y="635" class="small" text-anchor="middle">0</text>
+  <path d="M 240.868 613 V 618" fill="none" stroke="#8a97a8" stroke-width="1"/>
+  <text x="240.868" y="635" class="small" text-anchor="middle">0.2</text>
+  <path d="M 399.736 613 V 618" fill="none" stroke="#8a97a8" stroke-width="1"/>
+  <text x="399.736" y="635" class="small" text-anchor="middle">0.4</text>
+  <path d="M 558.604 613 V 618" fill="none" stroke="#8a97a8" stroke-width="1"/>
+  <text x="558.604" y="635" class="small" text-anchor="middle">0.6</text>
+  <path d="M 717.472 613 V 618" fill="none" stroke="#8a97a8" stroke-width="1"/>
+  <text x="717.472" y="635" class="small" text-anchor="middle">0.8</text>
+  <path d="M 876.340 613 V 618" fill="none" stroke="#8a97a8" stroke-width="1"/>
+  <text x="876.34" y="635" class="small" text-anchor="middle">1</text>
+  <text x="503" y="659" class="label" text-anchor="middle">Increasing pruning penalty λ / λ_root → (linear scale)</text>
+  <rect x="361" y="433" width="512" height="164" rx="7" fill="#ffffff" stroke="#e3e8ef"/>
+  <text x="376" y="452" class="small">Zoom: early pruning raises validation accuracy</text>
+  <defs><clipPath id="zoom"><rect x="408" y="476" width="435" height="90"/></clipPath></defs>
+  <path d="M 408 548.000 H 843" class="grid"/>
+  <text x="396" y="552" class="small" text-anchor="end">75%</text>
+  <path d="M 408 518.000 H 843" class="grid"/>
+  <text x="396" y="522" class="small" text-anchor="end">80%</text>
+  <path d="M 408 488.000 H 843" class="grid"/>
+  <text x="396" y="492" class="small" text-anchor="end">85%</text>
+  <path d="M 408 476 V 566 H 843" class="axis"/>
+  <path d="M 408.000 556.850 H 417.767 V 556.100 H 421.812 V 554.750 H 424.916 V 556.550 H 427.533 V 557.150 H 427.533 V 557.000 H 428.887 V 556.100 H 429.839 V 555.050 H 430.555 V 553.850 H 431.020 V 553.700 H 431.036 V 552.800 H 431.923 V 552.650 H 431.923 V 553.100 H 433.374 V 550.550 H 433.840 V 550.100 H 434.834 V 549.350 H 435.624 V 548.600 H 435.624 V 550.100 H 436.548 V 549.950 H 436.752 V 548.900 H 436.942 V 548.300 H 437.300 V 548.600 H 437.300 V 545.150 H 438.261 V 545.750 H 440.096 V 547.550 H 441.833 V 547.100 H 442.530 V 546.050 H 442.942 V 547.550 H 443.238 V 547.100 H 444.543 V 546.800 H 444.652 V 544.700 H 445.826 V 544.550 H 447.087 V 543.050 H 447.310 V 543.200 H 447.471 V 542.150 H 449.645 V 541.400 H 451.228 V 541.100 H 451.950 V 542.300 H 452.297 V 544.100 H 453.809 V 541.700 H 453.969 V 541.400 H 454.346 V 540.800 H 455.846 V 540.650 H 456.145 V 540.200 H 457.219 V 538.850 H 457.340 V 535.850 H 458.239 V 535.400 H 458.749 V 533.450 H 460.581 V 531.950 H 460.946 V 534.350 H 461.510 V 533.150 H 462.002 V 532.400 H 462.347 V 531.800 H 463.332 V 530.750 H 463.372 V 530.000 H 464.085 V 529.850 H 464.739 V 530.450 H 464.972 V 529.700 H 464.989 V 529.250 H 466.040 V 527.900 H 471.213 V 527.750 H 474.253 V 525.950 H 474.309 V 525.200 H 475.665 V 524.600 H 477.460 V 524.450 H 480.357 V 524.600 H 481.250 V 523.850 H 483.685 V 521.900 H 487.810 V 521.750 H 489.559 V 517.700 H 494.461 V 516.950 H 496.177 V 516.350 H 498.902 V 515.900 H 499.324 V 514.250 H 500.395 V 512.450 H 505.514 V 512.000 H 515.002 V 510.950 H 522.534 V 510.800 H 523.218 V 509.150 H 523.751 V 506.000 H 524.679 V 500.750 H 535.901 V 499.700 H 538.281 V 498.500 H 546.047 V 497.600 H 548.266 V 496.700 H 593.167 V 496.100 H 613.438 V 495.950 H 625.322 V 495.050 H 625.383 V 494.150 H 625.660 V 492.950 H 630.800 V 492.350 H 663.577 V 491.600 H 688.765 V 490.400 H 2700.628 V 548.450 H 3931.151 V 586.850 H 4550.857 V 691.250 H 843.000" fill="none" stroke="#8755b5" stroke-width="2" clip-path="url(#zoom)"/>
+  <circle cx="739.285" cy="490.400" r="4" fill="#13886c"/>
+  <text x="731.285" y="480.4" class="small" text-anchor="end">B · 84.6%</text>
+  <text x="408" y="584" class="small" text-anchor="middle">0</text>
+  <text x="511.571" y="584" class="small" text-anchor="middle">0.025</text>
+  <text x="615.143" y="584" class="small" text-anchor="middle">0.05</text>
+  <text x="718.714" y="584" class="small" text-anchor="middle">0.075</text>
+  <text x="822.286" y="584" class="small" text-anchor="middle">0.1</text>
+  <text x="30" y="691" class="small">A–D match the trees below. The penalty is chosen by validation only; ties favor fewer splits.</text>
+  <text x="30" y="714" class="small">Accuracy rises then falls; classification error has the opposite U shape. Illustrative simulation, not a benchmark. No HS.</text>
 </svg>

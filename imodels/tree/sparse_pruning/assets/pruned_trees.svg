@@ -1,121 +1,183 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="840" height="652" viewBox="0 0 840 652" role="img" aria-labelledby="title description">
-  <title id="title">The same regression tree at four pruning penalties</title>
-  <desc id="description">Four snapshots use fixed node positions and IDs. A, penalty zero: root 0 splits at x 1.5, left node 1 at 0.5, and right node 2 at 2.5; leaves predict -3, -1, 1, and 4. B, penalty 0.5: node 1 becomes a leaf predicting -2, and its children disappear. C, penalty 0.75: node 2 also becomes a leaf, predicting 2.5. D, penalty 2.25: root 0 becomes the only leaf, predicting the overall mean 0.25. Faint dashed lines mark removed branches, not active structure. No descendants are promoted. Leaf labels are pooled original CART means, not penalized coefficient predictions.</desc>
-  <style>
-    text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: #243247; }
-    .title { font-size: 20px; font-weight: 650; }
-    .heading { font-size: 15px; font-weight: 650; }
-    .small { font-size: 12px; fill: #526175; }
-    .node-id { font-size: 11px; fill: #526175; }
-    .node-value { font-size: 13px; }
-    .split { fill: #ffffff; stroke: #8a97a8; }
-    .leaf { fill: #e8f2fa; stroke: #7aa3c4; }
-    .collapsed { fill: #eee7f4; stroke: #9778af; }
-    .edge { fill: none; stroke: #8a97a8; stroke-width: 1.5; }
-  </style>
-  <defs>
-    <!-- All panels reuse these exact original coordinates; no tree relayout. -->
-    <path id="branches" d="M 190 63 L 90 125 M 190 63 L 290 125 M 90 125 L 40 185 M 90 125 L 140 185 M 290 125 L 240 185 M 290 125 L 340 185"/>
-    <g id="ghosts">
-      <use xlink:href="#branches" fill="none" stroke="#dce2ea" stroke-dasharray="3 4"/>
-      <g fill="#dce2ea">
-        <circle cx="190" cy="63" r="3"/>
-        <circle cx="90" cy="125" r="3"/><circle cx="290" cy="125" r="3"/>
-        <circle cx="40" cy="185" r="3"/><circle cx="140" cy="185" r="3"/>
-        <circle cx="240" cy="185" r="3"/><circle cx="340" cy="185" r="3"/>
-      </g>
-    </g>
-    <g id="root-split" text-anchor="middle">
-      <rect x="150" y="45" width="80" height="36" rx="6" class="split"/>
-      <text x="190" y="59" class="node-id">#0</text>
-      <text x="190" y="74" class="node-value">x ≤ 1.5</text>
-    </g>
-    <g id="left-split" text-anchor="middle">
-      <rect x="50" y="107" width="80" height="36" rx="6" class="split"/>
-      <text x="90" y="121" class="node-id">#1</text>
-      <text x="90" y="136" class="node-value">x ≤ 0.5</text>
-    </g>
-    <g id="right-split" text-anchor="middle">
-      <rect x="250" y="107" width="80" height="36" rx="6" class="split"/>
-      <text x="290" y="121" class="node-id">#2</text>
-      <text x="290" y="136" class="node-value">x ≤ 2.5</text>
-    </g>
-    <g id="right-leaves" text-anchor="middle">
-      <rect x="203" y="167" width="74" height="36" rx="6" class="leaf"/>
-      <text x="240" y="181" class="node-id">#3</text>
-      <text x="240" y="196" class="node-value">ŷ = 1</text>
-      <rect x="303" y="167" width="74" height="36" rx="6" class="leaf"/>
-      <text x="340" y="181" class="node-id">#4</text>
-      <text x="340" y="196" class="node-value">ŷ = 4</text>
-    </g>
-    <g id="left-collapsed" text-anchor="middle">
-      <rect x="50" y="107" width="80" height="36" rx="6" class="collapsed"/>
-      <text x="90" y="121" class="node-id">#1</text>
-      <text x="90" y="136" class="node-value">ŷ = −2</text>
-    </g>
-  </defs>
-  <rect width="840" height="652" rx="12" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="1010" viewBox="0 0 960 1010" role="img" aria-labelledby="title description">
+  <title id="title">The overfit tree at key pruning penalties</title>
+  <desc id="description">Four panels preserve original node IDs and positions. A: the original 280-split tree is summarized by three visible splits and subtrees containing 102, 30, 80, and 65 splits; the summary boxes are not leaves. B: the validation-selected 3-split tree retains splits 0, 1, and 207, using only the two signal features. Validation accuracy is 84.6 percent. C: at 2 splits, node 207 becomes a leaf for its 729 training observations, and validation accuracy drops to 74.925 percent. D: the root is the only leaf, with validation accuracy 51.125 percent. Blue leaves predict class 0; orange leaves predict class 1. P1 is pooled training frequency, not optimized logistic probability. Faint dashed branches are removed structure, shown only as a positional guide. Threshold and penalty labels are rounded. No HS.</desc>
+  <style>text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; fill: #243247; } .title { font-size: 22px; font-weight: 650; } .heading { font-size: 16px; font-weight: 650; } .label { font-size: 14px; } .small { font-size: 12px; fill: #526175; } .stage { font-size: 16px; font-weight: 700; fill: #126d56; } .grid { stroke: #e3e8ef; stroke-width: 1; } .axis { fill: none; stroke: #8a97a8; stroke-width: 1; }</style>
+  <rect width="960" height="1010" rx="12" fill="#ffffff"/>
+  <!-- Fixed-seed synthetic experiment. Reproduction code is in README.md. Curves use production structural knots, before HS. -->
   <text x="30" y="32" class="title">The same tree as the penalty increases</text>
-  <text x="30" y="55" class="small">A–D match the structural path · fixed node IDs and positions · left branch: ≤; right branch: &gt;</text>
-  <rect x="30" y="75" width="16" height="14" rx="3" class="split"/>
-  <text x="54" y="87" class="small">Split</text>
-  <rect x="123" y="75" width="16" height="14" rx="3" class="leaf"/>
-  <text x="147" y="87" class="small">Original leaf</text>
-  <rect x="258" y="75" width="16" height="14" rx="3" class="collapsed"/>
-  <text x="282" y="87" class="small">Collapsed subtree → leaf</text>
-  <path d="M 495 82 H 523" stroke="#c3ccd8" stroke-dasharray="3 4"/>
-  <text x="531" y="87" class="small">Removed structure (guide only)</text>
-
-  <g transform="translate(20 112)" data-stage="A" data-splits="3" data-lambda="0">
-    <rect width="390" height="224" rx="10" fill="#fafbfd" stroke="#e3e8ef"/>
-    <text x="14" y="25" class="heading">A · λ = 0 · 3 splits / 4 leaves</text>
-    <use xlink:href="#branches" class="edge"/>
-    <use xlink:href="#root-split"/>
-    <use xlink:href="#left-split"/>
-    <use xlink:href="#right-split"/>
-    <use xlink:href="#right-leaves"/>
-    <g text-anchor="middle">
-      <rect x="3" y="167" width="74" height="36" rx="6" class="leaf"/>
-      <text x="40" y="181" class="node-id">#5</text>
-      <text x="40" y="196" class="node-value">ŷ = −3</text>
-      <rect x="103" y="167" width="74" height="36" rx="6" class="leaf"/>
-      <text x="140" y="181" class="node-id">#6</text>
-      <text x="140" y="196" class="node-value">ŷ = −1</text>
-    </g>
+  <text x="30" y="56" class="small">Fixed original node IDs and positions · left branch: ≤; right branch: &gt; · A–D match the path plot</text>
+  <rect x="30" y="76" width="16" height="14" rx="3" fill="#e8f1fa" stroke="#70a0cc"/>
+  <text x="54" y="88" class="small">Leaf: class 0</text>
+  <rect x="195" y="76" width="16" height="14" rx="3" fill="#fff0df" stroke="#d99547"/>
+  <text x="219" y="88" class="small">Leaf: class 1</text>
+  <rect x="360" y="76" width="16" height="14" rx="3" fill="#f0f2f5" stroke="#8495a7" stroke-dasharray="3 2"/>
+  <text x="384" y="88" class="small">Subtree summary (A only)</text>
+  <path d="M 618 83 H 646" fill="none" stroke="#d4dfe7" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="654" y="88" class="small">Removed structure (guide only)</text>
+  <g transform="translate(20 112)" data-stage="A" data-splits="280" data-lambda="0">
+  <rect width="450" height="410" rx="10" fill="#fafbfd" stroke="#e3e8ef"/>
+  <text x="14" y="26" class="heading">A · Overfit: unpruned</text>
+  <text x="14" y="49" class="small">280 splits · λ / λ_root = 0.000 · validation 73.5%</text>
+  <path d="M 270 104 L 158 184" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 270 104 L 385 184" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 158 184 L 70 264" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 158 184 L 245 264" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 245 264 L 190 344" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 245 264 L 300 344" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <circle cx="270" cy="104" r="3" fill="#dce2ea"/>
+  <circle cx="158" cy="184" r="3" fill="#dce2ea"/>
+  <circle cx="385" cy="184" r="3" fill="#dce2ea"/>
+  <circle cx="70" cy="264" r="3" fill="#dce2ea"/>
+  <circle cx="245" cy="264" r="3" fill="#dce2ea"/>
+  <circle cx="190" cy="344" r="3" fill="#dce2ea"/>
+  <circle cx="300" cy="344" r="3" fill="#dce2ea"/>
+  <path d="M 270 104 L 158 184" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <path d="M 270 104 L 385 184" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <rect x="218" y="81" width="104" height="46" rx="6" fill="#ffffff" stroke="#9caebb"/>
+  <text x="270" y="99.5" class="small" text-anchor="middle">#0</text>
+  <text x="270" y="116.5" class="label" text-anchor="middle">x1 ≤ 0.653</text>
+  <rect x="331" y="153" width="108" height="62" rx="6" fill="#f0f2f5" stroke="#8495a7" stroke-dasharray="4 3"/>
+  <text x="385" y="171" class="small" text-anchor="middle">#430</text>
+  <text x="385" y="188" class="label" text-anchor="middle">65 splits</text>
+  <text x="385" y="205" class="small" text-anchor="middle">subtree (hidden)</text>
+  <path d="M 158 184 L 70 264" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <path d="M 158 184 L 245 264" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <rect x="106" y="161" width="104" height="46" rx="6" fill="#ffffff" stroke="#9caebb"/>
+  <text x="158" y="179.5" class="small" text-anchor="middle">#1</text>
+  <text x="158" y="196.5" class="label" text-anchor="middle">x0 ≤ 0.0041</text>
+  <path d="M 245 264 L 190 344" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <path d="M 245 264 L 300 344" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <rect x="193" y="241" width="104" height="46" rx="6" fill="#ffffff" stroke="#9caebb"/>
+  <text x="245" y="259.5" class="small" text-anchor="middle">#207</text>
+  <text x="245" y="276.5" class="label" text-anchor="middle">x1 ≤ -0.652</text>
+  <rect x="246" y="313" width="108" height="62" rx="6" fill="#f0f2f5" stroke="#8495a7" stroke-dasharray="4 3"/>
+  <text x="300" y="331" class="small" text-anchor="middle">#269</text>
+  <text x="300" y="348" class="label" text-anchor="middle">80 splits</text>
+  <text x="300" y="365" class="small" text-anchor="middle">subtree (hidden)</text>
+  <rect x="136" y="313" width="108" height="62" rx="6" fill="#f0f2f5" stroke="#8495a7" stroke-dasharray="4 3"/>
+  <text x="190" y="331" class="small" text-anchor="middle">#208</text>
+  <text x="190" y="348" class="label" text-anchor="middle">30 splits</text>
+  <text x="190" y="365" class="small" text-anchor="middle">subtree (hidden)</text>
+  <rect x="16" y="233" width="108" height="62" rx="6" fill="#f0f2f5" stroke="#8495a7" stroke-dasharray="4 3"/>
+  <text x="70" y="251" class="small" text-anchor="middle">#2</text>
+  <text x="70" y="268" class="label" text-anchor="middle">102 splits</text>
+  <text x="70" y="285" class="small" text-anchor="middle">subtree (hidden)</text>
+  <text x="14" y="397" class="small">3 visible splits + 277 summarized splits = 280.</text>
   </g>
-  <g transform="translate(430 112)" data-stage="B" data-splits="2" data-lambda="0.5">
-    <rect width="390" height="224" rx="10" fill="#fafbfd" stroke="#e3e8ef"/>
-    <text x="14" y="25" class="heading">B · λ = 0.5 · 2 splits / 3 leaves</text>
-    <use xlink:href="#ghosts"/>
-    <path d="M 190 63 L 90 125 M 190 63 L 290 125 M 290 125 L 240 185 M 290 125 L 340 185" class="edge"/>
-    <use xlink:href="#root-split"/>
-    <use xlink:href="#left-collapsed"/>
-    <use xlink:href="#right-split"/>
-    <use xlink:href="#right-leaves"/>
+  <g transform="translate(490 112)" data-stage="B" data-splits="3" data-lambda="0.016960050559387478">
+  <rect width="450" height="410" rx="10" fill="#fafbfd" stroke="#e3e8ef"/>
+  <text x="14" y="26" class="heading">B · Validation-selected</text>
+  <text x="14" y="49" class="small">3 splits · λ / λ_root = 0.080 · validation 84.6%</text>
+  <path d="M 270 104 L 158 184" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 270 104 L 385 184" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 158 184 L 70 264" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 158 184 L 245 264" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 245 264 L 190 344" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 245 264 L 300 344" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <circle cx="270" cy="104" r="3" fill="#dce2ea"/>
+  <circle cx="158" cy="184" r="3" fill="#dce2ea"/>
+  <circle cx="385" cy="184" r="3" fill="#dce2ea"/>
+  <circle cx="70" cy="264" r="3" fill="#dce2ea"/>
+  <circle cx="245" cy="264" r="3" fill="#dce2ea"/>
+  <circle cx="190" cy="344" r="3" fill="#dce2ea"/>
+  <circle cx="300" cy="344" r="3" fill="#dce2ea"/>
+  <path d="M 270 104 L 158 184" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <path d="M 270 104 L 385 184" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <rect x="218" y="81" width="104" height="46" rx="6" fill="#ffffff" stroke="#9caebb"/>
+  <text x="270" y="99.5" class="small" text-anchor="middle">#0</text>
+  <text x="270" y="116.5" class="label" text-anchor="middle">x1 ≤ 0.653</text>
+  <rect x="331" y="153" width="108" height="62" rx="6" fill="#fff0df" stroke="#d99547"/>
+  <text x="385" y="171" class="small" text-anchor="middle">#430 · class 1</text>
+  <text x="385" y="188" class="label" text-anchor="middle">P1 = 85.5%</text>
+  <text x="385" y="205" class="label" text-anchor="middle">n = 524</text>
+  <path d="M 158 184 L 70 264" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <path d="M 158 184 L 245 264" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <rect x="106" y="161" width="104" height="46" rx="6" fill="#ffffff" stroke="#9caebb"/>
+  <text x="158" y="179.5" class="small" text-anchor="middle">#1</text>
+  <text x="158" y="196.5" class="label" text-anchor="middle">x0 ≤ 0.0041</text>
+  <path d="M 245 264 L 190 344" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <path d="M 245 264 L 300 344" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <rect x="193" y="241" width="104" height="46" rx="6" fill="#ffffff" stroke="#9caebb"/>
+  <text x="245" y="259.5" class="small" text-anchor="middle">#207</text>
+  <text x="245" y="276.5" class="label" text-anchor="middle">x1 ≤ -0.652</text>
+  <rect x="246" y="313" width="108" height="62" rx="6" fill="#fff0df" stroke="#d99547"/>
+  <text x="300" y="331" class="small" text-anchor="middle">#269 · class 1</text>
+  <text x="300" y="348" class="label" text-anchor="middle">P1 = 84.1%</text>
+  <text x="300" y="365" class="label" text-anchor="middle">n = 496</text>
+  <rect x="136" y="313" width="108" height="62" rx="6" fill="#e8f1fa" stroke="#70a0cc"/>
+  <text x="190" y="331" class="small" text-anchor="middle">#208 · class 0</text>
+  <text x="190" y="348" class="label" text-anchor="middle">P1 = 15.0%</text>
+  <text x="190" y="365" class="label" text-anchor="middle">n = 233</text>
+  <rect x="16" y="233" width="108" height="62" rx="6" fill="#e8f1fa" stroke="#70a0cc"/>
+  <text x="70" y="251" class="small" text-anchor="middle">#2 · class 0</text>
+  <text x="70" y="268" class="label" text-anchor="middle">P1 = 13.1%</text>
+  <text x="70" y="285" class="label" text-anchor="middle">n = 747</text>
+  <text x="14" y="397" class="small">Every retained node is shown; only signal features remain.</text>
   </g>
-  <g transform="translate(20 352)" data-stage="C" data-splits="1" data-lambda="0.75">
-    <rect width="390" height="224" rx="10" fill="#fafbfd" stroke="#e3e8ef"/>
-    <text x="14" y="25" class="heading">C · λ = 0.75 · 1 split / 2 leaves</text>
-    <use xlink:href="#ghosts"/>
-    <path d="M 190 63 L 90 125 M 190 63 L 290 125" class="edge"/>
-    <use xlink:href="#root-split"/>
-    <use xlink:href="#left-collapsed"/>
-    <g text-anchor="middle">
-      <rect x="250" y="107" width="80" height="36" rx="6" class="collapsed"/>
-      <text x="290" y="121" class="node-id">#2</text>
-      <text x="290" y="136" class="node-value">ŷ = 2.5</text>
-    </g>
+  <g transform="translate(20 537)" data-stage="C" data-splits="2" data-lambda="0.11737065796285452">
+  <rect width="450" height="410" rx="10" fill="#fafbfd" stroke="#e3e8ef"/>
+  <text x="14" y="26" class="heading">C · Useful split removed</text>
+  <text x="14" y="49" class="small">2 splits · λ / λ_root = 0.553 · validation 74.9%</text>
+  <path d="M 270 104 L 158 184" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 270 104 L 385 184" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 158 184 L 70 264" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 158 184 L 245 264" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 245 264 L 190 344" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 245 264 L 300 344" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <circle cx="270" cy="104" r="3" fill="#dce2ea"/>
+  <circle cx="158" cy="184" r="3" fill="#dce2ea"/>
+  <circle cx="385" cy="184" r="3" fill="#dce2ea"/>
+  <circle cx="70" cy="264" r="3" fill="#dce2ea"/>
+  <circle cx="245" cy="264" r="3" fill="#dce2ea"/>
+  <circle cx="190" cy="344" r="3" fill="#dce2ea"/>
+  <circle cx="300" cy="344" r="3" fill="#dce2ea"/>
+  <path d="M 270 104 L 158 184" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <path d="M 270 104 L 385 184" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <rect x="218" y="81" width="104" height="46" rx="6" fill="#ffffff" stroke="#9caebb"/>
+  <text x="270" y="99.5" class="small" text-anchor="middle">#0</text>
+  <text x="270" y="116.5" class="label" text-anchor="middle">x1 ≤ 0.653</text>
+  <rect x="331" y="153" width="108" height="62" rx="6" fill="#fff0df" stroke="#d99547"/>
+  <text x="385" y="171" class="small" text-anchor="middle">#430 · class 1</text>
+  <text x="385" y="188" class="label" text-anchor="middle">P1 = 85.5%</text>
+  <text x="385" y="205" class="label" text-anchor="middle">n = 524</text>
+  <path d="M 158 184 L 70 264" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <path d="M 158 184 L 245 264" fill="none" stroke="#8196a9" stroke-width="1.5"/>
+  <rect x="106" y="161" width="104" height="46" rx="6" fill="#ffffff" stroke="#9caebb"/>
+  <text x="158" y="179.5" class="small" text-anchor="middle">#1</text>
+  <text x="158" y="196.5" class="label" text-anchor="middle">x0 ≤ 0.0041</text>
+  <rect x="191" y="233" width="108" height="62" rx="6" fill="#fff0df" stroke="#d99547"/>
+  <text x="245" y="251" class="small" text-anchor="middle">#207 · class 1</text>
+  <text x="245" y="268" class="label" text-anchor="middle">P1 = 62.0%</text>
+  <text x="245" y="285" class="label" text-anchor="middle">n = 729</text>
+  <rect x="16" y="233" width="108" height="62" rx="6" fill="#e8f1fa" stroke="#70a0cc"/>
+  <text x="70" y="251" class="small" text-anchor="middle">#2 · class 0</text>
+  <text x="70" y="268" class="label" text-anchor="middle">P1 = 13.1%</text>
+  <text x="70" y="285" class="label" text-anchor="middle">n = 747</text>
+  <text x="14" y="397" class="small">#207 becomes a leaf; children #208 and #269 disappear.</text>
   </g>
-  <g transform="translate(430 352)" data-stage="D" data-splits="0" data-lambda="2.2500000000000004">
-    <rect width="390" height="224" rx="10" fill="#fafbfd" stroke="#e3e8ef"/>
-    <text x="14" y="25" class="heading">D · λ = 2.25 · 0 splits / 1 leaf</text>
-    <use xlink:href="#ghosts"/>
-    <g text-anchor="middle">
-      <rect x="150" y="45" width="80" height="36" rx="6" class="collapsed"/>
-      <text x="190" y="59" class="node-id">#0</text>
-      <text x="190" y="74" class="node-value">ŷ = 0.25</text>
-    </g>
+  <g transform="translate(490 537)" data-stage="D" data-splits="0" data-lambda="0.21209278655974292">
+  <rect width="450" height="410" rx="10" fill="#fafbfd" stroke="#e3e8ef"/>
+  <text x="14" y="26" class="heading">D · Underfit: root only</text>
+  <text x="14" y="49" class="small">0 splits · λ / λ_root = 1.000 · validation 51.1%</text>
+  <path d="M 270 104 L 158 184" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 270 104 L 385 184" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 158 184 L 70 264" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 158 184 L 245 264" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 245 264 L 190 344" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <path d="M 245 264 L 300 344" fill="none" stroke="#dce2ea" stroke-width="1" stroke-dasharray="3 4"/>
+  <circle cx="270" cy="104" r="3" fill="#dce2ea"/>
+  <circle cx="158" cy="184" r="3" fill="#dce2ea"/>
+  <circle cx="385" cy="184" r="3" fill="#dce2ea"/>
+  <circle cx="70" cy="264" r="3" fill="#dce2ea"/>
+  <circle cx="245" cy="264" r="3" fill="#dce2ea"/>
+  <circle cx="190" cy="344" r="3" fill="#dce2ea"/>
+  <circle cx="300" cy="344" r="3" fill="#dce2ea"/>
+  <rect x="216" y="73" width="108" height="62" rx="6" fill="#e8f1fa" stroke="#70a0cc"/>
+  <text x="270" y="91" class="small" text-anchor="middle">#0 · class 0</text>
+  <text x="270" y="108" class="label" text-anchor="middle">P1 = 49.9%</text>
+  <text x="270" y="125" class="label" text-anchor="middle">n = 2000</text>
+  <text x="14" y="397" class="small">All observations pool at the original root.</text>
   </g>
-  <text x="30" y="606" class="small">A subtree becomes one leaf at its original root. Descendants disappear; nothing moves upward.</text>
-  <text x="30" y="628" class="small">Leaf labels are pooled training means, not penalized coefficient predictions. No HS. Penalty labels rounded.</text>
+  <text x="30" y="972" class="small">P1 is the training frequency of class 1 at that node, not an optimized logistic probability. No HS.</text>
+  <text x="30" y="995" class="small">Whole subtrees collapse into their roots; descendants never move upward. Threshold and penalty labels are rounded.</text>
 </svg>

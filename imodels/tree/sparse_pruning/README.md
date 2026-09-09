@@ -143,42 +143,74 @@ retained while its descendant group is active—even if its own coefficient is z
 
 ### Traverse and preview pruned trees
 
-Here is a separate, small regression example: a four-leaf CART tree fitted to
-`x = [0, 1, 2, 3]`, `y = [-3, -1, 1, 4]`. The split count is a staircase;
-each A–D marker matches a tree below.
+This synthetic **classification** example starts with an overfit, 280-split
+CART tree. Validation accuracy rises from **73.5% to 84.6%** at just **3 splits**,
+then falls to 51.1% when only the root remains. Classification error is
+`1 − accuracy`, so its curve has the opposite, U-shaped pattern.
 
-![Retained splits decrease from three to two, one, and zero as the pruning penalty increases, with A–D marking the matching tree snapshots.](assets/structural_path.svg)
+![Overfitting example: validation accuracy rises to 84.6% before declining with excessive pruning. Training accuracy, three independent test evaluations, retained split counts, and an early-pruning zoom are also shown.](assets/structural_path.svg)
 
-![Four snapshots with fixed node positions: subtrees collapse into leaves at their original roots as the penalty increases.](assets/pruned_trees.svg)
+The penalty is selected using **validation data only** (ties favor fewer splits).
+Independent test accuracy improves from 74.2% to **84.65%** for the selected tree;
+the test set does not choose the penalty. This is an illustrative fixed-seed
+simulation, not a general performance guarantee. The horizontal axis divides
+λ by `λ_root`, the penalty at which only the root remains.
+
+Each A–D marker matches a tree below. Panel A summarizes the large original
+subtrees explicitly; B–D show every remaining node.
+
+![The overfit 280-split tree, summarized using subtree counts, followed by the validation-selected 3-split tree, a 2-split tree, and the root-only tree. Original node IDs and positions stay fixed.](assets/pruned_trees.svg)
 
 Pruning removes a whole subtree and turns its root into a leaf—descendants
-are **not moved upward**. The leaf predictions shown are pooled original CART
-means, not predictions reconstructed from penalized coefficients. Between
-structural knots, these previews stay the same even if coefficients change.
+are **not moved upward**. These classifier previews use pooled CART class
+frequencies, without HS or penalized-coefficient predictions. Between structural
+knots, these previews stay the same even if coefficients change. This example
+uses the [fitted-tree classification APIs](#classification-paths), not the
+classifier wrappers' numeric-grid CV.
 
-With the structural solver, fitted wrappers expose `pruning_path_`;
-`coef_` and `coefficient_path_` are `None`. To plot states, keep the original
-CART tree and use the fitted-tree helpers directly. This fits the example tree
-and previews one state:
+<details>
+<summary>Reproduce the example and preview the selected tree</summary>
 
 ```python
 import numpy as np
-from sklearn.tree import DecisionTreeRegressor, plot_tree
+from sklearn.tree import DecisionTreeClassifier, plot_tree
 from imodels.tree.sparse_pruning import (
     fitted_tree_linf_exact_topology_path, materialize_fitted_tree_topology,
 )
 
-X = np.arange(4).reshape(-1, 1)  # replace this toy dataset with your own
-y = [-3, -1, 1, 4]
-source = DecisionTreeRegressor(max_leaf_nodes=4, random_state=0).fit(X, y)
-structure = fitted_tree_linf_exact_topology_path(source)
-for alpha, removed_node_ids in structure.iter_node_pruning_events():
-    print(alpha, removed_node_ids)  # increasing penalty; remove each tied batch
+# Two signal features, ten irrelevant features, and 15% random label flips.
+rng = np.random.default_rng(42)
+X = rng.normal(size=(14000, 12))
+signal = np.where(X[:, 0] > 0, X[:, 1] > -0.65, X[:, 1] > 0.65)
+y = np.logical_xor(signal, rng.random(len(X)) < 0.15).astype(int)
+X_train, y_train = X[:2000], y[:2000]
+X_val, y_val = X[2000:6000], y[2000:6000]
+X_test, y_test = X[6000:], y[6000:]
 
-alpha = float(structure.lambdas[len(structure.lambdas) // 2])
-preview = materialize_fitted_tree_topology(source, structure, alpha)
-plot_tree(preview)
+source = DecisionTreeClassifier(random_state=42).fit(X_train, y_train)
+structure = fitted_tree_linf_exact_topology_path(source)
+alphas = structure.lambdas[::-1]  # increasing penalty, including zero
+scores, counts = [], []
+for alpha in alphas:
+    preview = materialize_fitted_tree_topology(source, structure, float(alpha))
+    scores.append(preview.score(X_val, y_val))
+    counts.append(len(structure.tree_nodes_at(alpha)))
+
+# Freeze the choice before evaluating the independent test set.
+best = max(range(len(alphas)), key=lambda i: (scores[i], -counts[i]))
+selected = materialize_fitted_tree_topology(source, structure, float(alphas[best]))
+print(counts[best], scores[best], selected.score(X_test, y_test))
+# 3 splits, 0.846 validation accuracy, 0.8465 test accuracy
+plot_tree(selected, feature_names=[f"x{i}" for i in range(X.shape[1])])
 ```
+
+</details>
+
+Regression wrappers using the structural solver expose `pruning_path_`;
+`coef_` and `coefficient_path_` are `None`. The same fitted-tree helpers work
+with an eligible `DecisionTreeRegressor`. Keep the original CART tree for
+previews; `structure.iter_node_pruning_events()` streams disappearing node IDs
+in increasing penalty order.
 
 At a structural knot, the disappearing splits are already removed;
 `below=True` previews the state immediately below that knot. Previews leave
