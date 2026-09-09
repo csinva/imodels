@@ -51,16 +51,18 @@ def test_regression_endpoints_clone_and_refit(wrapper):
 @pytest.mark.parametrize("wrapper", [
     SPTreeClassifier, SHSTreeClassifier, SPTreeClassifierCV, SHSTreeClassifierCV,
 ])
-def test_binary_classification_probabilities_and_numeric_cv(wrapper):
+@pytest.mark.parametrize("n_classes", [2, 3])
+def test_classification_probabilities_and_numeric_cv(wrapper, n_classes):
     X, target = _data()
-    y = np.where(target > np.median(target), "high", "low")
+    boundaries = np.quantile(target, np.arange(1, n_classes) / n_classes)
+    y = np.array(["low", "middle", "high"])[np.digitize(target, boundaries)]
     is_cv = wrapper in (SPTreeClassifierCV, SHSTreeClassifierCV)
     choices = (dict(sp_alpha_list=[0, .1], reg_param_list=[0, 2], cv=2)
                if is_cv else dict(sp_alpha=0, reg_param=0))
     model = wrapper(max_leaf_nodes=3, random_state=0, tol=1e-5, **choices)
     assert model.fit(X, y) is model
     probabilities = model.predict_proba(X)
-    assert probabilities.shape == (len(X), 2)
+    assert probabilities.shape == (len(X), n_classes)
     assert np.all((probabilities >= 0) & (probabilities <= 1))
     assert_allclose(probabilities.sum(axis=1), 1)
     assert_array_equal(model.predict(X), model.classes_[probabilities.argmax(axis=1)])
@@ -68,10 +70,30 @@ def test_binary_classification_probabilities_and_numeric_cv(wrapper):
     if is_cv:
         assert model.cv_path_mode_ == "grid"
         assert model.cv_scores_.shape == (4, 2)
-        assert model.solver_ == "apa_apg2"
+        assert model.solver_ == "topology"
     else:
         cart = DecisionTreeClassifier(max_leaf_nodes=3, random_state=0).fit(X, y)
         assert_allclose(probabilities, cart.predict_proba(X))
+
+
+@pytest.mark.parametrize("wrapper", [SPTreeClassifier, SHSTreeClassifier])
+@pytest.mark.parametrize("solver", ["proximal", "coefficient_path"])
+def test_classifier_coefficients_are_optional_and_do_not_replace_leaf_predictions(wrapper, solver):
+    X = np.repeat([[-1.], [1.]], 10, axis=0)
+    y = np.array(["low"] * 8 + ["high"] * 2 + ["low"] * 2 + ["high"] * 8)
+    model = wrapper(solver=solver, max_leaf_nodes=2, sp_alpha=.1, reg_param=0,
+                    random_state=0, tol=1e-8).fit(X, y)
+    assert_allclose(model.coef_, [-np.log(.7 / .3)], atol=1e-6)
+    # Coefficients solve penalized logits; the returned tree pools training labels.
+    assert_allclose(model.predict_proba(X[[0, -1]]), [[.2, .8], [.8, .2]])
+    if solver == "coefficient_path":
+        assert not model.coefficient_path_.exact
+        assert .1 in model.coefficient_path_.lambdas
+        assert np.all(model.coefficient_path_.lambdas > 0)
+        assert_allclose(model.coefficient_path_.at(.1)[0], model.coef_)
+    model.set_params(sp_alpha=0).fit(X, y)
+    assert model.coef_ is model.intercept_ is None
+    assert not model.optimization_results_[0]["coefficients_available"]
 
 
 def test_analytic_coefficient_knots_and_interpolation():
@@ -237,7 +259,7 @@ def test_incompatible_options_raise_clear_errors(options):
     with pytest.raises(ValueError):
         SPTreeRegressor(max_leaf_nodes=4, **options).fit(X, y)
     with pytest.raises(ValueError, match="regression"):
-        SPTreeClassifier(solver="coefficient_path").fit(X, y > np.median(y))
+        SPTreeClassifier(solver="hicap").fit(X, y > np.median(y))
 
 
 @pytest.mark.parametrize("solver", ["coefficient_path", "hicap"])

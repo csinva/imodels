@@ -403,4 +403,10 @@ proximal operator's dual certificate. It does not bound coefficient error or
 objective suboptimality, especially near separation. Positive penalties are
 required; a finite unpenalized coefficient endpoint may not exist. Requests
 that exceed the iteration or refinement budget return `status="partial"`.
-The existing binary APA API and SP/SHS classifier-wrapper defaults are unchanged.
+SP/SHS classifier wrappers now default to the structural solver for eligible
+binary/multiclass CART trees. Their `"proximal"` option uses this point solver;
+`"coefficient_path"` samples positive structural knots plus the requested
+penalty. Optional coefficients are computed only for the final fit during
+automatic structural CV. At zero penalty the wrappers retain the original tree
+but expose no finite coefficients; direct coefficient APIs require positive
+penalties. The existing binary APA API remains available explicitly.

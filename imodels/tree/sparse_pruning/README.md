@@ -33,20 +33,36 @@ predictions = shrunk.predict(X)
 selected_strengths = shrunk.sp_alpha_, shrunk.reg_param_
 ```
 
-Defaults are `ord=np.inf, solver="auto"`. For eligible regression trees this
+Defaults are `ord=np.inf, solver="auto"`. For eligible CART trees this
 computes the fast structural path: all distinct pruned trees, without solving
 for every coefficient. Predictions use retained CART node values, optionally
 shrunk by HS—not the penalized coefficients used to decide pruning.
 
-### Binary classification
+### Binary and multiclass classification
 
 Use `SPTreeClassifier` / `SPTreeClassifierCV` for pruning, or
 `SHSTreeClassifier` / `SHSTreeClassifierCV` to add HS. All provide `predict`
-and `predict_proba`. These estimator wrappers currently use APA-APG2 with
-logistic loss and numeric-grid CV. Their HS strengths must be numeric; GCV
-and multiclass classification are unsupported in the wrappers.
-The separate [fitted-tree classification APIs](#classification-paths) below
-support binary and multiclass structural paths and coefficient samples.
+and `predict_proba`. Eligible classifiers now use the fast structural solver
+by default, with logistic/softmax loss and the class-range hiCAP penalty.
+Automatic CV evaluates training-fold structural knots using stratified folds.
+HS strengths must be numeric; GCV remains regression-only.
+
+```python
+from sklearn.datasets import load_iris
+from imodels import SPTreeClassifierCV
+
+X_class, y_class = load_iris(return_X_y=True)
+classifier = SPTreeClassifierCV(cv=5, max_leaf_nodes=32, random_state=0).fit(
+    X_class, y_class,
+)
+probabilities = classifier.predict_proba(X_class)
+structure = classifier.pruning_path_
+```
+
+`solver="proximal"` optionally exposes coefficients at the selected penalty;
+`"coefficient_path"` adds nonlinear coefficient samples. Explicit `"apa_apg2"`
+remains a binary-only alternative, also used by `"auto"` for unsupported native
+geometry or `ord=2`. See [classification paths](#classification-paths) for details.
 
 ## Tune regularization strengths
 
@@ -58,8 +74,9 @@ grows its own tree, prunes candidates, applies HS if requested, and scores
 predictions on held-out rows. The selected configuration is refitted on all data.
 
 - `sp_alpha_list="auto"` evaluates distinct structural states for eligible
-  regression trees. Candidates come from training-fold knots, never a full-data
-  tree. Other cases, including classification and explicit APA, use a numeric grid.
+  regression and classification trees. Candidates come from training-fold knots,
+  never a full-data tree. Other supported cases, including explicit APA, use a
+  numeric grid. Class weights are recomputed within each classification fold.
 - A numeric `sp_alpha_list` requests grid CV.
 - SHS defaults to a numeric `reg_param_list`, selecting HS by held-out scores;
   SP disables HS by default. `reg_param_list="gcv"` changes only HS selection
@@ -165,8 +182,8 @@ Pruning removes a whole subtree and turns its root into a leaf—descendants
 are **not moved upward**. These classifier previews use pooled CART class
 frequencies, without HS or penalized-coefficient predictions. Between structural
 knots, these previews stay the same even if coefficients change. This example
-uses the [fitted-tree classification APIs](#classification-paths), not the
-classifier wrappers' numeric-grid CV.
+uses one fixed tree and a single validation split. The CV wrappers instead
+grow a separate tree within each training fold.
 
 <details>
 <summary>Reproduce the example and preview the selected tree</summary>
@@ -206,7 +223,7 @@ plot_tree(selected, feature_names=[f"x{i}" for i in range(X.shape[1])])
 
 </details>
 
-Regression wrappers using the structural solver expose `pruning_path_`;
+Wrappers using the structural solver expose `pruning_path_`;
 `coef_` and `coefficient_path_` are `None`. The same fitted-tree helpers work
 with an eligible `DecisionTreeRegressor`. Keep the original CART tree for
 previews; `structure.iter_node_pruning_events()` streams disappearing node IDs
@@ -251,6 +268,32 @@ piecewise-linear interpolation contract.
 
 ### Classification paths
 
+Both SP/SHS classifier families, including their CV versions, support native
+`"topology"`, `"proximal"`, and `"coefficient_path"` solvers:
+
+```python
+from imodels import SPTreeClassifier
+
+model = SPTreeClassifier(
+    sp_alpha=0.02, solver="coefficient_path", max_leaf_nodes=32, random_state=0,
+).fit(X_class, y_class)
+beta = model.coef_              # solved at sp_alpha=0.02, not interpolated
+path = model.coefficient_path_  # positive structural knots + supplied penalty
+```
+
+These paths are **nonlinear coefficient samples**, not complete piecewise-linear
+paths: `path.exact` is false and `path.at(alpha)` interpolates approximately.
+`"proximal"` solves only the requested point. Automatic CV still scores structural
+states and computes optional coefficients only during the final fit.
+
+At `sp_alpha=0`, all original splits are retained, but classifier `coef_` and
+`intercept_` are `None`: pure leaves can require infinite unpenalized logits.
+The diagnostic reports that coefficients are unavailable. A requested coefficient
+path still contains its positive samples, or is `None` if there are none.
+Structural-only classifier fits also leave `intercept_=None`.
+
+For custom sampling grids or adaptive refinement, use the fitted-tree APIs:
+
 For an eligible fitted `DecisionTreeClassifier`,
 `fitted_tree_linf_exact_topology_path` and `materialize_fitted_tree_topology`
 also provide all structural pruning states. The objective is logistic/softmax
@@ -290,23 +333,25 @@ Penalties must be positive: pure leaves can require infinite logits at zero.
 These APIs reuse the exact laminar proximal operator and warm starts. Leaf
 aggregation avoids an observation-by-split matrix, but coefficient storage and
 explicit descendant groups can still be costly for large, deep trees.
-They do not change classifier-wrapper solver choices or CV defaults.
+Both the wrappers and these helpers use the same underlying classification solvers.
 
 ## Solver reference
 
-| `solver` | What it computes | Use when |
+| `solver` | Regression | Classification |
 | --- | --- | --- |
-| `"auto"` | Structural path when eligible; otherwise proximal for infinity-norm regression, APA for other supported objectives | Default for fitting and CV |
-| `"topology"` | Exact structural knots; no coefficients | You only need pruned trees |
-| `"proximal"` | Certified coefficients at one penalty | You need coefficients, but not their full path |
-| `"coefficient_path"` | Complete certified diagonal-tree coefficient path | You need all coefficient knots and interpolation |
-| `"hicap"` | Generic, slower, certified coefficient path | Small reference/validation problems |
-| `"apa_apg2"` | Approximate point solution | Binary classification or `ord=2` |
+| `"auto"` | Structural path when eligible; otherwise proximal for infinity norm, APA for `ord=2` | Structural path when eligible; otherwise binary APA |
+| `"topology"` | Exact structural knots; no coefficients | Exact structural knots; no coefficients |
+| `"proximal"` | Certified coefficients at one penalty | Logistic/softmax coefficients at a positive penalty, with a stationarity check |
+| `"coefficient_path"` | Complete certified coefficient path; exact linear interpolation | Warm-started nonlinear samples; approximate interpolation |
+| `"hicap"` | Generic, slower reference coefficient path | Unsupported |
+| `"apa_apg2"` | Approximate point solution | Approximate point solution; binary only |
 
-Wrapper tree-specific solvers require `ord=np.inf`, zero/default `support_tol`, and an
-unconstrained single-output mean-based regression tree on its fitting rows and
-weights. Wrappers do not assume this for external `prefit=True` trees or forest
-OOB data. Explicitly incompatible choices or failed certificates raise errors.
+Wrapper tree-specific solvers require `ord=np.inf`, zero/default `support_tol`,
+and an unconstrained single-output CART tree on its fitting rows and weights.
+Regression nodes must store means; classifiers need positive leaf/class masses.
+Wrappers do not assume this geometry for external `prefit=True` trees or forest
+OOB data. Multiclass requires native geometry; APA does not provide a multiclass
+fallback. Explicitly incompatible choices or failed certificates raise errors.
 
 For `p` splits, the structural path takes `O(p log p)` time and `O(p)` space
 after fitting. CV and previews still pay for copies and held-out predictions.
@@ -315,7 +360,8 @@ active constraints; they are optional because pruning does not need that work.
 
 "Exact" means within floating-point certificate tolerances, not symbolic
 arithmetic. `tol` controls those tolerances; for APA it only controls stopping.
-`max_iter` caps point iterations or coefficient-path events, depending on the
+`max_iter` caps point iterations (per classification sample) or regression
+coefficient-path events, depending on the
 solver. For compatibility, wrapper `sp_alpha=0` preserves every original split;
 strict mathematical path queries omit zero-activation splits even at zero.
 See the [optimization guide](optimization/README.md) for numerical contracts.

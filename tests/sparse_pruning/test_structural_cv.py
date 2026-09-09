@@ -4,14 +4,16 @@ from copy import deepcopy
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import KFold
+from sklearn.metrics import log_loss, mean_squared_error
+from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.base import clone
+from sklearn.utils.class_weight import compute_sample_weight
 
 from imodels import (
     HSTreeRegressor, SHSTreeRegressor, SHSTreeRegressorCV,
-    SHSTreeClassifierCV, SPTreeRegressor, SPTreeRegressorCV,
+    SHSTreeClassifier, SHSTreeClassifierCV, SPTreeClassifierCV,
+    SPTreeRegressor, SPTreeRegressorCV,
 )
 from imodels.tree._hs_gcv import select_hs_reg_param
 from imodels.tree.sparse_pruning._cv import (
@@ -335,7 +337,7 @@ def test_structural_to_numeric_grid_refit_clears_stale_path_metadata(change_meth
     assert model.cv_scores_.shape == (len(alphas), 3)
 
 
-@pytest.mark.parametrize("mode", ["classification", "ord2", "custom", "positive_support"])
+@pytest.mark.parametrize("mode", ["classification_apa", "ord2", "custom", "positive_support"])
 @pytest.mark.filterwarnings("ignore:APA-APG:sklearn.exceptions.ConvergenceWarning")
 def test_ineligible_automatic_cv_uses_numeric_grid_without_structural_claim(mode, monkeypatch):
     from imodels.tree.sparse_pruning import _cv
@@ -347,12 +349,12 @@ def test_ineligible_automatic_cv_uses_numeric_grid_without_structural_claim(mode
         raise AssertionError("ineligible problem entered structural CV")
 
     monkeypatch.setattr(_cv, "evaluate_structural_cv", forbidden)
-    if mode == "classification":
+    if mode == "classification_apa":
         y = (y > np.median(y)).astype(int)
         model = SHSTreeClassifierCV(
             estimator_=DecisionTreeClassifier(max_leaf_nodes=4),
             max_leaf_nodes=4, reg_param_list=[0], random_state=9,
-            cv=3, max_iter=100, tol=1e-4,
+            cv=3, max_iter=100, tol=1e-4, solver="apa_apg2",
         )
     else:
         model = _model(reg_param_list=[0], max_iter=100, tol=1e-4)
@@ -427,3 +429,124 @@ def test_native_exact_zero_paths_reject_positive_support_threshold(solver):
     X, y = _data()
     with pytest.raises(ValueError, match="support_tol"):
         _model(solver=solver, support_tol=.1, reg_param_list=[0]).fit(X, y)
+
+
+@pytest.mark.parametrize("n_classes", [2, 3])
+@pytest.mark.parametrize("class_weight", [None, "balanced"])
+def test_classifier_structural_cv_matches_fold_local_weighted_hs_oracle(n_classes, class_weight):
+    rng = np.random.default_rng(85)
+    X = rng.normal(size=(69, 3))
+    signal = X[:, 0] + .4 * X[:, 1]
+    cuts = np.quantile(signal, np.linspace(.25, .7, n_classes - 1))
+    y = np.array(["oak", "elm", "pine"])[np.digitize(signal, cuts)]
+    weights = 1. + np.arange(len(y)) % 3
+
+    def scorer(candidate, X_out, y_out, sample_weight=None):
+        assert isinstance(candidate, SHSTreeClassifier)
+        assert candidate.coef_ is candidate.intercept_ is None
+        assert candidate.estimator_.tree_.node_count == 2 * candidate.complexity_ + 1
+        probability = candidate.predict_proba(X_out)
+        assert_allclose(probability.sum(axis=1), 1., atol=1e-14)
+        assert_array_equal(candidate.predict(X_out), candidate.classes_[probability.argmax(axis=1)])
+        return -log_loss(y_out, probability, labels=candidate.classes_, sample_weight=sample_weight)
+
+    base = DecisionTreeClassifier(max_leaf_nodes=5, class_weight=class_weight, random_state=9)
+    model = SHSTreeClassifierCV(
+        estimator_=base, max_leaf_nodes=5, reg_param_list=[0., 7.],
+        cv=3, scoring=scorer, random_state=9,
+    ).fit(X, y, sample_weight=weights)
+    assert model.cv_path_mode_ == "structural" and model.solver_ == "topology"
+    assert not hasattr(base, "tree_")
+    full_weight = weights * compute_sample_weight(class_weight, y)
+    expected_scores = np.empty_like(model.cv_scores_)
+    expected_complexity = np.empty_like(model.cv_complexities_)
+    fractions = []
+    for fold, (train, test) in enumerate(StratifiedKFold(3, shuffle=True, random_state=9).split(X, y)):
+        tree = clone(base).fit(X[train], y[train], sample_weight=weights[train])
+        path = fitted_tree_linf_exact_topology_path(tree)
+        effective = weights[train] * compute_sample_weight(class_weight, y[train])
+        fraction = effective.sum() / full_weight.sum()
+        fractions.append(fraction)
+        for index, params in enumerate(model.cv_params_):
+            pruned = _brute_tree(tree, path, params["sp_alpha"])
+            structure = pruned.tree_
+            original = structure.value[:, 0].copy()
+            original /= original.sum(axis=1, keepdims=True)
+            rho = params["reg_param"] * fraction
+            # Independent vector HS: each parent-to-child probability increment
+            # is shrunk according to the parent's effective fitting mass.
+            pending = [(0, original[0])]
+            while pending:
+                node, probability = pending.pop()
+                structure.value[node, 0] = probability
+                if structure.children_left[node] >= 0:
+                    for child in (structure.children_left[node], structure.children_right[node]):
+                        increment = (original[child] - original[node]) / (
+                            1. + rho / structure.weighted_n_node_samples[node]
+                        )
+                        pending.append((child, probability + increment))
+            expected_scores[index, fold] = -log_loss(
+                y[test], pruned.predict_proba(X[test]), labels=pruned.classes_,
+                sample_weight=weights[test],
+            )
+            expected_complexity[index, fold] = pruned.get_n_leaves() - 1
+            assert_allclose(model.cv_reg_params_[index, fold], rho)
+    assert_allclose(model.cv_scores_, expected_scores, atol=1e-12)
+    assert_array_equal(model.cv_complexities_, expected_complexity)
+    assert_allclose(model.cv_weight_fractions_, fractions)
+    final = SHSTreeClassifier(
+        estimator_=clone(base), max_leaf_nodes=5, sp_alpha=model.sp_alpha_,
+        reg_param=model.reg_param_, random_state=9,
+    ).fit(X, y, sample_weight=weights)
+    assert_allclose(model.predict_proba(X), final.predict_proba(X), atol=1e-12)
+
+
+@pytest.mark.parametrize("wrapper", [SPTreeClassifierCV, SHSTreeClassifierCV])
+def test_classifier_default_structural_cv_never_builds_stump_matrix(wrapper, monkeypatch):
+    import imodels.tree.sparse_pruning.sparse_hierarchical_shrinkage as wrappers
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("structural classification must not build a design or run APA")
+
+    monkeypatch.setattr(wrappers, "make_stumps", forbidden)
+    monkeypatch.setattr(wrappers, "tree_feature_transform", forbidden)
+    X, signal = _data()
+    y = np.digitize(signal, np.quantile(signal, [1 / 3, 2 / 3]))
+    model = wrapper(max_leaf_nodes=4, reg_param_list=[0., 2.], cv=3, random_state=9).fit(X, y)
+    assert model.cv_path_mode_ == "structural" and model.cv_solver_ == "topology"
+    assert model.cv_scores_.shape == (2 * len(model.cv_sp_alphas_), 3)
+    assert_allclose(model.predict_proba(X).sum(axis=1), 1.)
+
+
+@pytest.mark.parametrize("n_classes", [2, 3])
+def test_classifier_numeric_grid_shares_one_nonlinear_path_per_fold(n_classes, monkeypatch):
+    from imodels.tree.sparse_pruning import _solver
+
+    X, signal = _data()
+    y = np.digitize(signal, np.quantile(signal, np.arange(1, n_classes) / n_classes))
+    original = _solver.fitted_tree_linf_classification_path
+    paths, scored_paths = [], []
+
+    def counted_path(*args, **kwargs):
+        path = original(*args, **kwargs)
+        paths.append(path)
+        return path
+
+    def scorer(candidate, X_out, y_out):
+        scored_paths.append(candidate.coefficient_path_)
+        return np.mean(candidate.predict(X_out) == y_out)
+
+    monkeypatch.setattr(_solver, "fitted_tree_linf_classification_path", counted_path)
+    common = dict(max_leaf_nodes=3, sp_alpha_list=[0., .1, 1.],
+                  reg_param_list=[0., 3.], cv=3, random_state=9, tol=1e-7)
+    model = SHSTreeClassifierCV(solver="coefficient_path", scoring=scorer, **common).fit(X, y)
+    reference = SHSTreeClassifierCV(solver="topology", **common).fit(X, y)
+    assert model.cv_path_mode_ == "grid" and model.cv_solver_ == "coefficient_path"
+    assert len(paths) == 4  # Three folds plus the final fitted tree.
+    assert len(scored_paths) == 3 * 3 * 2
+    assert {id(path) for path in scored_paths} == {id(path) for path in paths[:3]}
+    assert model.coefficient_path_ is paths[-1]
+    assert all(not path.exact and np.all(path.lambdas > 0) for path in paths)
+    assert_allclose(model.cv_scores_, reference.cv_scores_, atol=0.)
+    assert model.sp_alpha_ == reference.sp_alpha_
+    assert_allclose(model.predict_proba(X), reference.predict_proba(X))

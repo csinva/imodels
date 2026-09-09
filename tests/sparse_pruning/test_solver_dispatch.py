@@ -83,7 +83,7 @@ def test_cv_eligibility_inspects_template_without_fitting():
     assert not _solver._native_tree_eligible(tree)
     assert _solver._native_tree_eligible(tree, require_fitted=False)
     assert not hasattr(tree, "tree_")
-    assert not _solver._native_tree_eligible(
+    assert _solver._native_tree_eligible(
         DecisionTreeClassifier(), require_fitted=False
     )
     assert not _solver._native_tree_eligible(
@@ -99,10 +99,56 @@ def test_explicit_native_solvers_reject_incompatible_objectives(fitted_problem, 
         _resolve(fitted_problem[0], name, **options)
 
 
-@pytest.mark.parametrize("name", ["topology", "coefficient_path", "proximal", "hicap"])
-def test_explicit_exact_regression_solvers_reject_classification(name):
+def test_generic_exact_hicap_remains_regression_only():
     with pytest.raises(ValueError, match="regression"):
-        _resolve(DecisionTreeClassifier(), name)
+        _resolve(DecisionTreeClassifier(), "hicap")
+
+
+@pytest.mark.parametrize("n_classes", [2, 3])
+def test_classifier_dispatch_requires_matched_unconstrained_tree(n_classes):
+    X = np.arange(24.).reshape(-1, 1)
+    y = np.arange(len(X)) % n_classes
+    tree = DecisionTreeClassifier(max_leaf_nodes=3, random_state=0).fit(X, y)
+    assert _resolve(tree) == "topology"
+    assert _resolve(tree, "apa_apg2") == "apa_apg2"
+    assert _resolve(tree, ord=2) == "apa_apg2"
+    for name in ("topology", "proximal", "coefficient_path"):
+        assert _resolve(tree, name) == name
+        for options in (dict(matched_training=False), dict(ord=2), dict(support_tol=.01)):
+            with pytest.raises(ValueError):
+                _resolve(tree, name, **options)
+    tree.monotonic_cst = np.ones(X.shape[1], dtype=int)
+    assert _resolve(tree) == "apa_apg2"
+
+
+@pytest.mark.parametrize("solver", ["topology", "proximal", "coefficient_path"])
+def test_classification_native_solutions_preserve_tree_and_zero_endpoint(solver):
+    X = np.repeat([[-1.], [1.]], 10, axis=0)
+    y = np.array([0] * 8 + [1] * 2 + [0] * 2 + [1] * 8)
+    tree = DecisionTreeClassifier(max_depth=1, random_state=0).fit(X, y)
+    before = deepcopy(tree.tree_.__getstate__())
+    zero, interior, above = list(iter_fitted_tree_solutions(
+        tree, [0., .1, .4], solver, tol=1e-8, max_iter=2000,
+    ))
+    assert zero.coefficients is zero.intercept is None
+    np.testing.assert_array_equal(zero.retained_node_ids, [0])
+    np.testing.assert_array_equal(interior.retained_node_ids, [0])
+    assert len(above.retained_node_ids) == 0
+    if solver != "topology":
+        assert not zero.info["coefficients_available"]
+        assert zero.info["coefficients_unavailable_reason"] == "zero_penalty_may_have_infinite_logits"
+        np.testing.assert_allclose(interior.coefficients, [np.log(.7 / .3)], atol=1e-6)
+        np.testing.assert_allclose(interior.intercept, 0., atol=1e-6)
+        np.testing.assert_allclose(above.coefficients, [0.], atol=1e-7)
+    if solver == "coefficient_path":
+        path = interior.coefficient_path
+        assert path is zero.coefficient_path is above.coefficient_path
+        assert not path.exact and path.status == "complete"
+        assert np.all(path.lambdas > 0)
+        assert .1 in path.lambdas and .4 in path.lambdas
+        np.testing.assert_allclose(path.at(.1)[0], interior.coefficients)
+    np.testing.assert_array_equal(tree.tree_.__getstate__()["nodes"], before["nodes"])
+    np.testing.assert_array_equal(tree.tree_.value, before["values"])
 
 
 @pytest.mark.parametrize("name", ["proximal", "hicap"])

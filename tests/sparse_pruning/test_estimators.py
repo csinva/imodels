@@ -226,26 +226,52 @@ def test_classifier_preserves_arbitrary_binary_labels():
     assert_array_equal(model.predict(X), y)
     predicted_from_proba = model.classes_[np.argmax(model.predict_proba(X), axis=1)]
     assert_array_equal(predicted_from_proba, model.predict(X))
-    assert not model.__sklearn_tags__().classifier_tags.multi_class
+    assert model.__sklearn_tags__().classifier_tags.multi_class
 
 
-def test_classifier_shrinkage_uses_node_probabilities_not_sample_counts():
+@pytest.mark.parametrize("scheme, pure_class_probability", [
+    ("node_based", .75), ("constant", .5 + .5 / 9), ("leaf_based", .5 + .5 / 3),
+])
+def test_classifier_shrinkage_uses_node_probabilities_not_sample_counts(scheme, pure_class_probability):
     X, y = _classification_data()
     model = SHSTreeClassifier(
         estimator_=DecisionTreeClassifier(max_depth=1, random_state=0),
         sp_alpha=0,
         reg_param=8,
         random_state=0,
-    ).fit(X, y)
+    )
+    model.shrinkage_scheme_ = scheme
+    model.fit(X, y)
 
     tree_values = model.estimator_.tree_.value[:, 0, :]
     assert_allclose(tree_values[0], [0.5, 0.5])
-    assert_allclose(tree_values[1], [0.75, 0.25])
-    assert_allclose(tree_values[2], [0.25, 0.75])
+    assert_allclose(tree_values[1], [pure_class_probability, 1 - pure_class_probability])
+    assert_allclose(tree_values[2], [1 - pure_class_probability, pure_class_probability])
     assert_allclose(model.predict_proba(X).sum(axis=1), 1)
 
 
-def test_classifier_rejects_multiclass_targets():
+@pytest.mark.parametrize("scheme", ["node_based", "constant", "leaf_based"])
+def test_classifier_shrinkage_handles_deep_retained_tree_without_recursion(scheme):
+    # Alternating labels yield a depth-1099 chain, beyond Python's usual
+    # recursion limit. Do not change that limit to accommodate the estimator.
+    X = np.arange(1100., dtype=float).reshape(-1, 1)
+    y = np.where(np.arange(len(X)) % 2, "odd", "even")
+    model = SHSTreeClassifier(
+        estimator_=DecisionTreeClassifier(random_state=0),
+        sp_alpha=0., reg_param=1., random_state=0,
+    )
+    model.shrinkage_scheme_ = scheme
+    model.fit(X, y)
+    assert model.estimator_.get_depth() == len(X) - 1
+    assert model.complexity_ == len(X) - 1
+    probability = model.predict_proba(X)
+    assert np.isfinite(probability).all()
+    assert np.all((probability >= 0.) & (probability <= 1.))
+    assert_allclose(probability.sum(axis=1), 1., atol=1e-12)
+    assert_array_equal(model.predict(X), model.classes_[probability.argmax(axis=1)])
+
+
+def test_legacy_apa_classifier_rejects_multiclass_targets():
     X = np.arange(9, dtype=float).reshape(-1, 1)
     y = np.tile(np.arange(3), 3)
     model = SPTreeClassifier(
@@ -253,10 +279,86 @@ def test_classifier_rejects_multiclass_targets():
         sp_alpha=0,
         reg_param=0,
         random_state=0,
+        solver="apa_apg2",
     )
 
     with pytest.raises(ValueError):
         model.fit(X, y)
+
+
+@pytest.mark.parametrize("wrapper", [SPTreeClassifier, SHSTreeClassifier])
+@pytest.mark.parametrize("solver", ["topology", "proximal", "coefficient_path"])
+def test_multiclass_range_penalty_endpoints_and_coefficient_metadata(wrapper, solver):
+    # The class-range threshold is 4/11. An incorrect sum-zero 2*linf
+    # penalty instead prunes at 3/11 and fails this interior support check.
+    X = np.repeat([[-1.], [1.]], 11, axis=0)
+    labels = np.array(["oak", "maple", "pine"])
+    y = np.r_[np.repeat(labels, [1, 5, 5]), np.repeat(labels, [9, 1, 1])]
+    base = DecisionTreeClassifier(max_depth=1, random_state=0).fit(X, y)
+    model = wrapper(
+        max_leaf_nodes=2, solver=solver, sp_alpha=7 / 22, reg_param=0,
+        random_state=0, tol=1e-8,
+    ).fit(X, y)
+    assert model.complexity_ == 1
+    assert_allclose(model.pruning_path_.lambdas, [4 / 11, 0.], atol=1e-14)
+    assert_array_equal(model.classes_, base.classes_)
+    assert_allclose(model.predict_proba(X), base.predict_proba(X))
+    if solver != "topology":
+        assert model.coef_.shape == (1, 3) and model.intercept_.shape == (3,)
+        assert_allclose(model.coef_.sum(axis=1), 0., atol=1e-12)
+        assert_allclose(model.intercept_.sum(), 0., atol=1e-12)
+        assert np.ptp(model.coef_[0]) > .1
+    if solver == "coefficient_path":
+        assert not model.coefficient_path_.exact
+        assert 7 / 22 in model.coefficient_path_.lambdas
+        assert_allclose(model.coefficient_path_.at(7 / 22)[0], model.coef_)
+    model.set_params(sp_alpha=1.).fit(X, y)
+    assert model.complexity_ == 0
+    assert_allclose(model.predict_proba(X), np.tile(base.tree_.value[0, 0] /
+                    base.tree_.value[0, 0].sum(), (len(X), 1)))
+    model.set_params(sp_alpha=0).fit(X, y)
+    assert model.coef_ is model.intercept_ is None
+    assert_allclose(model.predict_proba(X), base.predict_proba(X))
+    if solver != "topology":
+        assert model.optimization_results_[0]["certified"] is False
+        assert not model.optimization_certified_
+        assert model.complexity_ == 1
+    if solver == "coefficient_path":
+        assert model.coefficient_path_ is not None
+        assert np.all(model.coefficient_path_.lambdas > 0)
+
+
+@pytest.mark.parametrize("class_weight", ["balanced", {"oak": 2., "elm": 1., "pine": 3.}])
+def test_native_multiclass_class_weights_match_effective_sample_weights(class_weight):
+    from sklearn.utils.class_weight import compute_sample_weight
+
+    X = np.arange(36., dtype=float).reshape(-1, 1)
+    y = np.repeat(["oak", "elm", "pine"], [8, 12, 16])
+    weights = 1. + np.arange(len(y)) % 3
+    common = dict(sp_alpha=.03, reg_param=5., random_state=0)
+    model = SHSTreeClassifier(
+        estimator_=DecisionTreeClassifier(max_leaf_nodes=4, class_weight=class_weight),
+        **common,
+    ).fit(X, y, sample_weight=weights)
+    effective = weights * compute_sample_weight(class_weight, y)
+    reference = SHSTreeClassifier(
+        estimator_=DecisionTreeClassifier(max_leaf_nodes=4), **common,
+    ).fit(X, y, sample_weight=effective)
+    assert model.solver_ == reference.solver_ == "topology"
+    assert_allclose(model.pruning_path_.activation_lambdas,
+                    reference.pruning_path_.activation_lambdas)
+    assert_allclose(model.predict_proba(X), reference.predict_proba(X), atol=1e-12)
+    assert_allclose(clone(model).fit(X, y, sample_weight=weights).predict_proba(X),
+                    model.predict_proba(X), atol=1e-12)
+
+
+@pytest.mark.parametrize("options", [dict(ord=2), dict(solver="apa_apg2"),
+                                     dict(solver="hicap"), dict(support_tol=.01)])
+def test_multiclass_rejects_unsupported_solver_objectives(options):
+    X = np.arange(18.).reshape(-1, 1)
+    y = np.arange(len(X)) % 3
+    with pytest.raises(ValueError):
+        SPTreeClassifier(max_leaf_nodes=3, sp_alpha=.1, **options).fit(X, y)
 
 
 @pytest.mark.parametrize("reg_param", ["invalid", -1.0])
@@ -923,10 +1025,10 @@ def test_invalid_set_params_is_transactional_for_fitted_model():
 def test_failed_refit_invalidates_wrapper_fitted_state():
     X, y = _classification_data()
     model = SPTreeClassifier(sp_alpha=0, reg_param=0).fit(X, y)
-    multiclass_y = np.arange(len(y)) % 3
+    continuous_y = np.linspace(0.1, 0.9, len(y))
 
     with pytest.raises(ValueError):
-        model.fit(X, multiclass_y)
+        model.fit(X, continuous_y)
     with pytest.raises(NotFittedError):
         check_is_fitted(model)
 
@@ -1547,12 +1649,10 @@ def test_degenerate_tree_diagnostics_remain_aligned(task):
 
     model.fit(X, y)
 
-    assert len(model.beta_stars_) == (0 if task == "regression" else 1)
+    assert len(model.beta_stars_) == 0
     assert len(model.support_thresholds_) == 1
     assert len(model.optimization_results_) == 1
-    assert model.optimization_results_[0]["status"] == (
-        "complete" if task == "regression" else "no_internal_nodes"
-    )
+    assert model.optimization_results_[0]["status"] == "complete"
 
 
 def test_single_tree_rejects_bootstrap_only_pruning_sets():
@@ -1568,11 +1668,12 @@ def test_single_tree_rejects_bootstrap_only_pruning_sets():
         ).fit(X, y)
 
 
-def test_classifier_class_weight_matches_explicit_sample_weight():
+def test_apa_classifier_class_weight_matches_explicit_sample_weight():
     X = np.arange(40, dtype=float).reshape(20, 2)
     y = np.array([0] * 14 + [1] * 6)
     class_weight = {0: 1, 1: 5}
     common = {
+        "solver": "apa_apg2",
         "sp_alpha": 10,
         "reg_param": 0,
         "max_iter": 100,

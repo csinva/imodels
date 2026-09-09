@@ -6,12 +6,14 @@ from dataclasses import dataclass, replace
 from typing import Any
 
 import numpy as np
-from sklearn.base import is_regressor
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.base import is_classifier, is_regressor
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from .fitted_tree import (
     _MEAN_REGRESSION_CRITERIA,
     _fitted_tree_statistics,
+    fitted_tree_linf_classification,
+    fitted_tree_linf_classification_path,
     fitted_tree_linf_exact_coefficient_path,
     fitted_tree_linf_exact_topology_path,
 )
@@ -54,13 +56,18 @@ def _native_tree_eligible(estimator: Any, *, require_fitted: bool = True) -> boo
     solve still requires one fitted output and validates the stored statistics.
     """
     constraints = getattr(estimator, "monotonic_cst", None)
-    return bool(
+    classifier = isinstance(estimator, DecisionTreeClassifier)
+    compatible_tree = classifier or (
         isinstance(estimator, DecisionTreeRegressor)
+        and str(estimator.criterion) in _MEAN_REGRESSION_CRITERIA
+    )
+    return bool(
+        compatible_tree
         and (not require_fitted or (
             hasattr(estimator, "tree_")
             and getattr(estimator, "n_outputs_", None) == 1
+            and (not classifier or getattr(estimator, "n_classes_", 0) >= 2)
         ))
-        and str(estimator.criterion) in _MEAN_REGRESSION_CRITERIA
         and (constraints is None or not np.any(np.asarray(constraints) != 0))
     )
 
@@ -99,18 +106,21 @@ def resolve_solver(
             raise ValueError("an explicit solver conflicts with the custom point-solver hook")
         return "apa_apg2"
 
-    linf_regression = is_regressor(estimator) and ord in ("inf", np.inf)
-    native = linf_regression and matched_training and _native_tree_eligible(estimator)
+    linf = ord in ("inf", np.inf)
+    linf_regression = is_regressor(estimator) and linf
+    native = linf and matched_training and _native_tree_eligible(estimator)
     if name == "auto":
         if native and support_tol == 0:
             return "topology"
         return "proximal" if linf_regression else "apa_apg2"
-    if name in ("topology", "coefficient_path"):
+    if name in ("topology", "coefficient_path") or (
+        name == "proximal" and is_classifier(estimator)
+    ):
         if not native:
             raise ValueError(
-                f"solver={name!r} requires a fitted single-output, mean-based "
-                "regression tree, ord=inf, its fitting rows/weights, and no "
-                "active monotonic constraints"
+                f"solver={name!r} requires a fitted single-output classification "
+                "or mean-based regression tree, ord=inf, its fitting rows/weights, "
+                "and no active monotonic constraints"
             )
         if support_tol > 0:
             raise ValueError(f"solver={name!r} requires support_tol=None or 0")
@@ -124,13 +134,17 @@ class FittedTreeSolution:
     """A solve on the original tree, before the estimator prunes or compacts it.
 
     Coefficients, when present, use unnormalized local stumps in ``node_ids``
-    order. Topology-only solves deliberately return ``coefficients=None``.
+    order, with a trailing class dimension for multiclass classification.
+    Topology-only solves deliberately return ``coefficients=None``. Classifier
+    topology and zero-penalty solves also leave ``intercept=None``: they do not
+    compute finite optimized logits. A classifier coefficient path stores only
+    positive samples and is ``None`` if no positive penalties are available.
     """
 
     topology_path: TreeTopologyPath
     coefficient_path: RegularizationPath | None
     coefficients: np.ndarray | None
-    intercept: float
+    intercept: float | np.ndarray | None
     node_ids: np.ndarray
     retained_node_ids: np.ndarray
     info: dict[str, Any]
@@ -180,8 +194,80 @@ def _diagonal_coefficients(scores, diagonal, alpha, tolerance, operator):
     }
 
 
+def _iter_fitted_classifier_solutions(estimator, alphas, solver, *, tol, max_iter):
+    """Keep exact structural decisions separate from nonlinear coefficient samples."""
+    topology = fitted_tree_linf_exact_topology_path(estimator)
+    node_ids = _snapshot(topology.node_ids, np.intp)
+    coefficient_path = None
+    sample_indices = {}
+    if solver == "coefficient_path":
+        # Include every requested positive penalty, so the fitted model never
+        # relies on interpolation of logistic/softmax coefficient samples.
+        samples = np.unique(np.r_[topology.lambdas, alphas])
+        samples = samples[samples > 0]
+        if samples.size:
+            coefficient_path = fitted_tree_linf_classification_path(
+                estimator, samples, tol=tol, max_iter=max_iter
+            )
+            if coefficient_path.status != "complete" or not all(
+                point.get("certified", False) for point in coefficient_path.diagnostics
+            ):
+                raise RuntimeError(
+                    "The classification coefficient path contains an uncertified "
+                    "point; increase max_iter or relax tol."
+                )
+            sample_indices = {
+                float(alpha): index for index, alpha in enumerate(coefficient_path.lambdas)
+            }
+
+    beta_init, intercept_init = None, None
+    for alpha in alphas:
+        coefficients, intercept = None, None
+        info = {
+            "solver": solver, "status": "complete", "converged": True,
+            "n_iter": 0, "relative_step_norm": 0.0,
+            "coefficients_available": False,
+        }
+        if solver != "topology" and alpha == 0:
+            # Pure CART leaves have infinite unpenalized logits. Preserve the
+            # original tree without inventing finite zero-penalty coefficients.
+            info.update(
+                certified=False,
+                coefficients_unavailable_reason="zero_penalty_may_have_infinite_logits",
+            )
+        elif solver == "coefficient_path":
+            index = sample_indices[alpha]
+            coefficients = coefficient_path.coefficients[index]
+            intercept = coefficient_path.intercepts[index]
+            info.update(coefficient_path.diagnostics[index], coefficients_available=True)
+        elif solver == "proximal":
+            coefficients, point_info = fitted_tree_linf_classification(
+                estimator, alpha, beta_init=beta_init, intercept_init=intercept_init,
+                tol=tol, max_iter=max_iter, return_info=True,
+            )
+            if not point_info.get("certified", False):
+                raise RuntimeError(
+                    "The classification proximal solution did not pass its certificate; "
+                    "increase max_iter or relax tol."
+                )
+            intercept = point_info["intercept"]
+            beta_init, intercept_init = coefficients, intercept
+            info.update(point_info, coefficients_available=True)
+        if intercept is not None:
+            intercept = (
+                _snapshot(intercept, float) if np.ndim(intercept) else float(intercept)
+            )
+        retained = node_ids if alpha == 0 else topology.tree_nodes_at(alpha)
+        yield FittedTreeSolution(
+            topology_path=topology, coefficient_path=coefficient_path,
+            coefficients=None if coefficients is None else _snapshot(coefficients, float),
+            intercept=intercept, node_ids=node_ids,
+            retained_node_ids=_snapshot(retained, np.intp), info=info,
+        )
+
+
 def iter_fitted_tree_solutions(
-    estimator: DecisionTreeRegressor,
+    estimator: DecisionTreeRegressor | DecisionTreeClassifier,
     alphas,
     solver: str,
     *,
@@ -192,7 +278,9 @@ def iter_fitted_tree_solutions(
 
     Supports ``topology``, ``proximal``, and ``coefficient_path``; the caller
     routes general design-based algorithms separately. ``max_iter`` caps
-    coefficient-path events, not the noniterative topology/proximal sweeps.
+    regression coefficient-path events, or iterations per classification point,
+    not the noniterative topology/regression-proximal sweeps. Classification
+    paths contain positive-penalty samples, not exact affine segments.
     For compatibility, alpha zero retains every original split even when its
     mathematical coefficient is zero. Numerical failures are raised, not
     silently replaced by another algorithm.
@@ -209,6 +297,12 @@ def iter_fitted_tree_solutions(
         or not isinstance(max_iter, (int, np.integer)) or max_iter <= 0
     ):
         raise ValueError("max_iter must be a positive integer")
+
+    if isinstance(estimator, DecisionTreeClassifier):
+        yield from _iter_fitted_classifier_solutions(
+            estimator, alphas, solver, tol=tol, max_iter=max_iter
+        )
+        return
 
     coefficient_path = None
     info = {"solver": solver, "status": "complete", "converged": True,

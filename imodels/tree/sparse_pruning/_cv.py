@@ -1,4 +1,4 @@
-"""Fold-local structural-path validation for sparse regression trees.
+"""Fold-local structural-path validation for sparse regression/classification trees.
 
 Only training-fold trees determine candidate penalties. Each fold is fitted
 once, and every distinct local topology is scored once per HS strength. The
@@ -10,7 +10,8 @@ from copy import deepcopy
 from itertools import product
 
 import numpy as np
-from sklearn.model_selection import KFold
+from sklearn.base import is_classifier
+from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.tree._tree import TREE_LEAF, TREE_UNDEFINED
 
 from imodels.tree._hs_gcv import apply_node_based_hs, select_hs_reg_param
@@ -31,7 +32,7 @@ def _score_fold_states(
 ):
     # Import at call time: the public estimator dispatches into this module.
     from .sparse_hierarchical_shrinkage import (
-        SHSTreeRegressor, _compact_tree, _fold_reg_param,
+        SHSTreeClassifier, SHSTreeRegressor, _compact_tree, _fold_reg_param,
         _score_with_optional_sample_weight,
     )
 
@@ -40,12 +41,20 @@ def _score_fold_states(
     # scorers. Copying remains O(original nodes * states); no estimator is
     # copied again for the HS grid, and there are no per-state fingerprints.
     source = deepcopy(base)
+    classification = is_classifier(base)
+    if classification:
+        # Modern sklearn expects probabilities, whereas older saved trees may
+        # contain class counts. Normalize once, also covering HS strength zero.
+        values = source.tree_.value[:, 0, :]
+        values /= values.max(axis=1, keepdims=True)
+        values /= values.sum(axis=1, keepdims=True)
     order = np.argsort(path.activation_lambdas, kind="stable")
     next_event = 0
     shape = (len(penalties), len(reg_params))
     scores, complexities, strengths = (np.empty(shape) for _ in range(3))
     diagnostics = []
-    candidate = SHSTreeRegressor(
+    wrapper = SHSTreeClassifier if classification else SHSTreeRegressor
+    candidate = wrapper(
         sp_alpha=0, reg_param=0, ord=np.inf,
         random_state=estimator.random_state,
     )
@@ -55,7 +64,9 @@ def _score_fold_states(
     candidate.solver_ = "topology"
     candidate.beta_stars_ = []
     candidate.coef_ = None
-    candidate.intercept_ = float(base.tree_.value[0, 0, 0])
+    candidate.intercept_ = None if classification else float(base.tree_.value[0, 0, 0])
+    if classification:
+        candidate.classes_ = np.asarray(base.classes_).copy()
     candidate.coef_node_ids_ = path.node_ids
     candidate.pruning_path_ = path
     candidate.coefficient_path_ = None
@@ -97,7 +108,7 @@ def _score_fold_states(
                 candidate.reg_param = effective
                 candidate.reg_param_ = effective
                 candidate.gcv_results_ = None
-                if candidate.shrinkage_scheme_ == "node_based":
+                if not classification and candidate.shrinkage_scheme_ == "node_based":
                     apply_node_based_hs(candidate.estimator_.tree_, effective)
                 else:
                     candidate._shrink(X_in, y_in, sample_weight=weight_in)
@@ -116,11 +127,11 @@ def evaluate_structural_cv(
 ):
     """Populate CV diagnostics and return ``[(alpha, reference_HS), ...]``.
 
-    The caller validates eligibility (a fresh single regression tree with the
-    exact infinity-norm structural objective), inputs, and numeric HS values.
+    The caller validates eligibility (a fresh single tree with the exact
+    infinity-norm structural objective), inputs, and numeric HS values.
     ``reg_param_list='gcv'`` or ``['gcv']`` instead selects HS using only each
-    state's training-fold statistics. The returned parameter remains ``'gcv'``
-    so the caller reselects HS after its final full-data fit.
+    regression state's training-fold statistics. The returned parameter remains
+    ``'gcv'`` so the caller reselects HS after its final full-data fit.
 
     Scores follow sklearn's higher-is-better convention. Candidate penalties
     are absolute normalized-loss penalties, not fractions of a full-data knot.
@@ -140,22 +151,54 @@ def evaluate_structural_cv(
         raise ValueError(
             "structural CV requires numeric HS values or the sole value 'gcv'"
         )
+    classification = is_classifier(estimator)
+    if classification and contains_string:
+        raise ValueError("Automatic GCV HS supports regression only")
     fit_kwargs = {} if fit_kwargs is None else dict(fit_kwargs)
-    full_weight = _effective_weight_sum(sample_weight, len(y))
+    full_effective_weight = sample_weight
+    if classification:
+        _, full_effective_weight = estimator._fold_class_weight_into_sample_weight(
+            estimator._fresh_estimator(), y, sample_weight,
+            sparse_pruning_requested=True,
+        )
+    full_weight = _effective_weight_sum(full_effective_weight, len(y))
     folds = []
     paths = []
     fractions = []
-    kfold = KFold(n_splits=n_splits, shuffle=True, random_state=estimator.random_state)
-    for train, test in kfold.split(X):
+    splitter = StratifiedKFold if classification else KFold
+    kfold = splitter(n_splits=n_splits, shuffle=True, random_state=estimator.random_state)
+    n_classes = np.unique(y).size if classification else None
+    for train, test in kfold.split(X, y):
         X_in, y_in, X_out, y_out = X[train], y[train], X[test], y[test]
         weight_in = None if sample_weight is None else sample_weight[train]
         weight_out = None if sample_weight is None else sample_weight[test]
         for weights, label in ((weight_in, "training"), (weight_out, "validation")):
             if weights is not None and not np.any(weights > 0):
                 raise ValueError(f"sample_weight has zero total weight in a CV {label} fold")
+        if classification:
+            for labels, weights, role in (
+                (y_in, weight_in, "training"), (y_out, weight_out, "validation"),
+            ):
+                positive_labels = labels if weights is None else labels[weights > 0]
+                if np.unique(positive_labels).size != n_classes:
+                    raise ValueError(
+                        "Every classifier CV training and validation fold must "
+                        f"contain all classes with positive weight ({role} fold)"
+                    )
         # _fresh_estimator preserves the public template/max-leaf/random-state
         # override semantics and returns a fresh clone when prefit=False.
-        base = estimator._fresh_estimator().fit(
+        base = estimator._fresh_estimator()
+        if classification:
+            base, weight_in = estimator._fold_class_weight_into_sample_weight(
+                base, y_in, weight_in, sparse_pruning_requested=True,
+            )
+            positive_labels = y_in if weight_in is None else y_in[weight_in > 0]
+            if np.unique(positive_labels).size != n_classes:
+                raise ValueError(
+                    "class_weight and sample_weight must leave all classes "
+                    "with positive weight in every CV training fold"
+                )
+        base.fit(
             X_in, y_in, *fit_args, sample_weight=weight_in, **fit_kwargs
         )
         path = fitted_tree_linf_exact_topology_path(base)
