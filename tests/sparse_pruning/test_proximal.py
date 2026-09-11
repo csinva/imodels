@@ -154,6 +154,43 @@ def test_weighted_centered_point_solver_returns_profiled_intercept():
     assert info["certified"] is True
 
 
+@pytest.mark.parametrize("zero_weight_outlier", [False, True])
+@pytest.mark.parametrize("constant_response", [False, True])
+def test_centering_keeps_effective_constants_exact(zero_weight_outlier, constant_response):
+    rng = np.random.default_rng(3)
+    X = np.column_stack([np.full(12, .3), rng.normal(size=(12, 2))])
+    y = np.full(12, .3) if constant_response else rng.normal(size=12)
+    weights = np.ones(12)
+    if zero_weight_outlier:
+        weights[0] = 0.
+        X[0, 0], y[0] = 99., -99.
+    beta, info = laminar_group_linf_regression(
+        X, y, [np.arange(3)], 0., sample_weight=weights,
+        return_info=True, tol=1e-12,
+    )
+    active = weights > 0
+    design = np.column_stack([np.ones(active.sum()), X[active, 1:]])
+    expected = design @ np.linalg.lstsq(design, y[active], rcond=None)[0]
+    assert info["certified"]
+    assert info["relative_stationarity_residual"] <= 1e-12
+    np.testing.assert_allclose(info["intercept"] + X[active] @ beta, expected, atol=1e-14)
+    if constant_response:
+        np.testing.assert_array_equal(beta, np.zeros(3))
+
+
+def test_centering_does_not_erase_tiny_nonconstant_column():
+    X = .3 + 1e-14 * np.array([[-1.], [0.], [1.]])
+    y = np.array([-1., 0., 1.])
+    beta, info = laminar_group_linf_regression(
+        X, y, [[0]], 0., return_info=True, tol=1e-12,
+    )
+    assert info["certified"]
+    assert beta[0] > 1e13
+    # Check the centered predictions; forming a huge cancelling intercept
+    # would itself lose precision and is unrelated to the centering fix.
+    np.testing.assert_allclose((X - .3) @ beta, y, atol=1e-14)
+
+
 def test_assume_diagonal_fast_path_is_reported():
     X, y, groups = _diagonal_problem()
     path = laminar_group_linf_regression_path(

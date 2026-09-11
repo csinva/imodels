@@ -139,6 +139,8 @@ class FittedTreeSolution:
     topology and zero-penalty solves also leave ``intercept=None``: they do not
     compute finite optimized logits. A classifier coefficient path stores only
     positive samples and is ``None`` if no positive penalties are available.
+    Classification ``info["certificate_scope"]`` distinguishes a certified
+    structure from a structure with certified finite coefficients.
     """
 
     topology_path: TreeTopologyPath
@@ -226,13 +228,13 @@ def _iter_fitted_classifier_solutions(estimator, alphas, solver, *, tol, max_ite
         info = {
             "solver": solver, "status": "complete", "converged": True,
             "n_iter": 0, "relative_step_norm": 0.0,
+            "certified": True, "certificate_scope": "structure",
             "coefficients_available": False,
         }
         if solver != "topology" and alpha == 0:
             # Pure CART leaves have infinite unpenalized logits. Preserve the
             # original tree without inventing finite zero-penalty coefficients.
             info.update(
-                certified=False,
                 coefficients_unavailable_reason="zero_penalty_may_have_infinite_logits",
             )
         elif solver == "coefficient_path":
@@ -253,6 +255,8 @@ def _iter_fitted_classifier_solutions(estimator, alphas, solver, *, tol, max_ite
             intercept = point_info["intercept"]
             beta_init, intercept_init = coefficients, intercept
             info.update(point_info, coefficients_available=True)
+        if coefficients is not None:
+            info["certificate_scope"] = "structure_and_coefficients"
         if intercept is not None:
             intercept = (
                 _snapshot(intercept, float) if np.ndim(intercept) else float(intercept)

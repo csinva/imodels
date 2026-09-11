@@ -86,6 +86,63 @@ def test_defaults_select_infinity_structural_path_and_normalized_hs():
     assert model.reg_param_mode == "normalized"
 
 
+@pytest.mark.parametrize("wrapper", [
+    SPTreeRegressorCV, SHSTreeRegressorCV,
+    SPTreeClassifierCV, SHSTreeClassifierCV,
+])
+@pytest.mark.parametrize("template_cap, cap_options, expected_cap", [
+    (6, {}, 6),
+    (6, {"max_leaf_nodes": None}, 6),
+    (6, {"max_leaf_nodes": 3}, 3),
+    (None, {}, None),
+    (None, {"max_leaf_nodes": None}, None),
+    (None, {"max_leaf_nodes": 3}, 3),
+])
+def test_cv_leaf_cap_respects_template_unless_overridden(
+    wrapper, template_cap, cap_options, expected_cap,
+):
+    rng = np.random.default_rng(12)
+    X = rng.normal(size=(256, 4))
+    classification = is_classifier(wrapper())
+    y = np.tile([0, 1], 128) if classification else rng.normal(size=len(X))
+    tree_cls = DecisionTreeClassifier if classification else DecisionTreeRegressor
+    options = dict(cap_options)
+    if template_cap is not None:
+        options["estimator_"] = tree_cls(max_leaf_nodes=template_cap)
+    model = wrapper(cv=2, reg_param_list=[0], random_state=0, **options)
+
+    assert model.max_leaf_nodes == cap_options.get("max_leaf_nodes")
+    assert clone(model).max_leaf_nodes == model.max_leaf_nodes
+    model.fit(X, y)
+
+    assert model.estimator_.max_leaf_nodes == expected_cap
+    for path in [model.pruning_path_, *model.cv_path_results_]:
+        if expected_cap is None:
+            assert len(path.node_ids) > 19
+        else:
+            assert len(path.node_ids) == expected_cap - 1
+    if template_cap is not None:
+        assert options["estimator_"].max_leaf_nodes == template_cap
+        assert not hasattr(options["estimator_"], "tree_")
+
+
+@pytest.mark.parametrize("wrapper", [
+    SPTreeRegressor, SHSTreeRegressor, SPTreeClassifier, SHSTreeClassifier,
+])
+@pytest.mark.parametrize("cap_options", [
+    {}, {"max_leaf_nodes": None}, {"max_leaf_nodes": 7},
+])
+def test_non_cv_default_tree_has_no_hidden_leaf_cap(wrapper, cap_options):
+    X = np.arange(64, dtype=float).reshape(-1, 1)
+    y = np.tile([0, 1], 32)
+    model = wrapper(sp_alpha=0, reg_param=0, random_state=0, **cap_options)
+    model.fit(X, y)
+
+    cap = cap_options.get("max_leaf_nodes")
+    assert model.estimator_.max_leaf_nodes == cap
+    assert model.estimator_.get_n_leaves() == (64 if cap is None else cap)
+
+
 @pytest.mark.parametrize("estimator_cls", [
     SHSTreeRegressor, SHSTreeClassifier, SHSTreeRegressorCV, SHSTreeClassifierCV,
     SPTreeRegressor, SPTreeClassifier, SPTreeRegressorCV, SPTreeClassifierCV,
@@ -308,6 +365,9 @@ def test_multiclass_range_penalty_endpoints_and_coefficient_metadata(wrapper, so
         assert_allclose(model.coef_.sum(axis=1), 0., atol=1e-12)
         assert_allclose(model.intercept_.sum(), 0., atol=1e-12)
         assert np.ptp(model.coef_[0]) > .1
+        assert model.optimization_results_[0]["certificate_scope"] == (
+            "structure_and_coefficients"
+        )
     if solver == "coefficient_path":
         assert not model.coefficient_path_.exact
         assert 7 / 22 in model.coefficient_path_.lambdas
@@ -319,10 +379,12 @@ def test_multiclass_range_penalty_endpoints_and_coefficient_metadata(wrapper, so
     model.set_params(sp_alpha=0).fit(X, y)
     assert model.coef_ is model.intercept_ is None
     assert_allclose(model.predict_proba(X), base.predict_proba(X))
-    if solver != "topology":
-        assert model.optimization_results_[0]["certified"] is False
-        assert not model.optimization_certified_
-        assert model.complexity_ == 1
+    info = model.optimization_results_[0]
+    assert info["certified"] is True
+    assert info["certificate_scope"] == "structure"
+    assert info["coefficients_available"] is False
+    assert model.optimization_certified_
+    assert model.complexity_ == 1
     if solver == "coefficient_path":
         assert model.coefficient_path_ is not None
         assert np.all(model.coefficient_path_.lambdas > 0)
@@ -1053,6 +1115,25 @@ def test_prefit_wrapper_is_not_fitted_until_pruning_runs():
     assert_array_equal(base_estimator.tree_.children_left, original_children)
 
 
+def test_prefit_alpha_zero_auto_matches_resolved_proximal_coefficients():
+    X, y = _regression_tree_data()
+    base = DecisionTreeRegressor(max_depth=2, random_state=0).fit(X, y)
+    original_children = base.tree_.children_left.copy()
+    models = [SPTreeRegressor(
+        estimator_=base, sp_alpha=0, reg_param=0, prefit=True, solver=solver,
+    ).fit(X, y) for solver in ("auto", "proximal")]
+
+    for model in models:
+        assert model.solver_ == "proximal"
+        assert model.coef_ is not None
+        assert model.intercept_ is not None
+        assert_allclose(model.predict(X), base.predict(X))
+        assert_array_equal(model.estimator_.tree_.children_left, original_children)
+    assert_allclose(models[0].coef_, models[1].coef_)
+    assert_allclose(models[0].intercept_, models[1].intercept_)
+    assert_array_equal(base.tree_.children_left, original_children)
+
+
 def test_prefit_wrapper_rejects_multioutput_estimator():
     X, y = _regression_tree_data()
     multioutput_estimator = DecisionTreeRegressor(random_state=0).fit(
@@ -1530,7 +1611,8 @@ def test_prefit_forest_requires_full_pruning_set():
         model.fit(X, y)
 
 
-def test_prefit_bootstrap_forest_allows_auto_when_pruning_is_disabled():
+@pytest.mark.parametrize("solver", ["auto", "proximal", "hicap"])
+def test_prefit_bootstrap_forest_skips_unverifiable_oob_solve_at_zero(solver):
     X = np.arange(80, dtype=float).reshape(40, 2)
     y = np.sin(X[:, 0])
     forest = RandomForestRegressor(
@@ -1545,10 +1627,12 @@ def test_prefit_bootstrap_forest_allows_auto_when_pruning_is_disabled():
         sp_alpha=0,
         reg_param=0,
         prefit=True,
+        solver=solver,
     ).fit(X, y)
 
     assert_allclose(model.predict(X), expected)
     assert model.optimization_results_ == []
+    assert model.beta_stars_ == []
 
 
 def test_zero_weight_oob_subset_skips_only_affected_trees():

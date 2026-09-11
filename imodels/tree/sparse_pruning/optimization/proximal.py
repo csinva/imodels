@@ -544,6 +544,14 @@ def _prepare_regression(
     if fit_intercept:
         x_mean = normalized_weights @ X
         y_mean = float(normalized_weights @ y)
+        # Preserve exact constants: mean roundoff would otherwise invent a
+        # tiny nonzero column and spoil its componentwise stationarity check.
+        positive = weights > 0
+        reference = int(np.argmax(positive))
+        constant = np.all((X == X[reference]) | ~positive[:, None], axis=0)
+        x_mean[constant] = X[reference, constant]
+        if np.all((y == y[reference]) | ~positive):
+            y_mean = float(y[reference])
         X_work = X - x_mean
         y_work = y - y_mean
     else:

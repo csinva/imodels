@@ -131,15 +131,26 @@ def test_classification_native_solutions_preserve_tree_and_zero_endpoint(solver)
         tree, [0., .1, .4], solver, tol=1e-8, max_iter=2000,
     ))
     assert zero.coefficients is zero.intercept is None
+    assert zero.info["certified"] is True
+    assert zero.info["certificate_scope"] == "structure"
+    assert not zero.info["coefficients_available"]
     np.testing.assert_array_equal(zero.retained_node_ids, [0])
     np.testing.assert_array_equal(interior.retained_node_ids, [0])
     assert len(above.retained_node_ids) == 0
     if solver != "topology":
-        assert not zero.info["coefficients_available"]
         assert zero.info["coefficients_unavailable_reason"] == "zero_penalty_may_have_infinite_logits"
+        for result in (interior, above):
+            assert result.info["certified"] is True
+            assert result.info["certificate_scope"] == "structure_and_coefficients"
+            assert result.info["coefficients_available"]
         np.testing.assert_allclose(interior.coefficients, [np.log(.7 / .3)], atol=1e-6)
         np.testing.assert_allclose(interior.intercept, 0., atol=1e-6)
         np.testing.assert_allclose(above.coefficients, [0.], atol=1e-7)
+    else:
+        for result in (interior, above):
+            assert result.info["certified"] is True
+            assert result.info["certificate_scope"] == "structure"
+            assert not result.info["coefficients_available"]
     if solver == "coefficient_path":
         path = interior.coefficient_path
         assert path is zero.coefficient_path is above.coefficient_path

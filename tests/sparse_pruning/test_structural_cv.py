@@ -18,8 +18,10 @@ from imodels import (
 from imodels.tree._hs_gcv import select_hs_reg_param
 from imodels.tree.sparse_pruning._cv import (
     evaluate_structural_cv, _local_penalties, _score_fold_states,
+    _zero_gain_penalty,
 )
 from imodels.tree.sparse_pruning.fitted_tree import fitted_tree_linf_exact_topology_path
+from imodels.tree.sparse_pruning.optimization.topology import TreeTopologyPath
 from imodels.tree.sparse_pruning.sparse_hierarchical_shrinkage import (
     _compact_tree, _finalize_cv_selection,
 )
@@ -136,7 +138,11 @@ def test_structural_cv_matches_independent_every_candidate_every_fold(reg_param_
     assert_allclose(model.cv_scores_, np.asarray(scores).T, rtol=1e-12, atol=1e-12)
     assert_allclose(model.cv_reg_params_, np.asarray(strengths).T)
     assert_array_equal(model.cv_complexities_, np.asarray(complexities).T)
-    assert_array_equal(model.cv_sp_alphas_, np.unique(np.concatenate([_local_penalties(p) for p in paths])))
+    zero_gain_penalty = _zero_gain_penalty(paths)
+    expected_alphas = np.unique(np.concatenate([
+        _local_penalties(p, zero_gain_penalty) for p in paths
+    ]))
+    assert_array_equal(model.cv_sp_alphas_, expected_alphas)
     assert_array_equal(model.cv_n_pruning_states_, [len(_local_penalties(p)) for p in paths])
     assert model.cv_params_ == [{"sp_alpha": a, "reg_param": r} for a, r in params]
     assert len(model.cv_optimization_results_) == len(params)
@@ -191,13 +197,28 @@ def test_each_fold_fits_once_and_scores_only_its_local_states(monkeypatch):
     assert len(scores) <= 2 * len(model.cv_sp_alphas_) * 3
 
 
-def test_zero_activation_has_separate_unpruned_zero_baseline():
+@pytest.mark.parametrize("first_knot", [.5, 1e-300, 1e300, 2 * np.nextafter(0., 1.)])
+def test_zero_activation_has_separate_readable_positive_baseline(first_knot):
     from types import SimpleNamespace
 
-    path = SimpleNamespace(lambdas=np.array([.5, 0.]), activation_lambdas=np.array([.5, 0.]))
-    assert_array_equal(_local_penalties(path), [0, np.nextafter(0., 1.), .5])
+    path = SimpleNamespace(
+        lambdas=np.array([first_knot, 0.]),
+        activation_lambdas=np.array([first_knot, 0.]),
+    )
+    assert_array_equal(_local_penalties(path), [0., first_knot / 2, first_knot])
     root = SimpleNamespace(lambdas=np.array([0.]), activation_lambdas=np.array([]))
     assert_array_equal(_local_penalties(root), [0.])
+
+
+def test_smallest_positive_knot_has_no_invented_intermediate_state():
+    from types import SimpleNamespace
+
+    smallest = np.nextafter(0., 1.)
+    path = SimpleNamespace(
+        lambdas=np.array([smallest, 0.]),
+        activation_lambdas=np.array([smallest, 0.]),
+    )
+    assert_array_equal(_local_penalties(path), [0., smallest])
 
 
 def test_zero_gain_cart_stump_is_preserved_only_at_exact_zero():
@@ -212,9 +233,81 @@ def test_zero_gain_cart_stump_is_preserved_only_at_exact_zero():
         _model(), base, path, penalties, X, y, X, y, None, None,
         [0.], _scorer, 1.,
     )
-    assert_array_equal(penalties, [0., np.nextafter(0., 1.)])
+    assert_array_equal(penalties, [0., 1.])
     assert_array_equal(complexities[:, 0], [1, 0])
     assert_allclose(scores[:, 0], [-.25, -.25])
+
+
+def test_selected_zero_gain_state_has_a_readable_penalty_and_matches_final_fit():
+    X, y = np.empty((24, 2)), np.empty(24)
+    # Balance XOR in each held-out fold, hence also in each training fold.
+    for _, test in KFold(3, shuffle=True, random_state=9).split(X):
+        X[test] = np.tile([[0., 0.], [0., 1.], [1., 0.], [1., 1.]], (2, 1))
+        y[test] = np.tile([0., 1., 1., 0.], 2)
+    model = SPTreeRegressorCV(
+        estimator_=DecisionTreeRegressor(max_depth=1),
+        cv=3, random_state=9, reg_param_list=[0.],
+    ).fit(X, y)
+    assert_array_equal(model.cv_sp_alphas_, [0., 1.])
+    assert_array_equal(model.cv_complexities_, [[1, 1, 1], [0, 0, 0]])
+    assert model.sp_alpha_ == model.sp_alpha == 1.
+    assert model.complexity_ == 0
+    assert_allclose(model.predict(X), .5)
+
+
+@pytest.mark.parametrize("root_knots, zero_gain_folds", [
+    ([0., .5, 3.], [True, True, True]),
+    ([.5, 2., 8.], [True, True, True]),
+    ([0., 0., 0.], [True, True, True]),
+    ([0., np.nextafter(0., 1.), 1.], [True, True, True]),
+    ([3., .5, 8.], [True, False, False]),
+])
+def test_fold_zero_gain_representatives_share_one_penalty_and_match_direct_scores(
+    root_knots, zero_gain_folds, monkeypatch,
+):
+    from imodels.tree.sparse_pruning import _cv
+
+    # Controlled paths isolate CV bookkeeping: zero-gain cuts and positive
+    # knots can differ between folds.
+    bases, paths = [], []
+
+    def controlled_path(base):
+        node_ids = np.flatnonzero(base.tree_.children_left >= 0)
+        assert len(node_ids) > 1
+        root_knot = root_knots[len(paths)]
+        activation = np.full(len(node_ids), root_knot)
+        if zero_gain_folds[len(paths)]:
+            activation[1:] = 0.
+        lambdas = np.r_[np.unique(activation[activation > 0])[::-1], 0.]
+        path = TreeTopologyPath(
+            lambdas=lambdas, activation_lambdas=activation,
+            entering_groups=tuple(
+                tuple(np.flatnonzero(activation == alpha)) if alpha > 0 else ()
+                for alpha in lambdas
+            ),
+            node_ids=node_ids,
+        )
+        bases.append(deepcopy(base))
+        paths.append(path)
+        return path
+
+    monkeypatch.setattr(_cv, "fitted_tree_linf_exact_topology_path", controlled_path)
+    X, y = _data()
+    model = _model()
+    params = evaluate_structural_cv(
+        model, X=X, y=y, sample_weight=None, reg_param_list=[0.],
+        scorer=_scorer, n_splits=3,
+    )
+    positive = [knot for knot in root_knots if knot > 0]
+    first = min(positive, default=2.)
+    representative = first / 2 or first
+    assert_array_equal(model.cv_sp_alphas_, np.unique([0., representative, *positive]))
+    for fold, (_, test) in enumerate(KFold(3, shuffle=True, random_state=9).split(X)):
+        for index, (alpha, _) in enumerate(params):
+            tree = _brute_tree(bases[fold], paths[fold], alpha)
+            expected = -mean_squared_error(y[test], tree.predict(X[test]))
+            assert_allclose(model.cv_scores_[index][fold], expected, rtol=0, atol=1e-14)
+            assert model.cv_complexities_[index][fold] == tree.get_n_leaves() - 1
 
 
 def test_one_se_selection_agrees_with_direct_score_and_complexity_rule():

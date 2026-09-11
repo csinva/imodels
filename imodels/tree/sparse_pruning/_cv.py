@@ -18,11 +18,27 @@ from imodels.tree._hs_gcv import apply_node_based_hs, select_hs_reg_param
 from .fitted_tree import fitted_tree_linf_exact_topology_path
 
 
-def _local_penalties(path):
-    """Keep alpha=0's explicit unpruned baseline, including zero-score splits."""
+def _zero_gain_penalty(paths):
+    """Represent the interval before the first positive knot without a sentinel."""
+    first = min(
+        (alpha for path in paths for alpha in path.lambdas if alpha > 0),
+        default=None,
+    )
+    if first is None:
+        return 1.0  # All positive penalties give the same structure.
+    # At the smallest subnormal, no positive float exists below the knot.
+    half = float(first) / 2
+    return half if half > 0 else float(first)
+
+
+def _local_penalties(path, zero_gain_penalty=None):
+    """Keep zero's unpruned baseline and a positive state for zero-score cuts."""
     penalties = [0.0, *path.lambdas[path.lambdas > 0]]
     if np.any(path.activation_lambdas == 0):
-        penalties.append(np.nextafter(0.0, 1.0))
+        penalties.append(
+            _zero_gain_penalty([path]) if zero_gain_penalty is None
+            else zero_gain_penalty
+        )
     return np.unique(penalties)
 
 
@@ -212,6 +228,15 @@ def evaluate_structural_cv(
         paths.append(path)
         fractions.append(fraction)
 
+    # Every fold must use the SAME representative for its zero-gain state;
+    # otherwise a smaller representative from another fold maps to its
+    # unpruned baseline. Moving within this first interval leaves scored trees
+    # unchanged and avoids retaining all fitted fold trees until scoring.
+    zero_gain_penalty = _zero_gain_penalty(paths)
+    folds = [
+        (_local_penalties(path, zero_gain_penalty), *fold[1:])
+        for path, fold in zip(paths, folds)
+    ]
     alphas = np.unique(np.concatenate([fold[0] for fold in folds]))
     param_list = list(product(alphas.tolist(), reg_params))
     _initialize_cv_tracking(estimator, param_list)

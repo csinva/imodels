@@ -29,6 +29,25 @@ def _data():
     return X, y
 
 
+@pytest.mark.parametrize("wrapper", [
+    SPTreeRegressor, SHSTreeRegressor, SPTreeClassifier, SHSTreeClassifier,
+    SPTreeRegressorCV, SHSTreeRegressorCV, SPTreeClassifierCV, SHSTreeClassifierCV,
+])
+def test_none_leaf_cap_does_not_hide_a_default_limit(wrapper):
+    X = np.arange(64.).reshape(-1, 1)
+    y = np.arange(len(X)) % 2
+    is_cv = wrapper in (
+        SPTreeRegressorCV, SHSTreeRegressorCV, SPTreeClassifierCV, SHSTreeClassifierCV,
+    )
+    choices = (dict(sp_alpha_list=[0], reg_param_list=[0], cv=2)
+               if is_cv else dict(sp_alpha=0, reg_param=0))
+    assert wrapper().max_leaf_nodes is None
+    model = wrapper(max_leaf_nodes=None, random_state=0, **choices).fit(X, y)
+    assert model.estimator_.max_leaf_nodes is None
+    assert model.estimator_.get_n_leaves() == len(X)
+    assert_allclose(model.predict(X), y)
+
+
 @pytest.mark.parametrize("wrapper", [SPTreeRegressor, SHSTreeRegressor])
 def test_regression_endpoints_clone_and_refit(wrapper):
     X, y = _data()
@@ -59,8 +78,10 @@ def test_classification_probabilities_and_numeric_cv(wrapper, n_classes):
     is_cv = wrapper in (SPTreeClassifierCV, SHSTreeClassifierCV)
     choices = (dict(sp_alpha_list=[0, .1], reg_param_list=[0, 2], cv=2)
                if is_cv else dict(sp_alpha=0, reg_param=0))
-    model = wrapper(max_leaf_nodes=3, random_state=0, tol=1e-5, **choices)
+    model = wrapper(estimator_=DecisionTreeClassifier(max_leaf_nodes=3),
+                    random_state=0, tol=1e-5, **choices)
     assert model.fit(X, y) is model
+    assert model.max_leaf_nodes is None and model.estimator_.max_leaf_nodes == 3
     probabilities = model.predict_proba(X)
     assert probabilities.shape == (len(X), n_classes)
     assert np.all((probabilities >= 0) & (probabilities <= 1))
@@ -94,6 +115,8 @@ def test_classifier_coefficients_are_optional_and_do_not_replace_leaf_prediction
     model.set_params(sp_alpha=0).fit(X, y)
     assert model.coef_ is model.intercept_ is None
     assert not model.optimization_results_[0]["coefficients_available"]
+    assert model.optimization_certified_
+    assert model.optimization_results_[0]["certificate_scope"] == "structure"
 
 
 def test_analytic_coefficient_knots_and_interpolation():
@@ -197,7 +220,9 @@ def test_non_cv_path_does_not_change_the_requested_penalty_model(solver):
 @pytest.mark.parametrize("wrapper", [SPTreeRegressorCV, SHSTreeRegressorCV])
 def test_default_structural_cv_matches_independent_fold_scores(wrapper):
     X, y = _data()
-    model = wrapper(max_leaf_nodes=4, reg_param_list=[0], cv=3, random_state=0).fit(X, y)
+    model = wrapper(estimator_=DecisionTreeRegressor(max_leaf_nodes=4),
+                    reg_param_list=[0], cv=3, random_state=0).fit(X, y)
+    assert model.max_leaf_nodes is None and model.estimator_.max_leaf_nodes == 4
     assert model.cv_path_mode_ == "structural" and model.solver_ == "topology"
     assert model.selection_rule == "one_se"
     scores = np.empty_like(model.cv_scores_)

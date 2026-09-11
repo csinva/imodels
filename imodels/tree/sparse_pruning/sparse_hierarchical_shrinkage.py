@@ -223,7 +223,7 @@ class SHSTree(BaseEstimator):
     estimator_ : sklearn tree or forest, optional
         Tree template. Each fit uses a fresh clone; ``prefit=True`` instead
         prunes a copy of an already fitted estimator. With no template, use
-        a decision tree with 20 leaves unless ``max_leaf_nodes`` overrides it.
+        a decision tree with no leaf cap unless ``max_leaf_nodes`` sets one.
     sp_alpha : float, default=1
         Nonnegative hiCAP penalty relative to mean weighted loss. Zero keeps
         every original split, including splits with zero coefficient.
@@ -262,7 +262,8 @@ class SHSTree(BaseEstimator):
         observations for a bootstrap forest. IB/OOB membership is reconstructed
         per tree and cannot be verified for externally supplied prefit forests.
     max_leaf_nodes : int or None, default=None
-        Optional leaf cap overriding the unfitted tree template.
+        Optional leaf cap overriding the unfitted tree template. None preserves
+        the template's settings, or imposes no cap when no template is supplied.
     random_state : int or None, default=None
         Seed for tree fitting and, in CV subclasses, fold construction.
     gamma1, a : float, default=1
@@ -296,6 +297,8 @@ class SHSTree(BaseEstimator):
     optimization_results_ : list
         Per-tree numerical diagnostics. Inspect ``optimization_certified_``
         as well as ``optimization_stable_`` for approximate solves.
+        Native classifier records use ``certificate_scope`` to distinguish
+        certified structure from certified structure and finite coefficients.
     reg_param_ : float
         Effective HS strength, possibly infinity for a GCV root-only limit.
     gcv_results_ : dict or None
@@ -650,16 +653,13 @@ class SHSTree(BaseEstimator):
     def _base_estimator_template(self):
         if self._estimator_template is not None:
             return self._estimator_template
-        max_leaf_nodes = (
-            20 if self.max_leaf_nodes is None else self.max_leaf_nodes
-        )
         if isinstance(self, ClassifierMixin):
             return DecisionTreeClassifier(
-                max_leaf_nodes=max_leaf_nodes,
+                max_leaf_nodes=self.max_leaf_nodes,
                 random_state=self.random_state,
             )
         return DecisionTreeRegressor(
-            max_leaf_nodes=max_leaf_nodes,
+            max_leaf_nodes=self.max_leaf_nodes,
             random_state=self.random_state,
         )
 
@@ -1243,8 +1243,16 @@ class SHSTree(BaseEstimator):
             if len(retained) != len(result.node_ids):
                 _compact_tree(tree)
             return
+        if (
+            self.sp_alpha == 0 and self.prefit
+            and isinstance(self.estimator_, BaseForest)
+            and self._resolved_prune_set() != "full"
+        ):
+            # Preserve the no-pruning case without guessing a prefit forest's
+            # bootstrap membership just to compute optional coefficients.
+            return
         if self.sp_alpha is None or (
-            self.sp_alpha <= 0 and self.solver not in {"proximal", "hicap"}
+            self.sp_alpha <= 0 and self.solver_ not in {"proximal", "hicap"}
         ):
             return
         if hasattr(self.estimator_, "tree_"):
@@ -2070,7 +2078,7 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
         estimator_: BaseEstimator | None = None,
         sp_alpha_list: Sequence[float] | str = "auto",
         reg_param_list: Sequence[float] = (0, 0.1, 1, 10, 50, 100, 500),
-        max_leaf_nodes: int = 20,
+        max_leaf_nodes: int | None = None,
         cv: int = 3,
         scoring=None,
         selection_rule: str = "one_se",
@@ -2395,8 +2403,9 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
         Select the simplest competitive tree, or the highest mean CV score.
     reg_param_mode : {"normalized", "raw"}, default="normalized"
         Scale count-based HS by training-fold mass, or use literal grid values.
-    max_leaf_nodes : int, default=20
-        Leaf cap used for each fold tree and the final tree.
+    max_leaf_nodes : int or None, default=None
+        Override the template's leaf cap for every fold and the final tree.
+        None preserves the template; without a template, the tree has no leaf cap.
     solver : str, default="auto"
         Final-fit solver. Eligible automatic CV uses structural events even
         when the final fit requests a coefficient-producing exact solver.
@@ -2413,7 +2422,8 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
         Candidate parameters and per-candidate/per-fold scores, split counts,
         and effective HS strengths. Scores use higher-is-better convention.
     cv_sp_alphas_ : ndarray
-        Evaluated penalties, including the union of fold events in structural CV.
+        Evaluated penalties: fold knots and, when needed, a shared positive
+        representative for removing zero-gain splits in structural CV.
     cv_path_results_, cv_n_pruning_states_ : list, ndarray
         Fold structural paths and numbers of local states, only in structural CV.
     coefficient_path_, coef_ : object or None
@@ -2439,7 +2449,7 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
             100,
             500,
         ),
-        max_leaf_nodes: int = 20,
+        max_leaf_nodes: int | None = None,
         cv: int = 3,
         scoring=None,
         selection_rule: str = "one_se",
@@ -2773,7 +2783,7 @@ class SPTreeRegressorCV(SHSTreeRegressorCV):
         estimator_: BaseEstimator | None = None,
         sp_alpha_list: Sequence[float] | str = "auto",
         reg_param_list: Sequence[float] | str = (0,),
-        max_leaf_nodes: int = 20,
+        max_leaf_nodes: int | None = None,
         cv: int = 3,
         scoring=None,
         selection_rule: str = "one_se",
@@ -2825,7 +2835,7 @@ class SPTreeClassifierCV(SHSTreeClassifierCV):
         estimator_: BaseEstimator | None = None,
         sp_alpha_list: Sequence[float] | str = "auto",
         reg_param_list: Sequence[float] = (0,),
-        max_leaf_nodes: int = 20,
+        max_leaf_nodes: int | None = None,
         cv: int = 3,
         scoring=None,
         selection_rule: str = "one_se",

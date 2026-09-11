@@ -1,270 +1,271 @@
 # Sparse-pruning regularization paths
 
-This folder keeps regularization-path computation separate from estimator
-mutation. It provides several deliberately different path contracts for the
-normalized objective
+This note explains the structural and coefficient solvers behind sparse
+pruning. For fitting models, examples, and solver options, start with the
+[sparse-pruning guide](../README.md).
+
+For regression, the normalized objective is
 
 ```text
-loss(beta) + lambda * sum_G ||beta[G]||_q.
+0.5 * sum_i w_i (y_i - intercept - z_i @ beta)^2 / sum_i w_i
+    + lambda * sum_g a_g ||beta[G_g]||_inf,
 ```
 
-Numerical implementations live in this directory. The sklearn-specific
-adapter lives in [`../fitted_tree.py`](../fitted_tree.py). Estimator users should
-start with the [sparse-pruning guide](../README.md); this document describes
-the lower-level mathematical APIs, not additional estimator choices.
+where the groups form a rooted laminar family and `a_g > 0`. In a tree,
+`G_g` contains a split and all its descendant splits. A group is retained
+while any coefficient in that group is nonzero.
 
-The homotopy implementation is derived independently from the convex
-epigraph/KKT formulation in the
-[CAP/hiCAP paper](https://arxiv.org/abs/0909.0411). The historical MATLAB
-archives are useful behavioral references, but their noncommercial license is
-kept separate from this MIT-licensed implementation.
-
-- `hicap_regression_path` computes the complete, piecewise-affine path for
-  squared loss, `q = infinity`, and a rooted laminar group family. It returns
-  every coefficient-direction breakpoint from `lambda_max` through zero and
-  sets `exact=True` only after KKT certification. An unpenalized intercept and
-  relative sample weights are supported. A numerically rank-deficient
-  weighted centered design has no unique coefficient path, so that case is
-  returned explicitly as `status="nonunique_design"`, `exact=False`, with
-  endpoint solutions only.
-- `apa_apg_regression_path` and `apa_apg_classification_path` evaluate a
-  user-provided lambda grid with descending continuation. They support both
-  `q = 2` and `q = infinity`, but remain sampled numerical paths and therefore
-  always return `exact=False`. With overlapping groups, the current APA-APG2
-  point solver uses its full iteration budget; a coefficient warm start can
-  improve the finite-iteration answer but does not itself provide an exact
-  breakpoint path or a KKT certificate. The returned path has
-  `status="partial"` when any sampled point does not meet the point solver's
-  stopping test.
-- `laminar_group_linf_regression_path` uses the exact laminar-tree proximal
-  map. For a general Gram matrix it runs FISTA with continuous stationarity
-  diagnostics; for a positive diagonal Gram matrix, every requested lambda is
-  instead solved exactly by one child-to-parent proximal sweep. The stored
-  point solutions can be certified (against the retained full Gram when it was
-  formed), but an arbitrary grid still has
-  `exact=False` because it does not enumerate coefficient-slope knots.
-- `tree_group_linf_exact_coefficient_path` accepts a positive Gram diagonal,
-  linear scores, and parent indices (one coefficient and descendant group per
-  node). It identifies a clipping face with the exact diagonal point solver,
-  then derives and certifies that face's affine lambda interval. This
-  enumerates structural **and coefficient-only** knots. The initial version
-  rebuilds each face and materializes descendant groups and dense coefficient
-  rows; its cost differs from the near-linear structural path.
-- `fitted_tree_linf_exact_coefficient_path` exposes that coefficient path for
-  a fitted single-output regression tree. It extracts sufficient statistics
-  from the stored node weights and means and adds the constant root-mean
-  intercept. It avoids a training design matrix but still constructs groups
-  internally. Its coefficients use **unnormalized** local stumps and follow
-  `metadata['tree_node_ids']`.
-- `laminar_group_linf_exact_topology_path` targets the path object needed to
-  visualize pruned trees. For a positive diagonal Gram and positive group
-  weights, one weighted tree-isotonic pass returns every exact zero-support
-  group/topology knot. Its result is a compact `TreeTopologyPath`, with tied
-  entering-group batches and both at-knot and just-below topology conventions.
-  Applying `iter_events()` to a mutable active-node mask traverses the full
-  path in linear output space. Coefficients at all knots are optional, because
-  materializing `p` coefficients at `K` knots already costs `O(p K)`.
-- `fitted_tree_linf_exact_topology_path` is the large-tree specialization for
-  an eligible fitted single-output regressor or classifier. It derives each local-stump
-  score directly from child weights and child predictions stored by sklearn,
-  so it constructs neither an `n`-by-`p` stump matrix nor descendant groups.
-  Its post-fit path cost is `O(p log p)` and does not depend on `n`.
-- `materialize_fitted_tree_topology` makes a plot-ready deep copy at one exact
-  state by turning inactive split nodes into leaves. It never mutates the
-  source tree and intentionally keeps original node IDs. The unreachable nodes
-  remain allocated, so structural metadata need not describe the visible
-  preview and serialized size remains that of the non-compacted backing tree.
+The homotopy implementation is derived from the convex epigraph/KKT
+formulation in the [CAP/hiCAP paper](https://arxiv.org/abs/0909.0411).
+Historical MATLAB implementations serve as behavioral references; their
+noncommercial license is separate from this MIT-licensed implementation.
 
 ## Why the fitted-tree Gram matrix is diagonal
 
-For a tree node `v`, let its two child weights be `L` and `R`. The unnormalized
-local stump is `-sqrt(R/L)` on the left child, `sqrt(L/R)` on the right child,
-and zero outside the node. Therefore its weighted sum is zero and its squared
-weighted norm is `L + R = W_v`. Two node regions are either disjoint or one is
-inside one child of the other; in the latter case the ancestor stump is
-constant on the descendant region and the descendant's weighted sum is zero.
-Consequently, on the rows and weights used to fit the tree,
+At node `v`, let the child weights be `L` and `R`. Its unnormalized local
+stump `z_v` is `-sqrt(R/L)` on the left child, `sqrt(L/R)` on the right child,
+and zero outside the node. Two identities follow immediately:
+
+```text
+sum_i w_i z_iv      = L * (-sqrt(R/L)) + R * sqrt(L/R) = -sqrt(LR) + sqrt(LR) = 0
+sum_i w_i z_iv^2    = L * (R/L)        + R * (L/R)     = R + L = W_v
+```
+
+so each stump is weighted zero-mean with weighted squared norm `W_v`.
+
+For two distinct nodes `u` and `v`, their regions are either disjoint or
+nested, because the tree partitions recursively.
+
+- **Disjoint.** The product `z_iu * z_iv` is zero at every row, so the inner
+  product vanishes.
+- **Nested**, say `region(v)` inside `region(u)`. Then `z_u` is constant on
+  `region(v)`, taking one value `k` on the whole of it, because `region(v)`
+  lies entirely within a single child of `u`. Hence
+  `sum_i w_i z_iu z_iv = k * sum_{i in region(v)} w_i z_iv = 0`, using the
+  zero-mean identity for `z_v`.
+
+Therefore, on the fitting rows and weights,
 
 ```text
 Z.T @ W @ Z = diag(W_v),       Z.T @ W @ 1 = 0.
 ```
 
-For the loss normalized by total weight `W_total`, the Gram diagonal is
-`W_v / W_total`. Calling `make_stumps(..., normalize=True)` instead makes the
-raw weighted Gram the identity (and the normalized-loss Gram
-`I / W_total`). Weighted centering leaves this structure unchanged.
+The same two identities give the linear scores, since
+`sum_i w_i z_iv y_i = -sqrt(LR) * mu_L + sqrt(LR) * mu_R`.
 
-This identity is measure-specific. OOB rows, held-out rows, a prefit tree with
-different data, changed sample weights, or full-data rows for a
-bootstrap-fitted tree generally destroy it. `cache_quadratic=True` safely forms
-and checks the Gram once. When the fitted-tree construction guarantees the
-same rows and weights, `assume_diagonal_gram=True` is the matrix-free fast path:
-it stores only the diagonal in `O(p)` memory. The assumption is explicit
-because using it on a nonorthogonal design changes the optimization problem.
-Without that flag, the solver forms a dense Gram matrix to verify numerical
-orthogonality, so the end-to-end call is not near-linear in a large `p`.
+With loss normalized by total weight `W_total`, the Gram diagonal is
+`D_vv = W_v / W_total`. With `make_stumps(..., normalize=True)`, the raw
+weighted Gram is the identity instead. Weighted centering changes neither.
 
-For native-missing-value trees, some sklearn releases can store fitting child
-statistics that differ from the partition obtained by reapplying the fitted
-tree to the original NaN-containing rows. The fitted-tree shortcut remains
-exact for the implicit stored fitting partition. To target a stump matrix
-reconstructed from `X`, construct it explicitly and use the design-input API.
-
-For a positive diagonal Gram `D`, set `theta = sqrt(D) * beta`. The hiCAP
-objective becomes an ordinary squared-distance proximal problem with the same
-laminar groups and shared coordinate weights `1 / sqrt(diag(D))`. The exact
-laminar proximal composition therefore solves a complete fixed-lambda
-regression problem in one bottom-up pass. No APA smoothing schedule, optimizer
-iteration, or warm start is required.
-
-The structural knots admit an even cheaper representation. For each group
-`g`, assign the coordinates not owned by a child group to its atom and set
-`Q_g` to the sum of their absolute quadratic scores. Weighted decreasing
-tree-isotonic regression of `Q_g / group_weight_g` gives activation values
-`t_g`; the exact retained topology at lambda is `{g: t_g > lambda}`. Distinct
-positive `t_g` values are all zero-support topology knots. The Gram diagonal
-affects coefficient magnitudes but not these activation penalties.
-
-For a fitted regression tree, every descendant-group atom contains exactly
-the coefficient of its own internal node. If node `v` has child weights
-`L_v, R_v`, child predictions `mu_L, mu_R`, and the root has weight `W`, then
+For a fitted mean-based regression tree, stored node statistics also give the
+linear scores:
 
 ```text
-h_v = sqrt(L_v * R_v) * (mu_R - mu_L) / W,
-D_vv = (L_v + R_v) / W.
+h_v = sqrt(L_v * R_v) * (mu_R - mu_L) / W_total,
+D_vv = (L_v + R_v) / W_total.
 ```
 
-Thus sklearn's stored node statistics are already sufficient for the exact
-structural path. This statement uses the tree-fitting rows and weights and a
-mean-based regression criterion; it is not an OOB or held-out-data result.
+No observation-by-split design matrix is needed. These identities depend on
+using the tree's fitting measure: changing rows or weights, including using
+held-out or OOB data, generally destroys orthogonality. Native-missing-value
+trees use their stored fitting partition, which some sklearn versions may not
+reproduce when reapplied to the same NaN-containing rows.
 
-All group indices are zero-based. The exact solver accepts a design without
-an explicit intercept column and uses `fit_intercept=True` by default. The
-APA path follows the existing point-solver convention, so an unpenalized
-explicit intercept column can be omitted from every group.
+For design-input APIs, `assume_diagonal_gram=True` explicitly asserts this
+matched geometry and stores only the diagonal. Without it,
+`cache_quadratic=True` forms and checks the full Gram. Use an explicit design
+when targeting a different partition or measure.
 
-In the example below, `X` is a centered local-stump design and `y` is centered;
-`tree_regressor` is the corresponding fitted source tree, not the design matrix.
+## Structural path
+
+For positive diagonal `D`, the change of variables
+`theta = sqrt(D) * beta` turns the quadratic objective into a squared-distance
+proximal problem with coordinate weights `1 / sqrt(D)`. Exact laminar
+proximal composition solves a fixed penalty in one child-to-parent sweep.
+
+Finding only the zero groups is cheaper still, and needs neither `D` nor any
+coefficient. The result is that the retained set is
+
+```text
+retained groups at lambda = {g : t_g > lambda},
+```
+
+where `t` is the weighted antitone tree-isotonic regression of `Q_g / a_g` and
+`Q_g` is the atom mass defined below. The rest of this section derives that,
+because the statement is easy to misread: the obvious candidate formula is not
+`t`, and gives a set that is not even a tree.
+
+### 1. The zero-subtree condition does not involve the curvature
+
+Let `S = subtree(v)` and suppose `beta = 0` on `S`. The gradient of the
+quadratic part at such a point is `D @ beta - h = -h` on `S`, so `D` cancels
+and stationarity on `S` reads
+
+```text
+h_u  in  sum over groups g containing u of  lambda * a_g * (subdifferential of ||.||_inf at 0)
+```
+
+for every `u` in `S`. Every quantity left is built from `h`, the tree, and the
+group weights `a`. This is why the structural path is invariant to `D`:
+curvature rescales surviving coefficients, but never decides which subtrees
+survive.
+
+### 2. Only groups rooted inside the subtree can help
+
+The groups containing a coordinate `u` are those rooted at its ancestors. If
+such a group `g` is *active*, meaning `max abs(beta)` over `G_g` is positive,
+its `||.||_inf` subdifferential is supported on the maximizing coordinates,
+which lie outside the zero set `S`. An active ancestor group therefore
+contributes nothing to `S`.
+
+Let `v` be the root of a *maximal* zero subtree, so its parent is retained.
+Every strict-ancestor group of `v` is then active, and only groups rooted
+inside `S` can supply mass.
+
+### 3. Feasibility is a transportation problem
+
+Signs are free, so stationarity on `S` is solvable exactly when a nonnegative
+flow exists from group budgets to coordinate demands:
+
+```text
+demand(u)      = abs(h_u)          for u in S
+supply(g)      = lambda * a_g      for g rooted in S
+g may serve u  iff u in G_g        (g is an ancestor-or-self of u)
+```
+
+By the Gale-Hall criterion this is feasible exactly when
+`demand(A) <= supply(N(A))` for every coordinate set `A`, where `N(A)` is the
+set of groups able to serve `A`. For any `A`, `N(A)` is the ancestor closure
+`T` of `A` inside `S`. That `T` is connected, contains `v`, and satisfies
+`demand(A) <= demand(T)` with `supply(N(A)) = supply(T)`. The binding sets are
+therefore exactly the connected subsets containing `v`, for which `N(T) = T`:
+
+```text
+subtree(v) can be zero   <=>   lambda >= m(v),
+m(v) = max of Q(T) / a(T) over connected T inside subtree(v) with v in T.
+```
+
+### 4. Why that maximum average is not the activation
+
+`m(v)` is a *conditional* threshold. It assumed in step 2 that the parent of
+`v` is retained, so that ancestor budgets were already committed. On its own
+it is wrong, because `m` need not decrease down the tree, so
+`{v : m(v) > lambda}` need not be ancestor closed.
+
+Take the chain `0 -> 1 -> 2` with `a = 1` and `abs(h) = (1, 1.2, 1.4)`:
+
+```text
+m            = (1.2, 1.3, 1.4)     not antitone
+t            = (1.2, 1.2, 1.2)     pooled activation
+at lambda = 1.25:
+  {m > lambda} = {1, 2}            drops the root but keeps its child
+  {t > lambda} = {}                the true answer
+```
+
+At `lambda = 1.25` the whole tree is zero for every positive `D`, because the
+root group's own budget can serve the deepest coordinate: total demand `3.6`
+is below total supply `3 * 1.25`. Step 3 never applies here, since no parent
+is retained.
+
+### 5. Antitone pooling resolves the interaction
+
+Let `t` solve the weighted antitone tree-isotonic problem
+
+```text
+minimize  sum_g a_g * (t_g - Q_g / a_g)^2    subject to   t_parent >= t_child.
+```
+
+Three facts connect `t` to the retained set.
+
+1. `t` is antitone, so `{t > lambda}` is ancestor closed and is a valid pruned
+   tree.
+2. Call `g` a *block root* when it is a forest root or its fitted value is
+   strictly below its parent's. Its pooling block never extends above it, so
+   `t_g` is determined inside `subtree(g)` alone, where the block-root value of
+   antitone tree-isotonic regression is the maximum average over rooted
+   connected subsets. Hence `t_g = m(g)` at every block root.
+3. Therefore `{t > lambda}` is exactly the retained set:
+   - If `t_v <= lambda`, let `b` be the highest ancestor with `t_b <= lambda`.
+     Its parent has `t > lambda`, so `b` is a block root and
+     `m(b) = t_b <= lambda`. By step 3 the whole of `subtree(b)`, which
+     contains `v`, is zero.
+   - If `t_v > lambda` but `subtree(v)` were zero, then `v` lies in a maximal
+     zero subtree rooted at some ancestor `b`, giving `lambda >= m(b) = t_b`
+     and `t_b >= t_v` by antitonicity, contradicting `t_v > lambda`.
+
+The distinct positive values of `t` are exactly the structural knots. Pooling
+uses the leftist-heap tree PAVA of Pardalos and Xue, which inserts and removes
+each block at most once, for `O(p log p)` time and `O(p)` space.
+
+### 6. Atoms, when a group owns several coordinates
+
+For a fitted tree each group's atom is its own split coefficient, so
+`Q_v = abs(h_v)`. In a general laminar family a group may own several
+coordinates. The groups containing a coordinate form a chain, so the
+coordinates that *only* the groups in an ancestor-closed set `U` can serve are
+those whose smallest containing group lies in `U`. Assign each coordinate to
+that smallest group, sum `abs(h)` over it to get the atom mass `Q_g`, and the
+Hall condition becomes the same comparison of `Q(U)` against `lambda * a(U)`
+over rooted connected `U`. Coordinates in no group are unpenalized and never
+appear in the group topology.
+
+### Computing the path
+
+`fitted_tree_linf_exact_topology_path` extracts the scores directly from the
+tree. For `p` splits it takes `O(p log p)` time and `O(p)` storage after
+fitting, without a design matrix or explicit descendant groups.
 
 ```python
-from imodels.tree.sparse_pruning.optimization import (
-    apa_apg_regression_path,
-    hicap_regression_path,
-    laminar_group_linf_exact_topology_path,
-    laminar_group_linf_regression_path,
-)
-from imodels.tree.sparse_pruning.fitted_tree import (
+from imodels.tree.sparse_pruning import (
     fitted_tree_linf_exact_topology_path,
     materialize_fitted_tree_topology,
 )
 
-exact = hicap_regression_path(X, y, subtree_groups)
-beta, intercept = exact.at(lambda_value)
-
-sampled = apa_apg_regression_path(
-    X,
-    y,
-    subtree_groups,
-    lambdas=lambda_grid,
-    ord="inf",
-    assume_diagonal_gram=True,  # only for matched fitted-tree rows/weights
-)
-
-exact_points = laminar_group_linf_regression_path(
-    X,
-    y,
-    subtree_groups,
-    lambdas=lambda_grid,
-    fit_intercept=False,
-    assume_diagonal_gram=True,
-)
-
-tree_path = laminar_group_linf_exact_topology_path(
-    X,
-    y,
-    subtree_groups,
-    fit_intercept=False,
-    assume_diagonal_gram=True,
-    include_coefficients=False,
-)
-topology_at_knot = tree_path.topology_at(tree_path.lambdas[0])
-topology_just_below = tree_path.topology_at(
-    tree_path.lambdas[0], below=True
-)
-
-# Scalable traversal: each group/node appears in at most one batch.
-active_nodes = set()
-# Render the initial no-split state here.
-for knot, entering_nodes in tree_path.iter_events():
-    active_nodes.update(entering_nodes)  # apply every tied batch atomically
-    # Render or update the corresponding tree here.
-
-# Preferred after fitting a large sklearn regression tree: no X_tree matrix.
-native_tree_path = fitted_tree_linf_exact_topology_path(tree_regressor)
-preview = materialize_fitted_tree_topology(
-    tree_regressor, native_tree_path, native_tree_path.lambdas[0]
-)
-# Plot/save the initial exact-at-knot state once.
-for knot, sklearn_node_ids in native_tree_path.iter_node_events():
-    preview = materialize_fitted_tree_topology(
-        tree_regressor, native_tree_path, knot, below=True
-    )
-    # Plot/save `preview`, the state immediately below this knot.
-
-# Or initialize the exact lambda=0 topology and increase the penalty.
-active_node_ids = set(native_tree_path.tree_nodes_at(0.0))
-# Render this lambda-zero state once before removing any batch.
-for knot, sklearn_node_ids in native_tree_path.iter_node_pruning_events():
-    active_node_ids.difference_update(sklearn_node_ids)
-    # Render the state at `knot` after removing the whole tied batch.
+structure = fitted_tree_linf_exact_topology_path(tree)
+active = set(structure.tree_nodes_at(0.0))
+for lam, removed_node_ids in structure.iter_node_pruning_events():
+    active.difference_update(removed_node_ids)
+    # Update a drawing, or create one preview:
+    preview = materialize_fitted_tree_topology(tree, structure, lam)
 ```
 
-The fitted-tree constructor costs `O(p log p)` time and `O(p)` storage, and
-the delta-event traversal costs `O(p)` total. There are `K + 1` states for `K`
-knots. Materializing or drawing every full tree necessarily costs `O(p K)`
-work/output (and `O(p K)` memory if all copies are retained), so stream one
-copy or figure at a time for `O(p)` live memory. Returned node IDs identify
-split nodes; leaves are implicit. The materialization helper displays original
-CART node values, not hiCAP-shrunken coefficients. Because it preserves the
-original node IDs without compacting the backing arrays, `tree_.node_count`,
-`get_depth()`, `get_n_leaves()`, and serialized size can overstate the reachable
-preview; use the rendered structure itself for visualization.
+At a knot the departing group is already zero; `below=True` returns the
+state just below it. Apply tied events as a batch. Zero-activation splits are
+absent even at lambda zero, so initialize from `tree_nodes_at(0.0)`, not
+all source splits. Coordinates outside every penalty group are unpenalized
+and do not appear in the group topology.
 
-The fitted-tree structural API avoids both the design matrix and explicit
-groups. The fitted-tree coefficient API also avoids the design, but uses
-explicit descendant groups for its point oracle. The generic design/group
-point solver remains available for isolated coefficient queries. Its work is
-proportional to the total descendant-group memberships—typically
-`O(p log p)` for a balanced tree but `O(p^2)` for a degenerate chain. This does
-not affect support-only pruning or previews based on the original CART node
-values.
-
-If `include_coefficients=True`, row `k` is evaluated exactly at
-`tree_path.lambdas[k]` and therefore depicts the strict pre-entry topology.
-For the newly entered state, evaluate the one-sweep point solver at any lambda
-strictly between that knot and the next one. Coordinates omitted from every
-penalty group are unpenalized and are not represented in the group topology.
-Likewise, a node with activation value exactly zero is absent even from the
-strict lambda-zero topology and does not appear in a positive pruning-event
-batch; initialize an ascending traversal with `tree_nodes_at(0.0)` as above.
-
-`RegularizationPath.at` is exact between adjacent knots only when
-`path.exact` is true. For an APA path it is ordinary linear interpolation
-between sampled solutions.
-
-Exact structural knots are not the same as all coefficient knots. A clipping
-face can change a coefficient's slope without changing whether any subtree is
-retained. Use the diagonal coefficient homotopy for every coefficient-direction
-knot of the fitted-tree training objective, or the generic hiCAP homotopy for
-small non-diagonal problems. The exact topology path plus lazy coefficient
-queries remains useful when only distinct tree structures need rendering.
+Delta-event traversal costs `O(p)` total. Drawing every full tree can still
+require `O(p K)` output for `K` knots; stream previews instead of keeping
+all copies. A preview preserves original CART node values and IDs, not
+optimized coefficients. Its backing arrays retain unreachable nodes, so use
+the path's reachable split count rather than sklearn's un-compacted metadata.
 
 ## Full coefficient path for a fitted tree
 
+A structural event changes which subtrees are retained. A coefficient event
+can also change a slope without removing a subtree. Squared-loss hiCAP is
+piecewise affine, so enumerating **all coefficient events** allows exact
+linear interpolation.
+
+The diagonal homotopy identifies a clipping face with the exact point solver,
+then certifies the face's affine interval. For each positive connected block
+`B` of equal subtree magnitudes, write `c = abs(h) / D` and let `A`
+contain its still-clipped coordinates:
+
+```text
+q_B(lambda) = (sum_A abs(h) - lambda * sum_B a_g) / sum_A D
+beta_v(lambda) = sign(h_v) * min(c_v, q_B(lambda)).
+```
+
+Linear clipping, parent/child, nonnegativity, and dual-multiplier inequalities
+bound the interval. Their roots include merges, splits, saturation, and
+structural events. Structural activation values constrain the probes;
+interval certificates establish coverage between them. Generic hiCAP is an
+independent test reference, not part of this solver's production path.
+
 ```python
-from imodels.tree.sparse_pruning.fitted_tree import (
-    fitted_tree_linf_exact_coefficient_path,
-)
+from imodels.tree.sparse_pruning import fitted_tree_linf_exact_coefficient_path
 from imodels.tree.sparse_pruning.optimization import (
     tree_group_linf_exact_coefficient_path,
 )
@@ -272,141 +273,165 @@ from imodels.tree.sparse_pruning.optimization import (
 path = fitted_tree_linf_exact_coefficient_path(tree_regressor)
 if path.exact and path.status == "complete":
     beta, intercept = path.at(0.5 * path.lambdas[0])
-    # beta columns correspond to path.metadata["tree_node_ids"].
-    # Prediction: intercept + unnormalized_local_stump_design @ beta.
+    # beta uses unnormalized local stumps; columns follow
+    # path.metadata["tree_node_ids"]. The intercept is the root mean.
 
-# Or directly from a diagonal quadratic:
-path = tree_group_linf_exact_coefficient_path(
+example = tree_group_linf_exact_coefficient_path(
     linear_scores=[1.0, 2.0],
     gram_diagonal=[1.0, 1.0],
     parent_indices=[-1, 0],
 )
-# Full knots: [1.5, 0.5, 0.0]. Green's structural knots: [1.5, 0.0].
-# At lambda=0.5 beta=[1,1]; thereafter beta[0] is constant while beta[1]
-# continues to change. Both coefficients stay nonzero.
+# Coefficient knots: [1.5, 0.5, 0.0]; structural path: [1.5, 0.0].
+# At 0.5 the coefficients meet at [1, 1]; neither becomes zero.
 ```
 
-The solver assumes squared loss and positive diagonal curvature and group
-weights. The score API defines this quadratic directly; it cannot verify
-whether an original design was diagonal. The fitted-tree wrapper inherits
-the training-measure and criterion restrictions above. It must not be used
-as a held-out/OOB coefficient path by substituting the fitting statistics.
+The score API assumes positive diagonal curvature and positive group weights;
+it cannot check the original design. The fitted-tree adapter inherits the
+fitting-measure restrictions above.
 
-For each positive connected block of equal subtree magnitudes, set
-`c = abs(h) / D` and let `A` contain its still-clipped coordinates. Then
-
-```text
-q_B(lambda) = (sum_A abs(h) - lambda * sum_B group_weight) / sum_A D
-beta_v(lambda) = sign(h_v) * min(c_v, q_B(lambda)).
-```
-
-The maximal validity interval follows from the linear clipping,
-parent/child, nonnegativity, and dual-multiplier inequalities. Their roots
-include merges, splits, saturation, and structural events. The structural path supplies
-zero-group activation thresholds; the proximal point solver identifies a face at an interior
-lambda; interval certificates establish coverage between samples. Legacy
-hiCAP is used in independent tests, not by the production solver.
-
-`exact=True` is numerical certification, not symbolic rational arithmetic.
-The requested tolerance has a machine-precision floor of `1024 * eps`,
-reported as `effective_certificate_tolerance`. Independently evaluated
-neighboring coefficient-face boundaries use a `512 * eps` relative roundoff
-floor (`relative_event_roundoff_tolerance`) plus cancellation-aware uncertainty
-estimates from the affine constraint formulas. Each interval records those
-absolute boundary uncertainties. Coefficient events below this numerical
-resolution are not symbolically distinguished. Known distinct structural
-events constrain probes even when their spacing is below the optimization
-tolerance. If two such penalties are adjacent floating-point numbers, a
-boundary probe is accepted only when its affine interval covers both endpoints;
-`n_boundary_probes` reports how often this occurs. Always check `status` and
-`exact`: reaching an
-event cap or failing to resolve a face returns an explicitly nonexact prefix.
-The first version builds dense coefficient rows, requiring `O(p K)` storage
-for `p` splits and `K` stored knots. It also rebuilds the point oracle's face
-after every event and stores explicit group memberships (potentially
-`O(p^2)` for chains). It is not an incremental dynamic-tree implementation.
-Once constructed, `path.at(lam)` uses binary search and only the neighboring
-coefficient rows, taking `O(log K + p)` time without copying the full path.
-Result arrays are owned, read-only snapshots; changing caller arrays cannot
-invalidate an existing path. Queries outside the stored range are rejected,
-including lambda zero on an incomplete prefix. A partial path can have
-certified stored points without having complete coefficient-event coverage;
-check `exact`/`status` separately from the point-certificate metadata.
-
-Positive proximal group radii must remain representable. If their calculation
-underflows to zero, point APIs reject the unsupported scale instead of dropping
-the penalty. During coefficient continuation such a failure returns an
-explicitly nonexact prefix. Tree penalty values are computed by a bottom-up
-`O(p K)` sweep, and fitted-tree statistics are extracted once per path.
+This solver stores dense coefficient rows (`O(p K)`) and rebuilds faces
+using explicit descendant groups. Those memberships can cost `O(p^2)` in a
+chain, versus `O(p log p)` for a balanced tree. The structural solver avoids
+that cost. Once built, `path.at(lam)` takes `O(log K + p)` time.
 
 ## Classification and other losses
 
-`classification.py` provides `laminar_group_linf_classification` and its
-`_path` counterpart for binary logistic and multiclass softmax loss. They use
-the exact laminar proximal operator inside accelerated proximal gradient with
-backtracking, an unpenalized intercept, and descending warm starts. Dense input
-accepts labels or probability rows, with optional sample weights. Every feature
-must have positive penalty coverage, and every class positive effective mass.
-The fitted-tree adapters use leaf class proportions and masses instead of
-reconstructing the observation-by-split design.
+Binary logistic and multiclass softmax coefficient solves use the exact
+laminar proximal map inside accelerated proximal gradient, with backtracking,
+an unpenalized intercept, and descending warm starts. Fitted-tree adapters
+use leaf class proportions and masses rather than reconstructing the design.
+Use `fitted_tree_linf_classification(tree, lam)` for a point solve, or
+`fitted_tree_linf_classification_path(tree, lambdas)` for a custom grid;
+the latter accepts `adaptive_tol` for midpoint refinement.
 
-For a coefficient matrix `B` (splits by classes), the multiclass penalty is
+For a coefficient matrix `B` (splits by classes), the penalty is
 
 ```text
 sum_g a_g * max_{v in subtree(g)} (max_c B[v,c] - min_c B[v,c]).
 ```
 
-Binary class contrasts reduce to scalar-logit hiCAP at the same lambda.
-Internally, optimizing twice the entrywise group infinity penalty over free
-rowwise class-common shifts is equivalent to this range penalty. **Fixing a
-sum-zero gauge during that infinity-norm optimization is not equivalent.**
-The returned multiclass coefficients are sum-zero contrasts, canonicalized
-only after solving. Column scaling uses the existing coordinate-weighted
-proximal map, changing the optimization metric without changing the objective.
+Binary contrasts reduce to scalar-logit hiCAP at the same lambda, since a
+two-class row `(-b/2, b/2)` has range `abs(b)`.
 
-For a zero subtree in a fitted tree, outside logits are constant on its region.
-Weighted zero-mean stumps cancel the probability term in its gradient. The
-class-range dual activation mass at split `v` is therefore
+**Gauge lemma.** Write
+`Omega_inf(B) = sum_g a_g max_{v in G_g} max_c abs(B[v,c])`, and let
+`Omega_range` be the penalty above. Then
 
 ```text
-h_vc = sqrt(L_v*R_v) * (p_right[c] - p_left[c]) / W
-Q_v  = 0.5 * sum_c abs(h_vc).
+min over row shifts s of  2 * Omega_inf(B - s 1^T)  =  Omega_range(B),
 ```
 
-The existing tree-isotonic pooling of `Q_v / a_v` yields structural knots.
-`fitted_tree_linf_exact_topology_path` exposes them for eligible classifiers;
-its point/path coefficient adapters screen splits inactive over the entire
-requested penalty interval. Their stationarity diagnostics concern the
-remaining coordinates, with the excluded zeros justified by that structural
-reduction. Statistics require original weighted child-mean probabilities,
-positive fitting leaf/class masses, and no active monotonic clipping. As in
-regression, these are the stored fitting partition's statistics, not an OOB
-or held-out objective; native missing-value routing may differ when reapplied.
+attained at the per-row midrange `s_v = (max_c B[v,c] + min_c B[v,c]) / 2`.
 
-Forward and adjoint tree passes cost `O(nodes * classes)` per loss/gradient
-evaluation. The remaining explicit group memberships and proximal projections
-may cost quadratically in tree depth; the complete coefficient solver is not
-claimed to be near-linear. Stored multiclass samples cost
-`O(n_points * n_splits * n_classes)`.
+*Proof.* For a single row, `min_s 2 max_c abs(B[v,c] - s)` equals
+`range_c B[v,:]`, attained at the midrange. Each group term is a maximum over
+rows of that per-row quantity, and the rows are shifted independently, so the
+per-row minimizer minimizes every group term simultaneously. Sum over groups
+with `a_g > 0`.
 
-Classification coefficient paths are generally curved, as discussed for GLMs by
-[Park and Hastie (2007)](https://doi.org/10.1111/j.1467-9868.2007.00607.x).
-Accordingly, `exact=False` always. `status="complete"` means sampled points
-met the stationarity tolerance and any requested midpoint refinement finished,
-not that all coefficient events were enumerated. Adaptive refinement compares
-solved midpoints with interpolated coefficients/intercepts; it is a heuristic,
-not a uniform interpolation-error bound. `path.at(lam)` interpolates only;
-call a point API for a checked solution at an additional penalty.
+Softmax loss is invariant to these shifts: shifting row `v` by `s_v` adds
+`s_v * z_v` to every class logit, which is a per-observation constant.
+Minimizing `loss + lambda * 2 * Omega_inf` over all `B` therefore attains the
+same value as minimizing `loss + lambda * Omega_range`, with the minimizer in
+the midrange gauge. That lifted problem is what the solver actually optimizes.
+Fixing a sum-zero gauge *during* that optimization would constrain `B` and
+generally solve a different problem, so returned coefficients are
+canonicalized to sum-zero contrasts only after solving.
 
-The diagnostic `certified` checks a scaled proximal-gradient residual and the
-proximal operator's dual certificate. It does not bound coefficient error or
-objective suboptimality, especially near separation. Positive penalties are
-required; a finite unpenalized coefficient endpoint may not exist. Requests
-that exceed the iteration or refinement budget return `status="partial"`.
-SP/SHS classifier wrappers now default to the structural solver for eligible
-binary/multiclass CART trees. Their `"proximal"` option uses this point solver;
-`"coefficient_path"` samples positive structural knots plus the requested
-penalty. Optional coefficients are computed only for the final fit during
-automatic structural CV. At zero penalty the wrappers retain the original tree
-but expose no finite coefficients; direct coefficient APIs require positive
-penalties. The existing binary APA API remains available explicitly.
+**Zero-subtree gradient.** Suppose every coefficient inside `subtree(a)`
+vanishes. The logits are then constant on the region of each `v` in
+`subtree(a)`, and
+
+```text
+d Loss / d B[v,c] = sum_i w_i z_iv (p_i[c] - y_i[c]) / W_total.
+```
+
+On `region(v)` the probabilities `p_i[c]` equal one constant `pi[c]`, and the
+local stump satisfies `sum_i w_i z_iv = 0`, so the probability term cancels:
+
+```text
+h_vc = sqrt(L_v * R_v) * (p_right[c] - p_left[c]) / W_total.
+```
+
+This is the original CART class-frequency contrast. It depends on neither
+`lambda` nor the retained part of the tree, which is what lets the regression
+argument carry over unchanged.
+
+**Dual norm.** Step 3 above assigns each row the norm dual to `range`,
+evaluated at `h_v`. For any sum-zero `g`,
+
+```text
+sup { <g, x> : range(x) <= 1 }  =  0.5 * ||g||_1.
+```
+
+*Proof.* Split `g = g+ - g-` with `||g+||_1 = ||g-||_1 = M = 0.5 * ||g||_1`,
+which is possible exactly because `g` sums to zero. Transporting that mass
+writes `g = sum_k mu_k (e_{c_k} - e_{c'_k})` with `mu_k >= 0` and
+`sum_k mu_k = M`, so `<g, x> <= M * range(x)`. Conversely `x = 0.5` on the
+support of `g+` and `-0.5` on the support of `g-` has `range(x) = 1` and
+attains `M`.
+
+Each `h_v` sums to zero over classes, because both child rows are probability
+vectors. Hence `Q_v = 0.5 * sum_c abs(h_vc)`, and the same tree-isotonic
+pooling of `Q_v / a_v` gives the classification structural knots. This is the
+exact structural path for the logistic and softmax objective, not a
+squared-error surrogate. It requires original weighted child-mean
+probabilities, positive fitting leaf and class masses, and no active monotonic
+clipping. The fitting-partition restrictions from regression apply here too.
+
+Coefficient adapters screen splits inactive throughout the requested penalty
+interval. Their forward/adjoint passes cost `O(nodes * classes)` per
+loss/gradient evaluation, but explicit group memberships and proximal
+projections can still be costly on deep trees. Multiclass samples require
+`O(n_points * n_splits * n_classes)` storage.
+
+Unlike squared loss, classification coefficient paths are generally curved;
+see [Park and Hastie (2007)](https://doi.org/10.1111/j.1467-9868.2007.00607.x).
+These paths always have `exact=False`. Adaptive midpoint refinement checks
+interpolation at solved midpoints, not a uniform error bound.
+`path.at(lam)` interpolates samples; call the point API to check another
+penalty. Direct coefficient APIs require positive penalties because a finite
+unpenalized solution need not exist.
+
+SP/SHS classifier wrappers use structural pruning by default for eligible
+binary/multiclass trees. Optional coefficients are computed only for the final
+fit during automatic structural CV; at zero penalty the wrappers retain the
+original tree without finite coefficients.
+
+## API map and numerical checks
+
+The sklearn adapters are in [`fitted_tree.py`](../fitted_tree.py). Generic
+design/group APIs live here:
+
+| API | Output |
+| --- | --- |
+| `hicap_regression_path` | KKT-certified, full squared-loss coefficient path for a rooted laminar family. |
+| `tree_group_linf_exact_coefficient_path` | Full coefficient path from positive diagonal curvature and tree scores. |
+| `laminar_group_linf_exact_topology_path` | Structural path from a diagonal design; coefficients optional. |
+| `laminar_group_linf_regression[_path]` | Exact diagonal point solves, or FISTA for a general Gram; a grid is still sampled. |
+| `laminar_group_linf_classification[_path]` | Logistic/softmax point solves and optionally refined samples. |
+| `apa_apg_regression_path`, `apa_apg_classification_path` | Warm-started grids for `ord=2` or `ord=inf`; always sampled. |
+
+Group indices are zero-based. Regression APIs can fit an unpenalized
+intercept; APA instead follows its point API's explicit-intercept convention.
+
+Check `exact` and `status` separately from point certificates. A complete
+sampled path is not a complete breakpoint path. `RegularizationPath.at`
+interpolates exactly only when `exact=True`; queries outside the stored
+range are rejected. Returned arrays are owned, read-only snapshots.
+
+For diagonal homotopy, `exact=True` means floating-point certification,
+not symbolic arithmetic. Tolerances have machine-precision floors and
+cancellation-aware boundary uncertainties; unresolved faces, event caps, or
+underflowing positive proximal radii return a nonexact prefix. Point APIs
+reject unrepresentable positive radii. See
+[`diagonal_homotopy.py`](diagonal_homotopy.py) for the reported tolerances
+and boundary diagnostics.
+
+Generic hiCAP returns `status="nonunique_design"` and endpoint solutions
+when the weighted centered design is numerically rank-deficient.
+Classification's `certified` flag checks scaled stationarity and the
+proximal dual certificate, not coefficient error or objective suboptimality.
+Iteration/refinement limits produce `status="partial"`. With overlapping
+groups, APA uses its full iteration budget; warm starts improve finite-budget
+solutions but do not supply exact breakpoints or KKT certificates.

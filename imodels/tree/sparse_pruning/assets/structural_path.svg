@@ -88,5 +88,5 @@
   <text x="718.714" y="584" class="small" text-anchor="middle">0.075</text>
   <text x="822.286" y="584" class="small" text-anchor="middle">0.1</text>
   <text x="30" y="691" class="small">A–D match the trees below. The penalty is chosen by validation only; ties favor fewer splits.</text>
-  <text x="30" y="714" class="small">Accuracy rises then falls; classification error has the opposite U shape. Illustrative simulation, not a benchmark. No HS.</text>
+  <text x="30" y="714" class="small">Accuracy rises then falls; classification error has the opposite U shape. No HS.</text>
 </svg>
