@@ -192,7 +192,7 @@ y.T @ y</code></pre>
 
                     <h3 id="related-work">Related work</h3>
 
-                    <p>GP-GAM extends a line of work that that fits a GP-based additive model.</p>
+                    <p>GP-GAM extends a line of work on GP-based additive models.</p>
 
                     <table class="reltbl">
                         <thead>
@@ -269,7 +269,8 @@ y.T @ y</code></pre>
                     <p class="caption caption-above"><b>Table 1.</b> Mean rank of GPGam and ten other regression models on four benchmark suites, held-out suites de-duplicated against the development suite.</p>
                     <table class="ranktbl">
                         <thead>
-                            <tr><th>model</th><th>imodels-65</th><th>classic-7</th><th>TabArena-12</th><th>CTR23-23</th></tr>
+                            <tr class="tblsec"><td colspan="1"></td><td colspan="2" style="text-align: center;">Visible</td><td colspan="2" style="text-align: center;">Hidden</td></tr>
+                            <tr><th></th><th>imodels-65</th><th>classic-7</th><th>TabArena-12</th><th>CTR23-23</th></tr>
                             <tr><th></th><th style="font-weight:normal;color:#777">65 sets</th><th style="font-weight:normal;color:#777">7 sets</th><th style="font-weight:normal;color:#777">12 sets</th><th style="font-weight:normal;color:#777">23 sets</th></tr>
                         </thead>
                         <tbody>
@@ -282,10 +283,10 @@ y.T @ y</code></pre>
                             <tr><td>FIGS</td><td>7.86</td><td>7.29</td><td>6.75</td><td>6.39</td></tr>
                             <tr><td>Decision tree</td><td>8.11</td><td>8.29</td><td>8.42</td><td>8.48</td></tr>
                             <tr class="tblsec"><td colspan="5">Not interpretable</td></tr>
-                            <tr><td>TabPFN</td><td><b>2.51</b></td><td><b>1.86</b></td><td>3.75</td><td><b>2.87</b></td></tr>
+                            <tr><td>TabPFN*</td><td><b>2.51</b></td><td><b>1.86</b></td><td>3.75</td><td><b>2.87</b></td></tr>
                             <tr><td>Gradient boosting</td><td>4.78</td><td>4.57</td><td>4.67</td><td>4.57</td></tr>
                             <tr><td>Random forest</td><td>5.14</td><td>3.14</td><td><b>3.50</b></td><td>4.87</td></tr>
-                            <tr><td>Neural net</td><td>8.83</td><td>8.71</td><td>9.00</td><td>9.13</td></tr>
+                            <tr><td>MLP</td><td>8.83</td><td>8.71</td><td>9.00</td><td>9.13</td></tr>
                         </tbody>
                     </table>
 
@@ -307,7 +308,7 @@ y.T @ y</code></pre>
                         that beats it on the de-duplicated sets, and every model in the table was refit on
                         identical preprocessing and the same split.</p>
 
-                    <p class="tblnote">TabPFN is handicapped in the three full-size suites. It is capped at
+                    <p class="tblnote">*TabPFN is handicapped in the three full-size suites. It is capped at
                         2,500 training rows by GPU memory, and on a dataset wider than 500 features only
                         the first 500 are passed to it; where it could not run at all it is ranked last.
                         Its numbers are a lower bound on the method rather than a measurement of it.</p>
@@ -337,29 +338,31 @@ y.T @ y</code></pre>
                     <span class="fig-anchor" id="fig2"></span>
                     <div id="hist-plot"></div>
 
-                    <p class="caption"><b>Fig 2.</b> Lines of code and mean rank at each version of the search. The loop added capability up to v38, then spent the rest of its budget removing whatever could not pay for itself.</p>
+                    <p class="caption"><b>Fig 2.</b> Lines of code and mean rank at every committed version of the search, from the shallow-tree baseline through spline GAMs and boosted GA2Ms to the Gaussian-process GAM. Ranks are measured consistently (each version refit on the official split, same baseline pool); dashed lines mark the GP reformulation, the simplification rounds and the generalization rounds.</p>
 
-                    <p>The plot has two phases. Up to v38 the loop added capability: v35 is the first version that fit a GAM as a Gaussian
-                        process, but it formed a kernel matrix over the training rows and so could only
-                        handle small data. Versions 36 to 38 added the binned formulation that made the
-                        exact likelihood affordable at any size, then added a boosted tree stage on the
-                        residual. The file roughly doubled, from 507 lines to 1,110.</p>
+                    <p>The plot covers the whole search, and its four bands are four model families.
+                        The loop started from a shallow decision tree (mean rank 10.7 on the 65-dataset
+                        suite, against EBM's 5.0). Its first nine versions were penalized spline GAMs
+                        distilled to readable segments, built for the interpretability tests; they reached
+                        6.65. The next twenty-two were boosted GA2Ms with cross-validated selection and
+                        seed averaging, the same family as EBM, and they closed most of the gap, 4.03 by
+                        v31, at the cost of a file that had grown to nearly a thousand lines. v35 was the
+                        reformulation: fitting the GAM as an additive Gaussian process over binned
+                        features cut the file to 507 lines and took the rank to 3.71 in one step, because
+                        one exact likelihood replaced the cross-validation, bagging and boosting rounds
+                        the previous family had needed. Every rank in the plot is measured the same way,
+                        each version refit on the official split and ranked against the same baseline
+                        pool; versions without a dot were not rerun.</p>
 
-                    <p>From v39 the instruction changed to simplification, and every later version
-                        removed something. Thirteen rounds of ablation took out the boosted tree stage,
-                        a second model class that handled small data separately, half the kernel
-                        dictionary, both MAP priors, a binary search over bin counts, and several
-                        parameters that turned out to do nothing. The file came back down to 686 lines,
-                        below where it started, while keeping the ability to scale that the middle
-                        versions bought.</p>
-
-                    <p>Simplification cost accuracy. Mean rank on the small benchmark moves from 3.71 to
-                        4.60 across those rounds, almost all
-                        of it from dropping the separate small-data model in v41. The trade was
-                        deliberate: one model instead of two, still ahead of EBM at 5.00 on the same
-                        pool. Each removal was measured first and reverted if it cost accuracy, which is
-                        how automatic relevance determination, the interaction fitting and the
-                        log-target rule were kept.</p>
+                    <p>From v36 the loop was asked to scale, and the file more than doubled (the binned
+                        sufficient statistics that make the fit affordable at any size, then a boosted
+                        tree stage). From v39 it was asked to simplify, and thirteen rounds of ablation
+                        took out the tree stage, a second model class for small data, half the kernel
+                        dictionary, both priors and several parameters that did nothing, bringing the
+                        file back below where v35 started. That cost accuracy on the small suite, and the
+                        plot shows it: the rank drifts from 3.71 to 4.60, nearly all of it from dropping
+                        the separate small-data model, a trade made deliberately for one model instead
+                        of two and still well ahead of EBM.</p>
 
                     <p>Two later rounds asked for the model to generalize rather than to score. The
                         first finding was about measurement, not modelling: the single split behind every
@@ -380,40 +383,32 @@ y.T @ y</code></pre>
 
                     <script>
                     (function () {
-                      var H = {"v": ["v35", "v36", "v37", "v38", "v39", "v40", "v41", "v42", "v43", "v44", "v45", "v46", "v47", "v48", "v49"], "lines": [507, 1035, 1101, 1110, 977, 976, 736, 732, 725, 725, 707, 700, 686, 689, 765], "rank": [3.71, null, null, null, null, null, 4.45, 4.46, 4.43, 4.52, 4.58, 4.65, 4.6, 4.45, 4.45], "ebm": 5.0};
+                      var H = {"v": ["DT", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v24", "v25", "v26", "v28", "v29", "v30", "v31", "v33", "v34", "v35", "v36", "v37", "v38", "v39", "v40", "v41", "v42", "v43", "v44", "v45", "v46", "v47", "v48", "v49"], "lines": [222, 506, 591, 606, 717, 777, 844, 859, 872, 892, 674, 686, 704, 708, 775, 786, 785, 806, 849, 897, 905, 919, 918, 960, 953, 966, 868, 967, 967, 968, 893, 639, 507, 1035, 1101, 1110, 977, 976, 736, 732, 725, 725, 707, 700, 686, 689, 765], "rank": [10.72, 9.57, null, null, 7.54, null, null, null, 6.65, null, 7.31, null, null, null, null, null, null, null, 5.68, null, null, null, null, 5.54, null, null, null, null, null, 4.03, 4.11, 4.35, 3.71, null, null, null, null, null, 4.45, null, null, 4.52, null, null, 4.6, 4.45, 4.45], "family": ["tree baseline", "spline GAM", "spline GAM", "spline GAM", "spline GAM", "spline GAM", "spline GAM", "spline GAM", "spline GAM", "spline GAM", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "boosted GA2M", "GP GAM", "GP GAM", "GP GAM", "GP GAM", "GP GAM", "GP GAM", "GP GAM", "GP GAM", "GP GAM", "GP GAM", "GP GAM", "GP GAM", "GP GAM", "GP GAM", "GP GAM"], "color": ["#bbb", "#c9b27f", "#c9b27f", "#c9b27f", "#c9b27f", "#c9b27f", "#c9b27f", "#c9b27f", "#c9b27f", "#c9b27f", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#c9c2b2", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9", "#7fb2c9"], "ebm": 5.0};
                       var el = document.getElementById('hist-plot');
                       var rankX = [], rankY = [];
                       H.rank.forEach(function (r, i) { if (r !== null) { rankX.push(H.v[i]); rankY.push(r); } });
                       Plotly.newPlot(el, [
                         { x: H.v, y: H.lines, type: 'bar', name: 'lines of code',
-                          marker: { color: H.v.map(function (v) {
-                            var k = +v.slice(1); return k >= 48 ? '#2c7bb6' : (k >= 39 ? '#7fb2c9' : '#c9c2b2'); }) },
+                          marker: { color: H.color },
                           hovertemplate: '%{x}: %{y} lines<extra></extra>' },
-                        { x: rankX, y: rankY, type: 'scatter', mode: 'lines+markers',
-                          name: 'mean rank (lower is better)', yaxis: 'y2',
-                          line: { color: '#a8541f', width: 2 }, marker: { size: 7 },
+                        { x: H.v, y: H.rank, type: 'scatter', mode: 'lines+markers', connectgaps: true,
+                          name: 'mean rank on the 65-dataset suite (lower is better)', yaxis: 'y2',
+                          line: { color: '#a8541f', width: 2 }, marker: { size: 6 },
                           hovertemplate: '%{x}: rank %{y}<extra></extra>' },
                         { x: H.v, y: H.v.map(function () { return H.ebm; }), type: 'scatter',
                           mode: 'lines', name: 'EBM', yaxis: 'y2',
                           line: { color: '#999', width: 1, dash: 'dot' }, hoverinfo: 'skip' }
                       ], {
-                        height: 380, margin: { l: 55, r: 55, t: 44, b: 40 },
-                        title: { text: 'Size and accuracy across the search', font: { size: 15 } },
-                        xaxis: { title: { text: 'version', font: { size: 12 } } },
+                        height: 420, margin: { l: 55, r: 55, t: 56, b: 60 },
+                        title: { text: 'Size and accuracy across the whole search', font: { size: 15 } },
+                        xaxis: { title: { text: 'version', font: { size: 12 } }, tickangle: -60, tickfont: { size: 9 },
+                                 tickvals: H.v.filter(function (v, i) { return i % 3 === 0 || v === 'v35' || v === 'v49'; }) },
                         yaxis: { title: { text: 'lines of code', font: { size: 12 } }, rangemode: 'tozero' },
-                        yaxis2: { title: { text: 'mean rank of 65 datasets', font: { size: 12 } },
+                        yaxis2: { title: { text: 'mean rank, 65 datasets', font: { size: 12 } },
                                   overlaying: 'y', side: 'right', autorange: 'reversed' },
-                        shapes: [{ type: 'line', x0: 8.5, x1: 8.5, y0: 0, y1: 1, xref: 'x',
-                                   yref: 'paper', line: { color: '#a8541f', width: 1.5, dash: 'dash' } },
-                                 { type: 'line', x0: 12.5, x1: 12.5, y0: 0, y1: 1, xref: 'x',
-                                   yref: 'paper', line: { color: '#2c7bb6', width: 1.5, dash: 'dash' } }],
-                        annotations: [{ x: 8.5, y: 1.06, xref: 'x', yref: 'paper',
-                          text: 'simplification begins', showarrow: false,
-                          font: { size: 11, color: '#a8541f' }, xanchor: 'left' },
-                          { x: 12.5, y: 1.06, xref: 'x', yref: 'paper',
-                          text: 'generalization rounds', showarrow: false,
-                          font: { size: 11, color: '#2c7bb6' }, xanchor: 'left' }],
-                        legend: { orientation: 'h', y: -0.18, font: { size: 11 } },
+                        shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: -0.5, x1: 0.5, y0: 0, y1: 1, fillcolor: '#bbb', opacity: 0.12, line: { width: 0 } }, { type: 'rect', xref: 'x', yref: 'paper', x0: 0.5, x1: 9.5, y0: 0, y1: 1, fillcolor: '#c9b27f', opacity: 0.12, line: { width: 0 } }, { type: 'rect', xref: 'x', yref: 'paper', x0: 9.5, x1: 31.5, y0: 0, y1: 1, fillcolor: '#c9c2b2', opacity: 0.12, line: { width: 0 } }, { type: 'rect', xref: 'x', yref: 'paper', x0: 31.5, x1: 46.5, y0: 0, y1: 1, fillcolor: '#7fb2c9', opacity: 0.12, line: { width: 0 } }, { type: 'line', x0: 31.5, x1: 31.5, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: '#a8541f', width: 1.2, dash: 'dash' } }, { type: 'line', x0: 35.5, x1: 35.5, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: '#a8541f', width: 1.2, dash: 'dash' } }, { type: 'line', x0: 44.5, x1: 44.5, y0: 0, y1: 1, xref: 'x', yref: 'paper', line: { color: '#a8541f', width: 1.2, dash: 'dash' } }],
+                        annotations: [{ x: 0.0, y: 1.07, xref: 'x', yref: 'paper', text: 'tree baseline', showarrow: false, font: { size: 11, color: '#555' }, xanchor: 'center' }, { x: 5.0, y: 1.07, xref: 'x', yref: 'paper', text: 'spline GAM', showarrow: false, font: { size: 11, color: '#555' }, xanchor: 'center' }, { x: 20.5, y: 1.07, xref: 'x', yref: 'paper', text: 'boosted GA2M', showarrow: false, font: { size: 11, color: '#555' }, xanchor: 'center' }, { x: 39.0, y: 1.07, xref: 'x', yref: 'paper', text: 'GP GAM', showarrow: false, font: { size: 11, color: '#555' }, xanchor: 'center' }, { x: 31.6, y: 0.97, xref: 'x', yref: 'paper', text: 'GP reformulation', showarrow: false, font: { size: 10, color: '#a8541f' }, xanchor: 'left' }, { x: 35.6, y: 0.97, xref: 'x', yref: 'paper', text: 'simplification', showarrow: false, font: { size: 10, color: '#a8541f' }, xanchor: 'left' }, { x: 44.6, y: 0.97, xref: 'x', yref: 'paper', text: 'generalization', showarrow: false, font: { size: 10, color: '#a8541f' }, xanchor: 'left' }],
+                        legend: { orientation: 'h', y: -0.28, font: { size: 11 } },
                         plot_bgcolor: '#fff', paper_bgcolor: '#fff', font: { family: 'inherit' }
                       }, { displayModeBar: false, responsive: true });
                     })();
