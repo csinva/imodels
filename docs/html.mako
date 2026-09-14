@@ -327,24 +327,38 @@
           return ''
 
       _tagged = [(c, _category(c)) for c in index_classes]
-      _cats = sorted({k for _, k in _tagged if k}, key=lambda k: CATEGORY_LABELS[k])
     %>
-    % if index_classes:
-    <li><h3>Classes</h3>
-      % if _cats:
+    <%
+      # Two sidebar sections: the predictors, and the classes that support
+      # them (clustering, discretization, experimental). Each gets its own
+      # legend, listing only the categories that appear in it.
+      MISC_CATEGORIES = {'clustering', 'discretization', 'experimental'}
+      _groups = [
+          ('Prediction classes', [(c, k) for c, k in _tagged if k not in MISC_CATEGORIES]),
+          ('Misc classes', [(c, k) for c, k in _tagged if k in MISC_CATEGORIES]),
+      ]
+    %>
+    % for _title, _members in _groups:
+    % if _members:
+    <%
+      _group_cats = sorted({k for _, k in _members if k}, key=lambda k: CATEGORY_LABELS[k])
+    %>
+    <li><h3>${_title}</h3>
+      % if _group_cats:
       <ul class="cat-legend">
-        % for k in _cats:
+        % for k in _group_cats:
         <li><span class="cat-dot cat-${k}"></span>${CATEGORY_LABELS[k]}</li>
         % endfor
       </ul>
       % endif
       <ul class="class-list">
-      % for c, k in _tagged:
+      % for c, k in _members:
         <li><span class="cat-dot${' cat-' + k if k else ''}" title="${CATEGORY_LABELS[k] if k else 'uncategorized'}"></span>${link(c)}</li>
       % endfor
       </ul>
     </li>
     % endif
+    % endfor
     </ul>
 
     <p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
