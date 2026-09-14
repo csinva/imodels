@@ -308,18 +308,18 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
                         </thead>
                         <tbody>
                             <tr class="tblsec"><td colspan="5">Interpretable</td></tr>
-                            <tr><td>GPGam</td><td><b>3.45</b></td><td><b>2.86</b></td><td><b>2.50</b></td><td><b>3.13</b></td></tr>
-                            <tr><td>EBM</td><td>3.94</td><td>3.57</td><td>3.00</td><td>3.48</td></tr>
-                            <tr><td>RuleFit</td><td>6.78</td><td>7.86</td><td>7.42</td><td>7.52</td></tr>
-                            <tr><td>Ridge</td><td>6.83</td><td>9.43</td><td>8.92</td><td>7.83</td></tr>
-                            <tr><td>Hierarchical shrinkage</td><td>7.77</td><td>8.43</td><td>8.08</td><td>7.74</td></tr>
-                            <tr><td>FIGS</td><td>7.86</td><td>7.29</td><td>6.75</td><td>6.39</td></tr>
-                            <tr><td>Decision tree</td><td>8.11</td><td>8.29</td><td>8.42</td><td>8.48</td></tr>
+                            <tr><td><a href="https://arxiv.org/abs/2605.03808">GPGam</a></td><td><b>3.45</b></td><td><b>2.86</b></td><td><b>2.50</b></td><td><b>3.13</b></td></tr>
+                            <tr><td><a href="https://doi.org/10.1145/2487575.2487579">EBM</a></td><td>3.94</td><td>3.57</td><td>3.00</td><td>3.48</td></tr>
+                            <tr><td><a href="https://doi.org/10.1214/07-AOAS148">RuleFit</a></td><td>6.78</td><td>7.86</td><td>7.42</td><td>7.52</td></tr>
+                            <tr><td><a href="https://doi.org/10.1080/00401706.1970.10488634">Ridge</a></td><td>6.83</td><td>9.43</td><td>8.92</td><td>7.83</td></tr>
+                            <tr><td><a href="https://arxiv.org/abs/2202.00858">Hierarchical shrinkage</a></td><td>7.77</td><td>8.43</td><td>8.08</td><td>7.74</td></tr>
+                            <tr><td><a href="https://arxiv.org/abs/2201.11931">FIGS</a></td><td>7.86</td><td>7.29</td><td>6.75</td><td>6.39</td></tr>
+                            <tr><td><a href="https://doi.org/10.1201/9781315139470">Decision tree</a></td><td>8.11</td><td>8.29</td><td>8.42</td><td>8.48</td></tr>
                             <tr class="tblsec"><td colspan="5">Not interpretable</td></tr>
-                            <tr><td>TabPFN*</td><td><b>2.51</b></td><td><b>1.86</b></td><td>3.75</td><td><b>2.87</b></td></tr>
-                            <tr><td>Gradient boosting</td><td>4.78</td><td>4.57</td><td>4.67</td><td>4.57</td></tr>
-                            <tr><td>Random forest</td><td>5.14</td><td>3.14</td><td><b>3.50</b></td><td>4.87</td></tr>
-                            <tr><td>MLP</td><td>8.83</td><td>8.71</td><td>9.00</td><td>9.13</td></tr>
+                            <tr><td><a href="https://doi.org/10.1038/s41586-024-08328-6">TabPFN*</a></td><td><b>2.51</b></td><td><b>1.86</b></td><td>3.75</td><td><b>2.87</b></td></tr>
+                            <tr><td><a href="https://doi.org/10.1214/aos/1013203451">Gradient boosting</a></td><td>4.78</td><td>4.57</td><td>4.67</td><td>4.57</td></tr>
+                            <tr><td><a href="https://doi.org/10.1023/A:1010933404324">Random forest</a></td><td>5.14</td><td>3.14</td><td><b>3.50</b></td><td>4.87</td></tr>
+                            <tr><td><a href="https://doi.org/10.1038/323533a0">MLP</a></td><td>8.83</td><td>8.71</td><td>9.00</td><td>9.13</td></tr>
                         </tbody>
                     </table>
 
@@ -344,7 +344,9 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
                     <p class="tblnote">*TabPFN is handicapped in the three full-size suites. It is capped at
                         2,500 training rows by GPU memory, and on a dataset wider than 500 features only
                         the first 500 are passed to it; where it could not run at all it is ranked last.
-                        Its numbers are a lower bound on the method rather than a measurement of it.</p>
+                        Its numbers are a lower bound on the method rather than a measurement of it. The checkpoint is the
+                        default regressor of <a href="https://arxiv.org/abs/2511.08667">TabPFN-2.5</a>
+                        (<code>tabpfn-v2.5-regressor-v2.5_default.ckpt</code>, tabpfn 7.0.0).</p>
 
                     <p class="tblnote">Every result is one 80/20 split at a fixed seed with all models at
                         library defaults, which is not the protocol TabArena or CTR23 define, so none of
