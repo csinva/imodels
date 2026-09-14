@@ -97,6 +97,26 @@ class TestGPGamRegressor:
         assert len(model.interaction_terms()) == 2
         assert model.n_steps == 15
 
+    def test_learned_lengthscales_are_reported(self):
+        """The shared lengthscales are learned and named in kernel_weights."""
+        X, y = _additive_data(n=400, seed=9)
+        model = _GPGam(schedule=False, n_bins=16, n_pairs=0, n_steps=20).fit(X, y)
+        assert hasattr(model, "scales_learned_")
+        s0, s1 = model.scales_learned_
+        assert 0.005 <= s0 <= 2.0 and 0.005 <= s1 <= 2.0
+        names = list(model.kernel_weights(0))
+        assert names[0].startswith("matern-") and names[1].startswith("rbf-")
+
+    def test_interactions_beyond_48_are_backfit(self):
+        """Above 48 selected pairs the extra ones are backfit and appear in the model."""
+        rng = np.random.RandomState(10)
+        X = rng.randn(3200, 12)
+        y = X[:, 0] * X[:, 1] + np.sin(X[:, 2]) + rng.randn(3200) * 0.3
+        model = _GPGam(schedule=False, n_bins=8, n_pairs=52, pair_res=(5, 4), n_steps=15,
+                       sweeps=1).fit(X, y)
+        assert len(model.interaction_terms()) == 52
+        assert np.all(np.isfinite(model.predict(X[:50])))
+
     def test_constant_feature_is_dropped(self):
         X, y = _additive_data(n=200, seed=4)
         X = np.column_stack([X, np.ones(len(X))])

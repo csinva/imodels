@@ -353,19 +353,20 @@ GPGam fits a generalized additive model with pairwise interactions. Every shape 
 
 Binning is what makes this practical. Once the features are binned, the exact GP marginal likelihood depends on the data only through the bin co-occurrence counts `Z'Z`, the bin sums `Z'y`, and `y'y`. One pass over the data computes those, and every optimizer step after that costs the same whether the data had a thousand rows or a hundred thousand.
 
-That one likelihood also settles every choice a GAM usually leaves to the user. How smooth each shape function should be follows from a mixture of two kernels. Features that explain nothing get amplitudes near zero and drop out. The grid resolution for each interaction is picked by comparing likelihoods. Nothing is set by cross-validation and nothing is random, so two fits on the same data give the same model.
+That one likelihood settles every choice a GAM usually leaves to the user. How smooth each shape function should be follows from a mixture of two kernels whose lengthscales are learned and shared across features. Features that explain nothing get amplitudes near zero and drop out, and a hierarchical prior shrinks each kernel's amplitudes toward their centre across features, so that choice is stable across splits. Interactions are screened on the residual; up to 48 are fit jointly, and above a thousand rows the rest, up to five per feature, are backfit on the joint model's residual with each surface's grid resolution picked by comparing likelihoods. Nothing is set by cross-validation and nothing is random, so two fits on the same data give the same model.
 
 ```python
 from imodels import GPGamRegressor
 model = GPGamRegressor().fit(X_train, y_train)
 
 grid, values, std = model.shape_function(0, return_std=True)   # feature 0's curve, with its band
+model.kernel_weights(0)                                        # the smooth/rough split the likelihood chose
 model.interaction_terms()                                      # the pairs it chose to include
 ```
 
-Because the model is a Gaussian process, each curve arrives with a posterior band, so you can see which parts of a shape function the data actually pins down. The [post](https://csinva.io/imodels/gpgam.html) walks through a model fit to California housing, curve by curve and interaction by interaction, including the latitude-by-longitude surface drawn over the state itself.
+Because the model is a Gaussian process, each curve arrives with a posterior band, so you can see which parts of a shape function the data actually pins down. The [post](https://csinva.io/imodels/gpgam.html) walks through a model fit to California housing, curve by curve and interaction by interaction.
 
-Across four regression benchmark suites covering 113 datasets, GPGam is the strongest interpretable model on three of them and ties explainable boosting machines on the fourth. OpenML-CTR23 is the most informative of the four, since it was held out and used for no design decision. There GPGam places first among interpretable models, with a mean rank of 2.11 against EBM's 2.32.
+On the development suite (65 datasets, at most 1,000 rows each) GPGam is the strongest interpretable model and second overall to TabPFN. On two held-out suites with every dataset shared with the development suite removed, TabArena and OpenML-CTR23, it is again the strongest interpretable model: first of eleven by mean rank on TabArena and second to TabPFN on CTR23, with a geometric-mean RMSE ratio of 0.97 against explainable boosting machines and wins on 22 of the 35 datasets. Every model in those comparisons was refit on identical preprocessing and the same split.
 
 ### Hierarchical shrinkage: post-hoc regularization for tree-based methods
 
