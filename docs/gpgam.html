@@ -30,7 +30,7 @@ stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 <path d="M9.5 21v-6h5v6"></path>
 </svg>
 </a>
-<p id="site-tagline">imodels. Sklearn-compatible interepretable models.</p>
+<p id="site-tagline">imodels. Sklearn-compatible interpretable models.</p>
 <a href="index.html" id="site-logo">
 <img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
 alt="imodels">
@@ -103,32 +103,15 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
                         dollars. It was asked for two interaction terms, and nothing else was set. On a
                         held-out fifth of the data it reaches an <i>R</i><sup>2</sup> of 0.825.</p>
 
-                    <p>This is the whole model: eight curves, one per feature, each with the Gaussian
-                        process posterior drawn two standard deviations wide, and two interaction
-                        surfaces, one of them over the state it describes. Nothing else is fitted.</p>
+                    <p>This is the whole model: eight curves, one per feature, and two interaction
+                        heatmaps. No parameters exist besides these curves.</p>
 
                     <span class="fig-anchor" id="fig1"></span>
                     <div id="gam-all"></div>
                     <p class="gam-note" id="gam-note">Hover over a panel to read what it shows.</p>
 
-                    <p class="caption"><b>Fig 1.</b> The whole model: a GPGam fit to California housing. Eight shape functions, each with its posterior drawn two standard deviations wide, and two interaction terms. Hover to explain: the note above this caption describes the panel under the cursor.</p>
-
-                    <p>The curves are ordered by how far they move. The last two barely move at all:
-                        block group population and bedrooms per household span under $22k end to end.
-                        No selection step removed them; their kernel amplitudes were driven near zero by
-                        the same likelihood that fit everything else, which is what automatic relevance
-                        determination does.</p>
-
-                    <p>Every band widens toward the ends of its curve. That is an edge effect rather
-                        than a density one, since quantile bins hold roughly equal counts by
-                        construction: a bin in the middle of a grid borrows strength from neighbours on
-                        both sides, while a bin at the end has neighbours on one side only.</p>
-
-                    <p>The two surfaces are worth
-                        +0.0545 in <i>R</i><sup>2</sup>. Without them the
-                        same model scores 0.7705, with them 0.825. Fitting all 24
-                        available pairs instead of two adds only a further +0.014, so nearly all the
-                        interaction structure in this data sits in these two terms.</p>
+                    <p class="caption"><b>Fig 1.</b> The whole model: a GPGam fit to California housing.
+                      Hover over a plot to explain it.</p>
 
 
 
@@ -280,89 +263,41 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
 
                     <h2 id="results">2. Experimental results</h2>
 
-                    
-
-                    <h3>How the model was found</h3>
 
                     <p>GPGam was produced by the autoresearch loop described
-                        in <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (see accompanying code on <a href="https://github.com/csinva/agentic-imodels">github</a>.
-                        The loop was given a benchmark, a
-                        rule that the model stay additive with at most pairwise terms, and one
-                        instruction: beat explainable boosting machines. The loop proposed a change,
-                        measured it on 65 regression datasets, and kept it only if the numbers held.
-                        Every failed idea was recorded with its cost, and anything that did not improve
-                        the benchmark was removed, which is why the parameter list is short.</p>
-
-                    <p>Nothing in that instruction mentions GPs, binning, or marginal
-                        likelihood. Those came out of the search.</p>
+                        in <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (see accompanying code on <a href="https://github.com/csinva/agentic-imodels">github</a>).
+                        Specifically, Fable 5.1 was given the imodels-65 suite of benchmarks from there and instructed to autoresearch a GAM algorithm that maximized predictive performance.
+                      The autoresearch loop explored a diverse range of GAM solutions, steadily improving performance and finally culminating in GPGam.
+                      </p>
 
                     <span class="fig-anchor" id="fig2"></span>
                     <div id="hist-plot"></div>
 
-                    <p class="caption"><b>Fig 2.</b> Size and accuracy across the whole search: lines of code (bars) and mean rank on the 65-dataset suite (line, lower is better) at every committed version, from the shallow-tree baseline through spline GAMs and boosted GA2Ms to the Gaussian-process GAM. Ranks are measured consistently, each version refit on the official split and ranked against the same baseline pool.</p>
+                    <p class="caption"><b>Fig 2.</b> Size and accuracy across the whole search: lines of code (bars) and mean rank on the 65-dataset suite (line, lower is better) at every committed version, from the shallow-tree baseline through spline GAMs and boosted GA2Ms to the Gaussian-process GAM.</p>
 
-                    <p>The plot covers the whole search, and its four bands are four model families.
-                        The loop started from a shallow decision tree (mean rank 10.7 on the 65-dataset
-                        suite, against EBM's 5.0). Its first nine versions were penalized spline GAMs
-                        distilled to readable segments, built for the interpretability tests; they reached
-                        6.65. The next twenty-two were boosted GA2Ms with cross-validated selection and
-                        seed averaging, the same family as EBM, and they closed most of the gap, 4.03 by
-                        v31, at the cost of a file that had grown to nearly a thousand lines. v35 was the
-                        reformulation: fitting the GAM as an additive Gaussian process over binned
-                        features cut the file to 507 lines and took the rank to 3.71 in one step, because
-                        one exact likelihood replaced the cross-validation, bagging and boosting rounds
-                        the previous family had needed. Every rank in the plot is measured the same way,
-                        each version refit on the official split and ranked against the same baseline
-                        pool; versions without a dot were not rerun.</p>
+                  <h3>Benchmarks</h3>
 
-                    <p>From v36 the loop was asked to scale, and the file more than doubled (the binned
-                        sufficient statistics that make the fit affordable at any size, then a boosted
-                        tree stage). From v39 it was asked to simplify, and thirteen rounds of ablation
-                        took out the tree stage, a second model class for small data, half the kernel
-                        dictionary, both priors and several parameters that did nothing, bringing the
-                        file back below where v35 started. That cost accuracy on the small suite, and the
-                        plot shows it: the rank drifts from 3.71 to 4.60, nearly all of it from dropping
-                        the separate small-data model, a trade made deliberately for one model instead
-                        of two and still well ahead of EBM.</p>
-
-                    <p>Two later rounds asked for the model to generalize rather than to score. The
-                        first finding was about measurement, not modelling: the single split behind every
-                        earlier decision moves EBM's own error by a median of 5.7%, so many of those
-                        decisions had been made inside the noise. Everything after v47 was accepted only
-                        by a paired test on three redrawn splits with the rule fixed in advance. Under
-                        that rule three changes survived out of more than a dozen tried (v48: the learned
-                        shared lengthscales, the hierarchical prior on amplitudes, and more capacity
-                        below a thousand rows), and one more in the second round (v49: the backfit
-                        interactions above it), after an audit showed that EBM was fitting five times as
-                        many interactions on the datasets it won by the most. The plot marks both rounds:
-                        the file grew again, this time for measured reasons.</p>
-
-                    <p>The prompts that drove the search, the benchmark harnesses, and the
-                        per-dataset results are all kept alongside the model in
-                        <a href="https://github.com/csinva/agentic-imodels/tree/main/evolve_gam"><code>evolve_gam/</code></a>.</p>
-
-                        <h3>Benchmarks</h3>
-
-                    <p>Four regression benchmark suites were used, 107 datasets after de-duplication,
-                        covering 50 to 72,000 rows and up to 1,024 features. GPGam is the strongest
-                        interpretable model on every suite. On the two held-out suites it is first of
-                        eleven models by mean rank on TabArena and second to TabPFN on CTR23; its
-                        geometric-mean RMSE against explainable boosting machines across the 35 held-out
-                        datasets is 0.97, with wins on 22 of them.</p>
+                    <p>GPGam outperforms interpretable baselines across both visible datasets it saw during the autoresearch loop and held-out datasets where it was only evaluated at the end (see Table 1).
+                      During development it saw imodels-65, which contains 65 datasets which were subsampled to have no more than 50 features and 1000 rows.
+                      imodels-7 shows 7 key datasets from there evalauted at full size.
+                      The other datasets are held out and completely non-overlapping with imodels-65. 
+                      In all cases, GPGam outperforms baseline interpretable models, including the SOTA GAM algorithm <a href="">EBM</a>.
+                      Each dataset is randomly split into an 80/20 train/test split.
+                    </p>
 
                     <p class="caption caption-above"><b>Table 1.</b> Mean rank of GPGam and ten other regression models on four benchmark suites, held-out suites de-duplicated against the development suite.</p>
                     <table class="ranktbl">
                         <thead>
                             <tr class="tblsec"><td colspan="1"></td><td colspan="2" style="text-align: center;">Visible</td><td colspan="2" style="text-align: center;">Hidden</td></tr>
-                            <tr><th></th><th>imodels-65</th><th>classic-7</th><th>TabArena-12</th><th>CTR23-23</th></tr>
+                            <tr><th></th><th>imodels-65</th><th>imodels-7</th><th>TabArena-12</th><th>CTR23-23</th></tr>
                             <tr><th></th><th style="font-weight:normal;color:#777">65 sets</th><th style="font-weight:normal;color:#777">7 sets</th><th style="font-weight:normal;color:#777">12 sets</th><th style="font-weight:normal;color:#777">23 sets</th></tr>
                         </thead>
                         <tbody>
                             <tr class="tblsec"><td colspan="5">Interpretable</td></tr>
-                            <tr><td><a href="https://arxiv.org/abs/2605.03808">GPGam</a></td><td><b>3.45</b></td><td><b>2.86</b></td><td><b>2.50</b></td><td><b>3.13</b></td></tr>
+                            <tr><td>GPGam</td><td><b>3.45</b></td><td><b>2.86</b></td><td><b>2.50</b></td><td><b>3.13</b></td></tr>
                             <tr><td><a href="https://doi.org/10.1145/2487575.2487579">EBM</a></td><td>3.94</td><td>3.57</td><td>3.00</td><td>3.48</td></tr>
                             <tr><td><a href="https://doi.org/10.1214/07-AOAS148">RuleFit</a></td><td>6.78</td><td>7.86</td><td>7.42</td><td>7.52</td></tr>
-                            <tr><td><a href="https://doi.org/10.1080/00401706.1970.10488634">Ridge</a></td><td>6.83</td><td>9.43</td><td>8.92</td><td>7.83</td></tr>
+                            <tr><td>Ridge</td><td>6.83</td><td>9.43</td><td>8.92</td><td>7.83</td></tr>
                             <tr><td><a href="https://arxiv.org/abs/2202.00858">Hierarchical shrinkage</a></td><td>7.77</td><td>8.43</td><td>8.08</td><td>7.74</td></tr>
                             <tr><td><a href="https://arxiv.org/abs/2201.11931">FIGS</a></td><td>7.86</td><td>7.29</td><td>6.75</td><td>6.39</td></tr>
                             <tr><td><a href="https://doi.org/10.1201/9781315139470">Decision tree</a></td><td>8.11</td><td>8.29</td><td>8.42</td><td>8.48</td></tr>
@@ -370,40 +305,15 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
                             <tr><td><a href="https://doi.org/10.1038/s41586-024-08328-6">TabPFN*</a></td><td><b>2.51</b></td><td><b>1.86</b></td><td>3.75</td><td><b>2.87</b></td></tr>
                             <tr><td><a href="https://doi.org/10.1214/aos/1013203451">Gradient boosting</a></td><td>4.78</td><td>4.57</td><td>4.67</td><td>4.57</td></tr>
                             <tr><td><a href="https://doi.org/10.1023/A:1010933404324">Random forest</a></td><td>5.14</td><td>3.14</td><td><b>3.50</b></td><td>4.87</td></tr>
-                            <tr><td><a href="https://doi.org/10.1038/323533a0">MLP</a></td><td>8.83</td><td>8.71</td><td>9.00</td><td>9.13</td></tr>
+                            <tr><td>MLP</td><td>8.83</td><td>8.71</td><td>9.00</td><td>9.13</td></tr>
                         </tbody>
                     </table>
 
-                    <p class="tblnote">Mean rank across the datasets of each suite, lower is better,
-                        over the same eleven models everywhere. Ranks are only comparable down a column,
-                        not across rows of different pools. Bold marks the best model within its
-                        section. TabPFN could not be fit on three datasets, two in TabArena with 1,024
-                            and 81 features and one in CTR23 with 81, and is ranked last on those.</p>
-
-                    <p class="tblnote"><b>What is held out, and what was removed.</b> The imodels-65 suite
-                        is where the model was developed, cut to at most 1,000 training rows and 50
-                        features at a fixed seed. Classic-7 is the same suite's seven OpenML datasets at
-                        full size. TabArena and CTR23 are held out, and are shown after de-duplication:
-                        TabArena loses <code>houses</code> (California housing, which is in the
-                        development suite) and CTR23 loses its five development-suite overlaps and its
-                        seven TabArena overlaps, leaving 12 and 23 datasets. Before de-duplication and
-                        with an earlier version of the model, the same table read as a comfortable win;
-                        after it, that version merely tied EBM head to head. The current model is the one
-                        that beats it on the de-duplicated sets, and every model in the table was refit on
-                        identical preprocessing and the same split.</p>
-
-                    <p class="tblnote">*TabPFN is handicapped in the three full-size suites. It is capped at
-                        2,500 training rows by GPU memory, and on a dataset wider than 500 features only
-                        the first 500 are passed to it; where it could not run at all it is ranked last.
-                        Its numbers are a lower bound on the method rather than a measurement of it. The checkpoint is the
+                    <p class="tblnote">*Due to GPU memory constraints, TabPFN is capped at
+                        2,500 training rows by GPU memory and 500 features, so its numbers may underestimate its performance.
+                        The checkpoint is the
                         default regressor of <a href="https://arxiv.org/abs/2511.08667">TabPFN-2.5</a>
                         (<code>tabpfn-v2.5-regressor-v2.5_default.ckpt</code>, tabpfn 7.0.0).</p>
-
-                    <p class="tblnote">Every result is one 80/20 split at a fixed seed with all models at
-                        library defaults, which is not the protocol TabArena or CTR23 define, so none of
-                        these numbers compare to published leaderboards. Redrawing the split moves EBM's
-                        own error by a median of 5.7% between splits, which is why the development
-                        decisions behind this model were made on three redrawn splits, not one.</p>
 
                     <script>
                     (function () {
@@ -473,11 +383,7 @@ y.T @ y</code></pre>
 
                     <p>Fig <a href="#fig1">1</a> fits one model to a synthetic dataset of 250 rows
                         whose five features differ only in how smooth their effect is: a slow wave, a
-                        straight line, a sharp step, a rapid wave, and a feature with no effect. The
-                        panels run in that order, smoothest first. The same model, with no tuning and
-                        no per-feature settings, handles all five. The sample is small deliberately: the bands are the
-                        posterior two standard deviations wide, and at 4,000 rows they are narrower than
-                        the line drawn over them.</p>
+                        straight line, a sharp step, a rapid wave, and a feature with no effect.</p>
 
                     <span class="fig-anchor" id="fig3"></span>
                     <div id="synth-plot"></div>
@@ -503,9 +409,6 @@ y.T @ y</code></pre>
                             rather than exactly zero.</li>
                     </ul>
 
-                    <p>Those same amplitudes select features. A feature that explains nothing has its
-                        amplitude driven to zero and drops out.</p>
-
                     <p>Three more choices that a GAM usually leaves to its user are made by that
                         likelihood too. The two lengthscales are not fixed: one Matérn and one squared
                         exponential lengthscale are learned and shared by every feature, with a weak
@@ -517,9 +420,7 @@ y.T @ y</code></pre>
                         and the model's error on a redrawn split can change by half; with it the choice is
                         stable.</p>
 
-                    <h3>Interactions</h3>
-
-                    <p>Interactions are screened on the residual of the main effects and the top
+                    <p>                    <b>Interactions. </b> Interactions are screened on the residual of the main effects and the top
                         candidates are fit as two-dimensional surfaces over grids of quantile bins. Up to
                         48 of them are fit jointly in blocks that share shrinkage, with the grid
                         resolution of each block chosen by comparing marginal likelihoods. That joint fit
