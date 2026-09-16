@@ -65,8 +65,8 @@ aria-label="View source on GitHub" title="GitHub">
                         spend most of their budget proving optimality rather than finding the tree, which is why they are
                         rarely used. Here we introduce <b>AutoOptTree</b>, an exact solver discovered through autoresearch
                         with frontier agents. It certifies optimality on 63 of 70 benchmark problems against 47 for GOSDT,
-                        and is 62&times; faster on geometric mean. The speedup comes entirely from stronger admissible
-                        bounds, so every tree it returns is still a proven optimum.
+                        and is 81&times; faster on geometric mean. The speedup comes from stronger admissible bounds and
+                        from compiling the search, so every tree it returns is still a proven optimum.
                     </p>
 
                     <nav class="toc-main">
@@ -115,7 +115,7 @@ else:
 
                     <p>What makes a problem expensive is the number of distinct values in the data, not the number of
                         rows: each one is a candidate split. Breast cancer's 30 continuous columns become 11,513 binary
-                        features, and the search above certifies in 0.15 seconds only because a leaf priced at 0.05
+                        features, and the search above certifies in 0.05 seconds only because a leaf priced at 0.05
                         rules most trees out immediately. Drop <code>regularization</code> to 0.02 and the same problem
                         does not finish in a minute. Discretizing the features first, or pricing leaves higher, is what
                         keeps an exact solver exact in practice.</p>
@@ -143,7 +143,7 @@ else:
                         </thead>
                         <tbody>
                             <tr class="tblsec"><td colspan="4">Exact</td></tr>
-                            <tr><td><b>AutoOptTree</b></td><td><b>63.0</b></td><td><b>0.0081 &plusmn; 0.0001</b></td><td><b>0</b></td></tr>
+                            <tr><td><b>AutoOptTree</b></td><td><b>63.0</b></td><td><b>0.0062 &plusmn; 0.0000</b></td><td><b>0</b></td></tr>
                             <tr><td>pygosdt (starting point)</td><td>55.3</td><td>0.102 &plusmn; 0.002</td><td>0</td></tr>
                             <tr><td><a href="https://arxiv.org/abs/2112.00674">STreeD</a></td><td>51.0</td><td>0.332 &plusmn; 0.024</td><td>0</td></tr>
                             <tr><td><a href="https://arxiv.org/abs/2006.08690">GOSDT</a></td><td>47.0</td><td>0.504 &plusmn; 0.027</td><td>1</td></tr>
@@ -158,7 +158,8 @@ else:
                         47 and 48, and pygosdt, which certified 56, 55 and 55. Only three problems are responsible, and
                         each of them lands within a few seconds of the 30 s cap in every run, so what changes is whether
                         a proof that was always going to be marginal fits inside the budget, not what the solver can
-                        prove. AutoOptTree's 63 and its seven unsolved problems are the same in all three runs.</p>
+                        prove. AutoOptTree's 63 and its seven unsolved problems are the same in all three runs, and
+                        its geometric mean is stable to four decimals across them.</p>
 
                     <p class="tblnote">The one false certificate is GOSDT's, on tic-tac-toe at
                         <code>regularization</code>=0.02: it reports a tree as optimal whose objective is worse than a
@@ -183,13 +184,12 @@ else:
 
                     <pre><code>minimise   misclassification rate + regularization * (number of leaves)</code></pre>
 
-                    <p>over every decision tree on the binarized features. The search is a memoised depth-first
-                        branch-and-bound. The subset of training rows reaching a node (its <i>capture set</i>) is held as
-                        a single Python big integer, so a subproblem is one dictionary key and identical subproblems
-                        reached by different paths are solved once. Each subproblem carries an interval
-                        <code>[lb, ub]</code> on its optimal risk and a budget; the recursion either closes that interval
-                        or proves the optimum exceeds the budget, which is what makes the final answer a certificate
-                        rather than an incumbent.</p>
+                    <p>over every decision tree on the binarized features. The search is a memoised
+                        branch-and-bound. The subset of training rows reaching a node (its <i>capture set</i>) is a
+                        bitmask over packed 64-bit words, so identical subproblems reached by different paths are
+                        recognised and solved once. Each subproblem carries an interval <code>[lb, ub]</code> on its
+                        optimal risk and a budget; the search either closes that interval or proves the optimum exceeds
+                        the budget, which is what makes the final answer a certificate rather than an incumbent.</p>
 
                     <p>Everything that made it faster is a bound, and every bound is admissible: they change which
                         subproblems are visited, never which tree is optimal. The ones that did the most work:</p>
@@ -202,16 +202,29 @@ else:
                             root split whose two sides have some number of leaves each. Combining the exact one- and
                             two-leaf values with a cheap floor for three-leaf subtrees bounds every such tree at once, so
                             a node can be certified without expanding a single child.</li>
-                        <li><b>Triples give exact depth-3 values.</b> Counting triples of candidate splits yields each
-                            child's exact best three-leaf and best (2,2)-leaf tree. It costs O(m&#179;) per node, so it
-                            is used only where the node is narrow enough to pay for itself.</li>
+                        <li><b>The whole search is compiled.</b> Nodes became rows of arrays behind an
+                            open-addressing index and the recursion became an explicit stack of frames, so the search
+                            and all its stages are one compiled function rather than a Python loop calling compiled
+                            kernels. Python re-enters it in short chunks only to enforce the time and memory limits.</li>
                     </ul>
 
-                    <p>The per-node counting runs in numba kernels over packed 64-bit words, and rows are ordered so that
-                        the capture sets of deep nodes occupy few of those words. Together the bounds and the kernels
-                        account for the 62&times;: the starting solver spent its time proving that subtrees it had
-                        already explored could not be beaten, and most of that proving is now done arithmetically from
-                        counts the node already has.</p>
+                    <p>One bound that did work earlier no longer earns its place, which is worth recording. Counting
+                        <i>triples</i> of candidate splits gives each child its exact best three-leaf and best
+                        (2,2)-leaf tree, and while the search was a Python loop that bought enough pruning to pay for
+                        its O(m&#179;) cost. Once the search was compiled, the recursion it saved became cheaper than
+                        the counting it added, and turning the stage off made the solver faster on every dataset it had
+                        ever run on. It is off in the shipped model.</p>
+
+                    <p>Rows are ordered so that the capture sets of deep nodes occupy few words, which is free
+                        because the objective does not depend on the order of the training rows. Together the bounds and
+                        the compiled engine account for the speedup: the solver this one started from spent its time
+                        proving that subtrees it had already explored could not be beaten, and most of that proving is
+                        now done arithmetically from counts the node already has.</p>
+
+                    <p>A practical note. The compiled search takes about 20 seconds to build the first time it runs on
+                        a machine. The result is cached on disk, so every later process loads it in about a second; if
+                        the cache directory is unwritable, set <code>OPTTREE_NUMBA_CACHE=0</code> to skip caching and
+                        pay the build each time.</p>
 
                     <!-- TODO: expand. Worth adding once the experiments land: a worked example of the shape
                          relaxation on a small node, the ablation of each bound (available in the run's NOTES.md),

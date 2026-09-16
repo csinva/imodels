@@ -7,20 +7,27 @@ calls. The objective is the one from `GOSDT
     minimise   misclassification rate + regularization * (number of leaves)
 
 over every decision tree on the binarized features. The search is a memoised
-depth-first branch-and-bound over capture sets, where a capture set (the subset
-of training rows reaching a node) is one Python big integer, and a subproblem is
-keyed by that integer. Each subproblem carries an interval ``[lb, ub]`` on its
-optimal risk, and the recursion either closes that interval or proves it exceeds
-the budget it was given, so a returned tree is certified optimal rather than
-merely the best one found.
+branch-and-bound over capture sets, where a capture set (the subset of training
+rows reaching a node) is a bitmask over packed 64-bit words. Each subproblem
+carries an interval ``[lb, ub]`` on its optimal risk, and the recursion either
+closes that interval or proves it exceeds the budget it was given, so a returned
+tree is certified optimal rather than merely the best one found.
 
 Every bound here is admissible: they change which subproblems are visited, never
 which tree is optimal. The ones that do the work are the equivalent-points and
 leaf-support bounds of the original paper, a MurTree-style pairwise stage that
 gives each child its exact best two-leaf tree, a shape relaxation that bounds
-every tree with four or more leaves, and an exact depth-3 stage over triples of
-candidate splits. The per-node counting runs in numba kernels over packed 64-bit
-words.
+every tree with four or more leaves, and a similar-support bound propagated
+along each numeric column.
+
+The whole search is one numba function rather than a Python recursion: nodes are
+rows of arrays behind an open-addressing index, and the recursion is an explicit
+stack of frames with a phase machine for the candidate loop, since numba cannot
+link a self-recursive function of this size. Python re-enters it in short
+chunks to enforce the time and memory limits, so an interrupted search still
+returns the best tree it found. `CompiledOptimizer` is that engine and
+`Optimizer` is an equivalent pure-Python one, kept because it is far easier to
+read and is what the exactness tests check the compiled engine against.
 
 Reference implementation and derivations: https://github.com/csinva/agentic-imodels
 """
@@ -28,7 +35,9 @@ Reference implementation and derivations: https://github.com/csinva/agentic-imod
 import importlib.util
 import json
 import os
+import queue
 import subprocess
+import threading
 import time
 
 import numpy as np
@@ -37,9 +46,9 @@ import pandas as pd
 EPS = 1e-10
 
 #: numba is optional for importing imodels but required to fit this model: the
-#: counting kernels below are the search, and interpreting them costs orders of
-#: magnitude. `AutoOptTreeClassifier.fit` raises with an install hint when it is
-#: missing; `njit` falls back to a no-op decorator so this module still imports.
+#: search itself is compiled, and interpreting it costs orders of magnitude.
+#: `AutoOptTreeClassifier.fit` raises with an install hint when it is missing;
+#: `njit` falls back to a no-op decorator so this module still imports.
 HAVE_NUMBA = importlib.util.find_spec("numba") is not None
 
 if HAVE_NUMBA:
@@ -51,10 +60,14 @@ else:
             return func
         return decorate(args[0]) if args and callable(args[0]) else decorate
 
+#: Compiling the search takes ~15 s, so the result is cached on disk and later
+#: processes load it in a second or two. Set OPTTREE_NUMBA_CACHE=0 to disable,
+#: which is what to do if the cache directory is read-only or shared oddly.
+NUMBA_CACHE = os.environ.get("OPTTREE_NUMBA_CACHE", "1") != "0"
 
 # ------------------------------------------------------------------ fastbits
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def _popcount64(x):
     x = x - ((x >> np.uint64(1)) & np.uint64(0x5555555555555555))
     x = (x & np.uint64(0x3333333333333333)) + ((x >> np.uint64(2)) & np.uint64(0x3333333333333333))
@@ -62,7 +75,7 @@ def _popcount64(x):
     return (x * np.uint64(0x0101010101010101)) >> np.uint64(56)
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def child_counts(F, masks, out):
     """out[j, r] = popcount(F[j] & masks[r]) for every feature j and mask r."""
     m, W = F.shape
@@ -76,7 +89,7 @@ def child_counts(F, masks, out):
     return out
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def child_counts_subset(F, feats, masks, out):
     """Same as ``child_counts`` restricted to the rows ``feats`` of ``F``."""
     W = F.shape[1]
@@ -91,7 +104,7 @@ def child_counts_subset(F, feats, masks, out):
     return out
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def segment_dp(S, costs, lam, best, back):
     """Optimal segmentation of ``M`` ordered bins into contiguous segments.
 
@@ -124,7 +137,7 @@ def segment_dp(S, costs, lam, best, back):
     return best[M]
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def segment_dp_uniform(S, w, lam, best, back):
     """``segment_dp`` for the uniform cost matrix (``w`` off the diagonal, 0 on it)."""
     M = S.shape[0] - 1
@@ -151,7 +164,7 @@ def segment_dp_uniform(S, w, lam, best, back):
     return best[M]
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def node_stats(F, feats, rows, group_of, masks, weights, costs, diff, lam,
                out_feats, out_L, out_l_leaf, out_l_lb, out_l_solved, out_r_leaf, out_r_lb,
                out_r_solved, out_l_pot, out_dist, out_l_pred, out_r_pred, out_pos):
@@ -262,7 +275,7 @@ def node_stats(F, feats, rows, group_of, masks, weights, costs, diff, lam,
     return nv
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def _leaf_cost(cnt, costs, K):
     c = 1e300
     for p in range(K):
@@ -275,7 +288,7 @@ def _leaf_cost(cnt, costs, K):
 
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def refilter_candidates(order, n_cand, split_lb, split_ub2, limit):
     """Keep the candidates in order[:n_cand] whose (raised) split_lb is within the limit,
     sorted by (split_lb, split_ub2), compacted in place; returns (count, min dropped lb)."""
@@ -306,7 +319,7 @@ def refilter_candidates(order, n_cand, split_lb, split_ub2, limit):
     return n, min_dropped
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def shape_bound(l_leaf, ml2_l, c3_l, r_leaf, ml2_r, c3_r, lam, l_lb, r_lb, l_ub2, r_ub2, split_lb, split_ub2):
     """Per-child bounds and the shape-relaxation bound from the pairwise counts.
 
@@ -348,7 +361,7 @@ def shape_bound(l_leaf, ml2_l, c3_l, r_leaf, ml2_r, c3_r, lam, l_lb, r_lb, l_ub2
             lb_ge4 = g
     return best_i, best_d2, lb_ge4
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def depth2_pairs(F, feats, rows, group_of, masks, costs, lam, dist, L, out_ml2_l, out_ml2_r, out_j_l, out_j_r,
                  out_c3_l, out_c3_r):
     """Best 2-leaf loss of the left (feature true) and right child of every candidate split.
@@ -466,7 +479,7 @@ def depth2_pairs(F, feats, rows, group_of, masks, costs, lam, dist, L, out_ml2_l
     return 0
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def prep_candidates(gidx, l_leaf, l_lb, r_leaf, r_lb, bound, do_exchange, split_lb, split_ub, order):
     """Split bounds, threshold-exchange dominance, cheap filter and candidate order.
 
@@ -523,7 +536,7 @@ def pack_columns(Xb: np.ndarray) -> np.ndarray:
     return np.ascontiguousarray(padded.view(np.uint64))
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def expand_kernel(F, features, group_of, kw, mask_matrix, weights, costs, diff, lam, bound, do_exchange,
                   io, fo, bo, L, dist):
     """node_stats + prep_candidates + (depth2_pairs + shape_bound) in one call.
@@ -599,7 +612,7 @@ def expand_kernel(F, features, group_of, kw, mask_matrix, weights, costs, diff, 
     return nv, n_cand, best_i, min_rejected, True, i_d2, best_d2, lb_ge4, M, Fc
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def max_pair(a, b):
     """max over both arrays (the children's largest lower bound)."""
     m = 0.0
@@ -612,14 +625,14 @@ def max_pair(a, b):
 
 
 # depth-3 stage gate: triples are enumerated when the node has at most this many candidates
-TRIPLE_MAX_NV = int(os.environ.get("TRIPLE_MAX_NV", "14"))
+TRIPLE_MAX_NV = int(os.environ.get("TRIPLE_MAX_NV", "0"))    # 0: depth-3 stage off (v40)
 D3_MAX_COUNT_LAM = float(os.environ.get("D3_MAX_COUNT_LAM", "64"))
 TRIPLE_MAX_OPS = 8.0e5
 D3_MAX_LEAVES = float(os.environ.get("D3_MAX_LEAVES", "8"))
 D3_MAX_KW = int(os.environ.get("D3_MAX_KW", "64"))
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def depth3_triples(F, feats, rows, masks, costs, uniform_w, lam, dist, L, out_val, out_arg):
     """Exact 3-leaf and (2,2)-leaf optima of every child from the class counts of all triples.
 
@@ -911,7 +924,7 @@ def depth3_triples(F, feats, rows, masks, costs, uniform_w, lam, dist, L, out_va
             out_arg[r, io, 5] = tB
 
 
-@njit(cache=True, nogil=True)
+@njit(cache=NUMBA_CACHE, nogil=True)
 def depth3_bounds(l_leaf, ml2_l, c3_l, r_leaf, ml2_r, c3_r, val, lam, l_ub3, r_ub3, l_lb3, r_lb3, kind_l, kind_r):
     """Per-child achievable risk over {leaf, 2, 3, (2,2)} trees and lower bound over all trees.
 
@@ -1610,6 +1623,12 @@ class TreeClassifier:
 
 class TimeLimitReached(Exception):
     """Raised inside the search when the time or memory limit is hit."""
+
+
+def _store_bytes(st) -> int:
+    """Bytes held by a node store (keys, index, per-node fields, pending)."""
+    cap, W = st[ST_KEYS].shape
+    return int(cap) * (8 * int(W) + 16 + 7 * 8 + 32 + 1)
 
 
 def _rss_bytes() -> int:
@@ -2634,3 +2653,1769 @@ class Optimizer:
         left = self._make_node(lkey)
         right = self._make_node(rkey)
         return {"feature": j, "true": self.extract(left), "false": self.extract(right)}
+
+# ------------------------------------------------------------------ gosdt
+
+# ===========================================================================
+# Compiled search (v28): the whole branch-and-bound in numba over an array memo
+# ===========================================================================
+# Node store: dense arrays indexed by node id (nkeys, ncount, nleaf, npred, nlb, nub,
+# nsplit, nsolved, npend) and an open-addressing index (hidx: hash slot -> node id).
+# meta: [n_nodes, iterations, abort (0 none, 1 iteration budget, 2 store full), max_iter]
+
+ST_KEYS, ST_HIDX, ST_COUNT, ST_LEAF, ST_PRED, ST_LB, ST_UB, ST_SPLIT, ST_SOLVED, ST_PEND, ST_META = range(11)
+DT_F, DT_GROUP, DT_MASKS, DT_WEIGHTS, DT_COSTS, DT_COSTS_T, DT_DIFF = range(7)
+# parameters (float array): lam, uniform_w, n; flags (int array): K, W, has_groups, look_ahead,
+# similar_support, cont_exchange, d3 enabled, is_uniform
+PF_LAM, PF_UW, PF_N = range(3)
+PI_K, PI_W, PI_GROUPS, PI_LOOKAHEAD, PI_SIM, PI_EXCH, PI_D3, PI_UNIFORM = range(8)
+
+
+SH_KEYS, SH_COUNTS, SH_LBS, SH_VALS, SH_USED, SH_META = range(6)   # meta: [T, C, min_count]
+SH_MIN_DIV = int(os.environ.get("SH_MIN_DIV", "64"))        # share subproblems with >= n / SH_MIN_DIV rows
+SH_MEM_MB = float(os.environ.get("SH_MEM_MB", "192"))       # memory budget of the table (all regions)
+SPLIT_EXTERN = -3                                          # split <= -3: solved in thread (-3 - split)
+
+
+def make_shared_table(T, C, W, min_count):
+    return (np.zeros((T, C, W), dtype=np.uint64), np.zeros((T, C), dtype=np.int64), np.zeros((T, C)),
+            np.full((T, C), np.nan), np.zeros((T, C), dtype=np.uint8), np.array([T, C, min_count], dtype=np.int64))
+
+
+def shared_table_capacity(T, W):
+    """Slots per region: a power of two within the memory budget (at least 4096, at most 2**14)."""
+    per_slot = 8 * W + 33
+    C = 4096
+    while C * 2 * T * per_slot <= SH_MEM_MB * 1e6 and C < (1 << 14):
+        C *= 2
+    return C
+
+
+_SH_POOL = {}
+
+
+def get_shared_table(T, W, min_count):
+    """A table for this fit from the pool (one per (T, W)): its used flags and values are
+    reset here, before any thread starts, so every thread sees an empty table."""
+    sh = _SH_POOL.pop((T, W), None)
+    if sh is None:
+        sh = make_shared_table(T, shared_table_capacity(T, W), W, min_count)
+    else:
+        sh[SH_USED][:] = 0
+        sh[SH_VALS][:] = np.nan
+        sh[SH_META][2] = min_count
+    return sh
+
+
+def release_shared_table(sh, T, W):
+    _SH_POOL[(T, W)] = sh
+
+
+def no_shared_table(W):
+    return make_shared_table(0, 1, W, 1 << 62)
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def sh_lookup(sh, kw, count):
+    """(largest bound, exact value or NaN, owner thread) published for the capture ``kw``.
+    Lock-free: keys are written once (a partially written key can only coincide with a
+    strict subset, which has a different row count), bounds only ever increase, and a
+    value is a single 64-bit store made only for the slot's own key, so whatever a reader
+    sees is either NaN or the optimum of exactly this subproblem."""
+    keys = sh[SH_KEYS]; counts = sh[SH_COUNTS]; lbs = sh[SH_LBS]; vals = sh[SH_VALS]; used = sh[SH_USED]
+    T = sh[SH_META][0]; C = sh[SH_META][1]
+    W = kw.shape[0]
+    hmask = np.int64(C - 1)
+    h0 = _slot_of(kw, hmask)
+    best = -1.0
+    val = np.nan
+    owner = -1
+    for t in range(T):
+        slot = h0
+        for _ in range(64):            # bounded probe
+            if used[t, slot] == 0:
+                break
+            if counts[t, slot] == count:
+                same = True
+                for w in range(W):
+                    if keys[t, slot, w] != kw[w]:
+                        same = False
+                        break
+                if same:
+                    v = lbs[t, slot]
+                    if v > best:
+                        best = v
+                    x = vals[t, slot]
+                    if owner < 0 and x == x:
+                        val = x
+                        owner = t
+                    break
+            slot = (slot + 1) & hmask
+    return best, val, owner
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def sh_publish(sh, tid, kw, count, lb, val):
+    """Record a proven bound (and, if ``val`` is not NaN, the exact optimum) in this thread's
+    region (the only writer of that region).  Dropped when the probe finds no room."""
+    keys = sh[SH_KEYS]; counts = sh[SH_COUNTS]; lbs = sh[SH_LBS]; vals = sh[SH_VALS]; used = sh[SH_USED]
+    C = sh[SH_META][1]
+    W = kw.shape[0]
+    hmask = np.int64(C - 1)
+    slot = _slot_of(kw, hmask)
+    for _ in range(64):
+        if used[tid, slot] == 0:
+            if val == val:
+                vals[tid, slot] = val
+            lbs[tid, slot] = lb
+            counts[tid, slot] = count
+            for w in range(W):
+                keys[tid, slot, w] = kw[w]
+            used[tid, slot] = 1
+            return
+        if counts[tid, slot] == count:
+            same = True
+            for w in range(W):
+                if keys[tid, slot, w] != kw[w]:
+                    same = False
+                    break
+            if same:
+                if lb > lbs[tid, slot]:
+                    lbs[tid, slot] = lb
+                if val == val and vals[tid, slot] != vals[tid, slot]:
+                    vals[tid, slot] = val
+                return
+        slot = (slot + 1) & hmask
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def _tighten_stack(st, ws, d, look_ahead):
+    """After the depth-0 bound dropped: re-derive the budgets of the frames below it from
+    their parents' bounds exactly as they were derived when pushed (first child: bound minus
+    the second's lb; second child: bound minus the first's lb while deepening, minus its ub
+    in the final solve).  Budgets only decrease, so every conclusion stays sound."""
+    FI = ws[WS_FI]; FF = ws[WS_FF]
+    nlb = st[ST_LB]; nub = st[ST_UB]
+    for k in range(1, d + 1):
+        p = ws[WS_SLOT][k - 1]; c = ws[WS_SLOT][k]
+        pb = FF[p, FF_BOUND]; phase = FI[p, FI_PHASE]
+        first = FI[p, FI_FIRST]; second = FI[p, FI_SECOND]
+        if not look_ahead:
+            nb = pb
+        elif phase == 3 or phase == 6:
+            nb = pb - nlb[second]
+        elif phase == 4:
+            nb = pb - nlb[first]
+        elif phase == 8:
+            nb = pb - nub[first]
+        else:
+            return
+        if phase == 3 and nb < FF[p, FF_BF]:
+            FF[p, FF_BF] = nb
+        if phase == 4 and nb < FF[p, FF_BS]:
+            FF[p, FF_BS] = nb
+        if nb < FF[c, FF_BUDGET]:
+            FF[c, FF_BUDGET] = nb
+        if nb < FF[c, FF_BOUND]:
+            FF[c, FF_BOUND] = nb
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def _sh_publish_node(sh, tid, st, node, lb0, lam):
+    """After a node's frame: publish its optimum when solved, else its bound when it was
+    raised by at least lambda/4 since entry."""
+    if st[ST_SOLVED][node] == 1:
+        if st[ST_SPLIT][node] > SPLIT_EXTERN:      # not adopted from another thread
+            sh_publish(sh, tid, st[ST_KEYS][node], st[ST_COUNT][node], st[ST_UB][node], st[ST_UB][node])
+    elif st[ST_LB][node] > lb0 + 0.25 * lam:
+        sh_publish(sh, tid, st[ST_KEYS][node], st[ST_COUNT][node], st[ST_LB][node], np.nan)
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def _slot_of(kw, hmask):
+    h = np.uint64(1469598103934665603)
+    for w in range(kw.shape[0]):
+        h = (h ^ kw[w]) * np.uint64(1099511628211)
+    return np.int64(h & np.uint64(hmask))
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def store_find(st, kw):
+    """Node id of the capture ``kw`` or -1."""
+    nkeys = st[ST_KEYS]
+    hidx = st[ST_HIDX]
+    W = kw.shape[0]
+    hmask = np.int64(hidx.shape[0] - 1)
+    slot = _slot_of(kw, hmask)
+    while True:
+        nid = hidx[slot]
+        if nid < 0:
+            return -1
+        same = True
+        for w in range(W):
+            if nkeys[nid, w] != kw[w]:
+                same = False
+                break
+        if same:
+            return nid
+        slot = (slot + 1) & hmask
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def store_add(st, kw, count, leaf, pred, lb, solved):
+    """Append a node (the caller checked it is absent); -1 if the store is full."""
+    meta = st[ST_META]
+    nid = meta[0]
+    nkeys = st[ST_KEYS]
+    if nid >= nkeys.shape[0]:
+        return -1
+    hidx = st[ST_HIDX]
+    hmask = np.int64(hidx.shape[0] - 1)
+    slot = _slot_of(kw, hmask)
+    while hidx[slot] >= 0:
+        slot = (slot + 1) & hmask
+    hidx[slot] = nid
+    for w in range(kw.shape[0]):
+        nkeys[nid, w] = kw[w]
+    st[ST_COUNT][nid] = count
+    st[ST_LEAF][nid] = leaf
+    st[ST_PRED][nid] = pred
+    st[ST_LB][nid] = lb
+    st[ST_UB][nid] = leaf
+    st[ST_SPLIT][nid] = -1
+    st[ST_SOLVED][nid] = 1 if solved else 0
+    st[ST_PEND][nid, 0] = 0
+    meta[0] = nid + 1
+    return nid
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def leaf_stats_words(kw, masks, weights, costs, diff, K):
+    """(count, leaf loss, equivalent-points loss, potential, prediction) of a capture."""
+    W = kw.shape[0]
+    nw = weights.shape[0]
+    dist = np.empty(K)
+    count = 0.0
+    pot = 0.0
+    for k in range(K):
+        acc = np.uint64(0)
+        for w in range(W):
+            acc += _popcount64(kw[w] & masks[k, w])
+        dist[k] = acc
+        count += dist[k]
+        pot += diff[k] * dist[k]
+    n_min = 0.0
+    for r in range(nw):
+        acc = np.uint64(0)
+        for w in range(W):
+            acc += _popcount64(kw[w] & masks[K + r, w])
+        n_min += weights[r] * acc
+    best = 1e300
+    pred = 0
+    for p in range(K):
+        acc = 0.0
+        for k in range(K):
+            acc += costs[p, k] * dist[k]
+        if acc < best:
+            best = acc
+            pred = p
+    return count, best, n_min, pot, pred
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def make_node(st, dat, pf, pi, kw):
+    """Id of the capture ``kw``, created with the leaf-only bounds if absent (-1: full)."""
+    nid = store_find(st, kw)
+    if nid >= 0:
+        return nid
+    K = pi[PI_K]
+    lam = pf[PF_LAM]
+    count, max_loss, min_loss, potential, pred = leaf_stats_words(kw, dat[DT_MASKS], dat[DT_WEIGHTS], dat[DT_COSTS],
+                                                                  dat[DT_DIFF], K)
+    leaf_risk = max_loss + lam
+    if count <= 1.0 or max_loss - min_loss < lam or potential < 2.0 * lam:
+        return store_add(st, kw, int(count), leaf_risk, pred, leaf_risk, True)
+    return store_add(st, kw, int(count), leaf_risk, pred, min(leaf_risk, min_loss + 2.0 * lam), False)
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def child_key(st, dat, parent, f, left, out):
+    """Words of the child of ``parent`` under feature ``f`` (left: f true)."""
+    nkeys = st[ST_KEYS]
+    F = dat[DT_F]
+    for w in range(out.shape[0]):
+        if left:
+            out[w] = nkeys[parent, w] & F[f, w]
+        else:
+            out[w] = nkeys[parent, w] & ~F[f, w]
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def child_node(st, dat, pf, pi, parent, f, left, leaf, lb, solved, pred, out):
+    """Child of ``parent`` under ``f`` with the kernel's statistics (existing node kept)."""
+    child_key(st, dat, parent, f, left, out)
+    nid = store_find(st, out)
+    if nid >= 0:
+        return nid
+    count = 0
+    for w in range(out.shape[0]):
+        count += int(_popcount64(out[w]))
+    return store_add(st, out, count, leaf, pred, lb, solved)
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def set_child_tree(st, cn, feats, i, io, kind, arg, jj, ub):
+    """Record a child's best {leaf, 2, 3, (2,2)}-leaf tree (kind 0..3): its split now, the
+    grandchildren's splits as pending (materialised at extraction)."""
+    st[ST_UB][cn] = ub
+    npend = st[ST_PEND]
+    npend[cn, 0] = 0
+    if kind == 0:
+        st[ST_SPLIT][cn] = -1
+    elif kind == 1:
+        st[ST_SPLIT][cn] = feats[jj]
+    elif kind == 2:
+        st[ST_SPLIT][cn] = feats[arg[i, io, 0]]
+        npend[cn, 0] = 2
+        npend[cn, 1] = arg[i, io, 1]
+        npend[cn, 2] = feats[arg[i, io, 2]]
+    else:
+        st[ST_SPLIT][cn] = feats[arg[i, io, 3]]
+        npend[cn, 0] = 3
+        npend[cn, 1] = feats[arg[i, io, 4]]
+        npend[cn, 2] = feats[arg[i, io, 5]]
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def column_dp_chain(st, dat, pf, pi, node, feats_g, Lg, dist, exact, best_in, kw_buf, kw_buf2):
+    """Single-column segmentation DP over the thresholds ``feats_g`` (increasing) with left
+    counts ``Lg``; materialises the chain when it beats ``best_in`` (or exact).  Returns
+    (value, root split or -1)."""
+    M = Lg.shape[0]
+    K = dist.shape[0]
+    lam = pf[PF_LAM]
+    S = np.empty((M + 2, K))
+    for k in range(K):
+        S[0, k] = 0.0
+        S[M + 1, k] = dist[k]
+    for i in range(M):
+        for k in range(K):
+            S[i + 1, k] = dist[k] - Lg[i, k]
+    best = np.empty(M + 2)
+    back = np.empty(M + 2, dtype=np.int64)
+    if pi[PI_UNIFORM] == 1:
+        val = segment_dp_uniform(S, pf[PF_UW], lam, best, back)
+    else:
+        val = segment_dp(S, dat[DT_COSTS], lam, best, back)
+    if not (val < best_in - EPS or exact):
+        return val, -2
+    # boundaries (1-based threshold positions), top first
+    nb = 0
+    i = M + 1
+    while True:
+        j = back[i]
+        if j <= 0:
+            break
+        nb += 1
+        i = j
+    bounds = np.empty(nb, dtype=np.int64)
+    i = M + 1
+    t = nb - 1
+    while True:
+        j = back[i]
+        if j <= 0:
+            break
+        bounds[t] = j
+        t -= 1
+        i = j
+    if nb == 0:
+        return val, -1
+    # segment leaf risks and suffix sums
+    seg_val = np.empty(nb + 1)
+    costs = dat[DT_COSTS]
+    for t in range(nb + 1):
+        lo = 0 if t == 0 else bounds[t - 1]
+        hi = M + 1 if t == nb else bounds[t]
+        c = 1e300
+        for p in range(K):
+            acc = 0.0
+            for k in range(K):
+                acc += costs[p, k] * (S[hi, k] - S[lo, k])
+            if acc < c:
+                c = acc
+        seg_val[t] = c + lam
+    suffix = np.zeros(nb + 2)
+    for t in range(nb, -1, -1):
+        suffix[t] = suffix[t + 1] + seg_val[t]
+    cur = node
+    root_split = feats_g[bounds[0] - 1]
+    nub = st[ST_UB]; nlb = st[ST_LB]; nsplit = st[ST_SPLIT]; nsolved = st[ST_SOLVED]; npend = st[ST_PEND]
+    for t in range(nb):
+        f = feats_g[bounds[t] - 1]
+        child_key(st, dat, cur, f, True, kw_buf)
+        child_key(st, dat, cur, f, False, kw_buf2)
+        rn = make_node(st, dat, pf, pi, kw_buf2)
+        ln = make_node(st, dat, pf, pi, kw_buf)
+        if rn < 0 or ln < 0:
+            return val, -3
+        if suffix[t] < nub[cur] - EPS or (exact and cur != node and suffix[t] <= nub[cur] + EPS):
+            if suffix[t] < nub[cur]:
+                nub[cur] = suffix[t]
+            if nsplit[cur] != f:
+                npend[cur, 0] = 0
+            nsplit[cur] = f
+        if exact:
+            if suffix[t] < nub[cur]:
+                nub[cur] = suffix[t]
+            nlb[cur] = nub[cur]
+            nsolved[cur] = 1
+            if seg_val[t] <= nub[rn] + EPS:
+                # (a node with a strictly better structure keeps it: its bound stays valid)
+                if seg_val[t] < nub[rn]:
+                    nub[rn] = seg_val[t]
+                if nsplit[rn] != -1:
+                    npend[rn, 0] = 0
+                nsplit[rn] = -1
+            nlb[rn] = nub[rn]
+            nsolved[rn] = 1
+        cur = ln
+    if exact:
+        if seg_val[nb] <= nub[cur] + EPS:
+            if seg_val[nb] < nub[cur]:
+                nub[cur] = seg_val[nb]
+            if nsplit[cur] != -1:
+                npend[cur, 0] = 0
+            nsplit[cur] = -1
+        nlb[cur] = nub[cur]
+        nsolved[cur] = 1
+    return val, root_split
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def _count_words(kw):
+    c = np.uint64(0)
+    for w in range(kw.shape[0]):
+        c += _popcount64(kw[w])
+    return c
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def _propagate(lb_arr, gidx, pot, i, v, bound):
+    """Column-wide similar-support propagation of a proven split bound (see the Python solver)."""
+    if v <= bound + EPS:
+        return
+    g = gidx[i]
+    if g < 0:
+        return
+    a = i
+    while a > 0 and gidx[a - 1] == g:
+        a -= 1
+    b = i + 1
+    n = gidx.shape[0]
+    while b < n and gidx[b] == g:
+        b += 1
+    for t in range(a, b):
+        cand = v - abs(pot[t] - pot[i])
+        if cand > lb_arr[t]:
+            lb_arr[t] = cand
+
+
+# ---------------------------------------------------------------------------
+# Iterative form of the compiled search: an explicit stack of frames (one per depth) with
+# per-depth workspaces, so no numba recursion is needed.
+# ---------------------------------------------------------------------------
+MAXD = 48
+# integer frame fields
+FI_NODE, FI_PHASE, FI_NV, FI_NKEEP, FI_OI, FI_II, FI_LN, FI_RN, FI_FIRST, FI_SECOND, FI_PRUNED, FI_HAVE_D2, FI_HAVE_D3, FI_SIM, FI_BEST_SPLIT, FI_PARENT_NV, FI_VALID, FI_CACHED_NODE = range(18)
+# float frame fields
+FF_BUDGET, FF_BEST, FF_BOUND, FF_MINPR, FF_LBMAX, FF_STEP, FF_BF, FF_BS, FF_EXACT_BELOW, FF_LEAF, FF_OUT_KIND, FF_OUT_VALUE, FF_BD2, FF_LBGE4, FF_LBREST, FF_LB0 = range(16)
+# workspace tuple indices
+WS_FI, WS_FF, WS_IO, WS_FO, WS_BO, WS_L, WS_DIST, WS_GIDX, WS_LBARR, WS_ARG3, WS_F3, WS_K3, WS_KW, WS_KW2, WS_ROOTFEATS, WS_SLOT = range(16)
+NSLOT = 2 * MAXD      # two frame slots per depth (one per sibling), slot 0 is the root
+
+
+_WS_POOL = {}
+
+
+def make_workspace(m, K, W):
+    """Per-thread workspace; pooled by shape across fits (the frame cache flags are reset)."""
+    key = (m, K, W)
+    pool = _WS_POOL.setdefault(key, [])
+    if pool:
+        ws = pool.pop()
+        ws[WS_FI][:, FI_VALID] = 0
+        ws[WS_SLOT][:] = 0
+        return ws
+    m3 = min(m, TRIPLE_MAX_NV)     # the depth-3 stage only runs on narrow nodes
+    return (np.zeros((NSLOT, 18), dtype=np.int64), np.zeros((NSLOT, 16)), np.zeros((NSLOT, 7, m), dtype=np.int64),
+            np.zeros((NSLOT, 14, m)), np.zeros((NSLOT, 2, m), dtype=np.bool_), np.zeros((NSLOT, m, K)),
+            np.zeros((NSLOT, K + 1)), np.zeros((NSLOT, m), dtype=np.int64), np.zeros((NSLOT, m)),
+            np.zeros((NSLOT, m3, 2, 6), dtype=np.int64), np.zeros((NSLOT, 4, m)), np.zeros((NSLOT, 2, m), dtype=np.int64),
+            np.zeros(W, dtype=np.uint64), np.zeros(W, dtype=np.uint64), np.arange(m, dtype=np.int64),
+            np.zeros(MAXD + 1, dtype=np.int64))
+
+
+def release_workspace(ws, m, K, W):
+    _WS_POOL.setdefault((m, K, W), []).append(ws)
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def _frame_feats(ws, d):
+    """Allowed features of the frame at depth d: the parent's surviving candidates."""
+    if d == 0:
+        return ws[WS_ROOTFEATS]
+    pp = ws[WS_SLOT][d - 1]
+    pn = ws[WS_FI][pp, FI_NV]
+    return ws[WS_IO][pp, 0, :pn]
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def _expand_frame(st, dat, pf, pi, ws, d):
+    """Phase 0 of a frame: the expansion and kernel stages of ``_solve`` up to the candidate
+    loop.  Returns True when the node is resolved (frame done), else the frame is ready
+    for its loop (fields filled)."""
+    FI = ws[WS_FI]; FF = ws[WS_FF]
+    ps = ws[WS_SLOT][d]
+    FI[ps, FI_VALID] = 0
+    node = FI[ps, FI_NODE]
+    budget = FF[ps, FF_BUDGET]
+    nlb = st[ST_LB]; nub = st[ST_UB]; nsplit = st[ST_SPLIT]; nsolved = st[ST_SOLVED]
+    npend = st[ST_PEND]; nleaf = st[ST_LEAF]; ncount = st[ST_COUNT]; nkeys = st[ST_KEYS]
+    meta = st[ST_META]
+    lam = pf[PF_LAM]
+    K = pi[PI_K]
+    W = pi[PI_W]
+    F = dat[DT_F]
+    group_of = dat[DT_GROUP]
+    features = _frame_feats(ws, d)
+    mf = features.shape[0]
+    io = ws[WS_IO][ps, :, :mf]
+    fo = ws[WS_FO][ps, :, :mf]
+    bo = ws[WS_BO][ps, :, :mf]
+    L = ws[WS_L][ps, :mf]
+    dist = ws[WS_DIST][ps]
+    kw = nkeys[node]
+    nv, n_cand, i0, min_rejected, ran, i_d2, best_d2, lb_ge4, M, Fc = expand_kernel(
+        F, features, group_of, kw, dat[DT_MASKS], dat[DT_WEIGHTS], dat[DT_COSTS], dat[DT_DIFF], lam,
+        min(budget, nub[node]), pi[PI_EXCH] == 1 and pi[PI_GROUPS] == 1, io, fo, bo, L, dist)
+    leaf_risk = nleaf[node]
+    FF[ps, FF_LEAF] = leaf_risk
+    if nv == 0:
+        nlb[node] = leaf_risk
+        nub[node] = leaf_risk
+        nsplit[node] = -1
+        npend[node, 0] = 0
+        nsolved[node] = 1
+        return True
+    if ran and min(leaf_risk, min(best_d2, lb_ge4)) > budget + EPS:
+        v = min(leaf_risk, min(best_d2, lb_ge4))
+        if v > nlb[node]:
+            nlb[node] = v
+        return True
+    FI[ps, FI_NV] = nv
+    feats = io[0, :nv]; order_buf = io[1, :nv]; j_l = io[2, :nv]; j_r = io[3, :nv]
+    l_pred = io[4, :nv]; r_pred = io[5, :nv]
+    l_leaf = fo[0, :nv]; l_lb = fo[1, :nv]; r_leaf = fo[2, :nv]; r_lb = fo[3, :nv]
+    split_lb = fo[5, :nv]; split_ub = fo[6, :nv]
+    l_ub2 = fo[11, :nv]; r_ub2 = fo[12, :nv]; split_ub2 = fo[13, :nv]
+    l_solved = bo[0, :nv]; r_solved = bo[1, :nv]
+    n_min = dist[K]
+    distK = dist[:K]
+    Lv = L[:nv]
+    kw_buf = ws[WS_KW]
+    kw_buf2 = ws[WS_KW2]
+    best = nub[node]
+    best_split = nsplit[node]
+    i = i0
+    if split_ub[i] < best - EPS:
+        best = split_ub[i]
+        best_split = feats[i]
+    gidx = ws[WS_GIDX][ps, :nv]
+    for t in range(nv):
+        gidx[t] = group_of[feats[t]]
+    if pi[PI_GROUPS] == 1:
+        single = gidx[0] >= 0
+        if single:
+            for t in range(1, nv):
+                if gidx[t] != gidx[0]:
+                    single = False
+                    break
+        large = ncount[node] == int(pf[PF_N])
+        if single or large:
+            a = 0
+            while a < nv:
+                b = a + 1
+                while b < nv and gidx[b] == gidx[a]:
+                    b += 1
+                if gidx[a] >= 0 and (single or b - a >= 2):
+                    val, rs = column_dp_chain(st, dat, pf, pi, node, feats[a:b], Lv[a:b], distK, single, best,
+                                              kw_buf, kw_buf2)
+                    if rs == -3:
+                        meta[2] = 2
+                        return True
+                    if val < best - EPS and rs != -2:
+                        best = val
+                        best_split = rs
+                    if single:
+                        if best < nub[node]:
+                            nub[node] = best
+                        if best_split >= 0 or nub[node] <= leaf_risk + EPS:
+                            new_split = best_split if best < leaf_risk - EPS else -1
+                            if new_split != nsplit[node]:
+                                npend[node, 0] = 0
+                            nsplit[node] = new_split
+                        nlb[node] = nub[node]
+                        nsolved[node] = 1
+                        return True
+                a = b
+    bound = min(budget, best)
+    n_keep = n_cand
+    min_pruned = min_rejected
+    have_d3 = False
+    f3 = ws[WS_F3][ps, :, :nv]
+    k3 = ws[WS_K3][ps, :, :nv]
+    arg3 = ws[WS_ARG3][ps, :min(nv, ws[WS_ARG3].shape[1])]
+    FF[ps, FF_BD2] = best_d2
+    FF[ps, FF_LBGE4] = lb_ge4
+    FF[ps, FF_LBREST] = 1e300
+    FI[ps, FI_HAVE_D2] = 1 if ran else 0
+    FI[ps, FI_HAVE_D3] = 0
+    FI[ps, FI_CACHED_NODE] = node
+    if ran:
+        if best_d2 < best - EPS:
+            best = best_d2
+            best_split = feats[i_d2]
+            for side in range(2):
+                ii = i_d2
+                if side == 0:
+                    cn = child_node(st, dat, pf, pi, node, feats[ii], True, l_leaf[ii], l_lb[ii], l_solved[ii], l_pred[ii], kw_buf)
+                    ub2 = l_ub2[ii]; jj = j_l[ii]; lf = l_leaf[ii]
+                else:
+                    cn = child_node(st, dat, pf, pi, node, feats[ii], False, r_leaf[ii], r_lb[ii], r_solved[ii], r_pred[ii], kw_buf)
+                    ub2 = r_ub2[ii]; jj = j_r[ii]; lf = r_leaf[ii]
+                if cn < 0:
+                    meta[2] = 2
+                    return True
+                if ub2 < nub[cn] - EPS:
+                    nub[cn] = ub2
+                    nsplit[cn] = feats[jj] if (jj >= 0 and ub2 < lf - EPS) else -1
+                    npend[cn, 0] = 0
+            bound = min(budget, best)
+        if best_d2 <= lb_ge4 and best_d2 <= budget + EPS and best_d2 <= leaf_risk + EPS:
+            if best_d2 < nub[node]:
+                nub[node] = best_d2
+            if best_split != nsplit[node]:
+                npend[node, 0] = 0
+            nsplit[node] = best_split
+            nlb[node] = nub[node]
+            nsolved[node] = 1
+            return True
+        if budget < 4.0 * lam - EPS:
+            nub[node] = best
+            if best_split != nsplit[node]:
+                npend[node, 0] = 0
+            nsplit[node] = best_split
+            if best <= budget + EPS:
+                nlb[node] = best
+                nsolved[node] = 1
+            else:
+                v = min(best, 4.0 * lam)
+                if v > nlb[node]:
+                    nlb[node] = v
+            return True
+        if (pi[PI_D3] == 1 and nv <= TRIPLE_MAX_NV and K * W <= D3_MAX_KW
+                and nv * nv * nv / 6.0 * (K * W + 150.0) <= TRIPLE_MAX_OPS
+                and budget < n_min + D3_MAX_LEAVES * lam - EPS
+                and ncount[node] <= D3_MAX_COUNT_LAM * lam * pf[PF_N]):
+            val3 = np.empty((nv, 2, 6))
+            depth3_triples(Fc, feats, io[6, :nv], M[:K], dat[DT_COSTS], pf[PF_UW], lam, distK, Lv, val3, arg3)
+            i3, best_d3, lb_rest = depth3_bounds(l_leaf, fo[7, :nv], fo[9, :nv], r_leaf, fo[8, :nv], fo[10, :nv], val3, lam,
+                                                 f3[0], f3[1], f3[2], f3[3], k3[0], k3[1])
+            have_d3 = True
+            FI[ps, FI_HAVE_D3] = 1
+            FF[ps, FF_LBREST] = lb_rest
+            if best_d3 < best - EPS:
+                best = best_d3
+                best_split = feats[i3]
+                for side in range(2):
+                    if side == 0:
+                        cn = child_node(st, dat, pf, pi, node, feats[i3], True, l_leaf[i3], l_lb[i3], l_solved[i3], l_pred[i3], kw_buf)
+                        ub3 = f3[0, i3]; kind = k3[0, i3]; jj = j_l[i3]
+                    else:
+                        cn = child_node(st, dat, pf, pi, node, feats[i3], False, r_leaf[i3], r_lb[i3], r_solved[i3], r_pred[i3], kw_buf)
+                        ub3 = f3[1, i3]; kind = k3[1, i3]; jj = j_r[i3]
+                    if cn < 0:
+                        meta[2] = 2
+                        return True
+                    if ub3 < nub[cn] - EPS:
+                        set_child_tree(st, cn, feats, i3, 1 - side, kind, arg3, jj, ub3)
+                bound = min(budget, best)
+            lb3 = min(leaf_risk, lb_rest)
+            if lb3 > budget + EPS:
+                nub[node] = best
+                if best_split != nsplit[node]:
+                    npend[node, 0] = 0
+                nsplit[node] = best_split
+                if lb3 > nlb[node]:
+                    nlb[node] = lb3
+                return True
+            if best <= lb3 + EPS:
+                nub[node] = best
+                if best_split != nsplit[node]:
+                    npend[node, 0] = 0
+                nsplit[node] = best_split
+                nlb[node] = nub[node]
+                nsolved[node] = 1
+                return True
+            for t in range(nv):
+                if f3[2, t] > l_lb[t]:
+                    l_lb[t] = f3[2, t]
+                if f3[3, t] > r_lb[t]:
+                    r_lb[t] = f3[3, t]
+                split_lb[t] = l_lb[t] + r_lb[t]
+                split_ub2[t] = f3[0, t] + f3[1, t]
+        else:
+            for t in range(nv):
+                f3[0, t] = l_ub2[t]
+                f3[1, t] = r_ub2[t]
+        FI[ps, FI_VALID] = 1
+        n_keep, min_dropped = refilter_candidates(order_buf, n_cand, split_lb, split_ub2, bound + EPS)
+        if min_dropped < min_pruned:
+            min_pruned = min_dropped
+    sim = pi[PI_SIM] == 1 and pi[PI_GROUPS] == 1
+    lb_arr = ws[WS_LBARR][ps, :nv]
+    for t in range(nv):
+        lb_arr[t] = split_lb[t]
+    FI[ps, FI_NKEEP] = n_keep
+    FI[ps, FI_OI] = 0
+    FI[ps, FI_HAVE_D2] = 1 if ran else 0
+    FI[ps, FI_HAVE_D3] = 1 if have_d3 else 0
+    FI[ps, FI_SIM] = 1 if sim else 0
+    FI[ps, FI_BEST_SPLIT] = best_split
+    FI[ps, FI_LN] = -1
+    FI[ps, FI_RN] = -1
+    FF[ps, FF_BEST] = best
+    FF[ps, FF_BOUND] = bound
+    FF[ps, FF_MINPR] = min_pruned
+    FF[ps, FF_LBMAX] = max_pair(l_lb, r_lb)
+    FF[ps, FF_EXACT_BELOW] = 4.0 * lam if have_d3 else 3.0 * lam
+    return False
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def _rearm_frame(st, dat, pf, pi, ws, d):
+    """Re-entry of a cached frame with a new budget: the budget-dependent steps of
+    _expand_frame only (probe checks, candidate filtering and ordering, exact-resolution
+    tests).  Returns True when the node is resolved."""
+    FI = ws[WS_FI]; FF = ws[WS_FF]
+    ps = ws[WS_SLOT][d]
+    node = FI[ps, FI_NODE]
+    budget = FF[ps, FF_BUDGET]
+    nlb = st[ST_LB]; nub = st[ST_UB]; nsplit = st[ST_SPLIT]; nsolved = st[ST_SOLVED]; npend = st[ST_PEND]
+    lam = pf[PF_LAM]
+    leaf_risk = FF[ps, FF_LEAF]
+    ran = FI[ps, FI_HAVE_D2] == 1
+    have_d3 = FI[ps, FI_HAVE_D3] == 1
+    best_d2 = FF[ps, FF_BD2]
+    lb_ge4 = FF[ps, FF_LBGE4]
+    lb_rest = FF[ps, FF_LBREST]
+    if ran and min(leaf_risk, min(best_d2, lb_ge4)) > budget + EPS:
+        v = min(leaf_risk, min(best_d2, lb_ge4))
+        if v > nlb[node]:
+            nlb[node] = v
+        return True
+    if have_d3 and min(leaf_risk, lb_rest) > budget + EPS:
+        v = min(leaf_risk, lb_rest)
+        if v > nlb[node]:
+            nlb[node] = v
+        return True
+    nv = FI[ps, FI_NV]
+    io = ws[WS_IO][ps]; fo = ws[WS_FO][ps]
+    feats = io[0, :nv]; order_buf = io[1, :nv]
+    l_leaf = fo[0, :nv]; l_lb = fo[1, :nv]; r_leaf = fo[2, :nv]; r_lb = fo[3, :nv]
+    split_lb = fo[5, :nv]; split_ub = fo[6, :nv]; split_ub2 = fo[13, :nv]
+    gidx = ws[WS_GIDX][ps, :nv]
+    best = nub[node]
+    best_split = nsplit[node]
+    n_cand, i0, min_rejected = prep_candidates(gidx, l_leaf, l_lb, r_leaf, r_lb, min(budget, best),
+                                               pi[PI_EXCH] == 1 and pi[PI_GROUPS] == 1, split_lb, split_ub, order_buf)
+    if n_cand > 0 and split_ub[i0] < best - EPS:
+        best = split_ub[i0]
+        best_split = feats[i0]
+    bound = min(budget, best)
+    n_keep = n_cand
+    min_pruned = min_rejected
+    if ran:
+        if best_d2 <= lb_ge4 and best_d2 <= budget + EPS and best_d2 <= leaf_risk + EPS:
+            if best_d2 < nub[node]:
+                nub[node] = best_d2
+            if best_split != nsplit[node]:
+                npend[node, 0] = 0
+            nsplit[node] = best_split
+            nlb[node] = nub[node]
+            nsolved[node] = 1
+            return True
+        if budget < 4.0 * lam - EPS:
+            nub[node] = best
+            if best_split != nsplit[node]:
+                npend[node, 0] = 0
+            nsplit[node] = best_split
+            if best <= budget + EPS:
+                nlb[node] = best
+                nsolved[node] = 1
+            else:
+                v = min(best, 4.0 * lam)
+                if v > nlb[node]:
+                    nlb[node] = v
+            return True
+        if have_d3:
+            lb3 = min(leaf_risk, lb_rest)
+            if best <= lb3 + EPS:
+                nub[node] = best
+                if best_split != nsplit[node]:
+                    npend[node, 0] = 0
+                nsplit[node] = best_split
+                nlb[node] = nub[node]
+                nsolved[node] = 1
+                return True
+        n_keep, min_dropped = refilter_candidates(order_buf, n_cand, split_lb, split_ub2, bound + EPS)
+        if min_dropped < min_pruned:
+            min_pruned = min_dropped
+    lb_arr = ws[WS_LBARR][ps, :nv]
+    for t in range(nv):
+        if split_lb[t] > lb_arr[t]:
+            lb_arr[t] = split_lb[t]
+    FI[ps, FI_NKEEP] = n_keep
+    FI[ps, FI_OI] = 0
+    FI[ps, FI_SIM] = 1 if (pi[PI_SIM] == 1 and pi[PI_GROUPS] == 1) else 0
+    FI[ps, FI_BEST_SPLIT] = best_split
+    FI[ps, FI_LN] = -1
+    FI[ps, FI_RN] = -1
+    FF[ps, FF_BEST] = best
+    FF[ps, FF_BOUND] = bound
+    FF[ps, FF_MINPR] = min_pruned
+    FF[ps, FF_LBMAX] = max_pair(l_lb, r_lb)
+    FF[ps, FF_EXACT_BELOW] = 4.0 * lam if have_d3 else 3.0 * lam
+    return False
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def _finish_frame(st, ws, d):
+    """Epilogue of a frame's candidate loop."""
+    FI = ws[WS_FI]; FF = ws[WS_FF]
+    ps = ws[WS_SLOT][d]
+    node = FI[ps, FI_NODE]
+    best = FF[ps, FF_BEST]
+    best_split = FI[ps, FI_BEST_SPLIT]
+    if best_split != st[ST_SPLIT][node]:
+        st[ST_PEND][node, 0] = 0
+    st[ST_UB][node] = best
+    st[ST_SPLIT][node] = best_split
+    if best <= FF[ps, FF_BUDGET] + EPS:
+        st[ST_LB][node] = best
+        st[ST_SOLVED][node] = 1
+    else:
+        v = max(min(best, FF[ps, FF_MINPR]), FF[ps, FF_LBMAX])
+        if v > st[ST_LB][node]:
+            st[ST_LB][node] = v
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def _flush_frames(st, ws, d):
+    """On an interruption, record each open frame's incumbent (achievable, its tree is in
+    the store) on its node so the tree returned at a time limit is the best one found."""
+    FI = ws[WS_FI]; FF = ws[WS_FF]
+    for k in range(d + 1):
+        pk = ws[WS_SLOT][k]
+        if FI[pk, FI_PHASE] == 0:
+            continue
+        node = FI[pk, FI_NODE]
+        best = FF[pk, FF_BEST]
+        if best < st[ST_UB][node] - EPS:
+            st[ST_UB][node] = best
+            if FI[pk, FI_BEST_SPLIT] != st[ST_SPLIT][node]:
+                st[ST_PEND][node, 0] = 0
+            st[ST_SPLIT][node] = FI[pk, FI_BEST_SPLIT]
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def solve_iter(st, dat, pf, pi, ws, root, budget, only, shared, sh, tid):
+    """Iterative ``_solve``: frames on an explicit stack, the candidate loop as phases.
+
+    ``only >= 0`` (parallel workers): the depth-0 frame is already expanded; only the
+    candidate at position ``only`` of its order is processed, the depth-0 bound is capped
+    by ``shared[0]`` (the incumbent shared between workers), and the outcome is written to
+    ``FF[0, FF_OUT_KIND]`` (1 solved / 0 pruned) and ``FF[0, FF_OUT_VALUE]``."""
+    FI = ws[WS_FI]; FF = ws[WS_FF]
+    nlb = st[ST_LB]; nub = st[ST_UB]; nsplit = st[ST_SPLIT]; nsolved = st[ST_SOLVED]; npend = st[ST_PEND]
+    meta = st[ST_META]
+    lam = pf[PF_LAM]
+    look_ahead = pi[PI_LOOKAHEAD] == 1
+    kw_buf = ws[WS_KW]; kw_buf2 = ws[WS_KW2]
+    d = 0
+    if only >= 0:
+        FI[0, FI_OI] = only
+        FI[0, FI_NKEEP] = only + 1
+        FI[0, FI_PHASE] = 1
+        FF[0, FF_OUT_KIND] = -1.0
+    else:
+        FI[0, FI_NODE] = root
+        FF[0, FF_BUDGET] = budget
+        FI[0, FI_PHASE] = 0
+    ws[WS_SLOT][0] = 0
+    while d >= 0:
+        ps = ws[WS_SLOT][d]
+        node = FI[ps, FI_NODE]
+        phase = FI[ps, FI_PHASE]
+        if only >= 0 and shared[0] < FF[0, FF_BOUND]:
+            # another thread improved the incumbent: tighten the whole stack
+            FF[0, FF_BOUND] = shared[0]
+            if shared[0] < FF[0, FF_BEST]:
+                FF[0, FF_BEST] = shared[0]
+            _tighten_stack(st, ws, d, look_ahead)
+        if phase == 0:
+            # entry of _solve
+            if nsolved[node] == 1 or nlb[node] > FF[ps, FF_BUDGET] + EPS:
+                d -= 1
+                continue
+            sh_big = sh[SH_META][0] > 0 and st[ST_COUNT][node] >= sh[SH_META][2]
+            if sh_big:
+                # a bound, or the optimum, another thread proved for this subproblem
+                v, x, owner = sh_lookup(sh, st[ST_KEYS][node], st[ST_COUNT][node])
+                if owner >= 0:
+                    # adopt the optimum: the tree lives in the owner's store (see extract)
+                    if x < nub[node]:
+                        nub[node] = x
+                        nsplit[node] = SPLIT_EXTERN - owner
+                        npend[node, 0] = 0
+                    nlb[node] = nub[node]
+                    nsolved[node] = 1
+                    meta[6] += 1
+                    d -= 1
+                    continue
+                if v > nlb[node]:
+                    nlb[node] = v
+                    if v > FF[ps, FF_BUDGET] + EPS:
+                        d -= 1
+                        continue
+            FF[ps, FF_LB0] = nlb[node]
+            if meta[1] >= meta[3]:
+                meta[2] = 1
+                _flush_frames(st, ws, d)
+                return
+            meta[1] += 1
+            if FI[ps, FI_VALID] == 1 and FI[ps, FI_CACHED_NODE] == node:
+                # the slot still holds this node's expansion: only the budget-dependent part
+                if _rearm_frame(st, dat, pf, pi, ws, d):
+                    if sh_big:
+                        _sh_publish_node(sh, tid, st, node, FF[ps, FF_LB0], lam)
+                    d -= 1
+                    continue
+            elif _expand_frame(st, dat, pf, pi, ws, d):
+                if meta[2] != 0:
+                    _flush_frames(st, ws, d)
+                    return
+                if sh_big:
+                    _sh_publish_node(sh, tid, st, node, FF[ps, FF_LB0], lam)
+                d -= 1
+                continue
+            FI[ps, FI_PHASE] = 1
+            continue
+        nv = FI[ps, FI_NV]
+        io = ws[WS_IO][ps]; fo = ws[WS_FO][ps]; bo = ws[WS_BO][ps]
+        feats = io[0, :nv]; order_buf = io[1, :nv]; j_l = io[2, :nv]; j_r = io[3, :nv]
+        l_pred = io[4, :nv]; r_pred = io[5, :nv]
+        l_leaf = fo[0, :nv]; l_lb = fo[1, :nv]; r_leaf = fo[2, :nv]; r_lb = fo[3, :nv]; l_pot = fo[4, :nv]
+        split_lb = fo[5, :nv]
+        l_solved = bo[0, :nv]; r_solved = bo[1, :nv]
+        f3 = ws[WS_F3][ps]; k3 = ws[WS_K3][ps]; arg3 = ws[WS_ARG3][ps]
+        gidx = ws[WS_GIDX][ps, :nv]; lb_arr = ws[WS_LBARR][ps, :nv]
+        have_d2 = FI[ps, FI_HAVE_D2] == 1
+        have_d3 = FI[ps, FI_HAVE_D3] == 1
+        sim = FI[ps, FI_SIM] == 1
+        bound = FF[ps, FF_BOUND]
+        budget_f = FF[ps, FF_BUDGET]
+        first = FI[ps, FI_FIRST]; second = FI[ps, FI_SECOND]
+        if phase == 1:
+            # next candidate
+            oi = FI[ps, FI_OI]
+            if oi >= FI[ps, FI_NKEEP]:
+                if d == 0 and only >= 0:
+                    return
+                _finish_frame(st, ws, d)
+                if sh[SH_META][0] > 0 and st[ST_COUNT][node] >= sh[SH_META][2]:
+                    _sh_publish_node(sh, tid, st, node, FF[ps, FF_LB0], lam)
+                d -= 1
+                continue
+            FI[ps, FI_OI] = oi + 1
+            ii = order_buf[oi]
+            raw = split_lb[ii]
+            if raw > bound + EPS:
+                if raw < FF[ps, FF_MINPR]:
+                    FF[ps, FF_MINPR] = raw
+                if d == 0 and only >= 0:
+                    FF[0, FF_OUT_KIND] = 0.0
+                    FF[0, FF_OUT_VALUE] = raw
+                    return
+                _finish_frame(st, ws, d)
+                if sh[SH_META][0] > 0 and st[ST_COUNT][node] >= sh[SH_META][2]:
+                    _sh_publish_node(sh, tid, st, node, FF[ps, FF_LB0], lam)
+                d -= 1
+                continue
+            cur = lb_arr[ii]
+            if sim and cur > bound + EPS:
+                if cur < FF[ps, FF_MINPR]:
+                    FF[ps, FF_MINPR] = cur
+                if d == 0 and only >= 0:
+                    FF[0, FF_OUT_KIND] = 0.0
+                    FF[0, FF_OUT_VALUE] = cur
+                continue
+            f = feats[ii]
+            child_key(st, dat, node, f, True, kw_buf)
+            ln = store_find(st, kw_buf)
+            child_key(st, dat, node, f, False, kw_buf2)
+            rn = store_find(st, kw_buf2)
+            if ln < 0:
+                llb = l_lb[ii]; lub = l_leaf[ii]
+            else:
+                llb = nlb[ln]; lub = nub[ln]
+            if rn < 0:
+                rlb = r_lb[ii]; rub = r_leaf[ii]
+            else:
+                rlb = nlb[rn]; rub = nub[rn]
+            sub = lub + rub
+            if sub < FF[ps, FF_BEST] - EPS:
+                FF[ps, FF_BEST] = sub
+                FI[ps, FI_BEST_SPLIT] = f
+                bound = min(budget_f, sub)
+                FF[ps, FF_BOUND] = bound
+            slb = llb + rlb
+            if slb < cur:
+                slb = cur
+            if slb > bound + EPS:
+                if slb < FF[ps, FF_MINPR]:
+                    FF[ps, FF_MINPR] = slb
+                if sim:
+                    _propagate(lb_arr, gidx, l_pot, ii, slb, bound)
+                if d == 0 and only >= 0:
+                    FF[0, FF_OUT_KIND] = 0.0
+                    FF[0, FF_OUT_VALUE] = slb
+                continue
+            if ln < 0:
+                ln = store_add(st, kw_buf, int(_count_words(kw_buf)), lub, l_pred[ii], llb, l_solved[ii])
+            if rn < 0:
+                rn = store_add(st, kw_buf2, int(_count_words(kw_buf2)), rub, r_pred[ii], rlb, r_solved[ii])
+            if ln < 0 or rn < 0:
+                meta[2] = 2
+                _flush_frames(st, ws, d)
+                return
+            if have_d2:
+                for side in range(2):
+                    cn = ln if side == 0 else rn
+                    ub2 = f3[0, ii] if side == 0 else f3[1, ii]
+                    jj = j_l[ii] if side == 0 else j_r[ii]
+                    lf = l_leaf[ii] if side == 0 else r_leaf[ii]
+                    if ub2 < nub[cn] - EPS:
+                        if have_d3:
+                            kind = k3[0, ii] if side == 0 else k3[1, ii]
+                            set_child_tree(st, cn, feats, ii, 1 - side, kind, arg3, jj, ub2)
+                        else:
+                            nub[cn] = ub2
+                            nsplit[cn] = feats[jj] if (jj >= 0 and ub2 < lf - EPS) else -1
+                            npend[cn, 0] = 0
+                    lbi = l_lb[ii] if side == 0 else r_lb[ii]
+                    if nlb[cn] < lbi:
+                        nlb[cn] = lbi
+                    if nsolved[cn] == 0 and nub[cn] <= nlb[cn] + EPS:
+                        nlb[cn] = nub[cn]
+                        nsolved[cn] = 1
+            if nlb[ln] >= nlb[rn]:
+                first = ln; second = rn
+            else:
+                first = rn; second = ln
+            if have_d2:
+                eb = FF[ps, FF_EXACT_BELOW]
+                for side in range(2):
+                    cn = first if side == 0 else second
+                    other = second if side == 0 else first
+                    if nsolved[cn] == 0 and bound - nlb[other] < eb - EPS and nub[cn] <= bound - nlb[other] + EPS:
+                        nlb[cn] = nub[cn]
+                        nsolved[cn] = 1
+            FI[ps, FI_II] = ii; FI[ps, FI_LN] = ln; FI[ps, FI_RN] = rn
+            FI[ps, FI_FIRST] = first; FI[ps, FI_SECOND] = second
+            FI[ps, FI_PRUNED] = 0
+            FF[ps, FF_STEP] = 2.0 * lam
+            FI[ps, FI_PHASE] = 2
+            continue
+        ii = FI[ps, FI_II]
+        if phase == 2:
+            # deepening loop head
+            if look_ahead and nsolved[first] == 0:
+                bf = bound - nlb[second]
+                FF[ps, FF_BF] = bf
+                if nlb[first] > bf + EPS:
+                    FI[ps, FI_PRUNED] = 1
+                    FI[ps, FI_PHASE] = 7
+                    continue
+                FI[ps, FI_PHASE] = 3
+                if d + 1 >= MAXD:
+                    meta[2] = 3
+                    _flush_frames(st, ws, d)
+                    return
+                cs = 2 * (d + 1) - 1
+                ws[WS_SLOT][d + 1] = cs
+                FI[cs, FI_NODE] = first; FF[cs, FF_BUDGET] = min(bf, nlb[first] + FF[ps, FF_STEP]); FI[cs, FI_PHASE] = 0
+                d += 1
+                continue
+            FI[ps, FI_PHASE] = 5
+            continue
+        if phase == 3:
+            bf = FF[ps, FF_BF]
+            if nlb[first] > bf + EPS:
+                FI[ps, FI_PRUNED] = 1
+                FI[ps, FI_PHASE] = 7
+                continue
+            if nsolved[first] == 1:
+                FI[ps, FI_PHASE] = 5
+                continue
+            bs = bound - nlb[first]
+            FF[ps, FF_BS] = bs
+            if nsolved[second] == 0:
+                if nlb[second] > bs + EPS:
+                    FI[ps, FI_PRUNED] = 1
+                    FI[ps, FI_PHASE] = 7
+                    continue
+                FI[ps, FI_PHASE] = 4
+                if d + 1 >= MAXD:
+                    meta[2] = 3
+                    _flush_frames(st, ws, d)
+                    return
+                cs = 2 * (d + 1)
+                ws[WS_SLOT][d + 1] = cs
+                FI[cs, FI_NODE] = second; FF[cs, FF_BUDGET] = min(bs, nlb[second] + FF[ps, FF_STEP]); FI[cs, FI_PHASE] = 0
+                d += 1
+                continue
+            FF[ps, FF_STEP] = FF[ps, FF_STEP] * 2.0
+            FI[ps, FI_PHASE] = 2
+            continue
+        if phase == 4:
+            bs = FF[ps, FF_BS]
+            if nlb[second] > bs + EPS:
+                FI[ps, FI_PRUNED] = 1
+                FI[ps, FI_PHASE] = 7
+                continue
+            FF[ps, FF_STEP] = FF[ps, FF_STEP] * 2.0
+            FI[ps, FI_PHASE] = 2
+            continue
+        if phase == 5:
+            # final solve of first (not pruned)
+            FI[ps, FI_PHASE] = 6
+            if d + 1 >= MAXD:
+                meta[2] = 3
+                _flush_frames(st, ws, d)
+                return
+            cs = 2 * (d + 1) - 1
+            ws[WS_SLOT][d + 1] = cs
+            FI[cs, FI_NODE] = first
+            FF[cs, FF_BUDGET] = bound - nlb[second] if look_ahead else bound
+            FI[cs, FI_PHASE] = 0
+            d += 1
+            continue
+        if phase == 6 or phase == 7:
+            if nlb[first] > FF[ps, FF_LBMAX]:
+                FF[ps, FF_LBMAX] = nlb[first]
+            if nlb[second] > FF[ps, FF_LBMAX]:
+                FF[ps, FF_LBMAX] = nlb[second]
+            if phase == 7 or nlb[first] > bound - nlb[second] + EPS:
+                slb = nlb[first] + nlb[second]
+                if slb < FF[ps, FF_MINPR]:
+                    FF[ps, FF_MINPR] = slb
+                if sim:
+                    _propagate(lb_arr, gidx, l_pot, ii, slb, bound)
+                if d == 0 and only >= 0:
+                    FF[0, FF_OUT_KIND] = 0.0
+                    FF[0, FF_OUT_VALUE] = slb
+                FI[ps, FI_PHASE] = 1
+                continue
+            FI[ps, FI_PHASE] = 8
+            if d + 1 >= MAXD:
+                meta[2] = 3
+                _flush_frames(st, ws, d)
+                return
+            cs = 2 * (d + 1)
+            ws[WS_SLOT][d + 1] = cs
+            FI[cs, FI_NODE] = second
+            FF[cs, FF_BUDGET] = bound - nub[first] if look_ahead else bound
+            FI[cs, FI_PHASE] = 0
+            d += 1
+            continue
+        if phase == 8:
+            if nlb[second] > FF[ps, FF_LBMAX]:
+                FF[ps, FF_LBMAX] = nlb[second]
+            if nlb[second] > bound - nub[first] + EPS:
+                slb = nub[first] + nlb[second]
+                if slb < FF[ps, FF_MINPR]:
+                    FF[ps, FF_MINPR] = slb
+                if sim:
+                    _propagate(lb_arr, gidx, l_pot, ii, slb, bound)
+                if d == 0 and only >= 0:
+                    FF[0, FF_OUT_KIND] = 0.0
+                    FF[0, FF_OUT_VALUE] = slb
+                FI[ps, FI_PHASE] = 1
+                continue
+            value = nub[first] + nub[second]
+            if value < FF[ps, FF_BEST] - EPS:
+                FF[ps, FF_BEST] = value
+                FI[ps, FI_BEST_SPLIT] = feats[ii]
+                FF[ps, FF_BOUND] = min(budget_f, value)
+            elif sim:
+                _propagate(lb_arr, gidx, l_pot, ii, value, bound)
+            if d == 0 and only >= 0:
+                FF[0, FF_OUT_KIND] = 1.0
+                FF[0, FF_OUT_VALUE] = value
+            FI[ps, FI_PHASE] = 1
+            continue
+
+
+class CompiledOptimizer:
+    """Driver of the compiled search: owns the array memo, re-enters the search in
+    iteration chunks to honour the time and memory limits, grows the store on demand."""
+
+    def __init__(self, data: BitDataset, regularization: float, *, groups=None, time_limit=0.0,
+                 look_ahead=True, similar_support=True, feature_exchange=True, continuous_feature_exchange=True,
+                 greedy_init=True, upperbound=0.0, engine="numba", memory_limit=0, verbose=False,
+                 n_jobs=1, parallel_after=0.01, force_parallel=False):
+        self.data = data
+        self.lam = float(regularization)
+        self.time_limit = float(time_limit)
+        self.memory_limit = int(memory_limit)
+        self.upperbound = float(upperbound)
+        self.verbose = verbose
+        self.iterations = 0
+        self.optimal = False
+        self.stop_reason = ""
+        self.elapsed = 0.0
+        warm_up()
+        group_of = np.full(data.m, -1, dtype=np.int64)
+        for gi, g in enumerate(groups or []):
+            group_of[g] = gi
+        has_groups = any(len(g) >= 2 for g in (groups or []))
+        self.group_of = group_of
+        # uniform-cost matrix
+        w = float(data.mismatch_costs[0])
+        uniform = data.zero_diagonal and data.equal_mismatch and bool(np.all(data.costs == (data.costs > 0) * w))
+        uniform_w = w if uniform else 0.0
+        # masks and weights: class masks, then the equivalent-points masks (see node_stats)
+        masks = [data.target_words[k] for k in range(data.K)]
+        weights = []
+        pairs = [(data.minority_by_class_words[k], float(data.mismatch_costs[k])) for k in range(data.K)]
+        if not data.zero_diagonal:
+            pairs += [(data.majority_by_class_words[k], float(data.match_costs[k])) for k in range(data.K)]
+        if data.zero_diagonal and data.equal_mismatch:
+            masks.append(data.minority_words)
+            weights.append(w)
+        else:
+            for mw, ww in pairs:
+                if ww == 0.0:
+                    continue
+                masks.append(mw)
+                weights.append(ww)
+        self.dat = (data.F_words, group_of, np.ascontiguousarray(np.vstack(masks)), np.array(weights, dtype=np.float64),
+                    data.costs, data.costs.T.copy(), data.diff_costs.copy())
+        self.pf = np.array([self.lam, uniform_w, float(data.n)])
+        self.pi = np.array([data.K, data.W, 1 if has_groups else 0, 1 if look_ahead else 0, 1 if similar_support else 0,
+                            1 if continuous_feature_exchange else 0, 1, 1 if uniform else 0], dtype=np.int64)
+        self._alloc(1 << 14)
+        self.ws = make_workspace(data.m, data.K, data.W)
+        self._no_shared = np.array([1e300])
+        self._no_table = no_shared_table(data.W)
+        self.n_jobs = int(n_jobs)
+        self.parallel_after = float(parallel_after)
+        self.force_parallel = bool(force_parallel)
+        self.parallel_tree = None
+        self.stores = None
+        self._thread_bytes = np.zeros(max(1, self.n_jobs))
+        self._table_bytes = 0
+        _compile_search()
+
+    def _alloc(self, cap, old=None):
+        self.st = self._new_store(cap, old)
+
+    def _new_store(self, cap, old=None):
+        W = self.data.W
+        st = (np.empty((cap, W), dtype=np.uint64), np.full(2 * cap, -1, dtype=np.int64), np.zeros(cap, dtype=np.int64),
+              np.zeros(cap), np.zeros(cap, dtype=np.int64), np.zeros(cap), np.zeros(cap), np.full(cap, -1, dtype=np.int64),
+              np.zeros(cap, dtype=np.uint8), np.zeros((cap, 4), dtype=np.int64), np.zeros(8, dtype=np.int64))
+        if old is not None:
+            n = int(old[ST_META][0])
+            for a in (ST_KEYS, ST_COUNT, ST_LEAF, ST_PRED, ST_LB, ST_UB, ST_SPLIT, ST_SOLVED, ST_PEND):
+                st[a][:n] = old[a][:n]
+            st[ST_META][:] = old[ST_META]
+            _rebuild_index(st[ST_KEYS], st[ST_HIDX], n)
+        return st
+
+    def run(self):
+        self.start_time = time.perf_counter()
+        last_mem = self.start_time
+        data = self.data
+        kw = int_to_words(data.full, data.W).copy()
+        root = make_node(self.st, self.dat, self.pf, self.pi, kw)
+        features = np.arange(data.m, dtype=np.int64)
+        st = self.st
+        meta = st[ST_META]
+        chunk = 500
+        budget = None
+        try:
+            while True:
+                meta[2] = 0
+                meta[3] = meta[1] + chunk
+                if budget is None:
+                    budget = st[ST_UB][root] if self.upperbound <= 0.0 else min(st[ST_UB][root], self.upperbound)
+                t0 = time.perf_counter()
+                if self.force_parallel and self.n_jobs > 1:
+                    meta[2] = 1
+                else:
+                    solve_iter(st, self.dat, self.pf, self.pi, self.ws, np.int64(root), float(budget), np.int64(-1), self._no_shared,
+                               self._no_table, np.int64(0))
+                dt = time.perf_counter() - t0
+                if meta[2] == 0:
+                    break
+                if meta[2] == 1 and self.n_jobs > 1 and (self.force_parallel or (time.perf_counter() - self.start_time >= self.parallel_after
+                                                                               and self._worth_parallel())):
+                    self._run_parallel(root, budget)
+                    break
+                if meta[2] == 2:
+                    self._alloc(st[ST_KEYS].shape[0] * 2, st)
+                    st = self.st
+                    meta = st[ST_META]
+                    continue
+                if meta[2] == 3:
+                    raise TimeLimitReached("depth")
+                # iteration budget hit: check the limits, re-enter with a chunk of ~50 ms
+                now = time.perf_counter()
+                if self.time_limit > 0.0 and now - self.start_time > self.time_limit:
+                    raise TimeLimitReached("time")
+                if self.memory_limit > 0 and now - last_mem > 0.5:
+                    last_mem = now
+                    if self._mem_bytes() > self.memory_limit:
+                        raise TimeLimitReached("memory")
+                if dt > 0.0:
+                    # before the hand-off the chunk ends near ``parallel_after`` so the
+                    # threads start on time; afterwards (or sequentially) ~50 ms chunks
+                    target = 0.05
+                    if self.n_jobs > 1:
+                        target = max(0.002, self.parallel_after - (now - self.start_time))
+                    chunk = int(min(max(chunk * target / dt, 100), 200000))
+            self.optimal = st[ST_SOLVED][root] == 1
+            self.stop_reason = "optimal" if self.optimal else "upperbound"
+        except TimeLimitReached as exc:
+            self.optimal = False
+            self.stop_reason = str(exc)
+        self.iterations = int(meta[1])
+        self.elapsed = time.perf_counter() - self.start_time
+        self.root = root
+        return root
+
+    def _mem_bytes(self) -> int:
+        """Live bytes of this search: main store, the threads' stores, the shared table."""
+        return _store_bytes(self.st) + int(self._thread_bytes.sum()) + self._table_bytes
+
+    def release(self):
+        """Return the workspace to the pool (after extraction)."""
+        if self.ws is not None:
+            release_workspace(self.ws, self.data.m, self.data.K, self.data.W)
+            self.ws = None
+
+    # ------------------------------------------------------------ parallel
+    def _worth_parallel(self):
+        """Hand-off gate: the root frame's candidate position extrapolates the remaining
+        sequential work; the threads are worth their set-up (~2 ms) only if it is larger."""
+        FI = self.ws[WS_FI]
+        if FI[0, FI_PHASE] == 0:
+            return True                     # root not expanded yet: unknown, go parallel
+        oi = int(FI[0, FI_OI]); nk = int(FI[0, FI_NKEEP])
+        remaining = nk - oi + 1             # the candidate in progress counts as remaining
+        done = max(oi - 1, 1)
+        if remaining < 2:
+            return False
+        elapsed = time.perf_counter() - self.start_time
+        return elapsed * remaining / done >= 0.004
+
+    def _run_parallel(self, root, budget):
+        """Root-parallel phase with threads on private memo copies (see DESCRIPTION)."""
+        st = self.st; ws = self.ws; meta = st[ST_META]
+        FI = ws[WS_FI]; FF = ws[WS_FF]
+        FI[0, FI_NODE] = root; FF[0, FF_BUDGET] = float(budget); FI[0, FI_PHASE] = 0
+        meta[2] = 0; meta[3] = meta[1] + 10 ** 9
+        t_x = time.perf_counter()
+        if FI[0, FI_VALID] == 1 and FI[0, FI_CACHED_NODE] == root and ws[WS_SLOT][0] == 0:
+            resolved = _rearm_frame(st, self.dat, self.pf, self.pi, ws, 0)   # cached expansion
+        else:
+            resolved = _expand_frame(st, self.dat, self.pf, self.pi, ws, 0)
+        self.handoff_expand_time = time.perf_counter() - t_x
+        if resolved:
+            if meta[2] == 2:
+                self._alloc(st[ST_KEYS].shape[0] * 2, st)
+                return self._run_parallel(root, budget)
+            return                      # resolved by the kernel stages
+        FI[0, FI_PHASE] = 1
+        n_keep = int(FI[0, FI_NKEEP])
+        best = float(FF[0, FF_BEST]); best_split = int(FI[0, FI_BEST_SPLIT])
+        if best < st[ST_UB][root] - EPS or best_split != st[ST_SPLIT][root]:
+            st[ST_UB][root] = min(st[ST_UB][root], best)
+            if best_split != st[ST_SPLIT][root]:
+                st[ST_PEND][root, 0] = 0
+            st[ST_SPLIT][root] = best_split
+        min_pruned = float(FF[0, FF_MINPR]); child_lb_max = float(FF[0, FF_LBMAX])
+        shared = np.array([best])
+        lock = threading.Lock()
+        tasks = queue.Queue()
+        n_threads = min(self.n_jobs, n_keep)
+        sh = get_shared_table(n_threads, self.data.W, max(2, self.data.n // SH_MIN_DIV))
+        self._table_bytes = int(sh[SH_KEYS].nbytes + sh[SH_COUNTS].nbytes + sh[SH_LBS].nbytes + sh[SH_VALS].nbytes + sh[SH_USED].nbytes)
+        thread_bytes = self._thread_bytes; thread_bytes[:] = 0
+        stores = {}
+        for pos in range(n_keep):
+            tasks.put(pos)
+        deadline = self.start_time + self.time_limit if self.time_limit > 0.0 else float("inf")
+        results = []
+        state = {"failure": "", "iters": 0}
+        m = self.data.m; K = self.data.K; W = self.data.W
+
+        def worker(tid):
+            # private copies of the store (sized by its contents, grown on demand) and of the root frame
+            cap_k = 1 << max(12, int(2 * int(st[ST_META][0]) - 1).bit_length())
+            st_k = self._new_store(min(cap_k, st[ST_KEYS].shape[0]), st)
+            thread_bytes[tid] = _store_bytes(st_k)
+            ws_k = make_workspace(m, K, W)
+            for a in (WS_FI, WS_FF, WS_IO, WS_FO, WS_BO, WS_L, WS_DIST, WS_GIDX, WS_LBARR, WS_ARG3, WS_F3, WS_K3):
+                ws_k[a][0] = ws[a][0]
+            frame0_fi = ws_k[WS_FI][0].copy(); frame0_ff = ws_k[WS_FF][0].copy()
+            meta_k = st_k[ST_META]; iters0 = int(meta_k[1]); last_mem = time.perf_counter()
+            try:
+                while True:
+                    try:
+                        pos = tasks.get_nowait()
+                    except queue.Empty:
+                        break
+                    chunk = 2000
+                    while True:
+                        ws_k[WS_FI][0] = frame0_fi; ws_k[WS_FF][0] = frame0_ff
+                        meta_k[2] = 0; meta_k[3] = meta_k[1] + chunk
+                        t0 = time.perf_counter()
+                        solve_iter(st_k, self.dat, self.pf, self.pi, ws_k, np.int64(root), float(budget), np.int64(pos), shared,
+                                   sh, np.int64(tid))
+                        dt = time.perf_counter() - t0
+                        if meta_k[2] == 0:
+                            break
+                        if meta_k[2] == 2:
+                            st_k = self._new_store(st_k[ST_KEYS].shape[0] * 2, st_k); meta_k = st_k[ST_META]
+                            thread_bytes[tid] = _store_bytes(st_k)
+                            continue
+                        if meta_k[2] == 3:
+                            raise TimeLimitReached("depth")
+                        now = time.perf_counter()
+                        if now > deadline or state["failure"]:
+                            raise TimeLimitReached("time")
+                        if self.memory_limit > 0 and now - last_mem > 0.5:
+                            last_mem = now
+                            if self._mem_bytes() > self.memory_limit:
+                                raise TimeLimitReached("memory")
+                        if dt > 0.0:
+                            chunk = int(min(max(chunk * 0.05 / dt, 500), 200000))
+                    kind = int(ws_k[WS_FF][0, FF_OUT_KIND]); value = float(ws_k[WS_FF][0, FF_OUT_VALUE])
+                    ln = int(ws_k[WS_FI][0, FI_LN]); rn = int(ws_k[WS_FI][0, FI_RN])
+                    lbmax = 0.0
+                    if ln >= 0:
+                        lbmax = max(lbmax, float(st_k[ST_LB][ln]))
+                    if rn >= 0:
+                        lbmax = max(lbmax, float(st_k[ST_LB][rn]))
+                    f = -1
+                    if kind == 1:
+                        with lock:
+                            if value < shared[0]:
+                                shared[0] = value
+                        f = int(ws_k[WS_IO][0, 0, ws_k[WS_IO][0, 1, pos]])
+                    with lock:
+                        results.append((pos, kind, value, lbmax, (tid, f, ln, rn)))
+            except TimeLimitReached as exc:
+                with lock:
+                    state["failure"] = state["failure"] or str(exc)
+            except Exception as exc:
+                with lock:
+                    state["failure"] = state["failure"] or f"worker error: {exc!r}"
+            with lock:
+                state["iters"] += int(meta_k[1]) - iters0
+                state["adopted"] = state.get("adopted", 0) + int(meta_k[6])
+                stores[tid] = st_k          # final store: trees adopted by other threads live here
+            release_workspace(ws_k, m, K, W)
+
+        threads = [threading.Thread(target=worker, args=(k,), daemon=True) for k in range(n_threads)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        meta[1] += state["iters"]
+        self.peak_thread_bytes = int(thread_bytes.sum())
+        release_shared_table(sh, n_threads, self.data.W)
+        self.n_adopted = state.get("adopted", 0)
+        best_tree = None; best_ref = None
+        for pos, kind, value, lbmax, ref in results:
+            if kind == 1:
+                if ref[1] >= 0 and value < best - EPS:
+                    best = value; best_split = ref[1]; best_ref = ref
+            else:
+                if value < min_pruned:
+                    min_pruned = value
+            if lbmax > child_lb_max:
+                child_lb_max = lbmax
+        if best < st[ST_UB][root]:
+            st[ST_UB][root] = best
+        if best_ref is not None:
+            # extraction after the join: every store is final, so subtrees solved by other
+            # threads are followed into their owner's store
+            tid, f, ln, rn = best_ref
+            self.stores = stores
+            ext = _StoreView(self, stores[tid], stores)
+            best_tree = {"feature": f, "true": ext.extract(ln), "false": ext.extract(rn)}
+        if best_tree is not None:
+            self.parallel_tree = best_tree
+            st[ST_SPLIT][root] = best_split
+            st[ST_PEND][root, 0] = 0
+        if state["failure"] or len(results) < n_keep:
+            raise TimeLimitReached(state["failure"] or "time")
+        if best <= budget + EPS:
+            st[ST_LB][root] = best
+            st[ST_SOLVED][root] = 1
+        else:
+            v = max(min(best, min_pruned), child_lb_max)
+            if v > st[ST_LB][root]:
+                st[ST_LB][root] = v
+
+    # ------------------------------------------------------------ extraction
+    def _node_id(self, kw):
+        nid = store_find(self.st, kw)
+        if nid < 0:
+            nid = make_node(self.st, self.dat, self.pf, self.pi, kw)
+            if nid < 0:
+                self._alloc(self.st[ST_KEYS].shape[0] * 2, self.st)
+                nid = make_node(self.st, self.dat, self.pf, self.pi, kw)
+        return nid
+
+    def _apply_pending(self, nid):
+        st = self.st
+        kind = int(st[ST_PEND][nid, 0])
+        st[ST_PEND][nid, 0] = 0
+        f = int(st[ST_SPLIT][nid])
+        if kind == 0 or f < 0:
+            return
+        W = self.data.W
+        akey = np.empty(W, dtype=np.uint64); bkey = np.empty(W, dtype=np.uint64)
+        child_key(st, self.dat, nid, f, True, akey)
+        child_key(st, self.dat, nid, f, False, bkey)
+        if kind == 2:
+            cells = [(bkey if int(st[ST_PEND][nid, 1]) == 0 else akey, int(st[ST_PEND][nid, 2]))]
+        else:
+            cells = [(akey, int(st[ST_PEND][nid, 1])), (bkey, int(st[ST_PEND][nid, 2]))]
+        for cell, t in cells:
+            gn = self._node_id(cell)
+            c1 = np.empty(W, dtype=np.uint64); c2 = np.empty(W, dtype=np.uint64)
+            child_key(st, self.dat, gn, t, True, c1)
+            child_key(st, self.dat, gn, t, False, c2)
+            g1 = self._node_id(c1); g2 = self._node_id(c2)
+            v = float(st[ST_LEAF][g1] + st[ST_LEAF][g2])
+            if v < st[ST_UB][gn] - EPS:
+                st[ST_UB][gn] = v
+                st[ST_SPLIT][gn] = t
+                st[ST_PEND][gn, 0] = 0
+
+    def extract(self, nid):
+        st = self.st
+        f = int(st[ST_SPLIT][nid])
+        if f <= SPLIT_EXTERN:
+            # solved by another thread: its tree lives in that thread's (final) store
+            owner = SPLIT_EXTERN - f
+            view = _StoreView(getattr(self, "opt", self), self.stores[owner], self.stores)
+            nid2 = store_find(view.st, st[ST_KEYS][nid])
+            if nid2 < 0 or view.st[ST_SOLVED][nid2] != 1:
+                raise RuntimeError("shared solution missing from its owner's store")
+            return view.extract(nid2)
+        if st[ST_PEND][nid, 0] != 0:
+            self._apply_pending(nid)
+            f = int(st[ST_SPLIT][nid])
+        if f < 0:
+            return {"prediction": int(st[ST_PRED][nid]), "key": words_to_int(st[ST_KEYS][nid]),
+                    "count": int(st[ST_COUNT][nid])}
+        W = self.data.W
+        a = np.empty(W, dtype=np.uint64); b = np.empty(W, dtype=np.uint64)
+        child_key(st, self.dat, nid, f, True, a)
+        child_key(st, self.dat, nid, f, False, b)
+        return {"feature": f, "true": self.extract(self._node_id(a)), "false": self.extract(self._node_id(b))}
+
+    @property
+    def memo(self):
+        return range(int(self.st[ST_META][0]))
+
+
+@njit(cache=NUMBA_CACHE, nogil=True)
+def _rebuild_index(nkeys, hidx, n):
+    hmask = np.int64(hidx.shape[0] - 1)
+    for nid in range(n):
+        slot = _slot_of(nkeys[nid], hmask)
+        while hidx[slot] >= 0:
+            slot = (slot + 1) & hmask
+        hidx[slot] = nid
+
+
+def words_to_int(kw) -> int:
+    return int.from_bytes(np.ascontiguousarray(kw).tobytes(), "little")
+
+
+class _StoreView:
+    """Extraction from a given store (a thread's private copy); ``stores`` maps a thread id to
+    its final store for subtrees solved by other threads."""
+
+    def __init__(self, opt, st, stores=None):
+        self.opt = opt
+        self.st = st
+        self.stores = stores
+        self.data = opt.data
+        self.dat = opt.dat
+        self.pf = opt.pf
+        self.pi = opt.pi
+
+    def _alloc(self, cap, old):
+        self.st = self.opt._new_store(cap, old)
+
+    _node_id = CompiledOptimizer._node_id
+    _apply_pending = CompiledOptimizer._apply_pending
+    extract = CompiledOptimizer.extract
+
+
+def _compiled_worker(opt, shared, lock, tasks, results, memory_limit, deadline):
+    """Worker: solve one root split at a time with the compiled search (single-candidate
+    mode), report (position, kind, value, children's max lb, tree)."""
+    st = opt.st; ws = opt.ws; meta = st[ST_META]
+    FI = ws[WS_FI]; FF = ws[WS_FF]
+    root = int(FI[0, FI_NODE]); budget = float(FF[0, FF_BUDGET])
+    frame0_fi = FI[0].copy(); frame0_ff = FF[0].copy()
+    iters0 = int(meta[1]); failure = ""; last_mem = time.perf_counter()
+    try:
+        while True:
+            pos = tasks.get()
+            if pos < 0:
+                break
+            chunk = 2000
+            while True:
+                FI[0] = frame0_fi; FF[0] = frame0_ff       # restart the candidate from scratch (memo kept)
+                meta[2] = 0; meta[3] = meta[1] + chunk
+                t0 = time.perf_counter()
+                solve_iter(st, opt.dat, opt.pf, opt.pi, ws, np.int64(root), budget, np.int64(pos), shared, opt._no_table, np.int64(0))
+                dt = time.perf_counter() - t0
+                if meta[2] == 0:
+                    break
+                if meta[2] == 2:
+                    opt._alloc(st[ST_KEYS].shape[0] * 2, st); st = opt.st; meta = st[ST_META]
+                    continue
+                if meta[2] == 3:
+                    raise TimeLimitReached("depth")
+                now = time.perf_counter()
+                if now > deadline:
+                    raise TimeLimitReached("time")
+                if memory_limit > 0 and now - last_mem > 0.5:
+                    last_mem = now
+                    if _rss_bytes() > memory_limit:
+                        raise TimeLimitReached("memory")
+                if dt > 0.0:
+                    chunk = int(min(max(chunk * 0.05 / dt, 500), 200000))
+            kind = int(FF[0, FF_OUT_KIND]); value = float(FF[0, FF_OUT_VALUE])
+            ln = int(FI[0, FI_LN]); rn = int(FI[0, FI_RN])
+            lbmax = 0.0
+            if ln >= 0:
+                lbmax = max(lbmax, float(st[ST_LB][ln]))
+            if rn >= 0:
+                lbmax = max(lbmax, float(st[ST_LB][rn]))
+            tree = None
+            if kind == 1:
+                with lock:
+                    if value < shared[0]:
+                        shared[0] = value
+                f = int(ws[WS_IO][0, 0, ws[WS_IO][0, 1, pos]])
+                tree = {"feature": f, "true": opt.extract(ln), "false": opt.extract(rn)}
+            results.put(("split", pos, kind, value, lbmax, tree))
+    except TimeLimitReached as exc:
+        failure = str(exc)
+    except Exception as exc:
+        failure = f"worker error: {exc!r}"
+    results.put(("done", int(meta[1]) - iters0, failure))
+    results.close()
+    results.join_thread()
+
+
+_COMPILED = [False]
+
+
+def _compile_search():
+    """Run the compiled search once on a tiny problem so its compilation (or cache load)
+    happens before any timed fit."""
+    if _COMPILED[0]:
+        return
+    _COMPILED[0] = True
+    Xb = np.array([[1, 0], [0, 1], [1, 1], [0, 0]], dtype=bool)
+    y = np.array([0, 1, 1, 0])
+    data = BitDataset(Xb, y, 2)
+    opt = CompiledOptimizer(data, 0.1)
+    st, dat, pf, pi = opt.st, opt.dat, opt.pf, opt.pi
+    # the callees must be compiled by direct calls before the recursive search is
+    # compiled, otherwise numba fails to link them into it ("unresolved symbol")
+    kw = int_to_words(data.full, data.W).copy()
+    root = make_node(st, dat, pf, pi, kw)
+    W = data.W; K = data.K; mf = data.m
+    buf = np.empty(W, dtype=np.uint64); buf2 = np.empty(W, dtype=np.uint64)
+    child_key(st, dat, root, 0, True, buf)
+    feats = np.arange(mf, dtype=np.int64)
+    io = np.empty((7, mf), dtype=np.int64); fo = np.empty((14, mf)); bo = np.empty((2, mf), dtype=np.bool_)
+    L = np.empty((mf, K)); dist = np.empty(K + 1)
+    nv, n_cand, i0, mr, ran, i_d2, bd2, lbg, M, Fc = expand_kernel(dat[DT_F], feats, dat[DT_GROUP], st[ST_KEYS][root],
+                                                                 dat[DT_MASKS], dat[DT_WEIGHTS], dat[DT_COSTS], dat[DT_DIFF],
+                                                                 0.1, 1.0, False, io, fo, bo, L, dist)
+    leaf_stats_words(kw, dat[DT_MASKS], dat[DT_WEIGHTS], dat[DT_COSTS], dat[DT_DIFF], K)
+    child_node(st, dat, pf, pi, root, 0, True, 0.5, 0.1, False, 0, buf)
+    _count_words(buf)
+    _propagate(np.zeros(2), np.zeros(2, dtype=np.int64), np.zeros(2), 0, 1.0, 0.5)
+    column_dp_chain(st, dat, pf, pi, root, feats[:1], L[:1], dist[:K], False, 1e300, buf, buf2)
+    val3 = np.empty((nv, 2, 6)); arg3 = np.empty((nv, 2, 6), dtype=np.int64)
+    if nv >= 1:
+        depth3_triples(Fc, np.ascontiguousarray(io[0, :nv]), io[6, :nv], M[:K], dat[DT_COSTS], pf[PF_UW], 0.1, dist[:K], L[:nv], val3, arg3)
+        f3 = np.empty((4, nv)); k3 = np.empty((2, nv), dtype=np.int64)
+        depth3_bounds(fo[0, :nv], fo[7, :nv], fo[9, :nv], fo[2, :nv], fo[8, :nv], fo[10, :nv], val3, 0.1,
+                      f3[0], f3[1], f3[2], f3[3], k3[0], k3[1])
+        set_child_tree(st, root, np.ascontiguousarray(io[0, :nv]), 0, 1, 0, arg3, 0, st[ST_UB][root])
+        refilter_candidates(io[1, :nv], nv, fo[5, :nv], fo[13, :nv], 1.0)
+    max_pair(fo[1, :nv], fo[3, :nv])
+    st[ST_SPLIT][root] = -1
+    st[ST_PEND][root, 0] = 0
+    ws = opt.ws
+    ws[WS_FI][0, FI_NODE] = root; ws[WS_FF][0, FF_BUDGET] = float(st[ST_UB][root]); ws[WS_FI][0, FI_PHASE] = 0
+    _expand_frame(st, dat, pf, pi, ws, 0)
+    _finish_frame(st, ws, 0)
+    st[ST_SPLIT][root] = -1
+    st[ST_PEND][root, 0] = 0
+    st[ST_SOLVED][root] = 0
+    opt.run()
+    opt.extract(opt.root)
+    _flush_frames(st, ws, 0)
+    # store growth (workers may grow their store: compile the rebuild here, in the parent)
+    opt._alloc(st[ST_KEYS].shape[0] * 2, st)
+    st = opt.st
+    # the single-candidate mode (workers) with a shared bound array
+    st[ST_SOLVED][root] = 0
+    ws[WS_FI][0, FI_NODE] = root; ws[WS_FF][0, FF_BUDGET] = float(st[ST_UB][root]); ws[WS_FI][0, FI_PHASE] = 0
+    if not _expand_frame(st, dat, pf, pi, ws, 0):
+        solve_iter(st, dat, pf, pi, ws, np.int64(root), float(st[ST_UB][root]), np.int64(0), np.array([1e300]),
+                   make_shared_table(1, 8, data.W, 1), np.int64(0))
+    sh = make_shared_table(1, 8, data.W, 1)
+    sh_publish(sh, np.int64(0), st[ST_KEYS][root], int(st[ST_COUNT][root]), 0.0, np.nan)
+    sh_lookup(sh, st[ST_KEYS][root], int(st[ST_COUNT][root]))
+    _sh_publish_node(sh, np.int64(0), st, root, 0.0, 0.1)
+    st[ST_SOLVED][root] = 0

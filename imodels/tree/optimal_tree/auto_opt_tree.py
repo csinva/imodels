@@ -11,17 +11,17 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
 
-from imodels.tree.optimal_tree.solver import (HAVE_NUMBA, BinaryEncoder, BitDataset,
-                                              Optimizer, TargetEncoder, TreeClassifier,
-                                              cluster_rows)
+from imodels.tree.optimal_tree.solver import (HAVE_NUMBA, ST_LB, ST_UB, BinaryEncoder,
+                                              BitDataset, CompiledOptimizer, TargetEncoder,
+                                              TreeClassifier, cluster_rows)
 from imodels.util.arguments import (check_fit_arguments, check_predict_X,
                                     decode_labels)
 
 NUMBA_HINT = (
     "AutoOptTreeClassifier needs numba, which is not installed. Install it with "
-    "`pip install numba` (or `pip install imodels[optional]`). The search counts "
-    "bits in compiled kernels, and interpreting those kernels is orders of "
-    "magnitude slower, so there is no pure-Python fallback."
+    "`pip install numba` (or `pip install imodels[optional]`). The search itself is "
+    "compiled, and interpreting it is orders of magnitude slower, so there is no "
+    "pure-Python fallback."
 )
 
 
@@ -98,6 +98,13 @@ class AutoOptTreeClassifier(ClassifierMixin, BaseEstimator):
     classes_ : ndarray
         Class labels seen during fit.
 
+    Notes
+    -----
+    The compiled search takes about 20 seconds to build the first time it runs
+    on a machine. The result is cached on disk, so later processes load it in
+    about a second. Set ``OPTTREE_NUMBA_CACHE=0`` to skip the cache if its
+    directory is unwritable.
+
     Examples
     --------
     >>> import numpy as np
@@ -151,16 +158,18 @@ class AutoOptTreeClassifier(ClassifierMixin, BaseEstimator):
                           costs=self.costs, balance=self.balance)
         self.n_binary_features_ = data.m
 
-        opt = Optimizer(data, self.regularization, groups=self.encoder_.groups,
-                        time_limit=self.time_limit, memory_limit=self.memory_limit,
-                        verbose=self.verbose)
-        root = opt.run()
+        # n_jobs=1: the search has a parallel phase, but a library model should not
+        # take every core of the caller's machine without being asked
+        opt = CompiledOptimizer(data, self.regularization, groups=self.encoder_.groups,
+                                time_limit=self.time_limit, memory_limit=self.memory_limit,
+                                verbose=self.verbose, n_jobs=1)
+        root = opt.run()          # a row index into the compiled engine's node store
         self.optimal_ = opt.optimal
         self.stop_reason_ = opt.stop_reason
         self.time_ = opt.elapsed
         self.iterations_ = opt.iterations
-        self.lowerbound_ = root.lb
-        self.upperbound_ = root.ub
+        self.lowerbound_ = float(opt.st[ST_LB][root])
+        self.upperbound_ = float(opt.st[ST_UB][root])
         if not self.optimal_:
             warnings.warn(
                 f"{self.stop_reason_} limit reached before optimality was certified; "
@@ -168,6 +177,7 @@ class AutoOptTreeClassifier(ClassifierMixin, BaseEstimator):
                 "regularization to search over smaller trees.", RuntimeWarning)
 
         self.tree_ = self._decode(opt.extract(root), data)
+        opt.release()             # the node store is large and is not needed past extraction
         self.tree = TreeClassifier(self.tree_)
         self.objective_ = self.tree.risk()
         self.n_leaves_ = self.tree.leaves()
