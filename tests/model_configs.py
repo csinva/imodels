@@ -35,6 +35,10 @@ MODEL_KWARGS = {
     "TreeGAMClassifier": dict(n_boosting_rounds=10, random_state=0),
     "TreeGAMRegressor": dict(n_boosting_rounds=50, random_state=0),
     "FIGSClassifierCV": dict(n_rules_list=[3], n_trees_list=[2], cv=2),
+    # an exact solver: a continuous column becomes one binary feature per
+    # distinct value, so the test config prices leaves high enough to keep the
+    # optimal tree small and caps the search so a slow machine cannot hang
+    "AutoOptTreeClassifier": dict(regularization=0.1, time_limit=30),
     "FIGSRegressorCV": dict(n_rules_list=[3], n_trees_list=[2], cv=2),
     "BART": dict(n_samples=5, n_burn=5, n_trees=3, n_chains=1),
     "DecisionTreeCCPClassifier": dict(

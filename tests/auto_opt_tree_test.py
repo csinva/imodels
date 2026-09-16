@@ -1,0 +1,159 @@
+"""Checks for AutoOptTreeClassifier, whose selling point is that it is exact.
+
+The important test here is `test_matches_brute_force`: the model claims the tree
+it returns is the best one in existence for its objective, so a test that only
+checked accuracy would not be testing the claim. These enumerate every tree on a
+small problem and compare.
+"""
+
+import itertools
+import warnings
+
+import numpy as np
+import pandas as pd
+import pytest
+from sklearn.tree import DecisionTreeClassifier
+
+from imodels import AutoOptTreeClassifier
+
+
+def brute_force_optimum(Xb, y, lam):
+    """Risk of the best tree on binary features Xb, by exhaustive enumeration.
+
+    The same objective the model minimises: misclassification rate over all n
+    rows, plus lam per leaf. Memoised on the set of rows reaching a node, which
+    is what makes enumerating every tree tractable at this size.
+    """
+    n, m = Xb.shape
+    memo = {}
+
+    def best(rows):
+        key = frozenset(rows)
+        if key in memo:
+            return memo[key]
+        labels = y[list(rows)]
+        _, counts = np.unique(labels, return_counts=True)
+        value = (len(rows) - counts.max()) / n + lam  # keep it as one leaf
+        for j in range(m):
+            left = [i for i in rows if Xb[i, j] == 1]
+            right = [i for i in rows if Xb[i, j] == 0]
+            if not left or not right:  # not a tree, just the same node again
+                continue
+            value = min(value, best(tuple(left)) + best(tuple(right)))
+        memo[key] = value
+        return value
+
+    return best(tuple(range(n)))
+
+
+def objective_of(model, X, y, lam):
+    """Score any fitted classifier on the model's objective, for comparison."""
+    preds = np.asarray(model.predict(X))
+    n_leaves = (model.get_n_leaves() if hasattr(model, "get_n_leaves")
+                else model.n_leaves_)
+    return float(np.mean(preds != np.asarray(y))) + lam * n_leaves
+
+
+@pytest.fixture
+def binary_data():
+    """Every combination of 4 binary features, labelled by XOR of the first two.
+
+    XOR is the textbook case for an exact solver: neither of the two features
+    that matter looks useful on its own, so the first split a greedy tree makes
+    is a coin toss. The label is balanced, so leaves have to earn their keep.
+    """
+    X = np.array(list(itertools.product([0, 1], repeat=4)))
+    y = (X[:, 0] ^ X[:, 1]).astype(int)
+    return X, y
+
+
+class TestOptimality:
+    @pytest.mark.parametrize("lam", [0.02, 0.05, 0.15])
+    def test_matches_brute_force(self, binary_data, lam):
+        """The certified objective equals the best of every tree that exists."""
+        X, y = binary_data
+        model = AutoOptTreeClassifier(regularization=lam, time_limit=60).fit(X, y)
+        assert model.optimal_, "search did not certify optimality on 16x4 data"
+        assert model.objective_ == pytest.approx(brute_force_optimum(X, y, lam))
+
+    def test_bounds_meet_when_certified(self, binary_data):
+        """A certified run closes its interval on the optimum."""
+        X, y = binary_data
+        model = AutoOptTreeClassifier(regularization=0.05, time_limit=60).fit(X, y)
+        assert model.lowerbound_ == pytest.approx(model.upperbound_)
+        assert model.objective_ == pytest.approx(model.upperbound_)
+
+    def test_at_least_as_good_as_greedy(self, binary_data):
+        """Greedy trees are a lower bar by construction; pin that they are."""
+        X, y = binary_data
+        lam = 0.05
+        model = AutoOptTreeClassifier(regularization=lam, time_limit=60).fit(X, y)
+        greedy = DecisionTreeClassifier(random_state=0).fit(X, y)
+        assert model.objective_ <= objective_of(greedy, X, y, lam) + 1e-12
+
+    def test_reported_objective_matches_the_returned_tree(self, binary_data):
+        """objective_ describes the tree handed back, not an internal bound."""
+        X, y = binary_data
+        lam = 0.05
+        model = AutoOptTreeClassifier(regularization=lam, time_limit=60).fit(X, y)
+        assert model.objective_ == pytest.approx(objective_of(model, X, y, lam))
+
+
+class TestRegularization:
+    def test_larger_penalty_never_grows_the_tree(self, binary_data):
+        """Leaves cost more, so the optimal tree cannot gain any."""
+        X, y = binary_data
+        sizes = [AutoOptTreeClassifier(regularization=lam, time_limit=60)
+                 .fit(X, y).n_leaves_ for lam in (0.01, 0.05, 0.2, 0.5)]
+        assert sizes == sorted(sizes, reverse=True), sizes
+
+    def test_heavy_penalty_gives_a_single_leaf(self, binary_data):
+        """Priced above any gain, the majority-class stump wins."""
+        X, y = binary_data
+        model = AutoOptTreeClassifier(regularization=1.0, time_limit=60).fit(X, y)
+        assert model.n_leaves_ == 1
+        assert model.complexity_ == 0
+        assert len(np.unique(model.predict(X))) == 1
+
+
+class TestApi:
+    def test_predict_proba_agrees_with_predict(self, binary_data):
+        X, y = binary_data
+        model = AutoOptTreeClassifier(regularization=0.05, time_limit=60).fit(X, y)
+        proba = model.predict_proba(X)
+        assert proba.shape == (len(y), len(model.classes_))
+        assert np.allclose(proba.sum(axis=1), 1)
+        assert (model.classes_[proba.argmax(axis=1)] == model.predict(X)).all()
+
+    def test_multiclass_with_string_labels(self):
+        X, y = np.repeat(np.arange(3), 6).reshape(-1, 1), np.repeat(list("abc"), 6)
+        model = AutoOptTreeClassifier(regularization=0.02, time_limit=60).fit(X, y)
+        assert list(model.classes_) == ["a", "b", "c"]
+        assert (model.predict(X) == y).all()
+        assert model.predict_proba(X).shape == (18, 3)
+
+    def test_feature_names_reach_the_printed_model(self, binary_data):
+        X, y = binary_data
+        frame = pd.DataFrame(X, columns=["alpha", "beta", "gamma", "delta"])
+        model = AutoOptTreeClassifier(regularization=0.05, time_limit=60).fit(frame, y)
+        printed = str(model)
+        assert "alpha" in printed or "beta" in printed
+        assert "certified optimal" in printed
+
+    def test_time_limit_reports_uncertified(self):
+        """A limit that cannot be met must say so rather than claim optimality.
+
+        Random labels over continuous features is the expensive case: there is
+        no structure to prune against, and each column contributes one candidate
+        split per distinct value.
+        """
+        rng = np.random.RandomState(0)
+        X = rng.randn(200, 6)
+        y = rng.randint(0, 2, size=200)
+        model = AutoOptTreeClassifier(regularization=0.005, time_limit=0.3)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            model.fit(X, y)
+        assert not model.optimal_
+        assert any("optimality" in str(w.message) for w in caught)
+        assert model.lowerbound_ <= model.upperbound_ + 1e-12
