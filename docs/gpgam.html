@@ -281,7 +281,7 @@ model.interaction_terms()      # [(6, 7), (1, 5)]</code></pre>
                       During development it saw imodels-65, which contains 65 datasets which were subsampled to have no more than 50 features and 1000 rows.
                       imodels-7 shows 7 key datasets from there evalauted at full size.
                       The other datasets are held out and completely non-overlapping with imodels-65. 
-                      In all cases, GPGam outperforms baseline interpretable models, including the SOTA GAM algorithm <a href="">EBM</a>.
+                      In all cases, GPGam outperforms baseline interpretable models, including the SOTA GAM algorithm <a href="">EBM</a> (which continues to outperform <a href="https://arxiv.org/abs/2410.04560">tabular foundation models for GAMs</a>).
                       Each dataset is randomly split into an 80/20 train/test split.
                     </p>
 
@@ -601,11 +601,12 @@ y.T @ y</code></pre>
 </div>
 <ul id="index">
 <li><h3>Our favorite methods</h3>
-<ul>
-<li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a></li>
-<li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a></li>
-<li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a></li>
-<li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a></li>
+<ul class="post-list">
+<li><a href="https://csinva.io/imodels/autoopttree.html" title="Certifiably optimal sparse decision trees">AutoOptTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep 2026</span></li>
+<li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep 2026</span></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul 2023</span></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a><span class="post-date">Feb 2022</span></li>
+<li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a><span class="post-date">Jan 2022</span></li>
 </ul>
 </li>
 <li><h3>Prediction classes</h3>
