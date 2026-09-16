@@ -1,0 +1,185 @@
+<section id="section-intro">
+
+                <div class="article" style="padding-right: 2%; padding-left: 2%;">
+                    <p align="center">
+                    <h1 text-align="center" style="padding-bottom: 0px;"> AutoOptTree: certifiably optimal decision trees via Autoresearch</h1>
+                    <h3 class="post-authors" style="color:gray;padding-top:0px;">Chandan Singh &middot; September 2026</h3>
+                    </p>
+                    <p class="post-links"><a href="https://arxiv.org/abs/2605.03808">📄 Paper</a>, <a href="https://csinva.io/imodels/tree/optimal_tree/auto_opt_tree.html">🗂 Doc</a>, <a href="#citation">📌 Citation</a></p>
+                    <hr>
+
+                    <p class="abstract">Decision trees are fit greedily in practice: CART and C4.5 pick each split
+                        without regard to the splits below it, so the tree they return can be far from the best tree of
+                        its size, and there is no way to tell from the output how far. Finding the actual optimum is
+                        NP-hard, and the exact solvers that do it
+                        (<a href="https://arxiv.org/abs/2006.08690">GOSDT</a>, <a href="https://arxiv.org/abs/2112.00674">STreeD</a>)
+                        spend most of their budget proving optimality rather than finding the tree, which is why they are
+                        rarely used. Here we introduce <b>AutoOptTree</b>, an exact solver discovered through autoresearch
+                        with frontier agents. It certifies optimality on 63 of 70 benchmark problems against 46 for GOSDT,
+                        and where both finish it is 59&times; faster on geometric mean. The speedup comes entirely from
+                        stronger admissible bounds, so every tree it returns is still a proven optimum.
+                    </p>
+
+                    <nav class="toc-main">
+                      <a href="#quickstart"><span>1</span> Quickstart &amp; example usage</a>
+                      <a href="#results"><span>2</span> Experimental results</a>
+                      <a href="#methods"><span>3</span> Methods: AutoOptTree</a>
+                    </nav>
+
+                    <h2 id="quickstart">1. Quickstart &amp; example usage</h2>
+
+                    <pre><code class="language-python">from imodels import AutoOptTreeClassifier
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+
+X, y = load_breast_cancer(return_X_y=True, as_frame=True)
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+
+model = AutoOptTreeClassifier(regularization=0.05).fit(X_train, y_train)
+preds = model.predict(X_test)</code></pre>
+
+                    <p>There is no <code>max_depth</code>. <code>regularization</code> sets what a leaf costs, in units
+                        of misclassification rate, and the model returns the best tree at that price, however deep that
+                        turns out to be. A leaf that does not improve the training error by
+                        <code>regularization</code> is never worth adding, so the trees stay small on their own.</p>
+
+                    <p>The fitted model reports whether the search finished, and what it proved:</p>
+
+                    <pre><code class="language-python">model.optimal_      # True: no other tree on these features scores better
+model.objective_    # 0.1775, the proven minimum of error + 0.05 * leaves
+model.n_leaves_     # 2
+print(model)        # the tree, as nested if/else on the caller's feature names</code></pre>
+
+                    <p>At this price a leaf is expensive, and the best tree that exists on breast cancer is a single
+                        threshold, which reaches 89.5% on the held-out quarter:</p>
+
+                    <pre><code>if mean concave points &gt;= 0.05128 then:
+    class = 0
+else:
+    class = 1</code></pre>
+
+                    <p><code>optimal_</code> is the part greedy trees cannot offer. When it is True, the objective
+                        reported is a minimum over every tree that exists on the binarized features, not the best of
+                        those that happened to be tried. When the time limit is hit first it is False, the model warns,
+                        and <code>lowerbound_</code> and <code>upperbound_</code> bracket how much could still be left
+                        on the table.</p>
+
+                    <p>What makes a problem expensive is the number of distinct values in the data, not the number of
+                        rows: each one is a candidate split. Breast cancer's 30 continuous columns become 11,513 binary
+                        features, and the search above certifies in 0.15 seconds only because a leaf priced at 0.05
+                        rules most trees out immediately. Drop <code>regularization</code> to 0.02 and the same problem
+                        does not finish in a minute. Discretizing the features first, or pricing leaves higher, is what
+                        keeps an exact solver exact in practice.</p>
+
+                    <h2 id="results">2. Experimental results</h2>
+
+                    <p>AutoOptTree was produced by the autoresearch loop described in
+                        <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (code on
+                        <a href="https://github.com/csinva/agentic-imodels">github</a>). An agent was given a working
+                        exact solver, a fixed benchmark, and a gate that no change may ever return a tree that is not
+                        optimal; it proposed bounds, proved them admissible, measured them, and kept the ones that won.</p>
+
+                    <p>The benchmark is 70 problems: 14 datasets crossed with five values of
+                        <code>regularization</code> (0.1, 0.05, 0.02, 0.01, 0.005), each given 30 seconds and 6 GB.
+                        Every returned tree's objective is recomputed independently from the tree and the raw data, and
+                        checked against the known optimum for that problem, so a solver cannot score by misreporting.</p>
+
+                    <p class="caption caption-above"><b>Table 1.</b> Exact solvers on the 70-problem development suite, 30 s cap each.
+                        Time is the geometric mean over all problems, counting an unsolved one at the cap.</p>
+                    <table class="ranktbl">
+                        <thead>
+                            <tr><th></th><th>certified optimal</th><th>geo. mean time</th><th>false certificates</th></tr>
+                            <tr><th></th><th style="font-weight:normal;color:#777">of 70</th><th style="font-weight:normal;color:#777">seconds</th><th style="font-weight:normal;color:#777">count</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="tblsec"><td colspan="4">Exact</td></tr>
+                            <tr><td><b>AutoOptTree</b></td><td><b>63</b></td><td><b>0.008</b></td><td><b>0</b></td></tr>
+                            <tr><td>pygosdt (starting point)</td><td>56</td><td>0.099</td><td>0</td></tr>
+                            <tr><td><a href="https://arxiv.org/abs/2112.00674">STreeD</a></td><td>51</td><td>0.360</td><td>0</td></tr>
+                            <tr><td><a href="https://arxiv.org/abs/2006.08690">GOSDT</a></td><td>46</td><td>0.473</td><td>1</td></tr>
+                            <tr><td><a href="https://arxiv.org/abs/2112.00356">gosdt-guesses</a>, exact mode</td><td>46</td><td>0.506</td><td>0</td></tr>
+                            <tr class="tblsec"><td colspan="4">Heuristic</td></tr>
+                            <tr><td>gosdt-guesses, guided</td><td>0</td><td>0.001</td><td>&mdash;</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p class="tblnote">The one false certificate is GOSDT's, on tic-tac-toe at
+                        <code>regularization</code>=0.02: it reports a tree as optimal whose objective is worse than a
+                        tree AutoOptTree certifies. The cause is a scope-conditional lower bound cached unconditionally,
+                        confirmed by a two-line patch to the reference implementation. gosdt-guesses in guided mode is a
+                        heuristic by design, so it certifies nothing; it is listed to show what the search space costs.</p>
+
+                    <p>Seven problems are certified by nobody, including AutoOptTree, within the cap: they are the
+                        widest continuous datasets, where a column contributes one candidate split per distinct value.
+                        No solver in the table certifies them within 600 seconds either.</p>
+
+                    <!-- TODO: accuracy experiments. Planned: held-out test accuracy and tree size against
+                         CART, C4.5 and FIGS at matched sizes, on the imodels-65 suite and on held-out suites
+                         (TabArena, CTR23) as in the GPGam post. The claim to test is that the optimality gap
+                         greedy trees leave on the table is large enough to show up on held-out data. -->
+                    <p><i>Accuracy experiments against greedy trees on held-out data are in progress and will be added
+                        here: the open question is how much of the optimality gap survives to test time.</i></p>
+
+                    <h2 id="methods">3. Methods: AutoOptTree</h2>
+
+                    <p>The objective is the one GOSDT introduced,</p>
+
+                    <pre><code>minimise   misclassification rate + regularization * (number of leaves)</code></pre>
+
+                    <p>over every decision tree on the binarized features. The search is a memoised depth-first
+                        branch-and-bound. The subset of training rows reaching a node (its <i>capture set</i>) is held as
+                        a single Python big integer, so a subproblem is one dictionary key and identical subproblems
+                        reached by different paths are solved once. Each subproblem carries an interval
+                        <code>[lb, ub]</code> on its optimal risk and a budget; the recursion either closes that interval
+                        or proves the optimum exceeds the budget, which is what makes the final answer a certificate
+                        rather than an incumbent.</p>
+
+                    <p>Everything that made it faster is a bound, and every bound is admissible: they change which
+                        subproblems are visited, never which tree is optimal. The ones that did the most work:</p>
+
+                    <ul class="gam-readings">
+                        <li><b>Pairwise counts give exact two-leaf values.</b> Counting every pair of candidate splits at
+                            a node yields, for each child, the exact loss of its best two-leaf tree. A node whose budget
+                            cannot afford four leaves is then solved outright, with no recursion at all.</li>
+                        <li><b>A shape relaxation bounds everything larger.</b> Any tree with four or more leaves has a
+                            root split whose two sides have some number of leaves each. Combining the exact one- and
+                            two-leaf values with a cheap floor for three-leaf subtrees bounds every such tree at once, so
+                            a node can be certified without expanding a single child.</li>
+                        <li><b>Triples give exact depth-3 values.</b> Counting triples of candidate splits yields each
+                            child's exact best three-leaf and best (2,2)-leaf tree. It costs O(m&#179;) per node, so it
+                            is used only where the node is narrow enough to pay for itself.</li>
+                    </ul>
+
+                    <p>The per-node counting runs in numba kernels over packed 64-bit words, and rows are ordered so that
+                        the capture sets of deep nodes occupy few of those words. Together the bounds and the kernels
+                        account for the 59&times;: the starting solver spent its time proving that subtrees it had
+                        already explored could not be beaten, and most of that proving is now done arithmetically from
+                        counts the node already has.</p>
+
+                    <!-- TODO: expand. Worth adding once the experiments land: a worked example of the shape
+                         relaxation on a small node, the ablation of each bound (available in the run's NOTES.md),
+                         and the null results (leaf-count caps, pairwise similar support, row clustering on wide
+                         data) which are as informative as the wins. -->
+                    <p><i>A fuller description of each bound, the ablations, and the ideas that were proved sound but
+                        measured to be worthless, is in progress.</i></p>
+
+                    <h3 id="citation">Citation</h3>
+
+                    <p>AutoOptTree came out of the autoresearch loop described in
+                        <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a>. If you use
+                        either, please cite:</p>
+
+                    <pre><code>@misc{singh2026agenticimodels,
+      title={Agentic-imodels: Evolving agentic interpretability tools via autoresearch},
+      author={Chandan Singh and Yan Shuo Tan and Weijia Xu and Zelalem Gero and Weiwei Yang and Michel Galley and Jianfeng Gao},
+      year={2026},
+      eprint={2605.03808},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2605.03808},
+}</code></pre>
+
+                </div>
+            </section>
+            <section>
+            </section>

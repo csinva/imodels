@@ -280,6 +280,7 @@
     <li><h3>Our favorite methods</h3>
         <ul>
         <%doc>Keep this list in the same order as the "Our favorite methods" section of the readme.</%doc>
+        <li><a href="https://csinva.io/imodels/autoopttree.html" title="Certifiably optimal sparse decision trees">AutoOptTree</a></li>
         <li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a></li>
         <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a></li>
         <li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a></li>
