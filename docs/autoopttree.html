@@ -64,9 +64,9 @@ aria-label="View source on GitHub" title="GitHub">
                         (<a href="https://arxiv.org/abs/2006.08690">GOSDT</a>, <a href="https://arxiv.org/abs/2112.00674">STreeD</a>)
                         spend most of their budget proving optimality rather than finding the tree, which is why they are
                         rarely used. Here we introduce <b>AutoOptTree</b>, an exact solver discovered through autoresearch
-                        with frontier agents. It certifies optimality on 63 of 70 benchmark problems against 46 for GOSDT,
-                        and where both finish it is 59&times; faster on geometric mean. The speedup comes entirely from
-                        stronger admissible bounds, so every tree it returns is still a proven optimum.
+                        with frontier agents. It certifies optimality on 63 of 70 benchmark problems against 47 for GOSDT,
+                        and is 62&times; faster on geometric mean. The speedup comes entirely from stronger admissible
+                        bounds, so every tree it returns is still a proven optimum.
                     </p>
 
                     <nav class="toc-main">
@@ -134,6 +134,7 @@ else:
                         checked against the known optimum for that problem, so a solver cannot score by misreporting.</p>
 
                     <p class="caption caption-above"><b>Table 1.</b> Exact solvers on the 70-problem development suite, 30 s cap each.
+                        Every figure is the mean of three runs, run one after another on an otherwise idle machine.
                         Time is the geometric mean over all problems, counting an unsolved one at the cap.</p>
                     <table class="ranktbl">
                         <thead>
@@ -142,15 +143,22 @@ else:
                         </thead>
                         <tbody>
                             <tr class="tblsec"><td colspan="4">Exact</td></tr>
-                            <tr><td><b>AutoOptTree</b></td><td><b>63</b></td><td><b>0.008</b></td><td><b>0</b></td></tr>
-                            <tr><td>pygosdt (starting point)</td><td>56</td><td>0.099</td><td>0</td></tr>
-                            <tr><td><a href="https://arxiv.org/abs/2112.00674">STreeD</a></td><td>51</td><td>0.360</td><td>0</td></tr>
-                            <tr><td><a href="https://arxiv.org/abs/2006.08690">GOSDT</a></td><td>46</td><td>0.473</td><td>1</td></tr>
-                            <tr><td><a href="https://arxiv.org/abs/2112.00356">gosdt-guesses</a>, exact mode</td><td>46</td><td>0.506</td><td>0</td></tr>
+                            <tr><td><b>AutoOptTree</b></td><td><b>63.0</b></td><td><b>0.0081 &plusmn; 0.0001</b></td><td><b>0</b></td></tr>
+                            <tr><td>pygosdt (starting point)</td><td>55.3</td><td>0.102 &plusmn; 0.002</td><td>0</td></tr>
+                            <tr><td><a href="https://arxiv.org/abs/2112.00674">STreeD</a></td><td>51.0</td><td>0.332 &plusmn; 0.024</td><td>0</td></tr>
+                            <tr><td><a href="https://arxiv.org/abs/2006.08690">GOSDT</a></td><td>47.0</td><td>0.504 &plusmn; 0.027</td><td>1</td></tr>
+                            <tr><td><a href="https://arxiv.org/abs/2112.00356">gosdt-guesses</a>, exact mode</td><td>46.0</td><td>0.486 &plusmn; 0.018</td><td>0</td></tr>
                             <tr class="tblsec"><td colspan="4">Heuristic</td></tr>
-                            <tr><td>gosdt-guesses, guided</td><td>0</td><td>0.001</td><td>&mdash;</td></tr>
+                            <tr><td>gosdt-guesses, guided</td><td>0.0</td><td>0.0011 &plusmn; 0.0000</td><td>&mdash;</td></tr>
                         </tbody>
                     </table>
+
+                    <p class="tblnote">&plusmn; is the standard deviation over the three runs. Four of the six solvers
+                        certify exactly the same problems every time. The two that move are GOSDT, which certified 46,
+                        47 and 48, and pygosdt, which certified 56, 55 and 55. Only three problems are responsible, and
+                        each of them lands within a few seconds of the 30 s cap in every run, so what changes is whether
+                        a proof that was always going to be marginal fits inside the budget, not what the solver can
+                        prove. AutoOptTree's 63 and its seven unsolved problems are the same in all three runs.</p>
 
                     <p class="tblnote">The one false certificate is GOSDT's, on tic-tac-toe at
                         <code>regularization</code>=0.02: it reports a tree as optimal whose objective is worse than a
@@ -201,7 +209,7 @@ else:
 
                     <p>The per-node counting runs in numba kernels over packed 64-bit words, and rows are ordered so that
                         the capture sets of deep nodes occupy few of those words. Together the bounds and the kernels
-                        account for the 59&times;: the starting solver spent its time proving that subtrees it had
+                        account for the 62&times;: the starting solver spent its time proving that subtrees it had
                         already explored could not be beaten, and most of that proving is now done arithmetically from
                         counts the node already has.</p>
 
