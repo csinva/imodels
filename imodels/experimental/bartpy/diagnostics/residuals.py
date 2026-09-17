@@ -1,11 +1,14 @@
-import seaborn as sns
-import statsmodels.api as sm
 from matplotlib import pyplot as plt
 
+from imodels.util.optional_deps import require_optional_dependency
 from ..sklearnmodel import SklearnModel
 
 
 def plot_qq(model: SklearnModel, ax=None) -> None:
+    require_optional_dependency('statsmodels', 'plot_qq',
+                                purpose='draws the QQ plot')
+    import statsmodels.api as sm
+
     if ax is None:
         _, ax = plt.subplots(1, 1)
     residuals = model.residuals(model.data.X.values)
@@ -15,6 +18,10 @@ def plot_qq(model: SklearnModel, ax=None) -> None:
 
 
 def plot_homoscedasticity_diagnostics(model: SklearnModel, ax=None):
+    require_optional_dependency('seaborn', 'plot_homoscedasticity_diagnostics',
+                                purpose='draws the regression plot')
+    import seaborn as sns
+
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(5, 5))
     sns.regplot(model.predict(model.data.X.values), model.residuals(model.data.X.values), ax=ax)

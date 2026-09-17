@@ -16,6 +16,7 @@ from sklearn.linear_model import LinearRegression, Lasso, LogisticRegression
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from imodels.util.arguments import check_predict_X, set_feature_names_in
+from imodels.util.optional_deps import warn_optional_dependency
 
 def _warn_if_rounding_collapsed(coef, rounded):
     """Warn when rounding to integers has destroyed the fitted model.
@@ -47,6 +48,9 @@ class SLIMRegressor(RegressorMixin, BaseEstimator):
     '''
 
     def __init__(self, alpha=0.01):
+        warn_optional_dependency(
+            'cvxpy', 'SLIMRegressor', fallback='rounding the coefficients of a non-integer fit',
+            purpose='used to solve the integer program exactly')
         self.alpha = alpha
 
     def fit(self, X, y, sample_weight=None):
@@ -124,6 +128,9 @@ class SLIMClassifier(ClassifierMixin, BaseEstimator):
         alpha: float
             weight for sparsity penalty
         '''
+        warn_optional_dependency(
+            'cvxpy', 'SLIMClassifier', fallback='rounding the coefficients of a non-integer fit',
+            purpose='used to solve the integer program exactly')
         self.alpha = alpha
 
     def fit(self, X, y, sample_weight=None):

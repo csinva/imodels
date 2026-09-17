@@ -12,7 +12,12 @@ from sklearn.multioutput import MultiOutputRegressor, MultiOutputClassifier
 from sklearn.preprocessing import StandardScaler
 from imodels.util.transforms import CorrelationScreenTransformer
 
-from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+from imodels.util.optional_deps import require_optional_dependency
+
+try:  # optional dependency, checked for by name when a model is initialized
+    from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+except ImportError:
+    ExplainableBoostingClassifier = ExplainableBoostingRegressor = None
 
 from sklearn.base import RegressorMixin, ClassifierMixin
 
@@ -72,6 +77,9 @@ class MultiTaskGAM(BaseEstimator):
         fit_linear_frac: float
             If not None, the fraction of features to use for the linear model (the rest are used for the EBM)
         """
+        require_optional_dependency(
+            'interpret', type(self).__name__,
+            purpose='provides the ExplainableBoostingMachine used to fit the curves')
         self.ebm_kwargs = ebm_kwargs
         self.multitask = multitask
         self.linear_penalty = linear_penalty

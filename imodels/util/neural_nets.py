@@ -38,7 +38,19 @@ Example
 from copy import deepcopy
 
 import numpy as np
-from torch import nn
+
+from imodels.util.optional_deps import require_optional_dependency
+
+try:
+    from torch import nn
+except ImportError:
+    # Net subclasses nn.Module, so torch is needed to define it at all;
+    # report that with a message naming the install instead of a bare
+    # ModuleNotFoundError.
+    require_optional_dependency(
+        'torch', 'imodels.util.neural_nets.Net',
+        purpose='the converted decision tree is a torch module')
+    raise  # torch is installed but failed to import for another reason
 
 
 class Net(nn.Module):
