@@ -46,7 +46,10 @@ PAGES = {
         "    <script type=\"text/javascript\">window.PlotlyConfig = { MathJaxConfig: 'local' };</script>\n",
     ),
     "mdi_plus": ("MDI+", ""),
-    "autoopttree": ("AutoOptTree", ""),
+    "autoopttree": (
+        "AutoOptTree",
+        '    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>\n',
+    ),
     "gpgam": (
         "GPGam",
         '    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>\n'

@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="style.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>
 </head>
 
 <body>
@@ -122,6 +123,36 @@ else:
 
                     <h2 id="results">2. Experimental results</h2>
 
+                    <details class="pareto-details" id="datasets">
+                      <summary>The 14 datasets in the benchmark</summary>
+                      <table class="ranktbl dataset-table">
+                        <thead>
+                          <tr><th>dataset</th><th>what it is</th><th>rows</th><th>features</th><th>binary splits</th><th>classes</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td><code>chudi</code></td><td>Two-feature example from the GOSDT experiments</td><td>77</td><td>2</td><td>46</td><td>2</td></tr>
+                          <tr><td><code>monk_3</code></td><td>UCI MONK's problem 3, one-hot</td><td>122</td><td>11</td><td>11</td><td>2</td></tr>
+                          <tr><td><code>monk_1</code></td><td>UCI MONK's problem 1, one-hot</td><td>124</td><td>11</td><td>11</td><td>2</td></tr>
+                          <tr><td><code>iris</code></td><td>UCI Iris</td><td>150</td><td>4</td><td>118</td><td>3</td></tr>
+                          <tr><td><code>monk_2</code></td><td>UCI MONK's problem 2, one-hot</td><td>169</td><td>11</td><td>11</td><td>2</td></tr>
+                          <tr><td><code>tic-tac-toe</code></td><td>UCI Tic-Tac-Toe endgames</td><td>958</td><td>9</td><td>27</td><td>2</td></tr>
+                          <tr><td><code>gaussian_1k</code></td><td>Synthetic, one continuous feature</td><td>1,000</td><td>1</td><td>999</td><td>2</td></tr>
+                          <tr><td><code>fico_1k</code></td><td>FICO HELOC credit, 1,000-row sample, raw features</td><td>1,000</td><td>23</td><td>1,357</td><td>2</td></tr>
+                          <tr><td><code>sine_1k</code></td><td>Synthetic, one continuous feature</td><td>1,000</td><td>1</td><td>999</td><td>2</td></tr>
+                          <tr><td><code>car_evaluation</code></td><td>UCI Car Evaluation, binarized</td><td>1,728</td><td>15</td><td>15</td><td>2</td></tr>
+                          <tr><td><code>coupon_bar</code></td><td>In-vehicle coupon recommendation, bar coupons</td><td>1,913</td><td>14</td><td>14</td><td>2</td></tr>
+                          <tr><td><code>compas_binned</code></td><td>ProPublica COMPAS recidivism, binarized</td><td>6,907</td><td>12</td><td>12</td><td>2</td></tr>
+                          <tr><td><code>fico_binary</code></td><td>FICO HELOC credit, binarized</td><td>10,459</td><td>17</td><td>17</td><td>2</td></tr>
+                          <tr><td><code>compas_processed</code></td><td>ProPublica COMPAS recidivism, processed</td><td>12,381</td><td>22</td><td>621</td><td>2</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="tblnote">All 14 come from the GOSDT reference repository's experiments, and each is run at
+                        five penalties per leaf (0.1, 0.05, 0.02, 0.01, 0.005) for 70 problems. <i>Binary splits</i> is
+                        what the solver actually searches over: a binary feature is one split, and a numeric or ordinal
+                        feature becomes one split per distinct value, which is why a single continuous column of 1,000
+                        rows yields 999 and why fico_1k and compas_processed hold the problems nobody certifies.</p>
+                    </details>
+
                     <p>AutoOptTree was produced by the autoresearch loop described in
                         <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (code on
                         <a href="https://github.com/csinva/agentic-imodels">github</a>). An agent was given a working
@@ -133,9 +164,257 @@ else:
                         Every returned tree's objective is recomputed independently from the tree and the raw data, and
                         checked against the known optimum for that problem, so a solver cannot score by misreporting.</p>
 
+                    <p>Fig <a href="#fig1">1</a> puts every solver the loop produced on one chart, with the
+                        baselines, so the whole search is visible rather than only the version that ships. Down is a
+                        better tree and left is faster, so the frontier runs along the lower left.</p>
+
+                    <span class="fig-anchor" id="fig1"></span>
+                    <div id="pareto-plot" role="img" aria-label="Scatter of geometric-mean criterion against geometric-mean time for every solver version and baseline; the full data is in the table below the figure."></div>
+
+                    <p class="caption"><b>Fig 1.</b> Every solver on the 70-problem suite: each point is a geometric mean
+                        over the problems of the time spent (at most the 30 s cap) and of the
+                        criterion its tree scores, error plus penalty times leaves. Blue points are exact versions from
+                        the loop and orange its anytime versions, which stop at a fixed time budget and so trade a little
+                        criterion for speed; gray points are baselines, open if they are heuristics that certify
+                        nothing. Diamonds use 8 threads. Large points with error bars are the mean of three runs, &plusmn;
+                        one standard deviation; small translucent points are single runs. A red &times; marks a solver
+                        that issued a false certificate on the suite. On a problem where a baseline returned no tree
+                        (GOSDT and gosdt-guesses stopping for memory, SPLIT running out of time) it is charged the
+                        criterion of a single leaf. An earlier recording of v46 certified two wrong trees because
+                        of a two-line indentation slip; the points shown are the fixed code, which certified none. Hover
+                        a point for its numbers, or open the table below.</p>
+
+                    <details class="pareto-details">
+                      <summary>Every point in Fig 1 as a table</summary>
+                      <table class="ranktbl pareto-table">
+                        <thead>
+                          <tr><th>solver</th><th>kind</th><th>threads</th><th>runs</th><th>geo. mean time (s)</th><th>geo. mean criterion</th><th>certified of 70</th><th>notes</th></tr>
+                        </thead>
+                        <tbody>
+<!-- PARETO-TABLE-START -->
+<tr><td>v46_anytime_1ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0010</td><td>0.2588</td><td>46.0</td><td></td></tr>
+<tr><td>v43c_anytime_1ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0011</td><td>0.2610</td><td>46.0</td><td></td></tr>
+<tr><td>v45_anytime_1ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0011</td><td>0.2595</td><td>46.0</td><td></td></tr>
+<tr><td>gosdt-guesses, guided</td><td>baseline</td><td>1</td><td>3</td><td>0.0011 &plusmn; 0.0000</td><td>0.3278 &plusmn; 0.0000</td><td>0.0</td><td></td></tr>
+<tr><td>v46_anytime_2ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0013</td><td>0.2578</td><td>48.0</td><td></td></tr>
+<tr><td>v43c_anytime_2ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0013</td><td>0.2596</td><td>47.0</td><td></td></tr>
+<tr><td>v45_anytime_2ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0013</td><td>0.2580</td><td>48.0</td><td></td></tr>
+<tr><td>v45_anytime_5ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0017</td><td>0.2579</td><td>51.0</td><td></td></tr>
+<tr><td>v46_anytime_5ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0017</td><td>0.2579</td><td>51.0</td><td></td></tr>
+<tr><td>v43c_anytime_5ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0017</td><td>0.2590</td><td>50.0</td><td></td></tr>
+<tr><td>v45_anytime_10ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0020</td><td>0.2579</td><td>52.0</td><td></td></tr>
+<tr><td>v43c_anytime_10ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0021</td><td>0.2590</td><td>52.0</td><td></td></tr>
+<tr><td>v46_anytime_10ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0022</td><td>0.2579</td><td>52.0</td><td></td></tr>
+<tr><td>v43_anytime_10ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0022</td><td>0.2590</td><td>52.0</td><td></td></tr>
+<tr><td>v45_anytime_20ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0024</td><td>0.2576</td><td>55.0</td><td></td></tr>
+<tr><td>v43c_anytime_20ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0024</td><td>0.2588</td><td>56.0</td><td></td></tr>
+<tr><td>v43_anytime_20ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0025</td><td>0.2588</td><td>56.0</td><td></td></tr>
+<tr><td>v46_anytime_20ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0027</td><td>0.2575</td><td>55.0</td><td></td></tr>
+<tr><td>v45_anytime_50ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0028</td><td>0.2576</td><td>59.0</td><td></td></tr>
+<tr><td>v43c_anytime_50ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0028</td><td>0.2584</td><td>59.0</td><td></td></tr>
+<tr><td>v43_anytime_50ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0029</td><td>0.2582</td><td>59.0</td><td></td></tr>
+<tr><td>v46_anytime_50ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0030</td><td>0.2573</td><td>59.0</td><td></td></tr>
+<tr><td>v45_anytime_100ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0031</td><td>0.2575</td><td>61.0</td><td></td></tr>
+<tr><td>v46_anytime_100ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0031</td><td>0.2572</td><td>61.0</td><td></td></tr>
+<tr><td>v43c_anytime_100ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0032</td><td>0.2575</td><td>60.0</td><td></td></tr>
+<tr><td>v43_anytime_100ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0032</td><td>0.2575</td><td>61.0</td><td></td></tr>
+<tr><td>v46_anytime_300ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0035</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v43_anytime_300ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0036</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v43c_anytime_300ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0038</td><td>0.2572</td><td>62.0</td><td></td></tr>
+<tr><td>v43_anytime_1000ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0040</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v43c_anytime_1000ms</td><td>anytime</td><td>8</td><td>1</td><td>0.0041</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v43_greedy_seed</td><td>exact</td><td>8</td><td>1</td><td>0.0053</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v45_greedy_family_lns</td><td>exact</td><td>8</td><td>1</td><td>0.0053</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v37_gated_handoff</td><td>exact</td><td>8</td><td>1</td><td>0.0053</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v46_topk_pairs</td><td>exact</td><td>8</td><td>3</td><td>0.0054 &plusmn; 0.0001</td><td>0.2572 &plusmn; 0.0000</td><td>63.0</td><td></td></tr>
+<tr><td>v40_no_depth3_stage</td><td>exact</td><td>8</td><td>1</td><td>0.0054</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v41_node_keyed_frame_cache</td><td>exact</td><td>8</td><td>1</td><td>0.0055</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v39_own_memory_accounting</td><td>exact</td><td>8</td><td>1</td><td>0.0056</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v34_shared_solutions_live_incumbent</td><td>exact</td><td>8</td><td>1</td><td>0.0058</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v35_pooled_table</td><td>exact</td><td>8</td><td>1</td><td>0.0058</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v33_fast_handoff</td><td>exact</td><td>8</td><td>1</td><td>0.0058</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v36_cached_root_handoff</td><td>exact</td><td>8</td><td>1</td><td>0.0059</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v32_shared_bound_table</td><td>exact</td><td>8</td><td>1</td><td>0.0059</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v30_compiled_mc8_threads</td><td>exact</td><td>8</td><td>1</td><td>0.0060</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v40_sequential</td><td>exact</td><td>1</td><td>3</td><td>0.0062 &plusmn; 0.0000</td><td>0.2572 &plusmn; 0.0000</td><td>63.0</td><td></td></tr>
+<tr><td>v29_compiled_mc8</td><td>exact</td><td>8</td><td>1</td><td>0.0063</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v28_compiled_search</td><td>exact</td><td>1</td><td>1</td><td>0.0064</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v31_frame_cache</td><td>exact</td><td>8</td><td>1</td><td>0.0067</td><td>0.2572</td><td>63.0</td><td></td></tr>
+<tr><td>v25_mc8_root_parallel</td><td>exact</td><td>8</td><td>1</td><td>0.0079</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v22_kernel_side_masks</td><td>exact</td><td>1</td><td>1</td><td>0.0080</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v21_python_overhead</td><td>exact</td><td>1</td><td>1</td><td>0.0081</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v23_word_compaction</td><td>exact</td><td>1</td><td>3</td><td>0.0081 &plusmn; 0.0001</td><td>0.2575 &plusmn; 0.0000</td><td>63.0</td><td></td></tr>
+<tr><td>v20_two_peeled_leaves</td><td>exact</td><td>1</td><td>1</td><td>0.0085</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v18_expansion_cache_kernel_predictions</td><td>exact</td><td>1</td><td>1</td><td>0.0086</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v19_depth3_triples</td><td>exact</td><td>1</td><td>1</td><td>0.0087</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v16b_fused_expansion</td><td>exact</td><td>1</td><td>1</td><td>0.0088</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v15_shape_relaxation</td><td>exact</td><td>1</td><td>1</td><td>0.0094</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v16_fused_expansion</td><td>exact</td><td>1</td><td>1</td><td>0.0100</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v14_hardened_superset_lb</td><td>exact</td><td>1</td><td>1</td><td>0.0105</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v13_numba_candidate_prep</td><td>exact</td><td>1</td><td>1</td><td>0.0113</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v10_depth2_everywhere_cheap</td><td>exact</td><td>1</td><td>1</td><td>0.0113</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v9_budget_deepening</td><td>exact</td><td>1</td><td>1</td><td>0.0123</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v8_sound_lb_lean_nodes</td><td>exact</td><td>1</td><td>1</td><td>0.0123</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v7_depth2_pairs</td><td>exact</td><td>1</td><td>1</td><td>0.0142</td><td>0.2575</td><td>63.0</td><td>proof gap</td></tr>
+<tr><td>v5_fused_node_kernel</td><td>exact</td><td>1</td><td>1</td><td>0.0184</td><td>0.2575</td><td>63.0</td><td></td></tr>
+<tr><td>v4_leaf_support_splits</td><td>exact</td><td>1</td><td>1</td><td>0.0249</td><td>0.2575</td><td>62.0</td><td></td></tr>
+<tr><td>v3_column_dp</td><td>exact</td><td>1</td><td>1</td><td>0.0286</td><td>0.2575</td><td>61.0</td><td></td></tr>
+<tr><td>v2_group_simsupport</td><td>exact</td><td>1</td><td>1</td><td>0.0937</td><td>0.2648</td><td>55.0</td><td></td></tr>
+<tr><td>pygosdt_v1_flat</td><td>exact</td><td>1</td><td>1</td><td>0.0937</td><td>0.2648</td><td>55.0</td><td></td></tr>
+<tr><td>pygosdt</td><td>baseline</td><td>1</td><td>3</td><td>0.1017 &plusmn; 0.0021</td><td>0.2648 &plusmn; 0.0000</td><td>55.3</td><td></td></tr>
+<tr><td>SPLIT</td><td>baseline</td><td>1</td><td>3</td><td>0.1565 &plusmn; 0.0224</td><td>0.3150 &plusmn; 0.0003</td><td>0.0</td><td>no tree on 13</td></tr>
+<tr><td>STreeD</td><td>baseline</td><td>1</td><td>3</td><td>0.3323 &plusmn; 0.0238</td><td>0.2591 &plusmn; 0.0000</td><td>51.0</td><td></td></tr>
+<tr><td>GOSDT, 8 threads</td><td>baseline</td><td>8</td><td>1</td><td>0.4538</td><td>0.2809</td><td>38.0</td><td>no tree on 17</td></tr>
+<tr><td>gosdt-guesses</td><td>baseline</td><td>1</td><td>3</td><td>0.4857 &plusmn; 0.0176</td><td>0.2816 &plusmn; 0.0008</td><td>46.0</td><td>no tree on 23</td></tr>
+<tr><td>GOSDT</td><td>baseline</td><td>1</td><td>3</td><td>0.5037 &plusmn; 0.0266</td><td>0.2794 &plusmn; 0.0000</td><td>47.0</td><td>1 false certificate, no tree on 13</td></tr>
+<!-- PARETO-TABLE-END -->
+                        </tbody>
+                      </table>
+                    </details>
+
+                    <style>
+                      #pareto-plot { margin: 1.2em 0 0.2em; }
+                      details.pareto-details { margin: 0.4em 0 1.8em; overflow-x: auto; }
+                      details.pareto-details summary { cursor: pointer; color: var(--accent); }
+                      /* "#content table" in style.css outranks a bare table class, so these are scoped the same way */
+                      #content details.pareto-details table { font-size: 0.84em; margin: 0.8em 0; }
+                      #content details.pareto-details table th,
+                      #content details.pareto-details table td { padding: 4px 9px; vertical-align: top; }
+                      #content table.dataset-table td:nth-child(n+3), #content table.dataset-table th:nth-child(n+3),
+                      #content table.pareto-table td:nth-child(n+3), #content table.pareto-table th:nth-child(n+3) {
+                        text-align: right; font-variant-numeric: tabular-nums; }
+                      #content table.pareto-table td:nth-child(-n+2), #content table.pareto-table td:nth-child(n+3) {
+                        white-space: nowrap; }
+                      #content details.pareto-details table th { white-space: nowrap; }
+                      #content table.pareto-table td:last-child, #content table.pareto-table th:last-child {
+                        text-align: left; white-space: normal; min-width: 9em; }
+                    </style>
+
+                    <script>
+                    var PARETO = {"points":[{"model":"gosdt_guesses_guided","label":"gosdt-guesses, guided","direct":"gosdt-guesses, guided","group":"baseline","heuristic":true,"multicore":false,"runs":3,"t":0.001117806943137291,"t_sd":2.1319094543770653e-06,"c":0.3277631691262381,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"pygosdt_v1","label":"pygosdt","direct":"pygosdt (start)","group":"baseline","heuristic":false,"multicore":false,"runs":3,"t":0.10167345399914253,"t_sd":0.002069595815402394,"c":0.2648059958697585,"c_sd":0.0,"solved":55.333333333333336,"wrong":0,"notree":0,"proof_gap":false},{"model":"split","label":"SPLIT","direct":"SPLIT","group":"baseline","heuristic":true,"multicore":false,"runs":3,"t":0.15653786725419805,"t_sd":0.022400194971795614,"c":0.3150106079100712,"c_sd":0.0003283834304508913,"solved":0.0,"wrong":0,"notree":13,"proof_gap":false},{"model":"streed","label":"STreeD","direct":"STreeD","group":"baseline","heuristic":false,"multicore":false,"runs":3,"t":0.33231500562506583,"t_sd":0.023819676034676985,"c":0.25907125735778963,"c_sd":0.0,"solved":51.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"gosdt_mc8","label":"GOSDT, 8 threads","direct":"","group":"baseline","heuristic":false,"multicore":true,"runs":1,"t":0.4538490984149746,"t_sd":0.0,"c":0.2808698745962506,"c_sd":0.0,"solved":38.0,"wrong":0,"notree":17,"proof_gap":false},{"model":"gosdt_guesses","label":"gosdt-guesses","direct":"","group":"baseline","heuristic":false,"multicore":false,"runs":3,"t":0.4857469427242014,"t_sd":0.017574048257628958,"c":0.2815540326872263,"c_sd":0.0007834398484357419,"solved":46.0,"wrong":0,"notree":23,"proof_gap":false},{"model":"gosdt","label":"GOSDT","direct":"GOSDT","group":"baseline","heuristic":false,"multicore":false,"runs":3,"t":0.5037158461313708,"t_sd":0.026597171641212263,"c":0.27944686745105196,"c_sd":0.0,"solved":47.0,"wrong":1,"notree":13,"proof_gap":false},{"model":"v46_anytime_1ms","label":"v46_anytime_1ms","direct":"v46 anytime, 1 ms","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.001042333479515824,"t_sd":0.0,"c":0.25878058521097885,"c_sd":0.0,"solved":46.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43c_anytime_1ms","label":"v43c_anytime_1ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0010811602341791252,"t_sd":0.0,"c":0.2609802828717931,"c_sd":0.0,"solved":46.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v45_anytime_1ms","label":"v45_anytime_1ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.001087365425534748,"t_sd":0.0,"c":0.25950451121764617,"c_sd":0.0,"solved":46.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v46_anytime_2ms","label":"v46_anytime_2ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0013102105639413622,"t_sd":0.0,"c":0.2577894431984639,"c_sd":0.0,"solved":48.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43c_anytime_2ms","label":"v43c_anytime_2ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0013128474445748902,"t_sd":0.0,"c":0.2596495063804072,"c_sd":0.0,"solved":47.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v45_anytime_2ms","label":"v45_anytime_2ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0013306873765801474,"t_sd":0.0,"c":0.25795340067493056,"c_sd":0.0,"solved":48.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v45_anytime_5ms","label":"v45_anytime_5ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0017028415927661518,"t_sd":0.0,"c":0.2579394917170839,"c_sd":0.0,"solved":51.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v46_anytime_5ms","label":"v46_anytime_5ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.001707502884052053,"t_sd":0.0,"c":0.25791492712998665,"c_sd":0.0,"solved":51.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43c_anytime_5ms","label":"v43c_anytime_5ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0017107416782501982,"t_sd":0.0,"c":0.2590482118860937,"c_sd":0.0,"solved":50.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v45_anytime_10ms","label":"v45_anytime_10ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.002029793750934397,"t_sd":0.0,"c":0.2578756170989471,"c_sd":0.0,"solved":52.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43c_anytime_10ms","label":"v43c_anytime_10ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0020538463133665317,"t_sd":0.0,"c":0.2590482118860937,"c_sd":0.0,"solved":52.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v46_anytime_10ms","label":"v46_anytime_10ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.002154316881683989,"t_sd":0.0,"c":0.2578777748799026,"c_sd":0.0,"solved":52.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43_anytime_10ms","label":"v43_anytime_10ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0021986531975397923,"t_sd":0.0,"c":0.2590482118860937,"c_sd":0.0,"solved":52.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v45_anytime_20ms","label":"v45_anytime_20ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.002402314475192871,"t_sd":0.0,"c":0.25758721103400817,"c_sd":0.0,"solved":55.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43c_anytime_20ms","label":"v43c_anytime_20ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.00242601601056606,"t_sd":0.0,"c":0.25879780422966936,"c_sd":0.0,"solved":56.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43_anytime_20ms","label":"v43_anytime_20ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.002470849862878602,"t_sd":0.0,"c":0.25879780422966936,"c_sd":0.0,"solved":56.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v46_anytime_20ms","label":"v46_anytime_20ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.002703384968235814,"t_sd":0.0,"c":0.2575255784865548,"c_sd":0.0,"solved":55.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v45_anytime_50ms","label":"v45_anytime_50ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0028036370610752493,"t_sd":0.0,"c":0.25758721103400817,"c_sd":0.0,"solved":59.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43c_anytime_50ms","label":"v43c_anytime_50ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.002842218510445295,"t_sd":0.0,"c":0.2583896137961291,"c_sd":0.0,"solved":59.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43_anytime_50ms","label":"v43_anytime_50ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0028528355703653775,"t_sd":0.0,"c":0.25823948294714105,"c_sd":0.0,"solved":59.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v46_anytime_50ms","label":"v46_anytime_50ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0029676471173440727,"t_sd":0.0,"c":0.25728968122660967,"c_sd":0.0,"solved":59.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v45_anytime_100ms","label":"v45_anytime_100ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.00308789993923128,"t_sd":0.0,"c":0.257461733068484,"c_sd":0.0,"solved":61.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v46_anytime_100ms","label":"v46_anytime_100ms","direct":"v46 anytime, 100 ms","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0031184470932426474,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":61.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43c_anytime_100ms","label":"v43c_anytime_100ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0031767098250652962,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":60.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43_anytime_100ms","label":"v43_anytime_100ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0031813963012593356,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":61.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v46_anytime_300ms","label":"v46_anytime_300ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0035173133630684974,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43_anytime_300ms","label":"v43_anytime_300ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0035809434546231816,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43c_anytime_300ms","label":"v43c_anytime_300ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.003760756896297375,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":62.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43_anytime_1000ms","label":"v43_anytime_1000ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.003959390512551514,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43c_anytime_1000ms","label":"v43c_anytime_1000ms","direct":"","group":"anytime","heuristic":false,"multicore":true,"runs":1,"t":0.0040644990384054265,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43_greedy_seed","label":"v43_greedy_seed","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005291336466850661,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v45_greedy_family_lns","label":"v45_greedy_family_lns","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005319887679712079,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v37_gated_handoff","label":"v37_gated_handoff","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005329363561075443,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v46_topk_pairs","label":"v46_topk_pairs","direct":"v46, 8 threads","group":"exact","heuristic":false,"multicore":true,"runs":3,"t":0.005362674230585337,"t_sd":7.457700457847889e-05,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v40_no_depth3_stage","label":"v40_no_depth3_stage","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005417285884984925,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v41_node_keyed_frame_cache","label":"v41_node_keyed_frame_cache","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005511193401705544,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v39_own_memory_accounting","label":"v39_own_memory_accounting","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005586625231836496,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v34_shared_solutions_live_incumbent","label":"v34_shared_solutions_live_incumbent","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.00580125067960671,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v35_pooled_table","label":"v35_pooled_table","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005821511595450474,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v33_fast_handoff","label":"v33_fast_handoff","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.0058343759031394766,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v36_cached_root_handoff","label":"v36_cached_root_handoff","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005900232221757762,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v32_shared_bound_table","label":"v32_shared_bound_table","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.0059119773111220505,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v30_compiled_mc8_threads","label":"v30_compiled_mc8_threads","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.006032829431343315,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v40_sequential","label":"v40_sequential","direct":"v40 (shipped)","group":"exact","heuristic":false,"multicore":false,"runs":3,"t":0.006182182874983268,"t_sd":1.0732933240804583e-06,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v29_compiled_mc8","label":"v29_compiled_mc8","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.006311860317272532,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v28_compiled_search","label":"v28_compiled_search","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.006445964474050014,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v31_frame_cache","label":"v31_frame_cache","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.006698352322422484,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v25_mc8_root_parallel","label":"v25_mc8_root_parallel","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.007888564936176951,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v22_kernel_side_masks","label":"v22_kernel_side_masks","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.008008888018363124,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v21_python_overhead","label":"v21_python_overhead","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.008089999537034232,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v23_word_compaction","label":"v23_word_compaction","direct":"v23","group":"exact","heuristic":false,"multicore":false,"runs":3,"t":0.008115023259903346,"t_sd":0.00012139093754047589,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v20_two_peeled_leaves","label":"v20_two_peeled_leaves","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.008505690323628547,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v18_expansion_cache_kernel_predictions","label":"v18_expansion_cache_kernel_predictions","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.008601010659339808,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v19_depth3_triples","label":"v19_depth3_triples","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.008696782233268278,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v16b_fused_expansion","label":"v16b_fused_expansion","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.008777597008129547,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v15_shape_relaxation","label":"v15_shape_relaxation","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.009365954857323925,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v16_fused_expansion","label":"v16_fused_expansion","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.010000654061470195,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v14_hardened_superset_lb","label":"v14_hardened_superset_lb","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.010547130439141263,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v13_numba_candidate_prep","label":"v13_numba_candidate_prep","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.0112581433993055,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v10_depth2_everywhere_cheap","label":"v10_depth2_everywhere_cheap","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.011284276613908375,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v9_budget_deepening","label":"v9_budget_deepening","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.012284653880984465,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v8_sound_lb_lean_nodes","label":"v8_sound_lb_lean_nodes","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.012328583038481998,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v7_depth2_pairs","label":"v7_depth2_pairs","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.014168267085038325,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":true},{"model":"v5_fused_node_kernel","label":"v5_fused_node_kernel","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.018398104569521942,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v4_leaf_support_splits","label":"v4_leaf_support_splits","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.024870715764303553,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":62.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v3_column_dp","label":"v3_column_dp","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.028568607423630866,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":61.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v2_group_simsupport","label":"v2_group_simsupport","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.09369833509180374,"t_sd":0.0,"c":0.2648059958697585,"c_sd":0.0,"solved":55.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"pygosdt_v1_flat","label":"pygosdt_v1_flat","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.09371656322168867,"t_sd":0.0,"c":0.2648059958697585,"c_sd":0.0,"solved":55.0,"wrong":0,"notree":0,"proof_gap":false}],"frontier":[{"t":0.001042333479515824,"c":0.25878058521097885,"model":"v46_anytime_1ms"},{"t":0.0013102105639413622,"c":0.2577894431984639,"model":"v46_anytime_2ms"},{"t":0.002402314475192871,"c":0.25758721103400817,"model":"v45_anytime_20ms"},{"t":0.002703384968235814,"c":0.2575255784865548,"model":"v46_anytime_20ms"},{"t":0.0029676471173440727,"c":0.25728968122660967,"model":"v46_anytime_50ms"},{"t":0.0031184470932426474,"c":0.2572383299872058,"model":"v46_anytime_100ms"}],"cap":30.0,"offsets":{"gosdt":[40,-40],"streed":[40,-30],"pygosdt_v1":[-10,-45],"split":[-40,-40],"gosdt_guesses_guided":[95,5],"v23_word_compaction":[55,-30],"v40_sequential":[-10,-45],"v46_topk_pairs":[10,55],"v46_anytime_1ms":[60,-35],"v46_anytime_100ms":[-60,45]}};
+                    (function () {
+                      var el = document.getElementById('pareto-plot');
+                      if (!el || !window.Plotly || !PARETO.points) return;
+                      // roles, not raw hex, below this line; categorical slots 1-2 validated all-pairs
+                      var C = {
+                        baseline: '#6f6e69', exact: '#2a78d6', anytime: '#eb6834', critical: '#d03b3b',
+                        ink: '#1b1f23', muted: '#6a737d', grid: '#e3e6e8', axis: '#c3c2b7',
+                        surface: '#ffffff', frontier: '#8f959a'
+                      };
+                      var GROUP = { baseline: 'Baseline', exact: 'AutoOptTree, exact', anytime: 'AutoOptTree, anytime' };
+                      var pts = PARETO.points;
+
+                      function fmt(v, sd, runs, d) {
+                        return v.toFixed(d) + (runs > 1 ? ' ± ' + sd.toFixed(d) : '');
+                      }
+                      function hover(p) {
+                        var lines = ['<b>' + p.label + '</b>',
+                          GROUP[p.group] + (p.heuristic ? ' (heuristic)' : '') + ' · ' + (p.multicore ? '8 threads' : '1 thread'),
+                          'time ' + fmt(p.t, p.t_sd, p.runs, 4) + ' s',
+                          'criterion ' + fmt(p.c, p.c_sd, p.runs, 4),
+                          'certified ' + p.solved.toFixed(p.runs > 1 ? 1 : 0) + ' of 70',
+                          p.runs > 1 ? 'mean of ' + p.runs + ' runs' : 'single run'];
+                        if (p.wrong) lines.push('✖ ' + p.wrong + ' false certificate' + (p.wrong > 1 ? 's' : ''));
+                        if (p.notree) lines.push('no tree on ' + p.notree + ' problems');
+                        if (p.proof_gap) lines.push('exactness proof has a gap (no wrong answer observed)');
+                        return lines.join('<br>');
+                      }
+
+                      var traces = [{
+                        x: PARETO.frontier.map(function (f) { return f.t; }),
+                        y: PARETO.frontier.map(function (f) { return f.c; }),
+                        mode: 'lines', line: { color: C.frontier, width: 1.5, shape: 'hv' },
+                        hoverinfo: 'skip', showlegend: false
+                      }];
+                      // the x goes down first so the solver's own marker stays readable on top of it
+                      var failed = pts.filter(function (p) { return p.wrong > 0; });
+                      if (failed.length) traces.push({
+                        x: failed.map(function (p) { return p.t; }), y: failed.map(function (p) { return p.c; }),
+                        mode: 'markers', showlegend: false, hoverinfo: 'skip',
+                        marker: { symbol: 'x-thin-open', size: 30, color: C.critical, line: { width: 3 } }
+                      });
+
+                      // one trace per (repeated, group, threads, heuristic) so each carries fixed styling;
+                      // every single run is drawn before any three-run mean, so the means stay on top
+                      [false, true].forEach(function (rep) {
+                        ['baseline', 'exact', 'anytime'].forEach(function (g) {
+                          [false, true].forEach(function (mc) {
+                            [false, true].forEach(function (heur) {
+                              var sub = pts.filter(function (p) {
+                                return p.group === g && p.multicore === mc && (p.runs > 1) === rep && !!p.heuristic === heur;
+                              });
+                              if (!sub.length) return;
+                              var shape = (mc ? 'diamond' : 'circle') + (heur ? '-open' : '');
+                              var bar = { type: 'data', visible: rep, color: C[g], thickness: 1.5, width: 0 };
+                              traces.push({
+                                x: sub.map(function (p) { return p.t; }),
+                                y: sub.map(function (p) { return p.c; }),
+                                error_x: Object.assign({ array: sub.map(function (p) { return p.t_sd; }) }, bar),
+                                error_y: Object.assign({ array: sub.map(function (p) { return p.c_sd; }) }, bar),
+                                mode: 'markers', showlegend: false,
+                                marker: {
+                                  symbol: shape, size: rep ? 15 : 9, opacity: rep ? 1 : 0.55,
+                                  // open symbols are stroked in marker.color; filled ones get a surface ring
+                                  color: C[g],
+                                  line: heur ? { color: C[g], width: 2 } : { color: C.surface, width: 2 }
+                                },
+                                text: sub.map(hover), hovertemplate: '%{text}<extra></extra>'
+                              });
+                            });
+                          });
+                        });
+                      });
+
+
+                      // legend: one entry per encoding, drawn from off-plot dummy points
+                      function key(name, marker, extra) {
+                        return Object.assign({ x: [null], y: [null], mode: 'markers', name: name, marker: marker, hoverinfo: 'skip' }, extra || {});
+                      }
+                      traces.push(
+                        key('AutoOptTree, exact', { symbol: 'circle', size: 10, color: C.exact }),
+                        key('AutoOptTree, anytime', { symbol: 'circle', size: 10, color: C.anytime }),
+                        key('Baseline', { symbol: 'circle', size: 10, color: C.baseline }),
+                        key('Heuristic baseline', { symbol: 'circle-open', size: 10, color: C.baseline, line: { width: 2 } }),
+                        key('8 threads', { symbol: 'diamond', size: 10, color: C.muted }),
+                        key('Mean of 3 runs ± 1 sd', { symbol: 'circle', size: 15, color: C.muted, line: { color: C.surface, width: 2 } }),
+                        key('False certificate', { symbol: 'x-thin-open', size: 14, color: C.critical, line: { width: 2.5 } }),
+                        { x: [null], y: [null], mode: 'lines', name: 'Pareto frontier', line: { color: C.frontier, width: 1.5 }, hoverinfo: 'skip' }
+                      );
+
+                      // direct labels on a few points, with leader lines; offsets in pixels
+                      var OFFSET = PARETO.offsets || {};
+                      var notes = pts.filter(function (p) { return p.direct; }).map(function (p) {
+                        var o = OFFSET[p.model] || [30, -30];
+                        return {
+                          x: Math.log10(p.t), y: p.c, xref: 'x', yref: 'y', text: p.direct + (p.wrong ? ' ✖ false certificate' : ''),
+                          showarrow: true, arrowhead: 0, arrowwidth: 1, arrowcolor: C.axis, ax: o[0], ay: o[1],
+                          font: { size: 12, color: p.wrong ? C.critical : C.ink }, bgcolor: 'rgba(255,255,255,0.85)', borderpad: 2
+                        };
+                      });
+                      notes.push({
+                        xref: 'paper', yref: 'paper', x: 0.99, y: 0.03, xanchor: 'right', yanchor: 'bottom', showarrow: false,
+                        text: 'faster and better: lower left', font: { size: 12, color: C.muted }
+                      });
+
+                      var axis = { gridcolor: C.grid, linecolor: C.axis, zeroline: false, ticks: 'outside', tickcolor: C.axis,
+                                   tickfont: { size: 12, color: C.muted }, titlefont: { size: 13, color: C.ink } };
+                      Plotly.newPlot(el, traces, {
+                        height: 560, margin: { l: 70, r: 20, t: 10, b: 120 },
+                        paper_bgcolor: C.surface, plot_bgcolor: C.surface,
+                        font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: C.ink },
+                        xaxis: Object.assign({ type: 'log', title: { text: 'Geometric-mean time per problem (s, log scale)' } }, axis),
+                        yaxis: Object.assign({ title: { text: 'Geometric-mean criterion' }, tickformat: '.2f' }, axis),
+                        legend: { orientation: 'h', x: 0, y: -0.16, xanchor: 'left', yanchor: 'top', font: { size: 12, color: C.ink } },
+                        hovermode: 'closest', hoverlabel: { bgcolor: C.surface, bordercolor: C.grid, font: { color: C.ink, size: 12 } },
+                        annotations: notes
+                      }, { displayModeBar: false, responsive: true });
+                    })();
+                    </script>
+
                     <p class="caption caption-above"><b>Table 1.</b> Exact solvers on the 70-problem development suite, 30 s cap each.
                         Every figure is the mean of three runs, run one after another on an otherwise idle machine.
-                        Time is the geometric mean over all problems, counting an unsolved one at the cap.</p>
+                        Time is the geometric mean over all problems of the seconds each run spent, so an unsolved
+                        problem counts at the 30 s cap, or earlier if the solver stopped at its 6 GB memory budget.</p>
                     <table class="ranktbl">
                         <thead>
                             <tr><th></th><th>certified optimal</th><th>geo. mean time</th><th>false certificates</th></tr>
@@ -143,7 +422,8 @@ else:
                         </thead>
                         <tbody>
                             <tr class="tblsec"><td colspan="4">Exact</td></tr>
-                            <tr><td><b>AutoOptTree</b></td><td><b>63.0</b></td><td><b>0.0062 &plusmn; 0.0000</b></td><td><b>0</b></td></tr>
+                            <tr><td><b>AutoOptTree</b> (v40, 1 thread, shipped)</td><td><b>63.0</b></td><td><b>0.0062 &plusmn; 0.0000</b></td><td><b>0</b></td></tr>
+                            <tr><td>AutoOptTree v46, 8 threads</td><td>63.0</td><td>0.0054 &plusmn; 0.0001</td><td>0</td></tr>
                             <tr><td>pygosdt (starting point)</td><td>55.3</td><td>0.102 &plusmn; 0.002</td><td>0</td></tr>
                             <tr><td><a href="https://arxiv.org/abs/2112.00674">STreeD</a></td><td>51.0</td><td>0.332 &plusmn; 0.024</td><td>0</td></tr>
                             <tr><td><a href="https://arxiv.org/abs/2006.08690">GOSDT</a></td><td>47.0</td><td>0.504 &plusmn; 0.027</td><td>1</td></tr>
@@ -160,6 +440,19 @@ else:
                         a proof that was always going to be marginal fits inside the budget, not what the solver can
                         prove. AutoOptTree's 63 and its seven unsolved problems are the same in all three runs, and
                         its geometric mean is stable to four decimals across them.</p>
+
+                    <p class="tblnote">v46 is the loop's last exact version and is not what ships: it uses 8 threads,
+                        where the shipped model deliberately uses one. On 8 threads its three largest problems reach the
+                        6 GB memory budget after 13 to 25 seconds and stop there; charged the full 30 s cap instead, its
+                        time would be 0.0055 s rather than 0.0054 s. The single-threaded model never approaches that
+                        budget, so no other exact row is affected.</p>
+
+                    <p>The loop also produced <i>anytime</i> versions, which take a fixed time budget per problem and
+                        return the best tree found when it runs out, certifying optimality only when the search finishes
+                        first. They make up the whole frontier in Fig 1. With 100 ms per problem, v46's anytime version
+                        certifies 61 of the 70 problems in 0.0031 s and matches the exact solvers' criterion to four
+                        decimals; with 1 ms it certifies 46 in 0.0010 s for a criterion 0.6% higher. When a certificate
+                        is not needed, that is most of the benefit at half the time.</p>
 
                     <p class="tblnote">The one false certificate is GOSDT's, on tic-tac-toe at
                         <code>regularization</code>=0.02: it reports a tree as optimal whose objective is worse than a
