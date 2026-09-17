@@ -55,12 +55,15 @@ BASELINES = {
 MULTICORE_BASELINES = {"gosdt_mc8"}
 HEURISTIC_BASELINES = {"gosdt_guesses_guided", "split"}
 # the evolved solvers as the external sweep names them
-EXTERNAL_EVOLVED = {"autoopttree": ("v23", False), "autoopttree_v40": ("v40 (shipped)", False),
-                    "autoopttree_v46": ("v46, 8 threads", True)}
+EXTERNAL_EVOLVED = {"autoopttree": ("v23", False, "exact"),
+                    "autoopttree_v40": ("v40 (shipped)", False, "exact"),
+                    "autoopttree_v46": ("v46, 8 threads", True, "exact"),
+                    "autoopttree_v46_anytime100": ("v46 anytime, 100 ms", True, "anytime")}
 # names the repeat script used for evolved solvers, mapped to their run names
 REPEAT_ALIASES = {"autoopttree": "v23_word_compaction",
                   "autoopttree_v40": "v40_sequential",
-                  "autoopttree_v46": "v46_topk_pairs"}
+                  "autoopttree_v46": "v46_topk_pairs",
+                  "autoopttree_v46_anytime100": "v46_anytime_100ms"}
 # The points the figure names directly; everything else is in the tooltip. The anytime
 # versions are left unlabelled: at half the figure's width their labels collide with the
 # exact ones, and the text and tooltips carry which cap is which.
@@ -76,10 +79,12 @@ LABELLED = {
 }
 EXTERNAL_LABELLED = {"gosdt": "GOSDT", "streed": "STreeD", "pygosdt_v1": "pygosdt (start)", "split": "SPLIT",
                      "gosdt_guesses": "gosdt-guesses", "gosdt_guesses_guided": "gosdt-guesses, guided",
-                     "autoopttree": "v23", "autoopttree_v40": "v40 (shipped)", "autoopttree_v46": "v46, 8 threads"}
+                     "autoopttree": "v23", "autoopttree_v40": "v40 (shipped)", "autoopttree_v46": "v46, 8 threads",
+                     "autoopttree_v46_anytime100": "v46 anytime, 100 ms"}
 EXTERNAL_OFFSETS = {"gosdt": [-58, -40], "streed": [-55, -32], "pygosdt_v1": [-5, -42], "split": [-45, 38],
                     "gosdt_guesses": [-62, 34], "gosdt_guesses_guided": [82, 10], "autoopttree": [46, -26],
-                    "autoopttree_v40": [-56, -30], "autoopttree_v46": [0, 50]}
+                    "autoopttree_v40": [-56, -30], "autoopttree_v46": [0, 50],
+                    "autoopttree_v46_anytime100": [58, 34]}
 # where each direct label sits relative to its point, in pixels (x right, y down),
 # chosen by rendering the page and moving labels off each other and off the marks
 OFFSETS = {
@@ -148,8 +153,7 @@ def external_points(root):
         t = [v["t"] for v in per.values()]
         c = [v["c"] for v in per.values()]
         if model in EXTERNAL_EVOLVED:
-            label, multicore = EXTERNAL_EVOLVED[model]
-            group = "exact"
+            label, multicore, group = EXTERNAL_EVOLVED[model]
         else:
             label, multicore, group = BASELINES.get(model, model), model in MULTICORE_BASELINES, "baseline"
         points.append({
