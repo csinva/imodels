@@ -82,6 +82,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | OneR rule list              | [🗂️](https://csinva.io/imodels/rule_list/one_r.html), [📄](https://link.springer.com/article/10.1023/A:1022631118932) | Fits rule list restricted to only one feature              |
 | Greedy rule tree            | [🗂️](https://csinva.io/imodels/tree/cart_wrapper.html), [📄](https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone), [🔗](https://scikit-learn.org/stable/modules/tree.html)  | Greedily fits tree using CART                              |
 | C4.5 rule tree        | [🗂️](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier), [📄](https://link.springer.com/article/10.1007/BF00993309), [🔗](https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier) | Greedily fits tree using C4.5                           |
+| **Optimal rule tree** | [🗂️](https://csinva.io/imodels/autoopttree.html),ㅤ[📄](https://csinva.io/imodels/autoopttree.html) | Provably optimal tree for a given penalty per leaf |
 | TAO rule tree        | [🗂️](https://csinva.io/imodels/tree/tao.html), [📄](https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html) | Fits tree using alternating optimization                    |
 | Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
 | Tree GAM | [🗂️](https://csinva.io/imodels/algebraic/tree_gam.html), [📄](https://dl.acm.org/doi/abs/10.1145/2339530.2339556), [🔗](https://github.com/interpretml/interpret) | Generalized additive model fit with short boosted trees                           |
@@ -171,6 +172,7 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | OneR rule list              | [OneRClassifier](https://csinva.io/imodels/rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier) |                                                              |  |
 | Greedy rule tree (CART)     | [GreedyTreeClassifier](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier) |      [GreedyTreeRegressor](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor)                                                        |  |
 | C4.5 rule tree              | [C45TreeClassifier](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier) |           |  |
+| Optimal rule tree           | [AutoOptTreeClassifier](https://csinva.io/imodels/tree/optimal_tree/auto_opt_tree.html#imodels.tree.optimal_tree.auto_opt_tree.AutoOptTreeClassifier) |                                                              | Certifiably optimal rather than greedy; needs [numba](https://pypi.org/project/numba/) |
 | CCP-pruned rule tree        | [DecisionTreeCCPClassifier](https://csinva.io/imodels/tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier) | [DecisionTreeCCPRegressor](https://csinva.io/imodels/tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPRegressor) | Prunes a tree to a target complexity via cost-complexity pruning |
 | TAO rule tree              | [TaoTreeClassifier](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeClassifier) |   [TaoTreeRegressor](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeRegressor)        |  |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
@@ -192,7 +194,7 @@ fitting them (they warn if rounding has removed most of the model).
 **Multiclass.** These classifiers handle more than two classes: `FIGSClassifier`,
 `GreedyTreeClassifier`, `HSTreeClassifier`, `TaoTreeClassifier`,
 `BoostedRulesClassifier`, `SLIMClassifier`, `C45TreeClassifier`,
-`DecisionTreeCCPClassifier` and the `CV` variants. The rule-set and rule-list models are binary-only and raise a
+`DecisionTreeCCPClassifier`, `AutoOptTreeClassifier` and the `CV` variants. The rule-set and rule-list models are binary-only and raise a
 clear error if given a multiclass target, rather than silently treating it as
 binary.
 

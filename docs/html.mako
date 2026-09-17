@@ -278,12 +278,14 @@
     </li>
     % endif
     <li><h3>Our favorite methods</h3>
-        <ul>
-        <%doc>Keep this list in the same order as the "Our favorite methods" section of the readme.</%doc>
-        <li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a></li>
-        <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a></li>
-        <li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a></li>
-        <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a></li>
+        <ul class="post-list">
+        <%doc>Newest post first. Each entry carries its post date, and the methods an
+        autoresearch loop discovered carry a badge; keep both in step with docs/pages/.</%doc>
+        <li><a href="https://csinva.io/imodels/autoopttree.html" title="Certifiably optimal sparse decision trees">AutoOptTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+        <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+        <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
+        <li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a><span class="post-date">Feb '22</span></li>
+        <li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a><span class="post-date">Jan '22</span></li>
         </ul>
     </li>
     % if variables:

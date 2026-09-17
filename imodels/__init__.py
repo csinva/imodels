@@ -24,6 +24,7 @@ from .rule_set.fpskope import FPSkopeClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.slipper import SlipperClassifier
+from .tree.optimal_tree.auto_opt_tree import AutoOptTreeClassifier
 from .tree.c45_tree.c45_tree import C45TreeClassifier
 from .tree.cart_ccp import (
     DecisionTreeCCPClassifier,
@@ -59,6 +60,7 @@ CLASSIFIERS = [
     SlipperClassifier,
     BayesianRuleSetClassifier,
     C45TreeClassifier,
+    AutoOptTreeClassifier,
     OneRClassifier,
     RuleFitClassifier,
     FPLassoClassifier,
@@ -99,7 +101,7 @@ DISCRETIZERS = [RFDiscretizer, BasicDiscretizer,
 # models and helpers rather than whatever each submodule happened to import.
 __all__ = [
     "GPGamRegressor", "AutoInterpretableClassifier",
-    "AutoInterpretableRegressor", "BART",
+    "AutoInterpretableRegressor", "AutoOptTreeClassifier", "BART",
     "BRLDiscretizer", "BasicDiscretizer", "BayesianRuleListClassifier",
     "BayesianRuleSetClassifier", "BoostedRulesClassifier",
     "BoostedRulesRegressor", "C45TreeClassifier", "CLASSIFIERS",
