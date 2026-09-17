@@ -48,12 +48,10 @@ exclude = ["notebooks*", "tests*", "docs*"]
 dev = [
     "jupyter>=1.1.1",
     "jupytext",
-    "matplotlib",
     "pdoc3",
     "pytest",
     "pytest-cov",
     "slurmpy",
-    "tqdm",
     "pmlb",
     "dvu",
 ]
