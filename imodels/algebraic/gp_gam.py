@@ -40,6 +40,7 @@ from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 
 from imodels.util.arguments import check_predict_X, set_feature_names_in
+from imodels.util.progress import progress_iter
 
 
 class GPGamRegressor(RegressorMixin, BaseEstimator):
@@ -146,6 +147,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         learn_scales=True,
         scale_prior=0.5,
         sweeps=3,
+        verbose=0,
     ):
         self.schedule = schedule
         self.n_bins = n_bins
@@ -156,6 +158,7 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         self.learn_scales = learn_scales
         self.scale_prior = scale_prior
         self.sweeps = sweeps
+        self.verbose = verbose
         self.n_pairs = n_pairs
         self.pair_bins = pair_bins
         self.pair_res = pair_res
@@ -704,7 +707,8 @@ class GPGamRegressor(RegressorMixin, BaseEstimator):
         vals = [np.zeros(g[0][1]) for g in grids]
         cols_k = [g[0][0] for g in grids]
         T = np.zeros(n)
-        for sw in range(int(self.sweeps)):
+        for sw in progress_iter(range(int(self.sweeps)), verbose=self.verbose,
+                                desc='backfitting sweeps'):
             s2 = float(np.var(resid - T))
             for k in range(K):
                 r_k = resid - T + vals[k][cols_k[k]]

@@ -14,6 +14,7 @@ from imodels.util import checks
 from imodels.util.arguments import check_fit_arguments, check_predict_X
 from imodels.util.tree import compute_tree_complexity
 from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.progress import progress_iter
 
 
 def _as_arrays(X, y):
@@ -501,6 +502,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
+        verbose: int = 0,
         *args,
         **kwargs
     ):
@@ -525,6 +527,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
         self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.shrinkage_scheme_ = shrinkage_scheme_
         # print('estimator', self.estimator_,
         #       'checks.check_is_fitted(estimator)', checks.check_is_fitted(self.estimator_))
@@ -540,6 +543,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
             "max_leaf_nodes": self.estimator_.max_leaf_nodes,
             "cv": self.cv,
             "scoring": self.scoring,
+            "verbose": self.verbose,
         }
         if deep:
             return deepcopy(d)
@@ -550,7 +554,9 @@ class HSTreeClassifierCV(HSTreeClassifier):
         self.scores_ = [[] for _ in self.reg_param_list]
         scorer = kwargs.get("scoring", log_loss)
         kf = KFold(n_splits=self.cv)
-        for train_index, test_index in kf.split(X_arr):
+        for train_index, test_index in progress_iter(
+                kf.split(X_arr), verbose=self.verbose, total=self.cv,
+                desc='cross-validating'):
             X_out, y_out = X_arr[test_index, :], y_arr[test_index]
             X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)
@@ -613,6 +619,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
+        verbose: int = 0,
         *args,
         **kwargs
     ):
@@ -637,6 +644,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
         self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.shrinkage_scheme_ = shrinkage_scheme_
         # print('estimator', self.estimator_,
         #       'checks.check_is_fitted(estimator)', checks.check_is_fitted(self.estimator_))
@@ -652,6 +660,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
             "max_leaf_nodes": self.estimator_.max_leaf_nodes,
             "cv": self.cv,
             "scoring": self.scoring,
+            "verbose": self.verbose,
         }
         if deep:
             return deepcopy(d)
@@ -662,7 +671,9 @@ class HSTreeRegressorCV(HSTreeRegressor):
         self.scores_ = [[] for _ in self.reg_param_list]
         kf = KFold(n_splits=self.cv)
         scorer = kwargs.get("scoring", mean_squared_error)
-        for train_index, test_index in kf.split(X_arr):
+        for train_index, test_index in progress_iter(
+                kf.split(X_arr), verbose=self.verbose, total=self.cv,
+                desc='cross-validating'):
             X_out, y_out = X_arr[test_index, :], y_arr[test_index]
             X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)

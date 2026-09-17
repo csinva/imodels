@@ -18,6 +18,7 @@ from scipy.special import softmax
 
 from imodels.tree.viz_utils import extract_sklearn_tree_from_figs
 from imodels.util.arguments import check_fit_arguments, check_predict_X
+from imodels.util.progress import progress_bar, progress_iter
 from imodels.util.data_util import encode_categories
 from imodels.util.introspection import RuleInspectionMixin
 from imodels.util.arguments import explicit_get_params
@@ -394,6 +395,10 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
 
         # start the greedy fitting algorithm
         finished = False
+        # one tick per rule added; max_rules bounds the loop, so the bar has a
+        # total whenever the user set one (an unbounded fit gets a plain counter)
+        bar = progress_bar(total=self.max_rules, verbose=verbose,
+                           desc='fitting rules')
         while len(potential_splits) > 0 and not finished:
             # print('potential_splits', [str(s) for s in potential_splits])
             # get node with max impurity_reduction (since it's sorted)
@@ -464,8 +469,8 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
                 budget = '' if self.max_rules is None else f'/{self.max_rules}'
                 condition = (f"X_{split_node.feature} <= {split_node.threshold:0.3f}"
                              if split_node.feature is not None else str(split_node))
-                print(f"rule {self.complexity_}{budget} "
-                      f"({len(self.trees_)} tree(s)): {condition}")
+                bar.write(f"rule {self.complexity_}{budget} "
+                          f"({len(self.trees_)} tree(s)): {condition}")
 
             # update predictions for altered tree
             for tree_num_ in range(len(self.trees_)):
@@ -519,9 +524,12 @@ class FIGS(RuleInspectionMixin, BaseEstimator):
             )
             if verbose >= 2:
                 print(self)
+            bar.update(1)
             if self.max_rules is not None and self.complexity_ >= self.max_rules:
                 finished = True
                 break
+
+        bar.close()
 
         # annotate final tree with node_id and value_sklearn, and prepare importance_data_
         importance_data = []
@@ -857,6 +865,7 @@ class FIGSCV(RuleInspectionMixin, BaseEstimator):
         min_impurity_decrease_list: List[float] = [0],
         cv: int = 3,
         scoring=None,
+        verbose: int = 0,
         *args,
         **kwargs,
     ):
@@ -869,6 +878,7 @@ class FIGSCV(RuleInspectionMixin, BaseEstimator):
         self.min_impurity_decrease_list = min_impurity_decrease_list
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
 
 
     @property
@@ -878,7 +888,7 @@ class FIGSCV(RuleInspectionMixin, BaseEstimator):
     #: __init__ takes *args/**kwargs, which sklearn's introspection rejects,
     #: so the parameters are spelled out here instead
     _PARAM_NAMES = ("n_rules_list", "n_trees_list", "depth_list",
-                    "min_impurity_decrease_list", "cv", "scoring")
+                    "min_impurity_decrease_list", "cv", "scoring", "verbose")
 
     def get_params(self, deep=True):
         return explicit_get_params(self, self._PARAM_NAMES, deep=deep)
@@ -890,7 +900,12 @@ class FIGSCV(RuleInspectionMixin, BaseEstimator):
 
     def fit(self, X, y):
         self.scores_ = []
-        for _i, (n_rules, n_trees, depth, min_impurity_decrease) in enumerate(itertools.product(*[self.n_rules_list, self.n_trees_list, self.depth_list, self.min_impurity_decrease_list])):
+        param_grid = list(itertools.product(
+            *[self.n_rules_list, self.n_trees_list, self.depth_list,
+              self.min_impurity_decrease_list]))
+        for _i, (n_rules, n_trees, depth, min_impurity_decrease) in enumerate(
+                progress_iter(param_grid, verbose=self.verbose,
+                              desc='cross-validating')):
             est = self._figs_class(max_rules=n_rules, max_trees=n_trees, max_depth=depth, min_impurity_decrease=min_impurity_decrease)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             mean_score = np.mean(cv_scores)

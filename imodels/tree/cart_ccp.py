@@ -9,6 +9,7 @@ from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifie
 from imodels.util.tree import compute_tree_complexity
 from imodels.util.introspection import RuleInspectionMixin
 from imodels.util.arguments import explicit_get_params, explicit_set_params
+from imodels.util.progress import progress_iter
 
 
 class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
@@ -187,18 +188,21 @@ class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
 class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-                 desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
+                 desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
+                 *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         m = DecisionTreeCCPRegressor(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
-        for reg_param in self.reg_param_list:
+        for reg_param in progress_iter(self.reg_param_list, verbose=self.verbose,
+                                       desc='cross-validating'):
             est = HSTreeRegressor(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
@@ -208,18 +212,21 @@ class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
 
 class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-                 desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
+                 desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
+                 *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         m = DecisionTreeCCPClassifier(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
-        for reg_param in self.reg_param_list:
+        for reg_param in progress_iter(self.reg_param_list, verbose=self.verbose,
+                                       desc='cross-validating'):
             est = HSTreeClassifier(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))

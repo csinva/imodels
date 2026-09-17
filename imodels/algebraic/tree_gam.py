@@ -17,6 +17,7 @@ from sklearn.base import RegressorMixin, ClassifierMixin
 from imodels.util.arguments import (check_binary_target, check_predict_X, decode_labels,
                                     set_feature_names_in)
 from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.progress import progress_iter
 
 
 class TreeGAM(RuleInspectionMixin, BaseEstimator):
@@ -43,6 +44,7 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         boosting_strategy="cyclic",
         validation_frac=0.15,
         random_state=None,
+        verbose=0,
     ):
         """
         Params
@@ -82,6 +84,8 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
             Fraction of data to use for early stopping.
         random_state : int
             Random seed.
+        verbose : int
+            If nonzero, show a progress bar over the boosting rounds while fitting.
         """
         self.n_boosting_rounds = n_boosting_rounds
         self.max_leaf_nodes = max_leaf_nodes
@@ -97,6 +101,7 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         self.boosting_strategy = boosting_strategy
         self.validation_frac = validation_frac
         self.random_state = random_state
+        self.verbose = verbose
 
     def fit(self, X, y, sample_weight=None):
         set_feature_names_in(self, X)
@@ -164,7 +169,8 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         Store in self.estimators_marginal"""
         residuals_train = y_train - self.predict_proba(X_train)[:, 1]
         p = X_train.shape[1]
-        for feature_num in range(p):
+        for feature_num in progress_iter(range(p), verbose=self.verbose,
+                                         desc='marginal fits'):
             X_ = np.zeros_like(X_train)
             X_[:, feature_num] = X_train[:, feature_num]
             est = GradientBoostingRegressor(
@@ -207,7 +213,8 @@ class TreeGAM(RuleInspectionMixin, BaseEstimator):
         residuals_train = y_train - self.predict_proba(X_train)[:, 1]
         mse_val = self._calc_mse(X_val, y_val, sample_weight_val)
         self.decay_coef_towards_marginal_ = []
-        for _ in range(self.n_boosting_rounds):
+        for _ in progress_iter(range(self.n_boosting_rounds),
+                               verbose=self.verbose, desc='boosting rounds'):
             boosting_round_ests = []
             boosting_round_mses = []
             feature_nums = np.arange(X_train.shape[1])

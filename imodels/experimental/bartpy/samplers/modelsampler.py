@@ -8,6 +8,7 @@ from ..model import Model
 from ..samplers.sampler import Sampler
 from ..samplers.schedule import SampleSchedule
 from ..trace import TraceLogger
+from imodels.util.progress import progress_iter
 
 Chain = Mapping[str, Union[List[Any], np.ndarray]]
 
@@ -42,13 +43,14 @@ class ModelSampler(Sampler):
                 n_burn: int,
                 thin: float=0.1,
                 store_in_sample_predictions: bool=True,
-                store_acceptance: bool=True) -> Chain:
+                store_acceptance: bool=True,
+                verbose: int=0) -> Chain:
         # print("Starting burn")
 
         trace_logger = self.trace_logger_class()
         y = copy.deepcopy(model.data.y.unnormalized_y)
 
-        for _ in range(n_burn):
+        for _ in progress_iter(range(n_burn), verbose=verbose, desc='burn-in'):
             model.update_z_values(y)
             self.step(model, trace_logger)
 
@@ -61,7 +63,8 @@ class ModelSampler(Sampler):
 
         thin_inverse = 1. / thin
 
-        for ss in range(n_samples):
+        for ss in progress_iter(range(n_samples), verbose=verbose,
+                                desc='sampling'):
             model.update_z_values(y)
             step_trace_dict, l_score, prob = self.step(model, trace_logger)
             # print(step_trace_dict)

@@ -84,7 +84,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                  include_linear=True,
                  alpha=None,
                  cv=True,
-                 random_state=None):
+                 random_state=None,
+                 verbose=0):
         self.n_estimators = n_estimators
         self.tree_size = tree_size
         self.sample_fract = sample_fract
@@ -98,6 +99,7 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
         self.alpha = alpha
         self.cv = cv
         self.random_state = random_state
+        self.verbose = verbose
 
         self.stddev = None
         self.mean = None
@@ -292,7 +294,8 @@ class RuleFit(BaseEstimator, TransformerMixin, RuleSet):
                                tree_generator=self.tree_generator,
                                exp_rand_tree_size=self.exp_rand_tree_size,
                                sample_fract=self.sample_fract,
-                               random_state=self.random_state)
+                               random_state=self.random_state,
+                               verbose=self.verbose)
 
     def _score_rules(self, X, y, rules) -> Tuple[List[Rule], List[float], float]:
         X_concat = np.zeros([X.shape[0], 0])

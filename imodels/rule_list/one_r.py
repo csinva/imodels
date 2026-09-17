@@ -6,14 +6,17 @@ the rule list with the highest accuracy
 import numpy as np
 
 from imodels import GreedyRuleListClassifier
+from imodels.util.progress import progress_iter
 from imodels.util.arguments import check_binary_target, check_fit_arguments
 
 
 class OneRClassifier(GreedyRuleListClassifier):
-    def __init__(self, max_depth=5, class_weight=None, criterion='gini'):
+    def __init__(self, max_depth=5, class_weight=None, criterion='gini',
+                 verbose=0):
         self.max_depth = max_depth
         self.class_weight = class_weight
         self.criterion = criterion
+        self.verbose = verbose
         self._estimator_type = 'classifier'
 
     def fit(self, X, y, feature_names=None):
@@ -24,7 +27,8 @@ class OneRClassifier(GreedyRuleListClassifier):
 
         ms = []
         accs = np.zeros(X.shape[1])
-        for col_idx in range(X.shape[1]):
+        for col_idx in progress_iter(range(X.shape[1]), verbose=self.verbose,
+                                     desc='scoring features'):
             x = X[:, col_idx].reshape(-1, 1)
             m = GreedyRuleListClassifier(max_depth=self.max_depth, class_weight=self.class_weight,
                                          criterion=self.criterion)
