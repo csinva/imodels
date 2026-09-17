@@ -165,36 +165,35 @@ else:
                     <div class="fig-wide">
                       <div class="fig-pair">
                         <div class="fig-panel">
-                          <h4>Development suite <span>(the 14 datasets the loop was scored on)</span></h4>
-                          <div id="pareto-dev" role="img" aria-label="Geometric-mean criterion against geometric-mean time for every solver version and baseline on the development suite."></div>
+                          <h4>Visible set <span>(the 14 datasets the loop was scored on)</span></h4>
+                          <div id="pareto-dev" role="img" aria-label="Geometric-mean criterion against geometric-mean time for every solver version and baseline on the visible set."></div>
                         </div>
                         <div class="fig-panel">
-                          <h4>TabArena-14 <span>(held out)</span></h4>
-                          <div id="pareto-external" role="img" aria-label="The same measure for the key solver versions and the baselines on the held-out TabArena-14 benchmark."></div>
+                          <h4>Hidden set <span>(TabArena-14)</span></h4>
+                          <div id="pareto-external" role="img" aria-label="The same measure for the key solver versions and the baselines on the hidden set, TabArena-14."></div>
                         </div>
                       </div>
                       <ul class="fig-legend" aria-label="Legend">
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#2a78d6"/></svg>AutoOptTree, exact</li>
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#eb6834"/></svg>AutoOptTree, anytime</li>
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#6f6e69"/></svg>Baseline</li>
-                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="4.5" fill="none" stroke="#6f6e69" stroke-width="2"/></svg>Heuristic baseline</li>
                         <li><svg viewBox="0 0 16 16"><path d="M8 2 L14 8 L8 14 L2 8 Z" fill="#6a737d"/></svg>8 threads</li>
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#6a737d" stroke="#fff" stroke-width="1.5"/></svg>Mean of 3 runs</li>
                       </ul>
                     </div>
 
-                    <p class="caption"><b>Fig 1.</b> Solvers on the development suite (left) and on the held-out
-                        TabArena-14 (right). Each point is a geometric mean over the 70 problems of the time spent (at
+                    <p class="caption"><b>Fig 1.</b> Solvers on the visible set (left) and on the hidden set, TabArena-14
+                        (right). Each point is a geometric mean over the 70 problems of the time spent (at
                         most the 30 s cap) and of the criterion its tree scores, error plus penalty times leaves. The
                         time axes are the same, so the panels can be compared left to right; the criterion axes are not,
                         since the two benchmarks have different optima. Blue points are exact versions from the loop and
                         orange its anytime versions, which stop at a fixed time budget and so trade a little criterion for
-                        speed; gray points are baselines, open if they are heuristics that certify nothing. Diamonds use 8
+                        speed; gray points are baselines. Diamonds use 8
                         threads. Large points are the mean of three runs and small translucent ones are single runs;
                         hovering a three-run point gives its standard deviation. On a problem where a baseline returned no tree it is
                         charged the criterion of a single leaf. TabArena-14 has no certified optima, so a certificate there is checked against the
                         best tree any run of any solver returned. An earlier recording of v46 certified two wrong trees on
-                        the development suite because of a two-line indentation slip; the points shown are the fixed
+                        the visible set because of a two-line indentation slip; the points shown are the fixed
                         code, which certified none. Which solvers issued false certificates is in the text and in each
                         point's tooltip. Hover a point for its numbers.</p>
 
@@ -261,23 +260,20 @@ else:
                         [false, true].forEach(function (rep) {
                           ['baseline', 'exact', 'anytime'].forEach(function (g) {
                             [false, true].forEach(function (mc) {
-                              [false, true].forEach(function (heur) {
-                                var sub = pts.filter(function (p) {
-                                  return p.group === g && p.multicore === mc && (p.runs > 1) === rep && !!p.heuristic === heur;
-                                });
-                                if (!sub.length) return;
-                                traces.push({
-                                  x: sub.map(function (p) { return p.t; }),
-                                  y: sub.map(function (p) { return p.c; }),
-                                  mode: 'markers', showlegend: false,
-                                  marker: {
-                                    // open symbols are stroked in marker.color; filled ones get a surface ring
-                                    symbol: (mc ? 'diamond' : 'circle') + (heur ? '-open' : ''),
-                                    size: rep ? 15 : 9, opacity: rep ? 1 : 0.55, color: C[g],
-                                    line: heur ? { color: C[g], width: 2 } : { color: C.surface, width: 2 }
-                                  },
-                                  text: sub.map(hover), hovertemplate: '%{text}<extra></extra>'
-                                });
+                              var sub = pts.filter(function (p) {
+                                return p.group === g && p.multicore === mc && (p.runs > 1) === rep;
+                              });
+                              if (!sub.length) return;
+                              traces.push({
+                                x: sub.map(function (p) { return p.t; }),
+                                y: sub.map(function (p) { return p.c; }),
+                                mode: 'markers', showlegend: false,
+                                marker: {
+                                  symbol: mc ? 'diamond' : 'circle',
+                                  size: rep ? 15 : 9, opacity: rep ? 1 : 0.55, color: C[g],
+                                  line: { color: C.surface, width: 2 }
+                                },
+                                text: sub.map(hover), hovertemplate: '%{text}<extra></extra>'
                               });
                             });
                           });
