@@ -1,9 +1,8 @@
-"""Regenerate Fig 1 and its table on the autoopttree page.
+"""Regenerate Fig 1 on the autoopttree page.
 
 Reads the autoresearch run and the baseline benchmark from an agentic-imodels
-checkout, and rewrites two marked spans of autoopttree.html in place: the
-``var PARETO = {...};`` line the figure draws from, and the rows of the table
-that gives the same numbers without the plot.
+checkout, and rewrites the ``var PARETO = {...};`` line in autoopttree.html that
+the figure draws from.
 
     uv run python autoopttree_pareto.py --root /path/to/agentic-imodels/evolve_optimal_tree
 
@@ -205,26 +204,6 @@ def main():
     page, n = re.subn(r"var PARETO = \{.*?\};", lambda _: f"var PARETO = {blob};", page, flags=re.S)
     assert n == 1, "expected one `var PARETO = {...};` line in the page"
 
-    names = {"baseline": "baseline", "exact": "exact", "anytime": "anytime"}
-    body = []
-    for p in sorted(points, key=lambda p: p["t"]):
-        sd = lambda v, s, f: f"{v:{f}}" + (f" &plusmn; {s:{f}}" if p["runs"] > 1 else "")
-        flags = []
-        if p["wrong"]:
-            flags.append(f"{p['wrong']} false certificate{'s' if p['wrong'] > 1 else ''}")
-        if p["notree"]:
-            flags.append(f"no tree on {p['notree']}")
-        if p["proof_gap"]:
-            flags.append("proof gap")
-        body.append(
-            f"<tr><td>{p['label']}</td><td>{names[p['group']]}</td>"
-            f"<td>{'8' if p['multicore'] else '1'}</td><td>{p['runs']}</td>"
-            f"<td>{sd(p['t'], p['t_sd'], '.4f')}</td><td>{sd(p['c'], p['c_sd'], '.4f')}</td>"
-            f"<td>{p['solved']:.1f}</td><td>{', '.join(flags)}</td></tr>")
-    table = "\n".join(body)
-    page, n = re.subn(r"(<!-- PARETO-TABLE-START -->).*?(<!-- PARETO-TABLE-END -->)",
-                      lambda m: f"{m.group(1)}\n{table}\n{m.group(2)}", page, flags=re.S)
-    assert n == 1, "expected the PARETO-TABLE markers in the page"
     open(PAGE, "w").write(page)
     print(f"{len(points)} points, {len(front)} on the frontier, "
           f"{sum(p['runs'] > 1 for p in points)} with repeats -> {PAGE}")
