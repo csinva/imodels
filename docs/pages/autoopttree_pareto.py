@@ -169,17 +169,7 @@ def external_points(root):
             "wrong": max(v["wrong"] for v in per.values()),
             "notree": max(v["notree"] for v in per.values()), "proof_gap": False,
         })
-    return {"points": points, "frontier": frontier(points), "offsets": EXTERNAL_OFFSETS}
-
-
-def frontier(points):
-    """Pareto frontier over the plotted positions: faster, or better than everything faster."""
-    front, best = [], math.inf
-    for p in sorted(points, key=lambda p: (p["t"], p["c"])):
-        if p["c"] < best - 1e-12:
-            front.append({"t": p["t"], "c": p["c"], "model": p["model"]})
-            best = p["c"]
-    return front
+    return {"points": points, "offsets": EXTERNAL_OFFSETS}
 
 
 def main():
@@ -260,8 +250,7 @@ def main():
         })
 
     points.sort(key=lambda p: (p["group"] != "baseline", p["t"]))
-    front = frontier(points)
-    data = {"dev": {"points": points, "frontier": front, "offsets": OFFSETS},
+    data = {"dev": {"points": points, "offsets": OFFSETS},
             "external": external_points(root), "cap": CAP}
     blob = json.dumps(data, separators=(",", ":"))
 
@@ -271,9 +260,8 @@ def main():
 
     open(PAGE, "w").write(page)
     ext = data["external"]
-    print(f"dev: {len(points)} points, {len(front)} on the frontier, "
-          f"{sum(p['runs'] > 1 for p in points)} with repeats; external: "
-          f"{len(ext['points']) if ext else 0} points -> {PAGE}")
+    print(f"dev: {len(points)} points, {sum(p['runs'] > 1 for p in points)} with repeats; "
+          f"external: {len(ext['points']) if ext else 0} points -> {PAGE}")
 
 
 if __name__ == "__main__":
