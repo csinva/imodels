@@ -42,7 +42,7 @@ PAGE = os.path.join(HERE, "autoopttree.html")
 CAP = 30.0
 FLOOR = 1e-3
 
-# baselines, and the label the figure gives each; their first run comes from the benchmark
+# solvers whose first run comes from the 600 s benchmark, and the label the figure gives each
 BASELINES = {
     "gosdt": "GOSDT",
     "gosdt_mc8": "GOSDT, 8 threads",
@@ -53,6 +53,9 @@ BASELINES = {
     "split": "SPLIT",
 }
 MULTICORE_BASELINES = {"gosdt_mc8"}
+# pygosdt is version 1 of the line the loop evolved, so it is drawn with the loop's versions
+# rather than as an outside baseline, even though its rows come from the benchmark
+V1 = {"pygosdt_v1"}
 HEURISTIC_BASELINES = {"gosdt_guesses_guided", "split"}
 # the evolved solvers as the external sweep names them
 EXTERNAL_EVOLVED = {"autoopttree": ("v23", False, "exact"),
@@ -70,14 +73,14 @@ REPEAT_ALIASES = {"autoopttree": "v23_word_compaction",
 LABELLED = {
     "gosdt": "GOSDT",
     "streed": "STreeD",
-    "pygosdt_v1": "pygosdt (start)",
+    "pygosdt_v1": "pygosdt (v1)",
     "split": "SPLIT",
     "gosdt_guesses_guided": "gosdt-guesses, guided",
     "v23_word_compaction": "v23",
     "v40_sequential": "v40 (shipped)",
     "v46_topk_pairs": "v46, 8 threads",
 }
-EXTERNAL_LABELLED = {"gosdt": "GOSDT", "streed": "STreeD", "pygosdt_v1": "pygosdt (start)", "split": "SPLIT",
+EXTERNAL_LABELLED = {"gosdt": "GOSDT", "streed": "STreeD", "pygosdt_v1": "pygosdt (v1)", "split": "SPLIT",
                      "gosdt_guesses": "gosdt-guesses", "gosdt_guesses_guided": "gosdt-guesses, guided",
                      "autoopttree": "v23", "autoopttree_v40": "v40 (shipped)", "autoopttree_v46": "v46, 8 threads",
                      "autoopttree_v46_anytime100": "v46 anytime, 100 ms"}
@@ -155,7 +158,8 @@ def external_points(root):
         if model in EXTERNAL_EVOLVED:
             label, multicore, group = EXTERNAL_EVOLVED[model]
         else:
-            label, multicore, group = BASELINES.get(model, model), model in MULTICORE_BASELINES, "baseline"
+            label, multicore = BASELINES.get(model, model), model in MULTICORE_BASELINES
+            group = "exact" if model in V1 else "baseline"
         points.append({
             "model": model, "label": label, "direct": EXTERNAL_LABELLED.get(model, ""), "group": group,
             "heuristic": model in HEURISTIC_BASELINES, "multicore": multicore, "runs": len(per),
@@ -230,14 +234,15 @@ def main():
         c = [per[r]["c"] for r in crit_runs]
         row = overall.loc[model] if model in overall.index else None
         if model in BASELINES:
-            group = "baseline"
+            group = "exact" if model in V1 else "baseline"
             multicore = model in MULTICORE_BASELINES
             label = BASELINES[model]
         else:
             group = "anytime" if "anytime" in model else "exact"
             multicore = bool(row is not None and str(row["multicore"]).lower() == "true")
             label = model
-        proof_gap = (group == "exact" and row is not None and str(row["exact"]) == "approximate")
+        proof_gap = (group == "exact" and model not in V1
+                     and row is not None and str(row["exact"]) == "approximate")
         points.append({
             "model": model,
             "label": label,
