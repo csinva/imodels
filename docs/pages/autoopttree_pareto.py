@@ -1,8 +1,10 @@
 """Regenerate Fig 1 on the autoopttree page.
 
-Reads the autoresearch run and the baseline benchmark from an agentic-imodels
-checkout, and rewrites the ``var PARETO = {...};`` line in autoopttree.html that
-the figure draws from.
+Reads the autoresearch run, the baseline benchmark and the TabArena-14 sweep from an
+agentic-imodels checkout, and rewrites the ``var PARETO = {...};`` line in
+autoopttree.html that the figure's two panels draw from: ``dev`` is the development
+suite, ``external`` the held-out TabArena-14 built by
+baselines/benchmarks/external/build_tabarena14.py.
 
     uv run python autoopttree_pareto.py --root /path/to/agentic-imodels/evolve_optimal_tree
 
@@ -52,11 +54,16 @@ BASELINES = {
 }
 MULTICORE_BASELINES = {"gosdt_mc8"}
 HEURISTIC_BASELINES = {"gosdt_guesses_guided", "split"}
+# the evolved solvers as the external sweep names them
+EXTERNAL_EVOLVED = {"autoopttree": ("v23", False), "autoopttree_v40": ("v40 (shipped)", False),
+                    "autoopttree_v46": ("v46, 8 threads", True)}
 # names the repeat script used for evolved solvers, mapped to their run names
 REPEAT_ALIASES = {"autoopttree": "v23_word_compaction",
                   "autoopttree_v40": "v40_sequential",
                   "autoopttree_v46": "v46_topk_pairs"}
-# the points the figure names directly; everything else is in the tooltip and the table
+# The points the figure names directly; everything else is in the tooltip. The anytime
+# versions are left unlabelled: at half the figure's width their labels collide with the
+# exact ones, and the text and tooltips carry which cap is which.
 LABELLED = {
     "gosdt": "GOSDT",
     "streed": "STreeD",
@@ -66,22 +73,24 @@ LABELLED = {
     "v23_word_compaction": "v23",
     "v40_sequential": "v40 (shipped)",
     "v46_topk_pairs": "v46, 8 threads",
-    "v46_anytime_1ms": "v46 anytime, 1 ms",
-    "v46_anytime_100ms": "v46 anytime, 100 ms",
 }
+EXTERNAL_LABELLED = {"gosdt": "GOSDT", "streed": "STreeD", "pygosdt_v1": "pygosdt (start)", "split": "SPLIT",
+                     "gosdt_guesses": "gosdt-guesses", "gosdt_guesses_guided": "gosdt-guesses, guided",
+                     "autoopttree": "v23", "autoopttree_v40": "v40 (shipped)", "autoopttree_v46": "v46, 8 threads"}
+EXTERNAL_OFFSETS = {"gosdt": [-58, -40], "streed": [-55, -32], "pygosdt_v1": [-5, -42], "split": [-45, 38],
+                    "gosdt_guesses": [-62, 34], "gosdt_guesses_guided": [82, 10], "autoopttree": [46, -26],
+                    "autoopttree_v40": [-56, -30], "autoopttree_v46": [0, 50]}
 # where each direct label sits relative to its point, in pixels (x right, y down),
 # chosen by rendering the page and moving labels off each other and off the marks
 OFFSETS = {
-    "gosdt": [40, -40],
-    "streed": [40, -30],
-    "pygosdt_v1": [-10, -45],
-    "split": [-40, -40],
-    "gosdt_guesses_guided": [95, 5],
-    "v23_word_compaction": [55, -30],
-    "v40_sequential": [-10, -45],
-    "v46_topk_pairs": [10, 55],
-    "v46_anytime_1ms": [60, -35],
-    "v46_anytime_100ms": [-60, 45],
+    "gosdt": [-62, -44],
+    "streed": [-48, -34],
+    "pygosdt_v1": [-15, -42],
+    "split": [-42, -34],
+    "gosdt_guesses_guided": [78, 8],
+    "v23_word_compaction": [58, -26],
+    "v40_sequential": [-5, -46],
+    "v46_topk_pairs": [26, 50],
 }
 
 
@@ -111,6 +120,58 @@ def metrics(rows, leaf):
         "notree": int(missing.sum()),
         "pairs": len(df),
     }
+
+
+def external_points(root):
+    """Points for the held-out panel: every solver's runs on TabArena-14, judged against the
+    best tree any run returned for the problem, since these datasets have no certified optima."""
+    ext = os.path.join(root, "baselines", "benchmarks", "external")
+    path = os.path.join(ext, "results", "external_pairs.csv")
+    if not os.path.exists(path):
+        return None
+    d = pd.read_csv(path)
+    leaf = {}
+    for name in d["dataset"].unique():
+        y = pd.read_csv(os.path.join(ext, "data", f"{name}.csv")).iloc[:, -1]
+        wrong = 1.0 - y.value_counts().max() / len(y)
+        for lam in d.loc[d["dataset"] == name, "lam"].unique():
+            leaf[(name, float(lam))] = wrong + lam
+    best = d.groupby(["dataset", "lam"])["objective"].min().rename("best")
+    d = d.join(best, on=["dataset", "lam"])
+    d["verdict"] = np.where((d["status"] == "optimal") & (d["objective"] > d["best"] + 1e-9), "WRONG", "ok")
+    d.loc[d["status"] == "crash", "verdict"] = "WRONG"
+    points = []
+    for model, g in d.groupby("model"):
+        per = {r: metrics(rows.to_dict("records"), leaf) for r, rows in g.groupby("repeat") if len(rows) == 70}
+        if not per:
+            continue
+        t = [v["t"] for v in per.values()]
+        c = [v["c"] for v in per.values()]
+        if model in EXTERNAL_EVOLVED:
+            label, multicore = EXTERNAL_EVOLVED[model]
+            group = "exact"
+        else:
+            label, multicore, group = BASELINES.get(model, model), model in MULTICORE_BASELINES, "baseline"
+        points.append({
+            "model": model, "label": label, "direct": EXTERNAL_LABELLED.get(model, ""), "group": group,
+            "heuristic": model in HEURISTIC_BASELINES, "multicore": multicore, "runs": len(per),
+            "t": float(np.mean(t)), "t_sd": float(np.std(t, ddof=1)) if len(t) > 1 else 0.0,
+            "c": float(np.mean(c)), "c_sd": float(np.std(c, ddof=1)) if len(c) > 1 else 0.0,
+            "solved": float(np.mean([v["solved"] for v in per.values()])),
+            "wrong": max(v["wrong"] for v in per.values()),
+            "notree": max(v["notree"] for v in per.values()), "proof_gap": False,
+        })
+    return {"points": points, "frontier": frontier(points), "offsets": EXTERNAL_OFFSETS}
+
+
+def frontier(points):
+    """Pareto frontier over the plotted positions: faster, or better than everything faster."""
+    front, best = [], math.inf
+    for p in sorted(points, key=lambda p: (p["t"], p["c"])):
+        if p["c"] < best - 1e-12:
+            front.append({"t": p["t"], "c": p["c"], "model": p["model"]})
+            best = p["c"]
+    return front
 
 
 def main():
@@ -189,15 +250,10 @@ def main():
             "proof_gap": proof_gap,
         })
 
-    # Pareto frontier over the plotted positions: faster, or better than everything faster
-    front, best = [], math.inf
-    for p in sorted(points, key=lambda p: (p["t"], p["c"])):
-        if p["c"] < best - 1e-12:
-            front.append({"t": p["t"], "c": p["c"], "model": p["model"]})
-            best = p["c"]
-
     points.sort(key=lambda p: (p["group"] != "baseline", p["t"]))
-    data = {"points": points, "frontier": front, "cap": CAP, "offsets": OFFSETS}
+    front = frontier(points)
+    data = {"dev": {"points": points, "frontier": front, "offsets": OFFSETS},
+            "external": external_points(root), "cap": CAP}
     blob = json.dumps(data, separators=(",", ":"))
 
     page = open(PAGE).read()
@@ -205,8 +261,10 @@ def main():
     assert n == 1, "expected one `var PARETO = {...};` line in the page"
 
     open(PAGE, "w").write(page)
-    print(f"{len(points)} points, {len(front)} on the frontier, "
-          f"{sum(p['runs'] > 1 for p in points)} with repeats -> {PAGE}")
+    ext = data["external"]
+    print(f"dev: {len(points)} points, {len(front)} on the frontier, "
+          f"{sum(p['runs'] > 1 for p in points)} with repeats; external: "
+          f"{len(ext['points']) if ext else 0} points -> {PAGE}")
 
 
 if __name__ == "__main__":
