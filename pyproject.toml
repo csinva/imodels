@@ -56,7 +56,6 @@ dev = [
     "tqdm",
     "pmlb",
     "dvu",
-    "gdown",
 ]
 
 # Optional algorithm deps mentioned in setup.py comments
