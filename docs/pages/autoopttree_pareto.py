@@ -2,9 +2,11 @@
 
 Reads the autoresearch run, the baseline benchmark and the TabArena-14 sweep from an
 agentic-imodels checkout, and rewrites the ``var PARETO = {...};`` line in
-autoopttree.html that the figure's two panels draw from: ``dev`` is the development
+autoopttree.html that the figure's panels draw from: ``dev`` is the development
 suite, ``external`` the held-out TabArena-14 built by
-baselines/benchmarks/external/build_tabarena14.py.
+baselines/benchmarks/external/build_tabarena14.py, ``full`` the full-size datasets at
+30 minutes, and ``nolimit`` the held-out problems at 4 hours each
+(baselines/benchmarks/external/run_external_nolimit.py).
 
     uv run python autoopttree_pareto.py --root /path/to/agentic-imodels/evolve_optimal_tree
 
@@ -45,6 +47,7 @@ FULL_PAIRS = 14        # one penalty (0.05) on each of the 14 full-size datasets
 FULL_OFFSETS = {"autoopttree_v46_anytime100": [64, 24], "autoopttree_v49": [-54, 42],
                 "autoopttree_v40": [34, -36], "streed": [-52, -30], "gosdt": [-62, -30],
                 "split": [-26, 44]}
+NOLIMIT_WALL = 4 * 3600   # the hidden run without the 30 s cap: 4 h a problem, 6 GB
 FLOOR = 1e-3
 
 # solvers whose first run comes from the 600 s benchmark, and the label the figure gives each
@@ -102,6 +105,11 @@ EXTERNAL_OFFSETS = {"gosdt": [-58, -40], "streed": [-55, -32], "pygosdt_v1": [-5
                     "gg_guided_e60d2": [92, -30], "autoopttree": [46, -26],
                     "autoopttree_v40": [-56, -30], 
                     "autoopttree_v46_anytime100": [66, 26], "autoopttree_v49": [-64, 54]}
+NOLIMIT_OFFSETS = {"gosdt": [60, 30], "streed": [-55, -32], "pygosdt_v1": [-5, -42], "split": [-45, 38],
+                   "gosdt_guesses": [-62, 34], "gosdt_guesses_guided": [82, 10],
+                   "gg_guided_e60d2": [92, -30], "autoopttree": [50, 20],
+                   "autoopttree_v40": [40, 40],
+                   "autoopttree_v46_anytime100": [66, 26], "autoopttree_v49": [60, 40]}
 # where each direct label sits relative to its point, in pixels (x right, y down),
 # chosen by rendering the page and moving labels off each other and off the marks
 OFFSETS = {
@@ -141,6 +149,9 @@ def metrics(rows, leaf, cap=CAP):
         "solved": int((df["status"] == "optimal").sum()),
         "wrong": int((df.get("verdict") == "WRONG").sum()),
         "notree": int(missing.sum()),
+        "memory": int((df["status"] == "memory").sum()),
+        # a run that used the whole budget: the solver stopped itself on time, or was killed
+        "unfinished": int((((df["status"] == "time") & (secs >= 0.99 * cap)) | (df["status"] == "unfinished")).sum()),
         "pairs": len(df),
     }
 
@@ -185,7 +196,10 @@ def external_points(root, data="data", pairs="external_pairs.csv", npairs=70, ca
             "c": float(np.mean(c)), "c_sd": float(np.std(c, ddof=1)) if len(c) > 1 else 0.0,
             "solved": float(np.mean([v["solved"] for v in per.values()])),
             "wrong": max(v["wrong"] for v in per.values()),
-            "notree": max(v["notree"] for v in per.values()), "proof_gap": False,
+            "notree": max(v["notree"] for v in per.values()),
+            "memory": max(v["memory"] for v in per.values()),
+            "unfinished": max(v["unfinished"] for v in per.values()),
+            "pairs": npairs, "proof_gap": False,
         })
     return {"points": points, "offsets": EXTERNAL_OFFSETS if offsets is None else offsets}
 
@@ -275,7 +289,11 @@ def main():
     data = {"dev": {"points": points, "offsets": OFFSETS},
             "external": external_points(root), "cap": CAP,
             "full": external_points(root, data="data_full", pairs="external_pairs_full30min.csv",
-                                    npairs=FULL_PAIRS, cap=FULL_CAP, offsets=FULL_OFFSETS)}
+                                    npairs=FULL_PAIRS, cap=FULL_CAP, offsets=FULL_OFFSETS),
+            # no time limit: seconds is the solver's clock, or the wall time at a memory stop, so
+            # the cap only fills the rows that had neither
+            "nolimit": external_points(root, pairs="external_pairs_nolimit.csv", cap=NOLIMIT_WALL,
+                                       offsets=NOLIMIT_OFFSETS)}
     blob = json.dumps(data, separators=(",", ":"))
 
     page = open(PAGE).read()
@@ -286,7 +304,8 @@ def main():
     ext = data["external"]
     print(f"dev: {len(points)} points, {sum(p['runs'] > 1 for p in points)} with repeats; "
           f"external: {len(ext['points']) if ext else 0} points, "
-          f"full: {len(data['full']['points']) if data['full'] else 0} points -> {PAGE}")
+          f"full: {len(data['full']['points']) if data['full'] else 0} points, "
+          f"nolimit: {len(data['nolimit']['points']) if data['nolimit'] else 0} points -> {PAGE}")
 
 
 if __name__ == "__main__":
