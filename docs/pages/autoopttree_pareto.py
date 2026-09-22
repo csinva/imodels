@@ -40,6 +40,11 @@ import pandas as pd
 HERE = os.path.dirname(os.path.abspath(__file__))
 PAGE = os.path.join(HERE, "autoopttree.html")
 CAP = 30.0
+FULL_CAP = 1800.0      # the full-size hidden run: 30 minutes a problem
+FULL_PAIRS = 14        # one penalty (0.05) on each of the 14 full-size datasets
+FULL_OFFSETS = {"autoopttree_v46_anytime100": [64, 24], "autoopttree_v49": [-54, 42],
+                "autoopttree_v40": [34, -36], "streed": [-52, -30], "gosdt": [-62, -30],
+                "split": [-26, 44]}
 FLOOR = 1e-3
 
 # solvers whose first run comes from the 600 s benchmark, and the label the figure gives each
@@ -115,10 +120,10 @@ def leaf_objectives(suite):
     return out
 
 
-def metrics(rows, leaf):
-    """Geometric-mean time and criterion, and counts, for one run's 70 rows."""
+def metrics(rows, leaf, cap=CAP):
+    """Geometric-mean time and criterion, and counts, for one run's rows."""
     df = pd.DataFrame(rows)
-    secs = pd.to_numeric(df["seconds"], errors="coerce").fillna(CAP).clip(lower=FLOOR, upper=CAP)
+    secs = pd.to_numeric(df["seconds"], errors="coerce").fillna(cap).clip(lower=FLOOR, upper=cap)
     obj = pd.to_numeric(df["objective"], errors="coerce")
     missing = obj.isna()
     obj = obj.where(~missing, [leaf[(d, float(l))] for d, l in zip(df["dataset"], df["lam"])])
@@ -132,17 +137,19 @@ def metrics(rows, leaf):
     }
 
 
-def external_points(root):
-    """Points for the held-out panel: every solver's runs on TabArena-14, judged against the
-    best tree any run returned for the problem, since these datasets have no certified optima."""
+def external_points(root, data="data", pairs="external_pairs.csv", npairs=70, cap=CAP,
+                    offsets=None):
+    """Points for a held-out panel: every solver's runs on a TabArena-14 build, judged against
+    the best tree any run returned for the problem, since these datasets have no certified
+    optima. `data` is the dataset folder and `pairs` the sweep that ran over it."""
     ext = os.path.join(root, "baselines", "benchmarks", "external")
-    path = os.path.join(ext, "results", "external_pairs.csv")
+    path = os.path.join(ext, "results", pairs)
     if not os.path.exists(path):
         return None
     d = pd.read_csv(path)
     leaf = {}
     for name in d["dataset"].unique():
-        y = pd.read_csv(os.path.join(ext, "data", f"{name}.csv")).iloc[:, -1]
+        y = pd.read_csv(os.path.join(ext, data, f"{name}.csv")).iloc[:, -1]
         wrong = 1.0 - y.value_counts().max() / len(y)
         for lam in d.loc[d["dataset"] == name, "lam"].unique():
             leaf[(name, float(lam))] = wrong + lam
@@ -152,7 +159,8 @@ def external_points(root):
     d.loc[d["status"] == "crash", "verdict"] = "WRONG"
     points = []
     for model, g in d.groupby("model"):
-        per = {r: metrics(rows.to_dict("records"), leaf) for r, rows in g.groupby("repeat") if len(rows) == 70}
+        per = {r: metrics(rows.to_dict("records"), leaf, cap) for r, rows in g.groupby("repeat")
+               if len(rows) == npairs}
         if not per:
             continue
         t = [v["t"] for v in per.values()]
@@ -171,7 +179,7 @@ def external_points(root):
             "wrong": max(v["wrong"] for v in per.values()),
             "notree": max(v["notree"] for v in per.values()), "proof_gap": False,
         })
-    return {"points": points, "offsets": EXTERNAL_OFFSETS}
+    return {"points": points, "offsets": EXTERNAL_OFFSETS if offsets is None else offsets}
 
 
 def main():
@@ -255,7 +263,9 @@ def main():
 
     points.sort(key=lambda p: (p["group"] != "baseline", p["t"]))
     data = {"dev": {"points": points, "offsets": OFFSETS},
-            "external": external_points(root), "cap": CAP}
+            "external": external_points(root), "cap": CAP,
+            "full": external_points(root, data="data_full", pairs="external_pairs_full30min.csv",
+                                    npairs=FULL_PAIRS, cap=FULL_CAP, offsets=FULL_OFFSETS)}
     blob = json.dumps(data, separators=(",", ":"))
 
     page = open(PAGE).read()
@@ -265,7 +275,8 @@ def main():
     open(PAGE, "w").write(page)
     ext = data["external"]
     print(f"dev: {len(points)} points, {sum(p['runs'] > 1 for p in points)} with repeats; "
-          f"external: {len(ext['points']) if ext else 0} points -> {PAGE}")
+          f"external: {len(ext['points']) if ext else 0} points, "
+          f"full: {len(data['full']['points']) if data['full'] else 0} points -> {PAGE}")
 
 
 if __name__ == "__main__":
