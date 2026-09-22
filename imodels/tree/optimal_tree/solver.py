@@ -959,11 +959,14 @@ def depth3_bounds(l_leaf, ml2_l, c3_l, r_leaf, ml2_r, c3_r, val, lam, l_ub3, r_u
                 ub = g4; kind = 3
             # 4 leaves: (2,2) is in ub, (1,3)/(3,1) cost >= c4 (>= c3); 5 leaves: (1,4)/(4,1) peel a
             # leaf (>= c3; the 4-leaf side may be (2,2)), (2,3)/(3,2) >= c5b; 6 leaves: (1,5) >= c3,
-            # (2,4) >= c5, (3,3) >= c6; more leaves: >= 6 lam + the same floor
+            # (2,4) >= c5, (3,3) >= c6.  Seven or more leaves get 7 lam and nothing else: a (3,4)
+            # or (4,4) shape can put every leaf below depth 2 ((2,2) sides have no leaf that is a
+            # cell or a sub-cell), so none of c3, c5, c6 bounds it; the earlier floor of
+            # 6 lam + min(c3, c5, c6) was not admissible for those shapes.
             f4 = max(c3, c4)
             f5 = min(c3, c5b)
             f6 = min(min(c3, c5), c6)
-            lb = min(min(ub, 4.0 * lam + f4), min(5.0 * lam + f5, 6.0 * lam + f6))
+            lb = min(min(min(ub, 4.0 * lam + f4), min(5.0 * lam + f5, 6.0 * lam + f6)), 7.0 * lam)
             if side == 1:
                 l_ub3[i] = ub; l_lb3[i] = lb; kind_l[i] = kind
             else:

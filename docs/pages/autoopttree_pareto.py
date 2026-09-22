@@ -74,7 +74,7 @@ HEURISTIC_BASELINES = {"gosdt_guesses_guided", "gg_guided_e60d2", "gg_guided_db5
 EXTERNAL_EVOLVED = {"autoopttree": ("v23", False, "exact"),
                     "autoopttree_v40": ("v40 (shipped)", False, "exact"),
                     "autoopttree_v46": ("v46, 8 threads", True, "exact"),
-                    "autoopttree_v46_anytime100": ("v46 anytime, 100 ms", True, "anytime"),
+                    "autoopttree_v46_anytime100": ("v46 anytime, 100 ms", True, "approximate"),
                     "autoopttree_v49": ("v49, 8 threads", True, "exact")}
 # names the repeat script used for evolved solvers, mapped to their run names
 REPEAT_ALIASES = {"autoopttree": "v23_word_compaction",
@@ -178,6 +178,8 @@ def external_points(root, data="data", pairs="external_pairs.csv", npairs=70, ca
     d.loc[d["status"] == "crash", "verdict"] = "WRONG"
     points = []
     for model, g in d.groupby("model"):
+        if "anytime" in model:
+            continue
         per = {r: metrics(rows.to_dict("records"), leaf, cap) for r, rows in g.groupby("repeat")
                if len(rows) == npairs}
         if not per:
@@ -262,10 +264,12 @@ def main():
             multicore = model in MULTICORE_BASELINES
             label = BASELINES[model]
         else:
-            # "anytime" is the figure's slot for every approximate version: the ones that stop
-            # at a time budget, and the round that guessed its bounds from a reference model
+            # the anytime rows (the exact solver stopped at a cap) are not plotted; the one
+            # approximate version left is the round that guessed its bounds from a reference model
+            if "anytime" in model:
+                continue
             approximate = row is not None and str(row["exact"]) == "approximate"
-            group = "anytime" if ("anytime" in model or approximate) else "exact"
+            group = "approximate" if approximate else "exact"
             multicore = bool(row is not None and str(row["multicore"]).lower() == "true")
             label = model
         proof_gap = False
