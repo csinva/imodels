@@ -56,12 +56,17 @@ BASELINES = {
     "gosdt_guesses": "gosdt-guesses",
     "gosdt_guesses_guided": "gosdt-guesses, guided",
     "split": "SPLIT",
+    # the same baseline at settings found by sweeping its hyperparameters rather than
+    # taking the paper's headline recipe, so it is judged at its best on this suite
+    "gg_guided_e60d2": "gosdt-guesses, guided (tuned)",
+    "gg_guided_db5": "gosdt-guesses, guided (depth 5)",
+    "gg_exact_simsup": "gosdt-guesses (similar support)",
 }
 MULTICORE_BASELINES = {"gosdt_mc8"}
 # pygosdt is version 1 of the line the loop evolved, so it is drawn with the loop's versions
 # rather than as an outside baseline, even though its rows come from the benchmark
 V1 = {"pygosdt_v1"}
-HEURISTIC_BASELINES = {"gosdt_guesses_guided", "split"}
+HEURISTIC_BASELINES = {"gosdt_guesses_guided", "gg_guided_e60d2", "gg_guided_db5", "split"}
 # the evolved solvers as the external sweep names them
 EXTERNAL_EVOLVED = {"autoopttree": ("v23", False, "exact"),
                     "autoopttree_v40": ("v40 (shipped)", False, "exact"),
@@ -83,16 +88,18 @@ LABELLED = {
     "pygosdt_v1": "pygosdt (v1)",
     "split": "SPLIT",
     "gosdt_guesses_guided": "gosdt-guesses, guided",
+    "gg_guided_e60d2": "gosdt-guesses, guided (tuned)",
     "v23_word_compaction": "v23",
     "v40_sequential": "v40 (shipped)",
     "v49_cands_pairs_lazy_ws": "v49, 8 threads",
 }
 EXTERNAL_LABELLED = {"gosdt": "GOSDT", "streed": "STreeD", "pygosdt_v1": "pygosdt (v1)", "split": "SPLIT",
                      "gosdt_guesses": "gosdt-guesses", "gosdt_guesses_guided": "gosdt-guesses, guided",
-                     "autoopttree": "v23", "autoopttree_v40": "v40 (shipped)",
+                     "gg_guided_e60d2": "gosdt-guesses, guided (tuned)", "autoopttree": "v23", "autoopttree_v40": "v40 (shipped)",
                      "autoopttree_v46_anytime100": "v46 anytime, 100 ms", "autoopttree_v49": "v49, 8 threads"}
 EXTERNAL_OFFSETS = {"gosdt": [-58, -40], "streed": [-55, -32], "pygosdt_v1": [-5, -42], "split": [-45, 38],
-                    "gosdt_guesses": [-62, 34], "gosdt_guesses_guided": [82, 10], "autoopttree": [46, -26],
+                    "gosdt_guesses": [-62, 34], "gosdt_guesses_guided": [82, 10],
+                    "gg_guided_e60d2": [92, -30], "autoopttree": [46, -26],
                     "autoopttree_v40": [-56, -30], 
                     "autoopttree_v46_anytime100": [66, 26], "autoopttree_v49": [-64, 54]}
 # where each direct label sits relative to its point, in pixels (x right, y down),
@@ -106,6 +113,7 @@ OFFSETS = {
     "v23_word_compaction": [58, -26],
     "v40_sequential": [-5, -46],
     "v49_cands_pairs_lazy_ws": [22, 52],
+    "gg_guided_e60d2": [112, -30],
 }
 
 
@@ -221,8 +229,10 @@ def main():
         reps = pd.read_csv(path)
         for (model, rep), d in reps.groupby(["model", "repeat"]):
             model = REPEAT_ALIASES.get(model, model)
-            if model in runs and len(d) == 70:
-                runs[model].setdefault(int(rep), d.to_dict("records"))
+            # a baseline measured only here (the tuned gosdt-guesses settings) has no run 0
+            # from the 600 s benchmark, so its repeat rows are all it has
+            if len(d) == 70 and (model in runs or model in BASELINES):
+                runs.setdefault(model, {}).setdefault(int(rep), d.to_dict("records"))
 
     points = []
     for model, by_run in runs.items():
