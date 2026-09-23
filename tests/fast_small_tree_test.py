@@ -1,4 +1,4 @@
-"""Checks for AutoOptTreeClassifier, whose selling point is that it is exact.
+"""Checks for FastSmallTreeClassifier, whose selling point is that it is exact.
 
 The important test here is `test_matches_brute_force`: the model claims the tree
 it returns is the best one in existence for its objective, so a test that only
@@ -14,7 +14,7 @@ import pandas as pd
 import pytest
 from sklearn.tree import DecisionTreeClassifier
 
-from imodels import AutoOptTreeClassifier
+from imodels import FastSmallTreeClassifier
 
 
 def brute_force_optimum(Xb, y, lam):
@@ -72,14 +72,14 @@ class TestOptimality:
     def test_matches_brute_force(self, binary_data, lam):
         """The certified objective equals the best of every tree that exists."""
         X, y = binary_data
-        model = AutoOptTreeClassifier(regularization=lam, time_limit=60).fit(X, y)
+        model = FastSmallTreeClassifier(regularization=lam, time_limit=60).fit(X, y)
         assert model.optimal_, "search did not certify optimality on 16x4 data"
         assert model.objective_ == pytest.approx(brute_force_optimum(X, y, lam))
 
     def test_bounds_meet_when_certified(self, binary_data):
         """A certified run closes its interval on the optimum."""
         X, y = binary_data
-        model = AutoOptTreeClassifier(regularization=0.05, time_limit=60).fit(X, y)
+        model = FastSmallTreeClassifier(regularization=0.05, time_limit=60).fit(X, y)
         assert model.lowerbound_ == pytest.approx(model.upperbound_)
         assert model.objective_ == pytest.approx(model.upperbound_)
 
@@ -87,7 +87,7 @@ class TestOptimality:
         """Greedy trees are a lower bar by construction; pin that they are."""
         X, y = binary_data
         lam = 0.05
-        model = AutoOptTreeClassifier(regularization=lam, time_limit=60).fit(X, y)
+        model = FastSmallTreeClassifier(regularization=lam, time_limit=60).fit(X, y)
         greedy = DecisionTreeClassifier(random_state=0).fit(X, y)
         assert model.objective_ <= objective_of(greedy, X, y, lam) + 1e-12
 
@@ -95,7 +95,7 @@ class TestOptimality:
         """objective_ describes the tree handed back, not an internal bound."""
         X, y = binary_data
         lam = 0.05
-        model = AutoOptTreeClassifier(regularization=lam, time_limit=60).fit(X, y)
+        model = FastSmallTreeClassifier(regularization=lam, time_limit=60).fit(X, y)
         assert model.objective_ == pytest.approx(objective_of(model, X, y, lam))
 
 
@@ -103,14 +103,14 @@ class TestRegularization:
     def test_larger_penalty_never_grows_the_tree(self, binary_data):
         """Leaves cost more, so the optimal tree cannot gain any."""
         X, y = binary_data
-        sizes = [AutoOptTreeClassifier(regularization=lam, time_limit=60)
+        sizes = [FastSmallTreeClassifier(regularization=lam, time_limit=60)
                  .fit(X, y).n_leaves_ for lam in (0.01, 0.05, 0.2, 0.5)]
         assert sizes == sorted(sizes, reverse=True), sizes
 
     def test_heavy_penalty_gives_a_single_leaf(self, binary_data):
         """Priced above any gain, the majority-class stump wins."""
         X, y = binary_data
-        model = AutoOptTreeClassifier(regularization=1.0, time_limit=60).fit(X, y)
+        model = FastSmallTreeClassifier(regularization=1.0, time_limit=60).fit(X, y)
         assert model.n_leaves_ == 1
         assert model.complexity_ == 0
         assert len(np.unique(model.predict(X))) == 1
@@ -119,7 +119,7 @@ class TestRegularization:
 class TestApi:
     def test_predict_proba_agrees_with_predict(self, binary_data):
         X, y = binary_data
-        model = AutoOptTreeClassifier(regularization=0.05, time_limit=60).fit(X, y)
+        model = FastSmallTreeClassifier(regularization=0.05, time_limit=60).fit(X, y)
         proba = model.predict_proba(X)
         assert proba.shape == (len(y), len(model.classes_))
         assert np.allclose(proba.sum(axis=1), 1)
@@ -127,7 +127,7 @@ class TestApi:
 
     def test_multiclass_with_string_labels(self):
         X, y = np.repeat(np.arange(3), 6).reshape(-1, 1), np.repeat(list("abc"), 6)
-        model = AutoOptTreeClassifier(regularization=0.02, time_limit=60).fit(X, y)
+        model = FastSmallTreeClassifier(regularization=0.02, time_limit=60).fit(X, y)
         assert list(model.classes_) == ["a", "b", "c"]
         assert (model.predict(X) == y).all()
         assert model.predict_proba(X).shape == (18, 3)
@@ -135,7 +135,7 @@ class TestApi:
     def test_feature_names_reach_the_printed_model(self, binary_data):
         X, y = binary_data
         frame = pd.DataFrame(X, columns=["alpha", "beta", "gamma", "delta"])
-        model = AutoOptTreeClassifier(regularization=0.05, time_limit=60).fit(frame, y)
+        model = FastSmallTreeClassifier(regularization=0.05, time_limit=60).fit(frame, y)
         printed = str(model)
         assert "alpha" in printed or "beta" in printed
         assert "certified optimal" in printed
@@ -150,7 +150,7 @@ class TestApi:
         rng = np.random.RandomState(0)
         X = rng.randn(200, 6)
         y = rng.randint(0, 2, size=200)
-        model = AutoOptTreeClassifier(regularization=0.005, time_limit=0.3)
+        model = FastSmallTreeClassifier(regularization=0.005, time_limit=0.3)
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             model.fit(X, y)

@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.11.6" />
+<title>imodels.tree.optimal_tree.fast_small_tree</title>
+<meta name="description" content="Certifiably optimal sparse decision trees, discovered by autoresearch. `FastSmallTreeClassifier` returns the tree minimising misclassification rate …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<link rel="stylesheet" href="../../style.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<header id="site-header">
+<a href="../../index.html" class="nav-icon" aria-label="Home" title="Home">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M3 10.5 12 3l9 7.5"></path>
+<path d="M5 9.5V21h14V9.5"></path>
+<path d="M9.5 21v-6h5v6"></path>
+</svg>
+</a>
+<p id="site-tagline">imodels. Sklearn-compatible interpretable models.</p>
+<a href="../../index.html" id="site-logo">
+<img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
+alt="imodels">
+</a>
+<a href="https://github.com/csinva/imodels" class="nav-icon"
+aria-label="View source on GitHub" title="GitHub">
+<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01
+1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04
+2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+</svg>
+</a>
+</header>
+<main>
+<article id="content">
+<section id="section-intro">
+<p>Certifiably optimal sparse decision trees, discovered by autoresearch.</p>
+<p><code><a title="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier" href="#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a></code> returns the tree minimising misclassification rate plus
+a penalty per leaf, and certifies that no other tree on the same binarized
+features scores better. The search behind it lives in <code>solver.py</code>.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Certifiably optimal sparse decision trees, discovered by autoresearch.
+
+`FastSmallTreeClassifier` returns the tree minimising misclassification rate plus
+a penalty per leaf, and certifies that no other tree on the same binarized
+features scores better. The search behind it lives in `solver.py`.
+&#34;&#34;&#34;
+
+import warnings
+
+import numpy as np
+import pandas as pd
+from sklearn.base import BaseEstimator, ClassifierMixin
+
+from imodels.tree.optimal_tree.solver import (HAVE_NUMBA, ST_LB, ST_UB, BinaryEncoder,
+                                              BitDataset, CompiledOptimizer, TargetEncoder,
+                                              TreeClassifier, cluster_rows)
+from imodels.util.arguments import (check_fit_arguments, check_predict_X,
+                                    decode_labels)
+
+NUMBA_HINT = (
+    &#34;FastSmallTreeClassifier needs numba, which is not installed. Install it with &#34;
+    &#34;`pip install numba` (or `pip install imodels[optional]`). The search itself is &#34;
+    &#34;compiled, and interpreting it is orders of magnitude slower, so there is no &#34;
+    &#34;pure-Python fallback.&#34;
+)
+
+
+class FastSmallTreeClassifier(ClassifierMixin, BaseEstimator):
+    &#34;&#34;&#34;A decision tree that is certifiably optimal for its objective.
+
+    Fits the tree minimising
+
+        misclassification rate + ``regularization`` * (number of leaves)
+
+    over *every* decision tree on the binarized features, and proves that no
+    other such tree scores better. This is the objective of `GOSDT
+    &lt;https://arxiv.org/abs/2006.08690&gt;`_ (Lin et al., ICML 2020); the
+    branch-and-bound search is described in `solver.py` and was developed by
+    autoresearch (see `Agentic-imodels &lt;https://github.com/csinva/agentic-imodels&gt;`_).
+
+    Greedy trees (CART, C4.5) pick each split without regard to the splits below
+    it, so they can miss the best tree of a given size. This model does not:
+    when ``optimal_`` is True, the objective it reports is a proven minimum.
+
+    Depth is not a parameter. ``regularization`` sets the price of a leaf, and
+    the optimal tree at that price is as deep as it needs to be. Since a leaf
+    that does not improve the misclassification rate by ``regularization`` is
+    never worth adding, the trees stay small.
+
+    Parameters
+    ----------
+    regularization : float, default=0.05
+        Penalty added to the objective for each leaf, in units of
+        misclassification rate. Larger values give smaller trees. Values below
+        ``1 / n_samples`` are not useful, since a leaf fixing a single training
+        point already pays for itself.
+    time_limit : float, default=60.0
+        Seconds after which the search returns the best tree found so far rather
+        than continuing. ``optimal_`` is then False and a warning is raised.
+        ``0`` means no limit, which can run for a very long time on wide or
+        continuous data.
+    balance : bool, default=False
+        Weigh the classes equally, optimising balanced accuracy rather than
+        accuracy.
+    costs : array-like of shape (n_classes, n_classes), default=None
+        ``costs[i, j]`` is the cost of predicting class ``i`` when the truth is
+        class ``j``. Overrides ``balance``.
+    memory_limit : int, default=0
+        Resident memory in bytes above which the search stops, as the time limit
+        does. ``0`` means no limit. Memory grows with the number of subproblems
+        kept, which is what makes hard instances expensive.
+    verbose : bool, default=False
+        Print search statistics after fitting.
+
+    Attributes
+    ----------
+    optimal_ : bool
+        Whether optimality was certified. False means a limit was reached first,
+        so the tree is the best one found rather than a proven optimum.
+    objective_ : float
+        Objective value of the returned tree: its misclassification rate plus
+        ``regularization`` times its number of leaves.
+    lowerbound_, upperbound_ : float
+        Interval the search closed on the optimal objective; equal when
+        ``optimal_`` is True.
+    n_leaves_ : int
+        Number of leaves in the returned tree.
+    complexity_ : int
+        Number of splits in the returned tree, the imodels measure of size.
+    n_binary_features_ : int
+        Number of binary features the encoder produced from X. A continuous
+        column becomes one feature per distinct value, which is what makes
+        continuous data expensive to solve exactly.
+    tree_ : dict
+        The fitted tree, as nested dicts of splits and leaves.
+    time_ : float
+        Seconds spent in the search.
+    classes_ : ndarray
+        Class labels seen during fit.
+
+    Notes
+    -----
+    The compiled search takes about 20 seconds to build the first time it runs
+    on a machine. The result is cached on disk, so later processes load it in
+    about a second. Set ``OPTTREE_NUMBA_CACHE=0`` to skip the cache if its
+    directory is unwritable.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; from imodels import FastSmallTreeClassifier
+    &gt;&gt;&gt; X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]] * 8)
+    &gt;&gt;&gt; y = (X[:, 0] == X[:, 1]).astype(int)
+    &gt;&gt;&gt; model = FastSmallTreeClassifier(regularization=0.01).fit(X, y)
+    &gt;&gt;&gt; model.optimal_
+    True
+    &#34;&#34;&#34;
+
+    def __init__(self, regularization: float = 0.05, time_limit: float = 60.0,
+                 balance: bool = False, costs=None, memory_limit: int = 0,
+                 verbose: bool = False):
+        self.regularization = regularization
+        self.time_limit = time_limit
+        self.balance = balance
+        self.costs = costs
+        self.memory_limit = memory_limit
+        self.verbose = verbose
+
+    def fit(self, X, y, feature_names=None):
+        &#34;&#34;&#34;Fit the optimal tree.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+        y : array-like of shape (n_samples,)
+        feature_names : list of str, optional
+            Names used when printing the model; taken from X&#39;s columns when it
+            is a DataFrame.
+
+        Returns
+        -------
+        self
+        &#34;&#34;&#34;
+        if not HAVE_NUMBA:
+            raise ImportError(NUMBA_HINT)
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        frame = pd.DataFrame(X, columns=list(feature_names))
+
+        self.encoder_ = BinaryEncoder().fit(frame)
+        Xb = self.encoder_.transform(frame)
+        self.target_encoder_ = TargetEncoder().fit(y)
+        y_idx = self.target_encoder_.transform(y)
+        # the objective does not depend on the row order, but the kernels skip the
+        # empty words of a capture mask, so rows are clustered to keep the capture
+        # sets of deep nodes contiguous
+        perm = cluster_rows(Xb, y_idx, len(self.classes_), self.encoder_.groups)
+        data = BitDataset(Xb[perm], y_idx[perm], len(self.classes_),
+                          costs=self.costs, balance=self.balance)
+        self.n_binary_features_ = data.m
+
+        # n_jobs=1: the search has a parallel phase, but a library model should not
+        # take every core of the caller&#39;s machine without being asked
+        opt = CompiledOptimizer(data, self.regularization, groups=self.encoder_.groups,
+                                time_limit=self.time_limit, memory_limit=self.memory_limit,
+                                verbose=self.verbose, n_jobs=1)
+        root = opt.run()          # a row index into the compiled engine&#39;s node store
+        self.optimal_ = opt.optimal
+        self.stop_reason_ = opt.stop_reason
+        self.time_ = opt.elapsed
+        self.iterations_ = opt.iterations
+        self.lowerbound_ = float(opt.st[ST_LB][root])
+        self.upperbound_ = float(opt.st[ST_UB][root])
+        if not self.optimal_:
+            warnings.warn(
+                f&#34;{self.stop_reason_} limit reached before optimality was certified; &#34;
+                &#34;returning the best tree found. Raise time_limit, or raise &#34;
+                &#34;regularization to search over smaller trees.&#34;, RuntimeWarning)
+
+        self.tree_ = self._decode(opt.extract(root), data)
+        opt.release()             # the node store is large and is not needed past extraction
+        self.tree = TreeClassifier(self.tree_)
+        self.objective_ = self.tree.risk()
+        self.n_leaves_ = self.tree.leaves()
+        self.complexity_ = max(self.n_leaves_ - 1, 0)
+        self._leaf_proba_, self._leaf_tree_ = self._leaf_lookup(self.tree_)
+        if self.verbose:
+            print(f&#34;objective {self.objective_:.6g} in {self.time_:.3g}s &#34;
+                  f&#34;({self.iterations_} subproblems, optimal={self.optimal_})&#34;)
+        return self
+
+    def _decode(self, node: dict, data: BitDataset) -&gt; dict:
+        &#34;&#34;&#34;Turn the solver&#39;s tree of capture sets into one of named rules.
+
+        Each leaf keeps the class counts of the training rows it captures, so
+        that `predict_proba` has something to report.
+        &#34;&#34;&#34;
+        if &#34;prediction&#34; in node:
+            count, dist, max_loss, _, _, prediction = data.leaf_stats(node[&#34;key&#34;])
+            return {
+                &#34;prediction&#34;: self.target_encoder_.inverse(prediction),
+                &#34;name&#34;: &#34;class&#34;,
+                &#34;loss&#34;: float(max_loss),
+                &#34;complexity&#34;: float(self.regularization),
+                &#34;count&#34;: int(count),
+                &#34;dist&#34;: np.asarray(dist, dtype=float).tolist(),
+            }
+        rule = self.encoder_.rules[node[&#34;feature&#34;]]
+        return {
+            &#34;feature&#34;: int(rule[&#34;feature&#34;]),
+            &#34;name&#34;: rule[&#34;name&#34;],
+            &#34;relation&#34;: rule[&#34;relation&#34;],
+            &#34;reference&#34;: rule[&#34;reference&#34;],
+            &#34;type&#34;: rule[&#34;type&#34;],
+            &#34;true&#34;: self._decode(node[&#34;true&#34;], data),
+            &#34;false&#34;: self._decode(node[&#34;false&#34;], data),
+        }
+
+    def _leaf_lookup(self, tree: dict):
+        &#34;&#34;&#34;Class frequencies per leaf, and a copy of the tree predicting leaf ids.
+
+        Running the solver&#39;s own traversal over the copy is what routes rows to
+        leaves for `predict_proba`, so the two agree with `predict` by
+        construction.
+        &#34;&#34;&#34;
+        probs = []
+
+        def rec(node):
+            if &#34;prediction&#34; in node:
+                probs.append(node[&#34;dist&#34;])
+                return {**node, &#34;prediction&#34;: len(probs) - 1}
+            return {**node, &#34;true&#34;: rec(node[&#34;true&#34;]), &#34;false&#34;: rec(node[&#34;false&#34;])}
+
+        indexed = rec(tree)
+        counts = np.asarray(probs, dtype=float)
+        totals = counts.sum(axis=1, keepdims=True)
+        uniform = np.full_like(counts, 1.0 / max(counts.shape[1], 1))
+        return np.divide(counts, totals, out=uniform, where=totals &gt; 0), indexed
+
+    def _frame(self, X):
+        &#34;&#34;&#34;X as a DataFrame named the way the tree&#39;s rules are.&#34;&#34;&#34;
+        X = check_predict_X(self, X)
+        return pd.DataFrame(np.asarray(X, dtype=float),
+                            columns=list(self.feature_names_))
+
+    def predict(self, X):
+        &#34;&#34;&#34;Predict the class of each row of X.&#34;&#34;&#34;
+        frame = self._frame(X)  # checks fitted-ness before any attribute of ours
+        preds = self.tree.predict_fast(frame)
+        return decode_labels(self, preds.astype(int))
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;Class probabilities, read off the training rows in each leaf.
+
+        A leaf of an optimal tree predicts one class, so these are the empirical
+        class frequencies of the training rows that reached the leaf rather than
+        a calibrated probability.
+        &#34;&#34;&#34;
+        frame = self._frame(X)  # checks fitted-ness before any attribute of ours
+        leaf_ids = TreeClassifier(self._leaf_tree_).predict_fast(frame)
+        return self._leaf_proba_[leaf_ids.astype(int)]
+
+    def _display_tree(self, node: dict) -&gt; dict:
+        &#34;&#34;&#34;A copy of the tree whose leaves carry the caller&#39;s class labels.
+
+        The tree itself predicts the integer codes `check_fit_arguments` made of
+        y, which is what routes rows; only printing wants the labels back.
+        &#34;&#34;&#34;
+        if &#34;prediction&#34; in node:
+            label = self.classes_[int(node[&#34;prediction&#34;])]
+            # unwrap numpy scalars so the printed label reads as the caller wrote it
+            return {**node, &#34;prediction&#34;: getattr(label, &#34;item&#34;, lambda: label)()}
+        return {**node,
+                &#34;true&#34;: self._display_tree(node[&#34;true&#34;]),
+                &#34;false&#34;: self._display_tree(node[&#34;false&#34;])}
+
+    def __str__(self):
+        if not hasattr(self, &#34;tree_&#34;):
+            return f&#34;{type(self).__name__}(unfitted)&#34;
+        status = &#34;certified optimal&#34; if self.optimal_ else &#34;NOT certified optimal&#34;
+        return (f&#34;&gt; ------------------------------\n&#34;
+                f&#34;&gt; FastSmallTree: {self.n_leaves_} leaves, &#34;
+                f&#34;objective {self.objective_:.4g} ({status})\n&#34;
+                f&#34;&gt; ------------------------------\n&#34;
+                f&#34;{TreeClassifier(self._display_tree(self.tree_))}&#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier"><code class="flex name class">
+<span>class <span class="ident">FastSmallTreeClassifier</span></span>
+<span>(</span><span>regularization: float = 0.05, time_limit: float = 60.0, balance: bool = False, costs=None, memory_limit: int = 0, verbose: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A decision tree that is certifiably optimal for its objective.</p>
+<p>Fits the tree minimising</p>
+<pre><code>misclassification rate + &lt;code&gt;regularization&lt;/code&gt; * (number of leaves)
+</code></pre>
+<p>over <em>every</em> decision tree on the binarized features, and proves that no
+other such tree scores better. This is the objective of <code>GOSDT
+&lt;https://arxiv.org/abs/2006.08690&gt;</code><em> (Lin et al., ICML 2020); the
+branch-and-bound search is described in <code>solver.py</code> and was developed by
+autoresearch (see <code>Agentic-imodels &lt;https://github.com/csinva/agentic-imodels&gt;</code></em>).</p>
+<p>Greedy trees (CART, C4.5) pick each split without regard to the splits below
+it, so they can miss the best tree of a given size. This model does not:
+when <code>optimal_</code> is True, the objective it reports is a proven minimum.</p>
+<p>Depth is not a parameter. <code>regularization</code> sets the price of a leaf, and
+the optimal tree at that price is as deep as it needs to be. Since a leaf
+that does not improve the misclassification rate by <code>regularization</code> is
+never worth adding, the trees stay small.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>regularization</code></strong> :&ensp;<code>float</code>, default=<code>0.05</code></dt>
+<dd>Penalty added to the objective for each leaf, in units of
+misclassification rate. Larger values give smaller trees. Values below
+<code>1 / n_samples</code> are not useful, since a leaf fixing a single training
+point already pays for itself.</dd>
+<dt><strong><code>time_limit</code></strong> :&ensp;<code>float</code>, default=<code>60.0</code></dt>
+<dd>Seconds after which the search returns the best tree found so far rather
+than continuing. <code>optimal_</code> is then False and a warning is raised.
+<code>0</code> means no limit, which can run for a very long time on wide or
+continuous data.</dd>
+<dt><strong><code>balance</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
+<dd>Weigh the classes equally, optimising balanced accuracy rather than
+accuracy.</dd>
+<dt><strong><code>costs</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_classes, n_classes)</code>, default=<code>None</code></dt>
+<dd><code>costs[i, j]</code> is the cost of predicting class <code>i</code> when the truth is
+class <code>j</code>. Overrides <code>balance</code>.</dd>
+<dt><strong><code>memory_limit</code></strong> :&ensp;<code>int</code>, default=<code>0</code></dt>
+<dd>Resident memory in bytes above which the search stops, as the time limit
+does. <code>0</code> means no limit. Memory grows with the number of subproblems
+kept, which is what makes hard instances expensive.</dd>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>bool</code>, default=<code>False</code></dt>
+<dd>Print search statistics after fitting.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>optimal_</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether optimality was certified. False means a limit was reached first,
+so the tree is the best one found rather than a proven optimum.</dd>
+<dt><strong><code>objective_</code></strong> :&ensp;<code>float</code></dt>
+<dd>Objective value of the returned tree: its misclassification rate plus
+<code>regularization</code> times its number of leaves.</dd>
+<dt><strong><code>lowerbound_</code></strong>, <strong><code>upperbound_</code></strong> :&ensp;<code>float</code></dt>
+<dd>Interval the search closed on the optimal objective; equal when
+<code>optimal_</code> is True.</dd>
+<dt><strong><code>n_leaves_</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of leaves in the returned tree.</dd>
+<dt><strong><code>complexity_</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of splits in the returned tree, the imodels measure of size.</dd>
+<dt><strong><code>n_binary_features_</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of binary features the encoder produced from X. A continuous
+column becomes one feature per distinct value, which is what makes
+continuous data expensive to solve exactly.</dd>
+<dt><strong><code>tree_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The fitted tree, as nested dicts of splits and leaves.</dd>
+<dt><strong><code>time_</code></strong> :&ensp;<code>float</code></dt>
+<dd>Seconds spent in the search.</dd>
+<dt><strong><code>classes_</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>Class labels seen during fit.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>The compiled search takes about 20 seconds to build the first time it runs
+on a machine. The result is cached on disk, so later processes load it in
+about a second. Set <code>OPTTREE_NUMBA_CACHE=0</code> to skip the cache if its
+directory is unwritable.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; from imodels import FastSmallTreeClassifier
+&gt;&gt;&gt; X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]] * 8)
+&gt;&gt;&gt; y = (X[:, 0] == X[:, 1]).astype(int)
+&gt;&gt;&gt; model = FastSmallTreeClassifier(regularization=0.01).fit(X, y)
+&gt;&gt;&gt; model.optimal_
+True
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FastSmallTreeClassifier(ClassifierMixin, BaseEstimator):
+    &#34;&#34;&#34;A decision tree that is certifiably optimal for its objective.
+
+    Fits the tree minimising
+
+        misclassification rate + ``regularization`` * (number of leaves)
+
+    over *every* decision tree on the binarized features, and proves that no
+    other such tree scores better. This is the objective of `GOSDT
+    &lt;https://arxiv.org/abs/2006.08690&gt;`_ (Lin et al., ICML 2020); the
+    branch-and-bound search is described in `solver.py` and was developed by
+    autoresearch (see `Agentic-imodels &lt;https://github.com/csinva/agentic-imodels&gt;`_).
+
+    Greedy trees (CART, C4.5) pick each split without regard to the splits below
+    it, so they can miss the best tree of a given size. This model does not:
+    when ``optimal_`` is True, the objective it reports is a proven minimum.
+
+    Depth is not a parameter. ``regularization`` sets the price of a leaf, and
+    the optimal tree at that price is as deep as it needs to be. Since a leaf
+    that does not improve the misclassification rate by ``regularization`` is
+    never worth adding, the trees stay small.
+
+    Parameters
+    ----------
+    regularization : float, default=0.05
+        Penalty added to the objective for each leaf, in units of
+        misclassification rate. Larger values give smaller trees. Values below
+        ``1 / n_samples`` are not useful, since a leaf fixing a single training
+        point already pays for itself.
+    time_limit : float, default=60.0
+        Seconds after which the search returns the best tree found so far rather
+        than continuing. ``optimal_`` is then False and a warning is raised.
+        ``0`` means no limit, which can run for a very long time on wide or
+        continuous data.
+    balance : bool, default=False
+        Weigh the classes equally, optimising balanced accuracy rather than
+        accuracy.
+    costs : array-like of shape (n_classes, n_classes), default=None
+        ``costs[i, j]`` is the cost of predicting class ``i`` when the truth is
+        class ``j``. Overrides ``balance``.
+    memory_limit : int, default=0
+        Resident memory in bytes above which the search stops, as the time limit
+        does. ``0`` means no limit. Memory grows with the number of subproblems
+        kept, which is what makes hard instances expensive.
+    verbose : bool, default=False
+        Print search statistics after fitting.
+
+    Attributes
+    ----------
+    optimal_ : bool
+        Whether optimality was certified. False means a limit was reached first,
+        so the tree is the best one found rather than a proven optimum.
+    objective_ : float
+        Objective value of the returned tree: its misclassification rate plus
+        ``regularization`` times its number of leaves.
+    lowerbound_, upperbound_ : float
+        Interval the search closed on the optimal objective; equal when
+        ``optimal_`` is True.
+    n_leaves_ : int
+        Number of leaves in the returned tree.
+    complexity_ : int
+        Number of splits in the returned tree, the imodels measure of size.
+    n_binary_features_ : int
+        Number of binary features the encoder produced from X. A continuous
+        column becomes one feature per distinct value, which is what makes
+        continuous data expensive to solve exactly.
+    tree_ : dict
+        The fitted tree, as nested dicts of splits and leaves.
+    time_ : float
+        Seconds spent in the search.
+    classes_ : ndarray
+        Class labels seen during fit.
+
+    Notes
+    -----
+    The compiled search takes about 20 seconds to build the first time it runs
+    on a machine. The result is cached on disk, so later processes load it in
+    about a second. Set ``OPTTREE_NUMBA_CACHE=0`` to skip the cache if its
+    directory is unwritable.
+
+    Examples
+    --------
+    &gt;&gt;&gt; import numpy as np
+    &gt;&gt;&gt; from imodels import FastSmallTreeClassifier
+    &gt;&gt;&gt; X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]] * 8)
+    &gt;&gt;&gt; y = (X[:, 0] == X[:, 1]).astype(int)
+    &gt;&gt;&gt; model = FastSmallTreeClassifier(regularization=0.01).fit(X, y)
+    &gt;&gt;&gt; model.optimal_
+    True
+    &#34;&#34;&#34;
+
+    def __init__(self, regularization: float = 0.05, time_limit: float = 60.0,
+                 balance: bool = False, costs=None, memory_limit: int = 0,
+                 verbose: bool = False):
+        self.regularization = regularization
+        self.time_limit = time_limit
+        self.balance = balance
+        self.costs = costs
+        self.memory_limit = memory_limit
+        self.verbose = verbose
+
+    def fit(self, X, y, feature_names=None):
+        &#34;&#34;&#34;Fit the optimal tree.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+        y : array-like of shape (n_samples,)
+        feature_names : list of str, optional
+            Names used when printing the model; taken from X&#39;s columns when it
+            is a DataFrame.
+
+        Returns
+        -------
+        self
+        &#34;&#34;&#34;
+        if not HAVE_NUMBA:
+            raise ImportError(NUMBA_HINT)
+        X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        frame = pd.DataFrame(X, columns=list(feature_names))
+
+        self.encoder_ = BinaryEncoder().fit(frame)
+        Xb = self.encoder_.transform(frame)
+        self.target_encoder_ = TargetEncoder().fit(y)
+        y_idx = self.target_encoder_.transform(y)
+        # the objective does not depend on the row order, but the kernels skip the
+        # empty words of a capture mask, so rows are clustered to keep the capture
+        # sets of deep nodes contiguous
+        perm = cluster_rows(Xb, y_idx, len(self.classes_), self.encoder_.groups)
+        data = BitDataset(Xb[perm], y_idx[perm], len(self.classes_),
+                          costs=self.costs, balance=self.balance)
+        self.n_binary_features_ = data.m
+
+        # n_jobs=1: the search has a parallel phase, but a library model should not
+        # take every core of the caller&#39;s machine without being asked
+        opt = CompiledOptimizer(data, self.regularization, groups=self.encoder_.groups,
+                                time_limit=self.time_limit, memory_limit=self.memory_limit,
+                                verbose=self.verbose, n_jobs=1)
+        root = opt.run()          # a row index into the compiled engine&#39;s node store
+        self.optimal_ = opt.optimal
+        self.stop_reason_ = opt.stop_reason
+        self.time_ = opt.elapsed
+        self.iterations_ = opt.iterations
+        self.lowerbound_ = float(opt.st[ST_LB][root])
+        self.upperbound_ = float(opt.st[ST_UB][root])
+        if not self.optimal_:
+            warnings.warn(
+                f&#34;{self.stop_reason_} limit reached before optimality was certified; &#34;
+                &#34;returning the best tree found. Raise time_limit, or raise &#34;
+                &#34;regularization to search over smaller trees.&#34;, RuntimeWarning)
+
+        self.tree_ = self._decode(opt.extract(root), data)
+        opt.release()             # the node store is large and is not needed past extraction
+        self.tree = TreeClassifier(self.tree_)
+        self.objective_ = self.tree.risk()
+        self.n_leaves_ = self.tree.leaves()
+        self.complexity_ = max(self.n_leaves_ - 1, 0)
+        self._leaf_proba_, self._leaf_tree_ = self._leaf_lookup(self.tree_)
+        if self.verbose:
+            print(f&#34;objective {self.objective_:.6g} in {self.time_:.3g}s &#34;
+                  f&#34;({self.iterations_} subproblems, optimal={self.optimal_})&#34;)
+        return self
+
+    def _decode(self, node: dict, data: BitDataset) -&gt; dict:
+        &#34;&#34;&#34;Turn the solver&#39;s tree of capture sets into one of named rules.
+
+        Each leaf keeps the class counts of the training rows it captures, so
+        that `predict_proba` has something to report.
+        &#34;&#34;&#34;
+        if &#34;prediction&#34; in node:
+            count, dist, max_loss, _, _, prediction = data.leaf_stats(node[&#34;key&#34;])
+            return {
+                &#34;prediction&#34;: self.target_encoder_.inverse(prediction),
+                &#34;name&#34;: &#34;class&#34;,
+                &#34;loss&#34;: float(max_loss),
+                &#34;complexity&#34;: float(self.regularization),
+                &#34;count&#34;: int(count),
+                &#34;dist&#34;: np.asarray(dist, dtype=float).tolist(),
+            }
+        rule = self.encoder_.rules[node[&#34;feature&#34;]]
+        return {
+            &#34;feature&#34;: int(rule[&#34;feature&#34;]),
+            &#34;name&#34;: rule[&#34;name&#34;],
+            &#34;relation&#34;: rule[&#34;relation&#34;],
+            &#34;reference&#34;: rule[&#34;reference&#34;],
+            &#34;type&#34;: rule[&#34;type&#34;],
+            &#34;true&#34;: self._decode(node[&#34;true&#34;], data),
+            &#34;false&#34;: self._decode(node[&#34;false&#34;], data),
+        }
+
+    def _leaf_lookup(self, tree: dict):
+        &#34;&#34;&#34;Class frequencies per leaf, and a copy of the tree predicting leaf ids.
+
+        Running the solver&#39;s own traversal over the copy is what routes rows to
+        leaves for `predict_proba`, so the two agree with `predict` by
+        construction.
+        &#34;&#34;&#34;
+        probs = []
+
+        def rec(node):
+            if &#34;prediction&#34; in node:
+                probs.append(node[&#34;dist&#34;])
+                return {**node, &#34;prediction&#34;: len(probs) - 1}
+            return {**node, &#34;true&#34;: rec(node[&#34;true&#34;]), &#34;false&#34;: rec(node[&#34;false&#34;])}
+
+        indexed = rec(tree)
+        counts = np.asarray(probs, dtype=float)
+        totals = counts.sum(axis=1, keepdims=True)
+        uniform = np.full_like(counts, 1.0 / max(counts.shape[1], 1))
+        return np.divide(counts, totals, out=uniform, where=totals &gt; 0), indexed
+
+    def _frame(self, X):
+        &#34;&#34;&#34;X as a DataFrame named the way the tree&#39;s rules are.&#34;&#34;&#34;
+        X = check_predict_X(self, X)
+        return pd.DataFrame(np.asarray(X, dtype=float),
+                            columns=list(self.feature_names_))
+
+    def predict(self, X):
+        &#34;&#34;&#34;Predict the class of each row of X.&#34;&#34;&#34;
+        frame = self._frame(X)  # checks fitted-ness before any attribute of ours
+        preds = self.tree.predict_fast(frame)
+        return decode_labels(self, preds.astype(int))
+
+    def predict_proba(self, X):
+        &#34;&#34;&#34;Class probabilities, read off the training rows in each leaf.
+
+        A leaf of an optimal tree predicts one class, so these are the empirical
+        class frequencies of the training rows that reached the leaf rather than
+        a calibrated probability.
+        &#34;&#34;&#34;
+        frame = self._frame(X)  # checks fitted-ness before any attribute of ours
+        leaf_ids = TreeClassifier(self._leaf_tree_).predict_fast(frame)
+        return self._leaf_proba_[leaf_ids.astype(int)]
+
+    def _display_tree(self, node: dict) -&gt; dict:
+        &#34;&#34;&#34;A copy of the tree whose leaves carry the caller&#39;s class labels.
+
+        The tree itself predicts the integer codes `check_fit_arguments` made of
+        y, which is what routes rows; only printing wants the labels back.
+        &#34;&#34;&#34;
+        if &#34;prediction&#34; in node:
+            label = self.classes_[int(node[&#34;prediction&#34;])]
+            # unwrap numpy scalars so the printed label reads as the caller wrote it
+            return {**node, &#34;prediction&#34;: getattr(label, &#34;item&#34;, lambda: label)()}
+        return {**node,
+                &#34;true&#34;: self._display_tree(node[&#34;true&#34;]),
+                &#34;false&#34;: self._display_tree(node[&#34;false&#34;])}
+
+    def __str__(self):
+        if not hasattr(self, &#34;tree_&#34;):
+            return f&#34;{type(self).__name__}(unfitted)&#34;
+        status = &#34;certified optimal&#34; if self.optimal_ else &#34;NOT certified optimal&#34;
+        return (f&#34;&gt; ------------------------------\n&#34;
+                f&#34;&gt; FastSmallTree: {self.n_leaves_} leaves, &#34;
+                f&#34;objective {self.objective_:.4g} ({status})\n&#34;
+                f&#34;&gt; ------------------------------\n&#34;
+                f&#34;{TreeClassifier(self._display_tree(self.tree_))}&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.ClassifierMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Fit the optimal tree.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>X</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples, n_features)</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array-like</code> of <code>shape (n_samples,)</code></dt>
+<dd>&nbsp;</dd>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>list</code> of <code>str</code>, optional</dt>
+<dd>Names used when printing the model; taken from X's columns when it
+is a DataFrame.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>self</code></dt>
+<dd>&nbsp;</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, feature_names=None):
+    &#34;&#34;&#34;Fit the optimal tree.
+
+    Parameters
+    ----------
+    X : array-like of shape (n_samples, n_features)
+    y : array-like of shape (n_samples,)
+    feature_names : list of str, optional
+        Names used when printing the model; taken from X&#39;s columns when it
+        is a DataFrame.
+
+    Returns
+    -------
+    self
+    &#34;&#34;&#34;
+    if not HAVE_NUMBA:
+        raise ImportError(NUMBA_HINT)
+    X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+    frame = pd.DataFrame(X, columns=list(feature_names))
+
+    self.encoder_ = BinaryEncoder().fit(frame)
+    Xb = self.encoder_.transform(frame)
+    self.target_encoder_ = TargetEncoder().fit(y)
+    y_idx = self.target_encoder_.transform(y)
+    # the objective does not depend on the row order, but the kernels skip the
+    # empty words of a capture mask, so rows are clustered to keep the capture
+    # sets of deep nodes contiguous
+    perm = cluster_rows(Xb, y_idx, len(self.classes_), self.encoder_.groups)
+    data = BitDataset(Xb[perm], y_idx[perm], len(self.classes_),
+                      costs=self.costs, balance=self.balance)
+    self.n_binary_features_ = data.m
+
+    # n_jobs=1: the search has a parallel phase, but a library model should not
+    # take every core of the caller&#39;s machine without being asked
+    opt = CompiledOptimizer(data, self.regularization, groups=self.encoder_.groups,
+                            time_limit=self.time_limit, memory_limit=self.memory_limit,
+                            verbose=self.verbose, n_jobs=1)
+    root = opt.run()          # a row index into the compiled engine&#39;s node store
+    self.optimal_ = opt.optimal
+    self.stop_reason_ = opt.stop_reason
+    self.time_ = opt.elapsed
+    self.iterations_ = opt.iterations
+    self.lowerbound_ = float(opt.st[ST_LB][root])
+    self.upperbound_ = float(opt.st[ST_UB][root])
+    if not self.optimal_:
+        warnings.warn(
+            f&#34;{self.stop_reason_} limit reached before optimality was certified; &#34;
+            &#34;returning the best tree found. Raise time_limit, or raise &#34;
+            &#34;regularization to search over smaller trees.&#34;, RuntimeWarning)
+
+    self.tree_ = self._decode(opt.extract(root), data)
+    opt.release()             # the node store is large and is not needed past extraction
+    self.tree = TreeClassifier(self.tree_)
+    self.objective_ = self.tree.risk()
+    self.n_leaves_ = self.tree.leaves()
+    self.complexity_ = max(self.n_leaves_ - 1, 0)
+    self._leaf_proba_, self._leaf_tree_ = self._leaf_lookup(self.tree_)
+    if self.verbose:
+        print(f&#34;objective {self.objective_:.6g} in {self.time_:.3g}s &#34;
+              f&#34;({self.iterations_} subproblems, optimal={self.optimal_})&#34;)
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Predict the class of each row of X.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    &#34;&#34;&#34;Predict the class of each row of X.&#34;&#34;&#34;
+    frame = self._frame(X)  # checks fitted-ness before any attribute of ours
+    preds = self.tree.predict_fast(frame)
+    return decode_labels(self, preds.astype(int))</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class probabilities, read off the training rows in each leaf.</p>
+<p>A leaf of an optimal tree predicts one class, so these are the empirical
+class frequencies of the training rows that reached the leaf rather than
+a calibrated probability.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    &#34;&#34;&#34;Class probabilities, read off the training rows in each leaf.
+
+    A leaf of an optimal tree predicts one class, so these are the empirical
+    class frequencies of the training rows that reached the leaf rather than
+    a calibrated probability.
+    &#34;&#34;&#34;
+    frame = self._frame(X)  # checks fitted-ness before any attribute of ours
+    leaf_ids = TreeClassifier(self._leaf_tree_).predict_fast(frame)
+    return self._leaf_proba_[leaf_ids.astype(int)]</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier" href="#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a>, *, feature_names: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier" href="#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>feature_names</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+<dt id="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier" href="#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier" href="#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.tree.optimal_tree" href="index.html">imodels.tree.optimal_tree</a></code></li>
+</ul>
+</li>
+<li><h3>Our favorite methods</h3>
+<ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a><span class="post-date">Feb '22</span></li>
+<li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a><span class="post-date">Jan '22</span></li>
+</ul>
+</li>
+<li><h3>Prediction classes</h3>
+<ul class="cat-legend">
+<li><span class="cat-dot cat-tree"></span>trees</li>
+</ul>
+<ul class="class-list">
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier" href="#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a></li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">

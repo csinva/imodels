@@ -1,6 +1,6 @@
 """Certifiably optimal sparse decision trees, discovered by autoresearch.
 
-`AutoOptTreeClassifier` returns the tree minimising misclassification rate plus
+`FastSmallTreeClassifier` returns the tree minimising misclassification rate plus
 a penalty per leaf, and certifies that no other tree on the same binarized
 features scores better. The search behind it lives in `solver.py`.
 """
@@ -18,14 +18,14 @@ from imodels.util.arguments import (check_fit_arguments, check_predict_X,
                                     decode_labels)
 
 NUMBA_HINT = (
-    "AutoOptTreeClassifier needs numba, which is not installed. Install it with "
+    "FastSmallTreeClassifier needs numba, which is not installed. Install it with "
     "`pip install numba` (or `pip install imodels[optional]`). The search itself is "
     "compiled, and interpreting it is orders of magnitude slower, so there is no "
     "pure-Python fallback."
 )
 
 
-class AutoOptTreeClassifier(ClassifierMixin, BaseEstimator):
+class FastSmallTreeClassifier(ClassifierMixin, BaseEstimator):
     """A decision tree that is certifiably optimal for its objective.
 
     Fits the tree minimising
@@ -108,10 +108,10 @@ class AutoOptTreeClassifier(ClassifierMixin, BaseEstimator):
     Examples
     --------
     >>> import numpy as np
-    >>> from imodels import AutoOptTreeClassifier
+    >>> from imodels import FastSmallTreeClassifier
     >>> X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]] * 8)
     >>> y = (X[:, 0] == X[:, 1]).astype(int)
-    >>> model = AutoOptTreeClassifier(regularization=0.01).fit(X, y)
+    >>> model = FastSmallTreeClassifier(regularization=0.01).fit(X, y)
     >>> model.optimal_
     True
     """
@@ -278,7 +278,7 @@ class AutoOptTreeClassifier(ClassifierMixin, BaseEstimator):
             return f"{type(self).__name__}(unfitted)"
         status = "certified optimal" if self.optimal_ else "NOT certified optimal"
         return (f"> ------------------------------\n"
-                f"> AutoOptTree: {self.n_leaves_} leaves, "
+                f"> FastSmallTree: {self.n_leaves_} leaves, "
                 f"objective {self.objective_:.4g} ({status})\n"
                 f"> ------------------------------\n"
                 f"{TreeClassifier(self._display_tree(self.tree_))}")

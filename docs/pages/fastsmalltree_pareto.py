@@ -1,14 +1,14 @@
-"""Regenerate Fig 1 on the autoopttree page.
+"""Regenerate Fig 1 on the fastsmalltree page.
 
 Reads the autoresearch run, the baseline benchmark and the TabArena-14 sweep from an
 agentic-imodels checkout, and rewrites the ``var PARETO = {...};`` line in
-autoopttree.html that the figure's panels draw from: ``dev`` is the development
+fastsmalltree.html that the figure's panels draw from: ``dev`` is the development
 suite, ``external`` the held-out TabArena-14 built by
 baselines/benchmarks/external/build_tabarena14.py, ``full`` the full-size datasets at
 30 minutes, and ``nolimit`` the held-out problems at 4 hours each
 (baselines/benchmarks/external/run_external_nolimit.py).
 
-    uv run python autoopttree_pareto.py --root /path/to/agentic-imodels/evolve_optimal_tree
+    uv run python fastsmalltree_pareto.py --root /path/to/agentic-imodels/evolve_optimal_tree
 
 Every point is one solver on the 70-problem suite (14 datasets x 5 penalties, 30 s
 cap each). Its position is two geometric means over the problems:
@@ -40,12 +40,12 @@ import numpy as np
 import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PAGE = os.path.join(HERE, "autoopttree.html")
+PAGE = os.path.join(HERE, "fastsmalltree.html")
 CAP = 30.0
 FULL_CAP = 1800.0      # the full-size hidden run: 30 minutes a problem
 FULL_PAIRS = 14        # one penalty (0.05) on each of the 14 full-size datasets
-FULL_OFFSETS = {"autoopttree_v46_anytime100": [64, 24], "autoopttree_v49": [-54, 42],
-                "autoopttree_v40": [34, -36], "streed": [-52, -30], "gosdt": [-62, -30],
+FULL_OFFSETS = {"fastsmalltree_v46_anytime100": [64, 24], "fastsmalltree_v49": [-54, 42],
+                "fastsmalltree_v40": [34, -36], "streed": [-52, -30], "gosdt": [-62, -30],
                 "split": [-26, 44], "gosdt_guesses": [-88, -8],
                 "gosdt_guesses_guided": [36, -34], "gg_guided_e60d2": [74, 30]}
 NOLIMIT_WALL = 4 * 3600   # the hidden run without the 30 s cap: 4 h a problem, 6 GB
@@ -72,17 +72,17 @@ MULTICORE_BASELINES = {"gosdt_mc8"}
 V1 = {"pygosdt_v1"}
 HEURISTIC_BASELINES = {"gosdt_guesses_guided", "gg_guided_e60d2", "gg_guided_db5", "split"}
 # the evolved solvers as the external sweep names them
-EXTERNAL_EVOLVED = {"autoopttree": ("v23", False, "exact"),
-                    "autoopttree_v40": ("v40 (shipped)", False, "exact"),
-                    "autoopttree_v46": ("v46, 8 threads", True, "exact"),
-                    "autoopttree_v46_anytime100": ("v46 anytime, 100 ms", True, "approximate"),
-                    "autoopttree_v49": ("v49, 8 threads", True, "exact")}
+EXTERNAL_EVOLVED = {"fastsmalltree": ("v23", False, "exact"),
+                    "fastsmalltree_v40": ("v40 (shipped)", False, "exact"),
+                    "fastsmalltree_v46": ("v46, 8 threads", True, "exact"),
+                    "fastsmalltree_v46_anytime100": ("v46 anytime, 100 ms", True, "approximate"),
+                    "fastsmalltree_v49": ("v49, 8 threads", True, "exact")}
 # names the repeat script used for evolved solvers, mapped to their run names
-REPEAT_ALIASES = {"autoopttree": "v23_word_compaction",
-                  "autoopttree_v40": "v40_sequential",
-                  "autoopttree_v46": "v46_topk_pairs",
-                  "autoopttree_v46_anytime100": "v46_anytime_100ms",
-                  "autoopttree_v49": "v49_cands_pairs_lazy_ws"}
+REPEAT_ALIASES = {"fastsmalltree": "v23_word_compaction",
+                  "fastsmalltree_v40": "v40_sequential",
+                  "fastsmalltree_v46": "v46_topk_pairs",
+                  "fastsmalltree_v46_anytime100": "v46_anytime_100ms",
+                  "fastsmalltree_v49": "v49_cands_pairs_lazy_ws"}
 # The points the figure names directly; everything else is in the tooltip. The anytime
 # versions are left unlabelled: at half the figure's width their labels collide with the
 # exact ones, and the text and tooltips carry which cap is which.
@@ -99,18 +99,18 @@ LABELLED = {
 }
 EXTERNAL_LABELLED = {"gosdt": "GOSDT", "streed": "STreeD", "pygosdt_v1": "pygosdt (v1)", "split": "SPLIT",
                      "gosdt_guesses": "gosdt-guesses", "gosdt_guesses_guided": "gosdt-guesses, guided",
-                     "gg_guided_e60d2": "gosdt-guesses, guided (tuned)", "autoopttree": "v23", "autoopttree_v40": "v40 (shipped)",
-                     "autoopttree_v46_anytime100": "v46 anytime, 100 ms", "autoopttree_v49": "v49, 8 threads"}
+                     "gg_guided_e60d2": "gosdt-guesses, guided (tuned)", "fastsmalltree": "v23", "fastsmalltree_v40": "v40 (shipped)",
+                     "fastsmalltree_v46_anytime100": "v46 anytime, 100 ms", "fastsmalltree_v49": "v49, 8 threads"}
 EXTERNAL_OFFSETS = {"gosdt": [-58, -40], "streed": [-55, -32], "pygosdt_v1": [-5, -42], "split": [-45, 38],
                     "gosdt_guesses": [-62, 34], "gosdt_guesses_guided": [82, 10],
-                    "gg_guided_e60d2": [92, -30], "autoopttree": [46, -26],
-                    "autoopttree_v40": [-56, -30], 
-                    "autoopttree_v46_anytime100": [66, 26], "autoopttree_v49": [-64, 54]}
+                    "gg_guided_e60d2": [92, -30], "fastsmalltree": [46, -26],
+                    "fastsmalltree_v40": [-56, -30], 
+                    "fastsmalltree_v46_anytime100": [66, 26], "fastsmalltree_v49": [-64, 54]}
 NOLIMIT_OFFSETS = {"gosdt": [60, 30], "streed": [-55, -32], "pygosdt_v1": [-5, -42], "split": [-45, 38],
                    "gosdt_guesses": [-62, 34], "gosdt_guesses_guided": [82, 10],
-                   "gg_guided_e60d2": [92, -30], "autoopttree": [50, 20],
-                   "autoopttree_v40": [40, 40],
-                   "autoopttree_v46_anytime100": [66, 26], "autoopttree_v49": [60, 40]}
+                   "gg_guided_e60d2": [92, -30], "fastsmalltree": [50, 20],
+                   "fastsmalltree_v40": [40, 40],
+                   "fastsmalltree_v46_anytime100": [66, 26], "fastsmalltree_v49": [60, 40]}
 # where each direct label sits relative to its point, in pixels (x right, y down),
 # chosen by rendering the page and moving labels off each other and off the marks
 OFFSETS = {
@@ -157,6 +157,12 @@ def metrics(rows, leaf, cap=CAP):
     }
 
 
+def model_ids(df):
+    """The benchmark harness recorded this model under its earlier name; read it as the new one."""
+    df["model"] = df["model"].astype(str).str.replace("autoopttree", "fastsmalltree", regex=False)
+    return df
+
+
 def external_points(root, data="data", pairs="external_pairs.csv", npairs=70, cap=CAP,
                     offsets=None):
     """Points for a held-out panel: every solver's runs on a TabArena-14 build, judged against
@@ -166,7 +172,7 @@ def external_points(root, data="data", pairs="external_pairs.csv", npairs=70, ca
     path = os.path.join(ext, "results", pairs)
     if not os.path.exists(path):
         return None
-    d = pd.read_csv(path)
+    d = model_ids(pd.read_csv(path))
     leaf = {}
     for name in d["dataset"].unique():
         y = pd.read_csv(os.path.join(ext, data, f"{name}.csv")).iloc[:, -1]
@@ -243,7 +249,7 @@ def main():
         path = os.path.join(results, fname)
         if not os.path.exists(path):
             continue
-        reps = pd.read_csv(path)
+        reps = model_ids(pd.read_csv(path))
         for (model, rep), d in reps.groupby(["model", "repeat"]):
             model = REPEAT_ALIASES.get(model, model)
             # a baseline measured only here (the tuned gosdt-guesses settings) has no run 0

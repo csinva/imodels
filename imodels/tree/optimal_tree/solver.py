@@ -1,6 +1,6 @@
-"""Branch-and-bound engine behind `AutoOptTreeClassifier`.
+"""Branch-and-bound engine behind `FastSmallTreeClassifier`.
 
-The public class lives in `auto_opt_tree.py`; everything here is the solver it
+The public class lives in `fast_small_tree.py`; everything here is the solver it
 calls. The objective is the one from `GOSDT
 <https://arxiv.org/abs/2006.08690>`_ (Lin et al., ICML 2020),
 
@@ -47,7 +47,7 @@ EPS = 1e-10
 
 #: numba is optional for importing imodels but required to fit this model: the
 #: search itself is compiled, and interpreting it costs orders of magnitude.
-#: `AutoOptTreeClassifier.fit` raises with an install hint when it is missing;
+#: `FastSmallTreeClassifier.fit` raises with an install hint when it is missing;
 #: `njit` falls back to a no-op decorator so this module still imports.
 HAVE_NUMBA = importlib.util.find_spec("numba") is not None
 

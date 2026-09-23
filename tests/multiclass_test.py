@@ -14,7 +14,7 @@ MULTICLASS_MODELS = [
     'BoostedRulesClassifier', 'SLIMClassifier', 'TaoTreeClassifier',
     'FIGSClassifier', 'FIGSClassifierCV', 'HSTreeClassifier',
     'HSTreeClassifierCV', 'GreedyTreeClassifier', 'DecisionTreeCCPClassifier',
-    'C45TreeClassifier', 'AutoOptTreeClassifier',
+    'C45TreeClassifier', 'FastSmallTreeClassifier',
 ]
 
 # binary-only: these must say so rather than silently collapsing the target
