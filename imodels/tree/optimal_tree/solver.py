@@ -508,21 +508,29 @@ def prep_candidates(gidx, l_leaf, l_lb, r_leaf, r_lb, bound, do_exchange, split_
                     active[k] = False
     n = 0
     min_rejected = 1e300
-    key = np.empty(mf)
     for i in range(mf):
         if not active[i]:
             continue
         if split_lb[i] <= bound + EPS:
             order[n] = i
-            key[n] = split_lb[i] + 1e-9 * split_ub[i]
             n += 1
         elif split_lb[i] < min_rejected:
             min_rejected = split_lb[i]
     if n > 1:
-        idx = np.argsort(key[:n], kind="mergesort")
+        # exact order by (split_lb, split_ub): two stable sorts, the secondary key first.
+        # The candidate loop stops at the first split above the bound, so the order must be
+        # nondecreasing in split_lb exactly, not up to a rounding of a combined key.
         tmp = order[:n].copy()
+        ub_n = np.empty(n)
         for t in range(n):
-            order[t] = tmp[idx[t]]
+            ub_n[t] = split_ub[tmp[t]]
+        i1 = np.argsort(ub_n, kind="mergesort")
+        lb_n = np.empty(n)
+        for t in range(n):
+            lb_n[t] = split_lb[tmp[i1[t]]]
+        i2 = np.argsort(lb_n, kind="mergesort")
+        for t in range(n):
+            order[t] = tmp[i1[i2[t]]]
     return n, best_i, min_rejected
 
 
@@ -3050,9 +3058,12 @@ def column_dp_chain(st, dat, pf, pi, node, feats_g, Lg, dist, exact, best_in, kw
     suffix = np.zeros(nb + 2)
     for t in range(nb, -1, -1):
         suffix[t] = suffix[t + 1] + seg_val[t]
+    # Every node of the chain is created before any structure is written: a node's value
+    # is only consistent once its left child carries the rest of the chain, so a chain
+    # cut by a full store (make_node -1) must leave nothing behind.
+    rids = np.empty(nb, dtype=np.int64)
+    lids = np.empty(nb, dtype=np.int64)
     cur = node
-    root_split = feats_g[bounds[0] - 1]
-    nub = st[ST_UB]; nlb = st[ST_LB]; nsplit = st[ST_SPLIT]; nsolved = st[ST_SOLVED]; npend = st[ST_PEND]
     for t in range(nb):
         f = feats_g[bounds[t] - 1]
         child_key(st, dat, cur, f, True, kw_buf)
@@ -3061,6 +3072,16 @@ def column_dp_chain(st, dat, pf, pi, node, feats_g, Lg, dist, exact, best_in, kw
         ln = make_node(st, dat, pf, pi, kw_buf)
         if rn < 0 or ln < 0:
             return val, -3
+        rids[t] = rn
+        lids[t] = ln
+        cur = ln
+    cur = node
+    root_split = feats_g[bounds[0] - 1]
+    nub = st[ST_UB]; nlb = st[ST_LB]; nsplit = st[ST_SPLIT]; nsolved = st[ST_SOLVED]; npend = st[ST_PEND]
+    for t in range(nb):
+        f = feats_g[bounds[t] - 1]
+        rn = rids[t]
+        ln = lids[t]
         if suffix[t] < nub[cur] - EPS or (exact and cur != node and suffix[t] <= nub[cur] + EPS):
             if suffix[t] < nub[cur]:
                 nub[cur] = suffix[t]
@@ -3138,6 +3159,7 @@ NSLOT = 2 * MAXD      # two frame slots per depth (one per sibling), slot 0 is t
 
 
 _WS_POOL = {}
+STORE_CAPACITY = 1 << 14      # initial node store; grown by doubling when full
 
 
 def make_workspace(m, K, W):
@@ -3887,7 +3909,7 @@ class CompiledOptimizer:
     def __init__(self, data: BitDataset, regularization: float, *, groups=None, time_limit=0.0,
                  look_ahead=True, similar_support=True, feature_exchange=True, continuous_feature_exchange=True,
                  greedy_init=True, upperbound=0.0, engine="numba", memory_limit=0, verbose=False,
-                 n_jobs=1, parallel_after=0.01, force_parallel=False):
+                 n_jobs=1, parallel_after=0.01, force_parallel=False, store_capacity=None):
         self.data = data
         self.lam = float(regularization)
         self.time_limit = float(time_limit)
@@ -3928,7 +3950,7 @@ class CompiledOptimizer:
         self.pf = np.array([self.lam, uniform_w, float(data.n)])
         self.pi = np.array([data.K, data.W, 1 if has_groups else 0, 1 if look_ahead else 0, 1 if similar_support else 0,
                             1 if continuous_feature_exchange else 0, 1, 1 if uniform else 0], dtype=np.int64)
-        self._alloc(1 << 14)
+        self._alloc(int(STORE_CAPACITY if store_capacity is None else store_capacity))
         self.ws = make_workspace(data.m, data.K, data.W)
         self._no_shared = np.array([1e300])
         self._no_table = no_shared_table(data.W)
@@ -4221,11 +4243,14 @@ class CompiledOptimizer:
         else:
             cells = [(akey, int(st[ST_PEND][nid, 1])), (bkey, int(st[ST_PEND][nid, 2]))]
         for cell, t in cells:
+            # _node_id may grow the store and replace self.st: re-read it after every call
             gn = self._node_id(cell)
+            st = self.st
             c1 = np.empty(W, dtype=np.uint64); c2 = np.empty(W, dtype=np.uint64)
             child_key(st, self.dat, gn, t, True, c1)
             child_key(st, self.dat, gn, t, False, c2)
             g1 = self._node_id(c1); g2 = self._node_id(c2)
+            st = self.st
             v = float(st[ST_LEAF][g1] + st[ST_LEAF][g2])
             if v < st[ST_UB][gn] - EPS:
                 st[ST_UB][gn] = v

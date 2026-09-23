@@ -144,6 +144,16 @@ class FastSmallTreeClassifier(ClassifierMixin, BaseEstimator):
         if not HAVE_NUMBA:
             raise ImportError(NUMBA_HINT)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        # the certificate rests on bounds of the form "a tree with a leaves costs at least
+        # a * regularization" and "a tree's loss cannot fall below zero", which need a
+        # nonnegative penalty and nonnegative, finite costs
+        lam = float(self.regularization)
+        if not np.isfinite(lam) or lam < 0.0:
+            raise ValueError(f"regularization must be a finite number >= 0, got {self.regularization!r}")
+        if self.costs is not None:
+            C = np.asarray(self.costs, dtype=np.float64)
+            if not np.all(np.isfinite(C)) or np.any(C < 0.0):
+                raise ValueError("costs must be finite and nonnegative")
         frame = pd.DataFrame(X, columns=list(feature_names))
 
         self.encoder_ = BinaryEncoder().fit(frame)

@@ -773,6 +773,101 @@ else:
                         design; the row is reported for what it is.</p>
                     </details>
 
+                    <details class="collapsible" id="b-shipped">
+                      <summary>The shipped model, checked line by line: v40 as it runs in the package</summary>
+                      <p>The proofs above are about rules. This section is about the code that applies them, read
+                        in full on the path the package takes. <code>fit</code> binarises the data, builds the cost
+                        matrix and its aggregates, and runs the compiled engine with one thread. That choice removes
+                        three things from the audit at once: the parallel phase, the shared bound table and the
+                        adoption of another thread's solutions are never entered, and the depth-3 stage is gated off.
+                        What remains is node creation, the expansion of a frame with its four early resolutions, the
+                        single-column chain, the candidate loop with its budget deepening, the frame epilogue, the
+                        flush on an interruption, the driver that re-enters the search in chunks, and extraction.
+                        Thirteen places in that code mark a node solved or raise a lower bound. Each is listed with the
+                        rule it applies and the collapsible that proves the rule.</p>
+                      <ol class="gam-readings">
+                        <li><b>Creating a node.</b> lb = min(leaf, floor + 2&lambda;), ub = the leaf, no split. Solved at
+                          once only for a single row, for leaf &minus; floor &lt; &lambda;, or for potential &lt; 2&lambda;.
+                          Inherited bounds.</li>
+                        <li><b>Expansion, no split left.</b> No split separates the rows with both sides of potential at
+                          least &lambda;: the node is its leaf. Leaf support.</li>
+                        <li><b>Expansion, everything above the budget.</b> min(leaf, best two-level tree, shape bound)
+                          exceeds the budget: the bound is raised to it. Shape relaxation; the pair stage ran over
+                          every separating split.</li>
+                        <li><b>The single-column chain.</b> When every separating split belongs to one numeric column
+                          the segmentation programme's value is the optimum, each node of the chain is solved at its
+                          suffix value, and the segments are leaves. Segmentation, with the two exclusions that define
+                          "separating" both monotone under subsets. The list a child sees is its parent's separating
+                          splits, so no descendant can regain a column.</li>
+                        <li><b>Installing the best two-level tree.</b> Each child receives min(leaf, 2&lambda; +
+                          best<sub>2</sub>) and the split that achieves it; the grandchildren are leaves that extraction
+                          creates from their keys. Real trees, so only (ii).</li>
+                        <li><b>The shape rule.</b> Best two-level tree no worse than the shape bound and no worse than
+                          the leaf: solved at that value.</li>
+                        <li><b>The rule below 4&lambda;.</b> Solved at best when best fits the budget, else the bound
+                          becomes min(best, 4&lambda;); best ranges over every separating split, which is what v49 gave
+                          up.</li>
+                        <li><b>Children in the candidate loop.</b> A new child takes the kernel's leaf value and bound.
+                          A child whose ub is within 1e-10 of its lb is solved. A child whose ub fits a budget below
+                          3&lambda; is solved, because every tree with three or more leaves costs at least 3&lambda; and
+                          the ub is exact over one and two leaves. Pairwise stage.</li>
+                        <li><b>Deepening.</b> The first child's budget is the bound less the second's lower bound; a
+                          child whose bound exceeds its budget prunes the split; the second's final budget is the bound
+                          less the first's optimum, which by (iii) the first holds once it is not pruned. Look-ahead.</li>
+                        <li><b>The epilogue.</b> Solved at best when best fits the budget; otherwise the bound becomes
+                          the larger of min(best, cheapest pruned split) and the largest child bound. Superset bound.
+                          Every pruned split exceeded the bound by more than 1e-10, so best is the optimum within that
+                          tolerance.</li>
+                        <li><b>The flush.</b> An interruption writes each open frame's incumbent to its node, never a
+                          bound and never a flag, and the search restarts from the root on the memo it left, which is
+                          consistent after every single write above.</li>
+                        <li><b>Re-arming a cached frame.</b> Only the budget-dependent steps rerun; the pair-stage
+                          values reused are functions of the node alone, a node's separating splits are intrinsic to
+                          it whichever parent reached it, and a frame whose pair stage did not run is never cached.</li>
+                        <li><b>The driver and extraction.</b> The root's budget is its own leaf value, so the search
+                          can only end solved or stopped. A time limit, a memory limit or the depth cap of 48 raise,
+                          set <code>optimal_</code> to False and warn: no certificate is issued on a stopped search.
+                          Extraction rebuilds a leaf where the split is &minus;1 and otherwise follows the two children
+                          by key, creating leaves where none were stored, which realises every incumbent any of the
+                          writes above recorded.</li>
+                      </ol>
+                      <p><b>The tolerance.</b> Every comparison that prunes requires exceeding by more than
+                        1e-10, and every comparison that solves accepts equality within 1e-10, so the guarantee is:
+                        the certified objective is within 1e-10 of the minimum and the returned tree scores within
+                        1e-10 of the certified objective. Two different trees differ by |&Delta;loss + <i>k</i>&lambda;| for an
+                        integer <i>k</i>, and with uniform costs &Delta;loss is a multiple of 1/<i>n</i>, so the tolerance
+                        can separate two trees only when the penalty agrees with a multiple of 1/<i>n</i> to ten decimal
+                        places. Its purpose is to treat exact ties, and the same sum taken in two orders, as equal.</p>
+                      <p><b>The inputs.</b> The floors of the form "<i>a</i> leaves cost at least <i>a</i>&lambda;" and
+                        "a tree's loss cannot fall below zero" need a nonnegative penalty and nonnegative, finite costs;
+                        nothing else about the costs is assumed, so a nonzero diagonal, unequal errors and
+                        <code>balance</code> are all covered by the same proofs. The package now rejects a negative or
+                        non-finite penalty and a cost matrix with a negative or non-finite entry; it accepted them
+                        before, and a negative penalty would have broken the 4&lambda; floor.</p>
+                      <p><b>What the check changed.</b> Three things, none of which the benchmarks reached. First, the
+                        chain of the single-column programme wrote each node's value and split before creating the
+                        next node's children, so a store that filled in the middle of a chain left a node whose
+                        value no tree in the store could realise: the certified value would have been right and the
+                        returned tree worse than it, a failure of (ii). The chain now creates all of its nodes before
+                        it writes any structure. A test grows a store of capacity four through dozens of
+                        reallocations, chains included, and passes on the old code as well as the new: the old
+                        code's retry usually completed the chain before anything read it, and the failure needs a
+                        memo hit on an inner chain node in between, which no test constructs. The fix rests on the
+                        argument, not on a test. Second, candidates were
+                        ordered by a rounded key, split_lb + 10<sup>&minus;9</sup>&middot;split_ub, and the loop stops at
+                        the first candidate above the bound, so two candidates whose bounds differ by less than
+                        10<sup>&minus;9</sup> could be misordered and one skipped: a tolerance of 10<sup>&minus;9</sup>
+                        where the rest of the solver keeps 10<sup>&minus;10</sup>. The order is now exact. Third, the input
+                        validation above. And with the depth-3 stage forced on for the same tests, a fourth: the
+                        step that materialises a pending three-leaf structure at extraction kept a reference to the
+                        node store across a call that can grow and replace it, and indexed the stale copy, a crash
+                        rather than a wrong tree, reachable only with the stage enabled; it now re-reads the store.
+                        The tests that accompany the check enumerate every tree on up to six binary
+                        features with two or three classes, on random nonnegative cost matrices with nonzero
+                        diagonals, and with the store forced to grow from four nodes; they are tripwires for the
+                        proofs, not substitutes for them.</p>
+                    </details>
+
                     <h3 id="ledger">The ledger</h3>
 
                     <details class="collapsible" id="versions">
@@ -804,7 +899,7 @@ else:
                           <tr><td>v29, v30</td><td>parallel phase on the compiled engine; threads</td><td>parallel</td><td>latent gap</td><td>as v25</td></tr>
                           <tr><td>v31, v33, v35, v36, v37, v39</td><td>frame cache, hand-off timing, pooled table, cached root, gated hand-off, memory accounting</td><td>refactor</td><td>latent gap</td><td>no new rule; carry v20's stage</td></tr>
                           <tr><td>v32, v34</td><td>shared lower bounds; shared optima and a live incumbent</td><td>parallel</td><td>latent gap</td><td>only bounds proved on the same subproblem cross threads; carry v20's stage</td></tr>
-                          <tr><td><b>v40</b> (shipped, as v40_sequential with one thread)</td><td>depth-3 stage off</td><td>gate</td><td><b>yes</b></td><td>removes the one inadmissible rule; every remaining rule is proved above</td></tr>
+                          <tr><td><b>v40</b> (shipped, as v40_sequential with one thread)</td><td>depth-3 stage off</td><td>gate</td><td><b>yes</b></td><td>removes the one inadmissible rule; every remaining rule is proved above, and the code that applies them is checked line by line in the last collapsible</td></tr>
                           <tr><td>v41</td><td>node-keyed frame cache</td><td>refactor</td><td>yes</td><td>no new rule (a draft re-armed a frame without its structure and certified a wrong tree; caught)</td></tr>
                           <tr><td>v43</td><td>lookahead-greedy seed, cap-scaled chunks</td><td>incumbent</td><td>yes</td><td>writes only (ii)</td></tr>
                           <tr><td>v43c</td><td>pair-stage budget for short caps</td><td>gate</td><td>yes</td><td>leaves bounds uncomputed, never changes one</td></tr>
@@ -825,7 +920,10 @@ else:
                     </details>
 
                     <p>Three lines of the audit are worth stating outside the collapsibles. The shipped model, v40 run on
-                        one thread, is exact with no reservation: every rule it applies is proved above. The versions
+                        one thread, is exact: every rule it applies is proved above, the code that applies them
+                        was read line by line, and its only reservation is the 1e-10 tolerance that treats ties as
+                        ties. That reading also found three engineering defects the benchmarks never reached, all
+                        fixed in the package. The versions
                         from v20 to v39 and v49 ran as exact solvers and certified nothing wrong on any problem in this
                         post, so their numbers in Fig <a href="#fig1">1</a> and Table 1 stand as measurements, but
                         each carries a bound whose proof has a hole that the benchmarks never reached; Fig 1 draws them

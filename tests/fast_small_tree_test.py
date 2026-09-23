@@ -157,3 +157,109 @@ class TestApi:
         assert not model.optimal_
         assert any("optimality" in str(w.message) for w in caught)
         assert model.lowerbound_ <= model.upperbound_ + 1e-12
+
+
+# ---------------------------------------------------------------------------
+# Exactness under conditions the development benchmark never exercised: wider feature
+# sets, three classes, cost matrices with nonzero diagonals, and a node store so small
+# that it is reallocated many times mid-search (including inside a single-column chain).
+# The guarantee rests on the proofs in the documentation; these are its tripwires.
+# ---------------------------------------------------------------------------
+
+def brute_force_with_costs(Xb, y, K, C, lam):
+    """Exhaustive optimum of sum_i C[pred_i, y_i] + lam * leaves over trees on Xb."""
+    n, m = Xb.shape
+    memo = {}
+
+    def leaf(rows):
+        cnt = np.bincount(y[list(rows)], minlength=K)
+        return float(min(C[p] @ cnt for p in range(K)))
+
+    def best(rows):
+        key = frozenset(rows)
+        if key in memo:
+            return memo[key]
+        value = leaf(rows) + lam
+        for j in range(m):
+            left = tuple(i for i in rows if Xb[i, j] == 1)
+            right = tuple(i for i in rows if Xb[i, j] == 0)
+            if not left or not right:
+                continue
+            value = min(value, best(left) + best(right))
+        memo[key] = value
+        return value
+
+    return best(tuple(range(n)))
+
+
+def objective_with_costs(model, X, y, C, lam):
+    preds = model.target_encoder_.transform(model.predict(X))
+    return float(sum(C[p, t] for p, t in zip(preds, y))) + lam * model.n_leaves_
+
+
+@pytest.mark.parametrize("seed", range(12))
+def test_exhaustive_wide_binary_and_multiclass(seed):
+    """Up to six binary features and three classes; every certificate equals the
+    exhaustive optimum and the returned tree scores exactly the certified value."""
+    rng = np.random.default_rng(seed)
+    n, m, K = int(rng.integers(8, 25)), int(rng.integers(4, 7)), int(rng.integers(2, 4))
+    Xb = rng.integers(0, 2, size=(n, m)).astype(np.uint8)
+    y = rng.integers(0, K, size=n)
+    for lam in (0.005, 0.02, 0.05, 0.12, 0.3):
+        model = FastSmallTreeClassifier(regularization=lam).fit(Xb, y)
+        assert model.optimal_
+        truth = brute_force_optimum(Xb, y, lam)
+        assert abs(model.upperbound_ - truth) < 1e-9
+        assert abs(objective_of(model, Xb, y, lam) - truth) < 1e-9
+
+
+@pytest.mark.parametrize("seed", range(8))
+def test_exhaustive_cost_matrix_nonzero_diagonal(seed):
+    """Random nonnegative cost matrices, a nonzero diagonal included: the certified
+    objective is the exhaustive optimum under those costs and the tree achieves it."""
+    rng = np.random.default_rng(100 + seed)
+    n, m, K = int(rng.integers(8, 21)), int(rng.integers(3, 6)), 3
+    Xb = rng.integers(0, 2, size=(n, m)).astype(np.uint8)
+    y = rng.integers(0, K, size=n)
+    C = rng.uniform(0.0, 1.0, size=(K, K))
+    if seed % 2 == 0:
+        np.fill_diagonal(C, 0.0)
+    for lam in (0.2, 0.7, 1.5):
+        model = FastSmallTreeClassifier(regularization=lam, costs=C).fit(Xb, y)
+        assert model.optimal_
+        truth = brute_force_with_costs(Xb, y, K, C, lam)
+        assert abs(model.upperbound_ - truth) < 1e-9
+        assert abs(objective_with_costs(model, Xb, y, C, lam) - truth) < 1e-9
+
+
+@pytest.mark.parametrize("seed", range(6))
+def test_tiny_store_reallocated_mid_search(seed, monkeypatch):
+    """A node store of capacity 4 is grown dozens of times during one fit, including in
+    the middle of a single-column chain; the certificate and the tree must not depend on
+    where the growth happened. One numeric column with many thresholds plus binary
+    features makes the chain path and the pairwise path both run."""
+    from imodels.tree.optimal_tree import solver
+    monkeypatch.setattr(solver, "STORE_CAPACITY", 4)
+    rng = np.random.default_rng(200 + seed)
+    n = int(rng.integers(12, 25))
+    X = pd.DataFrame({"x": rng.normal(size=n).round(3), "a": rng.integers(0, 2, size=n),
+                      "b": rng.integers(0, 2, size=n)})
+    y = ((X["x"] > 0.2) ^ (X["a"] == 1) ^ (rng.random(n) < 0.15)).astype(int).to_numpy()
+    for lam in (0.01, 0.04, 0.1):
+        model = FastSmallTreeClassifier(regularization=lam).fit(X, y)
+        assert model.optimal_
+        Xb = model.encoder_.transform(X).astype(np.uint8)
+        truth = brute_force_optimum(Xb, y, lam)
+        assert abs(model.upperbound_ - truth) < 1e-9
+        assert abs(objective_of(model, X, y, lam) - truth) < 1e-9
+
+
+def test_rejects_inputs_the_proofs_exclude():
+    X = np.array([[0, 1], [1, 0], [1, 1], [0, 0]])
+    y = np.array([0, 1, 1, 0])
+    with pytest.raises(ValueError):
+        FastSmallTreeClassifier(regularization=-0.01).fit(X, y)
+    with pytest.raises(ValueError):
+        FastSmallTreeClassifier(regularization=0.05, costs=[[0.0, -1.0], [1.0, 0.0]]).fit(X, y)
+    with pytest.raises(ValueError):
+        FastSmallTreeClassifier(regularization=0.05, costs=[[0.0, np.inf], [1.0, 0.0]]).fit(X, y)
