@@ -119,6 +119,30 @@ else:
                         does not finish in a minute. Discretizing the features first, or pricing leaves higher, is what
                         keeps an exact solver exact in practice.</p>
 
+                    <p>The certified tree is stored as an ordinary sklearn <code>DecisionTreeClassifier</code> in
+                        <code>model.estimator_</code>, and <code>predict</code> is sklearn's own, so sklearn's tree
+                        tooling (<code>plot_tree</code>, <code>export_text</code>, <code>feature_importances_</code>) and
+                        the libraries built on it work unchanged. Between those two prices, at 0.03, the search
+                        still certifies within seconds, and the extra room buys one more split: three leaves, and
+                        held-out accuracy rises from 89.5% to 93.7%. Drawn with
+                        <a href="https://github.com/parrt/dtreeviz">dtreeviz</a>:</p>
+
+                    <pre><code class="language-python">import dtreeviz  # pip install dtreeviz
+
+model = FastSmallTreeClassifier(regularization=0.03).fit(X_train, y_train)
+viz = dtreeviz.model(model.estimator_, X_train, y_train,
+                     feature_names=X.columns, target_name="diagnosis",
+                     class_names=["malignant", "benign"])
+viz.view()</code></pre>
+
+                    <figure class="dtreeviz-fig">
+                      <img src="img/fastsmalltree_dtreeviz.svg" width="440"
+                           alt="dtreeviz drawing of the certified three-leaf tree: worst area at most 930 then worst concave points at most 0.1424 leads to 266 benign rows, above 0.1424 to 38 malignant rows, and worst area above 930 to 122 malignant rows.">
+                      <figcaption>The certified optimal tree at <code>regularization</code>=0.03 on the breast cancer
+                        training split, drawn by dtreeviz from <code>model.estimator_</code>. Each split is placed
+                        midway between the training values on either side of it, as sklearn places its own.</figcaption>
+                    </figure>
+
                     <h2 id="results">2. Experimental results</h2>
 
                     <details class="collapsible" id="datasets">
@@ -296,6 +320,10 @@ else:
                         it took, since there is no cap to charge. One run per problem, 140 hours of solver time in all.</p>
 
                     <style>
+                      .dtreeviz-fig { margin: 1.2em auto; text-align: center; }
+                      .dtreeviz-fig img { max-width: 100%; height: auto; }
+                      .dtreeviz-fig figcaption { font-size: 0.85rem; color: var(--muted); max-width: 560px;
+                        margin: 0.4em auto 0; text-align: left; }
                       .fig-wide { margin: 1.2em 0 0.2em; }
                       @media (min-width: 1100px) {
                         /* two panels need more room than the text column: widen to the whole area

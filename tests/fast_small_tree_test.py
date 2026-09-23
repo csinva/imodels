@@ -12,9 +12,11 @@ import warnings
 import numpy as np
 import pandas as pd
 import pytest
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, export_text
 
 from imodels import FastSmallTreeClassifier
+from imodels.tree.optimal_tree.solver import TreeClassifier
+from imodels.util.arguments import decode_labels
 
 
 def brute_force_optimum(Xb, y, lam):
@@ -157,6 +159,52 @@ class TestApi:
         assert not model.optimal_
         assert any("optimality" in str(w.message) for w in caught)
         assert model.lowerbound_ <= model.upperbound_ + 1e-12
+
+
+class TestSklearnTree:
+    """The certified tree is stored as an sklearn tree, which `predict` uses."""
+
+    @staticmethod
+    def certified_predict(model, X):
+        """Predictions from the solver's own traversal of the certified rules."""
+        frame = pd.DataFrame(np.asarray(X, dtype=float), columns=list(model.feature_names_))
+        return decode_labels(model, TreeClassifier(model.tree_).predict_fast(frame).astype(int))
+
+    def test_estimator_is_a_fitted_sklearn_tree(self, binary_data):
+        X, y = binary_data
+        model = FastSmallTreeClassifier(regularization=0.02, time_limit=60).fit(X, y)
+        assert isinstance(model.estimator_, DecisionTreeClassifier)
+        assert model.estimator_.get_n_leaves() == model.n_leaves_
+        assert (model.predict(X) == model.estimator_.predict(X)).all()
+
+    @pytest.mark.parametrize("kwargs", [
+        {},
+        {"balance": True},
+        {"costs": [[0, 1, 4], [2, 0, 1], [1, 3, 0]]},
+    ], ids=["default", "balance", "costs"])
+    def test_sklearn_tree_routes_like_the_certified_tree(self, kwargs):
+        """sklearn predicts argmax of a leaf's value, which must be the certified class.
+
+        Three classes on continuous columns, so every rule is a threshold between
+        training values and the leaves' class choice depends on the objective.
+        """
+        rng = np.random.RandomState(0)
+        X = rng.rand(150, 3)
+        y = (X[:, 0] > 0.5).astype(int) + (X[:, 1] > 0.6).astype(int)
+        model = FastSmallTreeClassifier(regularization=0.02, time_limit=60, **kwargs).fit(X, y)
+        assert (model.predict(X) == self.certified_predict(model, X)).all()
+        X_new = rng.rand(500, 3)
+        assert (model.predict(X_new) == self.certified_predict(model, X_new)).all()
+
+    def test_sklearn_tooling_reads_the_feature_names(self, binary_data):
+        X, y = binary_data
+        frame = pd.DataFrame(X, columns=["alpha", "beta", "gamma", "delta"])
+        model = FastSmallTreeClassifier(regularization=0.02, time_limit=60).fit(frame, y)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")  # no feature-name warnings from sklearn
+            model.predict(frame)
+        text = export_text(model.estimator_, feature_names=list(frame.columns))
+        assert any(name in text for name in frame.columns)
 
 
 # ---------------------------------------------------------------------------

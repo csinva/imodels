@@ -66,12 +66,15 @@ import warnings
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree._tree import Tree
 
 from imodels.tree.optimal_tree.solver import (HAVE_NUMBA, ST_LB, ST_UB, BinaryEncoder,
                                               BitDataset, CompiledOptimizer, TargetEncoder,
                                               TreeClassifier, cluster_rows)
 from imodels.util.arguments import (check_fit_arguments, check_predict_X,
                                     decode_labels)
+from imodels.util.introspection import RuleInspectionMixin
 
 NUMBA_HINT = (
     &#34;FastSmallTreeClassifier needs numba, which is not installed. Install it with &#34;
@@ -81,7 +84,38 @@ NUMBA_HINT = (
 )
 
 
-class FastSmallTreeClassifier(ClassifierMixin, BaseEstimator):
+def _class_weights(costs: np.ndarray):
+    &#34;&#34;&#34;Per-class weights w when the objective is a reweighting of the counts.
+
+    That is the case when a mistake on a row of class j costs w[j] whatever was
+    predicted (zero diagonal, each column constant off it): the default objective
+    and ``balance``. Returns None for any other cost matrix.
+    &#34;&#34;&#34;
+    C = np.asarray(costs, dtype=np.float64)
+    K = C.shape[0]
+    if K &lt; 2 or np.any(np.diag(C) != 0):
+        return None
+    off = ~np.eye(K, dtype=bool)
+    w = np.array([C[off[:, j], j][0] for j in range(K)])
+    if not all(np.all(C[off[:, j], j] == w[j]) for j in range(K)):
+        return None
+    return w
+
+
+def _leaf_value(dist: np.ndarray, costs: np.ndarray, weights) -&gt; np.ndarray:
+    &#34;&#34;&#34;A node&#39;s sklearn ``value``: normalised, with ``argmax`` the solver&#39;s choice.&#34;&#34;&#34;
+    if weights is not None:
+        v = weights * dist
+    else:
+        cost = np.asarray(costs, dtype=np.float64) @ dist
+        v = cost.max() - cost
+    if v.sum() &lt;= 0:              # an empty node, or one where every label costs the same
+        v = np.zeros_like(dist)
+        v[int(np.argmin(np.asarray(costs, dtype=np.float64) @ dist))] = 1.0
+    return v / v.sum()
+
+
+class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
     &#34;&#34;&#34;A decision tree that is certifiably optimal for its objective.
 
     Fits the tree minimising
@@ -147,8 +181,19 @@ class FastSmallTreeClassifier(ClassifierMixin, BaseEstimator):
         Number of binary features the encoder produced from X. A continuous
         column becomes one feature per distinct value, which is what makes
         continuous data expensive to solve exactly.
+    estimator_ : sklearn.tree.DecisionTreeClassifier
+        The fitted tree as an sklearn decision tree, which `predict` delegates
+        to, so sklearn&#39;s tree tooling (``plot_tree``, ``export_text``,
+        ``feature_importances_``, dtreeviz) works on it directly. Each split is
+        placed midway between the training values on either side of the rule, as
+        sklearn places its own, so it routes every training row exactly as the
+        certified tree does. A new value strictly between two consecutive
+        training values of a column is routed by that midpoint, sklearn&#39;s
+        convention; the objective is defined on the training rows, so this
+        changes nothing the certificate covers.
     tree_ : dict
-        The fitted tree, as nested dicts of splits and leaves.
+        The same tree as nested dicts of named rules, which printing the model
+        shows.
     time_ : float
         Seconds spent in the search.
     classes_ : ndarray
@@ -200,6 +245,16 @@ class FastSmallTreeClassifier(ClassifierMixin, BaseEstimator):
         if not HAVE_NUMBA:
             raise ImportError(NUMBA_HINT)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        # the certificate rests on bounds of the form &#34;a tree with a leaves costs at least
+        # a * regularization&#34; and &#34;a tree&#39;s loss cannot fall below zero&#34;, which need a
+        # nonnegative penalty and nonnegative, finite costs
+        lam = float(self.regularization)
+        if not np.isfinite(lam) or lam &lt; 0.0:
+            raise ValueError(f&#34;regularization must be a finite number &gt;= 0, got {self.regularization!r}&#34;)
+        if self.costs is not None:
+            C = np.asarray(self.costs, dtype=np.float64)
+            if not np.all(np.isfinite(C)) or np.any(C &lt; 0.0):
+                raise ValueError(&#34;costs must be finite and nonnegative&#34;)
         frame = pd.DataFrame(X, columns=list(feature_names))
 
         self.encoder_ = BinaryEncoder().fit(frame)
@@ -234,11 +289,12 @@ class FastSmallTreeClassifier(ClassifierMixin, BaseEstimator):
 
         self.tree_ = self._decode(opt.extract(root), data)
         opt.release()             # the node store is large and is not needed past extraction
-        self.tree = TreeClassifier(self.tree_)
-        self.objective_ = self.tree.risk()
-        self.n_leaves_ = self.tree.leaves()
+        certified = TreeClassifier(self.tree_)
+        self.objective_ = certified.risk()
+        self.n_leaves_ = certified.leaves()
         self.complexity_ = max(self.n_leaves_ - 1, 0)
-        self._leaf_proba_, self._leaf_tree_ = self._leaf_lookup(self.tree_)
+        self.estimator_, self._node_proba_ = self._to_sklearn(self.tree_, frame, data.costs)
+        self._check_sklearn_tree(certified, frame)
         if self.verbose:
             print(f&#34;objective {self.objective_:.6g} in {self.time_:.3g}s &#34;
                   f&#34;({self.iterations_} subproblems, optimal={self.optimal_})&#34;)
@@ -271,38 +327,117 @@ class FastSmallTreeClassifier(ClassifierMixin, BaseEstimator):
             &#34;false&#34;: self._decode(node[&#34;false&#34;], data),
         }
 
-    def _leaf_lookup(self, tree: dict):
-        &#34;&#34;&#34;Class frequencies per leaf, and a copy of the tree predicting leaf ids.
+    def _to_sklearn(self, tree: dict, frame: pd.DataFrame, costs: np.ndarray):
+        &#34;&#34;&#34;The certified tree as a fitted `DecisionTreeClassifier`.
 
-        Running the solver&#39;s own traversal over the copy is what routes rows to
-        leaves for `predict_proba`, so the two agree with `predict` by
-        construction.
+        sklearn sends a row left when ``x[feature] &lt;= threshold``, so a rule&#39;s
+        false side becomes the left child and its true side the right one. Every
+        rule is a threshold on a numeric column (``check_fit_arguments`` admits
+        nothing else), so every rule maps onto one sklearn split.
+
+        sklearn predicts ``argmax`` of a leaf&#39;s ``value``, so ``value`` must pick
+        the class the solver certified. The solver picks ``argmin(costs @ dist)``
+        with the first class winning ties, which for the default objective and
+        for ``balance`` is ``argmax`` of the class-weighted counts, what sklearn
+        itself stores under ``class_weight``. A general ``costs`` matrix has no
+        such weighting, so there ``value`` holds each class&#39;s saving over the
+        costliest one, which ``argmax`` ranks the same way.
+
+        Returns the estimator and each node&#39;s empirical class frequencies, which
+        `predict_proba` reports.
         &#34;&#34;&#34;
-        probs = []
+        K = len(self.classes_)
+        weights = _class_weights(costs)
+        values_of = {}                      # column -&gt; its sorted training values
 
-        def rec(node):
+        def threshold(node):
+            j = node[&#34;feature&#34;]
+            if node[&#34;type&#34;] == &#34;categorical&#34;:
+                raise ValueError(&#34;categorical rules cannot be expressed as sklearn splits&#34;)
+            if j not in values_of:
+                values_of[j] = np.unique(frame.iloc[:, j].to_numpy(dtype=np.float64))
+            vals, ref = values_of[j], node[&#34;reference&#34;]
+            # on the training values, &#34;&gt;= ref&#34; and &#34;== ref&#34; (a two-valued column,
+            # ref its larger value) both hold exactly for the values &gt;= ref
+            return 0.5 * (vals[vals &lt; ref].max() + vals[vals &gt;= ref].min())
+
+        rows = []
+
+        def add(node, depth):
+            i = len(rows)
+            rows.append(None)
             if &#34;prediction&#34; in node:
-                probs.append(node[&#34;dist&#34;])
-                return {**node, &#34;prediction&#34;: len(probs) - 1}
-            return {**node, &#34;true&#34;: rec(node[&#34;true&#34;]), &#34;false&#34;: rec(node[&#34;false&#34;])}
+                dist = np.asarray(node[&#34;dist&#34;], dtype=np.float64)
+                rows[i] = (-1, -1, -2, -2.0, dist, int(node[&#34;prediction&#34;]))
+                return dist, depth
+            left = len(rows)
+            left_dist, left_depth = add(node[&#34;false&#34;], depth + 1)
+            right = len(rows)
+            right_dist, right_depth = add(node[&#34;true&#34;], depth + 1)
+            dist = left_dist + right_dist
+            rows[i] = (left, right, int(node[&#34;feature&#34;]), threshold(node), dist, None)
+            return dist, max(left_depth, right_depth)
 
-        indexed = rec(tree)
-        counts = np.asarray(probs, dtype=float)
-        totals = counts.sum(axis=1, keepdims=True)
-        uniform = np.full_like(counts, 1.0 / max(counts.shape[1], 1))
-        return np.divide(counts, totals, out=uniform, where=totals &gt; 0), indexed
+        _, max_depth = add(tree, 0)
 
-    def _frame(self, X):
-        &#34;&#34;&#34;X as a DataFrame named the way the tree&#39;s rules are.&#34;&#34;&#34;
-        X = check_predict_X(self, X)
-        return pd.DataFrame(np.asarray(X, dtype=float),
-                            columns=list(self.feature_names_))
+        est = Tree(self.n_features_in_, np.array([K], dtype=np.intp), 1)
+        nodes = np.zeros(len(rows), dtype=est.__getstate__()[&#34;nodes&#34;].dtype)
+        values = np.zeros((len(rows), 1, K))
+        node_proba = np.zeros((len(rows), K))
+        for i, (left, right, feature, thr, dist, prediction) in enumerate(rows):
+            n = dist.sum()
+            freq = dist / n if n &gt; 0 else np.full(K, 1.0 / K)
+            nodes[i][&#34;left_child&#34;], nodes[i][&#34;right_child&#34;] = left, right
+            nodes[i][&#34;feature&#34;], nodes[i][&#34;threshold&#34;] = feature, thr
+            nodes[i][&#34;impurity&#34;] = 1.0 - float(np.sum(freq ** 2))
+            nodes[i][&#34;n_node_samples&#34;] = nodes[i][&#34;weighted_n_node_samples&#34;] = n
+            if &#34;missing_go_to_left&#34; in nodes.dtype.names:
+                nodes[i][&#34;missing_go_to_left&#34;] = 1   # a missing value fails a rule: its false side
+            values[i, 0] = _leaf_value(dist, costs, weights)
+            node_proba[i] = freq
+            if prediction is not None and int(np.argmax(values[i, 0])) != prediction:
+                raise AssertionError(&#34;sklearn leaf value does not pick the certified class&#34;)
+        est.__setstate__({&#34;max_depth&#34;: max_depth, &#34;node_count&#34;: len(rows),
+                          &#34;nodes&#34;: nodes, &#34;values&#34;: values})
+
+        clf = DecisionTreeClassifier()
+        clf.tree_ = est
+        clf.classes_ = self.classes_
+        clf.n_classes_ = K
+        clf.n_outputs_ = 1
+        clf.n_features_in_ = self.n_features_in_
+        clf.max_features_ = self.n_features_in_
+        if hasattr(self, &#34;feature_names_in_&#34;):
+            clf.feature_names_in_ = self.feature_names_in_
+        return clf, node_proba
+
+    def _check_sklearn_tree(self, certified, frame: pd.DataFrame):
+        &#34;&#34;&#34;Warn if the sklearn tree routes any training row differently.
+
+        sklearn compares X as float32, so two training values of one column closer
+        than float32 resolves can land on the same side of a split the certified
+        tree drew between them. On ordinary data this never happens.
+        &#34;&#34;&#34;
+        ours = decode_labels(self, certified.predict_fast(frame).astype(int))
+        theirs = self.estimator_.predict(self._sklearn_X(frame.to_numpy()))
+        n_diff = int(np.sum(np.asarray(ours) != np.asarray(theirs)))
+        if n_diff:
+            warnings.warn(
+                f&#34;the sklearn tree predicts {n_diff} training rows differently from the &#34;
+                &#34;certified tree: some column has training values closer together than &#34;
+                &#34;float32 can separate&#34;, RuntimeWarning)
+
+    def _sklearn_X(self, X):
+        &#34;&#34;&#34;X as `estimator_` expects it: named when the model was fitted on names.&#34;&#34;&#34;
+        X = np.asarray(X, dtype=float)
+        if hasattr(self, &#34;feature_names_in_&#34;):
+            return pd.DataFrame(X, columns=self.feature_names_in_)
+        return X
 
     def predict(self, X):
-        &#34;&#34;&#34;Predict the class of each row of X.&#34;&#34;&#34;
-        frame = self._frame(X)  # checks fitted-ness before any attribute of ours
-        preds = self.tree.predict_fast(frame)
-        return decode_labels(self, preds.astype(int))
+        &#34;&#34;&#34;Predict the class of each row of X, with sklearn&#39;s tree.&#34;&#34;&#34;
+        X = check_predict_X(self, X)  # checks fitted-ness before any attribute of ours
+        return self.estimator_.predict(self._sklearn_X(X))
 
     def predict_proba(self, X):
         &#34;&#34;&#34;Class probabilities, read off the training rows in each leaf.
@@ -311,9 +446,8 @@ class FastSmallTreeClassifier(ClassifierMixin, BaseEstimator):
         class frequencies of the training rows that reached the leaf rather than
         a calibrated probability.
         &#34;&#34;&#34;
-        frame = self._frame(X)  # checks fitted-ness before any attribute of ours
-        leaf_ids = TreeClassifier(self._leaf_tree_).predict_fast(frame)
-        return self._leaf_proba_[leaf_ids.astype(int)]
+        X = check_predict_X(self, X)  # checks fitted-ness before any attribute of ours
+        return self._node_proba_[self.estimator_.apply(self._sklearn_X(X))]
 
     def _display_tree(self, node: dict) -&gt; dict:
         &#34;&#34;&#34;A copy of the tree whose leaves carry the caller&#39;s class labels.
@@ -414,8 +548,19 @@ so the tree is the best one found rather than a proven optimum.</dd>
 <dd>Number of binary features the encoder produced from X. A continuous
 column becomes one feature per distinct value, which is what makes
 continuous data expensive to solve exactly.</dd>
+<dt><strong><code>estimator_</code></strong> :&ensp;<code>sklearn.tree.DecisionTreeClassifier</code></dt>
+<dd>The fitted tree as an sklearn decision tree, which <code>predict</code> delegates
+to, so sklearn's tree tooling (<code>plot_tree</code>, <code>export_text</code>,
+<code>feature_importances_</code>, dtreeviz) works on it directly. Each split is
+placed midway between the training values on either side of the rule, as
+sklearn places its own, so it routes every training row exactly as the
+certified tree does. A new value strictly between two consecutive
+training values of a column is routed by that midpoint, sklearn's
+convention; the objective is defined on the training rows, so this
+changes nothing the certificate covers.</dd>
 <dt><strong><code>tree_</code></strong> :&ensp;<code>dict</code></dt>
-<dd>The fitted tree, as nested dicts of splits and leaves.</dd>
+<dd>The same tree as nested dicts of named rules, which printing the model
+shows.</dd>
 <dt><strong><code>time_</code></strong> :&ensp;<code>float</code></dt>
 <dd>Seconds spent in the search.</dd>
 <dt><strong><code>classes_</code></strong> :&ensp;<code>ndarray</code></dt>
@@ -439,7 +584,7 @@ True
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FastSmallTreeClassifier(ClassifierMixin, BaseEstimator):
+<pre><code class="python">class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
     &#34;&#34;&#34;A decision tree that is certifiably optimal for its objective.
 
     Fits the tree minimising
@@ -505,8 +650,19 @@ True
         Number of binary features the encoder produced from X. A continuous
         column becomes one feature per distinct value, which is what makes
         continuous data expensive to solve exactly.
+    estimator_ : sklearn.tree.DecisionTreeClassifier
+        The fitted tree as an sklearn decision tree, which `predict` delegates
+        to, so sklearn&#39;s tree tooling (``plot_tree``, ``export_text``,
+        ``feature_importances_``, dtreeviz) works on it directly. Each split is
+        placed midway between the training values on either side of the rule, as
+        sklearn places its own, so it routes every training row exactly as the
+        certified tree does. A new value strictly between two consecutive
+        training values of a column is routed by that midpoint, sklearn&#39;s
+        convention; the objective is defined on the training rows, so this
+        changes nothing the certificate covers.
     tree_ : dict
-        The fitted tree, as nested dicts of splits and leaves.
+        The same tree as nested dicts of named rules, which printing the model
+        shows.
     time_ : float
         Seconds spent in the search.
     classes_ : ndarray
@@ -558,6 +714,16 @@ True
         if not HAVE_NUMBA:
             raise ImportError(NUMBA_HINT)
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+        # the certificate rests on bounds of the form &#34;a tree with a leaves costs at least
+        # a * regularization&#34; and &#34;a tree&#39;s loss cannot fall below zero&#34;, which need a
+        # nonnegative penalty and nonnegative, finite costs
+        lam = float(self.regularization)
+        if not np.isfinite(lam) or lam &lt; 0.0:
+            raise ValueError(f&#34;regularization must be a finite number &gt;= 0, got {self.regularization!r}&#34;)
+        if self.costs is not None:
+            C = np.asarray(self.costs, dtype=np.float64)
+            if not np.all(np.isfinite(C)) or np.any(C &lt; 0.0):
+                raise ValueError(&#34;costs must be finite and nonnegative&#34;)
         frame = pd.DataFrame(X, columns=list(feature_names))
 
         self.encoder_ = BinaryEncoder().fit(frame)
@@ -592,11 +758,12 @@ True
 
         self.tree_ = self._decode(opt.extract(root), data)
         opt.release()             # the node store is large and is not needed past extraction
-        self.tree = TreeClassifier(self.tree_)
-        self.objective_ = self.tree.risk()
-        self.n_leaves_ = self.tree.leaves()
+        certified = TreeClassifier(self.tree_)
+        self.objective_ = certified.risk()
+        self.n_leaves_ = certified.leaves()
         self.complexity_ = max(self.n_leaves_ - 1, 0)
-        self._leaf_proba_, self._leaf_tree_ = self._leaf_lookup(self.tree_)
+        self.estimator_, self._node_proba_ = self._to_sklearn(self.tree_, frame, data.costs)
+        self._check_sklearn_tree(certified, frame)
         if self.verbose:
             print(f&#34;objective {self.objective_:.6g} in {self.time_:.3g}s &#34;
                   f&#34;({self.iterations_} subproblems, optimal={self.optimal_})&#34;)
@@ -629,38 +796,117 @@ True
             &#34;false&#34;: self._decode(node[&#34;false&#34;], data),
         }
 
-    def _leaf_lookup(self, tree: dict):
-        &#34;&#34;&#34;Class frequencies per leaf, and a copy of the tree predicting leaf ids.
+    def _to_sklearn(self, tree: dict, frame: pd.DataFrame, costs: np.ndarray):
+        &#34;&#34;&#34;The certified tree as a fitted `DecisionTreeClassifier`.
 
-        Running the solver&#39;s own traversal over the copy is what routes rows to
-        leaves for `predict_proba`, so the two agree with `predict` by
-        construction.
+        sklearn sends a row left when ``x[feature] &lt;= threshold``, so a rule&#39;s
+        false side becomes the left child and its true side the right one. Every
+        rule is a threshold on a numeric column (``check_fit_arguments`` admits
+        nothing else), so every rule maps onto one sklearn split.
+
+        sklearn predicts ``argmax`` of a leaf&#39;s ``value``, so ``value`` must pick
+        the class the solver certified. The solver picks ``argmin(costs @ dist)``
+        with the first class winning ties, which for the default objective and
+        for ``balance`` is ``argmax`` of the class-weighted counts, what sklearn
+        itself stores under ``class_weight``. A general ``costs`` matrix has no
+        such weighting, so there ``value`` holds each class&#39;s saving over the
+        costliest one, which ``argmax`` ranks the same way.
+
+        Returns the estimator and each node&#39;s empirical class frequencies, which
+        `predict_proba` reports.
         &#34;&#34;&#34;
-        probs = []
+        K = len(self.classes_)
+        weights = _class_weights(costs)
+        values_of = {}                      # column -&gt; its sorted training values
 
-        def rec(node):
+        def threshold(node):
+            j = node[&#34;feature&#34;]
+            if node[&#34;type&#34;] == &#34;categorical&#34;:
+                raise ValueError(&#34;categorical rules cannot be expressed as sklearn splits&#34;)
+            if j not in values_of:
+                values_of[j] = np.unique(frame.iloc[:, j].to_numpy(dtype=np.float64))
+            vals, ref = values_of[j], node[&#34;reference&#34;]
+            # on the training values, &#34;&gt;= ref&#34; and &#34;== ref&#34; (a two-valued column,
+            # ref its larger value) both hold exactly for the values &gt;= ref
+            return 0.5 * (vals[vals &lt; ref].max() + vals[vals &gt;= ref].min())
+
+        rows = []
+
+        def add(node, depth):
+            i = len(rows)
+            rows.append(None)
             if &#34;prediction&#34; in node:
-                probs.append(node[&#34;dist&#34;])
-                return {**node, &#34;prediction&#34;: len(probs) - 1}
-            return {**node, &#34;true&#34;: rec(node[&#34;true&#34;]), &#34;false&#34;: rec(node[&#34;false&#34;])}
+                dist = np.asarray(node[&#34;dist&#34;], dtype=np.float64)
+                rows[i] = (-1, -1, -2, -2.0, dist, int(node[&#34;prediction&#34;]))
+                return dist, depth
+            left = len(rows)
+            left_dist, left_depth = add(node[&#34;false&#34;], depth + 1)
+            right = len(rows)
+            right_dist, right_depth = add(node[&#34;true&#34;], depth + 1)
+            dist = left_dist + right_dist
+            rows[i] = (left, right, int(node[&#34;feature&#34;]), threshold(node), dist, None)
+            return dist, max(left_depth, right_depth)
 
-        indexed = rec(tree)
-        counts = np.asarray(probs, dtype=float)
-        totals = counts.sum(axis=1, keepdims=True)
-        uniform = np.full_like(counts, 1.0 / max(counts.shape[1], 1))
-        return np.divide(counts, totals, out=uniform, where=totals &gt; 0), indexed
+        _, max_depth = add(tree, 0)
 
-    def _frame(self, X):
-        &#34;&#34;&#34;X as a DataFrame named the way the tree&#39;s rules are.&#34;&#34;&#34;
-        X = check_predict_X(self, X)
-        return pd.DataFrame(np.asarray(X, dtype=float),
-                            columns=list(self.feature_names_))
+        est = Tree(self.n_features_in_, np.array([K], dtype=np.intp), 1)
+        nodes = np.zeros(len(rows), dtype=est.__getstate__()[&#34;nodes&#34;].dtype)
+        values = np.zeros((len(rows), 1, K))
+        node_proba = np.zeros((len(rows), K))
+        for i, (left, right, feature, thr, dist, prediction) in enumerate(rows):
+            n = dist.sum()
+            freq = dist / n if n &gt; 0 else np.full(K, 1.0 / K)
+            nodes[i][&#34;left_child&#34;], nodes[i][&#34;right_child&#34;] = left, right
+            nodes[i][&#34;feature&#34;], nodes[i][&#34;threshold&#34;] = feature, thr
+            nodes[i][&#34;impurity&#34;] = 1.0 - float(np.sum(freq ** 2))
+            nodes[i][&#34;n_node_samples&#34;] = nodes[i][&#34;weighted_n_node_samples&#34;] = n
+            if &#34;missing_go_to_left&#34; in nodes.dtype.names:
+                nodes[i][&#34;missing_go_to_left&#34;] = 1   # a missing value fails a rule: its false side
+            values[i, 0] = _leaf_value(dist, costs, weights)
+            node_proba[i] = freq
+            if prediction is not None and int(np.argmax(values[i, 0])) != prediction:
+                raise AssertionError(&#34;sklearn leaf value does not pick the certified class&#34;)
+        est.__setstate__({&#34;max_depth&#34;: max_depth, &#34;node_count&#34;: len(rows),
+                          &#34;nodes&#34;: nodes, &#34;values&#34;: values})
+
+        clf = DecisionTreeClassifier()
+        clf.tree_ = est
+        clf.classes_ = self.classes_
+        clf.n_classes_ = K
+        clf.n_outputs_ = 1
+        clf.n_features_in_ = self.n_features_in_
+        clf.max_features_ = self.n_features_in_
+        if hasattr(self, &#34;feature_names_in_&#34;):
+            clf.feature_names_in_ = self.feature_names_in_
+        return clf, node_proba
+
+    def _check_sklearn_tree(self, certified, frame: pd.DataFrame):
+        &#34;&#34;&#34;Warn if the sklearn tree routes any training row differently.
+
+        sklearn compares X as float32, so two training values of one column closer
+        than float32 resolves can land on the same side of a split the certified
+        tree drew between them. On ordinary data this never happens.
+        &#34;&#34;&#34;
+        ours = decode_labels(self, certified.predict_fast(frame).astype(int))
+        theirs = self.estimator_.predict(self._sklearn_X(frame.to_numpy()))
+        n_diff = int(np.sum(np.asarray(ours) != np.asarray(theirs)))
+        if n_diff:
+            warnings.warn(
+                f&#34;the sklearn tree predicts {n_diff} training rows differently from the &#34;
+                &#34;certified tree: some column has training values closer together than &#34;
+                &#34;float32 can separate&#34;, RuntimeWarning)
+
+    def _sklearn_X(self, X):
+        &#34;&#34;&#34;X as `estimator_` expects it: named when the model was fitted on names.&#34;&#34;&#34;
+        X = np.asarray(X, dtype=float)
+        if hasattr(self, &#34;feature_names_in_&#34;):
+            return pd.DataFrame(X, columns=self.feature_names_in_)
+        return X
 
     def predict(self, X):
-        &#34;&#34;&#34;Predict the class of each row of X.&#34;&#34;&#34;
-        frame = self._frame(X)  # checks fitted-ness before any attribute of ours
-        preds = self.tree.predict_fast(frame)
-        return decode_labels(self, preds.astype(int))
+        &#34;&#34;&#34;Predict the class of each row of X, with sklearn&#39;s tree.&#34;&#34;&#34;
+        X = check_predict_X(self, X)  # checks fitted-ness before any attribute of ours
+        return self.estimator_.predict(self._sklearn_X(X))
 
     def predict_proba(self, X):
         &#34;&#34;&#34;Class probabilities, read off the training rows in each leaf.
@@ -669,9 +915,8 @@ True
         class frequencies of the training rows that reached the leaf rather than
         a calibrated probability.
         &#34;&#34;&#34;
-        frame = self._frame(X)  # checks fitted-ness before any attribute of ours
-        leaf_ids = TreeClassifier(self._leaf_tree_).predict_fast(frame)
-        return self._leaf_proba_[leaf_ids.astype(int)]
+        X = check_predict_X(self, X)  # checks fitted-ness before any attribute of ours
+        return self._node_proba_[self.estimator_.apply(self._sklearn_X(X))]
 
     def _display_tree(self, node: dict) -&gt; dict:
         &#34;&#34;&#34;A copy of the tree whose leaves carry the caller&#39;s class labels.
@@ -699,6 +944,9 @@ True
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="imodels.util.introspection.RuleInspectionMixin" href="../../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></li>
+<li><a title="imodels.util.introspection.RulesMixin" href="../../util/introspection.html#imodels.util.introspection.RulesMixin">RulesMixin</a></li>
+<li><a title="imodels.util.introspection.LeavesMixin" href="../../util/introspection.html#imodels.util.introspection.LeavesMixin">LeavesMixin</a></li>
 <li>sklearn.base.ClassifierMixin</li>
 <li>sklearn.base.BaseEstimator</li>
 <li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
@@ -748,6 +996,16 @@ is a DataFrame.</dd>
     if not HAVE_NUMBA:
         raise ImportError(NUMBA_HINT)
     X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
+    # the certificate rests on bounds of the form &#34;a tree with a leaves costs at least
+    # a * regularization&#34; and &#34;a tree&#39;s loss cannot fall below zero&#34;, which need a
+    # nonnegative penalty and nonnegative, finite costs
+    lam = float(self.regularization)
+    if not np.isfinite(lam) or lam &lt; 0.0:
+        raise ValueError(f&#34;regularization must be a finite number &gt;= 0, got {self.regularization!r}&#34;)
+    if self.costs is not None:
+        C = np.asarray(self.costs, dtype=np.float64)
+        if not np.all(np.isfinite(C)) or np.any(C &lt; 0.0):
+            raise ValueError(&#34;costs must be finite and nonnegative&#34;)
     frame = pd.DataFrame(X, columns=list(feature_names))
 
     self.encoder_ = BinaryEncoder().fit(frame)
@@ -782,11 +1040,12 @@ is a DataFrame.</dd>
 
     self.tree_ = self._decode(opt.extract(root), data)
     opt.release()             # the node store is large and is not needed past extraction
-    self.tree = TreeClassifier(self.tree_)
-    self.objective_ = self.tree.risk()
-    self.n_leaves_ = self.tree.leaves()
+    certified = TreeClassifier(self.tree_)
+    self.objective_ = certified.risk()
+    self.n_leaves_ = certified.leaves()
     self.complexity_ = max(self.n_leaves_ - 1, 0)
-    self._leaf_proba_, self._leaf_tree_ = self._leaf_lookup(self.tree_)
+    self.estimator_, self._node_proba_ = self._to_sklearn(self.tree_, frame, data.costs)
+    self._check_sklearn_tree(certified, frame)
     if self.verbose:
         print(f&#34;objective {self.objective_:.6g} in {self.time_:.3g}s &#34;
               f&#34;({self.iterations_} subproblems, optimal={self.optimal_})&#34;)
@@ -797,16 +1056,15 @@ is a DataFrame.</dd>
 <span>def <span class="ident">predict</span></span>(<span>self, X)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Predict the class of each row of X.</p></div>
+<div class="desc"><p>Predict the class of each row of X, with sklearn's tree.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict(self, X):
-    &#34;&#34;&#34;Predict the class of each row of X.&#34;&#34;&#34;
-    frame = self._frame(X)  # checks fitted-ness before any attribute of ours
-    preds = self.tree.predict_fast(frame)
-    return decode_labels(self, preds.astype(int))</code></pre>
+    &#34;&#34;&#34;Predict the class of each row of X, with sklearn&#39;s tree.&#34;&#34;&#34;
+    X = check_predict_X(self, X)  # checks fitted-ness before any attribute of ours
+    return self.estimator_.predict(self._sklearn_X(X))</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier.predict_proba"><code class="name flex">
@@ -828,9 +1086,8 @@ a calibrated probability.</p></div>
     class frequencies of the training rows that reached the leaf rather than
     a calibrated probability.
     &#34;&#34;&#34;
-    frame = self._frame(X)  # checks fitted-ness before any attribute of ours
-    leaf_ids = TreeClassifier(self._leaf_tree_).predict_fast(frame)
-    return self._leaf_proba_[leaf_ids.astype(int)]</code></pre>
+    X = check_predict_X(self, X)  # checks fitted-ness before any attribute of ours
+    return self._node_proba_[self.estimator_.apply(self._sklearn_X(X))]</code></pre>
 </details>
 </dd>
 <dt id="imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier.set_fit_request"><code class="name flex">
@@ -1030,6 +1287,15 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="imodels.util.introspection.RuleInspectionMixin" href="../../util/introspection.html#imodels.util.introspection.RuleInspectionMixin">RuleInspectionMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.apply" href="../../util/introspection.html#imodels.util.introspection.LeavesMixin.apply">apply</a></code></li>
+<li><code><a title="imodels.util.introspection.RuleInspectionMixin.get_rules" href="../../util/introspection.html#imodels.util.introspection.RulesMixin.get_rules">get_rules</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
