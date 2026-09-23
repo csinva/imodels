@@ -46,7 +46,8 @@ FULL_CAP = 1800.0      # the full-size hidden run: 30 minutes a problem
 FULL_PAIRS = 14        # one penalty (0.05) on each of the 14 full-size datasets
 FULL_OFFSETS = {"autoopttree_v46_anytime100": [64, 24], "autoopttree_v49": [-54, 42],
                 "autoopttree_v40": [34, -36], "streed": [-52, -30], "gosdt": [-62, -30],
-                "split": [-26, 44]}
+                "split": [-26, 44], "gosdt_guesses": [-88, -8],
+                "gosdt_guesses_guided": [36, -34], "gg_guided_e60d2": [74, 30]}
 NOLIMIT_WALL = 4 * 3600   # the hidden run without the 30 s cap: 4 h a problem, 6 GB
 FLOOR = 1e-3
 
