@@ -51,6 +51,19 @@ FULL_OFFSETS = {"fastsmalltree_v46_anytime100": [64, 24], "fastsmalltree_v49": [
 NOLIMIT_WALL = 4 * 3600   # the hidden run without the 30 s cap: 4 h a problem, 6 GB
 FLOOR = 1e-3
 
+
+def audit_gap(model):
+    """Versions the Methods audit found not to preserve complete optimality, drawn as
+    approximate: v20 to v39 (the depth-3 floor for seven or more leaves) and v49 (the
+    restricted pair stage's failing branch). The external sweeps name v23 by the package name alone."""
+    if model in ("autoopttree", "fastsmalltree"):
+        return True
+    m = re.match(r"(?:autoopttree_|fastsmalltree_)?v(\d+)", model)
+    if not m:
+        return False
+    n = int(m.group(1))
+    return 20 <= n <= 39 or n == 49
+
 # solvers whose first run comes from the 600 s benchmark, and the label the figure gives each
 BASELINES = {
     "gosdt": "GOSDT",
@@ -195,6 +208,8 @@ def external_points(root, data="data", pairs="external_pairs.csv", npairs=70, ca
         c = [v["c"] for v in per.values()]
         if model in EXTERNAL_EVOLVED:
             label, multicore, group = EXTERNAL_EVOLVED[model]
+            if audit_gap(model):
+                group = "approximate"
         else:
             label, multicore = BASELINES.get(model, model), model in MULTICORE_BASELINES
             group = "exact" if model in V1 else "baseline"
@@ -276,7 +291,7 @@ def main():
             if "anytime" in model:
                 continue
             approximate = row is not None and str(row["exact"]) == "approximate"
-            group = "approximate" if approximate else "exact"
+            group = "approximate" if (approximate or audit_gap(model)) else "exact"
             multicore = bool(row is not None and str(row["multicore"]).lower() == "true")
             label = model
         proof_gap = False
