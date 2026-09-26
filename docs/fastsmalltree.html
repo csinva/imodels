@@ -242,7 +242,6 @@ viz.view()</code></pre>
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#a09f9a"/></svg>Baselines, exact</li>
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#6f6e69"/></svg>Baselines, approximate</li>
                         <li><svg viewBox="0 0 16 16"><path d="M8 1.2 L9.9 6 L15 6.3 L11 9.5 L12.3 14.6 L8 11.8 L3.7 14.6 L5 9.5 L1 6.3 L6.1 6 Z" fill="#2a78d6"/></svg>FastSmallTree</li>
-                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#6a737d" stroke="#fff" stroke-width="1.5"/></svg>Mean of 3 runs</li>
                       </ul>
                       <div class="fig-pair">
                         <div class="fig-panel">
@@ -307,12 +306,28 @@ viz.view()</code></pre>
                         8-thread versions), many at once; times are comparable within the panel only. The 4 hours are
                         each solver's time limit, so a run that reaches them returns its best tree. The harness enforces
                         6 GB on every process: a solver that stops itself at the budget keeps its incumbent, one the
-                        harness stops returns no tree. A memory stop is charged the seconds it took. One run per
-                        problem, 140 hours of solver time.</p>
-                      <p><b>Guided gosdt-guesses, all panels.</b> It reports only its search time, which excludes the
-                        threshold guessing where its work is done, so its points sit at the 1 ms floor. By wall clock,
-                        preprocessing included, it takes 3.1 s a problem in C against 9.6 s for v49: about three times
-                        faster, not a hundredfold, for a worse tree, no certificate, and no tree on 3 of the 14.</p>
+                        harness stops returns no tree. One run per problem, 140 hours of solver time. Two of D's points
+                        reflect this harness rather than the search. The shipped model's memory guard counts its own
+                        tables, not the process, so on the six widest problems the process passed 6 GB first, the
+                        harness stopped it, and it returned no tree on five of them; charged a single leaf there, its
+                        criterion (0.348) sits above pygosdt's (0.339) although its search is faster. That is a bug in
+                        the guard, not the search, and it is what a 6 GB machine would do; v23, whose guard reads the
+                        process, stops itself at 5.99 GB and keeps its tree. STreeD likewise loses three problems it
+                        finished on the laptop, where nothing policed its memory (monk_2, car_evaluation and coupon_bar
+                        at the smallest penalty, at 6.5 to 7 GB), which is part of why its criterion in D is worse than
+                        in B.</p>
+                      <p><b>gosdt-guesses.</b> In guided mode it reports only its search time, which excludes the
+                        threshold guessing where its work is done, so its points sit at the 1 ms floor in every panel.
+                        By wall clock, preprocessing included, it takes 3.1 s a problem in C against 9.6 s for v49:
+                        about three times faster, not a hundredfold, for a worse tree, no certificate, and no tree on 3
+                        of the 14. Both of its modes were also swept, since a baseline judged at one setting can be
+                        judged unfairly. In exact mode its similar-support bound changes nothing measurable (0.489
+                        &plusmn; 0.007 s against 0.486 &plusmn; 0.018 s). In guided mode the paper's threshold guesser, 40
+                        stumps of depth 1, is the weak part on the visible set: 60 trees of depth 2 improve the
+                        criterion from 0.328 to 0.271 at 0.0068 s a problem, while a depth budget of 5 changes nothing.
+                        That gain does not transfer: on TabArena-14 the tuned guesser is slightly <i>worse</i> than the
+                        published one (0.3505 against 0.3480) and misses 3 trees the default returns. So the post keeps
+                        the published configuration as the baseline and shows the tuned points beside it.</p>
                     </details>
 
                     <style>
@@ -499,34 +514,8 @@ viz.view()</code></pre>
                         (Fig <a href="#fig1">1</a>D), the solvers keep their places. The
                         8-thread versions reach 0.3368 and 0.3369 in 0.04 s a problem, and pygosdt 0.3386 in 0.88 s. STreeD
                         (0.3641) and GOSDT (0.3765) score worse than with 30 seconds, because more of their runs now end
-                        at the 6 GB cap without a tree. The shipped model's 0.3478 is a harness effect, described
-                        below.</p>
-
-                    <details class="collapsible" id="harness-4h">
-                      <summary>Two harness effects in the 4-hour panel</summary>
-                      <p>The shipped model's memory guard counts its own tables, not the process. On the six widest
-                        problems the process passed 6 GB before the guard fired, so the harness killed it and it
-                        returned no tree on five of them; v23, whose guard reads the process, stops itself at 5.99 GB
-                        and keeps its tree. Charged a single leaf on those five, the shipped model's criterion (0.348)
-                        sits above pygosdt's (0.339) in D, though its search is the faster one. That is a bug in the
-                        guard, not the search, and it is what a 6 GB machine would do. Separately, STreeD loses three
-                        problems it finished on the laptop, where nothing policed its memory (monk_2, car_evaluation and
-                        coupon_bar at the smallest penalty, at 6.5 to 7 GB), which is part of why its criterion in D is
-                        worse than in B.</p>
-                    </details>
-
-                    <details class="collapsible" id="guesses-settings">
-                      <summary>gosdt-guesses at other settings</summary>
-                      <p>A baseline judged at one setting can be judged unfairly, so both modes of gosdt-guesses were
-                        swept. In exact mode its similar-support bound changes nothing measurable (46 certified, 0.489
-                        &plusmn; 0.007 s against 0.486 &plusmn; 0.018 s). In guided mode the paper's threshold guesser, 40
-                        stumps of depth 1, is the weak part on this suite: 60 trees of depth 2 improve the criterion
-                        from 0.328 to 0.271 at 0.0068 s a problem, within 0.014 of the certified optimum, while a depth
-                        budget of 5 changes nothing. The gain does not transfer: on TabArena-14 the tuned guesser is
-                        slightly <i>worse</i> than the published one (0.3505 against 0.3480) and misses 3 trees the
-                        default returns. So the post keeps the published configuration as the baseline and shows the
-                        tuned points beside it.</p>
-                    </details>
+                        at the 6 GB cap without a tree. The shipped model's 0.3478 is a harness effect,
+                        explained in the details above.</p>
 
                     <!-- TODO: accuracy experiments. Planned: held-out test accuracy and tree size against
                          CART, C4.5 and FIGS at matched sizes, on the imodels-65 suite and on held-out suites
