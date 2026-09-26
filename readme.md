@@ -370,6 +370,25 @@ Because the model is a Gaussian process, each curve arrives with a posterior ban
 
 On the development suite (65 datasets, at most 1,000 rows each) GPGam is the strongest interpretable model and second overall to TabPFN. On two held-out suites with every dataset shared with the development suite removed, TabArena and OpenML-CTR23, it is again the strongest interpretable model: first of eleven by mean rank on TabArena and second to TabPFN on CTR23, with a geometric-mean RMSE ratio of 0.97 against explainable boosting machines and wins on 22 of the 35 datasets. Every model in those comparisons was refit on identical preprocessing and the same split.
 
+### FastSmallTree: provably optimal small decision trees
+
+[🔗 Post](https://csinva.io/imodels/fastsmalltree.html), [🗂️ API](https://csinva.io/imodels/tree/optimal_tree/fast_small_tree.html)
+
+FastSmallTree fits the decision tree that minimizes misclassification rate plus a penalty per leaf, over every tree on the binarized features, and certifies that no other tree scores better. This is the objective optimal-tree packages such as GOSDT and STreeD solve. FastSmallTree came out of an autoresearch loop, and most of its speed comes from compiling the whole branch-and-bound search with numba, along with a few tighter bounds, each proved admissible in the post.
+
+```python
+from imodels import FastSmallTreeClassifier
+model = FastSmallTreeClassifier(regularization=0.05).fit(X_train, y_train)
+
+model.optimal_      # True when the search finished: no other tree on these features scores better
+model.objective_    # the proven minimum of error + 0.05 * leaves
+model.estimator_    # the tree as an ordinary sklearn DecisionTreeClassifier (plot_tree, dtreeviz, ...)
+```
+
+`regularization` is the only hyperparameter: larger values give smaller trees. If the time limit is reached first, `optimal_` is False and the model warns. The search needs numba (`pip install numba`); it compiles once per machine, in about 20 seconds, and is cached after that.
+
+On held-out benchmarks built from TabArena, FastSmallTree matches the trees of existing optimal-tree packages while running faster, sometimes by more than 20×, and on the full-size datasets GOSDT and STreeD return no tree for several of them, mostly because they run out of memory. The [post](https://csinva.io/imodels/fastsmalltree.html) has the comparison and the proofs.
+
 ### Hierarchical shrinkage: post-hoc regularization for tree-based methods
 
 [📄 Paper](https://arxiv.org/abs/2202.00858) (ICML 2022), [🔗 Post](https://csinva.io/imodels/shrinkage.html), [📌 Citation](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=hierarchical+shrinkage+singh&btnG=&oq=hierar#d=gs_cit&u=%2Fscholar%3Fq%3Dinfo%3Azc6gtLx-aL4J%3Ascholar.google.com%2F%26output%3Dcite%26scirp%3D0%26hl%3Den)
