@@ -172,6 +172,11 @@ Prediction is made by looking at the value in the appropriate leaf of the tree
 <td>Greedily fits tree using C4.5</td>
 </tr>
 <tr>
+<td style="text-align: left;"><strong>Optimal rule tree</strong></td>
+<td><a href="https://csinva.io/imodels/fastsmalltree.html">🗂️</a>,ㅤ<a href="https://csinva.io/imodels/fastsmalltree.html">📄</a></td>
+<td>Provably optimal tree for a given penalty per leaf</td>
+</tr>
+<tr>
 <td style="text-align: left;">TAO rule tree</td>
 <td><a href="https://csinva.io/imodels/tree/tao.html">🗂️</a>, <a href="https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html">📄</a></td>
 <td>Fits tree using alternating optimization</td>
@@ -348,6 +353,9 @@ Regression
 | [C45TreeClassifier](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier) |
 |
 |
+| Optimal rule tree
+| [FastSmallTreeClassifier](https://csinva.io/imodels/tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier) |
+| Certifiably optimal rather than greedy; needs [numba](https://pypi.org/project/numba/) |
 | CCP-pruned rule tree
 | [DecisionTreeCCPClassifier](https://csinva.io/imodels/tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier) | [DecisionTreeCCPRegressor](https://csinva.io/imodels/tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPRegressor) | Prunes a tree to a target complexity via cost-complexity pruning |
 | TAO rule tree
@@ -377,7 +385,7 @@ fitting them (they warn if rounding has removed most of the model).
 **Multiclass.** These classifiers handle more than two classes: <code><a title="imodels.FIGSClassifier" href="tree/figs.html#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></code>,
 <code><a title="imodels.GreedyTreeClassifier" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></code>, <code><a title="imodels.HSTreeClassifier" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></code>, <code><a title="imodels.TaoTreeClassifier" href="tree/tao.html#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></code>,
 <code><a title="imodels.BoostedRulesClassifier" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></code>, <code><a title="imodels.SLIMClassifier" href="algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></code>, <code><a title="imodels.C45TreeClassifier" href="tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></code>,
-<code><a title="imodels.DecisionTreeCCPClassifier" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></code> and the <code>CV</code> variants. The rule-set and rule-list models are binary-only and raise a
+<code><a title="imodels.DecisionTreeCCPClassifier" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></code>, <code><a title="imodels.FastSmallTreeClassifier" href="tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a></code> and the <code>CV</code> variants. The rule-set and rule-list models are binary-only and raise a
 clear error if given a multiclass target, rather than silently treating it as
 binary.
 **Categorical features.** <code>FIGS</code> takes them directly — pass the column names and
@@ -571,6 +579,7 @@ from .rule_set.fpskope import FPSkopeClassifier
 from .rule_set.rule_fit import RuleFitRegressor, RuleFitClassifier
 from .rule_set.skope_rules import SkopeRulesClassifier
 from .rule_set.slipper import SlipperClassifier
+from .tree.optimal_tree.fast_small_tree import FastSmallTreeClassifier
 from .tree.c45_tree.c45_tree import C45TreeClassifier
 from .tree.cart_ccp import (
     DecisionTreeCCPClassifier,
@@ -606,6 +615,7 @@ CLASSIFIERS = [
     SlipperClassifier,
     BayesianRuleSetClassifier,
     C45TreeClassifier,
+    FastSmallTreeClassifier,
     OneRClassifier,
     RuleFitClassifier,
     FPLassoClassifier,
@@ -646,7 +656,7 @@ DISCRETIZERS = [RFDiscretizer, BasicDiscretizer,
 # models and helpers rather than whatever each submodule happened to import.
 __all__ = [
     &#34;GPGamRegressor&#34;, &#34;AutoInterpretableClassifier&#34;,
-    &#34;AutoInterpretableRegressor&#34;, &#34;BART&#34;,
+    &#34;AutoInterpretableRegressor&#34;, &#34;FastSmallTreeClassifier&#34;, &#34;BART&#34;,
     &#34;BRLDiscretizer&#34;, &#34;BasicDiscretizer&#34;, &#34;BayesianRuleListClassifier&#34;,
     &#34;BayesianRuleSetClassifier&#34;, &#34;BoostedRulesClassifier&#34;,
     &#34;BoostedRulesRegressor&#34;, &#34;C45TreeClassifier&#34;, &#34;CLASSIFIERS&#34;,
@@ -685,11 +695,12 @@ __all__ = [
 </div>
 <ul id="index">
 <li><h3>Our favorite methods</h3>
-<ul>
-<li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a></li>
-<li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a></li>
-<li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a></li>
-<li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a></li>
+<ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a><span class="post-date">Feb '22</span></li>
+<li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a><span class="post-date">Jan '22</span></li>
 </ul>
 </li>
 <li><h3>Prediction classes</h3>
@@ -719,6 +730,7 @@ __all__ = [
 <li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPLassoRegressor" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoRegressor">FPLassoRegressor</a></li>
 <li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPSkopeClassifier" href="rule_set/fpskope.html#imodels.rule_set.fpskope.FPSkopeClassifier">FPSkopeClassifier</a></li>
 <li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.FastFrugalTreeClassifier" href="rule_list/fast_frugal_tree.html#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FastSmallTreeClassifier" href="tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a></li>
 <li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.GPGamRegressor" href="algebraic/gp_gam.html#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a></li>
 <li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.GreedyRuleListClassifier" href="rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></li>
 <li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.GreedyTreeClassifier" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></li>

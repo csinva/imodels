@@ -14,7 +14,7 @@ MULTICLASS_MODELS = [
     'BoostedRulesClassifier', 'SLIMClassifier', 'TaoTreeClassifier',
     'FIGSClassifier', 'FIGSClassifierCV', 'HSTreeClassifier',
     'HSTreeClassifierCV', 'GreedyTreeClassifier', 'DecisionTreeCCPClassifier',
-    'C45TreeClassifier',
+    'C45TreeClassifier', 'FastSmallTreeClassifier',
 ]
 
 # binary-only: these must say so rather than silently collapsing the target
@@ -48,6 +48,8 @@ def _fit(model_name, n_classes):
 
 @pytest.mark.parametrize('model_name', MULTICLASS_MODELS)
 def test_multiclass_models(model_name):
+    if model_name in EXCLUDED_MODELS:
+        pytest.skip(EXCLUDED_MODELS[model_name])
     """These give one probability column per class"""
     model, X, y = _fit(model_name, n_classes=3)
     probs = model.predict_proba(X)

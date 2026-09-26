@@ -54,6 +54,8 @@ dev = [
     "slurmpy",
     "pmlb",
     "dvu",
+    "gdown",
+    "numba>=0.60",
 ]
 
 # Optional algorithm deps mentioned in setup.py comments
@@ -63,5 +65,6 @@ optional = [
   "statsmodels", # for bartpy
   "torch", # for imodels.util.neural_nets
   "interpret", # for imodels.algebraic.gam_multitask
+  "numba>=0.60", # for imodels.tree.optimal_tree
   "glmnet", # for imodels.tree.rf_plus.rf_plus; this is deprecated - should remove
 ]

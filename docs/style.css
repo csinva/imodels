@@ -215,6 +215,11 @@ nav.toc-main span {
   --cat-clustering:     #0f8b8d;
   --cat-util:           #718096;
   --cat-experimental:   #7c7a3f;
+
+  /* badge for methods an autoresearch loop discovered */
+  --research:      #8a6a12;
+  --research-line: #e8d9a8;
+  --research-bg:   #fdf9ec;
 }
 
 .cat-dot {
@@ -245,6 +250,30 @@ nav.toc-main span {
   font-size: 0.76rem; color: var(--muted);
 }
 #sidebar .cat-legend li { display: flex; align-items: baseline; margin: 0; }
+
+/* ---------- the favourite-methods list ---------- */
+/* Each row is: method, an optional badge, then the post's date pushed to the
+   right edge. Dates in a column let the list be read as a timeline, which is
+   what the newest-first order is for; `auto` on the left margin is what does
+   the pushing, so a long method name still wraps against the badge rather than
+   shoving the date off the row. */
+#sidebar .post-list li {
+  display: flex; align-items: baseline; gap: 0.45em; margin: 0.22em 0;
+}
+#sidebar .post-list .post-date {
+  margin-left: auto; padding-left: 0.5em;
+  font-size: 0.74rem; color: var(--muted);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+#sidebar .post-list .post-tag {
+  flex: 0 0 auto;
+  font-size: 0.62rem; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--research); background: var(--research-bg);
+  border: 1px solid var(--research-line); border-radius: 999px;
+  padding: 0.05em 0.5em; white-space: nowrap;
+  /* sits with the text rather than on it */
+  position: relative; top: -0.05em;
+}
 
 /* ---------- tables ---------- */
 #content table, .article table {

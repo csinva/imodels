@@ -82,6 +82,7 @@ Install with `pip install imodels` (see [here](https://github.com/csinva/imodels
 | OneR rule list              | [🗂️](https://csinva.io/imodels/rule_list/one_r.html), [📄](https://link.springer.com/article/10.1023/A:1022631118932) | Fits rule list restricted to only one feature              |
 | Greedy rule tree            | [🗂️](https://csinva.io/imodels/tree/cart_wrapper.html), [📄](https://www.taylorfrancis.com/books/mono/10.1201/9781315139470/classification-regression-trees-leo-breiman-jerome-friedman-richard-olshen-charles-stone), [🔗](https://scikit-learn.org/stable/modules/tree.html)  | Greedily fits tree using CART                              |
 | C4.5 rule tree        | [🗂️](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier), [📄](https://link.springer.com/article/10.1007/BF00993309), [🔗](https://github.com/RaczeQ/scikit-learn-C4.5-tree-classifier) | Greedily fits tree using C4.5                           |
+| **Optimal rule tree** | [🗂️](https://csinva.io/imodels/fastsmalltree.html),ㅤ[📄](https://csinva.io/imodels/fastsmalltree.html) | Provably optimal tree for a given penalty per leaf |
 | TAO rule tree        | [🗂️](https://csinva.io/imodels/tree/tao.html), [📄](https://proceedings.neurips.cc/paper/2018/hash/185c29dc24325934ee377cfda20e414c-Abstract.html) | Fits tree using alternating optimization                    |
 | Sparse integer<br/>linear model | [🗂️](https://csinva.io/imodels/algebraic/slim.html), [📄](https://link.springer.com/article/10.1007/s10994-015-5528-6) | Sparse linear model with integer coefficients                           |
 | Tree GAM | [🗂️](https://csinva.io/imodels/algebraic/tree_gam.html), [📄](https://dl.acm.org/doi/abs/10.1145/2339530.2339556), [🔗](https://github.com/interpretml/interpret) | Generalized additive model fit with short boosted trees                           |
@@ -171,6 +172,7 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | OneR rule list              | [OneRClassifier](https://csinva.io/imodels/rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier) |                                                              |  |
 | Greedy rule tree (CART)     | [GreedyTreeClassifier](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier) |      [GreedyTreeRegressor](https://csinva.io/imodels/tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor)                                                        |  |
 | C4.5 rule tree              | [C45TreeClassifier](https://csinva.io/imodels/tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier) |           |  |
+| Optimal rule tree           | [FastSmallTreeClassifier](https://csinva.io/imodels/tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier) |                                                              | Certifiably optimal rather than greedy; needs [numba](https://pypi.org/project/numba/) |
 | CCP-pruned rule tree        | [DecisionTreeCCPClassifier](https://csinva.io/imodels/tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier) | [DecisionTreeCCPRegressor](https://csinva.io/imodels/tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPRegressor) | Prunes a tree to a target complexity via cost-complexity pruning |
 | TAO rule tree              | [TaoTreeClassifier](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeClassifier) |   [TaoTreeRegressor](https://csinva.io/imodels/tree/tao.html#imodels.tree.tao.TaoTreeRegressor)        |  |
 | Sparse integer linear model | [SLIMClassifier](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier) | [SLIMRegressor](https://csinva.io/imodels/algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor) | Requires extra dependencies for speed |
@@ -192,7 +194,7 @@ fitting them (they warn if rounding has removed most of the model).
 **Multiclass.** These classifiers handle more than two classes: `FIGSClassifier`,
 `GreedyTreeClassifier`, `HSTreeClassifier`, `TaoTreeClassifier`,
 `BoostedRulesClassifier`, `SLIMClassifier`, `C45TreeClassifier`,
-`DecisionTreeCCPClassifier` and the `CV` variants. The rule-set and rule-list models are binary-only and raise a
+`DecisionTreeCCPClassifier`, `FastSmallTreeClassifier` and the `CV` variants. The rule-set and rule-list models are binary-only and raise a
 clear error if given a multiclass target, rather than silently treating it as
 binary.
 
@@ -367,6 +369,25 @@ model.interaction_terms()                                      # the pairs it ch
 Because the model is a Gaussian process, each curve arrives with a posterior band, so you can see which parts of a shape function the data actually pins down. The [post](https://csinva.io/imodels/gpgam.html) walks through a model fit to California housing, curve by curve and interaction by interaction.
 
 On the development suite (65 datasets, at most 1,000 rows each) GPGam is the strongest interpretable model and second overall to TabPFN. On two held-out suites with every dataset shared with the development suite removed, TabArena and OpenML-CTR23, it is again the strongest interpretable model: first of eleven by mean rank on TabArena and second to TabPFN on CTR23, with a geometric-mean RMSE ratio of 0.97 against explainable boosting machines and wins on 22 of the 35 datasets. Every model in those comparisons was refit on identical preprocessing and the same split.
+
+### FastSmallTree: provably optimal small decision trees
+
+[🔗 Post](https://csinva.io/imodels/fastsmalltree.html), [🗂️ API](https://csinva.io/imodels/tree/optimal_tree/fast_small_tree.html)
+
+FastSmallTree fits the decision tree that minimizes misclassification rate plus a penalty per leaf, over every tree on the binarized features, and certifies that no other tree scores better. This is the objective optimal-tree packages such as GOSDT and STreeD solve. FastSmallTree came out of an autoresearch loop, and most of its speed comes from compiling the whole branch-and-bound search with numba, along with a few tighter bounds, each proved admissible in the post.
+
+```python
+from imodels import FastSmallTreeClassifier
+model = FastSmallTreeClassifier(regularization=0.05).fit(X_train, y_train)
+
+model.optimal_      # True when the search finished: no other tree on these features scores better
+model.objective_    # the proven minimum of error + 0.05 * leaves
+model.estimator_    # the tree as an ordinary sklearn DecisionTreeClassifier (plot_tree, dtreeviz, ...)
+```
+
+`regularization` is the only hyperparameter: larger values give smaller trees. If the time limit is reached first, `optimal_` is False and the model warns. The search needs numba (`pip install numba`); it compiles once per machine, in about 20 seconds, and is cached after that.
+
+On held-out benchmarks built from TabArena, FastSmallTree matches the trees of existing optimal-tree packages while running faster, sometimes by more than 20×, and on the full-size datasets GOSDT and STreeD return no tree for several of them, mostly because they run out of memory. The [post](https://csinva.io/imodels/fastsmalltree.html) has the comparison and the proofs.
 
 ### Hierarchical shrinkage: post-hoc regularization for tree-based methods
 

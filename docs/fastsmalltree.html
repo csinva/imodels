@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.11.6" />
+<title>imodels &middot; FastSmallTree</title>
+<meta name="description" content="Python package for concise, transparent, and accurate predictive modeling. All sklearn-compatible and easy to use. Check out our new packages! …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<link rel="stylesheet" href="style.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+</head>
+
+<body>
+<header id="site-header">
+<a href="index.html" class="nav-icon" aria-label="Home" title="Home">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M3 10.5 12 3l9 7.5"></path>
+<path d="M5 9.5V21h14V9.5"></path>
+<path d="M9.5 21v-6h5v6"></path>
+</svg>
+</a>
+<p id="site-tagline">imodels. Sklearn-compatible interpretable models.</p>
+<a href="index.html" id="site-logo">
+<img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
+alt="imodels">
+</a>
+<a href="https://github.com/csinva/imodels" class="nav-icon"
+aria-label="View source on GitHub" title="GitHub">
+<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01
+1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04
+2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+</svg>
+</a>
+</header>
+<main>
+        <article id="content">
+<section id="section-intro">
+
+                <div class="article" style="padding-right: 2%; padding-left: 2%;">
+                    <p align="center">
+                    <h1 text-align="center" style="padding-bottom: 0px;"> FastSmallTree: Implementing compact, fast decision trees via Autoresearch</h1>
+                    <h3 class="post-authors" style="color:gray;padding-top:0px;">Chandan Singh &middot; September 2026</h3>
+                    </p>
+                    <p class="post-links"><a href="https://arxiv.org/abs/2605.03808">📄 Paper</a>, <a href="https://csinva.io/imodels/tree/optimal_tree/fast_small_tree.html">🗂 Doc</a>, <a href="#citation">📌 Citation</a></p>
+                    <hr>
+
+                    <p class="abstract">
+                        <a href="https://scikit-learn.org/stable/modules/tree.html">Standard decision trees</a> are fit
+                        greedily, so they end up larger than they need to be and harder to interpret. Optimal-tree
+                        solvers such as <a href="https://arxiv.org/abs/2006.08690">GOSDT</a> and
+                        <a href="https://github.com/AlgTUDelft/pystreed">STreeD</a> instead find the tree that provably
+                        minimizes error plus a penalty per leaf, but they are slow. Using autoresearch, we build
+                        <b>FastSmallTree</b>, an implementation that achieves useful speedups on real-world problems for
+                        fitting small trees (mostly by effectively compiling things into numba). On held-out benchmarks, it maintains the accuracy of existing optimal tree packages
+                        while sometimes providing significant speedups, sometimes >20&times;.
+                    </p>
+
+                    <nav class="toc-main">
+                      <a href="#quickstart"><span>1</span> Quickstart &amp; example usage</a>
+                      <a href="#results"><span>2</span> Experimental results</a>
+                      <a href="#methods"><span>3</span> Methods: FastSmallTree</a>
+                    </nav>
+
+                    <h2 id="quickstart">1. Quickstart &amp; example usage</h2>
+
+                    <pre><code class="language-python">from imodels import FastSmallTreeClassifier
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+
+X, y = load_breast_cancer(return_X_y=True, as_frame=True)
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+
+model = FastSmallTreeClassifier(regularization=0.05).fit(X_train, y_train)
+preds = model.predict(X_test)</code></pre>
+
+                    <p><code>regularization</code> is the only hyperparameter: larger values give smaller trees. The fitted model reports whether the search finished, and what it proved:</p>
+
+                    <pre><code class="language-python">model.optimal_      # True: no other tree on these features scores better
+model.objective_    # 0.1775, the proven minimum of error + 0.05 * leaves
+model.n_leaves_     # 2
+print(model)        # the tree, as nested if/else on the caller's feature names</code></pre>
+
+
+
+                    <details class="collapsible" id="visualize-tree">
+                      <summary>Visualize the tree</summary>
+                      <p>The certified tree is stored as an ordinary sklearn <code>DecisionTreeClassifier</code> in
+                        <code>model.estimator_</code>, so it works with sklearn-compatible libraries (<code>plot_tree</code>,
+                        <code>export_text</code>, <code>feature_importances_</code>), e.g. dtreeviz:</p>
+                    <div class="fig-wide code-fig">
+                    <pre><code class="language-python">import dtreeviz  # pip install dtreeviz
+
+model = FastSmallTreeClassifier(
+    regularization=0.03)
+model.fit(X_train, y_train)
+
+viz = dtreeviz.model(
+    model.estimator_, X_train, y_train,
+    feature_names=X.columns,
+    target_name="diagnosis",
+    class_names=["malignant", "benign"])
+viz.view()</code></pre>
+
+                    <figure class="dtreeviz-fig">
+                      <img src="img/fastsmalltree_dtreeviz.svg" width="440"
+                           alt="dtreeviz drawing of the certified three-leaf tree: worst area at most 930 then worst concave points at most 0.1424 leads to 266 benign rows, above 0.1424 to 38 malignant rows, and worst area above 930 to 122 malignant rows.">
+                      <figcaption>The certified optimal tree at <code>regularization</code>=0.03 on the breast cancer
+                        training split. Thresholds sit midway between neighbouring training values, as in sklearn.</figcaption>
+                    </figure>
+                    </div>
+                    </details>
+
+                    <h2 id="results">2. Experimental results</h2>
+
+                    
+
+                    <p>FastSmallTree was produced by the autoresearch loop of
+                        <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (code on
+                        <a href="https://github.com/csinva/agentic-imodels">github</a>): an agent was given a working
+                        exact solver, a fixed benchmark, and a rule that no change may return a non-optimal tree.
+                        It then proposed, proved and measured new bounds, keeping those that yielded speed ups on the visible set of problems.
+                        The visible set consists of 70 problems (14 datasets &times; 5 values of <code>regularization</code>),
+                        each with a 30-second time limit and 6-GB memory limit.</p>
+
+<details class="collapsible" id="datasets">
+                      <summary>The 14 visible datasets (from the <a href="https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees">GOSDT repo</a>)</summary>
+                      <table class="ranktbl dataset-table">
+                        <thead>
+                          <tr><th>dataset</th><th>what it is</th><th>rows</th><th>features</th><th>binary splits</th><th>classes</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td><code>chudi</code></td><td>Two-feature example from the GOSDT experiments</td><td>77</td><td>2</td><td>46</td><td>2</td></tr>
+                          <tr><td><code>monk_3</code></td><td>UCI MONK's problem 3, one-hot</td><td>122</td><td>11</td><td>11</td><td>2</td></tr>
+                          <tr><td><code>monk_1</code></td><td>UCI MONK's problem 1, one-hot</td><td>124</td><td>11</td><td>11</td><td>2</td></tr>
+                          <tr><td><code>iris</code></td><td>UCI Iris</td><td>150</td><td>4</td><td>118</td><td>3</td></tr>
+                          <tr><td><code>monk_2</code></td><td>UCI MONK's problem 2, one-hot</td><td>169</td><td>11</td><td>11</td><td>2</td></tr>
+                          <tr><td><code>tic-tac-toe</code></td><td>UCI Tic-Tac-Toe endgames</td><td>958</td><td>9</td><td>27</td><td>2</td></tr>
+                          <tr><td><code>gaussian_1k</code></td><td>Synthetic, one continuous feature</td><td>1,000</td><td>1</td><td>999</td><td>2</td></tr>
+                          <tr><td><code>fico_1k</code></td><td>FICO HELOC credit, 1,000-row sample, raw features</td><td>1,000</td><td>23</td><td>1,357</td><td>2</td></tr>
+                          <tr><td><code>sine_1k</code></td><td>Synthetic, one continuous feature</td><td>1,000</td><td>1</td><td>999</td><td>2</td></tr>
+                          <tr><td><code>car_evaluation</code></td><td>UCI Car Evaluation, binarized</td><td>1,728</td><td>15</td><td>15</td><td>2</td></tr>
+                          <tr><td><code>coupon_bar</code></td><td>In-vehicle coupon recommendation, bar coupons</td><td>1,913</td><td>14</td><td>14</td><td>2</td></tr>
+                          <tr><td><code>compas_binned</code></td><td>ProPublica COMPAS recidivism, binarized</td><td>6,907</td><td>12</td><td>12</td><td>2</td></tr>
+                          <tr><td><code>fico_binary</code></td><td>FICO HELOC credit, binarized</td><td>10,459</td><td>17</td><td>17</td><td>2</td></tr>
+                          <tr><td><code>compas_processed</code></td><td>ProPublica COMPAS recidivism, processed</td><td>12,381</td><td>22</td><td>621</td><td>2</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="tblnote">All 14 come from the GOSDT reference repository, each run at five penalties per leaf
+                        (0.1, 0.05, 0.02, 0.01, 0.005): 70 problems. <i>Binary splits</i> is what the solver searches:
+                        one per binary feature and one per distinct value of a numeric one, which is why fico_1k and
+                        compas_processed hold the problems nobody certifies.</p>
+                    </details>
+
+                    <details class="collapsible" id="tabarena14">
+                      <summary>The 14 hidden datasets (from <a href="https://tabarena.ai">TabArena</a>)</summary>
+                      <table class="ranktbl dataset-table">
+                        <thead>
+                          <tr><th>stands in for</th><th>TabArena source</th><th>rows</th><th>features</th><th>binary splits</th><th>majority</th><th>classes</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td><code>chudi</code></td><td>blood-transfusion-service-center</td><td>77</td><td>2</td><td>32 <span class="tgt">/ 46</span></td><td>0.61 <span class="tgt">/ 0.61</span></td><td>2</td></tr>
+                          <tr><td><code>monk_3</code></td><td>seismic-bumps</td><td>122</td><td>11</td><td>11 <span class="tgt">/ 11</span></td><td>0.51 <span class="tgt">/ 0.51</span></td><td>2</td></tr>
+                          <tr><td><code>monk_1</code></td><td>Marketing_Campaign</td><td>124</td><td>11</td><td>11 <span class="tgt">/ 11</span></td><td>0.50 <span class="tgt">/ 0.50</span></td><td>2</td></tr>
+                          <tr><td><code>iris</code></td><td>maternal_health_risk</td><td>150</td><td>4</td><td>83 <span class="tgt">/ 118</span></td><td>0.33 <span class="tgt">/ 0.33</span></td><td>3</td></tr>
+                          <tr><td><code>monk_2</code></td><td>Is-this-a-good-customer</td><td>169</td><td>11</td><td>11 <span class="tgt">/ 11</span></td><td>0.62 <span class="tgt">/ 0.62</span></td><td>2</td></tr>
+                          <tr><td><code>tic-tac-toe</code></td><td>qsar-biodeg</td><td>958</td><td>9</td><td>27 <span class="tgt">/ 27</span></td><td>0.65 <span class="tgt">/ 0.65</span></td><td>2</td></tr>
+                          <tr><td><code>gaussian_1k</code></td><td>credit-g</td><td>1,000</td><td>1</td><td>920 <span class="tgt">/ 999</span></td><td>0.70 <span class="tgt">/ 0.70</span></td><td>2</td></tr>
+                          <tr><td><code>fico_1k</code></td><td>polish_companies_bankruptcy</td><td>1,000</td><td>23</td><td>1,357 <span class="tgt">/ 1,357</span></td><td>0.59 <span class="tgt">/ 0.54</span></td><td>2</td></tr>
+                          <tr><td><code>sine_1k</code></td><td>Fitness_Club</td><td>1,000</td><td>1</td><td>876 <span class="tgt">/ 999</span></td><td>0.55 <span class="tgt">/ 0.51</span></td><td>2</td></tr>
+                          <tr><td><code>car_evaluation</code></td><td>Bioresponse</td><td>1,728</td><td>15</td><td>15 <span class="tgt">/ 15</span></td><td>0.70 <span class="tgt">/ 0.70</span></td><td>2</td></tr>
+                          <tr><td><code>coupon_bar</code></td><td>hazelnut-spread-contaminant-detection</td><td>1,913</td><td>14</td><td>14 <span class="tgt">/ 14</span></td><td>0.59 <span class="tgt">/ 0.59</span></td><td>2</td></tr>
+                          <tr><td><code>compas_binned</code></td><td>E-CommereShippingData</td><td>6,907</td><td>12</td><td>12 <span class="tgt">/ 12</span></td><td>0.54 <span class="tgt">/ 0.54</span></td><td>2</td></tr>
+                          <tr><td><code>fico_binary</code></td><td>HR_Analytics_Job_Change_of_Data_Scientists</td><td>10,459</td><td>17</td><td>17 <span class="tgt">/ 17</span></td><td>0.54 <span class="tgt">/ 0.52</span></td><td>2</td></tr>
+                          <tr><td><code>compas_processed</code></td><td>credit_card_clients_default</td><td>12,381</td><td>22</td><td>625 <span class="tgt">/ 621</span></td><td>0.69 <span class="tgt">/ 0.69</span></td><td>2</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="tblnote">Each development dataset has a stand-in drawn from a
+                        <a href="https://tabarena.ai">TabArena</a> classification dataset by a fixed rule (originals
+                        largest first, each taking the smallest unused source with enough rows of each class). A
+                        stand-in matches its original's rows and features exactly and its class balance within 0.05,
+                        keeping the features with the most mutual information with the label; numeric features are
+                        quantile-binned to match the original's number of binary splits, shown in gray. chudi and iris
+                        fall short because their sources have too few distinct values. TabArena's HELOC and coupon
+                        datasets are excluded, since the development suite already contains them. Builder, manifest
+                        and per-problem results:
+                        <a href="https://github.com/csinva/agentic-imodels">agentic-imodels</a>,
+                        <code>baselines/benchmarks/external/</code>.</p>
+                    </details>
+
+                    <p>Fig <a href="#fig1">1</a> plots the fitted loss (y-axis, lower is better) against the time per problem (x-axis, left is faster)
+                      for every version the loop produced against the baselines.
+                      We compare against four published baselines: <a href="https://arxiv.org/abs/2006.08690">GOSDT</a>
+                        (Lin et al., 2020), its successor <a href="https://arxiv.org/abs/2112.00356">gosdt-guesses</a>
+                        (McTavish et al., 2022), <a href="https://github.com/AlgTUDelft/pystreed">STreeD</a> (van der Linden
+                        et al., 2023), and the near-optimal <a href="https://arxiv.org/abs/2502.15988">SPLIT</a> (Babbar
+                        et al., 2025).
+                      Fig <a href="#fig1">1</a>A shows the visible set while the other three panels evaluate on the hidden set in different ways.
+                      When a solver returns no tree for a problem, its criterion there is that of a single leaf
+                        predicting the majority class, and its time is the seconds it spent before stopping, capped at the
+                        panel's time limit (the full limit if it ran out of time, less if it stopped early at the 6 GB
+                        memory limit).
+                    </p>
+
+                    <span class="fig-anchor" id="fig1"></span>
+                    <div class="fig-wide">
+                      <ul class="fig-legend" aria-label="Legend">
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#3987e5"/></svg>Autoresearch versions, exact</li>
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#104281"/></svg>Autoresearch versions, approximate</li>
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#a09f9a"/></svg>Baselines, exact</li>
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#6f6e69"/></svg>Baselines, approximate</li>
+                        <li><svg viewBox="0 0 16 16"><path d="M8 1.2 L9.9 6 L15 6.3 L11 9.5 L12.3 14.6 L8 11.8 L3.7 14.6 L5 9.5 L1 6.3 L6.1 6 Z" fill="#3987e5"/></svg>FastSmallTree</li>
+                      </ul>
+                      <div class="fig-pair">
+                        <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">A</span>
+                          <h4>Visible set <span>(5 penalties, 30 s per problem)</span></h4>
+                          <div id="pareto-dev" role="img" aria-label="Geometric-mean criterion against geometric-mean time for every solver version and baseline on the visible set."></div>
+                        </div>
+                        <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">B</span>
+                          <h4>Hidden set <span>(5 penalties, 30 s per problem)</span></h4>
+                          <div id="pareto-external" role="img" aria-label="The same measure for the key solver versions and the baselines on the hidden set, TabArena-14."></div>
+                        </div>
+                        <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">C</span>
+                          <h4>Hidden set, full size <span>(penalty 0.05, 30 min per problem)</span></h4>
+                          <div id="pareto-full" role="img" aria-label="The same measure on the full-size TabArena-14 datasets at a 30 minute cap."></div>
+                        </div>
+                        <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">D</span>
+                          <h4>Hidden set <span>(5 penalties, 4 h per problem, big Linux server)</span></h4>
+                          <div id="pareto-nolimit" role="img" aria-label="The same measure on the 70 TabArena-14 problems with 4 hours a problem instead of 30 seconds, and the same 6 GB memory budget."></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p class="caption"><b>Fig 1.</b> Tree quality against speed. <b>A</b>: the visible set the autoresearch loop was scored on, 70 problems (14 datasets
+                        &times; 5 penalties) at 30 s each. This plot shows all the versions tried by the loop.  <b>B</b>: the same 70-problem protocol on TabArena-14, held-out
+                        datasets never used during development. <b>C</b>: TabArena-14 at full size, every row and column
+                        kept, at one penalty (0.05) with 30 minutes a problem. <b>D</b>: TabArena-14's 70 problems with
+                        4 hours a problem instead of 30 s, and the same 6 GB. A&ndash;C all evaluate using a MacBook Air
+                        M5, while D uses a Linux server (two Xeon Platinum 8468V, 88 cores). Each point is a solver's geometric mean,
+                        over a panel's problems, of the time spent (up to the cap) and of the criterion its tree scores,
+                        error plus penalty times leaves. Blue: versions whose every bound is 
+                        admissible. Dark blue: versions that are approximate (non-optimal). Light and dark gray: baselines, exact and approximate. Large points average three runs.</p>
+
+                    <details class="collapsible" id="fig1-measurement">
+                      <summary>Extra details on experimental settings</summary>
+                      <p><b>A.</b> Every returned tree is re-scored from the raw data and checked against its problem's
+                        certified optimum, so a solver cannot score by misreporting. v46's points are from the fixed
+                        code; a draft certified two wrong trees here (Methods).</p>
+                      <p><b>B.</b> TabArena-14 has no certified optima, so a certificate there is checked against the
+                        best tree any run of any solver returned.</p>
+                      <p><b>C.</b> One run at a single penalty (0.05) on each of the 14 datasets, so the panel is read
+                        for the ordering rather than a close criterion race; several optima at that penalty are a
+                        single leaf, which every solver finds at once. Three kinds of baseline failure are charged as no
+                        tree: a stop at the 6 GB cap (GOSDT on 8 problems, SPLIT on 8), a run killed after twice its
+                        budget (STreeD on 2), and an operating-system kill for outgrowing memory (STreeD on coupon_bar,
+                        signal 9 after five minutes). GOSDT runs in a child process that the harness can stop at the
+                        cap; STreeD and SPLIT run in-process. gosdt-guesses in exact mode certifies 4 and returns no tree
+                        on 8 (5 memory stops, 3 crashes); guided, published and tuned alike, it returns a heuristic tree
+                        on 11 and hits the memory cap on the 3 widest datasets, since it builds the exact binarization
+                        before guessing thresholds.</p>
+                      <p><b>D.</b> Run on a Linux server (two Xeon Platinum 8468V, 88 cores), each problem in its own
+                        process pinned to its own hardware threads (two for single-threaded solvers, eight for the
+                        8-thread versions), many at once; times are comparable within the panel only. The 4 hours are
+                        each solver's time limit, so a run that reaches them returns its best tree. The harness enforces
+                        6 GB on every process: a solver that stops itself at the budget keeps its incumbent, one the
+                        harness stops returns no tree. One run per problem, 140 hours of solver time. Two of D's points
+                        reflect this harness rather than the search. The shipped model's memory guard counts its own
+                        tables, not the process, so on the six widest problems the process passed 6 GB first, the
+                        harness stopped it, and it returned no tree on five of them; charged a single leaf there, its
+                        criterion (0.348) sits above pygosdt's (0.339) although its search is faster. That is a bug in
+                        the guard, not the search, and it is what a 6 GB machine would do; v23, whose guard reads the
+                        process, stops itself at 5.99 GB and keeps its tree. STreeD likewise loses three problems it
+                        finished on the laptop, where nothing policed its memory (monk_2, car_evaluation and coupon_bar
+                        at the smallest penalty, at 6.5 to 7 GB), which is part of why its criterion in D is worse than
+                        in B.</p>
+                      <p><b>gosdt-guesses.</b> In guided mode it reports only its search time, which excludes the
+                        threshold guessing where its work is done, so its points sit at the 1 ms floor in every panel.
+                        By wall clock, preprocessing included, it takes 3.1 s a problem in C against 9.6 s for v49:
+                        about three times faster, not a hundredfold, for a worse tree, no certificate, and no tree on 3
+                        of the 14. Both of its modes were also swept, since a baseline judged at one setting can be
+                        judged unfairly. In exact mode its similar-support bound changes nothing measurable (0.489
+                        &plusmn; 0.007 s against 0.486 &plusmn; 0.018 s). In guided mode the paper's threshold guesser, 40
+                        stumps of depth 1, is the weak part on the visible set: 60 trees of depth 2 improve the
+                        criterion from 0.328 to 0.271 at 0.0068 s a problem, while a depth budget of 5 changes nothing.
+                        That gain does not transfer: on TabArena-14 the tuned guesser is slightly <i>worse</i> than the
+                        published one (0.3505 against 0.3480) and misses 3 trees the default returns. So the post keeps
+                        the published configuration as the baseline and shows the tuned points beside it.</p>
+                    </details>
+
+                    <style>
+                      /* expandables: a very light panel while open, so it is clear where each one ends; the
+                         padding is there when closed too, offset by a negative margin, so opening one does
+                         not shift its summary and the summary stays aligned with the body text */
+                      details.collapsible { border: 1px solid transparent; border-radius: 6px;
+                        padding: 0 0.9em; margin: 0.1em -0.9em; }
+                      details.collapsible[open] { background: var(--surface-alt); border-color: var(--line-soft);
+                        padding: 0.35em 0.9em 0.6em; margin: 0.5em -0.9em; }
+                      details.collapsible[open] > summary { margin-bottom: 0.35em; }
+                      .eq { overflow-x: auto; margin: 1em 0 1.2em; }
+                      /* the dtreeviz code and its drawing side by side; stacked when too narrow for both */
+                      .code-fig { display: flex; flex-wrap: wrap; align-items: center; gap: 1em 1.25em; }
+                      .code-fig > pre { flex: 1 1 380px; min-width: 0; margin: 0; font-size: 0.9em; }
+                      .code-fig > .dtreeviz-fig { flex: 0 1 340px; margin: 0 auto; }
+                      .dtreeviz-fig { margin: 1.2em auto; text-align: center; }
+                      .dtreeviz-fig img { max-width: 100%; height: auto; }
+                      .dtreeviz-fig figcaption { font-size: 0.85rem; color: var(--muted); max-width: 560px;
+                        margin: 0.4em auto 0; text-align: left; }
+                      .fig-wide { margin: 1.2em 0 0.2em; }
+                      @media (min-width: 1100px) {
+                        /* two panels need more room than the text column: widen to the whole area
+                           right of the sidebar, centred on the column like everything else */
+                        .fig-wide {
+                          --fig-w: min(1500px, calc(100vw - min(var(--sidebar-w), 32vw) - 6rem));
+                          width: var(--fig-w); margin-left: calc((100% - var(--fig-w)) / 2);
+                        }
+                      }
+                      .fig-pair { display: flex; flex-wrap: wrap; gap: 1em 2.5%; }
+                      .fig-panel { flex: 1 1 420px; min-width: 0; position: relative; }
+                      /* panel letters, top left of each plot */
+                      .panel-letter { position: absolute; left: 0; top: -0.1em; font-size: 1.15rem;
+                        font-weight: 700; color: var(--ink); line-height: 1; }
+                      .fig-panel h4 { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.1em 3.2rem; color: var(--ink); }
+                      .fig-panel h4 span { font-weight: 400; color: var(--muted); }
+                      ul.fig-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3em 1.3em;
+                        list-style: none; padding: 0; margin: 0 0 0.8em; font-size: 0.8rem; color: var(--ink); }
+                      ul.fig-legend li { display: flex; align-items: center; gap: 0.4em; margin: 0; }
+                      ul.fig-legend svg { width: 16px; height: 16px; flex: 0 0 auto; }
+                      .fig-pending { display: flex; align-items: center; justify-content: center; height: 340px;
+                        color: var(--muted); font-size: 0.9rem; border: 1px dashed var(--line); }
+                    </style>
+
+                    <script>
+                    var PARETO = {"dev":{"points":[{"model":"gosdt_guesses_guided","label":"gosdt-guesses, guided","direct":"gosdt-guesses, guided (and depth 5)","group":"baseline_approx","heuristic":true,"multicore":false,"runs":3,"t":0.001117806943137291,"t_sd":2.1319094543770653e-06,"c":0.3277631691262381,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"gg_guided_db5","label":"gosdt-guesses, guided (depth 5)","direct":"","group":"baseline_approx","heuristic":true,"multicore":false,"runs":1,"t":0.0011178437528111805,"t_sd":0.0,"c":0.3277631691262381,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"gg_guided_e60d2","label":"gosdt-guesses, guided (tuned)","direct":"gosdt-guesses, guided (tuned)","group":"baseline_approx","heuristic":true,"multicore":false,"runs":3,"t":0.006827955164406721,"t_sd":3.3317338163216016e-05,"c":0.2705763685119233,"c_sd":0.0009442087509723137,"solved":0.0,"wrong":2,"notree":5,"proof_gap":false},{"model":"split","label":"SPLIT","direct":"SPLIT","group":"baseline_approx","heuristic":true,"multicore":false,"runs":3,"t":0.15653786725419805,"t_sd":0.022400194971795614,"c":0.3150106079100712,"c_sd":0.0003283834304508913,"solved":0.0,"wrong":0,"notree":13,"proof_gap":false},{"model":"streed","label":"STreeD","direct":"STreeD","group":"baseline_exact","heuristic":false,"multicore":false,"runs":3,"t":0.33231500562506583,"t_sd":0.023819676034676985,"c":0.25907125735778963,"c_sd":0.0,"solved":51.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"gosdt_mc8","label":"GOSDT, 8 threads","direct":"GOSDT, 8 threads","group":"baseline_exact","heuristic":false,"multicore":true,"runs":1,"t":0.4538490984149746,"t_sd":0.0,"c":0.2808698745962506,"c_sd":0.0,"solved":38.0,"wrong":0,"notree":17,"proof_gap":false},{"model":"gosdt_guesses","label":"gosdt-guesses","direct":"gosdt-guesses","group":"baseline_exact","heuristic":false,"multicore":false,"runs":3,"t":0.4857469427242014,"t_sd":0.017574048257628958,"c":0.2815540326872263,"c_sd":0.0007834398484357419,"solved":46.0,"wrong":0,"notree":23,"proof_gap":false},{"model":"gg_exact_simsup","label":"gosdt-guesses (similar support)","direct":"gosdt-guesses (similar support)","group":"baseline_exact","heuristic":false,"multicore":false,"runs":3,"t":0.4885350221602347,"t_sd":0.007123702490572805,"c":0.28205209853133945,"c_sd":9.68385888968371e-05,"solved":46.0,"wrong":0,"notree":18,"proof_gap":false},{"model":"gosdt","label":"GOSDT","direct":"GOSDT","group":"baseline_exact","heuristic":false,"multicore":false,"runs":3,"t":0.5037158461313708,"t_sd":0.026597171641212263,"c":0.27944686745105196,"c_sd":0.0,"solved":47.0,"wrong":1,"notree":13,"proof_gap":false},{"model":"v47_guesses_like","label":"v47_guesses_like","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.0018697928510210283,"t_sd":0.0,"c":0.2731509721787071,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v49_cands_pairs_lazy_ws","label":"v49_cands_pairs_lazy_ws","direct":"v49, 8 threads","group":"exact","heuristic":false,"multicore":true,"runs":3,"t":0.005211139231778728,"t_sd":6.751324588933605e-05,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v43_greedy_seed","label":"v43_greedy_seed","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005291336466850661,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v45_greedy_family_lns","label":"v45_greedy_family_lns","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005319887679712079,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v37_gated_handoff","label":"v37_gated_handoff","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.005329363561075443,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v46_topk_pairs","label":"v46_topk_pairs","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":3,"t":0.005362674230585337,"t_sd":7.457700457847889e-05,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v40_no_depth3_stage","label":"v40_no_depth3_stage","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005417285884984925,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v48_fast_binarize","label":"v48_fast_binarize","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005463227517097275,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v41_node_keyed_frame_cache","label":"v41_node_keyed_frame_cache","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.005511193401705544,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v39_own_memory_accounting","label":"v39_own_memory_accounting","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.005586625231836496,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v34_shared_solutions_live_incumbent","label":"v34_shared_solutions_live_incumbent","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.00580125067960671,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v35_pooled_table","label":"v35_pooled_table","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.005821511595450474,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v33_fast_handoff","label":"v33_fast_handoff","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.0058343759031394766,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v36_cached_root_handoff","label":"v36_cached_root_handoff","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.005900232221757762,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v32_shared_bound_table","label":"v32_shared_bound_table","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.0059119773111220505,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v30_compiled_mc8_threads","label":"v30_compiled_mc8_threads","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.006032829431343315,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v40_sequential","label":"FastSmallTree (v40)","direct":"FastSmallTree","group":"exact","heuristic":false,"multicore":false,"runs":3,"t":0.006182182874983268,"t_sd":1.0732933240804583e-06,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v29_compiled_mc8","label":"v29_compiled_mc8","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.006311860317272532,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v28_compiled_search","label":"v28_compiled_search","direct":"","group":"approximate","heuristic":false,"multicore":false,"runs":1,"t":0.006445964474050014,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v31_frame_cache","label":"v31_frame_cache","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.006698352322422484,"t_sd":0.0,"c":0.2572383299872058,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v25_mc8_root_parallel","label":"v25_mc8_root_parallel","direct":"","group":"approximate","heuristic":false,"multicore":true,"runs":1,"t":0.007888564936176951,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v22_kernel_side_masks","label":"v22_kernel_side_masks","direct":"","group":"approximate","heuristic":false,"multicore":false,"runs":1,"t":0.008008888018363124,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v21_python_overhead","label":"v21_python_overhead","direct":"","group":"approximate","heuristic":false,"multicore":false,"runs":1,"t":0.008089999537034232,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v23_word_compaction","label":"v23_word_compaction","direct":"v23","group":"approximate","heuristic":false,"multicore":false,"runs":3,"t":0.008115023259903346,"t_sd":0.00012139093754047589,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v20_two_peeled_leaves","label":"v20_two_peeled_leaves","direct":"","group":"approximate","heuristic":false,"multicore":false,"runs":1,"t":0.008505690323628547,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v18_expansion_cache_kernel_predictions","label":"v18_expansion_cache_kernel_predictions","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.008601010659339808,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v19_depth3_triples","label":"v19_depth3_triples","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.008696782233268278,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v16b_fused_expansion","label":"v16b_fused_expansion","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.008777597008129547,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v15_shape_relaxation","label":"v15_shape_relaxation","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.009365954857323925,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v16_fused_expansion","label":"v16_fused_expansion","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.010000654061470195,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v14_hardened_superset_lb","label":"v14_hardened_superset_lb","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.010547130439141263,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v13_numba_candidate_prep","label":"v13_numba_candidate_prep","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.0112581433993055,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v10_depth2_everywhere_cheap","label":"v10_depth2_everywhere_cheap","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.011284276613908375,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v9_budget_deepening","label":"v9_budget_deepening","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.012284653880984465,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v8_sound_lb_lean_nodes","label":"v8_sound_lb_lean_nodes","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.012328583038481998,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v7_depth2_pairs","label":"v7_depth2_pairs","direct":"","group":"approximate","heuristic":false,"multicore":false,"runs":1,"t":0.014168267085038325,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v5_fused_node_kernel","label":"v5_fused_node_kernel","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.018398104569521942,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v4_leaf_support_splits","label":"v4_leaf_support_splits","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.024870715764303553,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":62.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v3_column_dp","label":"v3_column_dp","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.028568607423630866,"t_sd":0.0,"c":0.2575358004120271,"c_sd":0.0,"solved":61.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"v2_group_simsupport","label":"v2_group_simsupport","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.09369833509180374,"t_sd":0.0,"c":0.2648059958697585,"c_sd":0.0,"solved":55.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"pygosdt_v1_flat","label":"pygosdt_v1_flat","direct":"","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.09371656322168867,"t_sd":0.0,"c":0.2648059958697585,"c_sd":0.0,"solved":55.0,"wrong":0,"notree":0,"proof_gap":false},{"model":"pygosdt_v1","label":"pygosdt","direct":"pygosdt (v1)","group":"exact","heuristic":false,"multicore":false,"runs":3,"t":0.10167345399914253,"t_sd":0.002069595815402394,"c":0.2648059958697585,"c_sd":0.0,"solved":55.333333333333336,"wrong":0,"notree":0,"proof_gap":false}],"offsets":{"gg_exact_simsup":[-110,-127],"gosdt_guesses":[-70,-104],"gosdt_mc8":[-60,-84],"gosdt":[-40,-66],"streed":[-48,-34],"pygosdt_v1":[-15,-42],"split":[0,-34],"gosdt_guesses_guided":[120,8],"v23_word_compaction":[58,-26],"v40_sequential":[-5,-46],"v49_cands_pairs_lazy_ws":[22,52],"gg_guided_e60d2":[30,-80]}},"external":{"points":[{"model":"fastsmalltree","label":"v23","direct":"v23","group":"approximate","heuristic":false,"multicore":false,"runs":3,"t":0.019776846864463654,"t_sd":0.00042747421930667634,"c":0.33932987056820846,"c_sd":0.0,"solved":59.0,"wrong":0,"notree":0,"memory":0,"unfinished":11,"pairs":70,"proof_gap":false},{"model":"fastsmalltree_v40","label":"FastSmallTree (v40)","direct":"FastSmallTree","group":"exact","heuristic":false,"multicore":false,"runs":3,"t":0.013227767265581185,"t_sd":0.0006880927585958993,"c":0.3372815472052681,"c_sd":0.0,"solved":59.0,"wrong":0,"notree":0,"memory":0,"unfinished":11,"pairs":70,"proof_gap":false},{"model":"fastsmalltree_v46","label":"v46, 8 threads","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":3,"t":0.012795524336451716,"t_sd":0.0004651793946075839,"c":0.3371046357579348,"c_sd":1.4149780477241286e-05,"solved":59.0,"wrong":0,"notree":0,"memory":0,"unfinished":11,"pairs":70,"proof_gap":false},{"model":"fastsmalltree_v49","label":"v49, 8 threads","direct":"v49, 8 threads","group":"exact","heuristic":false,"multicore":true,"runs":3,"t":0.012151904468236175,"t_sd":0.00019785327491938818,"c":0.336941412854348,"c_sd":1.4142929286202445e-05,"solved":59.0,"wrong":0,"notree":0,"memory":0,"unfinished":11,"pairs":70,"proof_gap":false},{"model":"gg_exact_simsup","label":"gosdt-guesses (similar support)","direct":"","group":"baseline_exact","heuristic":false,"multicore":false,"runs":3,"t":0.21540854331670967,"t_sd":0.000432399099989728,"c":0.3663158689775135,"c_sd":0.0,"solved":47.0,"wrong":0,"notree":18,"memory":18,"unfinished":5,"pairs":70,"proof_gap":false},{"model":"gg_guided_e60d2","label":"gosdt-guesses, guided (tuned)","direct":"gosdt-guesses, guided (tuned)","group":"baseline_approx","heuristic":true,"multicore":false,"runs":3,"t":0.010345266558173765,"t_sd":6.780586493318824e-05,"c":0.3504580279381569,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":3,"memory":3,"unfinished":5,"pairs":70,"proof_gap":false},{"model":"gosdt","label":"GOSDT","direct":"GOSDT","group":"baseline_exact","heuristic":false,"multicore":false,"runs":3,"t":0.25258696858880375,"t_sd":0.014437821885642438,"c":0.3636309498801815,"c_sd":0.002067858875244308,"solved":43.0,"wrong":1,"notree":16,"memory":6,"unfinished":25,"pairs":70,"proof_gap":false},{"model":"gosdt_guesses","label":"gosdt-guesses","direct":"gosdt-guesses","group":"baseline_exact","heuristic":false,"multicore":false,"runs":3,"t":0.21115790647896784,"t_sd":0.0008266290439105383,"c":0.3663158689775135,"c_sd":0.0,"solved":47.0,"wrong":0,"notree":18,"memory":18,"unfinished":6,"pairs":70,"proof_gap":false},{"model":"gosdt_guesses_guided","label":"gosdt-guesses, guided","direct":"gosdt-guesses, guided","group":"baseline_approx","heuristic":true,"multicore":false,"runs":3,"t":0.0010464471594688288,"t_sd":0.0,"c":0.3479809471921606,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":0,"memory":0,"unfinished":0,"pairs":70,"proof_gap":false},{"model":"pygosdt_v1","label":"pygosdt","direct":"pygosdt (v1)","group":"exact","heuristic":false,"multicore":false,"runs":3,"t":0.15182886911782675,"t_sd":0.0071855514869148904,"c":0.3412676892762658,"c_sd":6.798699777552591e-17,"solved":51.0,"wrong":0,"notree":0,"memory":0,"unfinished":19,"pairs":70,"proof_gap":false},{"model":"split","label":"SPLIT","direct":"SPLIT","group":"baseline_approx","heuristic":true,"multicore":false,"runs":3,"t":0.15289461291258824,"t_sd":0.0014966356548293384,"c":0.3606919435146474,"c_sd":0.004730696371946565,"solved":0.0,"wrong":0,"notree":10,"memory":5,"unfinished":0,"pairs":70,"proof_gap":false},{"model":"streed","label":"STreeD","direct":"STreeD","group":"baseline_exact","heuristic":false,"multicore":false,"runs":3,"t":0.633041657412598,"t_sd":0.013114579352126357,"c":0.3366462566281228,"c_sd":0.0,"solved":46.0,"wrong":0,"notree":0,"memory":0,"unfinished":24,"pairs":70,"proof_gap":false}],"offsets":{"gosdt":[-58,-40],"streed":[-55,-32],"pygosdt_v1":[-5,-42],"split":[-45,38],"gosdt_guesses":[-62,34],"gosdt_guesses_guided":[82,10],"gg_guided_e60d2":[92,-30],"fastsmalltree":[46,-26],"fastsmalltree_v40":[-56,-30],"fastsmalltree_v46_anytime100":[66,26],"fastsmalltree_v49":[-64,54]}},"cap":30.0,"full":{"points":[{"model":"fastsmalltree_v40","label":"FastSmallTree (v40)","direct":"FastSmallTree","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":3.10669085004972,"t_sd":0.0,"c":0.2694855573909351,"c_sd":0.0,"solved":9.0,"wrong":0,"notree":0,"memory":0,"unfinished":5,"pairs":14,"proof_gap":false},{"model":"fastsmalltree_v49","label":"v49, 8 threads","direct":"v49, 8 threads","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":2.4421940999987664,"t_sd":0.0,"c":0.2694855573909351,"c_sd":0.0,"solved":9.0,"wrong":0,"notree":0,"memory":0,"unfinished":5,"pairs":14,"proof_gap":false},{"model":"gg_guided_e60d2","label":"gosdt-guesses, guided (tuned)","direct":"gosdt-guesses, guided (tuned)","group":"baseline_approx","heuristic":true,"multicore":false,"runs":1,"t":0.062419343925626126,"t_sd":0.0,"c":0.2773404145085364,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":3,"memory":3,"unfinished":0,"pairs":14,"proof_gap":false},{"model":"gosdt","label":"GOSDT","direct":"GOSDT","group":"baseline_exact","heuristic":false,"multicore":false,"runs":1,"t":215.6625120249074,"t_sd":0.0,"c":0.29454194754913343,"c_sd":0.0,"solved":4.0,"wrong":0,"notree":9,"memory":8,"unfinished":2,"pairs":14,"proof_gap":false},{"model":"gosdt_guesses","label":"gosdt-guesses","direct":"gosdt-guesses","group":"baseline_exact","heuristic":false,"multicore":false,"runs":1,"t":109.27508528551853,"t_sd":0.0,"c":0.2919092006074258,"c_sd":0.0,"solved":4.0,"wrong":3,"notree":8,"memory":5,"unfinished":2,"pairs":14,"proof_gap":false},{"model":"gosdt_guesses_guided","label":"gosdt-guesses, guided","direct":"gosdt-guesses, guided","group":"baseline_approx","heuristic":true,"multicore":false,"runs":1,"t":0.02189855895402458,"t_sd":0.0,"c":0.2782482140347361,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":3,"memory":3,"unfinished":0,"pairs":14,"proof_gap":false},{"model":"split","label":"SPLIT","direct":"SPLIT","group":"baseline_approx","heuristic":true,"multicore":false,"runs":1,"t":261.14755849005337,"t_sd":0.0,"c":0.29454194754913343,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":10,"memory":8,"unfinished":0,"pairs":14,"proof_gap":false},{"model":"streed","label":"STreeD","direct":"STreeD","group":"baseline_exact","heuristic":false,"multicore":false,"runs":1,"t":148.85885820103397,"t_sd":0.0,"c":0.2852674424598326,"c_sd":0.0,"solved":5.0,"wrong":1,"notree":4,"memory":0,"unfinished":5,"pairs":14,"proof_gap":false}],"offsets":{"fastsmalltree_v46_anytime100":[64,24],"fastsmalltree_v49":[-54,42],"fastsmalltree_v40":[34,-36],"streed":[-52,-30],"gosdt":[-62,-30],"split":[-26,44],"gosdt_guesses":[-88,-8],"gosdt_guesses_guided":[36,-34],"gg_guided_e60d2":[74,30]}},"nolimit":{"points":[{"model":"fastsmalltree","label":"v23","direct":"v23","group":"approximate","heuristic":false,"multicore":false,"runs":1,"t":0.06321909339467628,"t_sd":0.0,"c":0.3381278081619554,"c_sd":0.0,"solved":64.0,"wrong":0,"notree":1,"memory":6,"unfinished":0,"pairs":70,"proof_gap":false},{"model":"fastsmalltree_v40","label":"FastSmallTree (v40)","direct":"FastSmallTree","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.03589559737598059,"t_sd":0.0,"c":0.3478038967271502,"c_sd":0.0,"solved":64.0,"wrong":0,"notree":5,"memory":6,"unfinished":0,"pairs":70,"proof_gap":false},{"model":"fastsmalltree_v46","label":"v46, 8 threads","direct":"","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.04090685279046721,"t_sd":0.0,"c":0.33677029164760397,"c_sd":0.0,"solved":64.0,"wrong":0,"notree":0,"memory":0,"unfinished":6,"pairs":70,"proof_gap":false},{"model":"fastsmalltree_v49","label":"v49, 8 threads","direct":"v49, 8 threads","group":"exact","heuristic":false,"multicore":true,"runs":1,"t":0.04059551390201489,"t_sd":0.0,"c":0.3369391584567353,"c_sd":0.0,"solved":63.0,"wrong":0,"notree":0,"memory":0,"unfinished":7,"pairs":70,"proof_gap":false},{"model":"gg_exact_simsup","label":"gosdt-guesses (similar support)","direct":"","group":"baseline_exact","heuristic":false,"multicore":false,"runs":1,"t":0.48787012809063474,"t_sd":0.0,"c":0.37557470833837475,"c_sd":0.0,"solved":48.0,"wrong":0,"notree":22,"memory":22,"unfinished":0,"pairs":70,"proof_gap":false},{"model":"gg_guided_e60d2","label":"gosdt-guesses, guided (tuned)","direct":"gosdt-guesses, guided (tuned)","group":"baseline_approx","heuristic":true,"multicore":false,"runs":1,"t":0.025525569092599395,"t_sd":0.0,"c":0.35039544037562675,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":4,"memory":4,"unfinished":0,"pairs":70,"proof_gap":false},{"model":"gosdt","label":"GOSDT","direct":"GOSDT","group":"baseline_exact","heuristic":false,"multicore":false,"runs":1,"t":1.0492369312320968,"t_sd":0.0,"c":0.3764734564516692,"c_sd":0.0,"solved":47.0,"wrong":1,"notree":20,"memory":20,"unfinished":0,"pairs":70,"proof_gap":false},{"model":"gosdt_guesses","label":"gosdt-guesses","direct":"gosdt-guesses","group":"baseline_exact","heuristic":false,"multicore":false,"runs":1,"t":0.481877820540351,"t_sd":0.0,"c":0.37557470833837486,"c_sd":0.0,"solved":48.0,"wrong":0,"notree":22,"memory":22,"unfinished":0,"pairs":70,"proof_gap":false},{"model":"gosdt_guesses_guided","label":"gosdt-guesses, guided","direct":"gosdt-guesses, guided","group":"baseline_approx","heuristic":true,"multicore":false,"runs":1,"t":0.0013416973047651025,"t_sd":0.0,"c":0.3479809471921606,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":0,"memory":0,"unfinished":0,"pairs":70,"proof_gap":false},{"model":"pygosdt_v1","label":"pygosdt","direct":"pygosdt (v1)","group":"exact","heuristic":false,"multicore":false,"runs":1,"t":0.8767577053323141,"t_sd":0.0,"c":0.3385945767976273,"c_sd":0.0,"solved":62.0,"wrong":0,"notree":1,"memory":8,"unfinished":0,"pairs":70,"proof_gap":false},{"model":"split","label":"SPLIT","direct":"SPLIT","group":"baseline_approx","heuristic":true,"multicore":false,"runs":1,"t":0.5718226433324058,"t_sd":0.0,"c":0.36767350184025843,"c_sd":0.0,"solved":0.0,"wrong":0,"notree":12,"memory":7,"unfinished":0,"pairs":70,"proof_gap":false},{"model":"streed","label":"STreeD","direct":"STreeD","group":"baseline_exact","heuristic":false,"multicore":false,"runs":1,"t":8.764760727420619,"t_sd":0.0,"c":0.3641110538080965,"c_sd":0.0,"solved":46.0,"wrong":0,"notree":16,"memory":16,"unfinished":8,"pairs":70,"proof_gap":false}],"offsets":{"gosdt":[60,30],"streed":[-55,-32],"pygosdt_v1":[-5,-42],"split":[-45,38],"gosdt_guesses":[-62,34],"gosdt_guesses_guided":[82,10],"gg_guided_e60d2":[92,-30],"fastsmalltree":[50,20],"fastsmalltree_v40":[10,70],"fastsmalltree_v46_anytime100":[66,26],"fastsmalltree_v49":[60,40]}}};
+                    (function () {
+                      if (!window.Plotly || !PARETO.dev) return;
+                      // roles, not raw hex, below this line; categorical slots 1-2 validated all-pairs
+                      var C = {
+                        baseline_exact: '#a09f9a', baseline_approx: '#6f6e69', exact: '#3987e5', approximate: '#104281',
+                        ink: '#1b1f23', muted: '#6a737d', grid: '#e3e6e8', axis: '#c3c2b7',
+                        surface: '#ffffff'
+                      };
+                      var GROUP = { baseline_exact: 'Baselines, exact', baseline_approx: 'Baselines, approximate', exact: 'Autoresearch versions, exact', approximate: 'Autoresearch versions, approximate' };
+
+                      function fmt(v, sd, runs, d) {
+                        return v.toFixed(d) + (runs > 1 ? ' ± ' + sd.toFixed(d) : '');
+                      }
+                      function hover(p) {
+                        var lines = ['<b>' + p.label + '</b>',
+                          GROUP[p.group] + (p.heuristic ? ' (heuristic)' : '') + ' · ' + (p.multicore ? '8 threads' : '1 thread'),
+                          'time ' + fmt(p.t, p.t_sd, p.runs, 4) + ' s',
+                          'criterion ' + fmt(p.c, p.c_sd, p.runs, 4),
+                          'certified ' + p.solved.toFixed(p.runs > 1 ? 1 : 0) + ' of ' + (p.pairs || 70),
+                          p.runs > 1 ? 'mean of ' + p.runs + ' runs' : 'single run'];
+                        if (p.wrong) lines.push('✖ ' + p.wrong + ' false certificate' + (p.wrong > 1 ? 's' : ''));
+                        if (p.notree) lines.push('no tree on ' + p.notree + ' problems');
+                        if (p.memory) lines.push('stopped at 6 GB on ' + p.memory + ' problems');
+                        if (p.unfinished) lines.push('ran to the time cap on ' + p.unfinished + ' problems');
+                        if (p.proof_gap) lines.push('exactness proof has a gap (no wrong answer observed)');
+                        return lines.join('<br>');
+                      }
+
+                      // the two 30 s panels share a time range so they read left to right against
+                      // each other; the full-size panel is minutes, so it gets its own
+                      function span(pts) {
+                        var lo = Math.min.apply(null, pts.map(function (p) { return Math.log10(p.t); }));
+                        var hi = Math.max.apply(null, pts.map(function (p) { return Math.log10(p.t); }));
+                        return [lo - 0.15, hi + 0.2];
+                      }
+                      var xrange = span(PARETO.dev.points.concat(PARETO.external ? PARETO.external.points : []));
+
+                      // the version the package ships, under each panel's model key
+                      var SHIPPED = { v40_sequential: 1, fastsmalltree_v40: 1 };
+
+                      function panel(el, D, ytick, xr) {
+                        var pts = D.points;
+                        // translucency separates single runs from three-run means; where a panel
+                        // has only single runs it says nothing, so draw them solid
+                        var mixed = pts.some(function (p) { return p.runs > 1; });
+                        var traces = [];
+                        // every single run is drawn before any three-run mean, so the means stay on top
+                        [false, true].forEach(function (rep) {
+                          ['baseline_exact', 'baseline_approx', 'exact', 'approximate'].forEach(function (g) {
+                            [false, true].forEach(function (mc) {
+                              var sub = pts.filter(function (p) {
+                                return !SHIPPED[p.model] && p.group === g && p.multicore === mc && (p.runs > 1) === rep;
+                              });
+                              if (!sub.length) return;
+                              traces.push({
+                                x: sub.map(function (p) { return p.t; }),
+                                y: sub.map(function (p) { return p.c; }),
+                                mode: 'markers', showlegend: false,
+                                marker: {
+                                  symbol: 'circle',
+                                  size: rep ? 15 : 9, opacity: rep || !mixed ? 1 : 0.55, color: C[g],
+                                  line: { color: C.surface, width: 2 }
+                                },
+                                text: sub.map(hover), hovertemplate: '%{text}<extra></extra>'
+                              });
+                            });
+                          });
+                        });
+                        // the shipped model is drawn last, as a star, so it stays on top
+                        var ship = pts.filter(function (p) { return SHIPPED[p.model]; });
+                        if (ship.length) traces.push({
+                          x: ship.map(function (p) { return p.t; }),
+                          y: ship.map(function (p) { return p.c; }),
+                          mode: 'markers', showlegend: false,
+                          marker: {
+                            symbol: 'star',
+                            size: ship.map(function (p) { return p.runs > 1 ? 20 : 15; }),
+                            color: ship.map(function (p) { return C[p.group]; }),
+                            line: { color: C.surface, width: 1.5 }
+                          },
+                          text: ship.map(hover), hovertemplate: '%{text}<extra></extra>'
+                        });
+                        var OFFSET = D.offsets || {};
+                        var notes = pts.filter(function (p) { return p.direct; }).map(function (p) {
+                          var o = OFFSET[p.model] || [30, -30];
+                          // offsets were set for 424 px of plot area; the vertical ones follow its height
+                          var sy = (340 - 8 - 44) / (480 - 8 - 48);
+                          return {
+                            x: Math.log10(p.t), y: p.c, xref: 'x', yref: 'y',
+                            // the red x and the legend already say "false certificate"
+                            text: p.direct,
+                            showarrow: true, arrowhead: 0, arrowwidth: 1, arrowcolor: C.axis, ax: o[0], ay: o[1] * sy,
+                            font: { size: 11.5, color: C.ink }, bgcolor: 'rgba(255,255,255,0.85)', borderpad: 2
+                          };
+                        });
+                        var axis = { gridcolor: C.grid, linecolor: C.axis, zeroline: false, ticks: 'outside', tickcolor: C.axis,
+                                     tickfont: { size: 11.5, color: C.muted }, titlefont: { size: 12.5, color: C.ink } };
+                        Plotly.newPlot(el, traces, {
+                          height: 340, margin: { l: 62, r: 26, t: 8, b: 44 }, showlegend: false,
+                          paper_bgcolor: C.surface, plot_bgcolor: C.surface,
+                          font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: C.ink },
+                          xaxis: Object.assign({ type: 'log', range: xr || xrange, title: { text: 'Geometric-mean time per problem (s, log scale)' } }, axis),
+                          yaxis: Object.assign({ title: { text: 'Geometric-mean criterion' }, tickformat: ytick }, axis),
+                          hovermode: 'closest', hoverlabel: { bgcolor: C.surface, bordercolor: C.grid, font: { color: C.ink, size: 12 } },
+                          annotations: notes
+                        }, { displayModeBar: false, responsive: true });
+                      }
+
+                      // the held-out criteria span a tenth of the development range, so finer ticks
+                      panel(document.getElementById('pareto-dev'), PARETO.dev, '.2f');
+                      var ext = document.getElementById('pareto-external');
+                      if (PARETO.external) panel(ext, PARETO.external, '.3f');
+                      else ext.innerHTML = '<div class="fig-pending">TabArena-14 results pending</div>';
+                      var full = document.getElementById('pareto-full');
+                      if (PARETO.full) panel(full, PARETO.full, '.3f', span(PARETO.full.points));
+                      else full.innerHTML = '<div class="fig-pending">full-size run in progress</div>';
+                      var nolimit = document.getElementById('pareto-nolimit');
+                      if (PARETO.nolimit) panel(nolimit, PARETO.nolimit, '.3f', span(PARETO.nolimit.points));
+                      else nolimit.innerHTML = '<div class="fig-pending">4 h run in progress</div>';
+                    })();
+                    </script>
+
+                    Overall, we find that the autoresearch points (blue) can improve the performance-speed frontier and that the shipped FastSmallTree model (blue star) outperforms existing packages.
+
+                    <p><b>The shipped model consistently performs well at both performance and speed.</b> On the visible set (Fig <a href="#fig1">1</a>A) the loop's
+                        exact versions reach the best criterion of any solver and get there fastest, roughly 50 to 80
+                        times faster than STreeD and GOSDT. Only guided gosdt-guesses is quicker, and it pays for that
+                        with a much worse tree.</p>
+
+                    <p><b>The performance generalizes to the hidden set.</b> On TabArena-14 (Fig <a href="#fig1">1</a>B) the shipped model
+                        again pairs one of the best criteria with the fastest time among solvers that reach it, about 20
+                        times faster than GOSDT. STreeD edges it out marginally on criterion but takes about 50 times as
+                        long, spending its time refining trees on problems neither search finishes.</p>
+
+                    <p><b>The performance generalizes to larger data and longer time.</b> With every row and column kept and 30 minutes a problem
+                        (Fig <a href="#fig1">1</a>C), the baselines fall further behind on both axes: they take 50 to 70
+                        times longer and reach worse trees, largely because they run out of memory and return no tree on
+                        many datasets. Guided gosdt-guesses looks fast here only because its reported time leaves out
+                        its preprocessing (see the details above). With 4 hours a problem (Fig <a href="#fig1">1</a>D),
+                        the different methods keep the same relative places: the autoresearch versions keep the best criterion, while STreeD and
+                        GOSDT score worse than with 30 seconds, because more of their runs now end at the 6 GB cap
+                        without a tree. The shipped model's point is a harness effect, explained in the details
+                        above.</p>
+
+                    <h2 id="methods">3. Methods: FastSmallTree</h2>
+
+                    <p>The objective is the one GOSDT introduced,</p>
+
+                    <div class="eq">\[
+                      \min_{T}\;
+                      \underbrace{\frac{1}{n}\sum_{i=1}^{n} \mathbf{1}\!\left[\,T(x_i) \neq y_i\,\right]}_{\text{misclassification rate}}
+                      \;+\;
+                      \underbrace{\lambda \cdot \left|\mathrm{leaves}(T)\right|}_{\text{regularization} \,\times\, \text{number of leaves}}
+                    \]</div>
+
+                    <p>where <i>T</i> ranges over every decision tree on the binarized features and &lambda; is
+                        <code>regularization</code>. Write <i>R</i>(<i>X</i>) for the optimal value on
+                        the rows that reach a node, its <i>capture set</i> <i>X</i>. The solver is a memoised
+                        branch-and-bound over capture sets, stored as bitmasks of 64-bit words, so a subproblem reached
+                        by two paths is solved once.</p>
+
+                    <p><b>What "exact" means.</b> For each subproblem it touches the solver keeps an interval [lb, ub]
+                        and a solved flag. The answer is a certificate, not merely the best tree found, because three
+                        invariants hold throughout:</p>
+
+                    <ul class="gam-readings">
+                        <li><b>(i)</b> every stored lower bound is at most <i>R</i>(<i>X</i>);</li>
+                        <li><b>(ii)</b> every stored upper bound is the objective of a real tree on <i>X</i>, one the
+                            extraction rebuilds;</li>
+                        <li><b>(iii)</b> a call solve(<i>X</i>, budget) returns either with lb = ub = <i>R</i>(<i>X</i>),
+                            or with lb &gt; budget, a proof that no tree on <i>X</i> fits the budget.</li>
+                    </ul>
+
+                    <p>A version is exact if and only if every rule it adds preserves all three: a new lower bound must never
+                        exceed <i>R</i>, a new way to stop early must respect (iii), and a new source of trees must
+                        respect (ii). Changes that only rearrange computation (kernels, caches, the compiled port) add
+                        no rule, so their only risk is a transcription error.</p>
+
+                    <h3 id="bounds">The bounds found via autoresearch</h3>
+
+                    <details class="collapsible" id="b-inherited">
+                      <summary>Inherited from GOSDT: equivalent points, leaf support, look-ahead, threshold exchange</summary>
+                      <p><b>Equivalent points.</b> Rows with identical features but different labels can never be
+                        separated, so each such group costs at least its cheaper label. Summed over <i>X</i> this is a
+                        loss floor <i>m</i>(<i>X</i>), and since a split means at least two leaves,
+                        <i>R</i>(<i>X</i>) &ge; min(leaf(<i>X</i>), <i>m</i>(<i>X</i>) + 2&lambda;), where leaf(<i>X</i>)
+                        is the best single label plus &lambda;. Every node starts from this bound.</p>
+                      <p><b>Leaf support.</b> Let pot(<i>S</i>) be the most that relabelling the rows <i>S</i> can change the
+                        loss: the sum over the rows of the largest minus the smallest cost for their class (for 0/1 loss,
+                        their share of the rows). <i>In an optimal tree every leaf has potential at least
+                        &lambda;</i>: deleting a leaf <i>L</i> with less and routing its rows to its sibling saves
+                        &lambda; and adds at most pot(<i>L</i>) of loss. So a node with pot(<i>X</i>) &lt; 2&lambda; is a
+                        leaf, and (from v4) a split with a child of potential below &lambda; is dropped, here and on
+                        every subset, since potential only shrinks. The test loss(<i>X</i>) &minus; <i>m</i>(<i>X</i>)
+                        &lt; &lambda; also makes a node a leaf, for any nonnegative costs: a split costs at least
+                        <i>m</i> + 2&lambda; and the leaf loss + &lambda;. (An inherited test,
+                        1 &minus; <i>m</i>(<i>X</i>) &lt; &lambda;, assumed losses of at most 1; v14 removed it.)</p>
+                      <p><b>A consequence every later bound uses.</b> Deleting leaves of potential below &lambda; strictly
+                        improves any tree and must stop, and it stops at a tree whose every split leaves both sides with
+                        potential at least &lambda;. Such a split is also <i>valid</i> at every ancestor, since potential
+                        only grows with the rows. So <i>R</i>(<i>X</i>) is always attained by a tree built from splits
+                        valid at <i>X</i>, and a bound needs to hold only for such trees. Several hold for nothing more:
+                        the pairwise values, the shape relaxation and the column programme are computed over the valid
+                        splits, and a child only inherits its parent's valid splits.</p>
+                      <p><b>Look-ahead budgets.</b> A split's two children are solved in turn, the first with the budget
+                        less the second's lower bound, the second with the budget less the first's optimum; if either
+                        proves its lower bound above its share, the split is discarded. Budget deepening (v9) only
+                        changes the sequence of budgets, and every call respects (iii).</p>
+                      <p><b>Threshold exchange.</b> <i>R</i> is monotone under inclusion: restricting an optimal tree of
+                        <i>X</i> to <i>S</i> &sub; <i>X</i>, and deleting emptied leaves, adds neither loss nor leaves, so
+                        <i>R</i>(<i>S</i>) &le; <i>R</i>(<i>X</i>). For consecutive thresholds <i>t</i> &lt;
+                        <i>t&prime;</i> of a column, left(<i>t</i>) &supe; left(<i>t&prime;</i>) and right(<i>t</i>)
+                        &sube; right(<i>t&prime;</i>), so if lb(right(<i>t</i>)) reaches the leaf value of
+                        right(<i>t&prime;</i>), split <i>t&prime;</i> is no worse than <i>t</i> and <i>t</i> is dropped
+                        (symmetrically on the left). The two rules exclude each other on a pair, so no cycle drops
+                        both.</p>
+                    </details>
+
+                    <details class="collapsible" id="b-simsupport">
+                      <summary>Similar support across a whole column (v2)</summary>
+                      <p>For thresholds <i>t</i> &lt; <i>t&prime;</i> of one column, the two splits disagree
+                        only on the rows with <i>t</i> &le; <i>x</i> &lt; <i>t&prime;</i>, whose potential is
+                        |pot(left(<i>t</i>)) &minus; pot(left(<i>t&prime;</i>))| because the left sets are nested. Moving
+                        those rows turns any tree rooted at <i>t&prime;</i> into one rooted at <i>t</i> with the same
+                        leaves and at most that much more loss, so |<i>R</i>(<i>t</i>) &minus; <i>R</i>(<i>t&prime;</i>)|
+                        is bounded by it. A bound proved for one threshold therefore bounds its whole column; the
+                        reference applies this only to neighbouring thresholds.</p>
+                    </details>
+
+                    <details class="collapsible" id="b-columndp">
+                      <summary>One column solved exactly by segmentation (v3)</summary>
+                      <p>A tree that splits only on one column partitions the rows into intervals of that
+                        column, one per leaf, and any partition into <i>k</i> intervals is realised by a chain of
+                        <i>k</i> &minus; 1 splits. So the best such tree is the best segmentation of the sorted rows, each
+                        segment charged its best label plus &lambda;: a quadratic dynamic programme over class counts
+                        the node already has. When one column's thresholds are the only splits left at a node (after the
+                        exclusions above, which are monotone under subsets, so a descendant cannot regain a split),
+                        every tree on <i>X</i> uses only that column and the programme gives <i>R</i>(<i>X</i>) exactly,
+                        for every node of the chain. Elsewhere the chain is a real tree, used only as an upper
+                        bound.</p>
+                    </details>
+
+                    <details class="collapsible" id="b-pairs">
+                      <summary>The pairwise stage: exact two-level trees, and the rule below 4&lambda; (v7, v8, v10)</summary>
+                      <p>Counting rows for every pair of splits gives the exact cost of the best two-leaf tree on each
+                        child of each split, best<sub>2</sub>. Three consequences: (a) min(leaf, 2&lambda; +
+                        best<sub>2</sub>) is achieved by a real tree, so it upper-bounds the child; (b) any tree on a
+                        child is a leaf, one split, or has at least three leaves, so <i>R</i>(child) &ge; min(leaf,
+                        2&lambda; + best<sub>2</sub>, 3&lambda;); (c) every tree on <i>X</i> with at most three leaves is
+                        a leaf or a two-level tree, so the best two-level value over the valid splits, with the leaf, is
+                        at most the optimum over trees with at most three leaves (it also covers four-leaf (2,2) trees)
+                        and is achieved by a real tree. With a budget below 4&lambda; no tree with four or more leaves
+                        fits, so
+                        that value is <i>R</i>(<i>X</i>) if within budget, and otherwise <i>R</i>(<i>X</i>) &ge;
+                        min(best, 4&lambda;) is the bound to store.</p>
+                      <p>v7 stored instead the smaller of best and the smallest bound over <i>all</i> splits, candidates
+                        inside the budget included, which can fall at or below the budget, so a caller could treat an unsolved node as solved: a violation of (iii),
+                        fixed in v8. Note that (c) needs the minimum over <i>every</i> split that separates the node's
+                        rows, not only the candidates that survive the budget filter; v49 returns to this.</p>
+                    </details>
+
+                    <details class="collapsible" id="b-superset">
+                      <summary>The superset bound (v14)</summary>
+                      <p>For every child <i>S</i> of every split, <i>R</i>(<i>X</i>) &ge; <i>R</i>(<i>S</i>)
+                        &ge; lb(<i>S</i>) by monotonicity, so a node's lower bound can be raised to the largest proven
+                        bound of any child, for free. v14 also dropped the leaf test that assumes losses of at most 1
+                        and made a user-supplied upper bound a budget rather than an achievable value.</p>
+                    </details>
+
+                    <details class="collapsible" id="b-shape">
+                      <summary>The shape relaxation (v15)</summary>
+                      <p>Let <i>g<sub>a</sub></i>(<i>S</i>) bound every tree with exactly <i>a</i> leaves on
+                        <i>S</i>: <i>g</i><sub>1</sub> = leaf(<i>S</i>) and <i>g</i><sub>2</sub> = 2&lambda; +
+                        best<sub>2</sub>(<i>S</i>), both exact; <i>g</i><sub>3</sub> = 3&lambda; plus the cheapest cell
+                        any split peels off as a leaf, since a three-leaf tree has a leaf at depth one;
+                        <i>g<sub>a</sub></i> = <i>a</i>&lambda; for <i>a</i> &ge; 4. A tree with four or more leaves has
+                        a root split with <i>a</i> and <i>b</i> leaves on its sides, <i>a</i> + <i>b</i> &ge; 4, so the
+                        minimum over splits and such (<i>a</i>, <i>b</i>) of <i>g<sub>a</sub></i>(left) +
+                        <i>g<sub>b</sub></i>(right) bounds them all. If the best two-level tree is no worse than that
+                        and than the leaf, it is optimal, and the node is solved at any budget without expanding a
+                        child. Children's bounds rise to min(<i>g</i><sub>1</sub>, <i>g</i><sub>2</sub>,
+                        <i>g</i><sub>3</sub>, 4&lambda;) by the same argument.</p>
+                    </details>
+
+                    <details class="collapsible" id="b-triples">
+                      <summary>Triple counts and depth-3 floors (v19, v20; off since v40): the first finding</summary>
+                      <p>Counting rows for every triple of splits gives each child its exact best three-leaf and
+                        (2,2)-leaf trees. The stage ran only on narrow nodes (at most 14 candidates in 64 words, with a
+                        budget under the floor plus 8&lambda;), and v40 turned it off: once the search was compiled, the
+                        expansions it saved cost less than its cubic count. For shapes it does not enumerate it uses
+                        floors from the cells it sees; four leaves as (1,3), for instance, cost at least 4&lambda; + a
+                        cell + the cheapest sub-cell on the other side, and five and six leaves are bounded the same
+                        way. These floors are admissible, and v19, which charged six or more leaves just 6&lambda;, is
+                        exact.</p>
+                      <p><b>The finding.</b> v20 charges seven or more leaves 6&lambda; + min(<i>c</i><sub>3</sub>,
+                        <i>c</i><sub>5</sub>, <i>c</i><sub>6</sub>), which is not admissible. A (3,4) tree keeps a single
+                        sub-cell leaf, whose cost can be below all three (<i>c</i><sub>6</sub> needs a sub-cell on both
+                        sides), and a (4,4) tree of two (2,2) subtrees has no leaf above depth three, so its loss can be
+                        zero. Take a child whose label is the parity of three binary features, <i>n<sub>X</sub></i> of the
+                        <i>n</i> rows: every cell and sub-cell is half wrong, so all three constants are
+                        <i>n<sub>X</sub></i>/4<i>n</i> and the floor reads 6&lambda; + <i>n<sub>X</sub></i>/4<i>n</i>,
+                        while the eight-leaf tree on all three features is perfect and costs 8&lambda;. Once
+                        <i>n<sub>X</sub></i> &gt; 14&lambda;<i>n</i> every term of the stored bound exceeds 8&lambda;, so
+                        the node's stored lower bound is above its optimum; an independent brute-force check reproduces
+                        it (a bound of 0.25 against an optimum of 0.08). The overestimate enters the memo and, through
+                        the superset bound, the parent, where it can prune the optimum at a later budget: a false
+                        certificate. The loop's tests used at most three features, too few to build a seven-leaf subtree
+                        below a split. It never fired on the benchmark, so the numbers of v20 to v39 stand, but their
+                        guarantee does not. The admissible floor is 7&lambda;; the package ships with the stage off and
+                        now uses that floor, so enabling it is safe.</p>
+                    </details>
+
+                    <details class="collapsible" id="b-cands">
+                      <summary>The pair stage over the candidates only (v49): exact, correcting an earlier finding</summary>
+                      <p>On wide nodes with few candidates, v49 counts pairs only between the candidates and all other
+                        splits. Splits without pair counts keep their own bounds, and in the shape relaxation every tree
+                        rooted at one of them is charged that split's bound, which bounds any tree rooted there. The rule
+                        below 4&lambda; looks exposed, since its best two-level value now runs over the candidates only,
+                        but its failing branch is never reached with the restricted stage. Candidates are chosen at the
+                        budget, so every rejected split's bound exceeds it, and those bounds are part of the shape
+                        relaxation's value. Whenever the node cannot be solved within budget, min(leaf, best two-level
+                        tree, shape bound) therefore already exceeds the budget, and the node returns earlier with that
+                        valid bound. A frame under a budget below 4&lambda; is never cached, and one cached at a larger
+                        budget and re-entered at a smaller one keeps its rejected bounds above both. An earlier version
+                        of this page reported this branch as a second gap. That was wrong: it examined the branch
+                        without the early return in front of it. v49 is exact.</p>
+                    </details>
+
+                    <details class="collapsible" id="b-parallel">
+                      <summary>Parallel certification (v25, v29, v30, v32, v34)</summary>
+                      <p>After a short sequential phase the root's candidate splits go to eight workers
+                        (processes in v25 and v29, threads from v30). The shared incumbent is always a real tree's value
+                        and only decreases, so a split a worker proves above the incumbent it saw is above the final
+                        answer; every other split is solved exactly, and the root takes the minimum, as in the
+                        sequential search. v32 shares proven lower bounds through a lock-free table keyed by capture
+                        mask and row count: bounds only rise, a partly written key has the wrong row count, and every
+                        published value was proved for exactly that subproblem. v34 shares solved optima the same way
+                        and pushes a better incumbent down each task's stack, re-deriving child budgets as when they
+                        were pushed; budgets only tighten, so the conclusions match the sequential search.</p>
+                      <p><b>One assumption the argument needs.</b> A table slot is written as value, bound, row count,
+                        key, then a used flag, and read in the reverse order; the argument needs a reader to see those
+                        writes in that order. x86 guarantees it. ARM, which the laptop timings ran on, does not without
+                        memory barriers, which the code does not issue, and the table is reused across fits with only its
+                        flags and values reset. So on ARM a reader could in principle pair a fresh flag with a bound
+                        left by the previous fit, which can be too high for the current problem. Nothing in any check
+                        showed it, but the proof does not cover it. A release/acquire pair around the flag, or resetting
+                        bounds and keys with the flags, would close it. The shipped model runs one thread and never
+                        touches the table.</p>
+                    </details>
+
+                    <details class="collapsible" id="b-seeds">
+                      <summary>Seeds, repair and budgeted stages (v43, v45, v46): exact whenever the search finishes</summary>
+                      <p>The greedy seed (v43) installs a subtree's value only when it beats the node's, and every
+                        value it writes belongs to the structure it writes, so it only supplies (ii). The repair (v45)
+                        solves each internal node of the incumbent with its own value as budget, so by (iii) it ends
+                        solved or proven. v46's budgeted pair stage evaluates only the most promising splits under a
+                        short cap and derives no bounds from them, and v43c's rule that skips an expensive pair stage
+                        leaves bounds uncomputed, not changed. None of this can produce a wrong certificate; under a cap
+                        it only changes the incumbent. Drafts of v13, v41 and v46 did certify wrong trees through
+                        transcription errors (in v46, an indentation slip that skipped a refilter), all caught by the
+                        loop's checks before recording.</p>
+                    </details>
+
+                    <details class="collapsible" id="b-guesses">
+                      <summary>Guessed bounds and a depth budget (v47): approximate by construction</summary>
+                      <p>The gosdt-guesses recipe replaces the equivalent-points floor with a reference model's
+                        loss plus &lambda;, and caps the depth. The reference loss bounds nothing, since a tree can beat
+                        the reference on any subset, so optima are pruned wherever the reference is poor (on monk_2 the
+                        regret reached 0.12 to 0.23), and the depth cap removes trees outright. Both are approximations
+                        by design.</p>
+                    </details>
+
+                    <details class="collapsible" id="b-shipped">
+                      <summary>The shipped model, checked line by line</summary>
+                      <p>The proofs above cover rules; this section checks the code that applies them, on the path the
+                        package takes. <code>fit</code> runs the compiled engine on one thread, so the parallel phase,
+                        the shared table and thread adoption are never entered, and the depth-3 stage is off. Thirteen
+                        places in what remains mark a node solved or raise a lower bound, each resting on a rule proved
+                        above:</p>
+                      <ol class="gam-readings">
+                        <li><b>Creating a node.</b> lb = min(leaf, floor + 2&lambda;), ub = leaf; solved at once only for a single row, for leaf &minus; floor &lt; &lambda;, or for potential &lt; 2&lambda;. Inherited bounds.</li>
+                        <li><b>No split left.</b> No split leaves both sides with potential at least &lambda;, so the node is a leaf. Leaf support.</li>
+                        <li><b>Everything above the budget.</b> min(leaf, best two-level tree, shape bound) exceeds the budget, so the bound rises to it. Shape relaxation, over every separating split.</li>
+                        <li><b>The single-column chain.</b> When every separating split is on one column, the segmentation value is optimal and every chain node is solved. Segmentation; a child only sees its parent's separating splits, so no column is regained.</li>
+                        <li><b>Installing the best two-level tree.</b> Each child gets min(leaf, 2&lambda; + best<sub>2</sub>) and the split achieving it. Real trees, so only (ii).</li>
+                        <li><b>The shape rule.</b> Best two-level tree no worse than the shape bound and the leaf: solved at that value.</li>
+                        <li><b>The rule below 4&lambda;.</b> Solved at best when it fits the budget, else bound min(best, 4&lambda;); best ranges over every separating split.</li>
+                        <li><b>Children in the candidate loop.</b> Solved when ub is within 1e-10 of lb, or when ub fits a budget below 3&lambda;, since ub is exact over one and two leaves and three or more cost at least 3&lambda;. Pairwise stage.</li>
+                        <li><b>Deepening.</b> Each child's budget is the bound less its sibling's lower bound, or less its optimum once that is known; a child above its budget prunes the split. Look-ahead.</li>
+                        <li><b>The epilogue.</b> Solved at best when it fits; else bound max(min(best, cheapest pruned split), largest child bound). Superset bound.</li>
+                        <li><b>The flush.</b> An interruption writes each open frame's incumbent to its node, never a bound or a flag, and the search restarts from a consistent memo.</li>
+                        <li><b>Re-arming a cached frame.</b> Reuses only quantities that depend on the node alone; a frame whose pair stage did not run is never cached.</li>
+                        <li><b>The driver and extraction.</b> A time, memory or depth stop sets <code>optimal_</code> to False and warns, so a stopped search never certifies. Extraction rebuilds exactly the trees the writes above recorded.</li>
+                      </ol>
+                      <p><b>Tolerance.</b> A prune requires exceeding by more than 1e-10 and a solve accepts equality
+                        within it. Most conclusions rest on one such comparison, so the certified objective is within
+                        1e-10 of the minimum; the threshold-exchange rule can chain its comparisons along a column, so
+                        the worst case is a column's number of thresholds times 1e-10. The returned tree scores no worse
+                        than the certificate. With uniform costs two trees differ by a multiple of
+                        1/<i>n</i> plus a multiple of &lambda;, so this matters only if &lambda; matches a multiple of
+                        1/<i>n</i> to ten decimal places; its purpose is to treat ties as ties.</p>
+                      <p><b>Inputs.</b> The proofs need a nonnegative penalty and nonnegative, finite costs, and nothing
+                        more, so nonzero diagonals, unequal errors and <code>balance</code> are covered. The package now
+                        rejects anything else; before, a negative penalty would have broken the 4&lambda; floor.</p>
+                      <p><b>What the check fixed.</b> Four defects, none reached by any benchmark. (1) The single-column
+                        chain wrote each node's value before creating the next node's children, so a store that filled
+                        mid-chain could leave a node whose value no stored tree achieves, a failure of (ii); the chain
+                        now creates every node first. A test that grows a four-node store through dozens of
+                        reallocations passes on the old code too, since the failure also needs a memo hit on an inner
+                        chain node, so this fix rests on the argument. (2) Candidates were ordered by a rounded key
+                        with 1e-9 slack while the loop stops at the first candidate above the bound, so one could be
+                        skipped; the order is now exact. (3) The input validation above. (4) With the depth-3 stage
+                        forced on, extraction read a stale copy of a node store that had just grown: a crash, not a
+                        wrong tree; it now re-reads the store. The new tests enumerate every tree on up to six binary
+                        features with two or three classes, random nonnegative cost matrices, and a store forced to
+                        grow from four nodes: tripwires for the proofs, not substitutes.</p>
+                    </details>
+
+                    <br>
+
+                    <details class="collapsible" id="versions">
+                      <summary><b>Full table of all versions</b></summary>
+                      <table class="ranktbl dataset-table">
+                        <thead>
+                          <tr><th>version</th><th>what changed</th><th>kind</th><th>exact</th><th>why</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td>pygosdt (v1)</td><td>the reference bounds in Python: equivalent points, leaf support, look-ahead, similar support, threshold exchange; a numba popcount kernel</td><td>base</td><td>yes</td><td>inherited rules, proved above; one leaf test assumes losses at most 1, closed in v14</td></tr>
+                          <tr><td>v2</td><td>similar support across a whole column</td><td>bound</td><td>yes</td><td>nested thresholds differ on the rows between them</td></tr>
+                          <tr><td>v3</td><td>single-column segmentation programme</td><td>bound</td><td>yes</td><td>trees on one column are segmentations; exact only when no other split separates the node</td></tr>
+                          <tr><td>v4</td><td>leaf-support split exclusion</td><td>bound</td><td>yes</td><td>leaf-support lemma, monotone under subsets</td></tr>
+                          <tr><td>v5</td><td>one fused kernel per node</td><td>refactor</td><td>yes</td><td>no new rule</td></tr>
+                          <tr><td>v7</td><td>pairwise stage, exact two-level trees</td><td>bound</td><td><b>no</b></td><td>stored a bound at or below the budget for an unsolved node, breaking (iii)</td></tr>
+                          <tr><td>v8</td><td>the fix: stores min(best, 4&lambda;)</td><td>bound</td><td>yes</td><td>the rule below 4&lambda;, proved above</td></tr>
+                          <tr><td>v9</td><td>alternating budget deepening</td><td>schedule</td><td>yes</td><td>only the sequence of budgets changes; every call honours (iii)</td></tr>
+                          <tr><td>v10</td><td>pair stage on every cheap node</td><td>gate</td><td>yes</td><td>the same rule, applied more often</td></tr>
+                          <tr><td>v13</td><td>candidate preparation in numba</td><td>refactor</td><td>yes</td><td>no new rule (a draft dropped rejected splits from the node bound; caught before recording)</td></tr>
+                          <tr><td>v14</td><td>hardening; superset bound</td><td>bound</td><td>yes</td><td>monotonicity of <i>R</i> under inclusion</td></tr>
+                          <tr><td>v15</td><td>shape relaxation</td><td>bound</td><td>yes</td><td>case split on the root's (a, b) leaves</td></tr>
+                          <tr><td>v16, v16b</td><td>fused expansion kernel</td><td>refactor</td><td>yes</td><td>no new rule</td></tr>
+                          <tr><td>v18</td><td>expansion cache, kernel-side predictions</td><td>refactor</td><td>yes</td><td>a cached expansion is a function of the node alone</td></tr>
+                          <tr><td>v19</td><td>depth-3 stage from triple counts, floor 6&lambda; beyond six leaves</td><td>bound</td><td>yes</td><td>its floors are admissible</td></tr>
+                          <tr><td>v20</td><td>two-peeled-leaf floors</td><td>bound</td><td><b>latent gap</b></td><td>the floor for seven or more leaves is not admissible (first finding); gated, never fired on the benchmark</td></tr>
+                          <tr><td>v21, v22, v23</td><td>Python overhead, kernel-side masks, word compaction</td><td>refactor</td><td>latent gap</td><td>no new rule; carry v20's stage</td></tr>
+                          <tr><td>v25</td><td>root-parallel phase, 8 processes</td><td>parallel</td><td>latent gap</td><td>the sharing argument is sound; carries v20's stage</td></tr>
+                          <tr><td>v28</td><td>the whole search compiled</td><td>refactor</td><td>latent gap</td><td>a port of v23's rules; carries v20's stage</td></tr>
+                          <tr><td>v29, v30</td><td>parallel phase on the compiled engine; threads</td><td>parallel</td><td>latent gap</td><td>as v25</td></tr>
+                          <tr><td>v31, v33, v35, v36, v37, v39</td><td>frame cache, hand-off timing, pooled table, cached root, gated hand-off, memory accounting</td><td>refactor</td><td>latent gap</td><td>no new rule; carry v20's stage</td></tr>
+                          <tr><td>v32, v34</td><td>shared lower bounds; shared optima and a live incumbent</td><td>parallel</td><td>latent gap</td><td>only bounds proved on the same subproblem cross threads; carry v20's stage</td></tr>
+                          <tr><td><b>v40</b> (shipped, as v40_sequential with one thread)</td><td>depth-3 stage off</td><td>gate</td><td><b>yes</b></td><td>removes the one inadmissible rule; every remaining rule is proved above, and the code that applies them is checked line by line in the last collapsible</td></tr>
+                          <tr><td>v41</td><td>node-keyed frame cache</td><td>refactor</td><td>yes</td><td>no new rule (a draft re-armed a frame without its structure and certified a wrong tree; caught)</td></tr>
+                          <tr><td>v43</td><td>lookahead-greedy seed, cap-scaled chunks</td><td>incumbent</td><td>yes</td><td>writes only (ii)</td></tr>
+                          <tr><td>v43c</td><td>pair-stage budget for short caps</td><td>gate</td><td>yes</td><td>leaves bounds uncomputed, never changes one</td></tr>
+                          <tr><td>v45</td><td>a family of seeds; bottom-up exact repair</td><td>incumbent</td><td>yes</td><td>the repair calls the solver, so (iii) holds</td></tr>
+                          <tr><td>v46</td><td>budgeted pair stage, early install, leaf repair</td><td>incumbent</td><td>yes</td><td>the budgeted stage yields no bound</td></tr>
+                          <tr><td>v47</td><td>guessed bounds and a depth budget</td><td>approximation</td><td><b>no</b></td><td>a reference loss is not a bound; a depth cap removes trees</td></tr>
+                          <tr><td>v48</td><td>vectorised binarisation</td><td>refactor</td><td>yes</td><td>identical matrices; the search is untouched</td></tr>
+                          <tr><td>v49</td><td>pair stage over the candidates only; lazy workspaces</td><td>bound</td><td>yes</td><td>the rule below 4&lambda; cannot reach its failing branch under the restricted stage (an earlier version of this page said otherwise)</td></tr>
+                          <tr><td>anytime rows</td><td>v43 to v49 stopped at 1 ms to 1 s a problem</td><td>cap</td><td>by the cap</td><td>the same files; a certificate only when the search finishes first. Not plotted.</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="tblnote"><i>Latent gap</i>: the version ran as an exact solver and certified only known optima on
+                        the benchmark, but the proof of its guarantee has the hole described in the named collapsible.
+                        A refactor's "no new rule" is its whole argument; the loop's exhaustive checks caught three such
+                        drafts (v13, v41, v46), and the gap above is the one they could not reach. The parallel versions
+                        from v32 on also rest on the store-ordering assumption described under parallel certification.</p>
+                    </details>
+
+                    <p>In the end, two implementation details matter for speed.
+                      (1) We sort the rows so that the rows reaching a deep
+                        node sit close together, which keeps their bitmasks short.
+                      (2) The whole search is compiled with numba. The price is about 20 seconds of
+                        compiling the first time the model runs on a machine.
+                      After that the compiled code is cached
+                        and loads in about a second. If the cache directory isn't writable, set
+                        <code>OPTTREE_NUMBA_CACHE=0</code>.</p>
+
+
+                    <h3 id="citation">Citation</h3>
+
+                    <p>FastSmallTree came out of the autoresearch loop described in
+                        <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a>. If you use
+                        either, please cite:</p>
+
+                    <pre><code>@misc{singh2026agenticimodels,
+      title={Agentic-imodels: Evolving agentic interpretability tools via autoresearch},
+      author={Chandan Singh and Yan Shuo Tan and Weijia Xu and Zelalem Gero and Weiwei Yang and Michel Galley and Jianfeng Gao},
+      year={2026},
+      eprint={2605.03808},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2605.03808},
+}</code></pre>
+
+                </div>
+            </section>
+            <section>
+            </section>
+        </article>
+<nav id="sidebar">
+<div class="toc">
+<ul>
+<li><a href="index.html#installation">Installation</a></li>
+<li><a href="index.html#supported-models">Supported models</a></li>
+<li><a href="index.html#demo-notebooks">Demo notebooks</a></li>
+<li><a href="index.html#whats-the-difference-between-the-models">What's the difference between the models?</a><ul>
+<li><a href="index.html#extras">Extras</a></li>
+</ul>
+</li>
+<li><a href="index.html#references">References</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Our favorite methods</h3>
+<ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a><span class="post-date">Feb '22</span></li>
+<li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a><span class="post-date">Jan '22</span></li>
+</ul>
+</li>
+<li><h3>Prediction classes</h3>
+<ul class="cat-legend">
+<li><span class="cat-dot cat-algebraic"></span>algebraic</li>
+<li><span class="cat-dot cat-rule_list"></span>rule lists</li>
+<li><span class="cat-dot cat-rule_set"></span>rule sets</li>
+<li><span class="cat-dot cat-tree"></span>trees</li>
+<li><span class="cat-dot cat-util"></span>util</li>
+</ul>
+<ul class="class-list">
+<li><span class="cat-dot cat-util" title="util"></span><a title="imodels.AutoInterpretableClassifier" href="util/automl.html#imodels.util.automl.AutoInterpretableClassifier">AutoInterpretableClassifier</a></li>
+<li><span class="cat-dot cat-util" title="util"></span><a title="imodels.AutoInterpretableRegressor" href="util/automl.html#imodels.util.automl.AutoInterpretableRegressor">AutoInterpretableRegressor</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.BayesianRuleListClassifier" href="rule_list/bayesian_rule_list/bayesian_rule_list.html#imodels.rule_list.bayesian_rule_list.bayesian_rule_list.BayesianRuleListClassifier">BayesianRuleListClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.BayesianRuleSetClassifier" href="rule_set/brs.html#imodels.rule_set.brs.BayesianRuleSetClassifier">BayesianRuleSetClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.BoostedRulesClassifier" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.BoostedRulesRegressor" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesRegressor">BoostedRulesRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.C45TreeClassifier" href="tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.DecisionTreeCCPClassifier" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.DecisionTreeCCPRegressor" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPRegressor">DecisionTreeCCPRegressor</a></li>
+<li><span class="cat-dot cat-util" title="util"></span><a title="imodels.DistilledRegressor" href="util/distillation.html#imodels.util.distillation.DistilledRegressor">DistilledRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSClassifier" href="tree/figs.html#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSClassifierCV" href="tree/figs.html#imodels.tree.figs.FIGSClassifierCV">FIGSClassifierCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSRegressor" href="tree/figs.html#imodels.tree.figs.FIGSRegressor">FIGSRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FIGSRegressorCV" href="tree/figs.html#imodels.tree.figs.FIGSRegressorCV">FIGSRegressorCV</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPLassoClassifier" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoClassifier">FPLassoClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPLassoRegressor" href="rule_set/fplasso.html#imodels.rule_set.fplasso.FPLassoRegressor">FPLassoRegressor</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.FPSkopeClassifier" href="rule_set/fpskope.html#imodels.rule_set.fpskope.FPSkopeClassifier">FPSkopeClassifier</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.FastFrugalTreeClassifier" href="rule_list/fast_frugal_tree.html#imodels.rule_list.fast_frugal_tree.FastFrugalTreeClassifier">FastFrugalTreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.FastSmallTreeClassifier" href="tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.GPGamRegressor" href="algebraic/gp_gam.html#imodels.algebraic.gp_gam.GPGamRegressor">GPGamRegressor</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.GreedyRuleListClassifier" href="rule_list/greedy_rule_list.html#imodels.rule_list.greedy_rule_list.GreedyRuleListClassifier">GreedyRuleListClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.GreedyTreeClassifier" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.GreedyTreeRegressor" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeRegressor">GreedyTreeRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSDecisionTreeCCPClassifierCV" href="tree/cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV">HSDecisionTreeCCPClassifierCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSDecisionTreeCCPRegressorCV" href="tree/cart_ccp.html#imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV">HSDecisionTreeCCPRegressorCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeClassifier" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeClassifierCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeRegressor" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeRegressorCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.MarginalShrinkageLinearModelRegressor" href="algebraic/marginal_shrinkage_linear_model.html#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor">MarginalShrinkageLinearModelRegressor</a></li>
+<li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.OneRClassifier" href="rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier">OneRClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.RuleFitClassifier" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.RuleFitRegressor" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.SLIMClassifier" href="algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.SLIMRegressor" href="algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.SkopeRulesClassifier" href="rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></li>
+<li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.SlipperClassifier" href="rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SlipperClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.TaoTreeClassifier" href="tree/tao.html#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></li>
+<li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.TaoTreeRegressor" href="tree/tao.html#imodels.tree.tao.TaoTreeRegressor">TaoTreeRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.TreeGAMClassifier" href="algebraic/tree_gam.html#imodels.algebraic.tree_gam.TreeGAMClassifier">TreeGAMClassifier</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.TreeGAMRegressor" href="algebraic/tree_gam.html#imodels.algebraic.tree_gam.TreeGAMRegressor">TreeGAMRegressor</a></li>
+</ul>
+</li>
+<li><h3>Misc classes</h3>
+<ul class="cat-legend">
+<li><span class="cat-dot cat-clustering"></span>clustering</li>
+<li><span class="cat-dot cat-discretization"></span>discretization</li>
+<li><span class="cat-dot cat-experimental"></span>experimental</li>
+</ul>
+<ul class="class-list">
+<li><span class="cat-dot cat-experimental" title="experimental"></span><a title="imodels.BART" href="experimental/bartpy/index.html#imodels.experimental.bartpy.BART">BART</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.BRLDiscretizer" href="discretization/index.html#imodels.discretization.BRLDiscretizer">BRLDiscretizer</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.BasicDiscretizer" href="discretization/index.html#imodels.discretization.BasicDiscretizer">BasicDiscretizer</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.MDLPDiscretizer" href="discretization/mdlp.html#imodels.discretization.mdlp.MDLPDiscretizer">MDLPDiscretizer</a></li>
+<li><span class="cat-dot cat-discretization" title="discretization"></span><a title="imodels.RFDiscretizer" href="discretization/index.html#imodels.discretization.RFDiscretizer">RFDiscretizer</a></li>
+<li><span class="cat-dot cat-clustering" title="clustering"></span><a title="imodels.StableClustering" href="clustering/stableclustering.html#imodels.clustering.stableclustering.StableClustering">StableClustering</a></li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+    </main>
+
+    <footer id="footer">
+    </footer>
+    <script>
+      window.addEventListener('load', function () {
+        window.dispatchEvent(new Event('resize'));
+      });
+    </script>
+</body>
+
+</html>
