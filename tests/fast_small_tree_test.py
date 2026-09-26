@@ -14,6 +14,8 @@ import pandas as pd
 import pytest
 from sklearn.tree import DecisionTreeClassifier, export_text
 
+pytest.importorskip("numba")   # an optional dependency; fast_small_tree_without_numba_test.py covers its absence
+
 from imodels import FastSmallTreeClassifier
 from imodels.tree.optimal_tree.solver import TreeClassifier
 from imodels.util.arguments import decode_labels

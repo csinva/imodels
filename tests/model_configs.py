@@ -5,6 +5,7 @@ imodels.CLASSIFIERS or imodels.REGRESSORS only needs configuring once (and
 model_api_test.TestRegistryCoverage fails if it isn't).
 """
 
+import importlib.util
 from copy import deepcopy
 
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -89,4 +90,9 @@ EXCLUDED_MODELS = {
     # (pinned by TestUnsupportedCombinations::test_tao_regression_is_gated)
     "TaoTreeRegressor": "TAO regression is not supported yet",
 }
+
+# FastSmallTreeClassifier needs numba, an optional dependency, to fit; without it the model
+# raises an ImportError naming the fix (checked by fast_small_tree_without_numba_test.py)
+if importlib.util.find_spec("numba") is None:
+    EXCLUDED_MODELS["FastSmallTreeClassifier"] = "numba is not installed"
 
