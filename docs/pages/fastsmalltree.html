@@ -2,7 +2,7 @@
 
                 <div class="article" style="padding-right: 2%; padding-left: 2%;">
                     <p align="center">
-                    <h1 text-align="center" style="padding-bottom: 0px;"> FastSmallTree: certifiably optimal decision trees via Autoresearch</h1>
+                    <h1 text-align="center" style="padding-bottom: 0px;"> FastSmallTree: Implementing compact, fast decision trees via Autoresearch</h1>
                     <h3 class="post-authors" style="color:gray;padding-top:0px;">Chandan Singh &middot; September 2026</h3>
                     </p>
                     <p class="post-links"><a href="https://arxiv.org/abs/2605.03808">📄 Paper</a>, <a href="https://csinva.io/imodels/tree/optimal_tree/fast_small_tree.html">🗂 Doc</a>, <a href="#citation">📌 Citation</a></p>
@@ -15,11 +15,8 @@
                         <a href="https://github.com/AlgTUDelft/pystreed">STreeD</a> instead find the tree that provably
                         minimizes error plus a penalty per leaf, but they are slow. Using autoresearch, we build
                         <b>FastSmallTree</b>, an implementation that achieves useful speedups on real-world problems for
-                        fitting small trees. It certifies the optimum on 63 of 70 benchmark problems against 47 for
-                        GOSDT, is 81&times; faster on geometric mean, and every tree it returns is still a proven
-                        optimum. On a held-out benchmark built from <a href="https://tabarena.ai">TabArena</a>, never
-                        used during development, the ordering holds: 59 of 70 certified against GOSDT's 43, and
-                        19&times; faster.
+                        fitting small trees. On held-out benchmarks, it maintains the accuracy of existing optimal tree packages
+                        while sometimes providing significant speedups, sometimes >20&times;.
                     </p>
 
                     <nav class="toc-main">
@@ -40,44 +37,20 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 model = FastSmallTreeClassifier(regularization=0.05).fit(X_train, y_train)
 preds = model.predict(X_test)</code></pre>
 
-                    <p><code>regularization</code> is the only hyperparameter: larger values give smaller trees.</p>
-
-                    <p>The fitted model reports whether the search finished, and what it proved:</p>
+                    <p><code>regularization</code> is the only hyperparameter: larger values give smaller trees. The fitted model reports whether the search finished, and what it proved:</p>
 
                     <pre><code class="language-python">model.optimal_      # True: no other tree on these features scores better
 model.objective_    # 0.1775, the proven minimum of error + 0.05 * leaves
 model.n_leaves_     # 2
 print(model)        # the tree, as nested if/else on the caller's feature names</code></pre>
 
-                    <p>At this price a leaf is expensive, so the best tree on breast cancer is a single threshold,
-                        89.5% accurate on the held-out quarter:</p>
 
-                    <pre><code>if mean concave points &gt;= 0.05128 then:
-    class = 0
-else:
-    class = 1</code></pre>
-
-                    <p><code>optimal_</code> is what greedy trees cannot offer: when it is True, no tree on the binarized
-                        features scores better. If the time limit is hit first it is False, the model warns, and
-                        <code>lowerbound_</code> and <code>upperbound_</code> bracket how far from optimal the returned
-                        tree can be.</p>
-
-                    <p>Cost grows with the number of distinct values, not rows, since each is a candidate split. Breast
-                        cancer's 30 continuous columns become 11,513 binary features; the search above finishes in 0.05
-                        seconds because a leaf priced at 0.05 rules most trees out at once, while at
-                        <code>regularization</code>=0.02 it does not finish in a minute. Discretizing the features, or
-                        pricing leaves higher, is what keeps exact search practical.</p>
-
-                    <p>The certified tree is stored as an ordinary sklearn <code>DecisionTreeClassifier</code> in
-                        <code>model.estimator_</code>, so sklearn's tree tooling (<code>plot_tree</code>,
-                        <code>export_text</code>, <code>feature_importances_</code>) and the libraries built on it work
-                        unchanged. At <code>regularization</code>=0.03 the search still certifies within seconds and
-                        buys one more split: three leaves, and held-out accuracy rises from 89.5% to 93.7%.</p>
 
                     <details class="collapsible" id="visualize-tree">
                       <summary>Visualize the tree</summary>
-                      <p>With <a href="https://github.com/parrt/dtreeviz">dtreeviz</a>, straight from
-                        <code>model.estimator_</code>:</p>
+                      <p>The certified tree is stored as an ordinary sklearn <code>DecisionTreeClassifier</code> in
+                        <code>model.estimator_</code>, so it works with sklearn-compatible libraries (<code>plot_tree</code>,
+                        <code>export_text</code>, <code>feature_importances_</code>), e.g. dtreeviz:</p>
                     <div class="fig-wide code-fig">
                     <pre><code class="language-python">import dtreeviz  # pip install dtreeviz
 
@@ -103,8 +76,18 @@ viz.view()</code></pre>
 
                     <h2 id="results">2. Experimental results</h2>
 
-                    <details class="collapsible" id="datasets">
-                      <summary>The 14 datasets in the benchmark</summary>
+                    
+
+                    <p>FastSmallTree was produced by the autoresearch loop of
+                        <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (code on
+                        <a href="https://github.com/csinva/agentic-imodels">github</a>): an agent was given a working
+                        exact solver, a fixed benchmark, and a rule that no change may return a non-optimal tree.
+                        It then proposed, proved and measured new bounds, keeping those that yielded speed ups on the visible set of problems.
+                        The visible set consists of 70 problems (14 datasets &times; 5 values of <code>regularization</code>),
+                        each with a 30-second time limit and 6-GB memory limit.</p>
+
+<details class="collapsible" id="datasets">
+                      <summary>The 14 visible datasets (from the <a href="https://github.com/Jimmy-Lin/GeneralizedOptimalSparseDecisionTrees">GOSDT repo</a>)</summary>
                       <table class="ranktbl dataset-table">
                         <thead>
                           <tr><th>dataset</th><th>what it is</th><th>rows</th><th>features</th><th>binary splits</th><th>classes</th></tr>
@@ -133,7 +116,7 @@ viz.view()</code></pre>
                     </details>
 
                     <details class="collapsible" id="tabarena14">
-                      <summary>The 14 held-out datasets (TabArena-14)</summary>
+                      <summary>The 14 hidden datasets (from <a href="https://tabarena.ai">TabArena</a>)</summary>
                       <table class="ranktbl dataset-table">
                         <thead>
                           <tr><th>stands in for</th><th>TabArena source</th><th>rows</th><th>features</th><th>binary splits</th><th>majority</th><th>classes</th></tr>
@@ -168,27 +151,19 @@ viz.view()</code></pre>
                         <code>baselines/benchmarks/external/</code>.</p>
                     </details>
 
-                    <p>FastSmallTree was produced by the autoresearch loop of
-                        <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (code on
-                        <a href="https://github.com/csinva/agentic-imodels">github</a>): an agent was given a working
-                        exact solver, a fixed benchmark, and a rule that no change may return a non-optimal tree, and it
-                        proposed, proved and measured new bounds, keeping those that paid off. The Methods section
-                        re-checks every proof; one of the loop's fails, and it does not affect the shipped model.</p>
-
-                    <p>The benchmark is 70 problems (14 datasets &times; five values of <code>regularization</code>),
-                        each with 30 seconds and 6 GB. Every returned tree is re-scored from the raw data and checked
-                        against the known optimum, so a solver cannot score by misreporting.</p>
-
-                    <p>Fig <a href="#fig1">1</a> plots every version the loop produced against the baselines: lower is a
-                        better tree, left is faster. The other three panels test whether that holds away from the
-                        development suite: on TabArena-14, a held-out suite never used during development; on the same
-                        datasets at full size with 30 minutes a problem; and on TabArena-14 with 4 hours a problem.</p>
-
-                    <p>We compare against four published baselines: <a href="https://arxiv.org/abs/2006.08690">GOSDT</a>
+                    <p>Fig <a href="#fig1">1</a> plots the fitted loss (y-axis, lower is better) against the time per problem (x-axis, left is faster)
+                      for every version the loop produced against the baselines.
+                      We compare against four published baselines: <a href="https://arxiv.org/abs/2006.08690">GOSDT</a>
                         (Lin et al., 2020), its successor <a href="https://arxiv.org/abs/2112.00356">gosdt-guesses</a>
                         (McTavish et al., 2022), <a href="https://github.com/AlgTUDelft/pystreed">STreeD</a> (van der Linden
                         et al., 2023), and the near-optimal <a href="https://arxiv.org/abs/2502.15988">SPLIT</a> (Babbar
-                        et al., 2025).</p>
+                        et al., 2025).
+                      Fig <a href="#fig1">1</a>A shows the visible set while the other three panels evaluate on the hidden set in different ways.
+                      When a solver returns no tree for a problem, its criterion there is that of a single leaf
+                        predicting the majority class, and its time is the seconds it spent before stopping, capped at the
+                        panel's time limit (the full limit if it ran out of time, less if it stopped early at the 6 GB
+                        memory limit).
+                    </p>
 
                     <span class="fig-anchor" id="fig1"></span>
                     <div class="fig-wide">
@@ -223,24 +198,18 @@ viz.view()</code></pre>
                       </div>
                     </div>
 
-                    <p class="caption"><b>Fig 1.</b> Tree quality against speed for every version the loop produced
-                        and for the baselines. <b>A</b>: the visible set the loop was scored on, 70 problems (14 datasets
-                        &times; 5 penalties) at 30 s each. <b>B</b>: the same 70-problem protocol on TabArena-14, held-out
+                    <p class="caption"><b>Fig 1.</b> Tree quality against speed. <b>A</b>: the visible set the autoresearch loop was scored on, 70 problems (14 datasets
+                        &times; 5 penalties) at 30 s each. This plot shows all the versions tried by the loop.  <b>B</b>: the same 70-problem protocol on TabArena-14, held-out
                         datasets never used during development. <b>C</b>: TabArena-14 at full size, every row and column
                         kept, at one penalty (0.05) with 30 minutes a problem. <b>D</b>: TabArena-14's 70 problems with
-                        4 hours a problem instead of 30 s, and the same 6 GB. Each point is a solver's geometric mean,
+                        4 hours a problem instead of 30 s, and the same 6 GB. A&ndash;C all evaluate using a MacBook Air
+                        M5, while D uses a Linux server (two Xeon Platinum 8468V, 88 cores). Each point is a solver's geometric mean,
                         over a panel's problems, of the time spent (up to the cap) and of the criterion its tree scores,
-                        error plus penalty times leaves. Blue: versions whose every bound the Methods audit proves
-                        admissible. Dark blue: versions it does not &mdash; v7, v47, and v20 to v39, which carry one
-                        inadmissible bound but certified nothing wrong. Light and dark gray: baselines, exact and approximate. Large points average three runs
-                        (hover for numbers and spread). When a solver returns no tree for a problem, its criterion there is that of a single leaf
-                        predicting the majority class, and its time is the seconds it spent before stopping, capped at the
-                        panel's time limit: the full limit if it ran out of time, less if it stopped early at the 6 GB
-                        memory limit. A and B
-                        share a time axis; C and D have their own, and no criterion axes are shared.</p>
+                        error plus penalty times leaves. Blue: versions whose every bound is 
+                        admissible. Dark blue: versions that are approximate (non-optimal). Light and dark gray: baselines, exact and approximate. Large points average three runs.</p>
 
                     <details class="collapsible" id="fig1-measurement">
-                      <summary>How each panel was measured</summary>
+                      <summary>Extra details on experimental settings</summary>
                       <p><b>A.</b> Every returned tree is re-scored from the raw data and checked against its problem's
                         certified optimum, so a solver cannot score by misreporting. v46's points are from the fixed
                         code; a draft certified two wrong trees here (Methods).</p>
@@ -451,34 +420,26 @@ viz.view()</code></pre>
                     })();
                     </script>
 
+                    Overall, we find that the autoresearch points (blue) can improve the performance-speed frontier and that the shipped FastSmallTree model (blue star) outperforms existing packages.
                     <p><b>The shipped model consistently performs well at both performance and speed.</b> On the visible set (Fig <a href="#fig1">1</a>A) the loop's
                         exact versions reach the best criterion of any solver and get there fastest, roughly 50 to 80
                         times faster than STreeD and GOSDT. Only guided gosdt-guesses is quicker, and it pays for that
                         with a much worse tree.</p>
 
-                    <p><b>The ordering holds on data the loop never saw.</b> On TabArena-14 (Fig <a href="#fig1">1</a>B) the shipped model
+                    <p><b>The performance generalizes to the hidden set.</b> On TabArena-14 (Fig <a href="#fig1">1</a>B) the shipped model
                         again pairs one of the best criteria with the fastest time among solvers that reach it, about 20
                         times faster than GOSDT. STreeD edges it out marginally on criterion but takes about 50 times as
                         long, spending its time refining trees on problems neither search finishes.</p>
 
-                    <p><b>At full size the gap widens.</b> With every row and column kept and 30 minutes a problem
+                    <p><b>The performance generalizes to larger data and longer time.</b> With every row and column kept and 30 minutes a problem
                         (Fig <a href="#fig1">1</a>C), the baselines fall further behind on both axes: they take 50 to 70
                         times longer and reach worse trees, largely because they run out of memory and return no tree on
                         many datasets. Guided gosdt-guesses looks fast here only because its reported time leaves out
-                        its preprocessing (see the details above).</p>
-
-                    <p><b>More time does not change the ordering.</b> With 4 hours a problem, 480&times; the time (Fig <a href="#fig1">1</a>D),
-                        the solvers keep their places: the autoresearch versions keep the best criterion, while STreeD and
+                        its preprocessing (see the details above). With 4 hours a problem (Fig <a href="#fig1">1</a>D),
+                        the different methods keep the same relative places: the autoresearch versions keep the best criterion, while STreeD and
                         GOSDT score worse than with 30 seconds, because more of their runs now end at the 6 GB cap
                         without a tree. The shipped model's point is a harness effect, explained in the details
                         above.</p>
-
-                    <!-- TODO: accuracy experiments. Planned: held-out test accuracy and tree size against
-                         CART, C4.5 and FIGS at matched sizes, on the imodels-65 suite and on held-out suites
-                         (TabArena, CTR23) as in the GPGam post. The claim to test is that the optimality gap
-                         greedy trees leave on the table is large enough to show up on held-out data. -->
-                    <p><i>Accuracy against greedy trees on held-out data is in progress: the open question is how much
-                        of the optimality gap survives to test time.</i></p>
 
                     <h2 id="methods">3. Methods: FastSmallTree</h2>
 
