@@ -417,27 +417,31 @@ viz.view()</code></pre>
                     })();
                     </script>
 
-                    <p><b>A: the visible set.</b> The loop's exact versions reach the lowest criterion, 0.2572, and
+                    <p><b>The shipped model consistently performs well at both performance and speed.</b> On the
+                        visible set (Fig <a href="#fig1">1</a>A) the loop's exact versions reach the lowest criterion,
+                        0.2572, and
                         reach it fastest: the shipped model in 0.0062 s a problem and v49 in 0.0052 s. The nearest
                         baseline, STreeD, reaches 0.2591 in 0.33 s, 54&times; longer; pygosdt, the loop's starting
                         point, 0.2648 in 0.10 s; and GOSDT 0.2794 in 0.50 s, 81&times; longer than the shipped model.
                         Only guided gosdt-guesses is faster (0.0011 s), at a much worse criterion of 0.3278, or 0.2706
                         at 0.0068 s when tuned.</p>
 
-                    <p><b>B: held-out data.</b> On TabArena-14 the shipped model reaches 0.3373 in 0.013 s a problem,
+                    <p><b>The ordering holds on data the loop never saw.</b> On TabArena-14 (Fig <a href="#fig1">1</a>B)
+                        the shipped model reaches 0.3373 in 0.013 s a problem,
                         pygosdt 0.3413 in 0.15 s and GOSDT 0.3636 in 0.25 s, 19&times; longer. STreeD is the one
                         baseline with a marginally better criterion, 0.3366, and takes 48&times; as long (0.63 s):
                         on the problems neither search finishes, it spends its 30 seconds improving its tree. Guided
                         gosdt-guesses is again the fastest point (0.001 s), at 0.3480.</p>
 
-                    <p><b>C: full-size data.</b> With every row and column kept and 30 minutes a problem, the gap in
-                        criterion widens. The shipped model reaches 0.2695 in 3.1 s (v49 in 2.4 s), against 0.2853 for
+                    <p><b>At full size the gap widens.</b> With every row and column kept and 30 minutes a problem
+                        (Fig <a href="#fig1">1</a>C), the baselines fall further behind in criterion. The shipped model reaches 0.2695 in 3.1 s (v49 in 2.4 s), against 0.2853 for
                         STreeD in 149 s, 48&times; longer, and 0.2945 for GOSDT in 216 s, 69&times; longer. Much of the
                         baselines' gap is trees they never return: GOSDT and SPLIT stop at the 6 GB cap on most
                         datasets, and each missing tree is charged a single leaf. Guided gosdt-guesses plots at 0.02 s
                         with 0.2782, but that time leaves out its preprocessing (see above).</p>
 
-                    <p><b>D: four hours a problem.</b> With 480&times; the time the ordering does not change. The
+                    <p><b>More time does not change the ordering.</b> With 480&times; the time, 4 hours a problem
+                        (Fig <a href="#fig1">1</a>D), the solvers keep their places. The
                         8-thread versions reach 0.3368 and 0.3369 in 0.04 s a problem, and pygosdt 0.3386 in 0.88 s. STreeD
                         (0.3641) and GOSDT (0.3765) score worse than with 30 seconds, because more of their runs now end
                         at the 6 GB cap without a tree. The shipped model's 0.3478 is a harness effect, described
