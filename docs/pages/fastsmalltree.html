@@ -210,7 +210,7 @@ viz.view()</code></pre>
                       </div>
                       <ul class="fig-legend" aria-label="Legend">
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#2a78d6"/></svg>FastSmallTree, exact</li>
-                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#eb6834"/></svg>FastSmallTree, approximate</li>
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#104281"/></svg>FastSmallTree, approximate</li>
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#6f6e69"/></svg>Baseline</li>
                         <li><svg viewBox="0 0 16 16"><path d="M8 1.2 L9.9 6 L15 6.3 L11 9.5 L12.3 14.6 L8 11.8 L3.7 14.6 L5 9.5 L1 6.3 L6.1 6 Z" fill="#2a78d6"/></svg>Shipped (v40)</li>
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#6a737d" stroke="#fff" stroke-width="1.5"/></svg>Mean of 3 runs</li>
@@ -219,9 +219,9 @@ viz.view()</code></pre>
 
                     <p class="caption"><b>Fig 1.</b> Each point is a solver's geometric mean, over a panel's problems, of
                         the time spent (up to the cap) and of the criterion its tree scores, error plus penalty times
-                        leaves. Blue: versions the Methods audit proves exact. Orange: versions it does not &mdash; v7,
+                        leaves. Blue: versions the Methods audit proves exact. Dark blue: versions it does not &mdash; v7,
                         v47, and v20 to v39 and v49, which carry one unproven bound but certified nothing wrong. Gray:
-                        baselines. Diamonds use 8 threads; large points average three runs (hover for numbers and
+                        baselines. Large points average three runs (hover for numbers and
                         spread). A problem with no tree returned is charged a single leaf. The first two panels share
                         a time axis; the other two have their own, and no criterion axes are shared.</p>
 
@@ -293,7 +293,7 @@ viz.view()</code></pre>
                       if (!window.Plotly || !PARETO.dev) return;
                       // roles, not raw hex, below this line; categorical slots 1-2 validated all-pairs
                       var C = {
-                        baseline: '#6f6e69', exact: '#2a78d6', approximate: '#eb6834',
+                        baseline: '#6f6e69', exact: '#2a78d6', approximate: '#104281',
                         ink: '#1b1f23', muted: '#6a737d', grid: '#e3e6e8', axis: '#c3c2b7',
                         surface: '#ffffff'
                       };
@@ -348,7 +348,7 @@ viz.view()</code></pre>
                                 y: sub.map(function (p) { return p.c; }),
                                 mode: 'markers', showlegend: false,
                                 marker: {
-                                  symbol: mc ? 'diamond' : 'circle',
+                                  symbol: 'circle',
                                   size: rep ? 15 : 9, opacity: rep || !mixed ? 1 : 0.55, color: C[g],
                                   line: { color: C.surface, width: 2 }
                                 },
@@ -802,7 +802,7 @@ viz.view()</code></pre>
                         above, its code was checked line by line, and its only reservation is the 1e-10 tie tolerance.
                         That check also found and fixed four engineering defects the benchmarks never reached. v20 to
                         v39 and v49 certified nothing wrong, so their numbers stand, but each carries one unproven
-                        bound; Fig <a href="#fig1">1</a> draws them orange, with v7 (a bug the loop found itself) and v47
+                        bound; Fig <a href="#fig1">1</a> draws them in dark blue, with v7 (a bug the loop found itself) and v47
                         (guessed bounds, by design).</p>
 
                     <p>Two engineering facts complete the picture. Rows are sorted so deep capture sets occupy few 64-bit
