@@ -188,18 +188,22 @@ viz.view()</code></pre>
                     <div class="fig-wide">
                       <div class="fig-pair">
                         <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">A</span>
                           <h4>Visible set <span>(the 14 datasets the loop was scored on)</span></h4>
                           <div id="pareto-dev" role="img" aria-label="Geometric-mean criterion against geometric-mean time for every solver version and baseline on the visible set."></div>
                         </div>
                         <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">B</span>
                           <h4>Hidden set <span>(TabArena-14)</span></h4>
                           <div id="pareto-external" role="img" aria-label="The same measure for the key solver versions and the baselines on the hidden set, TabArena-14."></div>
                         </div>
                         <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">C</span>
                           <h4>Hidden set, full size <span>(30 min, one penalty)</span></h4>
                           <div id="pareto-full" role="img" aria-label="The same measure on the full-size TabArena-14 datasets at a 30 minute cap."></div>
                         </div>
                         <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">D</span>
                           <h4>Hidden set, 4 h a problem <span>(480&times; the budget, 6 GB, one run)</span></h4>
                           <div id="pareto-nolimit" role="img" aria-label="The same measure on the 70 TabArena-14 problems with 4 hours a problem instead of 30 seconds, and the same 6 GB memory budget."></div>
                         </div>
@@ -269,7 +273,10 @@ viz.view()</code></pre>
                         }
                       }
                       .fig-pair { display: flex; flex-wrap: wrap; gap: 1em 2.5%; }
-                      .fig-panel { flex: 1 1 420px; min-width: 0; }
+                      .fig-panel { flex: 1 1 420px; min-width: 0; position: relative; }
+                      /* panel letters, top left of each plot */
+                      .panel-letter { position: absolute; left: 0; top: -0.1em; font-size: 1.15rem;
+                        font-weight: 700; color: var(--ink); line-height: 1; }
                       .fig-panel h4 { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.1em 3.2rem; color: var(--ink); }
                       .fig-panel h4 span { font-weight: 400; color: var(--muted); }
                       ul.fig-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3em 1.3em;
