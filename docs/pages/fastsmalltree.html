@@ -217,13 +217,18 @@ viz.view()</code></pre>
                       </div>
                     </div>
 
-                    <p class="caption"><b>Fig 1.</b> Each point is a solver's geometric mean, over a panel's problems, of
-                        the time spent (up to the cap) and of the criterion its tree scores, error plus penalty times
-                        leaves. Blue: versions whose every bound the Methods audit proves admissible. Dark blue: versions it does not &mdash; v7,
-                        v47, and v20 to v39, which carry one inadmissible bound but certified nothing wrong. Gray:
-                        baselines. Large points average three runs (hover for numbers and
-                        spread). A problem with no tree returned is charged a single leaf. The first two panels share
-                        a time axis; the other two have their own, and no criterion axes are shared.</p>
+                    <p class="caption"><b>Fig 1.</b> Tree quality against speed for every version the loop produced
+                        and for the baselines. <b>A</b>: the visible set the loop was scored on, 70 problems (14 datasets
+                        &times; 5 penalties) at 30 s each. <b>B</b>: the same 70-problem protocol on TabArena-14, held-out
+                        datasets never used during development. <b>C</b>: TabArena-14 at full size, every row and column
+                        kept, at one penalty (0.05) with 30 minutes a problem. <b>D</b>: TabArena-14's 70 problems with
+                        4 hours a problem instead of 30 s, and the same 6 GB. Each point is a solver's geometric mean,
+                        over a panel's problems, of the time spent (up to the cap) and of the criterion its tree scores,
+                        error plus penalty times leaves. Blue: versions whose every bound the Methods audit proves
+                        admissible. Dark blue: versions it does not &mdash; v7, v47, and v20 to v39, which carry one
+                        inadmissible bound but certified nothing wrong. Gray: baselines. Large points average three runs
+                        (hover for numbers and spread). A problem with no tree returned is charged a single leaf. A and B
+                        share a time axis; C and D have their own, and no criterion axes are shared.</p>
 
                     <details class="collapsible" id="fig1-measurement">
                       <summary>How each panel was measured</summary>
