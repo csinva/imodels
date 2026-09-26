@@ -262,7 +262,7 @@ viz.view()</code></pre>
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#2a78d6"/></svg>FastSmallTree, exact</li>
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#eb6834"/></svg>FastSmallTree, approximate</li>
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#6f6e69"/></svg>Baseline</li>
-                        <li><svg viewBox="0 0 16 16"><path d="M8 2 L14 8 L8 14 L2 8 Z" fill="#6a737d"/></svg>8 threads</li>
+                        <li><svg viewBox="0 0 16 16"><path d="M8 1.2 L9.9 6 L15 6.3 L11 9.5 L12.3 14.6 L8 11.8 L3.7 14.6 L5 9.5 L1 6.3 L6.1 6 Z" fill="#2a78d6"/></svg>Shipped (v40)</li>
                         <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#6a737d" stroke="#fff" stroke-width="1.5"/></svg>Mean of 3 runs</li>
                       </ul>
                     </div>
@@ -376,6 +376,9 @@ viz.view()</code></pre>
                       }
                       var xrange = span(PARETO.dev.points.concat(PARETO.external ? PARETO.external.points : []));
 
+                      // the version the package ships, under each panel's model key
+                      var SHIPPED = { v40_sequential: 1, fastsmalltree_v40: 1 };
+
                       function panel(el, D, ytick, xr) {
                         var pts = D.points;
                         // translucency separates single runs from three-run means; where a panel
@@ -387,7 +390,7 @@ viz.view()</code></pre>
                           ['baseline', 'exact', 'approximate'].forEach(function (g) {
                             [false, true].forEach(function (mc) {
                               var sub = pts.filter(function (p) {
-                                return p.group === g && p.multicore === mc && (p.runs > 1) === rep;
+                                return !SHIPPED[p.model] && p.group === g && p.multicore === mc && (p.runs > 1) === rep;
                               });
                               if (!sub.length) return;
                               traces.push({
@@ -403,6 +406,20 @@ viz.view()</code></pre>
                               });
                             });
                           });
+                        });
+                        // the shipped model is drawn last, as a star, so it stays on top
+                        var ship = pts.filter(function (p) { return SHIPPED[p.model]; });
+                        if (ship.length) traces.push({
+                          x: ship.map(function (p) { return p.t; }),
+                          y: ship.map(function (p) { return p.c; }),
+                          mode: 'markers', showlegend: false,
+                          marker: {
+                            symbol: 'star',
+                            size: ship.map(function (p) { return p.runs > 1 ? 20 : 15; }),
+                            color: ship.map(function (p) { return C[p.group]; }),
+                            line: { color: C.surface, width: 1.5 }
+                          },
+                          text: ship.map(hover), hovertemplate: '%{text}<extra></extra>'
                         });
                         var OFFSET = D.offsets || {};
                         var notes = pts.filter(function (p) { return p.direct; }).map(function (p) {
