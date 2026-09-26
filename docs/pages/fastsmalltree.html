@@ -12,7 +12,7 @@
                         <a href="https://scikit-learn.org/stable/modules/tree.html">Standard decision trees</a> are fit
                         greedily, so they end up larger than they need to be and harder to interpret. Optimal-tree
                         solvers such as <a href="https://arxiv.org/abs/2006.08690">GOSDT</a> and
-                        <a href="https://arxiv.org/abs/2112.00674">STreeD</a> instead find the tree that provably
+                        <a href="https://github.com/AlgTUDelft/pystreed">STreeD</a> instead find the tree that provably
                         minimizes error plus a penalty per leaf, but they are slow. Using autoresearch, we build
                         <b>FastSmallTree</b>, an implementation that achieves useful speedups on real-world problems for
                         fitting small trees. It certifies the optimum on 63 of 70 benchmark problems against 47 for
@@ -186,7 +186,7 @@ viz.view()</code></pre>
 
                     <p>We compare against four published baselines: <a href="https://arxiv.org/abs/2006.08690">GOSDT</a>
                         (Lin et al., 2020), its successor <a href="https://arxiv.org/abs/2112.00356">gosdt-guesses</a>
-                        (McTavish et al., 2022), <a href="https://arxiv.org/abs/2112.00674">STreeD</a> (van der Linden
+                        (McTavish et al., 2022), <a href="https://github.com/AlgTUDelft/pystreed">STreeD</a> (van der Linden
                         et al., 2023), and the near-optimal <a href="https://arxiv.org/abs/2502.15988">SPLIT</a> (Babbar
                         et al., 2025).</p>
 
