@@ -59,16 +59,17 @@ aria-label="View source on GitHub" title="GitHub">
                     <hr>
 
                     <p class="abstract">
-                        <a href="https://scikit-learn.org/stable/modules/tree.html">Standard decision trees</a> are fit greedily, leading to tres that are larger than they need to be and harder to interpret.
-                        This has spawned a line of work seeking to find the smallest ("optimal") trees that best fit a dataset, e.g. <a href="https://arxiv.org/abs/2006.08690">GOSDT</a> or <a href="https://arxiv.org/abs/2112.00674">STreeD</a>.
-                        Here, we build on this work using autoresearch to develop a fast library for fitting small trees.
-                        We build <b>FastSmallTree</b>, a fast solver that achieves useful speedups on real-world problems for fitting small trees.
-                        It certifies optimality on 63 of 70 benchmark problems against 47 for GOSDT,
-                        and is 81&times; faster on geometric mean. The speedup comes from stronger admissible bounds and
-                        from compiling the search, so every tree it returns is still a proven optimum. On a held-out
-                        benchmark built from <a href="https://tabarena.ai">TabArena</a>, which none of the development
-                        was done against, the ordering holds: 59 of 70 certified against GOSDT's 43, and 19&times;
-                        faster.
+                        <a href="https://scikit-learn.org/stable/modules/tree.html">Standard decision trees</a> are fit
+                        greedily, so they end up larger than they need to be and harder to interpret. Optimal-tree
+                        solvers such as <a href="https://arxiv.org/abs/2006.08690">GOSDT</a> and
+                        <a href="https://arxiv.org/abs/2112.00674">STreeD</a> instead find the tree that provably
+                        minimizes error plus a penalty per leaf, but they are slow. Using autoresearch, we build
+                        <b>FastSmallTree</b>, an implementation that achieves useful speedups on real-world problems for
+                        fitting small trees. It certifies the optimum on 63 of 70 benchmark problems against 47 for
+                        GOSDT, is 81&times; faster on geometric mean, and every tree it returns is still a proven
+                        optimum. On a held-out benchmark built from <a href="https://tabarena.ai">TabArena</a>, never
+                        used during development, the ordering holds: 59 of 70 certified against GOSDT's 43, and
+                        19&times; faster.
                     </p>
 
                     <nav class="toc-main">
@@ -89,7 +90,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 model = FastSmallTreeClassifier(regularization=0.05).fit(X_train, y_train)
 preds = model.predict(X_test)</code></pre>
 
-                    <p><code>regularization</code> is the only hyperparameter: larger regularization returns smaller trees.</p>
+                    <p><code>regularization</code> is the only hyperparameter: larger values give smaller trees.</p>
 
                     <p>The fitted model reports whether the search finished, and what it proved:</p>
 
@@ -98,33 +99,30 @@ model.objective_    # 0.1775, the proven minimum of error + 0.05 * leaves
 model.n_leaves_     # 2
 print(model)        # the tree, as nested if/else on the caller's feature names</code></pre>
 
-                    <p>At this price a leaf is expensive, and the best tree that exists on breast cancer is a single
-                        threshold, which reaches 89.5% on the held-out quarter:</p>
+                    <p>At this price a leaf is expensive, so the best tree on breast cancer is a single threshold,
+                        89.5% accurate on the held-out quarter:</p>
 
                     <pre><code>if mean concave points &gt;= 0.05128 then:
     class = 0
 else:
     class = 1</code></pre>
 
-                    <p><code>optimal_</code> is the part greedy trees cannot offer. When it is True, the objective
-                        reported is a minimum over every tree that exists on the binarized features, not the best of
-                        those that happened to be tried. When the time limit is hit first it is False, the model warns,
-                        and <code>lowerbound_</code> and <code>upperbound_</code> bracket how much could still be left
-                        on the table.</p>
+                    <p><code>optimal_</code> is what greedy trees cannot offer: when it is True, no tree on the binarized
+                        features scores better. If the time limit is hit first it is False, the model warns, and
+                        <code>lowerbound_</code> and <code>upperbound_</code> bracket how far from optimal the returned
+                        tree can be.</p>
 
-                    <p>What makes a problem expensive is the number of distinct values in the data, not the number of
-                        rows: each one is a candidate split. Breast cancer's 30 continuous columns become 11,513 binary
-                        features, and the search above certifies in 0.05 seconds only because a leaf priced at 0.05
-                        rules most trees out immediately. Drop <code>regularization</code> to 0.02 and the same problem
-                        does not finish in a minute. Discretizing the features first, or pricing leaves higher, is what
-                        keeps an exact solver exact in practice.</p>
+                    <p>Cost grows with the number of distinct values, not rows, since each is a candidate split. Breast
+                        cancer's 30 continuous columns become 11,513 binary features; the search above finishes in 0.05
+                        seconds because a leaf priced at 0.05 rules most trees out at once, while at
+                        <code>regularization</code>=0.02 it does not finish in a minute. Discretizing the features, or
+                        pricing leaves higher, is what keeps exact search practical.</p>
 
                     <p>The certified tree is stored as an ordinary sklearn <code>DecisionTreeClassifier</code> in
-                        <code>model.estimator_</code>, and <code>predict</code> is sklearn's own, so sklearn's tree
-                        tooling (<code>plot_tree</code>, <code>export_text</code>, <code>feature_importances_</code>) and
-                        the libraries built on it work unchanged. Between those two prices, at 0.03, the search
-                        still certifies within seconds, and the extra room buys one more split: three leaves, and
-                        held-out accuracy rises from 89.5% to 93.7%. Drawn with
+                        <code>model.estimator_</code>, so sklearn's tree tooling (<code>plot_tree</code>,
+                        <code>export_text</code>, <code>feature_importances_</code>) and the libraries built on it work
+                        unchanged. At <code>regularization</code>=0.03 the search still certifies within seconds and
+                        buys one more split: three leaves, and held-out accuracy rises from 89.5% to 93.7%. Drawn with
                         <a href="https://github.com/parrt/dtreeviz">dtreeviz</a>:</p>
 
                     <div class="fig-wide code-fig">
@@ -145,8 +143,7 @@ viz.view()</code></pre>
                       <img src="img/fastsmalltree_dtreeviz.svg" width="440"
                            alt="dtreeviz drawing of the certified three-leaf tree: worst area at most 930 then worst concave points at most 0.1424 leads to 266 benign rows, above 0.1424 to 38 malignant rows, and worst area above 930 to 122 malignant rows.">
                       <figcaption>The certified optimal tree at <code>regularization</code>=0.03 on the breast cancer
-                        training split, drawn by dtreeviz from <code>model.estimator_</code>. Each split is placed
-                        midway between the training values on either side of it, as sklearn places its own.</figcaption>
+                        training split. Thresholds sit midway between neighbouring training values, as in sklearn.</figcaption>
                     </figure>
                     </div>
 
@@ -175,11 +172,10 @@ viz.view()</code></pre>
                           <tr><td><code>compas_processed</code></td><td>ProPublica COMPAS recidivism, processed</td><td>12,381</td><td>22</td><td>621</td><td>2</td></tr>
                         </tbody>
                       </table>
-                      <p class="tblnote">All 14 come from the GOSDT reference repository's experiments, and each is run at
-                        five penalties per leaf (0.1, 0.05, 0.02, 0.01, 0.005) for 70 problems. <i>Binary splits</i> is
-                        what the solver actually searches over: a binary feature is one split, and a numeric or ordinal
-                        feature becomes one split per distinct value, which is why a single continuous column of 1,000
-                        rows yields 999 and why fico_1k and compas_processed hold the problems nobody certifies.</p>
+                      <p class="tblnote">All 14 come from the GOSDT reference repository, each run at five penalties per leaf
+                        (0.1, 0.05, 0.02, 0.01, 0.005): 70 problems. <i>Binary splits</i> is what the solver searches:
+                        one per binary feature and one per distinct value of a numeric one, which is why fico_1k and
+                        compas_processed hold the problems nobody certifies.</p>
                     </details>
 
                     <details class="collapsible" id="tabarena14">
@@ -205,46 +201,34 @@ viz.view()</code></pre>
                           <tr><td><code>compas_processed</code></td><td>credit_card_clients_default</td><td>12,381</td><td>22</td><td>625 <span class="tgt">/ 621</span></td><td>0.69 <span class="tgt">/ 0.69</span></td><td>2</td></tr>
                         </tbody>
                       </table>
-                      <p class="tblnote">Each development dataset has a stand-in built from a
-                        <a href="https://tabarena.ai">TabArena</a> classification dataset by a fixed rule, not a choice per
-                        dataset: originals largest first, each taking the smallest unused source with enough rows and
-                        enough of each class. The stand-in matches the original's rows and features exactly and its
-                        class balance to within 0.05, and keeps the features with the most mutual information with the
-                        label. Binary originals get binarized features; numeric ones get quantile bins, one bin count per
-                        dataset chosen to match the original's number of binary splits. Gray figures are the original's
-                        targets. Two stand-ins fall short on splits because a small sample of their source has too few
-                        distinct values (chudi, iris), and the two one-feature stand-ins reach 88 to 92% of theirs because
-                        the originals are synthetic and have no tied values. TabArena's HELOC and in-vehicle coupon
-                        datasets are excluded, since the development suite already contains them. The builder, the
-                        manifest and the per-problem results are in
-                        <a href="https://github.com/csinva/agentic-imodels">agentic-imodels</a> under
+                      <p class="tblnote">Each development dataset has a stand-in drawn from a
+                        <a href="https://tabarena.ai">TabArena</a> classification dataset by a fixed rule (originals
+                        largest first, each taking the smallest unused source with enough rows of each class). A
+                        stand-in matches its original's rows and features exactly and its class balance within 0.05,
+                        keeping the features with the most mutual information with the label; numeric features are
+                        quantile-binned to match the original's number of binary splits, shown in gray. chudi and iris
+                        fall short because their sources have too few distinct values. TabArena's HELOC and coupon
+                        datasets are excluded, since the development suite already contains them. Builder, manifest
+                        and per-problem results:
+                        <a href="https://github.com/csinva/agentic-imodels">agentic-imodels</a>,
                         <code>baselines/benchmarks/external/</code>.</p>
                     </details>
 
-                    <p>FastSmallTree was produced by the autoresearch loop described in
+                    <p>FastSmallTree was produced by the autoresearch loop of
                         <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (code on
-                        <a href="https://github.com/csinva/agentic-imodels">github</a>). An agent was given a working
-                        exact solver, a fixed benchmark, and a gate that no change may ever return a tree that is not
-                        optimal; it proposed bounds, argued them admissible, measured them, and kept the ones that won. The
-                        Methods section re-proves every bound from first principles and finds two of the loop's
-                        arguments that do not hold; neither reaches the shipped model.</p>
+                        <a href="https://github.com/csinva/agentic-imodels">github</a>): an agent was given a working
+                        exact solver, a fixed benchmark, and a rule that no change may return a non-optimal tree, and it
+                        proposed, proved and measured new bounds, keeping those that paid off. The Methods section
+                        re-checks every proof; two of the loop's fail, and neither affects the shipped model.</p>
 
-                    <p>The benchmark is 70 problems: 14 datasets crossed with five values of
-                        <code>regularization</code> (0.1, 0.05, 0.02, 0.01, 0.005), each given 30 seconds and 6 GB.
-                        Every returned tree's objective is recomputed independently from the tree and the raw data, and
-                        checked against the known optimum for that problem, so a solver cannot score by misreporting.</p>
+                    <p>The benchmark is 70 problems (14 datasets &times; five values of <code>regularization</code>),
+                        each with 30 seconds and 6 GB. Every returned tree is re-scored from the raw data and checked
+                        against the known optimum, so a solver cannot score by misreporting.</p>
 
-                    <p>Fig <a href="#fig1">1</a> puts every solver the loop produced on one chart, with the
-                        baselines, so the whole search is visible rather than only the version that ships. Down is a
-                        better tree and left is faster, so the best trade-offs sit toward the lower left. Beside it, the key
-                        versions and every baseline are run again on TabArena-14, which none of them was developed on.
-                        The third panel drops both conveniences of that mirror: the 14 TabArena datasets at their full
-                        size, with a 30 minute budget instead of 30 seconds, to see whether the ordering survives
-                        problems large enough that no solver finishes most of them. It does, and more sharply: at full
-                        size the shipped model certifies 9 of the 14 and returns a tree for every one, while GOSDT
-                        returns nothing on 9 of them and STreeD on 4. The fourth panel keeps the 70 hidden problems
-                        and removes the other convenience, the 30 second cap: every solver gets 4 hours a problem,
-                        480 times the budget, and the same 6 GB, to ask what stops each of them when time does not.</p>
+                    <p>Fig <a href="#fig1">1</a> plots every version the loop produced against the baselines: lower is a
+                        better tree, left is faster. The other three panels test whether that holds away from the
+                        development suite: on TabArena-14, a held-out suite never used during development; on the same
+                        datasets at full size with 30 minutes a problem; and on TabArena-14 with 4 hours a problem.</p>
 
                     <span class="fig-anchor" id="fig1"></span>
                     <div class="fig-wide">
@@ -275,56 +259,42 @@ viz.view()</code></pre>
                       </ul>
                     </div>
 
-                    <p class="caption"><b>Fig 1.</b> Solvers on the visible set, on the hidden set, TabArena-14, on the
-                        full-size TabArena-14 datasets at a 30 minute cap, and on the hidden set again with 4 hours a
-                        problem instead of 30 seconds. Each point is a
-                        geometric mean over the panel's problems of the time spent (at most the cap) and of the
-                        criterion its tree scores, error plus penalty times leaves. The first two panels are the 70
-                        problems at 30 s and share a time axis, so they can be compared directly; the full-size panel
-                        is a different measurement and has its own. The criterion axes are not shared,
-                        since the benchmarks have different optima. Blue points are versions the Methods audit proves exact; orange are the ones it does not: v7,
-                        whose stored bound could pass an unsolved node as solved; v47, which guessed its bounds from a
-                        reference model; and v20 to v39 and v49, each of which carries one bound whose proof has a hole
-                        that no benchmark problem reached, so they certified nothing wrong but are not guaranteed to.
-                        Gray points are baselines. Diamonds use 8
-                        threads. Large points are the mean of three runs and small translucent ones are single runs;
-                        hovering a three-run point gives its standard deviation. On a problem where a baseline returned no tree it is
-                        charged the criterion of a single leaf. TabArena-14 has no certified optima, so a certificate there is checked against the
-                        best tree any run of any solver returned. An earlier recording of v46 certified two wrong trees on
-                        the visible set because of a two-line indentation slip; the points shown are the fixed
-                        code, which certified none. Which solvers issued false certificates is in the text and in each
-                        point's tooltip. Hover a point for its numbers.
-                        The full-size panel is a smaller instrument than the other two and is read for the ordering,
-                        not for a close criterion race: it is one run at a single penalty (0.05) on each of the 14
-                        datasets, 14 problems rather than 70, so every point there is a single run. At that penalty
-                        several full-size optima are a single leaf, which every solver finds at once; the separation
-                        comes from the five problems that are genuinely hard. Three of the baselines' failures are not
-                        ordinary timeouts and are counted as returning no tree, the same charge as a missing tree
-                        anywhere else in the figure: a stop at the 6 GB memory cap (GOSDT on 8 problems, SPLIT on 8),
-                        a solver that ran past twice its budget and was killed (STreeD on 2), and one the operating
-                        system killed outright for outgrowing memory (STreeD on coupon_bar, which exits with signal 9
-                        after five minutes). GOSDT is run in a child process and can be stopped at the memory cap;
-                        STreeD and SPLIT run in-process, so at this size they fail in ways the harness can only record
-                        after the fact. gosdt-guesses is in this panel in both modes: exact mode certifies 4 and
-                        returns no tree on 8 (5 memory stops, 3 crashes); guided mode, published and tuned alike,
-                        returns a heuristic tree on 11 and stops at the memory cap on the 3 widest datasets, since it
-                        builds the exact binarization before guessing thresholds from it.
-                        One timing caveat applies to guided gosdt-guesses on every panel. It reports only its search
-                        time, which excludes the threshold guessing where its work is done and is under a millisecond
-                        on nearly every problem, so its points sit at the figure's 1 ms floor. By wall-clock, every
-                        solver's preprocessing included, it takes 3.1 s a problem at full size against 9.6 s for v49:
-                        faster, by about three times rather than the hundredfold its point suggests, and for a worse
-                        tree, no certificate, and no tree at all on 3 of the 14.
-                        The 4 hour panel is a different instrument again and has its own time axis. It was run on a
-                        Linux server (two Xeon Platinum 8468V, 88 cores) rather than the laptop the other panels were
-                        measured on, with every problem in its own process pinned to its own hardware threads (two for
-                        single-threaded solvers, eight for the 8-thread versions), many problems at once, so times are
-                        comparable within the panel but not across to the others. The 4 hours are
-                        handed to each solver as its time limit, so a run that reaches them returns its best tree, as
-                        at 30 seconds, and the 6 GB budget is enforced on every process by the harness, not only by
-                        the solvers that police themselves: a solver that stops itself at the budget keeps its
-                        incumbent, one the harness has to stop returns no tree. A memory stop is charged the seconds
-                        it took, since there is no cap to charge. One run per problem, 140 hours of solver time in all.</p>
+                    <p class="caption"><b>Fig 1.</b> Each point is a solver's geometric mean, over a panel's problems, of
+                        the time spent (up to the cap) and of the criterion its tree scores, error plus penalty times
+                        leaves. Blue: versions the Methods audit proves exact. Orange: versions it does not &mdash; v7,
+                        v47, and v20 to v39 and v49, which carry one unproven bound but certified nothing wrong. Gray:
+                        baselines. Diamonds use 8 threads; large points average three runs (hover for numbers and
+                        spread). A problem with no tree returned is charged a single leaf. The first two panels share
+                        a time axis; the other two have their own, and no criterion axes are shared.</p>
+
+                    <details class="collapsible" id="fig1-measurement">
+                      <summary>How each panel was measured</summary>
+                      <p><b>Hidden set.</b> TabArena-14 has no certified optima, so a certificate there is checked
+                        against the best tree any run of any solver returned. v46's points are from the fixed code; a
+                        draft certified two wrong trees on the visible set (Methods).</p>
+                      <p><b>Full size, 30 minutes.</b> One run at a single penalty (0.05) on each of the 14 datasets,
+                        so the panel is read for the ordering rather than a close criterion race; several optima at
+                        that penalty are a single leaf, which every solver finds at once. Three kinds of baseline
+                        failure are charged as no tree: a stop at the 6 GB cap (GOSDT on 8 problems, SPLIT on 8), a run
+                        killed after twice its budget (STreeD on 2), and an operating-system kill for outgrowing memory
+                        (STreeD on coupon_bar, signal 9 after five minutes). GOSDT runs in a child process that the
+                        harness can stop at the cap; STreeD and SPLIT run in-process. gosdt-guesses in exact mode
+                        certifies 4 and returns no tree on 8 (5 memory stops, 3 crashes); guided, published and tuned
+                        alike, it returns a heuristic tree on 11 and hits the memory cap on the 3 widest datasets,
+                        since it builds the exact binarization before guessing thresholds.</p>
+                      <p><b>Guided gosdt-guesses timing, every panel.</b> It reports only its search time, which excludes
+                        the threshold guessing where its work is done, so its points sit at the 1 ms floor. By wall
+                        clock, preprocessing included, it takes 3.1 s a problem at full size against 9.6 s for v49:
+                        about three times faster, not a hundredfold, for a worse tree, no certificate, and no tree on 3
+                        of the 14.</p>
+                      <p><b>4 hours.</b> Run on a Linux server (two Xeon Platinum 8468V, 88 cores), each problem in its
+                        own process pinned to its own hardware threads (two for single-threaded solvers, eight for the
+                        8-thread versions), many at once; times are comparable within the panel only. The 4 hours are
+                        each solver's time limit, so a run that reaches them returns its best tree. The harness
+                        enforces 6 GB on every process: a solver that stops itself at the budget keeps its incumbent,
+                        one the harness stops returns no tree. A memory stop is charged the seconds it took. One run
+                        per problem, 140 hours of solver time.</p>
+                    </details>
 
                     <style>
                       /* the dtreeviz code and its drawing side by side; stacked when too narrow for both */
@@ -461,69 +431,44 @@ viz.view()</code></pre>
                     })();
                     </script>
 
-                    <p>The hidden-set panel is the part that was not developed against. The ordering holds:
-                        the shipped model certifies 59 of the 70 held-out problems in 0.0132 &plusmn; 0.0007 s against
-                        GOSDT's 43 in 0.253 &plusmn; 0.014 s, so 16 more problems proved optimal and 19&times; faster,
-                        with the loop's own starting point, pygosdt, at 51 in 0.152 s and STreeD at 46 in 0.633 s. Three runs each, and the spread is
-                        small enough that nothing in that ordering is within noise.</p>
+                    <p><b>Held-out data.</b> On TabArena-14 the ordering holds: the shipped model certifies 59 of 70
+                        problems in 0.0132 &plusmn; 0.0007 s, against GOSDT's 43 in 0.253 &plusmn; 0.014 s (16 more
+                        proofs, 19&times; faster), pygosdt's 51 in 0.152 s and STreeD's 46 in 0.633 s. The stand-ins are
+                        harder than the originals (59 certified rather than 63), and GOSDT and gosdt-guesses return no
+                        tree on 12 to 18 of them, stopping at 6 GB, which is why their times drop. GOSDT also issues a
+                        <b>second false certificate</b> here (the chudi stand-in at 0.005: 0.2518 certified where a tree
+                        scoring 0.2099 exists, in all three runs), so its unsound bound is not specific to one dataset.
+                        One caveat: STreeD's average tree is <i>marginally better</i>, 0.3366 against 0.3371, at 48&times;
+                        the time, because on the eleven problems neither certifies it spends its 30 seconds improving
+                        uncertified trees.</p>
 
-                    <p>Two things the held-out run shows that the development suite did not. GOSDT issues a
-                        <b>second false certificate</b>, on the stand-in for chudi at a penalty of 0.005: it reports
-                        0.2518 as optimal where a tree scoring 0.2099 exists, in all three runs. That is independent of
-                        the tic-tac-toe case, so the unsound bound is a property of the implementation rather than one
-                        unlucky dataset. And STreeD's trees are <i>marginally better</i> on average here, 0.3366 against
-                        our 0.3371, while taking 48&times; as long and certifying 13 fewer problems: on the eleven
-                        problems neither solver certifies, STreeD spends its 30 seconds finding slightly better
-                        uncertified trees. Being fastest to a proof is not the same as being best without one.</p>
+                    <p><b>Full-size data.</b> With every row and column kept and 30 minutes a problem, the question
+                        becomes who returns a tree at all. The shipped model certifies 9 of 14 and returns a tree on all
+                        14 (3.1 s geometric mean; v49 2.4 s). STreeD certifies 5 and returns nothing on 4, GOSDT
+                        certifies 4 and returns nothing on 9, and SPLIT returns nothing on 10. The failures are memory,
+                        not time: GOSDT hits the 6 GB cap on 8 datasets, and STreeD is killed by the operating system on
+                        the widest.</p>
 
-                    <p>At full size that last caveat does not survive, because the question stops being who finds a
-                        better uncertified tree and becomes who returns one at all. Given the same 14 datasets with
-                        every row and column kept and 30 minutes a problem, the shipped model certifies 9 of the 14
-                        and returns a tree for all of them, at a geometric mean of 3.1 s; v49 does the same in 2.4 s.
-                        STreeD certifies 5 and returns nothing on 4, GOSDT certifies 4 and returns nothing on 9, and
-                        SPLIT, which is heuristic and certifies nothing anywhere, returns nothing on 10. The failures
-                        are memory, not time: GOSDT stops at the 6 GB cap on 8 of the 14, and STreeD is killed by the
-                        operating system on the widest dataset. The gap the mirror showed at 30 seconds is the same
-                        gap, and it widens once the problems are large enough to exhaust a machine.</p>
+                    <p><b>Four hours a problem.</b> With 480&times; the time every exact solver certifies more, and the
+                        ordering does not move: the shipped model goes from 59 to 64 of 70 (the new proofs taking 4 to
+                        61 minutes), v46 also reaches 64 and v49 63, pygosdt 62, GOSDT 47 and gosdt-guesses 48, while
+                        STreeD stays at 46. Six problems, compas_processed and fico_1k at the three smallest penalties,
+                        are certified by nobody. What stops the solvers there is memory: GOSDT hits 6 GB on 20
+                        problems and gosdt-guesses on 22, the shipped model and pygosdt on 6 and 8, and the 8-thread
+                        versions never, staying under 1.1 GB for the full 4 hours.</p>
 
-                    <p><b>Removing the time limit instead.</b> The fourth panel gives the same 70 hidden problems 4
-                        hours each. Every exact solver certifies more, and the ordering does not move: the shipped
-                        model goes from 59 to 64 of 70, the five new proofs taking between 4 and 61 minutes, and the
-                        8-thread v46 also reaches 64 with v49 at 63 (v49 needs more than 4 hours on the iris
-                        stand-in at the smallest penalty, where v46 finishes in 92 minutes); pygosdt reaches 62, two
-                        of its eleven new certificates after 2.4 and 3.1 hours; GOSDT goes from 43 to 47, one of
-                        them after 3.3 hours; gosdt-guesses from 47 to 48; and STreeD stays at 46. Six problems are
-                        certified by nobody with 4 hours and 6 GB: the compas_processed and fico_1k stand-ins at the
-                        three smallest penalties, the two widest datasets with 625 and 1,357 binary splits. What ends
-                        the runs there is different for different solvers, and that is the finding. GOSDT reaches
-                        6 GB on 20 problems, after 8 seconds to 31 minutes, and gosdt-guesses on 22, most within a
-                        minute; the shipped model and pygosdt reach it on 6 and 8, after 4 to 77 minutes of search;
-                        the 8-thread versions never do, staying at or under 1.1 GB on the six open problems for the
-                        whole 4 hours. STreeD goes both ways: 16 memory stops and 8 runs to the 4 hour mark.</p>
-
-                    <p>Two of the panel's numbers are harness effects worth knowing about rather than results. The
-                        shipped model's memory guard counts its own tables, not the process, and on the six widest
+                    <details class="collapsible" id="harness-4h">
+                      <summary>Two harness effects in the 4-hour panel</summary>
+                      <p>The shipped model's memory guard counts its own tables, not the process. On the six widest
                         problems the process passed 6 GB before the guard fired, so the harness killed it and it
                         returned no tree on five of them; v23, whose guard reads the process, stops itself at 5.99 GB
-                        on the same six and keeps its incumbent. Charged a single leaf on those five, the shipped
-                        model's criterion (0.348) sits above pygosdt's (0.339) in this panel while certifying two
-                        more problems. That is a bug in the guard, not in the search, and it is what a 6 GB machine
-                        would have done. And three problems STreeD certified within 30 seconds on the laptop, where
-                        nothing policed its memory, it now loses within 22 seconds at 6 GB (monk_2, car_evaluation
+                        and keeps its incumbent. Charged a single leaf on those five, the shipped model's criterion
+                        (0.348) sits above pygosdt's (0.339) while certifying two more problems. That is a bug in the
+                        guard, not the search, and it is what a 6 GB machine would do. Separately, STreeD loses three
+                        problems it certified on the laptop, where nothing policed its memory (monk_2, car_evaluation
                         and coupon_bar at the smallest penalty, at 6.5 to 7 GB), which is why its count does not rise
-                        with its three new proofs. GOSDT's false certificate on the chudi stand-in appears again, on
-                        Linux and with 4 hours, so it is not a property of the clock.</p>
-
-                    <p>v49, the loop's newest exact version, was rerun on both: 63 of 70 certified in 0.0052 &plusmn;
-                        0.0001 s on the visible set and 59 in 0.0122 &plusmn; 0.0002 s on the hidden one, in both cases a
-                        few percent ahead of v46 on the same 8 threads and with no wrong certificates. The gap between
-                        the two is small enough that the interesting part of that round is not its speed; see below.</p>
-
-                    <p>The stand-ins are also harder than their originals: 59 of 70 certified rather than 63, and the
-                        8-thread version's lead over the single-threaded one narrows to almost nothing (0.0128 against
-                        0.0132 s). GOSDT and gosdt-guesses return no tree at all on 12 to 18 of the held-out problems,
-                        stopping at the 6 GB memory budget, which is why their times here are lower than on the
-                        development suite while they certify fewer problems.</p>
+                        with its three new proofs. GOSDT's false certificate on the chudi stand-in appears again.</p>
+                    </details>
 
                     <p class="caption caption-above"><b>Table 1.</b> Exact solvers on the 70-problem development suite, 30 s cap each.
                         Every figure is the mean of three runs, run one after another on an otherwise idle machine.
@@ -550,56 +495,39 @@ viz.view()</code></pre>
                         </tbody>
                     </table>
 
-                    <p class="tblnote">&dagger; v49\'s candidate-only pair stage stores, in one branch, a lower bound its proof no longer justifies (Methods); it certified nothing wrong here or on the hidden set.</p>
+                    <p class="tblnote">&dagger; v49's candidate-only pair stage stores, in one branch, a lower bound its proof
+                        does not justify (Methods); it certified nothing wrong here or on the hidden set, where it
+                        certifies 59 in 0.0122 &plusmn; 0.0002 s.</p>
 
-                    <p class="tblnote">&plusmn; is the standard deviation over the three runs. Six of the eight solvers that certify anything
-                        certify exactly the same problems every time. The two that move are GOSDT, which certified 46,
-                        47 and 48, and pygosdt, which certified 56, 55 and 55. Only three problems are responsible, and
-                        each of them lands within a few seconds of the 30 s cap in every run, so what changes is whether
-                        a proof that was always going to be marginal fits inside the budget, not what the solver can
-                        prove. FastSmallTree's 63 and its seven unsolved problems are the same in all three runs, and
-                        its geometric mean is stable to four decimals across them.</p>
+                    <p class="tblnote">&plusmn; is the standard deviation over three runs. Only GOSDT (46, 47, 48) and
+                        pygosdt (56, 55, 55) certify different problems across runs, because three proofs land within
+                        seconds of the 30 s cap; FastSmallTree's 63 are identical in every run. v46 and v49 use 8
+                        threads, where the shipped model uses one; on 8 threads the three largest problems stop at the
+                        6 GB budget before the cap, and charging them the full cap would move v46 from 0.0054 to
+                        0.0055 s. GOSDT's false certificate is on tic-tac-toe at <code>regularization</code>=0.02, from a
+                        scope-conditional lower bound cached unconditionally (confirmed by a two-line patch to the
+                        reference implementation). Seven problems, fico_1k and compas_processed at small penalties, are
+                        certified by no solver here, even within 600 s.</p>
 
-                    <p class="tblnote">v49 is the loop's newest exact version and v46 the one before it. Neither is
-                        what ships: both use 8 threads, where the shipped model deliberately uses one. On 8 threads the
-                        three largest problems reach the 6 GB memory budget and stop before the 30 s cap; charged the
-                        full cap instead, v46 would read 0.0055 s rather than 0.0054 s. The single-threaded model never
-                        approaches that budget, so no other exact row is affected.</p>
-
-                    <p class="tblnote">The one false certificate is GOSDT's, on tic-tac-toe at
-                        <code>regularization</code>=0.02: it reports a tree as optimal whose objective is worse than a
-                        tree FastSmallTree certifies. The cause is a scope-conditional lower bound cached unconditionally,
-                        confirmed by a two-line patch to the reference implementation. gosdt-guesses in guided mode is a
-                        heuristic by design, so it certifies nothing; it is listed to show what the search space costs.</p>
-
-                    <p><b>The baseline at more than one setting.</b> gosdt-guesses has knobs, and a baseline judged
-                        at a single setting can be judged unfairly, so its two modes were swept rather than taken as
-                        published. In exact mode, turning on the code base's similar-support bound changes nothing
-                        measurable: the same 46 problems certified and 0.489 &plusmn; 0.007 s against 0.486 &plusmn;
-                        0.018 s. In guided mode the paper's threshold guesser -- 40 stumps of depth 1 -- turns out to
-                        be the weak part on this suite. Replacing it with 60 trees of depth 2 improves the criterion
-                        from 0.328 to 0.271 for 0.0068 s a problem, which moves the baseline from the top-left corner
-                        of Fig <a href="#fig1">1</a> to within 0.014 of the certified optimum; a depth budget of 5,
-                        the other knob the paper uses, changes nothing.</p>
-
-                    <p>That gain does not transfer, which is the more useful half of the result. On the held-out
-                        TabArena-14 the same tuned guesser is slightly <i>worse</i> than the published recipe, 0.3505
-                        against 0.3480, and returns no tree on 3 problems where the default returns one everywhere. So
-                        the published defaults are not leaving something on the table in general; they are leaving
-                        something on the table on the 14 datasets the sweep was run against, which is what tuning on a
-                        benchmark buys. The comparisons in this post therefore keep the published configuration as the
-                        baseline, with the tuned points in the figure beside it.</p>
-
-                    <p>Seven problems are certified by nobody, including FastSmallTree, within the cap: they are the
-                        widest continuous datasets, where a column contributes one candidate split per distinct value.
-                        No solver in the table certifies them within 600 seconds either.</p>
+                    <details class="collapsible" id="guesses-settings">
+                      <summary>gosdt-guesses at other settings</summary>
+                      <p>A baseline judged at one setting can be judged unfairly, so both modes of gosdt-guesses were
+                        swept. In exact mode its similar-support bound changes nothing measurable (46 certified, 0.489
+                        &plusmn; 0.007 s against 0.486 &plusmn; 0.018 s). In guided mode the paper's threshold guesser, 40
+                        stumps of depth 1, is the weak part on this suite: 60 trees of depth 2 improve the criterion
+                        from 0.328 to 0.271 at 0.0068 s a problem, within 0.014 of the certified optimum, while a depth
+                        budget of 5 changes nothing. The gain does not transfer: on TabArena-14 the tuned guesser is
+                        slightly <i>worse</i> than the published one (0.3505 against 0.3480) and misses 3 trees the
+                        default returns. So the post keeps the published configuration as the baseline and shows the
+                        tuned points beside it.</p>
+                    </details>
 
                     <!-- TODO: accuracy experiments. Planned: held-out test accuracy and tree size against
                          CART, C4.5 and FIGS at matched sizes, on the imodels-65 suite and on held-out suites
                          (TabArena, CTR23) as in the GPGam post. The claim to test is that the optimality gap
                          greedy trees leave on the table is large enough to show up on held-out data. -->
-                    <p><i>Accuracy experiments against greedy trees on held-out data are in progress and will be added
-                        here: the open question is how much of the optimality gap survives to test time.</i></p>
+                    <p><i>Accuracy against greedy trees on held-out data is in progress: the open question is how much
+                        of the optimality gap survives to test time.</i></p>
 
                     <h2 id="methods">3. Methods: FastSmallTree</h2>
 
@@ -607,15 +535,14 @@ viz.view()</code></pre>
 
                     <pre><code>minimise   misclassification rate + regularization * (number of leaves)</code></pre>
 
-                    <p>over every decision tree on the binarized features. Write <i>R</i>(<i>X</i>) for the optimum
-                        of that objective restricted to the rows that reach a node, its <i>capture set</i> <i>X</i>: the
-                        least, over all trees on <i>X</i>, of the cost-weighted loss on <i>X</i> plus &lambda; per leaf.
-                        The solver is a memoised branch-and-bound over capture sets. A capture set is a bitmask over
-                        packed 64-bit words, so a subproblem reached by two paths is recognised and solved once.</p>
+                    <p>over every decision tree on the binarized features. Write <i>R</i>(<i>X</i>) for the optimal value on
+                        the rows that reach a node, its <i>capture set</i> <i>X</i>. The solver is a memoised
+                        branch-and-bound over capture sets, stored as bitmasks of 64-bit words, so a subproblem reached
+                        by two paths is solved once.</p>
 
-                    <p><b>What "exact" means, and what has to be proved.</b> Every version keeps, for each
-                        subproblem it has touched, an interval [lb, ub] and a solved flag, and the final answer is a
-                        certificate rather than an incumbent because three invariants hold throughout:</p>
+                    <p><b>What "exact" means.</b> For each subproblem it touches the solver keeps an interval [lb, ub]
+                        and a solved flag. The answer is a certificate, not merely the best tree found, because three
+                        invariants hold throughout:</p>
 
                     <ul class="gam-readings">
                         <li><b>(i)</b> every stored lower bound is at most <i>R</i>(<i>X</i>);</li>
@@ -625,336 +552,223 @@ viz.view()</code></pre>
                             or with lb &gt; budget, a proof that no tree on <i>X</i> fits the budget.</li>
                     </ul>
 
-                    <p>A version is exact if and only if every rule it adds preserves the three, which gives the
-                        audit below a short checklist. A change that only rearranges computation, a kernel, a cache,
-                        a compiled port, adds no rule and inherits exactness; its risk is a transcription error, not
-                        a theory error. A new lower bound needs a proof that it never exceeds <i>R</i>. A new way to
-                        stop early needs (iii). A shared or seeded incumbent needs (ii). And a rule that can discard a
-                        tree that might be optimal breaks exactness however good its measured results are. Read
-                        against that checklist, the loop's 41 recorded versions sort into the bounds, which is the
-                        only place theory enters; the parallel phase, which shares bounds and incumbents between
-                        threads; the seeds, which only touch upper bounds; the refactors; and the approximations. The
-                        bounds are stated and proved next, one collapsible each, and the ledger after them gives every
-                        version's verdict. Two verdicts disagree with the loop's own record, which is the reason to
-                        audit by proof rather than by test.</p>
+                    <p>A version is exact if and only if every rule it adds preserves all three: a new lower bound must never
+                        exceed <i>R</i>, a new way to stop early must respect (iii), and a new source of trees must
+                        respect (ii). Changes that only rearrange computation (kernels, caches, the compiled port) add
+                        no rule, so their only risk is a transcription error. The collapsibles below prove each bound
+                        the loop added, and the ledger after them gives every version's verdict; two verdicts disagree
+                        with the loop's own record.</p>
 
                     <h3 id="bounds">The bounds, and why each is admissible</h3>
 
                     <details class="collapsible" id="b-inherited">
                       <summary>Inherited from GOSDT: equivalent points, leaf support, look-ahead, threshold exchange</summary>
-                      <p><b>Equivalent points.</b> Rows with identical binary features but different labels can never be
-                        separated by any split, so whatever the tree, each such class contributes at least the cost of
-                        its cheaper label. Summed over the classes captured by <i>X</i> this is a floor <i>m</i>(<i>X</i>)
-                        on the loss of every tree on <i>X</i>. A tree with any split has at least two leaves, so
+                      <p><b>Equivalent points.</b> Rows with identical features but different labels can never be
+                        separated, so each such group costs at least its cheaper label. Summed over <i>X</i> this is a
+                        loss floor <i>m</i>(<i>X</i>), and since a split means at least two leaves,
                         <i>R</i>(<i>X</i>) &ge; min(leaf(<i>X</i>), <i>m</i>(<i>X</i>) + 2&lambda;), where leaf(<i>X</i>)
-                        is the cost of the best single label plus &lambda;. This is the bound every child starts
-                        from.</p>
-                      <p><b>Leaf support.</b> Let pot(<i>S</i>) be the potential of a set of rows, the largest loss they
-                        could contribute (for 0/1 losses, their share of the rows). <i>In an optimal tree every leaf
-                        has potential at least &lambda;.</i> Proof: take a leaf <i>L</i> with pot(<i>L</i>) &lt; &lambda;,
-                        delete the split above it and route its rows into the sibling subtree. The tree has one leaf
-                        fewer, saving &lambda;, and its loss rises by at most pot(<i>L</i>), since a rerouted row can
-                        cost at most its potential; the change is negative. Two rules follow. A node with
-                        pot(<i>X</i>) &lt; 2&lambda; is a leaf, because any split gives a child of potential below
-                        &lambda;. And, from v4, a split with a child of potential below &lambda; is dropped: no optimal
-                        tree on <i>X</i> uses it, and none on any subset of <i>X</i> either, since potential only
-                        shrinks under subsets. A second leaf test, leaf(<i>X</i>) &minus; <i>m</i>(<i>X</i>) &lt; 2&lambda;
-                        in the loss-only form loss(<i>X</i>) &minus; <i>m</i>(<i>X</i>) &lt; &lambda;, is admissible for
-                        any nonnegative costs: a split costs at least <i>m</i> + 2&lambda; and the leaf costs
-                        loss + &lambda;. (The inherited test 1 &minus; <i>m</i>(<i>X</i>) &lt; &lambda; assumes losses
-                        never exceed 1, which a user cost matrix can violate; v14 removed it.)</p>
-                      <p><b>Look-ahead budgets.</b> The two children of a split are solved in turn: the first with the
-                        budget less the second's lower bound, the second with the budget less the first's optimum. If
-                        the first returns with lb above its budget, the split costs at least lb(first) + lb(second),
-                        which is above the budget, and is discarded; the same for the second. Budget deepening (v9)
-                        changes only the sequence of budgets a child is given, geometric from its lower bound, and
-                        every call honours (iii), so the answer is unchanged.</p>
-                      <p><b>Threshold exchange.</b> <i>R</i> is monotone under inclusion: an optimal tree of <i>X</i>
-                        restricted to <i>S</i> &sub; <i>X</i> has no more loss and, once leaves that capture no row of
-                        <i>S</i> are deleted, no more leaves, so <i>R</i>(<i>S</i>) &le; <i>R</i>(<i>X</i>). For
-                        consecutive thresholds <i>t</i> &lt; <i>t&prime;</i> of one numeric column,
-                        left(<i>t</i>) &supe; left(<i>t&prime;</i>) and right(<i>t</i>) &sube; right(<i>t&prime;</i>). So
-                        if lb(right(<i>t</i>)) is at least the leaf value of right(<i>t&prime;</i>), the split at
-                        <i>t&prime;</i> is no worse than the split at <i>t</i> and <i>t</i> is dropped; symmetrically
-                        on the left. Dropping a split that another candidate dominates never removes an optimum, and
-                        the two rules exclude each other on a pair, so no cycle drops both.</p>
+                        is the best single label plus &lambda;. Every node starts from this bound.</p>
+                      <p><b>Leaf support.</b> Let pot(<i>S</i>) be the most loss the rows <i>S</i> can contribute (for
+                        0/1 loss, their share of the rows). <i>In an optimal tree every leaf has potential at least
+                        &lambda;</i>: deleting a leaf <i>L</i> with less and routing its rows to its sibling saves
+                        &lambda; and adds at most pot(<i>L</i>) of loss. So a node with pot(<i>X</i>) &lt; 2&lambda; is a
+                        leaf, and (from v4) a split with a child of potential below &lambda; is dropped, here and on
+                        every subset, since potential only shrinks. The test loss(<i>X</i>) &minus; <i>m</i>(<i>X</i>)
+                        &lt; &lambda; also makes a node a leaf, for any nonnegative costs: a split costs at least
+                        <i>m</i> + 2&lambda; and the leaf loss + &lambda;. (An inherited test,
+                        1 &minus; <i>m</i>(<i>X</i>) &lt; &lambda;, assumed losses of at most 1; v14 removed it.)</p>
+                      <p><b>Look-ahead budgets.</b> A split's two children are solved in turn, the first with the budget
+                        less the second's lower bound, the second with the budget less the first's optimum; if either
+                        proves its lower bound above its share, the split is discarded. Budget deepening (v9) only
+                        changes the sequence of budgets, and every call respects (iii).</p>
+                      <p><b>Threshold exchange.</b> <i>R</i> is monotone under inclusion: restricting an optimal tree of
+                        <i>X</i> to <i>S</i> &sub; <i>X</i>, and deleting emptied leaves, adds neither loss nor leaves, so
+                        <i>R</i>(<i>S</i>) &le; <i>R</i>(<i>X</i>). For consecutive thresholds <i>t</i> &lt;
+                        <i>t&prime;</i> of a column, left(<i>t</i>) &supe; left(<i>t&prime;</i>) and right(<i>t</i>)
+                        &sube; right(<i>t&prime;</i>), so if lb(right(<i>t</i>)) reaches the leaf value of
+                        right(<i>t&prime;</i>), split <i>t&prime;</i> is no worse than <i>t</i> and <i>t</i> is dropped
+                        (symmetrically on the left). The two rules exclude each other on a pair, so no cycle drops
+                        both.</p>
                     </details>
 
                     <details class="collapsible" id="b-simsupport">
                       <summary>Similar support across a whole column (v2)</summary>
-                      <p>For thresholds <i>t</i> &lt; <i>t&prime;</i> of one column the two splits disagree on exactly
-                        the rows with <i>t</i> &le; <i>x</i> &lt; <i>t&prime;</i>, and because the left sets are nested
-                        those rows have potential |pot(left(<i>t</i>)) &minus; pot(left(<i>t&prime;</i>))|. Any tree
-                        rooted at <i>t&prime;</i> becomes a tree rooted at <i>t</i> by moving those rows to the other
-                        side: the leaf count is unchanged and each moved row changes its loss by at most its
-                        potential. Hence |<i>R</i>(<i>t</i>) &minus; <i>R</i>(<i>t&prime;</i>)| is at most that
-                        potential, and a bound proved for one threshold lower-bounds every threshold of its column at
-                        a distance. The reference applies this to the two neighbouring thresholds; v2 applies it to the
-                        column in one vectorised update, by the same proof.</p>
+                      <p>For thresholds <i>t</i> &lt; <i>t&prime;</i> of one column, the two splits disagree
+                        only on the rows with <i>t</i> &le; <i>x</i> &lt; <i>t&prime;</i>, whose potential is
+                        |pot(left(<i>t</i>)) &minus; pot(left(<i>t&prime;</i>))| because the left sets are nested. Moving
+                        those rows turns any tree rooted at <i>t&prime;</i> into one rooted at <i>t</i> with the same
+                        leaves and at most that much more loss, so |<i>R</i>(<i>t</i>) &minus; <i>R</i>(<i>t&prime;</i>)|
+                        is bounded by it. A bound proved for one threshold therefore bounds its whole column; the
+                        reference applies this only to neighbouring thresholds.</p>
                     </details>
 
                     <details class="collapsible" id="b-columndp">
                       <summary>One column solved exactly by segmentation (v3)</summary>
-                      <p>A tree whose every split is a threshold on the same column partitions the rows into intervals
-                        of that column, one per leaf, and every partition into <i>k</i> intervals is realised by a chain
-                        of <i>k</i> &minus; 1 threshold splits with the same loss and the same <i>k</i>. So the best such
-                        tree is the best segmentation of the rows, sorted by the column, into contiguous segments each
-                        charged its best single label plus &lambda;: a quadratic dynamic programme over cumulative class
-                        counts the node already holds. When the thresholds of one column are the only splits that
-                        separate the node's rows, after the two exclusions above, both monotone under subsets so that
-                        a descendant cannot regain a split its ancestor lost, every optimal tree on <i>X</i> uses only
-                        that column and the programme's value is <i>R</i>(<i>X</i>) exactly; by optimal substructure the
-                        same holds for every node of the chain, which is stored solved. On any other node the chain
-                        is a real tree and its value is used only as an upper bound.</p>
+                      <p>A tree that splits only on one column partitions the rows into intervals of that
+                        column, one per leaf, and any partition into <i>k</i> intervals is realised by a chain of
+                        <i>k</i> &minus; 1 splits. So the best such tree is the best segmentation of the sorted rows, each
+                        segment charged its best label plus &lambda;: a quadratic dynamic programme over class counts
+                        the node already has. When one column's thresholds are the only splits left at a node (after the
+                        exclusions above, which are monotone under subsets, so a descendant cannot regain a split),
+                        every tree on <i>X</i> uses only that column and the programme gives <i>R</i>(<i>X</i>) exactly,
+                        for every node of the chain. Elsewhere the chain is a real tree, used only as an upper
+                        bound.</p>
                     </details>
 
                     <details class="collapsible" id="b-pairs">
                       <summary>The pairwise stage: exact two-level trees, and the rule below 4&lambda; (v7, v8, v10)</summary>
-                      <p>Counting rows for every pair of splits gives, for each child of each split, the class counts of
-                        the child's own two cells under every second split, hence the exact cost of the best two-leaf
-                        tree on that child, best<sub>2</sub>(child). Three things follow. (a) 2&lambda; + best<sub>2</sub>
-                        is achieved by a real tree, so min(leaf, 2&lambda; + best<sub>2</sub>) is an upper bound on each
-                        child and the sum over a split's children an upper bound on the split. (b) Every tree on a
-                        child is a leaf, a single split, or has at least three leaves, so <i>R</i>(child) &ge;
-                        min(leaf, 2&lambda; + best<sub>2</sub>, 3&lambda;). (c) Every tree on <i>X</i> with at most three
-                        leaves is a leaf or a root split with a leaf on one side and at most two leaves on the other,
-                        a two-level tree, so the minimum over all splits of the two-level values, with the leaf, is
-                        exactly the optimum over trees with at most three leaves. When the budget is below 4&lambda;
-                        no tree with four or more leaves fits, so that minimum is <i>R</i>(<i>X</i>) if it is within
-                        budget and otherwise a proof, with <i>R</i>(<i>X</i>) &ge; min(best, 4&lambda;) the bound to
-                        store.</p>
-                      <p>v7 stored something else in the failing case: the smaller of best and the cheapest rejected
-                        split's bound, which can lie at or below the budget, so a caller could take an unsolved node
-                        for a solved one. That violates (iii), and v7 is approximate. v8 stores min(best, 4&lambda;), the
-                        quantity the proof gives. Note what (c) needs: the minimum must range over every split that
-                        could root an optimal tree, so the stage runs over every split that separates the node's
-                        rows, not only over the candidates that survive the budget filter. v49 returns to this.</p>
+                      <p>Counting rows for every pair of splits gives the exact cost of the best two-leaf tree on each
+                        child of each split, best<sub>2</sub>. Three consequences: (a) min(leaf, 2&lambda; +
+                        best<sub>2</sub>) is achieved by a real tree, so it upper-bounds the child; (b) any tree on a
+                        child is a leaf, one split, or has at least three leaves, so <i>R</i>(child) &ge; min(leaf,
+                        2&lambda; + best<sub>2</sub>, 3&lambda;); (c) every tree on <i>X</i> with at most three leaves is
+                        a leaf or a two-level tree, so the best two-level value over all splits is exactly the optimum
+                        over trees with at most three leaves. With a budget below 4&lambda; no larger tree fits, so
+                        that value is <i>R</i>(<i>X</i>) if within budget, and otherwise <i>R</i>(<i>X</i>) &ge;
+                        min(best, 4&lambda;) is the bound to store.</p>
+                      <p>v7 stored instead the smaller of best and the cheapest rejected split's bound, which can fall at
+                        or below the budget, so a caller could treat an unsolved node as solved: a violation of (iii),
+                        fixed in v8. Note that (c) needs the minimum over <i>every</i> split that separates the node's
+                        rows, not only the candidates that survive the budget filter; v49 returns to this.</p>
                     </details>
 
                     <details class="collapsible" id="b-superset">
                       <summary>The superset bound (v14)</summary>
-                      <p>For every child <i>S</i> of every split, <i>R</i>(<i>X</i>) &ge; <i>R</i>(<i>S</i>) &ge; lb(<i>S</i>),
-                        by the monotonicity used for threshold exchange: restricting an optimal tree of <i>X</i> to
-                        <i>S</i> loses no loss and no leaves beyond the empty ones. So a node's lower bound can be
-                        raised to the largest lower bound proved for any child of any split, at no cost. v14 also
-                        removed the inherited leaf test that assumes losses at most 1 and made a user-supplied upper
-                        bound a budget rather than an achievable value, closing two gaps a cost matrix could have
-                        exposed.</p>
+                      <p>For every child <i>S</i> of every split, <i>R</i>(<i>X</i>) &ge; <i>R</i>(<i>S</i>)
+                        &ge; lb(<i>S</i>) by monotonicity, so a node's lower bound can be raised to the largest proven
+                        bound of any child, for free. v14 also dropped the leaf test that assumes losses of at most 1
+                        and made a user-supplied upper bound a budget rather than an achievable value.</p>
                     </details>
 
                     <details class="collapsible" id="b-shape">
                       <summary>The shape relaxation (v15)</summary>
-                      <p>Let <i>g<sub>a</sub></i>(<i>S</i>) be a lower bound on every tree with exactly <i>a</i> leaves on
-                        a set <i>S</i>: <i>g</i><sub>1</sub> = leaf(<i>S</i>) and <i>g</i><sub>2</sub> = 2&lambda; +
-                        best<sub>2</sub>(<i>S</i>), both exact from the pairwise counts; <i>g</i><sub>3</sub> = 3&lambda;
-                        plus the cheapest cell any split peels off <i>S</i> as a leaf, since a three-leaf tree has a
-                        leaf at depth one, which is such a cell, and the other side costs at least nothing;
-                        <i>g<sub>a</sub></i> = <i>a</i>&lambda; for <i>a</i> &ge; 4. Every tree on <i>X</i> with four or
-                        more leaves has a root split whose sides carry <i>a</i> and <i>b</i> leaves with
-                        <i>a</i> + <i>b</i> &ge; 4, so the minimum over all splits and all such (<i>a</i>, <i>b</i>) of
-                        <i>g<sub>a</sub></i>(left) + <i>g<sub>b</sub></i>(right) lower-bounds all of them at once (both
-                        sides at four or more leaves cost at least 8&lambda;, where the minimum starts). If the best
-                        two-level tree is no worse than that minimum and no worse than the leaf it is optimal, since
-                        it already beats every tree with two or three leaves exactly, and the node is solved at any
-                        budget without expanding a child. The children's bounds are raised to
-                        min(<i>g</i><sub>1</sub>, <i>g</i><sub>2</sub>, <i>g</i><sub>3</sub>, 4&lambda;) by the same case
-                        split.</p>
+                      <p>Let <i>g<sub>a</sub></i>(<i>S</i>) bound every tree with exactly <i>a</i> leaves on
+                        <i>S</i>: <i>g</i><sub>1</sub> = leaf(<i>S</i>) and <i>g</i><sub>2</sub> = 2&lambda; +
+                        best<sub>2</sub>(<i>S</i>), both exact; <i>g</i><sub>3</sub> = 3&lambda; plus the cheapest cell
+                        any split peels off as a leaf, since a three-leaf tree has a leaf at depth one;
+                        <i>g<sub>a</sub></i> = <i>a</i>&lambda; for <i>a</i> &ge; 4. A tree with four or more leaves has
+                        a root split with <i>a</i> and <i>b</i> leaves on its sides, <i>a</i> + <i>b</i> &ge; 4, so the
+                        minimum over splits and such (<i>a</i>, <i>b</i>) of <i>g<sub>a</sub></i>(left) +
+                        <i>g<sub>b</sub></i>(right) bounds them all. If the best two-level tree is no worse than that
+                        and than the leaf, it is optimal, and the node is solved at any budget without expanding a
+                        child. Children's bounds rise to min(<i>g</i><sub>1</sub>, <i>g</i><sub>2</sub>,
+                        <i>g</i><sub>3</sub>, 4&lambda;) by the same argument.</p>
                     </details>
 
                     <details class="collapsible" id="b-triples">
-                      <summary>Triple counts and the depth-3 floors (v19, v20; off since v40), and the first finding</summary>
-                      <p>Counting rows for every triple of splits gives every child its exact best three-leaf tree and its
-                        exact best (2,2) tree, two-level on both sides, so a child's achievable value is the minimum over
-                        one, two, three and (2,2) leaves. The stage was gated to nodes with at most 14 candidates that
-                        fit in 64 words, with a budget below the equivalent-points floor plus 8&lambda;, and v40 turned
-                        it off: under the compiled engine the expansions it saved cost less than its cubic count. Its
-                        lower bounds on the trees it does not enumerate are floors from the cells the triples expose.
-                        Four leaves other than (2,2) are a (1,3) or (3,1) shape, a cell as a leaf plus a three-leaf
-                        tree that has a leaf at its own depth one, a sub-cell: at least 4&lambda; + leaf(cell) +
-                        cheapest sub-cell of the other side. Five leaves: (1,4) peels a cell; (2,3) a two-leaf tree on
-                        a cell plus a sub-cell. Six: (1,5) a cell, (2,4) a two-leaf cell, (3,3) a sub-cell on each
-                        side. All of these are admissible, and v19, which charged six or more leaves 6&lambda; and
-                        nothing else, is exact.</p>
-                      <p><b>The finding.</b> v20 charges seven or more leaves "6&lambda; plus the same floor",
-                        min(<i>c</i><sub>3</sub>, <i>c</i><sub>5</sub>, <i>c</i><sub>6</sub>), and that is not admissible.
-                        A (3,4) tree can carry a (2,2) subtree on its four-leaf side and a (4,4) tree one on both, and
-                        in those shapes no leaf is a cell or a sub-cell, so nothing in <i>c</i><sub>3</sub>,
-                        <i>c</i><sub>5</sub> or <i>c</i><sub>6</sub> bounds their loss, which can be zero. Concretely, take
-                        a node whose rows have three binary features and a label equal to their parity. Every cell (one
-                        feature fixed) and every sub-cell (two fixed) is half wrong, so with <i>n<sub>X</sub></i> rows
-                        out of <i>n</i> all three constants equal <i>n<sub>X</sub></i>/4<i>n</i> and the floor for
-                        seven or more leaves reads 6&lambda; + <i>n<sub>X</sub></i>/4<i>n</i>; but the eight-leaf tree
-                        that fixes all three features is perfect and costs 8&lambda;, below the floor whenever
-                        <i>n<sub>X</sub></i> &gt; 8&lambda;<i>n</i>. On such a node v20 stores a lower bound above the
-                        optimum. That bound is written into the child's memo entry and, through the superset bound,
-                        into its parent's, from where it can prune a split that contains the optimum at a later
-                        budget: a false certificate. The loop's validation could not see it. Its exhaustive trials
-                        used at most three features, a child of a split has at most two left, and no two-feature
-                        subproblem holds a seven-leaf tree. On the 70 benchmark problems the gated stage never bound
-                        wrongly (every value it certified equals the known optimum), so the recorded numbers of v20 to
-                        v39 stand as measurements; their guarantee does not. The admissible floor for seven or more
-                        leaves is 7&lambda;. The shipped package carries the stage disabled and now uses that floor,
-                        so enabling it is safe.</p>
+                      <summary>Triple counts and depth-3 floors (v19, v20; off since v40): the first finding</summary>
+                      <p>Counting rows for every triple of splits gives each child its exact best three-leaf and
+                        (2,2)-leaf trees. The stage ran only on narrow nodes (at most 14 candidates in 64 words, with a
+                        budget under the floor plus 8&lambda;), and v40 turned it off: once the search was compiled, the
+                        expansions it saved cost less than its cubic count. For shapes it does not enumerate it uses
+                        floors from the cells it sees; four leaves as (1,3), for instance, cost at least 4&lambda; + a
+                        cell + the cheapest sub-cell on the other side, and five and six leaves are bounded the same
+                        way. These floors are admissible, and v19, which charged six or more leaves just 6&lambda;, is
+                        exact.</p>
+                      <p><b>The finding.</b> v20 charges seven or more leaves 6&lambda; + min(<i>c</i><sub>3</sub>,
+                        <i>c</i><sub>5</sub>, <i>c</i><sub>6</sub>), which is not admissible: a (3,4) or (4,4) tree can
+                        place every leaf below depth two, where no cell or sub-cell bounds its loss, and that loss can
+                        be zero. Take a node whose label is the parity of three binary features: every cell and
+                        sub-cell is half wrong, so the floor reads 6&lambda; + <i>n<sub>X</sub></i>/4<i>n</i>, yet the
+                        eight-leaf tree on all three features is perfect and costs 8&lambda;, below the floor whenever
+                        <i>n<sub>X</sub></i> &gt; 8&lambda;<i>n</i>. The overestimate enters the memo and, through the
+                        superset bound, the parent, where it can prune the optimum at a later budget: a false
+                        certificate. The loop's tests used at most three features, too few to build a seven-leaf
+                        subtree below a split. It never fired on the benchmark, so the numbers of v20 to v39 stand, but
+                        their guarantee does not. The admissible floor is 7&lambda;; the package ships with the stage
+                        off and now uses that floor, so enabling it is safe.</p>
                     </details>
 
                     <details class="collapsible" id="b-cands">
-                      <summary>The pair stage over the candidates only (v49), and the second finding</summary>
-                      <p>On a wide node with few surviving candidates v49 counts pairs for the candidates against every
-                        other split instead of every pair. Most of its bookkeeping is right: a split without pair
-                        information keeps the bounds it had, its leaves are the only trees it is credited with, and in
-                        the shape relaxation every tree with four or more leaves rooted at it is charged that split's
-                        own bound, a valid lower bound on any tree rooted there. The rule below 4&lambda; is where the
-                        restriction bites. Its proof (above) needs the minimum over the two-level trees of every
-                        split; with the restricted stage that minimum runs over the candidates, and a three-leaf tree
-                        rooted at a rejected split is not in it. A rejected split's value is at least its bound, which
-                        exceeds the budget, so the rule's success case still holds; but in the failing case v49 stores
-                        min(best, 4&lambda;) where only min(best, 4&lambda;, cheapest rejected bound) is justified, and
-                        the stored value exceeds <i>R</i>(<i>X</i>) whenever a rejected split has a three-leaf tree
-                        between the budget and that minimum. A memo entry above the optimum is the same hazard as
-                        before: it can prune the optimum at a later budget. v49 certified nothing wrong on either
-                        benchmark and its rows are reported as measured, marked; it is not the shipped version, and
-                        the omission is one term.</p>
+                      <summary>The pair stage over the candidates only (v49): the second finding</summary>
+                      <p>On wide nodes with few candidates, v49 counts pairs only between the candidates and all
+                        other splits. Most of its bookkeeping is sound: splits without pair counts keep their own
+                        bounds and are charged their split bound in the shape relaxation. The gap is in the rule below
+                        4&lambda;, whose proof needs the best two-level tree over <i>every</i> split; here it runs over
+                        the candidates only, missing three-leaf trees rooted at rejected splits. When the rule succeeds
+                        that is harmless, since a rejected split's value exceeds the budget. When it fails, v49 stores
+                        min(best, 4&lambda;) where only min(best, 4&lambda;, cheapest rejected bound) is justified, which
+                        can exceed <i>R</i>(<i>X</i>) and later prune the optimum. It never fired on either benchmark;
+                        v49 is not the shipped version, and the fix is one term.</p>
                     </details>
 
                     <details class="collapsible" id="b-parallel">
                       <summary>Parallel certification (v25, v29, v30, v32, v34)</summary>
-                      <p>After a short sequential phase the root's surviving candidate splits are handed to eight
-                        workers, processes in v25 and v29 and threads from v30 on. Exactness rests on what crosses
-                        between them. The incumbent is the value of a real tree and only decreases, so a split that a
-                        worker proves above the incumbent it saw is above the final incumbent, hence above the answer;
-                        every other split is solved exactly by the same search, and the root's optimum is the minimum
-                        over them and the leaf, as in the sequential loop. v32 shares lower bounds through a lock-free
-                        table keyed by the full capture mask and row count: a bound is only ever raised, a partly
-                        written key is a strict subset of the true one and so has a different row count, and every
-                        published value was proved by the same search on exactly that subproblem, so a reader sees a
-                        valid bound or nothing. v34 shares solved optima the same way and pushes an improved incumbent
-                        down a task's whole stack, re-deriving each child budget as when it was pushed; budgets only
-                        tighten, and a frame that ends above its budget returns unsolved with a sound bound, so the
-                        conclusions are the sequential ones.</p>
+                      <p>After a short sequential phase the root's candidate splits go to eight workers
+                        (processes in v25 and v29, threads from v30). The shared incumbent is always a real tree's value
+                        and only decreases, so a split a worker proves above the incumbent it saw is above the final
+                        answer; every other split is solved exactly, and the root takes the minimum, as in the
+                        sequential search. v32 shares proven lower bounds through a lock-free table keyed by capture
+                        mask and row count: bounds only rise, a partly written key has the wrong row count, and every
+                        published value was proved for exactly that subproblem. v34 shares solved optima the same way
+                        and pushes a better incumbent down each task's stack, re-deriving child budgets as when they
+                        were pushed; budgets only tighten, so the conclusions match the sequential search.</p>
                     </details>
 
                     <details class="collapsible" id="b-seeds">
                       <summary>Seeds, repair and budgeted stages (v43, v45, v46): exact whenever the search finishes</summary>
-                      <p>The lookahead-greedy seed (v43) walks down from the root, choosing each node's split by its
-                        expansion's best tree, and installs a subtree's value only when it beats what the node holds;
-                        every value it writes is the objective of the structure it writes, so it only ever supplies
-                        (ii). The bottom-up repair of v45 solves each internal node of the incumbent as a subproblem
-                        with its own value as the budget: by (iii) it ends solved or proven, and what it certifies is
-                        a sound memo entry. v46's budgeted pair stage, which under a short cap evaluates the <i>k</i>
-                        most promising splits only, derives no bound from its result (the frame is flagged, so the
-                        shape relaxation and the exact rule are skipped), and v43c's rule that skips a pair stage whose
-                        estimated cost exceeds a tenth of the time limit leaves bounds uncomputed rather than changed.
-                        None of this can produce a wrong certificate; what it produces under a cap is an incumbent,
-                        which is why one file is an exact solver at 30 s and an anytime method at 2 ms. A draft of v46
-                        did certify two wrong trees: an indentation slip left the candidate refilter under the wrong
-                        branch, a transcription error of the kind the checklist predicts for refactors, caught by the
-                        run's own check and fixed before its rows were recorded. Drafts of v13 and v41 were caught the
-                        same way.</p>
+                      <p>The greedy seed (v43) installs a subtree's value only when it beats the node's, and every
+                        value it writes belongs to the structure it writes, so it only supplies (ii). The repair (v45)
+                        solves each internal node of the incumbent with its own value as budget, so by (iii) it ends
+                        solved or proven. v46's budgeted pair stage evaluates only the most promising splits under a
+                        short cap and derives no bounds from them, and v43c's rule that skips an expensive pair stage
+                        leaves bounds uncomputed, not changed. None of this can produce a wrong certificate; under a cap
+                        it only changes the incumbent. Drafts of v13, v41 and v46 did certify wrong trees through
+                        transcription errors (in v46, an indentation slip that skipped a refilter), all caught by the
+                        loop's checks before recording.</p>
                     </details>
 
                     <details class="collapsible" id="b-guesses">
                       <summary>Guessed bounds and a depth budget (v47): approximate by construction</summary>
-                      <p>The gosdt-guesses recipe replaces the equivalent-points floor by a reference model's loss on the
-                        subproblem plus &lambda;, and caps the depth. The reference loss is not a lower bound on
-                        anything, since a tree can beat the reference model on any subset, so subtrees that contain
-                        the optimum are pruned wherever the reference is poor (on monk_2 the regret reached 0.12 to
-                        0.23), and a depth cap removes trees from the search space outright. Both break exactness by
-                        design; the row is reported for what it is.</p>
+                      <p>The gosdt-guesses recipe replaces the equivalent-points floor with a reference model's
+                        loss plus &lambda;, and caps the depth. The reference loss bounds nothing, since a tree can beat
+                        the reference on any subset, so optima are pruned wherever the reference is poor (on monk_2 the
+                        regret reached 0.12 to 0.23), and the depth cap removes trees outright. Both are approximations
+                        by design.</p>
                     </details>
 
                     <details class="collapsible" id="b-shipped">
-                      <summary>The shipped model, checked line by line: v40 as it runs in the package</summary>
-                      <p>The proofs above are about rules. This section is about the code that applies them, read
-                        in full on the path the package takes. <code>fit</code> binarises the data, builds the cost
-                        matrix and its aggregates, and runs the compiled engine with one thread. That choice removes
-                        three things from the audit at once: the parallel phase, the shared bound table and the
-                        adoption of another thread's solutions are never entered, and the depth-3 stage is gated off.
-                        What remains is node creation, the expansion of a frame with its four early resolutions, the
-                        single-column chain, the candidate loop with its budget deepening, the frame epilogue, the
-                        flush on an interruption, the driver that re-enters the search in chunks, and extraction.
-                        Thirteen places in that code mark a node solved or raise a lower bound. Each is listed with the
-                        rule it applies and the collapsible that proves the rule.</p>
+                      <summary>The shipped model, checked line by line</summary>
+                      <p>The proofs above cover rules; this section checks the code that applies them, on the path the
+                        package takes. <code>fit</code> runs the compiled engine on one thread, so the parallel phase,
+                        the shared table and thread adoption are never entered, and the depth-3 stage is off. Thirteen
+                        places in what remains mark a node solved or raise a lower bound, each resting on a rule proved
+                        above:</p>
                       <ol class="gam-readings">
-                        <li><b>Creating a node.</b> lb = min(leaf, floor + 2&lambda;), ub = the leaf, no split. Solved at
-                          once only for a single row, for leaf &minus; floor &lt; &lambda;, or for potential &lt; 2&lambda;.
-                          Inherited bounds.</li>
-                        <li><b>Expansion, no split left.</b> No split separates the rows with both sides of potential at
-                          least &lambda;: the node is its leaf. Leaf support.</li>
-                        <li><b>Expansion, everything above the budget.</b> min(leaf, best two-level tree, shape bound)
-                          exceeds the budget: the bound is raised to it. Shape relaxation; the pair stage ran over
-                          every separating split.</li>
-                        <li><b>The single-column chain.</b> When every separating split belongs to one numeric column
-                          the segmentation programme's value is the optimum, each node of the chain is solved at its
-                          suffix value, and the segments are leaves. Segmentation, with the two exclusions that define
-                          "separating" both monotone under subsets. The list a child sees is its parent's separating
-                          splits, so no descendant can regain a column.</li>
-                        <li><b>Installing the best two-level tree.</b> Each child receives min(leaf, 2&lambda; +
-                          best<sub>2</sub>) and the split that achieves it; the grandchildren are leaves that extraction
-                          creates from their keys. Real trees, so only (ii).</li>
-                        <li><b>The shape rule.</b> Best two-level tree no worse than the shape bound and no worse than
-                          the leaf: solved at that value.</li>
-                        <li><b>The rule below 4&lambda;.</b> Solved at best when best fits the budget, else the bound
-                          becomes min(best, 4&lambda;); best ranges over every separating split, which is what v49 gave
-                          up.</li>
-                        <li><b>Children in the candidate loop.</b> A new child takes the kernel's leaf value and bound.
-                          A child whose ub is within 1e-10 of its lb is solved. A child whose ub fits a budget below
-                          3&lambda; is solved, because every tree with three or more leaves costs at least 3&lambda; and
-                          the ub is exact over one and two leaves. Pairwise stage.</li>
-                        <li><b>Deepening.</b> The first child's budget is the bound less the second's lower bound; a
-                          child whose bound exceeds its budget prunes the split; the second's final budget is the bound
-                          less the first's optimum, which by (iii) the first holds once it is not pruned. Look-ahead.</li>
-                        <li><b>The epilogue.</b> Solved at best when best fits the budget; otherwise the bound becomes
-                          the larger of min(best, cheapest pruned split) and the largest child bound. Superset bound.
-                          Every pruned split exceeded the bound by more than 1e-10, so best is the optimum within that
-                          tolerance.</li>
-                        <li><b>The flush.</b> An interruption writes each open frame's incumbent to its node, never a
-                          bound and never a flag, and the search restarts from the root on the memo it left, which is
-                          consistent after every single write above.</li>
-                        <li><b>Re-arming a cached frame.</b> Only the budget-dependent steps rerun; the pair-stage
-                          values reused are functions of the node alone, a node's separating splits are intrinsic to
-                          it whichever parent reached it, and a frame whose pair stage did not run is never cached.</li>
-                        <li><b>The driver and extraction.</b> The root's budget is its own leaf value, so the search
-                          can only end solved or stopped. A time limit, a memory limit or the depth cap of 48 raise,
-                          set <code>optimal_</code> to False and warn: no certificate is issued on a stopped search.
-                          Extraction rebuilds a leaf where the split is &minus;1 and otherwise follows the two children
-                          by key, creating leaves where none were stored, which realises every incumbent any of the
-                          writes above recorded.</li>
+                        <li><b>Creating a node.</b> lb = min(leaf, floor + 2&lambda;), ub = leaf; solved at once only for a single row, for leaf &minus; floor &lt; &lambda;, or for potential &lt; 2&lambda;. Inherited bounds.</li>
+                        <li><b>No split left.</b> No split leaves both sides with potential at least &lambda;, so the node is a leaf. Leaf support.</li>
+                        <li><b>Everything above the budget.</b> min(leaf, best two-level tree, shape bound) exceeds the budget, so the bound rises to it. Shape relaxation, over every separating split.</li>
+                        <li><b>The single-column chain.</b> When every separating split is on one column, the segmentation value is optimal and every chain node is solved. Segmentation; a child only sees its parent's separating splits, so no column is regained.</li>
+                        <li><b>Installing the best two-level tree.</b> Each child gets min(leaf, 2&lambda; + best<sub>2</sub>) and the split achieving it. Real trees, so only (ii).</li>
+                        <li><b>The shape rule.</b> Best two-level tree no worse than the shape bound and the leaf: solved at that value.</li>
+                        <li><b>The rule below 4&lambda;.</b> Solved at best when it fits the budget, else bound min(best, 4&lambda;); best ranges over every separating split, which is what v49 gave up.</li>
+                        <li><b>Children in the candidate loop.</b> Solved when ub is within 1e-10 of lb, or when ub fits a budget below 3&lambda;, since ub is exact over one and two leaves and three or more cost at least 3&lambda;. Pairwise stage.</li>
+                        <li><b>Deepening.</b> Each child's budget is the bound less its sibling's lower bound, or less its optimum once that is known; a child above its budget prunes the split. Look-ahead.</li>
+                        <li><b>The epilogue.</b> Solved at best when it fits; else bound max(min(best, cheapest pruned split), largest child bound). Superset bound.</li>
+                        <li><b>The flush.</b> An interruption writes each open frame's incumbent to its node, never a bound or a flag, and the search restarts from a consistent memo.</li>
+                        <li><b>Re-arming a cached frame.</b> Reuses only quantities that depend on the node alone; a frame whose pair stage did not run is never cached.</li>
+                        <li><b>The driver and extraction.</b> A time, memory or depth stop sets <code>optimal_</code> to False and warns, so a stopped search never certifies. Extraction rebuilds exactly the trees the writes above recorded.</li>
                       </ol>
-                      <p><b>The tolerance.</b> Every comparison that prunes requires exceeding by more than
-                        1e-10, and every comparison that solves accepts equality within 1e-10, so the guarantee is:
-                        the certified objective is within 1e-10 of the minimum and the returned tree scores within
-                        1e-10 of the certified objective. Two different trees differ by |&Delta;loss + <i>k</i>&lambda;| for an
-                        integer <i>k</i>, and with uniform costs &Delta;loss is a multiple of 1/<i>n</i>, so the tolerance
-                        can separate two trees only when the penalty agrees with a multiple of 1/<i>n</i> to ten decimal
-                        places. Its purpose is to treat exact ties, and the same sum taken in two orders, as equal.</p>
-                      <p><b>The inputs.</b> The floors of the form "<i>a</i> leaves cost at least <i>a</i>&lambda;" and
-                        "a tree's loss cannot fall below zero" need a nonnegative penalty and nonnegative, finite costs;
-                        nothing else about the costs is assumed, so a nonzero diagonal, unequal errors and
-                        <code>balance</code> are all covered by the same proofs. The package now rejects a negative or
-                        non-finite penalty and a cost matrix with a negative or non-finite entry; it accepted them
-                        before, and a negative penalty would have broken the 4&lambda; floor.</p>
-                      <p><b>What the check changed.</b> Three things, none of which the benchmarks reached. First, the
-                        chain of the single-column programme wrote each node's value and split before creating the
-                        next node's children, so a store that filled in the middle of a chain left a node whose
-                        value no tree in the store could realise: the certified value would have been right and the
-                        returned tree worse than it, a failure of (ii). The chain now creates all of its nodes before
-                        it writes any structure. A test grows a store of capacity four through dozens of
-                        reallocations, chains included, and passes on the old code as well as the new: the old
-                        code's retry usually completed the chain before anything read it, and the failure needs a
-                        memo hit on an inner chain node in between, which no test constructs. The fix rests on the
-                        argument, not on a test. Second, candidates were
-                        ordered by a rounded key, split_lb + 10<sup>&minus;9</sup>&middot;split_ub, and the loop stops at
-                        the first candidate above the bound, so two candidates whose bounds differ by less than
-                        10<sup>&minus;9</sup> could be misordered and one skipped: a tolerance of 10<sup>&minus;9</sup>
-                        where the rest of the solver keeps 10<sup>&minus;10</sup>. The order is now exact. Third, the input
-                        validation above. And with the depth-3 stage forced on for the same tests, a fourth: the
-                        step that materialises a pending three-leaf structure at extraction kept a reference to the
-                        node store across a call that can grow and replace it, and indexed the stale copy, a crash
-                        rather than a wrong tree, reachable only with the stage enabled; it now re-reads the store.
-                        The tests that accompany the check enumerate every tree on up to six binary
-                        features with two or three classes, on random nonnegative cost matrices with nonzero
-                        diagonals, and with the store forced to grow from four nodes; they are tripwires for the
-                        proofs, not substitutes for them.</p>
+                      <p><b>Tolerance.</b> A prune requires exceeding by more than 1e-10 and a solve accepts equality
+                        within it, so the certified objective is within 1e-10 of the minimum and the returned tree
+                        within 1e-10 of the certificate. With uniform costs two trees differ by a multiple of
+                        1/<i>n</i> plus a multiple of &lambda;, so this matters only if &lambda; matches a multiple of
+                        1/<i>n</i> to ten decimal places; its purpose is to treat ties as ties.</p>
+                      <p><b>Inputs.</b> The proofs need a nonnegative penalty and nonnegative, finite costs, and nothing
+                        more, so nonzero diagonals, unequal errors and <code>balance</code> are covered. The package now
+                        rejects anything else; before, a negative penalty would have broken the 4&lambda; floor.</p>
+                      <p><b>What the check fixed.</b> Four defects, none reached by any benchmark. (1) The single-column
+                        chain wrote each node's value before creating the next node's children, so a store that filled
+                        mid-chain could leave a node whose value no stored tree achieves, a failure of (ii); the chain
+                        now creates every node first. A test that grows a four-node store through dozens of
+                        reallocations passes on the old code too, since the failure also needs a memo hit on an inner
+                        chain node, so this fix rests on the argument. (2) Candidates were ordered by a rounded key
+                        with 1e-9 slack while the loop stops at the first candidate above the bound, so one could be
+                        skipped; the order is now exact. (3) The input validation above. (4) With the depth-3 stage
+                        forced on, extraction read a stale copy of a node store that had just grown: a crash, not a
+                        wrong tree; it now re-reads the store. The new tests enumerate every tree on up to six binary
+                        features with two or three classes, random nonnegative cost matrices, and a store forced to
+                        grow from four nodes: tripwires for the proofs, not substitutes.</p>
                     </details>
 
                     <h3 id="ledger">The ledger</h3>
@@ -1000,69 +814,49 @@ viz.view()</code></pre>
                           <tr><td>anytime rows</td><td>v43 to v49 stopped at 1 ms to 1 s a problem</td><td>cap</td><td>by the cap</td><td>the same files; a certificate only when the search finishes first. Not plotted.</td></tr>
                         </tbody>
                       </table>
-                      <p class="tblnote">"Latent gap" means the version ran as an exact solver and every value it certified on the
-                        benchmark equals the known optimum, but the argument for its guarantee has the hole described
-                        in the collapsible named. The "why" column is the collapsible that carries the proof; a
-                        refactor's "no new rule" is the whole argument, and its risk, a transcription error, is what
-                        the loop's exhaustive checks were for: three drafts (v13, v41, v46) were caught by them, and
-                        the two gaps above are the ones those checks could not reach.</p>
+                      <p class="tblnote"><i>Latent gap</i>: the version ran as an exact solver and certified only known optima on
+                        the benchmark, but the proof of its guarantee has the hole described in the named collapsible.
+                        A refactor's "no new rule" is its whole argument; the loop's exhaustive checks caught three such
+                        drafts (v13, v41, v46), and the two gaps above are the ones they could not reach.</p>
                     </details>
 
-                    <p>Three lines of the audit are worth stating outside the collapsibles. The shipped model, v40 run on
-                        one thread, is exact: every rule it applies is proved above, the code that applies them
-                        was read line by line, and its only reservation is the 1e-10 tolerance that treats ties as
-                        ties. That reading also found three engineering defects the benchmarks never reached, all
-                        fixed in the package. The versions
-                        from v20 to v39 and v49 ran as exact solvers and certified nothing wrong on any problem in this
-                        post, so their numbers in Fig <a href="#fig1">1</a> and Table 1 stand as measurements, but
-                        each carries a bound whose proof has a hole that the benchmarks never reached; Fig 1 draws them
-                        orange and the table marks v49. And the approximations are three: v7, whose bug the loop
-                        found itself; v47, which guesses by design; and the anytime rows, which are the exact solver
-                        stopped early.</p>
+                    <p><b>In short.</b> The shipped model, v40 on one thread, is exact: every rule it applies is proved
+                        above, its code was checked line by line, and its only reservation is the 1e-10 tie tolerance.
+                        That check also found and fixed four engineering defects the benchmarks never reached. v20 to
+                        v39 and v49 certified nothing wrong, so their numbers stand, but each carries one unproven
+                        bound; Fig <a href="#fig1">1</a> draws them orange, with v7 (a bug the loop found itself) and v47
+                        (guessed bounds, by design).</p>
 
-                    <p>Two engineering facts complete the picture. Rows are ordered so that the capture sets of deep
-                        nodes occupy few words, which is free because the objective does not depend on the order of
-                        the rows. And the whole search is compiled: nodes are rows of arrays behind an open-addressing
-                        index, the recursion is an explicit stack of frames, and Python re-enters the compiled function
-                        in short chunks only to enforce the time and memory limits. The compiled search takes about 20
-                        seconds to build the first time it runs on a machine; the result is cached on disk, so every
-                        later process loads it in about a second, and if the cache directory is unwritable
-                        <code>OPTTREE_NUMBA_CACHE=0</code> skips caching and pays the build each time.</p>
+                    <p>Two engineering facts complete the picture. Rows are sorted so deep capture sets occupy few 64-bit
+                        words, which is free because the objective ignores row order. And the search is compiled: nodes
+                        are array rows behind a hash index, the recursion is an explicit stack, and Python re-enters it
+                        only to enforce the time and memory limits. The first run on a machine spends about 20 seconds
+                        compiling; the result is cached, so later runs load in about a second (set
+                        <code>OPTTREE_NUMBA_CACHE=0</code> if the cache directory is unwritable).</p>
 
                     <h3 id="after">Rounds after the shipped version</h3>
 
-                    <p>The loop kept going after the version this package ships, and the three most recent rounds are
-                        worth reporting less for their speed than for what they found.</p>
+                    <p>The loop kept going after the shipped version. Its three latest rounds are worth reporting more for
+                        what they found than for their speed.</p>
 
-                    <p><b>The published shortcut, measured inside our own search.</b> gosdt-guesses gets its speed from
-                        two ideas: take the thresholds a boosted-stump model uses, and use that model's loss as a lower
-                        bound on each subproblem. The loop implemented both as options in this solver so they could be
-                        compared without the rest of the implementation getting in the way. Every configuration is
-                        dominated by the exact search itself: the full recipe reaches a mean regret of 0.011 at
-                        0.0019 s. The reference bound is what costs: on monk_2 the stump ensemble is a poor reference, its guessed
-                        bounds prune subtrees that contained the optimum, and the regret reaches 0.12 to 0.23. The same
-                        held on three full-size datasets outside the suite. Guessing a bound is not free; it trades
-                        correctness for speed, and here it did so at a worse rate than a clock does.</p>
+                    <p><b>The gosdt-guesses shortcut, inside our search.</b> gosdt-guesses keeps only the thresholds a
+                        boosted-stump model uses, and treats that model's loss as a lower bound. Added as options to
+                        this solver, every configuration is dominated by the exact search: the full recipe reaches a mean
+                        regret of 0.011 at 0.0019 s. The guessed bound is the costly part: on monk_2 the stump ensemble
+                        is a poor reference, its bounds prune the optimum, and regret reaches 0.12 to 0.23. The same held
+                        on three full-size datasets outside the suite.</p>
 
-                    <p><b>The time was not in the search.</b> Profiling full-size fits showed the search certifying
-                        COMPAS at a penalty of 0.02 in 0.2 seconds inside a fit that took 86 seconds. Nearly all of it
-                        was binarization: each of 64,859 rules applied as its own pandas operation, categorical rules as
-                        a Python loop over rows, and the whole thing done twice. One broadcast comparison per column
-                        brought the encoding from 82 seconds to 2.0, and finding the equivalent-point classes by hashing
-                        packed rows rather than sorting 3 KB records took another 2.6 seconds to 0.05. A full-COMPAS fit
-                        went from 86 seconds to about 5, with the suite unchanged because the search never moved. It is
-                        worth saying plainly: for a while the fastest exact tree search in this comparison spent 99% of
-                        its time preparing the data.</p>
+                    <p><b>The time was not in the search.</b> On full-size COMPAS the search certified the optimum at a
+                        penalty of 0.02 in 0.2 seconds inside an 86-second fit; nearly all the rest was binarization,
+                        applying 64,859 rules one pandas operation at a time, twice. One broadcast comparison per column
+                        cut encoding from 82 s to 2.0 s, and hashing rows instead of sorting them cut the
+                        equivalent-point step from 2.6 s to 0.05 s, so the whole fit went from 86 s to about 5.</p>
 
-                    <p><b>Restricting the pairwise stage.</b> The pairwise stage looped over every splitting feature
-                        rather than only the surviving candidates, and each thread's workspace held 96 frames times the
-                        feature count, 634 MB on the full COMPAS table and the reason wide tables ran into the memory
-                        guard. Restricting the stage to the candidates and growing workspaces on demand made v49 the
-                        fastest version on both benchmarks to run as an exact solver, though not a proved one (Methods), and cut the workspace to 106 MB per thread. The first
-                        attempt ran the restricted stage everywhere and lost 1.5 to 1.8&times; on the widest problems;
-                        bounding it by the work it implies keeps the wins without the losses. The audit in the Methods section
-                        finds that one branch of the restricted stage stores a bound the restriction no longer
-                        justifies; it never fired, and v49 is not the shipped version.</p>
+                    <p><b>Restricting the pairwise stage.</b> The pairwise stage looped over every splitting feature, not
+                        only the surviving candidates, and each thread's workspace held 96 frames per feature: 634 MB on
+                        full COMPAS. Restricting the stage to candidates when that is cheap, and growing workspaces on
+                        demand, made v49 the fastest version to run as an exact solver and cut the workspace to 106 MB
+                        per thread. Its one unproven branch is described under Methods.</p>
 
                     <h3 id="citation">Citation</h3>
 
