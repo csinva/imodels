@@ -82,9 +82,8 @@ MULTICORE_BASELINES = {"gosdt_mc8"}
 # pygosdt is version 1 of the line the loop evolved, so it is drawn with the loop's versions
 # rather than as an outside baseline, even though its rows come from the benchmark
 V1 = {"pygosdt_v1"}
-# baselines drawn as approximate: the heuristics, and GOSDT, whose implementation issued
-# verified false certificates (tic-tac-toe on the visible set, the chudi stand-in on the hidden set)
-APPROX_BASELINES = {"gosdt", "gosdt_mc8", "split", "gosdt_guesses_guided", "gg_guided_e60d2", "gg_guided_db5"}
+# baselines drawn as approximate: the heuristics
+APPROX_BASELINES = {"split", "gosdt_guesses_guided", "gg_guided_e60d2", "gg_guided_db5"}
 HEURISTIC_BASELINES = {"gosdt_guesses_guided", "gg_guided_e60d2", "gg_guided_db5", "split"}
 # the evolved solvers as the external sweep names them
 EXTERNAL_EVOLVED = {"fastsmalltree": ("v23", False, "exact"),
@@ -106,8 +105,12 @@ LABELLED = {
     "streed": "STreeD",
     "pygosdt_v1": "pygosdt (v1)",
     "split": "SPLIT",
-    "gosdt_guesses_guided": "gosdt-guesses, guided",
+    # the depth-5 run lands exactly on the published guided point, so one label names both
+    "gosdt_guesses_guided": "gosdt-guesses, guided (and depth 5)",
     "gg_guided_e60d2": "gosdt-guesses, guided (tuned)",
+    "gosdt_mc8": "GOSDT, 8 threads",
+    "gosdt_guesses": "gosdt-guesses",
+    "gg_exact_simsup": "gosdt-guesses (similar support)",
     "v23_word_compaction": "v23",
     "v40_sequential": "FastSmallTree",
     "v49_cands_pairs_lazy_ws": "v49, 8 threads",
@@ -129,11 +132,16 @@ NOLIMIT_OFFSETS = {"gosdt": [60, 30], "streed": [-55, -32], "pygosdt_v1": [-5, -
 # where each direct label sits relative to its point, in pixels (x right, y down),
 # chosen by rendering the page and moving labels off each other and off the marks
 OFFSETS = {
-    "gosdt": [-62, -44],
+    # the four baselines near 0.5 s fan out up and to the left, in the order of their points
+    "gg_exact_simsup": [-110, -127],
+    "gosdt_guesses": [-70, -104],
+    "gosdt_mc8": [-60, -84],
+    "gosdt": [-40, -66],
+
     "streed": [-48, -34],
     "pygosdt_v1": [-15, -42],
-    "split": [-42, -34],
-    "gosdt_guesses_guided": [78, 8],
+    "split": [0, -34],
+    "gosdt_guesses_guided": [120, 8],
     "v23_word_compaction": [58, -26],
     "v40_sequential": [-5, -46],
     "v49_cands_pairs_lazy_ws": [22, 52],
