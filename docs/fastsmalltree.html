@@ -282,31 +282,32 @@ viz.view()</code></pre>
 
                     <details class="collapsible" id="fig1-measurement">
                       <summary>How each panel was measured</summary>
-                      <p><b>Hidden set.</b> TabArena-14 has no certified optima, so a certificate there is checked
-                        against the best tree any run of any solver returned. v46's points are from the fixed code; a
-                        draft certified two wrong trees on the visible set (Methods).</p>
-                      <p><b>Full size, 30 minutes.</b> One run at a single penalty (0.05) on each of the 14 datasets,
-                        so the panel is read for the ordering rather than a close criterion race; several optima at
-                        that penalty are a single leaf, which every solver finds at once. Three kinds of baseline
-                        failure are charged as no tree: a stop at the 6 GB cap (GOSDT on 8 problems, SPLIT on 8), a run
-                        killed after twice its budget (STreeD on 2), and an operating-system kill for outgrowing memory
-                        (STreeD on coupon_bar, signal 9 after five minutes). GOSDT runs in a child process that the
-                        harness can stop at the cap; STreeD and SPLIT run in-process. gosdt-guesses in exact mode
-                        certifies 4 and returns no tree on 8 (5 memory stops, 3 crashes); guided, published and tuned
-                        alike, it returns a heuristic tree on 11 and hits the memory cap on the 3 widest datasets,
-                        since it builds the exact binarization before guessing thresholds.</p>
-                      <p><b>Guided gosdt-guesses timing, every panel.</b> It reports only its search time, which excludes
-                        the threshold guessing where its work is done, so its points sit at the 1 ms floor. By wall
-                        clock, preprocessing included, it takes 3.1 s a problem at full size against 9.6 s for v49:
-                        about three times faster, not a hundredfold, for a worse tree, no certificate, and no tree on 3
-                        of the 14.</p>
-                      <p><b>4 hours.</b> Run on a Linux server (two Xeon Platinum 8468V, 88 cores), each problem in its
-                        own process pinned to its own hardware threads (two for single-threaded solvers, eight for the
+                      <p><b>A.</b> Every returned tree is re-scored from the raw data and checked against its problem's
+                        certified optimum, so a solver cannot score by misreporting. v46's points are from the fixed
+                        code; a draft certified two wrong trees here (Methods).</p>
+                      <p><b>B.</b> TabArena-14 has no certified optima, so a certificate there is checked against the
+                        best tree any run of any solver returned.</p>
+                      <p><b>C.</b> One run at a single penalty (0.05) on each of the 14 datasets, so the panel is read
+                        for the ordering rather than a close criterion race; several optima at that penalty are a
+                        single leaf, which every solver finds at once. Three kinds of baseline failure are charged as no
+                        tree: a stop at the 6 GB cap (GOSDT on 8 problems, SPLIT on 8), a run killed after twice its
+                        budget (STreeD on 2), and an operating-system kill for outgrowing memory (STreeD on coupon_bar,
+                        signal 9 after five minutes). GOSDT runs in a child process that the harness can stop at the
+                        cap; STreeD and SPLIT run in-process. gosdt-guesses in exact mode certifies 4 and returns no tree
+                        on 8 (5 memory stops, 3 crashes); guided, published and tuned alike, it returns a heuristic tree
+                        on 11 and hits the memory cap on the 3 widest datasets, since it builds the exact binarization
+                        before guessing thresholds.</p>
+                      <p><b>D.</b> Run on a Linux server (two Xeon Platinum 8468V, 88 cores), each problem in its own
+                        process pinned to its own hardware threads (two for single-threaded solvers, eight for the
                         8-thread versions), many at once; times are comparable within the panel only. The 4 hours are
-                        each solver's time limit, so a run that reaches them returns its best tree. The harness
-                        enforces 6 GB on every process: a solver that stops itself at the budget keeps its incumbent,
-                        one the harness stops returns no tree. A memory stop is charged the seconds it took. One run
-                        per problem, 140 hours of solver time.</p>
+                        each solver's time limit, so a run that reaches them returns its best tree. The harness enforces
+                        6 GB on every process: a solver that stops itself at the budget keeps its incumbent, one the
+                        harness stops returns no tree. A memory stop is charged the seconds it took. One run per
+                        problem, 140 hours of solver time.</p>
+                      <p><b>Guided gosdt-guesses, all panels.</b> It reports only its search time, which excludes the
+                        threshold guessing where its work is done, so its points sit at the 1 ms floor. By wall clock,
+                        preprocessing included, it takes 3.1 s a problem in C against 9.6 s for v49: about three times
+                        faster, not a hundredfold, for a worse tree, no certificate, and no tree on 3 of the 14.</p>
                     </details>
 
                     <style>
