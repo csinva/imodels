@@ -54,15 +54,14 @@ FLOOR = 1e-3
 
 def audit_gap(model):
     """Versions the Methods audit found not to preserve complete optimality, drawn as
-    approximate: v20 to v39 (the depth-3 floor for seven or more leaves) and v49 (the
-    restricted pair stage's failing branch). The external sweeps name v23 by the package name alone."""
+    approximate: v20 to v39 (the depth-3 floor for seven or more leaves). The external sweeps name v23 by the package name alone."""
     if model in ("autoopttree", "fastsmalltree"):
         return True
     m = re.match(r"(?:autoopttree_|fastsmalltree_)?v(\d+)", model)
     if not m:
         return False
     n = int(m.group(1))
-    return 20 <= n <= 39 or n == 49
+    return 20 <= n <= 39
 
 # solvers whose first run comes from the 600 s benchmark, and the label the figure gives each
 BASELINES = {
