@@ -41,12 +41,16 @@ def run_chain(model: 'SklearnModel', X: np.ndarray, y: np.ndarray):
 
     model.model = model._construct_model(X, y)
 
+    # chains running in parallel would interleave their bars, so progress is
+    # only reported when they run one at a time
+    verbose = model.verbose if (model.n_chains == 1 or model.n_jobs == 1) else 0
     return model.sampler.samples(model.model,
                                  model.n_samples,
                                  model.n_burn,
                                  model.thin,
                                  model.store_in_sample_predictions,
-                                 model.store_acceptance_trace)
+                                 model.store_acceptance_trace,
+                                 verbose=verbose)
 
 
 def delayed_run_chain():
@@ -202,7 +206,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  initializer: Optional[Initializer] = None,
                  n_jobs=-1,
                  classification: bool = False,
-                 max_rules=None):
+                 max_rules=None,
+                 verbose: int = 0):
         self.n_trees = n_trees
         self.n_chains = n_chains
         self.sigma_a = sigma_a
@@ -224,6 +229,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         self.sampler = ModelSampler(self.schedule)
         self.classification = classification
         self.max_rules = max_rules
+        self.verbose = verbose
 
         self.sigma, self.data, self.model, self._prediction_samples, self._model_samples, self.extract = [None] * 6
 

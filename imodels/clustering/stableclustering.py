@@ -4,16 +4,19 @@ from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster import KMeans
 from sklearn.metrics import rand_score, adjusted_rand_score
 from sklearn.utils.validation import check_is_fitted
-from tqdm import tqdm
+
+from imodels.util.progress import progress_iter
 
 
 class StableClustering(BaseEstimator, ClusterMixin):
-    def __init__(self, k_values, n_repetitions=10, algorithm="k-means", metric="adjusted_rand", random_state=42):
+    def __init__(self, k_values, n_repetitions=10, algorithm="k-means", metric="adjusted_rand", random_state=42,
+                 verbose=0):
         self.k_values = k_values
         self.n_repetitions = n_repetitions
         self.algorithm = algorithm
         self.metric = metric
         self.random_state = random_state
+        self.verbose = verbose
         self.scores_ = {}
 
     def fit(self, X):
@@ -21,9 +24,12 @@ class StableClustering(BaseEstimator, ClusterMixin):
         best_score = -1
         self.models_ = []
 
-        for k in tqdm(self.k_values, desc="k"):
+        # the outer bar is the top-level one, so it stays on screen when done
+        for k in progress_iter(self.k_values, verbose=self.verbose, desc="k",
+                               leave=True):
             clusters = []
-            for i_rep in tqdm(range(self.n_repetitions), desc='Repetitions', leave=False):
+            for i_rep in progress_iter(range(self.n_repetitions), verbose=self.verbose,
+                                       desc='repetitions'):
                 if self.algorithm == "k-means":
                     model = KMeans(
                         n_clusters=k, random_state=self.random_state + i_rep)  # , init='random')

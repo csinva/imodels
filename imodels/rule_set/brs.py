@@ -20,6 +20,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils.validation import check_is_fitted
 
 from imodels.rule_set.rule_set import RuleSet
+from imodels.util.progress import progress_iter
 from imodels.util.arguments import check_fit_arguments
 
 
@@ -148,7 +149,9 @@ class BayesianRuleSetClassifier(RuleSet, BaseEstimator, ClassifierMixin):
             maps[chain].append(
                 [-1, [pt_curr / 3, pt_curr / 3, pt_curr / 3], rules_curr, [self.rules_[i] for i in rules_curr]])
 
-            for iter in range(self.num_iterations):
+            for iter in progress_iter(
+                    range(self.num_iterations), verbose=verbose,
+                    desc=f'chain {chain + 1}/{self.num_chains}'):
                 if iter >= split:
                     p = np.array(range(1 + len(maps[chain])))
                     p = np.array(list(_accumulate(p)))

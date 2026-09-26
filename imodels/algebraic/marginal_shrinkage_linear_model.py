@@ -5,6 +5,7 @@ from sklearn.linear_model import RidgeCV, ElasticNet, ElasticNetCV
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, _check_sample_weight
 from imodels.util.arguments import check_predict_X, set_feature_names_in
+from imodels.util.progress import progress_iter
 from sklearn.preprocessing import StandardScaler
 
 from sklearn.base import RegressorMixin, ClassifierMixin
@@ -31,6 +32,7 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         alphas=np.logspace(-3, 5, num=9).tolist(),
         elasticnet_ratio=0.5,
         random_state=None,
+        verbose=0,
     ):
         """
         Params
@@ -52,8 +54,11 @@ class MarginalShrinkageLinearModel(BaseEstimator):
             If using elasticnet, Ratio of l1 to l2 penalty for elastic net
         random_state : int
             Random seed
+        verbose : int
+            If nonzero, show a progress bar over the per-feature marginal fits
         """
         self.random_state = random_state
+        self.verbose = verbose
         self.est_marginal_name = est_marginal_name
         self.est_main_name = est_main_name
         self.marginal_divide_by_d = marginal_divide_by_d
@@ -106,7 +111,8 @@ class MarginalShrinkageLinearModel(BaseEstimator):
             coef_marginal_ = np.zeros(X.shape[1])
         else:
             coef_marginal_ = []
-            for i in range(X.shape[1]):
+            for i in progress_iter(range(X.shape[1]), verbose=self.verbose,
+                                   desc='marginal fits'):
                 est_marginal.fit(X[:, i].reshape(-1, 1), y,
                                  sample_weight=sample_weight)
                 coef_marginal_.append(deepcopy(est_marginal.coef_))

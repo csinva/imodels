@@ -1,4 +1,9 @@
-from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+from imodels.util.optional_deps import require_optional_dependency
+
+try:  # optional dependency, checked for by name when a model is initialized
+    from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+except ImportError:
+    ExplainableBoostingClassifier = ExplainableBoostingRegressor = None
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 import numpy as np
 from imodels.util.arguments import explicit_get_params, explicit_set_params
@@ -14,6 +19,9 @@ class ShapGAM(BaseEstimator):
         - feature_fraction: Fraction of features to use for each EBM classifier.
         - random_state: Seed for random number generator to ensure reproducibility.
         """
+        require_optional_dependency(
+            'interpret', type(self).__name__,
+            purpose='provides the ExplainableBoostingMachine used for each ensemble member')
         self.n_estimators = n_estimators
         self.feature_fraction = feature_fraction
         self.random_state = random_state

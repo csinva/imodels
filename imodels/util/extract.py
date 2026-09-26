@@ -9,6 +9,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_array
 import inspect
 from imodels.util import rule, convert
+from imodels.util.progress import progress_iter
 
 
 def extract_fpgrowth(X,
@@ -34,7 +35,8 @@ def extract_rulefit(X, y, feature_names,
                     tree_generator=None,
                     exp_rand_tree_size=True,
                     sample_fract='default',
-                    random_state=None) -> List[str]:
+                    random_state=None,
+                    verbose=0) -> List[str]:
     if tree_generator is None:
         if sample_fract == 'default':
             # Friedman & Popescu 2004 (Sec. 2) default
@@ -78,7 +80,8 @@ def extract_rulefit(X, y, feature_names,
                                 for i_ in np.arange(len(tree_sizes))], dtype=int)
         tree_generator.set_params(warm_start=True)
         curr_est_ = 0
-        for i_size in np.arange(len(tree_sizes)):
+        for i_size in progress_iter(np.arange(len(tree_sizes)),
+                                    verbose=verbose, desc='fitting trees'):
             size = tree_sizes[i_size]
             tree_generator.set_params(n_estimators=curr_est_ + 1)
             tree_generator.set_params(max_leaf_nodes=size)

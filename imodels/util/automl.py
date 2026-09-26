@@ -26,7 +26,7 @@ class AutoInterpretableModel(RuleInspectionMixin, BaseEstimator):
     This is basically a wrapper around GridSearchCV, with some preselected models.
     """
 
-    def __init__(self, param_grid=None, refit=True):
+    def __init__(self, param_grid=None, refit=True, verbose=0):
         if param_grid is None:
             if isinstance(self, ClassifierMixin):
                 self.param_grid = self.PARAM_GRID_DEFAULT_CLASSIFICATION
@@ -35,6 +35,7 @@ class AutoInterpretableModel(RuleInspectionMixin, BaseEstimator):
         else:
             self.param_grid = param_grid
         self.refit = refit
+        self.verbose = verbose
 
     def fit(self, X, y, cv=5):
         self.pipe_ = Pipeline([("est", BaseEstimator())]
@@ -47,7 +48,8 @@ class AutoInterpretableModel(RuleInspectionMixin, BaseEstimator):
         elif isinstance(self, RegressorMixin):
             scoring = "r2"
         self.est_ = GridSearchCV(
-            self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit)
+            self.pipe_, self.param_grid, scoring=scoring, cv=cv, refit=self.refit,
+            verbose=self.verbose)
         self.est_.fit(X, y)
         return self
 

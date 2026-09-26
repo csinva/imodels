@@ -10,6 +10,7 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_t
 from sklearn.utils import check_X_y
 
 from imodels.util.arguments import check_fit_arguments, check_predict_X
+from imodels.util.progress import progress_iter
 from sklearn.utils.validation import check_is_fitted
 from imodels.util.introspection import RuleInspectionMixin
 
@@ -140,7 +141,8 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
                     X[:, self.model.tree_.feature[i]])
         if self.verbose:
             print('starting score', self.model.score(X, y))
-        for i in range(self.n_iters):
+        for i in progress_iter(range(self.n_iters), verbose=self.verbose,
+                              desc='TAO iterations'):
             num_updates = self._tao_iter_cart(
                 X, y, self.model.tree_, sample_weight=sample_weight)
             if num_updates == 0:

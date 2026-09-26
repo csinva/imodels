@@ -63,6 +63,8 @@ import numpy as np
 from scipy.special import gammaln
 from scipy.stats import poisson, beta
 
+from imodels.util.progress import progress_iter
+
 try:
     from matplotlib import pyplot as plt
 except:
@@ -101,7 +103,7 @@ def run_bdl_multichain_serial(numiters, thinning, alpha, lbda, eta, X, Y, nrules
     res = {}
     for n in range(nchains):
         res[n] = mcmcchain(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin,
-                           nchains, d_inits[n])
+                           nchains, d_inits[n], verbose=verbose)
 
     if verbose:
         print('Elapsed CPU time', time.process_time() - t1)
@@ -117,12 +119,12 @@ def run_bdl_multichain_serial(numiters, thinning, alpha, lbda, eta, X, Y, nrules
 
 
 def mcmcchain(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, nchains,
-              d_init):
+              d_init, verbose=False):
     '''Run and store mcmc chain
     '''
     res = {}
     permsdic, res['perms'] = bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs,
-                                          permsdic, burnin, None, d_init)
+                                          permsdic, burnin, None, d_init, verbose=verbose)
     # Store the permsdic results
     res['permsdic'] = {perm: list(vals)
                        for perm, vals in permsdic.items() if vals[1] > 0}
@@ -302,7 +304,7 @@ def preds_d_t(X, Y, d_t, theta):
 
 # MCMC core
 def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len, maxlhs, permsdic, burnin, rseed,
-                 d_init):
+                 d_init, verbose=False):
     '''Run Metropolis-Hastings algorithm
     '''
     # initialize
@@ -332,7 +334,8 @@ def bayesdl_mcmc(numiters, thinning, alpha, lbda, eta, X, Y, nruleslen, lhs_len,
         permsdic[a_t][1] += 1  # store the initialization sample
 
     # iterate!
-    for itr in range(numiters):
+    for itr in progress_iter(range(numiters), verbose=verbose,
+                            desc='MCMC iterations'):
         # Sample from proposal distribution
         d_star, Jratio, R_star, step = proposal(d_t, R_t, X, Y, alpha)
         # Compute the new posterior value, if necessary

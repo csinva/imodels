@@ -25,19 +25,23 @@ class FPLasso(RuleFit):
                  exp_rand_tree_size=True,
                  include_linear=True,
                  alpha=None,
+                 cv=True,
                  random_state=None):
-        super().__init__(n_estimators,
-                         tree_size,
-                         sample_fract,
-                         max_rules,
-                         memory_par,
-                         tree_generator,
-                         lin_trim_quantile,
-                         lin_standardise,
-                         exp_rand_tree_size,
-                         include_linear,
-                         alpha,
-                         random_state)
+        # passed by keyword: RuleFit takes cv between alpha and random_state,
+        # so positional arguments silently put random_state into cv
+        super().__init__(n_estimators=n_estimators,
+                         tree_size=tree_size,
+                         sample_fract=sample_fract,
+                         max_rules=max_rules,
+                         memory_par=memory_par,
+                         tree_generator=tree_generator,
+                         lin_trim_quantile=lin_trim_quantile,
+                         lin_standardise=lin_standardise,
+                         exp_rand_tree_size=exp_rand_tree_size,
+                         include_linear=include_linear,
+                         alpha=alpha,
+                         cv=cv,
+                         random_state=random_state)
         self.minsupport = minsupport
         self.maxcardinality = maxcardinality
         self.verbose = verbose

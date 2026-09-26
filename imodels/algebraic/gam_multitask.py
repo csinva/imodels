@@ -7,12 +7,17 @@ from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y
 from sklearn.utils.validation import _check_sample_weight
-from tqdm import tqdm
 from sklearn.multioutput import MultiOutputRegressor, MultiOutputClassifier
 from sklearn.preprocessing import StandardScaler
 from imodels.util.transforms import CorrelationScreenTransformer
 
-from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+from imodels.util.optional_deps import require_optional_dependency
+from imodels.util.progress import progress_iter
+
+try:  # optional dependency, checked for by name when a model is initialized
+    from interpret.glassbox import ExplainableBoostingClassifier, ExplainableBoostingRegressor
+except ImportError:
+    ExplainableBoostingClassifier = ExplainableBoostingRegressor = None
 
 from sklearn.base import RegressorMixin, ClassifierMixin
 
@@ -47,6 +52,7 @@ class MultiTaskGAM(BaseEstimator):
         use_single_task_with_reweighting=False,
         fit_linear_frac: float = None,
         random_state=42,
+        verbose=0,
     ):
         """
         Params
@@ -72,6 +78,9 @@ class MultiTaskGAM(BaseEstimator):
         fit_linear_frac: float
             If not None, the fraction of features to use for the linear model (the rest are used for the EBM)
         """
+        require_optional_dependency(
+            'interpret', type(self).__name__,
+            purpose='provides the ExplainableBoostingMachine used to fit the curves')
         self.ebm_kwargs = ebm_kwargs
         self.multitask = multitask
         self.linear_penalty = linear_penalty
@@ -85,6 +94,7 @@ class MultiTaskGAM(BaseEstimator):
         self.use_single_task_with_reweighting = use_single_task_with_reweighting
         self.use_correlation_screening_for_features = use_correlation_screening_for_features
         self.fit_linear_frac = fit_linear_frac
+        self.verbose = verbose
 
     def fit(self, X, y, sample_weight=None):
         X, y = check_X_y(X, y, accept_sparse=False, multi_output=True)
@@ -141,7 +151,8 @@ class MultiTaskGAM(BaseEstimator):
                                sample_weight=sample_weight[idxs_ebm])
         elif self.n_outputs_ == 1:
             # with 1 output, we fit an EBM to each feature
-            for task_num in tqdm(range(num_features)):
+            for task_num in progress_iter(range(num_features), verbose=self.verbose,
+                                          desc='feature curves'):
                 y_ = np.ascontiguousarray(X[idxs_ebm][:, task_num])
                 X_ = deepcopy(X[idxs_ebm])
                 X_[:, task_num] = 0
@@ -160,7 +171,8 @@ class MultiTaskGAM(BaseEstimator):
                     X[idxs_ebm], y[idxs_ebm], sample_weight=sample_weight[idxs_ebm])
         elif self.n_outputs_ > 1:
             # with multiple outputs, we fit an EBM to each output
-            for task_num in tqdm(range(self.n_outputs_)):
+            for task_num in progress_iter(range(self.n_outputs_), verbose=self.verbose,
+                                          desc='target curves'):
                 self.ebms_.append(self._initialize_ebm_internal(y[idxs_ebm]))
                 y_ = np.ascontiguousarray(y[idxs_ebm][:, task_num])
                 self.ebms_[task_num].fit(
