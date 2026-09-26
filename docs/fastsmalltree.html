@@ -277,7 +277,10 @@ viz.view()</code></pre>
                         error plus penalty times leaves. Blue: versions whose every bound the Methods audit proves
                         admissible. Dark blue: versions it does not &mdash; v7, v47, and v20 to v39, which carry one
                         inadmissible bound but certified nothing wrong. Gray: baselines. Large points average three runs
-                        (hover for numbers and spread). A problem with no tree returned is charged a single leaf. A and B
+                        (hover for numbers and spread). When a solver returns no tree for a problem, its criterion there is that of a single leaf
+                        predicting the majority class, and its time is the seconds it spent before stopping, capped at the
+                        panel's time limit: the full limit if it ran out of time, less if it stopped early at the 6 GB
+                        memory limit. A and B
                         share a time axis; C and D have their own, and no criterion axes are shared.</p>
 
                     <details class="collapsible" id="fig1-measurement">
