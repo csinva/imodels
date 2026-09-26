@@ -85,7 +85,7 @@ V1 = {"pygosdt_v1"}
 HEURISTIC_BASELINES = {"gosdt_guesses_guided", "gg_guided_e60d2", "gg_guided_db5", "split"}
 # the evolved solvers as the external sweep names them
 EXTERNAL_EVOLVED = {"fastsmalltree": ("v23", False, "exact"),
-                    "fastsmalltree_v40": ("v40 (shipped)", False, "exact"),
+                    "fastsmalltree_v40": ("FastSmallTree (v40)", False, "exact"),
                     "fastsmalltree_v46": ("v46, 8 threads", True, "exact"),
                     "fastsmalltree_v46_anytime100": ("v46 anytime, 100 ms", True, "approximate"),
                     "fastsmalltree_v49": ("v49, 8 threads", True, "exact")}
@@ -106,12 +106,12 @@ LABELLED = {
     "gosdt_guesses_guided": "gosdt-guesses, guided",
     "gg_guided_e60d2": "gosdt-guesses, guided (tuned)",
     "v23_word_compaction": "v23",
-    "v40_sequential": "v40 (shipped)",
+    "v40_sequential": "FastSmallTree",
     "v49_cands_pairs_lazy_ws": "v49, 8 threads",
 }
 EXTERNAL_LABELLED = {"gosdt": "GOSDT", "streed": "STreeD", "pygosdt_v1": "pygosdt (v1)", "split": "SPLIT",
                      "gosdt_guesses": "gosdt-guesses", "gosdt_guesses_guided": "gosdt-guesses, guided",
-                     "gg_guided_e60d2": "gosdt-guesses, guided (tuned)", "fastsmalltree": "v23", "fastsmalltree_v40": "v40 (shipped)",
+                     "gg_guided_e60d2": "gosdt-guesses, guided (tuned)", "fastsmalltree": "v23", "fastsmalltree_v40": "FastSmallTree",
                      "fastsmalltree_v46_anytime100": "v46 anytime, 100 ms", "fastsmalltree_v49": "v49, 8 threads"}
 EXTERNAL_OFFSETS = {"gosdt": [-58, -40], "streed": [-55, -32], "pygosdt_v1": [-5, -42], "split": [-45, 38],
                     "gosdt_guesses": [-62, 34], "gosdt_guesses_guided": [82, 10],
@@ -292,7 +292,7 @@ def main():
             approximate = row is not None and str(row["exact"]) == "approximate"
             group = "approximate" if (approximate or audit_gap(model)) else "exact"
             multicore = bool(row is not None and str(row["multicore"]).lower() == "true")
-            label = model
+            label = "FastSmallTree (v40)" if model == "v40_sequential" else model
         proof_gap = False
         points.append({
             "model": model,
