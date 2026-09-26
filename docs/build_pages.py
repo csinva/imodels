@@ -48,7 +48,10 @@ PAGES = {
     "mdi_plus": ("MDI+", ""),
     "fastsmalltree": (
         "FastSmallTree",
-        '    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>\n',
+        '    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>\n'
+        # the objective in Sec 3 is TeX; the same MathJax build the pdoc template uses
+        '    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" '
+        'integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>\n',
     ),
     "gpgam": (
         "GPGam",

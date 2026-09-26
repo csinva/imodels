@@ -17,6 +17,7 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
     <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
 </head>
 
 <body>
@@ -340,10 +341,11 @@ viz.view()</code></pre>
                          padding is there when closed too, offset by a negative margin, so opening one does
                          not shift its summary and the summary stays aligned with the body text */
                       details.collapsible { border: 1px solid transparent; border-radius: 6px;
-                        padding: 0.3em 0.9em; margin: 0.4em -0.9em; }
+                        padding: 0 0.9em; margin: 0.1em -0.9em; }
                       details.collapsible[open] { background: var(--surface-alt); border-color: var(--line-soft);
-                        padding-bottom: 0.8em; }
-                      details.collapsible[open] > summary { margin-bottom: 0.5em; }
+                        padding: 0.35em 0.9em 0.6em; margin: 0.5em -0.9em; }
+                      details.collapsible[open] > summary { margin-bottom: 0.35em; }
+                      .eq { overflow-x: auto; margin: 1em 0 1.2em; }
                       /* the dtreeviz code and its drawing side by side; stacked when too narrow for both */
                       .code-fig { display: flex; flex-wrap: wrap; align-items: center; gap: 1em 1.25em; }
                       .code-fig > pre { flex: 1 1 380px; min-width: 0; margin: 0; font-size: 0.9em; }
@@ -533,9 +535,15 @@ viz.view()</code></pre>
 
                     <p>The objective is the one GOSDT introduced,</p>
 
-                    <pre><code>minimise   misclassification rate + regularization * (number of leaves)</code></pre>
+                    <div class="eq">\[
+                      \min_{T}\;
+                      \underbrace{\frac{1}{n}\sum_{i=1}^{n} \mathbf{1}\!\left[\,T(x_i) \neq y_i\,\right]}_{\text{misclassification rate}}
+                      \;+\;
+                      \underbrace{\lambda \cdot \left|\mathrm{leaves}(T)\right|}_{\text{regularization} \,\times\, \text{number of leaves}}
+                    \]</div>
 
-                    <p>over every decision tree on the binarized features. Write <i>R</i>(<i>X</i>) for the optimal value on
+                    <p>where <i>T</i> ranges over every decision tree on the binarized features and &lambda; is
+                        <code>regularization</code>. Write <i>R</i>(<i>X</i>) for the optimal value on
                         the rows that reach a node, its <i>capture set</i> <i>X</i>. The solver is a memoised
                         branch-and-bound over capture sets, stored as bitmasks of 64-bit words, so a subproblem reached
                         by two paths is solved once.</p>
