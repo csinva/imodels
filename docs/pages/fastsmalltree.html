@@ -15,7 +15,7 @@
                         <a href="https://github.com/AlgTUDelft/pystreed">STreeD</a> instead find the tree that provably
                         minimizes error plus a penalty per leaf, but they are slow. Using autoresearch, we build
                         <b>FastSmallTree</b>, an implementation that achieves useful speedups on real-world problems for
-                        fitting small trees. On held-out benchmarks, it maintains the accuracy of existing optimal tree packages
+                        fitting small trees (mostly by effectively compiling things into numba). On held-out benchmarks, it maintains the accuracy of existing optimal tree packages
                         while sometimes providing significant speedups, sometimes >20&times;.
                     </p>
 
@@ -474,9 +474,7 @@ viz.view()</code></pre>
                     <p>A version is exact if and only if every rule it adds preserves all three: a new lower bound must never
                         exceed <i>R</i>, a new way to stop early must respect (iii), and a new source of trees must
                         respect (ii). Changes that only rearrange computation (kernels, caches, the compiled port) add
-                        no rule, so their only risk is a transcription error. The collapsibles below prove each bound
-                        the loop added, and the ledger after them gives every version's verdict; one verdict disagrees
-                        with the loop's own record.</p>
+                        no rule, so their only risk is a transcription error.</p>
 
                     <h3 id="bounds">The bounds found via autoresearch</h3>
 
@@ -768,22 +766,12 @@ viz.view()</code></pre>
                         from v32 on also rest on the store-ordering assumption described under parallel certification.</p>
                     </details>
 
-                    <p>To sum up the audit: the version we ship, v40 running on one thread, is exact. Every rule it
-                        uses is proved above, and we read through the code that applies those rules. The one caveat is a
-                        1e-10 tolerance, there so that exact ties count as ties. Reading the code also turned up four
-                        engineering bugs that no benchmark had triggered, and these are now fixed. Versions v20 to v39
-                        never certified a wrong answer, so their results still stand, but each relies on one bound that
-                        turns out not to hold. That is why Fig <a href="#fig1">1</a> draws them in dark blue, along with
-                        v7 (a bug the loop caught itself) and v47 (which guesses its bounds on purpose). The
-                        multithreaded versions from v32 on have a separate caveat. They share bounds through a table
-                        that is only safe if other threads see its writes in the order they were made. x86 guarantees
-                        that and ARM does not (see parallel certification).</p>
-
-                    <p>Two implementation details matter for speed. We sort the rows so that the rows reaching a deep
-                        node sit close together, which keeps their bitmasks short, and since the objective doesn't
-                        depend on row order this costs nothing. And the whole search is compiled with numba, with
-                        Python stepping in only to check the time and memory limits. The price is about 20 seconds of
-                        compiling the first time the model runs on a machine. After that the compiled code is cached
+                    <p>In the end, two implementation details matter for speed.
+                      (1) We sort the rows so that the rows reaching a deep
+                        node sit close together, which keeps their bitmasks short.
+                      (2) The whole search is compiled with numba. The price is about 20 seconds of
+                        compiling the first time the model runs on a machine.
+                      After that the compiled code is cached
                         and loads in about a second. If the cache directory isn't writable, set
                         <code>OPTTREE_NUMBA_CACHE=0</code>.</p>
 
