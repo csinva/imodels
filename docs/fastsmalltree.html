@@ -122,9 +122,12 @@ else:
                         <code>model.estimator_</code>, so sklearn's tree tooling (<code>plot_tree</code>,
                         <code>export_text</code>, <code>feature_importances_</code>) and the libraries built on it work
                         unchanged. At <code>regularization</code>=0.03 the search still certifies within seconds and
-                        buys one more split: three leaves, and held-out accuracy rises from 89.5% to 93.7%. Drawn with
-                        <a href="https://github.com/parrt/dtreeviz">dtreeviz</a>:</p>
+                        buys one more split: three leaves, and held-out accuracy rises from 89.5% to 93.7%.</p>
 
+                    <details class="collapsible" id="visualize-tree">
+                      <summary>Visualize the tree</summary>
+                      <p>With <a href="https://github.com/parrt/dtreeviz">dtreeviz</a>, straight from
+                        <code>model.estimator_</code>:</p>
                     <div class="fig-wide code-fig">
                     <pre><code class="language-python">import dtreeviz  # pip install dtreeviz
 
@@ -146,6 +149,7 @@ viz.view()</code></pre>
                         training split. Thresholds sit midway between neighbouring training values, as in sklearn.</figcaption>
                     </figure>
                     </div>
+                    </details>
 
                     <h2 id="results">2. Experimental results</h2>
 
