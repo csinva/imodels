@@ -421,6 +421,7 @@ viz.view()</code></pre>
                     </script>
 
                     Overall, we find that the autoresearch points (blue) can improve the performance-speed frontier and that the shipped FastSmallTree model (blue star) outperforms existing packages.
+
                     <p><b>The shipped model consistently performs well at both performance and speed.</b> On the visible set (Fig <a href="#fig1">1</a>A) the loop's
                         exact versions reach the best criterion of any solver and get there fastest, roughly 50 to 80
                         times faster than STreeD and GOSDT. Only guided gosdt-guesses is quicker, and it pays for that
@@ -477,7 +478,7 @@ viz.view()</code></pre>
                         the loop added, and the ledger after them gives every version's verdict; one verdict disagrees
                         with the loop's own record.</p>
 
-                    <h3 id="bounds">The bounds, and why each is admissible</h3>
+                    <h3 id="bounds">The bounds found via autoresearch</h3>
 
                     <details class="collapsible" id="b-inherited">
                       <summary>Inherited from GOSDT: equivalent points, leaf support, look-ahead, threshold exchange</summary>
@@ -717,10 +718,10 @@ viz.view()</code></pre>
                         grow from four nodes: tripwires for the proofs, not substitutes.</p>
                     </details>
 
-                    <h3 id="ledger">The ledger</h3>
+                    <br>
 
                     <details class="collapsible" id="versions">
-                      <summary>Every recorded version: what it changed, and whether it preserves complete optimality</summary>
+                      <summary><b>Full table of all versions</b></summary>
                       <table class="ranktbl dataset-table">
                         <thead>
                           <tr><th>version</th><th>what changed</th><th>kind</th><th>exact</th><th>why</th></tr>
@@ -767,44 +768,25 @@ viz.view()</code></pre>
                         from v32 on also rest on the store-ordering assumption described under parallel certification.</p>
                     </details>
 
-                    <p><b>In short.</b> The shipped model, v40 on one thread, is exact: every rule it applies is proved
-                        above, its code was checked line by line, and its only reservation is the 1e-10 tie tolerance.
-                        That check also found and fixed four engineering defects the benchmarks never reached. v20 to
-                        v39 certified nothing wrong, so their numbers stand, but each carries one inadmissible bound; Fig <a href="#fig1">1</a> draws them in dark blue, with v7 (a bug the loop found itself) and v47
-                        (guessed bounds, by design). The 8-thread versions from v32 on share bounds through a table whose
-                        safety assumes stores are seen in order, which x86 guarantees and ARM does not; see parallel
-                        certification.</p>
+                    <p>To sum up the audit: the version we ship, v40 running on one thread, is exact. Every rule it
+                        uses is proved above, and we read through the code that applies those rules. The one caveat is a
+                        1e-10 tolerance, there so that exact ties count as ties. Reading the code also turned up four
+                        engineering bugs that no benchmark had triggered, and these are now fixed. Versions v20 to v39
+                        never certified a wrong answer, so their results still stand, but each relies on one bound that
+                        turns out not to hold. That is why Fig <a href="#fig1">1</a> draws them in dark blue, along with
+                        v7 (a bug the loop caught itself) and v47 (which guesses its bounds on purpose). The
+                        multithreaded versions from v32 on have a separate caveat. They share bounds through a table
+                        that is only safe if other threads see its writes in the order they were made. x86 guarantees
+                        that and ARM does not (see parallel certification).</p>
 
-                    <p>Two engineering facts complete the picture. Rows are sorted so deep capture sets occupy few 64-bit
-                        words, which is free because the objective ignores row order. And the search is compiled: nodes
-                        are array rows behind a hash index, the recursion is an explicit stack, and Python re-enters it
-                        only to enforce the time and memory limits. The first run on a machine spends about 20 seconds
-                        compiling; the result is cached, so later runs load in about a second (set
-                        <code>OPTTREE_NUMBA_CACHE=0</code> if the cache directory is unwritable).</p>
+                    <p>Two implementation details matter for speed. We sort the rows so that the rows reaching a deep
+                        node sit close together, which keeps their bitmasks short, and since the objective doesn't
+                        depend on row order this costs nothing. And the whole search is compiled with numba, with
+                        Python stepping in only to check the time and memory limits. The price is about 20 seconds of
+                        compiling the first time the model runs on a machine. After that the compiled code is cached
+                        and loads in about a second. If the cache directory isn't writable, set
+                        <code>OPTTREE_NUMBA_CACHE=0</code>.</p>
 
-                    <h3 id="after">Rounds after the shipped version</h3>
-
-                    <p>The loop kept going after the shipped version. Its three latest rounds are worth reporting more for
-                        what they found than for their speed.</p>
-
-                    <p><b>The gosdt-guesses shortcut, inside our search.</b> gosdt-guesses keeps only the thresholds a
-                        boosted-stump model uses, and treats that model's loss as a lower bound. Added as options to
-                        this solver, every configuration is dominated by the exact search: the full recipe reaches a mean
-                        regret of 0.011 at 0.0019 s. The guessed bound is the costly part: on monk_2 the stump ensemble
-                        is a poor reference, its bounds prune the optimum, and regret reaches 0.12 to 0.23. The same held
-                        on three full-size datasets outside the suite.</p>
-
-                    <p><b>The time was not in the search.</b> On full-size COMPAS the search certified the optimum at a
-                        penalty of 0.02 in 0.2 seconds inside an 86-second fit; nearly all the rest was binarization,
-                        applying 64,859 rules one pandas operation at a time, twice. One broadcast comparison per column
-                        cut encoding from 82 s to 2.0 s, and hashing rows instead of sorting them cut the
-                        equivalent-point step from 2.6 s to 0.05 s, so the whole fit went from 86 s to about 5.</p>
-
-                    <p><b>Restricting the pairwise stage.</b> The pairwise stage looped over every splitting feature, not
-                        only the surviving candidates, and each thread's workspace held 96 frames per feature: 634 MB on
-                        full COMPAS. Restricting the stage to candidates when that is cheap, and growing workspaces on
-                        demand, made v49 the fastest exact version and cut the workspace to 106 MB
-                        per thread.</p>
 
                     <h3 id="citation">Citation</h3>
 
