@@ -236,6 +236,13 @@ viz.view()</code></pre>
 
                     <span class="fig-anchor" id="fig1"></span>
                     <div class="fig-wide">
+                      <ul class="fig-legend" aria-label="Legend">
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#2a78d6"/></svg>FastSmallTree, exact</li>
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#104281"/></svg>FastSmallTree, approximate</li>
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#6f6e69"/></svg>Baseline</li>
+                        <li><svg viewBox="0 0 16 16"><path d="M8 1.2 L9.9 6 L15 6.3 L11 9.5 L12.3 14.6 L8 11.8 L3.7 14.6 L5 9.5 L1 6.3 L6.1 6 Z" fill="#2a78d6"/></svg>Shipped (v40)</li>
+                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#6a737d" stroke="#fff" stroke-width="1.5"/></svg>Mean of 3 runs</li>
+                      </ul>
                       <div class="fig-pair">
                         <div class="fig-panel">
                           <span class="panel-letter" aria-hidden="true">A</span>
@@ -258,13 +265,6 @@ viz.view()</code></pre>
                           <div id="pareto-nolimit" role="img" aria-label="The same measure on the 70 TabArena-14 problems with 4 hours a problem instead of 30 seconds, and the same 6 GB memory budget."></div>
                         </div>
                       </div>
-                      <ul class="fig-legend" aria-label="Legend">
-                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#2a78d6"/></svg>FastSmallTree, exact</li>
-                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#104281"/></svg>FastSmallTree, approximate</li>
-                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#6f6e69"/></svg>Baseline</li>
-                        <li><svg viewBox="0 0 16 16"><path d="M8 1.2 L9.9 6 L15 6.3 L11 9.5 L12.3 14.6 L8 11.8 L3.7 14.6 L5 9.5 L1 6.3 L6.1 6 Z" fill="#2a78d6"/></svg>Shipped (v40)</li>
-                        <li><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#6a737d" stroke="#fff" stroke-width="1.5"/></svg>Mean of 3 runs</li>
-                      </ul>
                     </div>
 
                     <p class="caption"><b>Fig 1.</b> Each point is a solver's geometric mean, over a panel's problems, of
@@ -330,10 +330,10 @@ viz.view()</code></pre>
                       .fig-panel h4 { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.1em 3.2rem; color: var(--ink); }
                       .fig-panel h4 span { font-weight: 400; color: var(--muted); }
                       ul.fig-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3em 1.3em;
-                        list-style: none; padding: 0; margin: 0.4em 0 0; font-size: 0.8rem; color: var(--ink); }
+                        list-style: none; padding: 0; margin: 0 0 0.8em; font-size: 0.8rem; color: var(--ink); }
                       ul.fig-legend li { display: flex; align-items: center; gap: 0.4em; margin: 0; }
                       ul.fig-legend svg { width: 16px; height: 16px; flex: 0 0 auto; }
-                      .fig-pending { display: flex; align-items: center; justify-content: center; height: 480px;
+                      .fig-pending { display: flex; align-items: center; justify-content: center; height: 340px;
                         color: var(--muted); font-size: 0.9rem; border: 1px dashed var(--line); }
                     </style>
 
@@ -424,18 +424,20 @@ viz.view()</code></pre>
                         var OFFSET = D.offsets || {};
                         var notes = pts.filter(function (p) { return p.direct; }).map(function (p) {
                           var o = OFFSET[p.model] || [30, -30];
+                          // offsets were set for 424 px of plot area; the vertical ones follow its height
+                          var sy = (340 - 8 - 44) / (480 - 8 - 48);
                           return {
                             x: Math.log10(p.t), y: p.c, xref: 'x', yref: 'y',
                             // the red x and the legend already say "false certificate"
                             text: p.direct,
-                            showarrow: true, arrowhead: 0, arrowwidth: 1, arrowcolor: C.axis, ax: o[0], ay: o[1],
+                            showarrow: true, arrowhead: 0, arrowwidth: 1, arrowcolor: C.axis, ax: o[0], ay: o[1] * sy,
                             font: { size: 11.5, color: C.ink }, bgcolor: 'rgba(255,255,255,0.85)', borderpad: 2
                           };
                         });
                         var axis = { gridcolor: C.grid, linecolor: C.axis, zeroline: false, ticks: 'outside', tickcolor: C.axis,
                                      tickfont: { size: 11.5, color: C.muted }, titlefont: { size: 12.5, color: C.ink } };
                         Plotly.newPlot(el, traces, {
-                          height: 480, margin: { l: 62, r: 26, t: 8, b: 48 }, showlegend: false,
+                          height: 340, margin: { l: 62, r: 26, t: 8, b: 44 }, showlegend: false,
                           paper_bgcolor: C.surface, plot_bgcolor: C.surface,
                           font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: C.ink },
                           xaxis: Object.assign({ type: 'log', range: xr || xrange, title: { text: 'Geometric-mean time per problem (s, log scale)' } }, axis),
@@ -465,7 +467,9 @@ viz.view()</code></pre>
                         harder than the originals (59 certified rather than 63), and GOSDT and gosdt-guesses return no
                         tree on 12 to 18 of them, stopping at 6 GB, which is why their times drop. GOSDT also issues a
                         <b>second false certificate</b> here (the chudi stand-in at 0.005: 0.2518 certified where a tree
-                        scoring 0.2099 exists, in all three runs), so its unsound bound is not specific to one dataset.
+                        scoring 0.2099 exists, in all three runs), after its first on the visible set (tic-tac-toe at
+                        <code>regularization</code>=0.02, from a scope-conditional lower bound cached
+                        unconditionally), so its unsound bound is not specific to one dataset.
                         One caveat: STreeD's average tree is <i>marginally better</i>, 0.3366 against 0.3371, at 48&times;
                         the time, because on the eleven problems neither certifies it spends its 30 seconds improving
                         uncertified trees.</p>
@@ -497,45 +501,6 @@ viz.view()</code></pre>
                         and coupon_bar at the smallest penalty, at 6.5 to 7 GB), which is why its count does not rise
                         with its three new proofs. GOSDT's false certificate on the chudi stand-in appears again.</p>
                     </details>
-
-                    <p class="caption caption-above"><b>Table 1.</b> Exact solvers on the 70-problem development suite, 30 s cap each.
-                        Every figure is the mean of three runs, run one after another on an otherwise idle machine.
-                        Time is the geometric mean over all problems of the seconds each run spent, so an unsolved
-                        problem counts at the 30 s cap, or earlier if the solver stopped at its 6 GB memory budget.</p>
-                    <table class="ranktbl">
-                        <thead>
-                            <tr><th></th><th>certified optimal</th><th>geo. mean time</th><th>false certificates</th></tr>
-                            <tr><th></th><th style="font-weight:normal;color:#777">of 70</th><th style="font-weight:normal;color:#777">seconds</th><th style="font-weight:normal;color:#777">count</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr class="tblsec"><td colspan="4">Exact</td></tr>
-                            <tr><td><b>FastSmallTree</b> (v40, 1 thread, shipped)</td><td><b>63.0</b></td><td><b>0.0062 &plusmn; 0.0000</b></td><td><b>0</b></td></tr>
-                            <tr><td>FastSmallTree v49, 8 threads&dagger;</td><td>63.0</td><td>0.0052 &plusmn; 0.0001</td><td>0</td></tr>
-                            <tr><td>FastSmallTree v46, 8 threads</td><td>63.0</td><td>0.0054 &plusmn; 0.0001</td><td>0</td></tr>
-                            <tr><td>pygosdt (starting point)</td><td>55.3</td><td>0.102 &plusmn; 0.002</td><td>0</td></tr>
-                            <tr><td><a href="https://arxiv.org/abs/2112.00674">STreeD</a></td><td>51.0</td><td>0.332 &plusmn; 0.024</td><td>0</td></tr>
-                            <tr><td><a href="https://arxiv.org/abs/2006.08690">GOSDT</a></td><td>47.0</td><td>0.504 &plusmn; 0.027</td><td>1</td></tr>
-                            <tr><td><a href="https://arxiv.org/abs/2112.00356">gosdt-guesses</a>, exact mode</td><td>46.0</td><td>0.486 &plusmn; 0.018</td><td>0</td></tr>
-                            <tr><td>gosdt-guesses, exact mode + similar-support bound</td><td>46.0</td><td>0.489 &plusmn; 0.007</td><td>0</td></tr>
-                            <tr class="tblsec"><td colspan="4">Heuristic</td></tr>
-                            <tr><td>gosdt-guesses, guided (40 stumps, depth 1: the paper's recipe)</td><td>0.0</td><td>0.0011 &plusmn; 0.0000</td><td>&mdash;</td></tr>
-                            <tr><td>gosdt-guesses, guided (60 trees, depth 2)</td><td>0.0</td><td>0.0068 &plusmn; 0.0000</td><td>&mdash;</td></tr>
-                        </tbody>
-                    </table>
-
-                    <p class="tblnote">&dagger; v49's candidate-only pair stage stores, in one branch, a lower bound its proof
-                        does not justify (Methods); it certified nothing wrong here or on the hidden set, where it
-                        certifies 59 in 0.0122 &plusmn; 0.0002 s.</p>
-
-                    <p class="tblnote">&plusmn; is the standard deviation over three runs. Only GOSDT (46, 47, 48) and
-                        pygosdt (56, 55, 55) certify different problems across runs, because three proofs land within
-                        seconds of the 30 s cap; FastSmallTree's 63 are identical in every run. v46 and v49 use 8
-                        threads, where the shipped model uses one; on 8 threads the three largest problems stop at the
-                        6 GB budget before the cap, and charging them the full cap would move v46 from 0.0054 to
-                        0.0055 s. GOSDT's false certificate is on tic-tac-toe at <code>regularization</code>=0.02, from a
-                        scope-conditional lower bound cached unconditionally (confirmed by a two-line patch to the
-                        reference implementation). Seven problems, fico_1k and compas_processed at small penalties, are
-                        certified by no solver here, even within 600 s.</p>
 
                     <details class="collapsible" id="guesses-settings">
                       <summary>gosdt-guesses at other settings</summary>

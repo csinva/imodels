@@ -122,7 +122,7 @@ EXTERNAL_OFFSETS = {"gosdt": [-58, -40], "streed": [-55, -32], "pygosdt_v1": [-5
 NOLIMIT_OFFSETS = {"gosdt": [60, 30], "streed": [-55, -32], "pygosdt_v1": [-5, -42], "split": [-45, 38],
                    "gosdt_guesses": [-62, 34], "gosdt_guesses_guided": [82, 10],
                    "gg_guided_e60d2": [92, -30], "fastsmalltree": [50, 20],
-                   "fastsmalltree_v40": [40, 40],
+                   "fastsmalltree_v40": [10, 70],
                    "fastsmalltree_v46_anytime100": [66, 26], "fastsmalltree_v49": [60, 40]}
 # where each direct label sits relative to its point, in pixels (x right, y down),
 # chosen by rendering the page and moving labels off each other and off the marks
@@ -135,7 +135,7 @@ OFFSETS = {
     "v23_word_compaction": [58, -26],
     "v40_sequential": [-5, -46],
     "v49_cands_pairs_lazy_ws": [22, 52],
-    "gg_guided_e60d2": [112, -30],
+    "gg_guided_e60d2": [30, -80],
 }
 
 
