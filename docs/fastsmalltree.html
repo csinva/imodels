@@ -127,12 +127,18 @@ else:
                         held-out accuracy rises from 89.5% to 93.7%. Drawn with
                         <a href="https://github.com/parrt/dtreeviz">dtreeviz</a>:</p>
 
+                    <div class="fig-wide code-fig">
                     <pre><code class="language-python">import dtreeviz  # pip install dtreeviz
 
-model = FastSmallTreeClassifier(regularization=0.03).fit(X_train, y_train)
-viz = dtreeviz.model(model.estimator_, X_train, y_train,
-                     feature_names=X.columns, target_name="diagnosis",
-                     class_names=["malignant", "benign"])
+model = FastSmallTreeClassifier(
+    regularization=0.03)
+model.fit(X_train, y_train)
+
+viz = dtreeviz.model(
+    model.estimator_, X_train, y_train,
+    feature_names=X.columns,
+    target_name="diagnosis",
+    class_names=["malignant", "benign"])
 viz.view()</code></pre>
 
                     <figure class="dtreeviz-fig">
@@ -142,6 +148,7 @@ viz.view()</code></pre>
                         training split, drawn by dtreeviz from <code>model.estimator_</code>. Each split is placed
                         midway between the training values on either side of it, as sklearn places its own.</figcaption>
                     </figure>
+                    </div>
 
                     <h2 id="results">2. Experimental results</h2>
 
@@ -320,6 +327,10 @@ viz.view()</code></pre>
                         it took, since there is no cap to charge. One run per problem, 140 hours of solver time in all.</p>
 
                     <style>
+                      /* the dtreeviz code and its drawing side by side; stacked when too narrow for both */
+                      .code-fig { display: flex; flex-wrap: wrap; align-items: center; gap: 1em 1.25em; }
+                      .code-fig > pre { flex: 1 1 380px; min-width: 0; margin: 0; font-size: 0.9em; }
+                      .code-fig > .dtreeviz-fig { flex: 0 1 340px; margin: 0 auto; }
                       .dtreeviz-fig { margin: 1.2em auto; text-align: center; }
                       .dtreeviz-fig img { max-width: 100%; height: auto; }
                       .dtreeviz-fig figcaption { font-size: 0.85rem; color: var(--muted); max-width: 560px;
