@@ -82,6 +82,9 @@ MULTICORE_BASELINES = {"gosdt_mc8"}
 # pygosdt is version 1 of the line the loop evolved, so it is drawn with the loop's versions
 # rather than as an outside baseline, even though its rows come from the benchmark
 V1 = {"pygosdt_v1"}
+# baselines drawn as approximate: the heuristics, and GOSDT, whose implementation issued
+# verified false certificates (tic-tac-toe on the visible set, the chudi stand-in on the hidden set)
+APPROX_BASELINES = {"gosdt", "gosdt_mc8", "split", "gosdt_guesses_guided", "gg_guided_e60d2", "gg_guided_db5"}
 HEURISTIC_BASELINES = {"gosdt_guesses_guided", "gg_guided_e60d2", "gg_guided_db5", "split"}
 # the evolved solvers as the external sweep names them
 EXTERNAL_EVOLVED = {"fastsmalltree": ("v23", False, "exact"),
@@ -211,7 +214,7 @@ def external_points(root, data="data", pairs="external_pairs.csv", npairs=70, ca
                 group = "approximate"
         else:
             label, multicore = BASELINES.get(model, model), model in MULTICORE_BASELINES
-            group = "exact" if model in V1 else "baseline"
+            group = "exact" if model in V1 else ("baseline_approx" if model in APPROX_BASELINES else "baseline_exact")
         points.append({
             "model": model, "label": label, "direct": EXTERNAL_LABELLED.get(model, ""), "group": group,
             "heuristic": model in HEURISTIC_BASELINES, "multicore": multicore, "runs": len(per),
@@ -281,7 +284,7 @@ def main():
         c = [per[r]["c"] for r in crit_runs]
         row = overall.loc[model] if model in overall.index else None
         if model in BASELINES:
-            group = "exact" if model in V1 else "baseline"
+            group = "exact" if model in V1 else ("baseline_approx" if model in APPROX_BASELINES else "baseline_exact")
             multicore = model in MULTICORE_BASELINES
             label = BASELINES[model]
         else:
@@ -310,7 +313,7 @@ def main():
             "proof_gap": proof_gap,
         })
 
-    points.sort(key=lambda p: (p["group"] != "baseline", p["t"]))
+    points.sort(key=lambda p: (not p["group"].startswith("baseline"), p["t"]))
     data = {"dev": {"points": points, "offsets": OFFSETS},
             "external": external_points(root), "cap": CAP,
             "full": external_points(root, data="data_full", pairs="external_pairs_full30min.csv",
