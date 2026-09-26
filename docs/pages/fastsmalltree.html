@@ -417,45 +417,43 @@ viz.view()</code></pre>
                     })();
                     </script>
 
-                    <p><b>Held-out data.</b> On TabArena-14 the ordering holds: the shipped model certifies 59 of 70
-                        problems in 0.0132 &plusmn; 0.0007 s, against GOSDT's 43 in 0.253 &plusmn; 0.014 s (16 more
-                        proofs, 19&times; faster), pygosdt's 51 in 0.152 s and STreeD's 46 in 0.633 s. The stand-ins are
-                        harder than the originals (59 certified rather than 63), and GOSDT and gosdt-guesses return no
-                        tree on 12 to 18 of them, stopping at 6 GB, which is why their times drop. GOSDT also issues a
-                        <b>second false certificate</b> here (the chudi stand-in at 0.005: 0.2518 certified where a tree
-                        scoring 0.2099 exists, in all three runs), after its first on the visible set (tic-tac-toe at
-                        <code>regularization</code>=0.02, from a scope-conditional lower bound cached
-                        unconditionally), so its unsound bound is not specific to one dataset.
-                        One caveat: STreeD's average tree is <i>marginally better</i>, 0.3366 against 0.3371, at 48&times;
-                        the time, because on the eleven problems neither certifies it spends its 30 seconds improving
-                        uncertified trees.</p>
+                    <p><b>A: the visible set.</b> The loop's exact versions reach the lowest criterion, 0.2572, and
+                        reach it fastest: the shipped model in 0.0062 s a problem and v49 in 0.0052 s. The nearest
+                        baseline, STreeD, reaches 0.2591 in 0.33 s, 54&times; longer; pygosdt, the loop's starting
+                        point, 0.2648 in 0.10 s; and GOSDT 0.2794 in 0.50 s, 81&times; longer than the shipped model.
+                        Only guided gosdt-guesses is faster (0.0011 s), at a much worse criterion of 0.3278, or 0.2706
+                        at 0.0068 s when tuned.</p>
 
-                    <p><b>Full-size data.</b> With every row and column kept and 30 minutes a problem, the question
-                        becomes who returns a tree at all. The shipped model certifies 9 of 14 and returns a tree on all
-                        14 (3.1 s geometric mean; v49 2.4 s). STreeD certifies 5 and returns nothing on 4, GOSDT
-                        certifies 4 and returns nothing on 9, and SPLIT returns nothing on 10. The failures are memory,
-                        not time: GOSDT hits the 6 GB cap on 8 datasets, and STreeD is killed by the operating system on
-                        the widest.</p>
+                    <p><b>B: held-out data.</b> On TabArena-14 the shipped model reaches 0.3373 in 0.013 s a problem,
+                        pygosdt 0.3413 in 0.15 s and GOSDT 0.3636 in 0.25 s, 19&times; longer. STreeD is the one
+                        baseline with a marginally better criterion, 0.3366, and takes 48&times; as long (0.63 s):
+                        on the problems neither search finishes, it spends its 30 seconds improving its tree. Guided
+                        gosdt-guesses is again the fastest point (0.001 s), at 0.3480.</p>
 
-                    <p><b>Four hours a problem.</b> With 480&times; the time every exact solver certifies more, and the
-                        ordering does not move: the shipped model goes from 59 to 64 of 70 (the new proofs taking 4 to
-                        61 minutes), v46 also reaches 64 and v49 63, pygosdt 62, GOSDT 47 and gosdt-guesses 48, while
-                        STreeD stays at 46. Six problems, compas_processed and fico_1k at the three smallest penalties,
-                        are certified by nobody. What stops the solvers there is memory: GOSDT hits 6 GB on 20
-                        problems and gosdt-guesses on 22, the shipped model and pygosdt on 6 and 8, and the 8-thread
-                        versions never, staying under 1.1 GB for the full 4 hours.</p>
+                    <p><b>C: full-size data.</b> With every row and column kept and 30 minutes a problem, the gap in
+                        criterion widens. The shipped model reaches 0.2695 in 3.1 s (v49 in 2.4 s), against 0.2853 for
+                        STreeD in 149 s, 48&times; longer, and 0.2945 for GOSDT in 216 s, 69&times; longer. Much of the
+                        baselines' gap is trees they never return: GOSDT and SPLIT stop at the 6 GB cap on most
+                        datasets, and each missing tree is charged a single leaf. Guided gosdt-guesses plots at 0.02 s
+                        with 0.2782, but that time leaves out its preprocessing (see above).</p>
+
+                    <p><b>D: four hours a problem.</b> With 480&times; the time the ordering does not change. The
+                        8-thread versions reach 0.3368 and 0.3369 in 0.04 s a problem, and pygosdt 0.3386 in 0.88 s. STreeD
+                        (0.3641) and GOSDT (0.3765) score worse than with 30 seconds, because more of their runs now end
+                        at the 6 GB cap without a tree. The shipped model's 0.3478 is a harness effect, described
+                        below.</p>
 
                     <details class="collapsible" id="harness-4h">
                       <summary>Two harness effects in the 4-hour panel</summary>
                       <p>The shipped model's memory guard counts its own tables, not the process. On the six widest
                         problems the process passed 6 GB before the guard fired, so the harness killed it and it
                         returned no tree on five of them; v23, whose guard reads the process, stops itself at 5.99 GB
-                        and keeps its incumbent. Charged a single leaf on those five, the shipped model's criterion
-                        (0.348) sits above pygosdt's (0.339) while certifying two more problems. That is a bug in the
+                        and keeps its tree. Charged a single leaf on those five, the shipped model's criterion (0.348)
+                        sits above pygosdt's (0.339) in D, though its search is the faster one. That is a bug in the
                         guard, not the search, and it is what a 6 GB machine would do. Separately, STreeD loses three
-                        problems it certified on the laptop, where nothing policed its memory (monk_2, car_evaluation
-                        and coupon_bar at the smallest penalty, at 6.5 to 7 GB), which is why its count does not rise
-                        with its three new proofs. GOSDT's false certificate on the chudi stand-in appears again.</p>
+                        problems it finished on the laptop, where nothing policed its memory (monk_2, car_evaluation and
+                        coupon_bar at the smallest penalty, at 6.5 to 7 GB), which is part of why its criterion in D is
+                        worse than in B.</p>
                     </details>
 
                     <details class="collapsible" id="guesses-settings">
