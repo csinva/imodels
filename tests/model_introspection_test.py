@@ -165,6 +165,7 @@ BINARY_ONLY_CLASSIFIERS = [
     'SkopeRulesClassifier', 'SlipperClassifier',
     'OneRClassifier', 'RuleFitClassifier', 'FPLassoClassifier',
     'FPSkopeClassifier', 'TreeGAMClassifier', 'FastFrugalTreeClassifier',
+    'FastRiskScoreClassifier',
 ]
 
 
