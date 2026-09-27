@@ -144,7 +144,7 @@ __all__ = [
 <dl>
 <dt id="imodels.experimental.bartpy.BART"><code class="flex name class">
 <span>class <span class="ident">BART</span></span>
-<span>(</span><span>n_trees: int = 200, n_chains: int = 4, sigma_a: float = 0.001, sigma_b: float = 0.001, n_samples: int = 200, n_burn: int = 200, thin: float = 0.1, alpha: float = 0.95, beta: float = 2.0, store_in_sample_predictions: bool = False, store_acceptance_trace: bool = False, tree_sampler: <a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler" href="samplers/treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler">TreeMutationSampler</a> = &lt;imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler object&gt;, initializer: <a title="imodels.experimental.bartpy.initializers.initializer.Initializer" href="initializers/initializer.html#imodels.experimental.bartpy.initializers.initializer.Initializer">Initializer</a> | None = None, n_jobs=-1, classification: bool = False, max_rules=None)</span>
+<span>(</span><span>n_trees: int = 200, n_chains: int = 4, sigma_a: float = 0.001, sigma_b: float = 0.001, n_samples: int = 200, n_burn: int = 200, thin: float = 0.1, alpha: float = 0.95, beta: float = 2.0, store_in_sample_predictions: bool = False, store_acceptance_trace: bool = False, tree_sampler: <a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler" href="samplers/treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler">TreeMutationSampler</a> = &lt;imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler object&gt;, initializer: <a title="imodels.experimental.bartpy.initializers.initializer.Initializer" href="initializers/initializer.html#imodels.experimental.bartpy.initializers.initializer.Initializer">Initializer</a> | None = None, n_jobs=-1, classification: bool = False, max_rules=None, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The main access point to building BART models in BartPy</p>
@@ -572,6 +572,7 @@ array([3, 3, 3])
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

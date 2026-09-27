@@ -419,7 +419,7 @@ def encode_categories(X, features, encoder=None):
 </details>
 </dd>
 <dt id="imodels.util.data_util.get_clean_dataset"><code class="name flex">
-<span>def <span class="ident">get_clean_dataset</span></span>(<span>dataset_name: str, data_source: str = 'imodels', data_path='/Users/chandansingh/cache_imodels_data', convertna: bool = True, test_size: float = None, random_state: int = 42, verbose=True, return_target_col_names: bool = False, override_cache: bool = False) ‑> Tuple[numpy.ndarray, numpy.ndarray, list]</span>
+<span>def <span class="ident">get_clean_dataset</span></span>(<span>dataset_name: str, data_source: str = 'imodels', data_path='/home/chandan.singh/cache_imodels_data', convertna: bool = True, test_size: float = None, random_state: int = 42, verbose=True, return_target_col_names: bool = False, override_cache: bool = False) ‑> Tuple[numpy.ndarray, numpy.ndarray, list]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Fetch clean data (as numpy arrays) from various sources including imodels, pmlb, openml, and sklearn.
@@ -656,6 +656,7 @@ X, y, feature_names = imodels.get_clean_dataset('california_housing', data_sourc
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

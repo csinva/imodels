@@ -72,6 +72,7 @@ from sklearn.linear_model import LinearRegression, Lasso, LogisticRegression
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from imodels.util.arguments import check_predict_X, set_feature_names_in
+from imodels.util.optional_deps import warn_optional_dependency
 
 def _warn_if_rounding_collapsed(coef, rounded):
     &#34;&#34;&#34;Warn when rounding to integers has destroyed the fitted model.
@@ -103,6 +104,9 @@ class SLIMRegressor(RegressorMixin, BaseEstimator):
     &#39;&#39;&#39;
 
     def __init__(self, alpha=0.01):
+        warn_optional_dependency(
+            &#39;cvxpy&#39;, &#39;SLIMRegressor&#39;, fallback=&#39;rounding the coefficients of a non-integer fit&#39;,
+            purpose=&#39;used to solve the integer program exactly&#39;)
         self.alpha = alpha
 
     def fit(self, X, y, sample_weight=None):
@@ -180,6 +184,9 @@ class SLIMClassifier(ClassifierMixin, BaseEstimator):
         alpha: float
             weight for sparsity penalty
         &#39;&#39;&#39;
+        warn_optional_dependency(
+            &#39;cvxpy&#39;, &#39;SLIMClassifier&#39;, fallback=&#39;rounding the coefficients of a non-integer fit&#39;,
+            purpose=&#39;used to solve the integer program exactly&#39;)
         self.alpha = alpha
 
     def fit(self, X, y, sample_weight=None):
@@ -316,6 +323,9 @@ weight for sparsity penalty</p></div>
         alpha: float
             weight for sparsity penalty
         &#39;&#39;&#39;
+        warn_optional_dependency(
+            &#39;cvxpy&#39;, &#39;SLIMClassifier&#39;, fallback=&#39;rounding the coefficients of a non-integer fit&#39;,
+            purpose=&#39;used to solve the integer program exactly&#39;)
         self.alpha = alpha
 
     def fit(self, X, y, sample_weight=None):
@@ -720,6 +730,9 @@ weight for sparsity penalty</p></div>
     &#39;&#39;&#39;
 
     def __init__(self, alpha=0.01):
+        warn_optional_dependency(
+            &#39;cvxpy&#39;, &#39;SLIMRegressor&#39;, fallback=&#39;rounding the coefficients of a non-integer fit&#39;,
+            purpose=&#39;used to solve the integer program exactly&#39;)
         self.alpha = alpha
 
     def fit(self, X, y, sample_weight=None):
@@ -1088,6 +1101,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

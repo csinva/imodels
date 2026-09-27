@@ -50,14 +50,17 @@ aria-label="View source on GitHub" title="GitHub">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import seaborn as sns
-import statsmodels.api as sm
-from matplotlib import pyplot as plt
+<pre><code class="python">from matplotlib import pyplot as plt
 
+from imodels.util.optional_deps import require_optional_dependency
 from ..sklearnmodel import SklearnModel
 
 
 def plot_qq(model: SklearnModel, ax=None) -&gt; None:
+    require_optional_dependency(&#39;statsmodels&#39;, &#39;plot_qq&#39;,
+                                purpose=&#39;draws the QQ plot&#39;)
+    import statsmodels.api as sm
+
     if ax is None:
         _, ax = plt.subplots(1, 1)
     residuals = model.residuals(model.data.X.values)
@@ -67,6 +70,10 @@ def plot_qq(model: SklearnModel, ax=None) -&gt; None:
 
 
 def plot_homoscedasticity_diagnostics(model: SklearnModel, ax=None):
+    require_optional_dependency(&#39;seaborn&#39;, &#39;plot_homoscedasticity_diagnostics&#39;,
+                                purpose=&#39;draws the regression plot&#39;)
+    import seaborn as sns
+
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(5, 5))
     sns.regplot(model.predict(model.data.X.values), model.residuals(model.data.X.values), ax=ax)
@@ -93,6 +100,10 @@ def plot_homoscedasticity_diagnostics(model: SklearnModel, ax=None):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def plot_homoscedasticity_diagnostics(model: SklearnModel, ax=None):
+    require_optional_dependency(&#39;seaborn&#39;, &#39;plot_homoscedasticity_diagnostics&#39;,
+                                purpose=&#39;draws the regression plot&#39;)
+    import seaborn as sns
+
     if ax is None:
         _, ax = plt.subplots(1, 1, figsize=(5, 5))
     sns.regplot(model.predict(model.data.X.values), model.residuals(model.data.X.values), ax=ax)
@@ -112,6 +123,10 @@ def plot_homoscedasticity_diagnostics(model: SklearnModel, ax=None):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def plot_qq(model: SklearnModel, ax=None) -&gt; None:
+    require_optional_dependency(&#39;statsmodels&#39;, &#39;plot_qq&#39;,
+                                purpose=&#39;draws the QQ plot&#39;)
+    import statsmodels.api as sm
+
     if ax is None:
         _, ax = plt.subplots(1, 1)
     residuals = model.residuals(model.data.X.values)
@@ -137,6 +152,7 @@ def plot_homoscedasticity_diagnostics(model: SklearnModel, ax=None):
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

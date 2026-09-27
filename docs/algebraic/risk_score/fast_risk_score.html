@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.11.6" />
+<title>imodels.algebraic.risk_score.fast_risk_score</title>
+<meta name="description" content="FastRiskScore: sparse integer risk scores, found by autoresearch. A risk score adds up a few integer points, one per feature that applies to a row, …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<link rel="stylesheet" href="../../style.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<header id="site-header">
+<a href="../../index.html" class="nav-icon" aria-label="Home" title="Home">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M3 10.5 12 3l9 7.5"></path>
+<path d="M5 9.5V21h14V9.5"></path>
+<path d="M9.5 21v-6h5v6"></path>
+</svg>
+</a>
+<p id="site-tagline">imodels. Sklearn-compatible interpretable models.</p>
+<a href="../../index.html" id="site-logo">
+<img src="https://csinva.io/imodels/img/imodels_logo.svg?sanitize=True&kill_cache=1"
+alt="imodels">
+</a>
+<a href="https://github.com/csinva/imodels" class="nav-icon"
+aria-label="View source on GitHub" title="GitHub">
+<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01
+1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04
+2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+</svg>
+</a>
+</header>
+<main>
+<article id="content">
+<section id="section-intro">
+<p>FastRiskScore: sparse integer risk scores, found by autoresearch.</p>
+<p>A risk score adds up a few integer points, one per feature that applies to a row,
+and turns the total into a probability. FastRiskScoreClassifier picks at most <code>k</code>
+binary features (thresholds of numeric columns and levels of categorical ones)
+and gives each an integer number of points in [-max_points, max_points], choosing
+them to minimise the training log loss of the best map from total score to risk,</p>
+<pre><code>min over points w, and real a, b, of  mean_i log(1 + exp(-y_i (a * x_i.w + b))).
+</code></pre>
+<p>This is the problem RiskSLIM and FasterRisk solve. The solver came out of an
+autoresearch loop that started from FasterRisk; see
+<a href="https://csinva.io/imodels/fastriskscore.html">https://csinva.io/imodels/fastriskscore.html</a> for the method and the benchmarks.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;FastRiskScore: sparse integer risk scores, found by autoresearch.
+
+A risk score adds up a few integer points, one per feature that applies to a row,
+and turns the total into a probability. FastRiskScoreClassifier picks at most ``k``
+binary features (thresholds of numeric columns and levels of categorical ones)
+and gives each an integer number of points in [-max_points, max_points], choosing
+them to minimise the training log loss of the best map from total score to risk,
+
+    min over points w, and real a, b, of  mean_i log(1 + exp(-y_i (a * x_i.w + b))).
+
+This is the problem RiskSLIM and FasterRisk solve. The solver came out of an
+autoresearch loop that started from FasterRisk; see
+https://csinva.io/imodels/fastriskscore.html for the method and the benchmarks.
+&#34;&#34;&#34;
+
+from __future__ import annotations
+
+import math
+import time
+
+import numpy as np
+import pandas as pd
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils.validation import check_array, check_is_fitted
+
+from imodels.algebraic.risk_score import solver
+from imodels.util.arguments import (_finite_check_kwarg, check_binary_target, check_predict_X,
+                                    set_feature_names_in)
+
+NUMBA_HINT = (
+    &#34;FastRiskScoreClassifier needs numba, which is not installed. Install it with &#34;
+    &#34;`pip install numba` (or `pip install imodels[optional]`). The search is compiled &#34;
+    &#34;with numba once per machine (about 30 seconds) and cached after that.&#34;
+)
+
+
+def calibrate(scores, y):
+    &#34;&#34;&#34;(a, b, loss): the minimum over real a, b of the mean log loss of sigmoid(a * score + b).
+
+    Convex in (a, b); solved by damped Newton on the distinct score values.&#34;&#34;&#34;
+    y = np.asarray(y, float)
+    u, inv = np.unique(np.round(np.asarray(scores, float), 9), return_inverse=True)
+    pos = np.bincount(inv.ravel(), weights=y, minlength=len(u))
+    cnt = np.bincount(inv.ravel(), minlength=len(u)).astype(float)
+    n = cnt.sum()
+    p = min(max(pos.sum() / n, 1e-12), 1 - 1e-12)
+    a, b = 0.0, math.log(p / (1 - p))
+
+    def f(a_, b_):
+        z = a_ * u + b_
+        return float((pos * np.logaddexp(0, -z) + (cnt - pos) * np.logaddexp(0, z)).sum() / n)
+
+    cur = f(a, b)
+    if len(u) &gt; 1:
+        for _ in range(200):
+            q = 1 / (1 + np.exp(-(a * u + b)))
+            r = cnt * q - pos
+            w = cnt * q * (1 - q)
+            g = np.array([r @ u, r.sum()]) / n
+            H = np.array([[w @ (u * u), w @ u], [w @ u, w.sum()]]) / n + 1e-12 * np.eye(2)
+            step = np.linalg.solve(H, g)
+            t = 1.0
+            while t &gt; 1e-10:
+                na, nb_ = a - t * step[0], b - t * step[1]
+                new = f(na, nb_)
+                if new &lt;= cur - 1e-4 * t * float(g @ step):
+                    break
+                t *= 0.5
+            if t &lt;= 1e-10 or cur - new &lt; 1e-13:
+                if t &gt; 1e-10:
+                    a, b, cur = na, nb_, new
+                break
+            a, b, cur = na, nb_, new
+    return a, b, cur
+
+
+class _Binarizer:
+    &#34;&#34;&#34;Indicator features: ``x &lt;= t`` at up to ``n_thresholds`` quantiles of each numeric column,
+    ``x = v`` for a two-valued column, one level per indicator for a categorical column (levels
+    covering at least 1% of rows, at most 20), and ``x missing`` where the training data had
+    missing values.&#34;&#34;&#34;
+
+    def __init__(self, n_thresholds=9):
+        self.n_thresholds = n_thresholds
+
+    def fit(self, frame):
+        self.rules_ = []  # (column, kind, value, name)
+        qs = np.arange(1, self.n_thresholds + 1) / (self.n_thresholds + 1)
+        for c in frame.columns:
+            col = frame[c]
+            if not pd.api.types.is_numeric_dtype(col) or pd.api.types.is_bool_dtype(col):
+                col = col.astype(object).where(col.notna(), &#34;missing&#34;).astype(str)
+                freq = col.value_counts()
+                for level in list(freq[freq &gt;= 0.01 * len(col)].index[:20]):
+                    if 0 &lt; freq[level] &lt; len(col):
+                        self.rules_.append((c, &#34;eq_str&#34;, level, f&#34;{c} = {level}&#34;))
+                continue
+            x = pd.to_numeric(col, errors=&#34;coerce&#34;).to_numpy(float)
+            miss = np.isnan(x)
+            if miss.any() and not miss.all():
+                self.rules_.append((c, &#34;missing&#34;, None, f&#34;{c} missing&#34;))
+            vals = np.unique(x[~miss])
+            if len(vals) &lt;= 1:
+                continue
+            if len(vals) == 2:
+                self.rules_.append((c, &#34;eq&#34;, vals[1], f&#34;{c} = {vals[1]:g}&#34;))
+                continue
+            for t in np.unique(np.quantile(x[~miss], qs, method=&#34;lower&#34;)):
+                if t &lt; vals[-1]:
+                    self.rules_.append((c, &#34;le&#34;, t, f&#34;{c} &lt;= {t:g}&#34;))
+        self.names_ = [r[3] for r in self.rules_]
+        return self
+
+    def transform(self, frame):
+        out = np.zeros((len(frame), len(self.rules_)))
+        for j, (c, kind, v, _) in enumerate(self.rules_):
+            col = frame[c]
+            if kind == &#34;eq_str&#34;:
+                out[:, j] = (col.astype(object).where(col.notna(), &#34;missing&#34;).astype(str) == v).to_numpy()
+                continue
+            x = pd.to_numeric(col, errors=&#34;coerce&#34;).to_numpy(float)
+            if kind == &#34;missing&#34;:
+                out[:, j] = np.isnan(x)
+            elif kind == &#34;eq&#34;:
+                out[:, j] = x == v
+            else:
+                out[:, j] = x &lt;= v  # NaN compares False
+        return out
+
+
+class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
+    &#34;&#34;&#34;Sparse integer risk score (binary classification).
+
+    Parameters
+    ----------
+    k: int
+        The most features the score may use.
+    max_points: int
+        Every feature&#39;s points are an integer in [-max_points, max_points].
+    n_thresholds: int
+        Numeric columns are split at up to this many quantiles (``x &lt;= t`` indicators).
+    binarize: bool
+        If False, the columns of X are used as they are (they should then be binary or small
+        integers), and the points apply to them directly.
+    time_limit: float
+        Seconds for the search. It stops early and returns its best points if the limit is
+        reached (``stopped_early_`` is then True); on most data it finishes far sooner.
+
+    Attributes
+    ----------
+    points_: dict
+        Feature name -&gt; points, for the features the score uses.
+    coef_: ndarray
+        Points for every binary feature (``features_``), zero for those not used.
+    scale_, intercept_: float
+        The risk of a row with total score s is ``1 / (1 + exp(-(scale_ * s + intercept_)))``.
+    train_loss_: float
+        Mean training log loss of that risk.
+    &#34;&#34;&#34;
+
+    def __init__(self, k: int = 5, max_points: int = 5, n_thresholds: int = 9, binarize: bool = True,
+                 time_limit: float = 60.0):
+        self.k = k
+        self.max_points = max_points
+        self.n_thresholds = n_thresholds
+        self.binarize = binarize
+        self.time_limit = time_limit
+
+    # ------------------------------------------------------------------ fitting
+    def _frame(self, X):
+        if isinstance(X, pd.DataFrame):
+            frame = X.copy()
+            frame.columns = [str(c) for c in frame.columns]
+            return frame
+        X = check_array(X, dtype=None, **_finite_check_kwarg(True))
+        return pd.DataFrame(X, columns=list(self.feature_names_))
+
+    def fit(self, X, y, feature_names=None):
+        if not solver.HAVE_NUMBA:
+            raise ImportError(NUMBA_HINT)
+        if int(self.k) &lt; 1 or int(self.max_points) &lt; 1:
+            raise ValueError(&#34;k and max_points must be at least 1&#34;)
+        t0 = time.perf_counter()
+        set_feature_names_in(self, X)
+        if isinstance(X, pd.DataFrame):
+            self.feature_names_ = [str(c) for c in X.columns]
+        else:
+            n_cols = np.shape(X)[1] if len(np.shape(X)) == 2 else None
+            if n_cols is None:
+                X = check_array(X)  # raises the usual sklearn error for 1-D input
+            self.feature_names_ = list(feature_names) if feature_names is not None else \
+                [f&#34;X{i}&#34; for i in range(n_cols)]
+        y = np.asarray(y)
+        if y.ndim != 1 or len(y) != len(X):
+            raise ValueError(&#34;y must be 1-D with one entry per row of X&#34;)
+        check_binary_target(self, y)
+        self.classes_, y01 = np.unique(y, return_inverse=True)
+        if len(self.classes_) &lt; 2:
+            raise ValueError(&#34;FastRiskScoreClassifier needs two classes in y&#34;)
+        frame = self._frame(X)
+        self.n_features_in_ = frame.shape[1]
+        if self.binarize:
+            self.binarizer_ = _Binarizer(self.n_thresholds).fit(frame)
+            B = self.binarizer_.transform(frame)
+            self.features_ = list(self.binarizer_.names_)
+        else:
+            B = frame.to_numpy(float)
+            if np.isnan(B).any():
+                raise ValueError(&#34;binarize=False needs X without missing values&#34;)
+            self.features_ = list(self.feature_names_)
+        if B.shape[1] == 0:
+            points, stopped = np.zeros(0), False
+        else:
+            points, _, _, stopped = solver.solve(B, y01, int(self.k), bound=int(self.max_points),
+                                                 time_limit=float(self.time_limit))
+        points = points.astype(np.int64)
+        a, b, loss = calibrate(B @ points if len(points) else np.zeros(len(y01)), y01)
+        if a &lt; 0:  # orient the score so that more points always means more risk
+            points, a = -points, -a
+        self.coef_ = points
+        self.scale_, self.intercept_, self.train_loss_ = float(a), float(b), float(loss)
+        self.points_ = {self.features_[j]: int(points[j]) for j in np.flatnonzero(points)}
+        self.stopped_early_ = bool(stopped)
+        self.fit_seconds_ = time.perf_counter() - t0
+        return self
+
+    # --------------------------------------------------------------- prediction
+    def _binary(self, X):
+        check_predict_X(self, X)
+        if not isinstance(X, pd.DataFrame):
+            X = check_array(X, dtype=None, **_finite_check_kwarg(True))
+            X = pd.DataFrame(X, columns=list(self.feature_names_))
+        else:
+            X = X.copy()
+            X.columns = [str(c) for c in X.columns]
+        if self.binarize:
+            return self.binarizer_.transform(X)
+        return X.to_numpy(float)
+
+    def total_score(self, X):
+        &#34;&#34;&#34;The total points of each row.&#34;&#34;&#34;
+        check_is_fitted(self)
+        B = self._binary(X)
+        return B @ self.coef_ if B.shape[1] else np.zeros(B.shape[0])
+
+    def decision_function(self, X):
+        s = self.total_score(X)
+        return self.scale_ * s + self.intercept_
+
+    def predict_proba(self, X):
+        p = 1.0 / (1.0 + np.exp(-self.decision_function(X)))
+        return np.column_stack([1 - p, p])
+
+    def predict(self, X):
+        z = self.decision_function(X)
+        return self.classes_[(z &gt; 0).astype(int)]
+
+    def risk(self, score):
+        &#34;&#34;&#34;Probability of the second class for a total score.&#34;&#34;&#34;
+        return 1.0 / (1.0 + np.exp(-(self.scale_ * np.asarray(score, float) + self.intercept_)))
+
+    # ----------------------------------------------------------------- display
+    def __str__(self):
+        if not hasattr(self, &#34;coef_&#34;):
+            return &#34;FastRiskScoreClassifier (not fitted)&#34;
+        if not self.points_:
+            return (f&#34;FastRiskScoreClassifier: no feature helps; the risk of &#34;
+                    f&#34;class {self.classes_[1]} is {self.risk(0):.1%} for every row&#34;)
+        width = max(len(f) for f in self.points_)
+        lines = [f&#34;FastRiskScoreClassifier: add the points of every line that applies&#34;]
+        for name, v in sorted(self.points_.items(), key=lambda t: -t[1]):
+            lines.append(f&#34;  {name:&lt;{width}}  {v:+d}&#34;)
+        pos = sum(v for v in self.points_.values() if v &gt; 0)
+        neg = sum(v for v in self.points_.values() if v &lt; 0)
+        scores = np.arange(neg, pos + 1)
+        lines.append(f&#34;risk of class {self.classes_[1]} for each total score:&#34;)
+        cells = [(f&#34;{s:+d}&#34; if s else &#34;0&#34;, f&#34;{self.risk(s):.1%}&#34;) for s in scores]
+        cw = max(max(len(c[0]), len(c[1])) for c in cells) + 1
+        lines.append(&#34;  score &#34; + &#34;&#34;.join(c[0].rjust(cw) for c in cells))
+        lines.append(&#34;  risk  &#34; + &#34;&#34;.join(c[1].rjust(cw) for c in cells))
+        return &#34;\n&#34;.join(lines)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="imodels.algebraic.risk_score.fast_risk_score.calibrate"><code class="name flex">
+<span>def <span class="ident">calibrate</span></span>(<span>scores, y)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>(a, b, loss): the minimum over real a, b of the mean log loss of sigmoid(a * score + b).</p>
+<p>Convex in (a, b); solved by damped Newton on the distinct score values.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calibrate(scores, y):
+    &#34;&#34;&#34;(a, b, loss): the minimum over real a, b of the mean log loss of sigmoid(a * score + b).
+
+    Convex in (a, b); solved by damped Newton on the distinct score values.&#34;&#34;&#34;
+    y = np.asarray(y, float)
+    u, inv = np.unique(np.round(np.asarray(scores, float), 9), return_inverse=True)
+    pos = np.bincount(inv.ravel(), weights=y, minlength=len(u))
+    cnt = np.bincount(inv.ravel(), minlength=len(u)).astype(float)
+    n = cnt.sum()
+    p = min(max(pos.sum() / n, 1e-12), 1 - 1e-12)
+    a, b = 0.0, math.log(p / (1 - p))
+
+    def f(a_, b_):
+        z = a_ * u + b_
+        return float((pos * np.logaddexp(0, -z) + (cnt - pos) * np.logaddexp(0, z)).sum() / n)
+
+    cur = f(a, b)
+    if len(u) &gt; 1:
+        for _ in range(200):
+            q = 1 / (1 + np.exp(-(a * u + b)))
+            r = cnt * q - pos
+            w = cnt * q * (1 - q)
+            g = np.array([r @ u, r.sum()]) / n
+            H = np.array([[w @ (u * u), w @ u], [w @ u, w.sum()]]) / n + 1e-12 * np.eye(2)
+            step = np.linalg.solve(H, g)
+            t = 1.0
+            while t &gt; 1e-10:
+                na, nb_ = a - t * step[0], b - t * step[1]
+                new = f(na, nb_)
+                if new &lt;= cur - 1e-4 * t * float(g @ step):
+                    break
+                t *= 0.5
+            if t &lt;= 1e-10 or cur - new &lt; 1e-13:
+                if t &gt; 1e-10:
+                    a, b, cur = na, nb_, new
+                break
+            a, b, cur = na, nb_, new
+    return a, b, cur</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier"><code class="flex name class">
+<span>class <span class="ident">FastRiskScoreClassifier</span></span>
+<span>(</span><span>k: int = 5, max_points: int = 5, n_thresholds: int = 9, binarize: bool = True, time_limit: float = 60.0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sparse integer risk score (binary classification).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>k</code></strong> :&ensp;<code>int</code></dt>
+<dd>The most features the score may use.</dd>
+<dt><strong><code>max_points</code></strong> :&ensp;<code>int</code></dt>
+<dd>Every feature's points are an integer in [-max_points, max_points].</dd>
+<dt><strong><code>n_thresholds</code></strong> :&ensp;<code>int</code></dt>
+<dd>Numeric columns are split at up to this many quantiles (<code>x &lt;= t</code> indicators).</dd>
+<dt><strong><code>binarize</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If False, the columns of X are used as they are (they should then be binary or small
+integers), and the points apply to them directly.</dd>
+<dt><strong><code>time_limit</code></strong> :&ensp;<code>float</code></dt>
+<dd>Seconds for the search. It stops early and returns its best points if the limit is
+reached (<code>stopped_early_</code> is then True); on most data it finishes far sooner.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>points_</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Feature name -&gt; points, for the features the score uses.</dd>
+<dt><strong><code>coef_</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>Points for every binary feature (<code>features_</code>), zero for those not used.</dd>
+<dt><strong><code>scale_</code></strong>, <strong><code>intercept_</code></strong> :&ensp;<code>float</code></dt>
+<dd>The risk of a row with total score s is <code>1 / (1 + exp(-(scale_ * s + intercept_)))</code>.</dd>
+<dt><strong><code>train_loss_</code></strong> :&ensp;<code>float</code></dt>
+<dd>Mean training log loss of that risk.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
+    &#34;&#34;&#34;Sparse integer risk score (binary classification).
+
+    Parameters
+    ----------
+    k: int
+        The most features the score may use.
+    max_points: int
+        Every feature&#39;s points are an integer in [-max_points, max_points].
+    n_thresholds: int
+        Numeric columns are split at up to this many quantiles (``x &lt;= t`` indicators).
+    binarize: bool
+        If False, the columns of X are used as they are (they should then be binary or small
+        integers), and the points apply to them directly.
+    time_limit: float
+        Seconds for the search. It stops early and returns its best points if the limit is
+        reached (``stopped_early_`` is then True); on most data it finishes far sooner.
+
+    Attributes
+    ----------
+    points_: dict
+        Feature name -&gt; points, for the features the score uses.
+    coef_: ndarray
+        Points for every binary feature (``features_``), zero for those not used.
+    scale_, intercept_: float
+        The risk of a row with total score s is ``1 / (1 + exp(-(scale_ * s + intercept_)))``.
+    train_loss_: float
+        Mean training log loss of that risk.
+    &#34;&#34;&#34;
+
+    def __init__(self, k: int = 5, max_points: int = 5, n_thresholds: int = 9, binarize: bool = True,
+                 time_limit: float = 60.0):
+        self.k = k
+        self.max_points = max_points
+        self.n_thresholds = n_thresholds
+        self.binarize = binarize
+        self.time_limit = time_limit
+
+    # ------------------------------------------------------------------ fitting
+    def _frame(self, X):
+        if isinstance(X, pd.DataFrame):
+            frame = X.copy()
+            frame.columns = [str(c) for c in frame.columns]
+            return frame
+        X = check_array(X, dtype=None, **_finite_check_kwarg(True))
+        return pd.DataFrame(X, columns=list(self.feature_names_))
+
+    def fit(self, X, y, feature_names=None):
+        if not solver.HAVE_NUMBA:
+            raise ImportError(NUMBA_HINT)
+        if int(self.k) &lt; 1 or int(self.max_points) &lt; 1:
+            raise ValueError(&#34;k and max_points must be at least 1&#34;)
+        t0 = time.perf_counter()
+        set_feature_names_in(self, X)
+        if isinstance(X, pd.DataFrame):
+            self.feature_names_ = [str(c) for c in X.columns]
+        else:
+            n_cols = np.shape(X)[1] if len(np.shape(X)) == 2 else None
+            if n_cols is None:
+                X = check_array(X)  # raises the usual sklearn error for 1-D input
+            self.feature_names_ = list(feature_names) if feature_names is not None else \
+                [f&#34;X{i}&#34; for i in range(n_cols)]
+        y = np.asarray(y)
+        if y.ndim != 1 or len(y) != len(X):
+            raise ValueError(&#34;y must be 1-D with one entry per row of X&#34;)
+        check_binary_target(self, y)
+        self.classes_, y01 = np.unique(y, return_inverse=True)
+        if len(self.classes_) &lt; 2:
+            raise ValueError(&#34;FastRiskScoreClassifier needs two classes in y&#34;)
+        frame = self._frame(X)
+        self.n_features_in_ = frame.shape[1]
+        if self.binarize:
+            self.binarizer_ = _Binarizer(self.n_thresholds).fit(frame)
+            B = self.binarizer_.transform(frame)
+            self.features_ = list(self.binarizer_.names_)
+        else:
+            B = frame.to_numpy(float)
+            if np.isnan(B).any():
+                raise ValueError(&#34;binarize=False needs X without missing values&#34;)
+            self.features_ = list(self.feature_names_)
+        if B.shape[1] == 0:
+            points, stopped = np.zeros(0), False
+        else:
+            points, _, _, stopped = solver.solve(B, y01, int(self.k), bound=int(self.max_points),
+                                                 time_limit=float(self.time_limit))
+        points = points.astype(np.int64)
+        a, b, loss = calibrate(B @ points if len(points) else np.zeros(len(y01)), y01)
+        if a &lt; 0:  # orient the score so that more points always means more risk
+            points, a = -points, -a
+        self.coef_ = points
+        self.scale_, self.intercept_, self.train_loss_ = float(a), float(b), float(loss)
+        self.points_ = {self.features_[j]: int(points[j]) for j in np.flatnonzero(points)}
+        self.stopped_early_ = bool(stopped)
+        self.fit_seconds_ = time.perf_counter() - t0
+        return self
+
+    # --------------------------------------------------------------- prediction
+    def _binary(self, X):
+        check_predict_X(self, X)
+        if not isinstance(X, pd.DataFrame):
+            X = check_array(X, dtype=None, **_finite_check_kwarg(True))
+            X = pd.DataFrame(X, columns=list(self.feature_names_))
+        else:
+            X = X.copy()
+            X.columns = [str(c) for c in X.columns]
+        if self.binarize:
+            return self.binarizer_.transform(X)
+        return X.to_numpy(float)
+
+    def total_score(self, X):
+        &#34;&#34;&#34;The total points of each row.&#34;&#34;&#34;
+        check_is_fitted(self)
+        B = self._binary(X)
+        return B @ self.coef_ if B.shape[1] else np.zeros(B.shape[0])
+
+    def decision_function(self, X):
+        s = self.total_score(X)
+        return self.scale_ * s + self.intercept_
+
+    def predict_proba(self, X):
+        p = 1.0 / (1.0 + np.exp(-self.decision_function(X)))
+        return np.column_stack([1 - p, p])
+
+    def predict(self, X):
+        z = self.decision_function(X)
+        return self.classes_[(z &gt; 0).astype(int)]
+
+    def risk(self, score):
+        &#34;&#34;&#34;Probability of the second class for a total score.&#34;&#34;&#34;
+        return 1.0 / (1.0 + np.exp(-(self.scale_ * np.asarray(score, float) + self.intercept_)))
+
+    # ----------------------------------------------------------------- display
+    def __str__(self):
+        if not hasattr(self, &#34;coef_&#34;):
+            return &#34;FastRiskScoreClassifier (not fitted)&#34;
+        if not self.points_:
+            return (f&#34;FastRiskScoreClassifier: no feature helps; the risk of &#34;
+                    f&#34;class {self.classes_[1]} is {self.risk(0):.1%} for every row&#34;)
+        width = max(len(f) for f in self.points_)
+        lines = [f&#34;FastRiskScoreClassifier: add the points of every line that applies&#34;]
+        for name, v in sorted(self.points_.items(), key=lambda t: -t[1]):
+            lines.append(f&#34;  {name:&lt;{width}}  {v:+d}&#34;)
+        pos = sum(v for v in self.points_.values() if v &gt; 0)
+        neg = sum(v for v in self.points_.values() if v &lt; 0)
+        scores = np.arange(neg, pos + 1)
+        lines.append(f&#34;risk of class {self.classes_[1]} for each total score:&#34;)
+        cells = [(f&#34;{s:+d}&#34; if s else &#34;0&#34;, f&#34;{self.risk(s):.1%}&#34;) for s in scores]
+        cw = max(max(len(c[0]), len(c[1])) for c in cells) + 1
+        lines.append(&#34;  score &#34; + &#34;&#34;.join(c[0].rjust(cw) for c in cells))
+        lines.append(&#34;  risk  &#34; + &#34;&#34;.join(c[1].rjust(cw) for c in cells))
+        return &#34;\n&#34;.join(lines)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>sklearn.base.ClassifierMixin</li>
+<li>sklearn.base.BaseEstimator</li>
+<li>sklearn.utils._estimator_html_repr._HTMLDocumentationLinkMixin</li>
+<li>sklearn.utils._metadata_requests._MetadataRequester</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier.decision_function"><code class="name flex">
+<span>def <span class="ident">decision_function</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def decision_function(self, X):
+    s = self.total_score(X)
+    return self.scale_ * s + self.intercept_</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier.fit"><code class="name flex">
+<span>def <span class="ident">fit</span></span>(<span>self, X, y, feature_names=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fit(self, X, y, feature_names=None):
+    if not solver.HAVE_NUMBA:
+        raise ImportError(NUMBA_HINT)
+    if int(self.k) &lt; 1 or int(self.max_points) &lt; 1:
+        raise ValueError(&#34;k and max_points must be at least 1&#34;)
+    t0 = time.perf_counter()
+    set_feature_names_in(self, X)
+    if isinstance(X, pd.DataFrame):
+        self.feature_names_ = [str(c) for c in X.columns]
+    else:
+        n_cols = np.shape(X)[1] if len(np.shape(X)) == 2 else None
+        if n_cols is None:
+            X = check_array(X)  # raises the usual sklearn error for 1-D input
+        self.feature_names_ = list(feature_names) if feature_names is not None else \
+            [f&#34;X{i}&#34; for i in range(n_cols)]
+    y = np.asarray(y)
+    if y.ndim != 1 or len(y) != len(X):
+        raise ValueError(&#34;y must be 1-D with one entry per row of X&#34;)
+    check_binary_target(self, y)
+    self.classes_, y01 = np.unique(y, return_inverse=True)
+    if len(self.classes_) &lt; 2:
+        raise ValueError(&#34;FastRiskScoreClassifier needs two classes in y&#34;)
+    frame = self._frame(X)
+    self.n_features_in_ = frame.shape[1]
+    if self.binarize:
+        self.binarizer_ = _Binarizer(self.n_thresholds).fit(frame)
+        B = self.binarizer_.transform(frame)
+        self.features_ = list(self.binarizer_.names_)
+    else:
+        B = frame.to_numpy(float)
+        if np.isnan(B).any():
+            raise ValueError(&#34;binarize=False needs X without missing values&#34;)
+        self.features_ = list(self.feature_names_)
+    if B.shape[1] == 0:
+        points, stopped = np.zeros(0), False
+    else:
+        points, _, _, stopped = solver.solve(B, y01, int(self.k), bound=int(self.max_points),
+                                             time_limit=float(self.time_limit))
+    points = points.astype(np.int64)
+    a, b, loss = calibrate(B @ points if len(points) else np.zeros(len(y01)), y01)
+    if a &lt; 0:  # orient the score so that more points always means more risk
+        points, a = -points, -a
+    self.coef_ = points
+    self.scale_, self.intercept_, self.train_loss_ = float(a), float(b), float(loss)
+    self.points_ = {self.features_[j]: int(points[j]) for j in np.flatnonzero(points)}
+    self.stopped_early_ = bool(stopped)
+    self.fit_seconds_ = time.perf_counter() - t0
+    return self</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier.predict"><code class="name flex">
+<span>def <span class="ident">predict</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict(self, X):
+    z = self.decision_function(X)
+    return self.classes_[(z &gt; 0).astype(int)]</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier.predict_proba"><code class="name flex">
+<span>def <span class="ident">predict_proba</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def predict_proba(self, X):
+    p = 1.0 / (1.0 + np.exp(-self.decision_function(X)))
+    return np.column_stack([1 - p, p])</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier.risk"><code class="name flex">
+<span>def <span class="ident">risk</span></span>(<span>self, score)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Probability of the second class for a total score.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def risk(self, score):
+    &#34;&#34;&#34;Probability of the second class for a total score.&#34;&#34;&#34;
+    return 1.0 / (1.0 + np.exp(-(self.scale_ * np.asarray(score, float) + self.intercept_)))</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier.set_fit_request"><code class="name flex">
+<span>def <span class="ident">set_fit_request</span></span>(<span>self: <a title="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier" href="#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier">FastRiskScoreClassifier</a>, *, feature_names: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier" href="#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier">FastRiskScoreClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>fit</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>fit</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>fit</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>feature_names</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>feature_names</code> parameter in <code>fit</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier" href="#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier">FastRiskScoreClassifier</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier" href="#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier">FastRiskScoreClassifier</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
+<p>Note that this method is only relevant if
+<code>enable_metadata_routing=True</code> (see :func:<code>sklearn.set_config</code>).
+Please see :ref:<code>User Guide &lt;metadata_routing&gt;</code> on how the routing
+mechanism works.</p>
+<p>The options for each parameter are:</p>
+<ul>
+<li>
+<p><code>True</code>: metadata is requested, and passed to <code>score</code> if provided. The request is ignored if metadata is not provided.</p>
+</li>
+<li>
+<p><code>False</code>: metadata is not requested and the meta-estimator will not pass it to <code>score</code>.</p>
+</li>
+<li>
+<p><code>None</code>: metadata is not requested, and the meta-estimator will raise an error if the user provides it.</p>
+</li>
+<li>
+<p><code>str</code>: metadata should be passed to the meta-estimator with this given alias instead of the original name.</p>
+</li>
+</ul>
+<p>The default (<code>sklearn.utils.metadata_routing.UNCHANGED</code>) retains the
+existing request. This allows you to change the request for some
+parameters and not others.</p>
+<div class="admonition versionadded">
+<p class="admonition-title">Added in version:&ensp;1.3</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method is only relevant if this estimator is used as a
+sub-estimator of a meta-estimator, e.g. used inside a
+:class:<code>~sklearn.pipeline.Pipeline</code>. Otherwise it has no effect.</p>
+</div>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sample_weight</code></strong> :&ensp;<code>str, True, False,</code> or <code>None</code>,
+default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
+<dd>Metadata routing for <code>sample_weight</code> parameter in <code>score</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>self</code></strong> :&ensp;<code>object</code></dt>
+<dd>The updated object.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def func(*args, **kw):
+    &#34;&#34;&#34;Updates the request for provided parameters
+
+    This docstring is overwritten below.
+    See REQUESTER_DOC for expected functionality
+    &#34;&#34;&#34;
+    if not _routing_enabled():
+        raise RuntimeError(
+            &#34;This method is only available when metadata routing is enabled.&#34;
+            &#34; You can enable it using&#34;
+            &#34; sklearn.set_config(enable_metadata_routing=True).&#34;
+        )
+
+    if self.validate_keys and (set(kw) - set(self.keys)):
+        raise TypeError(
+            f&#34;Unexpected args: {set(kw) - set(self.keys)} in {self.name}. &#34;
+            f&#34;Accepted arguments are: {set(self.keys)}&#34;
+        )
+
+    # This makes it possible to use the decorated method as an unbound method,
+    # for instance when monkeypatching.
+    # https://github.com/scikit-learn/scikit-learn/issues/28632
+    if instance is None:
+        _instance = args[0]
+        args = args[1:]
+    else:
+        _instance = instance
+
+    # Replicating python&#39;s behavior when positional args are given other than
+    # `self`, and `self` is only allowed if this method is unbound.
+    if args:
+        raise TypeError(
+            f&#34;set_{self.name}_request() takes 0 positional argument but&#34;
+            f&#34; {len(args)} were given&#34;
+        )
+
+    requests = _instance._get_metadata_request()
+    method_metadata_request = getattr(requests, self.name)
+
+    for prop, alias in kw.items():
+        if alias is not UNCHANGED:
+            method_metadata_request.add_request(param=prop, alias=alias)
+    _instance._metadata_request = requests
+
+    return _instance</code></pre>
+</details>
+</dd>
+<dt id="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier.total_score"><code class="name flex">
+<span>def <span class="ident">total_score</span></span>(<span>self, X)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The total points of each row.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def total_score(self, X):
+    &#34;&#34;&#34;The total points of each row.&#34;&#34;&#34;
+    check_is_fitted(self)
+    B = self._binary(X)
+    return B @ self.coef_ if B.shape[1] else np.zeros(B.shape[0])</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="imodels.algebraic.risk_score" href="index.html">imodels.algebraic.risk_score</a></code></li>
+</ul>
+</li>
+<li><h3>Our favorite methods</h3>
+<ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
+<li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>
+<li><a href="https://csinva.io/imodels/shrinkage.html" title="Post-hoc regularization for tree-based methods">Hierarchical shrinkage</a><span class="post-date">Feb '22</span></li>
+<li><a href="https://csinva.io/imodels/figs.html" title="Fast interpretable greedy-tree sums">FIGS</a><span class="post-date">Jan '22</span></li>
+</ul>
+</li>
+<li><h3>Prediction classes</h3>
+<ul class="cat-legend">
+<li><span class="cat-dot cat-algebraic"></span>algebraic</li>
+</ul>
+<ul class="class-list">
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier" href="#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier">FastRiskScoreClassifier</a></li>
+</ul>
+</li>
+</ul>
+<p><img align="center" width=100% src="https://csinva.io/imodels/img/anim.gif"> </img></p>
+<!-- add wave animation -->
+</nav>
+</main>
+<footer id="footer">
+</footer>
+</body>
+</html>
+<!-- add github corner -->
+<!-- add wave animation stylesheet -->
+<link rel="stylesheet" href="github.css">
