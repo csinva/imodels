@@ -30,12 +30,22 @@ BASELINES = {
     "fasterrisk": "FasterRisk",
     "fasterrisk_wide": "FasterRisk, wide search",
     "riskslim": "RiskSLIM (CPLEX CE)",
+    "cpa_highs": "Cutting planes, HiGHS (RiskSLIM's method)",
     "slim_milp": "SLIM (HiGHS)",
+    "abess_seqround": "abess + sequential rounding",
+    "fastsparse_seqround": "fastSparse + sequential rounding",
+    "okridge_seqround": "OKRidge + sequential rounding",
+    "l1path_seqround": "L1 path + sequential rounding",
+    "psl": "Probabilistic scoring list",
+    "autoscore": "AutoScore",
     "rounded_lr": "Rounded L1 logistic",
+    "unit_weighting": "Unit weighting",
     "imodels_slim": "imodels SLIMClassifier",
 }
+# baselines labelled on the plot; the others are grey points named on hover, to keep the panels legible
 DIRECT = {"fasterrisk": "FasterRisk", "fasterrisk_wide": "FasterRisk, wide", "riskslim": "RiskSLIM",
-          "slim_milp": "SLIM", "rounded_lr": "Rounded L1-LR", "imodels_slim": "imodels SLIM"}
+          "cpa_highs": "Cutting planes", "slim_milp": "SLIM", "psl": "PSL", "abess_seqround": "abess",
+          "autoscore": "AutoScore"}
 FLOOR = 1e-5
 
 
@@ -86,7 +96,7 @@ def panel(root, prefix, version_names, ship_names, fr_names, extra_prefix=None):
         pts.append(point("fasterrisk", BASELINES["fasterrisk"], "baseline", fr, len(fr), DIRECT["fasterrisk"]))
     for m, label in BASELINES.items():
         if m != "fasterrisk" and m in stats:
-            pts.append(point(m, label, "baseline", [stats[m]], 1, DIRECT[m]))
+            pts.append(point(m, label, "baseline", [stats[m]], 1, DIRECT.get(m)))
     return {"points": pts}
 
 
@@ -101,9 +111,18 @@ def versions(root, run, tag=""):
 def table_rows(panels):
     order = [("fastriskscore", SHIP, "FastRiskScore (ours)"), ("fasterrisk", "fasterrisk", "FasterRisk"),
              ("fasterrisk_wide", "fasterrisk_wide", "FasterRisk, wide search"),
+             ("riskslim", "riskslim", "RiskSLIM (CPLEX CE)"),
+             ("cpa_highs", "cpa_highs", "Cutting planes, HiGHS (RiskSLIM's method)"),
+             ("slim_milp", "slim_milp", "SLIM (HiGHS)"),
+             ("abess_seqround", "abess_seqround", "abess + sequential rounding"),
+             ("fastsparse_seqround", "fastsparse_seqround", "fastSparse + sequential rounding"),
+             ("okridge_seqround", "okridge_seqround", "OKRidge + sequential rounding"),
+             ("l1path_seqround", "l1path_seqround", "L1 path + sequential rounding"),
+             ("psl", "psl", "Probabilistic scoring list"),
+             ("autoscore", "autoscore", "AutoScore"),
              ("rounded_lr", "rounded_lr", "Rounded L1 logistic"),
+             ("unit_weighting", "unit_weighting", "Unit weighting"),
              ("imodels_slim", "imodels_slim", "imodels SLIMClassifier (before)"),
-             ("slim_milp", "slim_milp", "SLIM (HiGHS)"), ("riskslim", "riskslim", "RiskSLIM (CPLEX CE)"),
              ("continuous_beam", "continuous_beam", "Real-valued k-sparse (not integer)")]
     rows = []
     for _, key, label in order:
