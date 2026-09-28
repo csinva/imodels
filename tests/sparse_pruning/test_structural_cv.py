@@ -578,8 +578,11 @@ def test_classifier_structural_cv_matches_fold_local_weighted_hs_oracle(n_classe
                             1. + rho / structure.weighted_n_node_samples[node]
                         )
                         pending.append((child, probability + increment))
+            # HS increments can round a zero probability to about -1e-17, which
+            # sklearn >= 1.9 log_loss rejects. The wrappers clip the same way.
+            probabilities = np.clip(pruned.predict_proba(X[test]), 0.0, 1.0)
             expected_scores[index, fold] = -log_loss(
-                y[test], pruned.predict_proba(X[test]), labels=pruned.classes_,
+                y[test], probabilities, labels=pruned.classes_,
                 sample_weight=weights[test],
             )
             expected_complexity[index, fold] = pruned.get_n_leaves() - 1

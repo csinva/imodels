@@ -13,8 +13,7 @@ from imodels import (
     HSTreeClassifier, HSTreeClassifierCV, HSTreeRegressor,
     HSTreeRegressorCV, SHSTreeRegressor,
 )
-from imodels.tree._hs_gcv import select_hs_reg_param
-from imodels.tree.sparse_pruning.optimizations import get_gcv_reg_param
+from imodels.tree._hs_gcv import get_gcv_reg_param, select_hs_reg_param
 
 
 def _data(seed=0, n=32):

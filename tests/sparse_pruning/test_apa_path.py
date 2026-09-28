@@ -42,13 +42,6 @@ def test_sparse_pruning_exports_only_estimators_and_fitted_tree_helpers():
     assert all(not hasattr(sparse_pruning, name) for name in optimization.__all__)
 
 
-def test_historical_optimization_imports_reexport_canonical_implementations():
-    from imodels.tree.sparse_pruning import optimization, optimizations
-
-    for name in ["hiCAP_regression", "hiCAP_classification", "proj_l1_ball"]:
-        assert getattr(optimizations, name) is getattr(optimization, name)
-
-
 def test_experimental_paths_are_not_runtime_exports():
     from imodels.tree import sparse_pruning
     from imodels.tree.sparse_pruning import optimization

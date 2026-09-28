@@ -19,8 +19,8 @@ from __future__ import annotations
 import numpy as np
 from scipy.optimize import minimize_scalar
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.tree._tree import TREE_LEAF
-from sklearn.utils.validation import check_is_fitted
+from sklearn.tree._tree import TREE_LEAF, Tree
+from sklearn.utils.validation import check_array, check_is_fitted
 
 
 def _tree_statistics(estimator, sample_weight):
@@ -268,6 +268,87 @@ def select_hs_reg_param(estimator, *, sample_weight=None, y=None):
     return float(parameters[selected]), info
 
 
+def get_gcv_reg_param(
+    tree, X=None, y=None, *, sample_weight=None, return_info=False,
+):
+    """Choose nonnegative node-based HS by conditional fixed-tree GCV.
+
+    Prefer passing a fitted ``DecisionTreeRegressor``; its retained node
+    statistics suffice, with no design matrix. The historical raw sklearn
+    ``Tree`` argument is also accepted, but requires its fitting ``X, y`` to
+    verify that its values and impurities really are response means and
+    squared-error variances. Supplied data are validated, never silently
+    ignored. Nonuniform weights, forests, and classification are unsupported.
+
+    Returns a scalar, or ``(scalar, diagnostics)`` with ``return_info=True``.
+    Infinity denotes the root-mean limit. The score conditions on the fitted
+    structure and does not account for learning/pruning it from the targets.
+    The input tree is not modified.
+    """
+    if (X is None) != (y is None):
+        raise ValueError("GCV requires both X and y when fitting data are supplied")
+    if isinstance(tree, Tree):
+        if X is None:
+            raise ValueError("GCV with a raw Tree requires its fitting X and y")
+        if tree.n_outputs != 1 or np.any(tree.n_classes != 1):
+            raise ValueError("GCV requires a single-output regression tree")
+        estimator = DecisionTreeRegressor()
+        estimator.tree_ = tree
+        estimator.n_outputs_ = 1
+        estimator.n_features_in_ = tree.n_features
+    else:
+        estimator = tree
+
+    selected, info = select_hs_reg_param(
+        estimator, sample_weight=sample_weight, y=y
+    )
+    if X is not None:
+        X = check_array(X, dtype=np.float32, accept_sparse="csr")
+        if np.iscomplexobj(y):
+            raise ValueError("GCV y must contain finite real values")
+        y = np.asarray(y, dtype=float)
+        fitted_tree = estimator.tree_
+        if (
+            y.ndim != 1 or y.size != X.shape[0]
+            or not np.all(np.isfinite(y))
+            or X.shape[1] != estimator.n_features_in_
+            or X.shape[0] != info["n_samples"]
+        ):
+            raise ValueError("GCV X and y must match the tree's fitting observations")
+
+        # A sparse routing matrix avoids the historical n-by-node dense
+        # allocation. Unreachable backing-array nodes have zero column counts.
+        path = fitted_tree.decision_path(X)
+        counts = np.asarray(path.sum(axis=0)).ravel()
+        retained = counts > 0
+        if not np.array_equal(
+            counts[retained], fitted_tree.n_node_samples[retained]
+        ):
+            raise ValueError("GCV X does not match the tree's fitting node counts")
+        centered = y - fitted_tree.value[0, 0, 0]
+        means = np.asarray(path.T @ centered).ravel()[retained] / counts[retained]
+        variances = (
+            np.asarray(path.T @ (centered * centered)).ravel()[retained]
+            / counts[retained] - means * means
+        )
+        stored_means = (
+            fitted_tree.value[retained, 0, 0] - fitted_tree.value[0, 0, 0]
+        )
+        scale = max(1.0, float(np.max(np.abs(centered))))
+        if not (
+            np.allclose(means, stored_means, rtol=1e-8, atol=1e-10 * scale)
+            and np.allclose(
+                variances, fitted_tree.impurity[retained],
+                rtol=1e-7, atol=1e-10 * scale * scale,
+            )
+        ):
+            raise ValueError(
+                "GCV requires unchanged fitting means and squared-error "
+                "impurities; X and y do not match this tree"
+            )
+    return (selected, info) if return_info else selected
+
+
 def apply_node_based_hs(tree, reg_param):
     """Apply selected HS in place to a validated scalar tree; return the tree.
 
@@ -292,4 +373,4 @@ def apply_node_based_hs(tree, reg_param):
     return tree
 
 
-__all__ = ["select_hs_reg_param", "apply_node_based_hs"]
+__all__ = ["select_hs_reg_param", "get_gcv_reg_param", "apply_node_based_hs"]

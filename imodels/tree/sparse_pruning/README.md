@@ -278,7 +278,6 @@ sparse_pruning/
   _cv.py                           fold-local structural CV
   fitted_tree.py                   fitted-tree statistics and previews
   optimization/                    solvers and derivations
-  optimizations.py                 legacy imports and GCV/subset helpers
 ```
 
 Shared HS/GCV code lives in `imodels/tree/_hs_gcv.py`.

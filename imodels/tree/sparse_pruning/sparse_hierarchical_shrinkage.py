@@ -35,14 +35,12 @@ from sklearn.utils.validation import check_is_fitted
 from imodels.util import checks
 from imodels.util.arguments import check_fit_arguments, check_fit_X
 from imodels.util.tree import compute_tree_complexity
-from imodels.tree._hs_gcv import apply_node_based_hs, select_hs_reg_param
+from imodels.tree._hs_gcv import (
+    apply_node_based_hs, get_gcv_reg_param, select_hs_reg_param,
+)
 
 from imodels.importance.local_stumps import make_stumps, tree_feature_transform
-from .optimizations import (
-    get_gcv_reg_param,
-    hiCAP_classification,
-    hiCAP_regression,
-)
+from .optimization.apa_point import hiCAP_classification, hiCAP_regression
 from ._solver import (
     _callable_accepts_keyword, _native_tree_eligible, coefficient_path_solution,
     iter_fitted_tree_solutions, resolve_solver,
@@ -66,19 +64,22 @@ _DEFAULT_SP_ALPHA_GRID = (
 )
 
 try:
-    from sklearn.ensemble._forest import (
-        BaseForest,
-        _generate_sample_indices,
-        _generate_unsampled_indices,
-        _get_n_samples_bootstrap,
-    )
-    from sklearn.utils.validation import check_random_state
+    from sklearn.ensemble._forest import BaseForest
 except ImportError:  # pragma: no cover
     BaseForest = ()
-    _generate_sample_indices = None
-    _generate_unsampled_indices = None
-    _get_n_samples_bootstrap = None
-    check_random_state = None
+
+
+def _bootstrap_draw_uses_sample_weight() -> bool:
+    """Whether sklearn draws forest bootstrap rows in proportion to sample_weight.
+
+    sklearn >= 1.9 does, and fits each tree on its draw counts alone. Earlier
+    releases draw uniformly and fit each tree on counts times sample_weight.
+    The private draw function gained its ``sample_weight`` argument with that
+    change, so its signature identifies the semantics.
+    """
+    from sklearn.ensemble._forest import _generate_sample_indices
+
+    return "sample_weight" in inspect.signature(_generate_sample_indices).parameters
 
 
 def _find_subtrees(tree, idx: int, ids: np.ndarray) -> list[np.ndarray]:
@@ -753,20 +754,12 @@ class SHSTree(BaseEstimator):
         X,
         y,
         sample_weight=None,
-        decimals: int = 0,
         verbose: bool = False,
         *args,
         **kwargs,
     ):
         self._wrapper_is_fitted = False
         self.gcv_results_ = None
-        if decimals != 0:
-            warnings.warn(
-                "decimals is deprecated and no longer controls sparse support; "
-                "use support_tol for an explicit response-scaled threshold.",
-                FutureWarning,
-                stacklevel=2,
-            )
         feature_names = kwargs.pop("feature_names", None)
         has_named_features = feature_names is not None or hasattr(X, "columns")
         if feature_names is None and hasattr(X, "columns"):
@@ -861,7 +854,6 @@ class SHSTree(BaseEstimator):
             X,
             y,
             sample_weight=sample_weight,
-            decimals=decimals,
             verbose=verbose,
         )
         self._update_optimization_diagnostics(warn=True)
@@ -942,7 +934,6 @@ class SHSTree(BaseEstimator):
         y,
         sp_alpha: float,
         sample_weight=None,
-        decimals: int = 0,
         beta_init=None,
         verbose: bool = False,
         coefficient_path=None,
@@ -1056,7 +1047,6 @@ class SHSTree(BaseEstimator):
         # Matched native geometry supplies exact structural support. General
         # coefficient solves use a response-scaled numerical threshold unless
         # the caller requests a specific tolerance (including literal zero).
-        _ = decimals
         if isinstance(self, ClassifierMixin):
             response_scale = 1.0
         elif sample_weight is None:
@@ -1124,51 +1114,67 @@ class SHSTree(BaseEstimator):
             _compact_tree(tree)
         return tree
 
-    def _forest_sample_indices(self, tree, n_samples):
+    def _forest_pruning_subsets(self, n_samples, sample_weight):
+        """Yield ``(tree, rows, weights)`` for each forest member.
+
+        In-bag rows repeat with their bootstrap multiplicity and reproduce
+        each tree's fitting measure: counts times ``sample_weight`` before
+        sklearn 1.9, counts alone from 1.9, which instead draws rows in
+        proportion to ``sample_weight``. OOB rows keep their sample weights.
+        ``weights=None`` means unit weights.
+        """
+        forest = self.estimator_
         prune_set = self._resolved_prune_set()
         if prune_set == "full":
-            return np.arange(n_samples, dtype=int)
-        if not isinstance(self.estimator_, BaseForest):
-            raise NotImplementedError(
-                "Ensemble sparse pruning currently supports sklearn forest "
-                "estimators only."
-            )
-        if not getattr(self.estimator_, "bootstrap", False):
+            rows = np.arange(n_samples, dtype=int)
+            for tree in forest.estimators_:
+                yield tree, rows, sample_weight
+            return
+        if not getattr(forest, "bootstrap", False):
             raise ValueError(
                 f"prune_set={prune_set!r} requires bootstrap=True; "
                 "use prune_set='full' for a non-bootstrap forest."
             )
-        if (
-            _get_n_samples_bootstrap is None
-            or _generate_sample_indices is None
-            or _generate_unsampled_indices is None
-        ):
+        # Public since sklearn 1.4. sklearn regenerates the draws from each
+        # tree's seed and the bootstrap settings it stored while fitting.
+        draws = getattr(forest, "estimators_samples_", None)
+        if draws is None:
             raise ImportError(
-                "sklearn >= 1.3 is required for sparse forest pruning"
+                "sklearn >= 1.4 is required for ib/oob forest pruning"
             )
-
-        n_samples_bootstrap = _get_n_samples_bootstrap(
-            n_samples, self.estimator_.max_samples
+        counts_carry_weight = (
+            sample_weight is None or _bootstrap_draw_uses_sample_weight()
         )
-        random_state = getattr(tree, "random_state", None)
-        if random_state is None:
-            random_state = check_random_state(self.random_state)
-        if prune_set == "ib":
-            indices = _generate_sample_indices(
-                random_state, n_samples, n_samples_bootstrap
+        tolerance = max(4096.0, 8.0 * n_samples) * np.finfo(float).eps
+        for tree, rows in zip(forest.estimators_, draws):
+            counts = np.bincount(rows, minlength=n_samples)
+            in_bag_weight = (
+                counts.sum() if counts_carry_weight
+                else float(counts @ sample_weight)
             )
-        else:
-            indices = _generate_unsampled_indices(
-                random_state, n_samples, n_samples_bootstrap
-            )
-        return indices
+            if not np.isclose(
+                in_bag_weight, tree.tree_.weighted_n_node_samples[0],
+                rtol=tolerance, atol=0,
+            ):
+                raise RuntimeError(
+                    "Reconstructed bootstrap samples do not match the fitted "
+                    "forest's training weights; use prune_set='full'."
+                )
+            if prune_set == "ib":
+                yield tree, rows, (
+                    None if counts_carry_weight else sample_weight[rows]
+                )
+            else:
+                rows = np.flatnonzero(counts == 0)
+                yield tree, rows, (
+                    None if sample_weight is None else sample_weight[rows]
+                )
 
     def _prune(
         self,
         X,
         y,
         sample_weight=None,
-        decimals: int = 0,
         verbose: bool = False,
         beta_init=None,
         fitted_solution=None,
@@ -1262,7 +1268,6 @@ class SHSTree(BaseEstimator):
                 y,
                 self.sp_alpha,
                 sample_weight=sample_weight,
-                decimals=decimals,
                 beta_init=beta_init,
                 verbose=verbose,
                 coefficient_path=coefficient_path,
@@ -1273,15 +1278,9 @@ class SHSTree(BaseEstimator):
                     "Ensemble sparse pruning currently supports sklearn "
                     "forest estimators only."
                 )
-            for est in self.estimator_.estimators_:
-                t = est
-                if isinstance(t, np.ndarray):
-                    if t.size != 1:
-                        raise NotImplementedError(
-                            "Multi-tree boosting stages are not supported"
-                        )
-                    t = t[0]
-                indices = self._forest_sample_indices(t, len(X))
+            for t, indices, weight_prune in self._forest_pruning_subsets(
+                len(X), sample_weight
+            ):
                 if len(indices) == 0:
                     ids = _collect_internal_node_ids(t.tree_)
                     self.beta_stars_.append(
@@ -1299,18 +1298,12 @@ class SHSTree(BaseEstimator):
                         }
                     )
                     continue
-                weight_prune = (
-                    None
-                    if sample_weight is None
-                    else np.asarray(sample_weight)[indices]
-                )
                 self._prune_tree(
                     t.tree_,
                     X[indices],
                     y[indices],
                     self.sp_alpha,
                     sample_weight=weight_prune,
-                    decimals=decimals,
                     beta_init=beta_init,
                     verbose=verbose,
                 )
@@ -1853,7 +1846,6 @@ def _evaluate_cached_cv_fold(
     reg_param_list,
     scorer,
     fold_weight_fraction,
-    decimals,
     classes=None,
 ) -> None:
     """Prune once per alpha, then score fresh shrinkage copies."""
@@ -1906,7 +1898,6 @@ def _evaluate_cached_cv_fold(
             X=X_in,
             y=y_prune,
             sample_weight=weight_in,
-            decimals=decimals,
             beta_init=None,
             fitted_solution=None if solutions is None else next(solutions),
             coefficient_path=reference_path,
@@ -2122,7 +2113,6 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
         X,
         y,
         sample_weight=None,
-        decimals: int = 0,
         *args,
         **kwargs,
     ):
@@ -2161,7 +2151,7 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
         if _uses_structural_cv(self):
             _select_structural_cv(self, X, y, sample_weight, n_splits, args, kwargs)
             return super().fit(
-                X=X, y=y, sample_weight=sample_weight, decimals=decimals,
+                X=X, y=y, sample_weight=sample_weight,
                 *args, feature_names=feature_names, **kwargs,
             )
         sp_alpha_list = _validated_nonnegative_grid(
@@ -2301,7 +2291,6 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
                 reg_param_list=reg_param_list,
                 scorer=scorer,
                 fold_weight_fraction=fold_weight_fraction,
-                decimals=decimals,
                 classes=classes,
             )
         flat_cv_optimization_results = [
@@ -2340,7 +2329,6 @@ class SHSTreeClassifierCV(SHSTreeClassifier):
             X=X,
             y=y,
             sample_weight=sample_weight,
-            decimals=decimals,
             *args,
             feature_names=feature_names,
             **kwargs,
@@ -2493,7 +2481,6 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
         X,
         y,
         sample_weight=None,
-        decimals: int = 0,
         *args,
         **kwargs,
     ):
@@ -2513,7 +2500,7 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
         if _uses_structural_cv(self):
             _select_structural_cv(self, X, y, sample_weight, n_splits, args, kwargs)
             return super().fit(
-                X=X, y=y, sample_weight=sample_weight, decimals=decimals,
+                X=X, y=y, sample_weight=sample_weight,
                 *args, feature_names=feature_names, **kwargs,
             )
         sp_alpha_list = _validated_nonnegative_grid(
@@ -2606,7 +2593,6 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
                 reg_param_list=reg_param_list,
                 scorer=scorer,
                 fold_weight_fraction=fold_weight_fraction,
-                decimals=decimals,
             )
         flat_cv_optimization_results = [
             result
@@ -2642,7 +2628,6 @@ class SHSTreeRegressorCV(SHSTreeRegressor):
             X=X,
             y=y,
             sample_weight=sample_weight,
-            decimals=decimals,
             *args,
             feature_names=feature_names,
             **kwargs,

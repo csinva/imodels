@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 from scipy import sparse
-from sklearn.base import clone, is_classifier, is_regressor
+from sklearn.base import BaseEstimator, clone, is_classifier, is_regressor
 from sklearn.ensemble import (
     GradientBoostingClassifier,
     GradientBoostingRegressor,
@@ -283,6 +283,17 @@ def test_classifier_preserves_arbitrary_binary_labels():
     assert_array_equal(model.predict(X), y)
     predicted_from_proba = model.classes_[np.argmax(model.predict_proba(X), axis=1)]
     assert_array_equal(predicted_from_proba, model.predict(X))
+
+
+@pytest.mark.skipif(
+    not hasattr(BaseEstimator, "__sklearn_tags__"),
+    reason="estimator tags use __sklearn_tags__ from sklearn 1.6",
+)
+def test_native_classifier_declares_multiclass_support():
+    model = SPTreeClassifier(
+        estimator_=DecisionTreeClassifier(max_depth=1, random_state=0)
+    )
+
     assert model.__sklearn_tags__().classifier_tags.multi_class
 
 
@@ -1224,15 +1235,6 @@ def test_custom_solver_without_diagnostics_is_not_claimed_as_certified():
     assert model.optimization_stable_ is None
 
 
-def test_nondefault_decimals_warns_and_points_to_support_tol():
-    X, y = _regression_tree_data()
-    with pytest.warns(FutureWarning, match="support_tol"):
-        SPTreeRegressor(
-            sp_alpha=0,
-            reg_param=0,
-        ).fit(X, y, decimals=3)
-
-
 def test_legacy_fixed_signature_custom_solver_remains_supported():
     X, y = _regression_tree_data()
 
@@ -1502,6 +1504,54 @@ def test_bootstrap_forest_uses_tree_specific_oob_pruning_sets():
             (tree.children_left == -1)
             | (tree.children_left < tree.node_count)
         )
+
+
+def _weighted_bootstrap_forest():
+    rng = np.random.default_rng(0)
+    X = rng.normal(size=(60, 3))
+    y = X[:, 0] + rng.normal(size=60)
+    sample_weight = rng.uniform(0.2, 5.0, size=60)
+    forest = RandomForestRegressor(
+        n_estimators=4, max_depth=3, random_state=0
+    ).fit(X, y, sample_weight=sample_weight)
+    return X, sample_weight, forest
+
+
+@pytest.mark.parametrize("prune_set", ["ib", "oob"])
+def test_forest_pruning_subsets_match_weighted_bootstrap_fits(prune_set):
+    # sklearn >= 1.9 draws bootstrap rows in proportion to sample_weight and
+    # fits trees on counts; earlier releases fit uniform draws times weights.
+    X, sample_weight, forest = _weighted_bootstrap_forest()
+    model = SPTreeRegressor(prune_set=prune_set)
+    model.estimator_ = forest
+
+    subsets = list(model._forest_pruning_subsets(len(X), sample_weight))
+
+    assert len(subsets) == len(forest.estimators_)
+    for (tree, rows, weights), draws in zip(subsets, forest.estimators_samples_):
+        if prune_set == "ib":
+            unit = np.ones(len(rows)) if weights is None else weights
+            node_weights = tree.decision_path(X[rows]).T @ unit
+            assert_allclose(node_weights, tree.tree_.weighted_n_node_samples)
+        else:
+            expected = np.setdiff1d(np.arange(len(X)), draws)
+            assert_array_equal(rows, expected)
+            assert_allclose(weights, sample_weight[expected])
+
+
+def test_forest_pruning_subsets_reject_mismatched_bootstrap_weights(monkeypatch):
+    X, sample_weight, forest = _weighted_bootstrap_forest()
+    model = SPTreeRegressor(prune_set="oob")
+    model.estimator_ = forest
+    from imodels.tree.sparse_pruning import sparse_hierarchical_shrinkage as shs
+
+    actual = shs._bootstrap_draw_uses_sample_weight()
+    monkeypatch.setattr(
+        shs, "_bootstrap_draw_uses_sample_weight", lambda: not actual
+    )
+
+    with pytest.raises(RuntimeError, match="bootstrap samples"):
+        list(model._forest_pruning_subsets(len(X), sample_weight))
 
 
 def test_nonbootstrap_forest_rejects_oob_pruning():

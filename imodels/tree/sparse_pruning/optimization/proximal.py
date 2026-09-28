@@ -1,6 +1,6 @@
 r"""Exact-proximal solvers for laminar group-:math:`\ell_\infty` regression.
 
-The APA-APG2 routines in :mod:`imodels.tree.sparse_pruning.optimizations`
+The APA-APG2 routines in :mod:`imodels.tree.sparse_pruning.optimization.apa_point`
 replace an overlapping-group proximal map by a sequence of increasingly
 accurate smooth approximations.  A laminar family needs no approximation:
 its Euclidean proximal map is one composition of group proximal maps, ordered

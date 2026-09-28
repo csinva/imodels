@@ -1,11 +1,9 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_array_equal
 
+from imodels.tree._hs_gcv import get_gcv_reg_param
 from imodels.tree.sparse_pruning.optimization._quadratic import _make_quadratic_regression_loss
-from imodels.tree.sparse_pruning.optimizations import (
-    get_gcv_reg_param,
-    get_reg_set,
+from imodels.tree.sparse_pruning.optimization.apa_point import (
     hiCAP_classification,
     hiCAP_regression,
 )
@@ -147,24 +145,6 @@ def test_assumed_diagonal_quadratic_cache_flag_requires_boolean():
 def test_gcv_rejects_missing_tree():
     with pytest.raises((TypeError, ValueError), match="regression|Regressor|fitted"):
         get_gcv_reg_param(None, np.ones((2, 1)), np.ones(2))
-
-
-def test_deprecated_reg_set_name_remains_functional():
-    X = np.arange(12).reshape(6, 2)
-    y = np.arange(6)
-
-    with pytest.warns(DeprecationWarning, match="deprecated"):
-        X_full, y_full = get_reg_set(
-            "full",
-            X,
-            y,
-            random_state=0,
-            n_samples=6,
-            n_samples_bootstrap=6,
-        )
-
-    assert_array_equal(X_full, X)
-    assert_array_equal(y_full, y)
 
 
 def test_nested_group_one_step_uses_full_vector_proximal_average_l2():
