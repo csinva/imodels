@@ -22,6 +22,23 @@ forest_module = importlib.import_module("imodels.tree.iterative_random_forest._f
 rit_module = importlib.import_module("imodels.tree.iterative_random_forest._rit")
 
 
+def _fit_outer_forests_serially(monkeypatch):
+    """Fit outer forests one at a time with ``fit`` so tests can inspect them.
+
+    The estimator fits all outer trees in one worker pool and keeps only their
+    paths; test_irf_forest checks that pool against this serial reference.
+    """
+    def forest_paths(forests, datasets, n_jobs=None):
+        for forest, (X, y, feature_weights, sample_weight, n_classes) in zip(
+                forests, datasets):
+            forest.fit(X, y, feature_weights=feature_weights,
+                       sample_weight=sample_weight, n_classes=n_classes)
+            yield [leaf for tree in forest.estimators_
+                   for leaf in tree.terminal_paths(X, sample_weight=sample_weight)]
+
+    monkeypatch.setattr(irf_module, "_forest_paths", forest_paths)
+
+
 class _FixedUniforms:
     """Feed one enumerated RNG outcome to the implementation being checked."""
 
@@ -136,6 +153,7 @@ def test_controlled_nested_bootstrap_keeps_duplicate_rows_and_routed_mass(monkey
     monkeypatch.setattr(irf_module, "resample", fixed_resample)
     monkeypatch.setattr(forest_module._WeightedTree, "fit", fixed_inner_fit)
     monkeypatch.setattr(forest_module._WeightedForest, "fit", record_fit)
+    _fit_outer_forests_serially(monkeypatch)
     monkeypatch.setattr(irf_module, "_random_intersection_trees", record_rit)
     model = IRFClassifier(n_estimators=1, n_iterations=2, n_bootstraps=2,
                           max_features=None, max_depth=1, random_state=0).fit(

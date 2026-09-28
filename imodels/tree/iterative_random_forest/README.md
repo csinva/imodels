@@ -78,6 +78,7 @@ and are recorded once `rit_depth` paths (default 5) have been combined.
 | `n_bootstraps=0` | Skip interaction discovery and fit for prediction only |
 | `bootstrap=False` | Turn off per-tree row bootstrapping |
 | `bootstrap_fraction` | Outer sample size as a fraction of training rows |
+| `n_jobs=-1` | Fit trees in parallel on all cores (default: one core) |
 | `random_state` | An integer gives identical results for any `n_jobs` |
 | `feature_weights_history_` | Weights fed into each full-data forest |
 | `feature_importances_history_` | Importances produced by each full-data forest |

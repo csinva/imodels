@@ -24,6 +24,23 @@ def _small_model(**kwargs):
     return IRFClassifier(**params)
 
 
+def _fit_outer_forests_serially(monkeypatch):
+    """Fit outer forests one at a time with ``fit`` so tests can inspect them.
+
+    The estimator fits all outer trees in one worker pool and keeps only their
+    paths; test_irf_forest checks that pool against this serial reference.
+    """
+    def forest_paths(forests, datasets, n_jobs=None):
+        for forest, (X, y, feature_weights, sample_weight, n_classes) in zip(
+                forests, datasets):
+            forest.fit(X, y, feature_weights=feature_weights,
+                       sample_weight=sample_weight, n_classes=n_classes)
+            yield [leaf for tree in forest.estimators_
+                   for leaf in tree.terminal_paths(X, sample_weight=sample_weight)]
+
+    monkeypatch.setattr(irf_module, "_forest_paths", forest_paths)
+
+
 def _record_forests(monkeypatch, importances):
     """A controlled learner exposes iteration/bootstrap scheduling mistakes."""
     fits = []
@@ -50,6 +67,7 @@ def _record_forests(monkeypatch, importances):
             return np.tile([0.7, 0.3], (len(X), 1))
 
     monkeypatch.setattr(irf_module, "_WeightedForest", RecordedForest)
+    _fit_outer_forests_serially(monkeypatch)
     return fits
 
 
@@ -134,6 +152,7 @@ def test_rit_receives_mass_from_all_outer_rows_not_inner_bootstraps(monkeypatch)
         return set()
 
     monkeypatch.setattr(irf_module._WeightedForest, "fit", capture_fit)
+    _fit_outer_forests_serially(monkeypatch)
     monkeypatch.setattr(irf_module, "_random_intersection_trees", capture_rit)
     X = np.arange(48).reshape(24, 2)
     y = (X[:, 0] >= 20).astype(int)

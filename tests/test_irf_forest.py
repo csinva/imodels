@@ -6,6 +6,7 @@ from numpy.testing import assert_allclose, assert_array_equal
 from sklearn.datasets import make_classification
 from sklearn.tree import DecisionTreeClassifier
 
+from imodels.tree.iterative_random_forest import _forest as forest_module
 from imodels.tree.iterative_random_forest._forest import _WeightedForest, _WeightedTree
 
 
@@ -173,3 +174,66 @@ def test_near_tie_is_not_treated_as_tie():
         for seed in range(50)
     }
     assert labels == {1}
+
+
+def test_numpy_split_search_matches_sklearn_stump_bit_for_bit(monkeypatch):
+    # Nodes the NumPy search resolves must match a seeded sklearn stump
+    # exactly, including tie-breaking; the rest are fit by the stump itself.
+    tie_breaks = []
+    feature_order = forest_module._sklearn_feature_order
+    monkeypatch.setattr(forest_module, "_sklearn_feature_order",
+                        lambda *args: tie_breaks.append(1) or feature_order(*args))
+    rng = np.random.RandomState(0)
+    resolved = {False: 0, True: 0}
+    for trial in range(1500):
+        regression = trial % 2 == 1
+        n = int(rng.choice([2, 3, 5, 8, 12, 40, 150]))
+        k = int(rng.randint(1, 6))
+        X = rng.randn(n, k) if trial % 3 else rng.randint(0, 3, size=(n, k))
+        X = X.astype(np.float32)
+        weights = (rng.randint(1, 4, size=n).astype(float) if trial % 4 == 0
+                   else np.ones(n))
+        min_samples_leaf = int(rng.choice([1, 1, 2]))
+        seed = rng.randint(np.iinfo(np.int32).max)
+        if regression:
+            raw = rng.randn(n) if trial % 5 else rng.randint(0, 3, size=n).astype(float)
+            if raw.min() == raw.max():
+                continue
+            y = forest_module._rescale_for_split_search(
+                raw, np.dot(weights, raw) / weights.sum())
+        else:
+            y = rng.randint(0, 3, size=n)
+            if np.unique(y).size < 2:
+                continue
+        fast = forest_module._fast_split(X, y, weights, regression, 3,
+                                         min_samples_leaf, seed)
+        if fast is forest_module._UNRESOLVED:
+            continue
+        resolved[regression] += 1
+        expected = forest_module._sklearn_split(X, y, weights, regression, 2,
+                                                min_samples_leaf, seed)
+        if regression and fast is not None and expected is not None:
+            fast, expected = fast[:2], expected[:2]
+        assert fast == expected, (trial, fast, expected)
+    assert min(resolved.values()) > 600
+    assert tie_breaks
+
+
+def test_shared_pool_paths_match_separately_fit_forests():
+    # Outer forests share one worker pool and return only terminal paths;
+    # these must equal the paths of each forest fit on its own.
+    X, y = make_classification(n_samples=120, n_features=6, random_state=3)
+    X = X.astype(np.float32)
+    datasets = [(X[rows], y[rows], np.full(6, 1 / 6), np.linspace(1, 2, 60), 2)
+                for rows in (np.arange(0, 120, 2), np.arange(1, 120, 2))]
+
+    def forests():
+        return [_WeightedForest(n_estimators=4, random_state=seed) for seed in (0, 1)]
+
+    expected = [
+        [leaf for tree in forest.fit(*data).estimators_
+         for leaf in tree.terminal_paths(data[0], sample_weight=data[3])]
+        for forest, data in zip(forests(), datasets)
+    ]
+    shared = forest_module._forest_paths(forests(), iter(datasets), n_jobs=2)
+    assert list(shared) == expected

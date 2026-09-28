@@ -21,7 +21,7 @@ except ImportError:  # scikit-learn < 1.6
     def validate_data(estimator, *args, **kwargs):
         return estimator._validate_data(*args, **kwargs)
 
-from ._forest import _WeightedForest
+from ._forest import _WeightedForest, _forest_paths
 from ._rit import _random_intersection_trees
 
 
@@ -172,6 +172,7 @@ class _IRFBase(BaseEstimator):
         self.bootstrap_samples_ = []
         n_trees = (self.n_estimators if self.n_estimators_bootstrap is None
                    else self.n_estimators_bootstrap)
+        replicates = []
         for _ in range(self.n_bootstraps):
             sample_seed, forest_seed, rit_seed = rng.randint(max_seed, size=3)
             indices = resample(
@@ -179,22 +180,26 @@ class _IRFBase(BaseEstimator):
                 stratify=stratify, random_state=int(sample_seed),
             )
             self.bootstrap_samples_.append(original_indices[indices])
-            X_outer, y_outer, weights_outer = X[indices], y_fit[indices], weights[indices]
-            outer_forest = self._new_forest(n_trees, int(forest_seed))
-            outer_forest.fit(
-                X_outer, y_outer, feature_weights=self.feature_weights_,
-                sample_weight=weights_outer, n_classes=self._forest_n_classes(),
-            )
+            replicates.append((indices, int(forest_seed), int(rit_seed)))
+        # Trees of all outer forests are fit in one pool of workers, which
+        # also measure leaf masses on the outer sample; only paths return.
+        outer_forests = [self._new_forest(n_trees, forest_seed)
+                         for _, forest_seed, _ in replicates]
+        outer_samples = (
+            (X[indices], y_fit[indices], self.feature_weights_, weights[indices],
+             self._forest_n_classes())
+            for indices, _, _ in replicates
+        )
+        leaves_per_forest = _forest_paths(outer_forests, outer_samples, self.n_jobs)
+        for (_, _, rit_seed), leaves in zip(replicates, leaves_per_forest):
             paths, masses = [], []
-            for tree in outer_forest.estimators_:
-                for path, prediction, mass in tree.terminal_paths(
-                        X_outer, sample_weight=weights_outer):
-                    if mass > 0 and self._select_leaf(prediction):
-                        paths.append(path)
-                        masses.append(mass)
+            for path, prediction, mass in leaves:
+                if mass > 0 and self._select_leaf(prediction):
+                    paths.append(path)
+                    masses.append(mass)
             interactions = _random_intersection_trees(
                 paths, masses, n_trees=self.n_rit, max_depth=self.rit_depth,
-                n_children=self.rit_branching, random_state=int(rit_seed),
+                n_children=self.rit_branching, random_state=rit_seed,
             )
             self.bootstrap_interactions_.append(interactions)
 
@@ -309,8 +314,9 @@ class IRFClassifier(ClassifierMixin, _IRFBase):
     Notes
     -----
     Supports dense, finite numeric inputs and single-output classification.
-    This is original unsigned iRF. Nodes are built with public scikit-learn
-    stumps, which can be slower than a compiled random forest. Default tree
+    This is original unsigned iRF. Nodes are split by a NumPy search that
+    reproduces public scikit-learn stumps exactly, falling back to the stumps
+    themselves; this can be slower than a compiled random forest. Default tree
     budgets are smaller than the paper's 500 forest trees and 500 RITs.
 
     Positive ``sample_weight`` values affect splits, probabilities, and leaf

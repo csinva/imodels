@@ -1,8 +1,9 @@
 """Weighted random forests used internally by iterative random forests.
 
-Each node draws its own candidate features without replacement. Public sklearn
-stumps perform the numerical CART split search; no private sklearn tree builder
-or compiled extension is required.
+Each node draws its own candidate features without replacement. A NumPy search
+reproduces the split a public sklearn stump would choose, including sklearn's
+tie-breaking; nodes where rounding could make the two differ are passed to the
+stump itself. No private sklearn tree builder or compiled extension is required.
 
 Classification and regression follow the node rules of R's randomForest as
 modified by the paper-era iRF package. Classification nodes hold distinct
@@ -12,6 +13,7 @@ size, and a split must reduce the residual sum of squares.
 """
 
 import numbers
+import threading
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -35,8 +37,9 @@ def _rescale_for_split_search(node_y, mean):
     """
     distance = np.abs(node_y - mean)
     shift = node_y[distance == distance.min()].min()
-    _, exponent = np.frexp(np.abs(node_y - shift).max())
-    return np.ldexp(node_y - shift, -exponent)
+    shifted = node_y - shift
+    _, exponent = np.frexp(np.abs(shifted).max())
+    return np.ldexp(shifted, -exponent)
 
 
 def _goes_left(column, threshold):
@@ -48,6 +51,277 @@ def _goes_left(column, threshold):
     values can then round up, sending the upper value left.
     """
     return np.asarray(column, dtype=np.float64) <= np.float64(threshold)
+
+
+_EPS = np.finfo(np.float64).eps
+_INT32_MAX = int(np.iinfo(np.int32).max)
+_RAND_R_MAX = 2147483647
+# sklearn skips split points between values closer than this. Recent versions
+# add it in float32 and older ones in float64; points where the two disagree
+# are left to sklearn.
+_FEATURE_THRESHOLD = 1e-7
+# Larger nodes (rows x candidates x classes) go to sklearn, whose per-call
+# overhead is then small relative to the search.
+_MAX_FAST_CELLS = 200_000
+# Regression ties are replayed in Python, so only in small nodes.
+_MAX_REPLAY_ROWS = 64
+_UNRESOLVED = object()
+_thread_state = threading.local()
+
+
+def _weighted_sample(rng, population, size, probabilities):
+    """Return ``rng.choice(population, size, replace=False, p=probabilities)``.
+
+    Makes the same draws as NumPy's legacy ``RandomState.choice``, whose
+    stream NumPy keeps fixed, without its per-call input validation. Callers
+    must ensure at least ``size`` probabilities are positive.
+    """
+    p = probabilities.copy()
+    found = []
+    while len(found) < size:
+        draws = rng.random_sample(size - len(found))
+        if found:
+            p[found] = 0
+        cdf = np.cumsum(p)
+        cdf /= cdf[-1]
+        # New indices in order of first occurrence, as np.unique(return_index).
+        found.extend(dict.fromkeys(cdf.searchsorted(draws, side="right").tolist()))
+    return population[found]
+
+
+def _sklearn_feature_order(seed, constant):
+    """Order in which sklearn's best splitter evaluates non-constant columns.
+
+    Mirrors the Fisher-Yates draw in ``node_split_best`` at the root, using
+    sklearn's ``our_rand_r`` generator seeded as ``Splitter.init`` does.
+    """
+    # Reseeding is much faster than constructing a RandomState per node.
+    generator = getattr(_thread_state, "generator", None)
+    if generator is None:
+        generator = _thread_state.generator = np.random.RandomState()
+    generator.seed(seed)
+    state = int(generator.randint(0, _RAND_R_MAX))
+    n_features = len(constant)
+    features = list(range(n_features))
+    remaining, n_constant, n_visited, order = n_features, 0, 0, []
+    while remaining > n_constant and (n_visited < n_features or n_visited <= n_constant):
+        n_visited += 1
+        if state == 0:
+            state = 1
+        state ^= (state << 13) & 0xFFFFFFFF
+        state ^= state >> 17
+        state ^= (state << 5) & 0xFFFFFFFF
+        j = state % (_RAND_R_MAX + 1) % (remaining - n_constant) + n_constant
+        if constant[features[j]]:
+            features[j], features[n_constant] = features[n_constant], features[j]
+            n_constant += 1
+            continue
+        remaining -= 1
+        features[remaining], features[j] = features[j], features[remaining]
+        order.append(features[remaining])
+    return order
+
+
+def _fma(x, y, z):
+    """Return ``x * y + z`` rounded once, as a fused multiply-add does.
+
+    Float ratios have power-of-two denominators and Python's integer true
+    division rounds correctly, so only the final rounding occurs.
+    """
+    xn, xd = float(x).as_integer_ratio()
+    yn, yd = float(y).as_integer_ratio()
+    zn, zd = float(z).as_integer_ratio()
+    return (xn * yn * zd + zn * xd * yd) / (xd * yd * zd)
+
+
+def _sklearn_gini_proxies(w_left, w_right, impurity_left, impurity_right):
+    """sklearn's Gini proxy ``-w_right * i_right - w_left * i_left``, rounded
+    without a fused multiply-add and with either product fused, since the
+    compiler may contract one of them."""
+    right, left = w_right * impurity_right, w_left * impurity_left
+    return (-right - left, _fma(-w_left, impurity_left, -right),
+            _fma(-w_right, impurity_right, -left))
+
+
+def _sklearn_mse_proxies(x_column, y_column, positions, node_total):
+    """sklearn's MSE proxy at each split position of one sorted column.
+
+    Replays ``RegressionCriterion.update`` for unit weights: sums continue
+    forward from the previous position, or run backward from the node total
+    when that is shorter. Returns None unless equal feature values share y, so
+    that sklearn's order within ties cannot change the sums.
+    """
+    if np.any((x_column[1:] == x_column[:-1]) & (y_column[1:] != y_column[:-1])):
+        return None
+    y_column = y_column.tolist()
+    n = len(y_column)
+    pos, sum_left, w_left, proxies = 0, 0.0, 0.0, {}
+    for p in positions.tolist():
+        if p - pos <= n - p:
+            for q in range(pos, p):
+                sum_left += y_column[q]
+                w_left += 1.0
+        else:
+            sum_left, w_left = node_total, float(n)
+            for q in range(n - 1, p - 1, -1):
+                sum_left -= y_column[q]
+                w_left -= 1.0
+        pos = p
+        sum_right = node_total - sum_left
+        proxies[p] = (sum_left * sum_left / w_left
+                      + sum_right * sum_right / (n - w_left))
+    return proxies
+
+
+def _fast_split(X, y, weights, regression, n_classes, min_samples_leaf, seed):
+    """Return sklearn's depth-one best split without calling sklearn.
+
+    Returns ``(column, threshold, weighted_n, impurity)`` for the root and its
+    left and right children, None when sklearn would not split, or
+    ``_UNRESOLVED`` when the result cannot be guaranteed to match sklearn.
+    Classification requires integer weights, so class sums are exact and the
+    returned impurities match sklearn bit for bit. Regression callers use only
+    the column and threshold. Near ties are settled by reproducing sklearn's
+    rounding and feature order.
+    """
+    n, k = X.shape
+    if not regression:
+        total_weight = weights.sum()
+        if (n * k * n_classes > _MAX_FAST_CELLS or total_weight >= 2 ** 26
+                or not np.array_equal(weights, np.rint(weights))):
+            return _UNRESOLVED
+    order = np.argsort(X, axis=0, kind="stable")
+    x_sorted = X[order, np.arange(k)]
+    lower, upper = x_sorted[:-1], x_sorted[1:]
+    valid32 = upper > lower + np.float32(_FEATURE_THRESHOLD)
+    valid64 = (upper.astype(np.float64)
+               > lower.astype(np.float64) + _FEATURE_THRESHOLD)
+    candidate = valid32 | valid64
+    uncertain = valid32 != valid64
+    if min_samples_leaf > 1:
+        # Row r splits after r + 1 samples; both sides need min_samples_leaf.
+        for mask in (candidate, uncertain):
+            mask[:min_samples_leaf - 1] = False
+            mask[n - min_samples_leaf:] = False
+    if not candidate.any():
+        return None
+
+    w_left = np.cumsum(weights[order], axis=0)[:-1]
+    if regression:
+        weighted_y = weights * y
+        total_weight, total_sum = weights.sum(), weighted_y.sum()
+        sum_left = np.cumsum(weighted_y[order], axis=0)[:-1]
+        sum_right = total_sum - sum_left
+        w_right = total_weight - w_left
+        proxy = sum_left * sum_left / w_left + sum_right * sum_right / w_right
+        # Bounds the rounding error of these sums and of sklearn's.
+        tolerance = 64 * n * _EPS * max(total_weight, np.abs(weighted_y).sum())
+        impurity = np.dot(weighted_y, y) / total_weight - (total_sum / total_weight) ** 2
+        if impurity < 1e-9:
+            return _UNRESOLVED
+    else:
+        counts = np.zeros((n, n_classes))
+        counts[np.arange(n), y] = weights
+        left = np.cumsum(counts[order], axis=0)[:-1]
+        total = counts.sum(axis=0)
+        right = total - left
+        w_right = total_weight - w_left
+        impurity_left = 1.0 - (left * left).sum(axis=-1) / (w_left * w_left)
+        impurity_right = 1.0 - (right * right).sum(axis=-1) / (w_right * w_right)
+        proxy = -w_right * impurity_right - w_left * impurity_left
+        tolerance = 64 * _EPS * total_weight
+        impurity = 1.0 - (total * total).sum() / (total_weight * total_weight)
+        if impurity <= _EPS:
+            return None
+
+    best = proxy[candidate].max()
+    near = candidate & (proxy >= best - tolerance)
+    if (near & uncertain).any():
+        return _UNRESOLVED
+    rows, columns = np.nonzero(near)
+    if rows.size == 1:
+        row, column = rows[0], columns[0]
+    else:
+        # Rounding decides between these candidates, so reproduce sklearn's
+        # arithmetic. It keeps the first maximum in feature order, then row.
+        tied = sorted(set(columns.tolist()))
+        rank = {tied[0]: 0}
+        if len(tied) > 1:
+            constant32 = x_sorted[-1] <= x_sorted[0] + np.float32(_FEATURE_THRESHOLD)
+            constant64 = (x_sorted[-1].astype(np.float64)
+                          <= x_sorted[0].astype(np.float64) + _FEATURE_THRESHOLD)
+            if (constant32 != constant64).any():
+                return _UNRESOLVED
+            rank = {c: i for i, c in enumerate(_sklearn_feature_order(seed, constant32))}
+        if regression:
+            if (n > _MAX_REPLAY_ROWS or uncertain[:, tied].any()
+                    or not np.all(weights == 1.0)):
+                return _UNRESOLVED
+            node_total = np.cumsum(y)[-1]  # sklearn sums in node order
+            replayed = {}
+            for c in tied:
+                replayed[c] = _sklearn_mse_proxies(
+                    x_sorted[:, c], y[order[:, c]],
+                    np.flatnonzero(candidate[:, c]) + 1, node_total)
+                if replayed[c] is None:
+                    return _UNRESOLVED
+            variants = [[replayed[c][r + 1] for r, c in zip(rows, columns)]]
+        else:
+            variants = list(zip(*(
+                _sklearn_gini_proxies(w_left[r, c], w_right[r, c],
+                                      impurity_left[r, c], impurity_right[r, c])
+                for r, c in zip(rows, columns))))
+        winners = {max(range(rows.size),
+                       key=lambda i: (values[i], -rank[columns[i]], -rows[i]))
+                   for values in variants}
+        if len(winners) > 1:
+            return _UNRESOLVED
+        i = winners.pop()
+        row, column = rows[i], columns[i]
+
+    # sklearn becomes a leaf if the improvement rounds below -EPSILON; leave
+    # (near-)zero improvements to sklearn.
+    if regression:
+        if best - total_sum * total_sum / total_weight <= tolerance:
+            return _UNRESOLVED
+        weighted_n = impurities = None
+    else:
+        wl, wr = w_left[row, column], w_right[row, column]
+        il, ir = impurity_left[row, column], impurity_right[row, column]
+        if impurity - wr / total_weight * ir - wl / total_weight * il <= 64 * _EPS:
+            return _UNRESOLVED
+        weighted_n = (float(total_weight), float(wl), float(wr))
+        impurities = (float(impurity), float(il), float(ir))
+    threshold = (float(x_sorted[row, column]) / 2.0
+                 + float(x_sorted[row + 1, column]) / 2.0)
+    return int(column), threshold, weighted_n, impurities
+
+
+def _best_split(X, y, weights, regression, n_classes, min_samples_split,
+                min_samples_leaf, seed):
+    """Return the split of a depth-one sklearn tree fit with ``seed``, or None."""
+    split = _fast_split(X, y, weights, regression, n_classes, min_samples_leaf, seed)
+    if split is _UNRESOLVED:
+        split = _sklearn_split(X, y, weights, regression, min_samples_split,
+                               min_samples_leaf, seed)
+    return split
+
+
+def _sklearn_split(X, y, weights, regression, min_samples_split, min_samples_leaf,
+                   seed):
+    """Fit a public sklearn stump; same return format as ``_fast_split``."""
+    stump_class = DecisionTreeRegressor if regression else DecisionTreeClassifier
+    stump = stump_class(
+        criterion="squared_error" if regression else "gini", max_depth=1,
+        min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf,
+        random_state=seed,
+    ).fit(X, y, sample_weight=weights)
+    tree = stump.tree_
+    if tree.node_count == 1:
+        return None
+    return (int(tree.feature[0]), float(tree.threshold[0]),
+            tuple(tree.weighted_n_node_samples[:3].tolist()),
+            tuple(tree.impurity[:3].tolist()))
 
 
 class _WeightedTree:
@@ -93,6 +367,9 @@ class _WeightedTree:
         support = np.flatnonzero(feature_weights > 0)
         probabilities = feature_weights[support] / feature_weights[support].sum()
         n_candidates = min(self.max_features, support.size)
+        # With too few nonzero probabilities, NumPy's choice raises at the
+        # first split; otherwise the unvalidated copy makes the same draws.
+        validated_draws = np.count_nonzero(probabilities) < n_candidates
         left, right, features, thresholds = [], [], [], []
         values, masses, impurities, counts, class_masses = [], [], [], [], []
         raw_importances = np.zeros(self.n_features_in_)
@@ -131,27 +408,25 @@ class _WeightedTree:
                     or (self.max_depth is not None and depth >= self.max_depth)):
                 continue
 
-            candidates = rng.choice(support, size=n_candidates, replace=False,
-                                    p=probabilities)
-            stump_class = DecisionTreeRegressor if regression else DecisionTreeClassifier
-            stump = stump_class(
-                criterion="squared_error" if regression else "gini", max_depth=1,
-                min_samples_split=self.min_samples_split,
-                min_samples_leaf=self.min_samples_leaf,
-                random_state=rng.randint(np.iinfo(np.int32).max),
-            )
+            if validated_draws:
+                candidates = rng.choice(support, size=n_candidates, replace=False,
+                                        p=probabilities)
+            else:
+                candidates = _weighted_sample(rng, support, n_candidates, probabilities)
+            seed = rng.randint(_INT32_MAX)
             if regression:
                 centered = node_y - value
                 stump_y = _rescale_for_split_search(node_y, value)
             else:
                 stump_y = y[indices]
-            stump.fit(X[np.ix_(indices, candidates)], stump_y,
-                      sample_weight=node_weights)
-            split = stump.tree_
-            if split.node_count == 1:
+            split = _best_split(
+                X[indices[:, None], candidates], stump_y, node_weights, regression,
+                n_classes, self.min_samples_split, self.min_samples_leaf, seed,
+            )
+            if split is None:
                 continue
-            feature = int(candidates[split.feature[0]])
-            threshold = float(split.threshold[0])
+            column, threshold, weighted_n, split_impurity = split
+            feature = int(candidates[column])
             goes_left = _goes_left(X[indices, feature], threshold)
             if goes_left.all() or not goes_left.any():
                 # Unreachable while routing matches sklearn; guards against an
@@ -171,9 +446,9 @@ class _WeightedTree:
             else:
                 # Weighted Gini decrease (R's MeanDecreaseGini). Zero-gain
                 # splits are retained: they are necessary to discover XOR.
-                decrease = max(0.0, split.weighted_n_node_samples[0] * split.impurity[0]
-                               - split.weighted_n_node_samples[1] * split.impurity[1]
-                               - split.weighted_n_node_samples[2] * split.impurity[2])
+                decrease = max(0.0, weighted_n[0] * split_impurity[0]
+                               - weighted_n[1] * split_impurity[1]
+                               - weighted_n[2] * split_impurity[2])
             left_indices = indices[goes_left]
             right_indices = indices[~goes_left]
             features[node_id] = feature
@@ -213,11 +488,10 @@ class _WeightedTree:
         otherwise unchanged.
         """
         labels = np.argmax(class_masses, axis=1)
-        for node_id in np.flatnonzero(self.is_leaf_):
-            class_mass = class_masses[node_id]
-            tied = np.flatnonzero(class_mass == class_mass.max())
-            if tied.size > 1:
-                labels[node_id] = tied[rng.randint(tied.size)]
+        is_max = class_masses == class_masses.max(axis=1, keepdims=True)
+        for node_id in np.flatnonzero(self.is_leaf_ & (is_max.sum(axis=1) > 1)):
+            tied = np.flatnonzero(is_max[node_id])
+            labels[node_id] = tied[rng.randint(tied.size)]
         return labels
 
     def apply(self, X):
@@ -278,6 +552,38 @@ class _WeightedTree:
         return paths
 
 
+def _fit_tree_paths(tree, X, y, feature_weights, sample_weight, n_classes):
+    """Fit a tree and return its terminal paths measured on its training rows."""
+    tree.fit(X, y, feature_weights, sample_weight, n_classes)
+    return tree.terminal_paths(X, sample_weight=sample_weight)
+
+
+def _forest_paths(forests, datasets, n_jobs=None):
+    """Fit forests in one pool of workers; yield each forest's terminal paths.
+
+    ``datasets`` gives ``(X, y, feature_weights, sample_weight, n_classes)``
+    for each forest and is consumed lazily. Workers return the trees'
+    ``terminal_paths`` on their training rows rather than the trees, and
+    results stream back in order, so memory holds about one forest's paths
+    at a time. Sharing one pool avoids idle workers between forests.
+    """
+    if not forests:
+        return
+
+    def tasks():
+        for forest, data in zip(forests, datasets):
+            trees, fit_args = forest._prepare(*data)
+            for tree in trees:
+                yield delayed(_fit_tree_paths)(tree, *fit_args)
+
+    try:
+        results = Parallel(n_jobs=n_jobs, return_as="generator")(tasks())
+    except TypeError:  # joblib < 1.3 cannot stream results
+        results = iter(Parallel(n_jobs=n_jobs)(tasks()))
+    for forest in forests:
+        yield [leaf for _ in range(forest.n_estimators) for leaf in next(results)]
+
+
 class _WeightedForest:
     """Internal forest backend.
 
@@ -298,6 +604,20 @@ class _WeightedForest:
         self.task = task
 
     def fit(self, X, y, feature_weights, sample_weight=None, n_classes=None):
+        trees, fit_args = self._prepare(X, y, feature_weights, sample_weight, n_classes)
+        # Tree building is mostly Python, so processes (joblib's default
+        # backend) run in parallel where threads would contend for the GIL.
+        self.estimators_ = Parallel(n_jobs=self.n_jobs)(
+            delayed(tree.fit)(*fit_args) for tree in trees)
+        importances = np.mean([tree.raw_feature_importances_
+                               for tree in self.estimators_], axis=0)
+        total = importances.sum()
+        self.raw_feature_importances_ = importances
+        self.feature_importances_ = (importances / total if total > 0 else importances)
+        return self
+
+    def _prepare(self, X, y, feature_weights, sample_weight=None, n_classes=None):
+        """Validate inputs; return unfitted trees and their shared fit arguments."""
         if self.task not in _TASKS:
             raise ValueError(f"task must be one of {_TASKS}.")
         X = np.asarray(X, dtype=np.float32, order="C")
@@ -335,20 +655,11 @@ class _WeightedForest:
         self.max_features_ = max_features
         rng = (np.random.RandomState() if self.random_state is None
                else check_random_state(self.random_state))
-        seeds = rng.randint(np.iinfo(np.int32).max, size=self.n_estimators)
-        self.estimators_ = Parallel(n_jobs=self.n_jobs, prefer="threads")(
-            delayed(_WeightedTree(
-                max_features, self.max_depth, self.min_samples_split,
-                self.min_samples_leaf, self.bootstrap, int(seed), self.task,
-            ).fit)(X, y, self.feature_weights_, sample_weight, self.n_classes_)
-            for seed in seeds
-        )
-        importances = np.mean([tree.raw_feature_importances_
-                               for tree in self.estimators_], axis=0)
-        total = importances.sum()
-        self.raw_feature_importances_ = importances
-        self.feature_importances_ = (importances / total if total > 0 else importances)
-        return self
+        seeds = rng.randint(_INT32_MAX, size=self.n_estimators)
+        trees = [_WeightedTree(max_features, self.max_depth, self.min_samples_split,
+                               self.min_samples_leaf, self.bootstrap, int(seed), self.task)
+                 for seed in seeds]
+        return trees, (X, y, self.feature_weights_, sample_weight, self.n_classes_)
 
     def predict_proba(self, X):
         if self.task == "regression":
