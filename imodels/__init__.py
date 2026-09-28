@@ -33,7 +33,7 @@ from .tree.cart_ccp import (
     HSDecisionTreeCCPRegressorCV,
 )
 
-# from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier
+from .tree.iterative_random_forest.iterative_random_forest import IRFClassifier, IRFRegressor
 # from .tree.optimal_classification_tree import OptimalTreeModel
 from .tree.cart_wrapper import GreedyTreeClassifier, GreedyTreeRegressor
 from .tree.figs import FIGSRegressor, FIGSClassifier, FIGSRegressorCV, FIGSClassifierCV
@@ -89,7 +89,8 @@ CLASSIFIERS = [
     SPTreeClassifierCV,
     GreedyTreeClassifier,
     AutoInterpretableClassifier,
-]  # , IRFClassifier
+    IRFClassifier,
+]
 REGRESSORS = [
     RuleFitRegressor,
     SLIMRegressor,
@@ -105,6 +106,7 @@ REGRESSORS = [
     SPTreeRegressorCV,
     BART,
     AutoInterpretableRegressor,
+    IRFRegressor,
 ]
 ESTIMATORS = CLASSIFIERS + REGRESSORS
 DISCRETIZERS = [RFDiscretizer, BasicDiscretizer,

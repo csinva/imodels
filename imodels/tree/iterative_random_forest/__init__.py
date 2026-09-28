@@ -1,2 +1,5 @@
-'''Repeatedly fit random forest, giving features with high importance a higher chance of being selected.
-'''
+"""Iterative random forests with bootstrap-stable interaction discovery."""
+
+from .iterative_random_forest import IRFClassifier, IRFRegressor
+
+__all__ = ["IRFClassifier", "IRFRegressor"]
