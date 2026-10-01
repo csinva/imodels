@@ -9,17 +9,17 @@
                     <hr>
 
                     <p class="abstract">
-                        A <b>risk score</b> predicts by adding up a few small integer points, one for each feature
-                        that applies, and reading the risk for the total off a table. Clinical scores such as
-                        <a href="https://en.wikipedia.org/wiki/CHA2DS2%E2%80%93VASc_score">CHA<sub>2</sub>DS<sub>2</sub>-VASc</a>
-                        are built this way because a person can compute and check them by hand. Finding the best
-                        score for a dataset is a hard integer problem: <a href="https://jmlr.org/papers/v20/18-615.html">RiskSLIM</a>
-                        solves it exactly with a commercial solver but slowly, and
+                        A <b>risk score</b> is a short list of conditions, each worth a few integer points. You add the
+                        points of the conditions that apply and look up the risk for the total in a table. Clinical
+                        scores such as <a href="https://en.wikipedia.org/wiki/CHA2DS2%E2%80%93VASc_score">CHA<sub>2</sub>DS<sub>2</sub>-VASc</a>
+                        work this way, so a doctor can compute and check them by hand. Choosing the conditions and points
+                        is an integer optimization problem. <a href="https://jmlr.org/papers/v20/18-615.html">RiskSLIM</a>
+                        solves it exactly but needs a commercial solver and is slow, and
                         <a href="https://arxiv.org/abs/2210.05846">FasterRisk</a> solves it approximately in seconds.
-                        Using autoresearch, we build <b>FastRiskScore</b>, which on held-out datasets fits scores
-                        about 50&times; faster than FasterRisk with a slightly lower training loss and the same test AUC.
-                        On small problems where every possible score can be enumerated, it finds the best one in 49
-                        of 50 cases, against 28 of 50 for FasterRisk.
+                        We used autoresearch to build <b>FastRiskScore</b>. On held-out datasets it fits scores about
+                        50&times; faster than FasterRisk, with a slightly lower training loss and a slightly higher test AUC.
+                        On small problems where every possible score can be checked, it finds the best one in 49 of 50
+                        cases; FasterRisk finds it in 28.
                     </p>
 
                     <nav class="toc-main">
@@ -40,10 +40,10 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 model = FastRiskScoreClassifier(k=5).fit(X_train, y_train)
 proba = model.predict_proba(X_test)</code></pre>
 
-                    <p><code>k</code> is the most features the score may use and <code>max_points</code> (default 5)
-                      bounds the points of each. Numeric columns are split at their deciles and categorical ones
-                      one-hot encoded, so the score's lines read as conditions on the original columns. Printing the
-                      model gives the whole score:</p>
+                    <p><code>k</code> is the maximum number of conditions, and <code>max_points</code> (default 5) is the
+                      largest number of points one condition can carry. Numeric columns are split at their deciles and
+                      categorical columns are one-hot encoded, so each condition refers to one of the original columns.
+                      Printing the model shows the whole score:</p>
 
                     <pre><code>FastRiskScoreClassifier: add the points of every line that applies
   worst area &lt;= 906.6              +5
@@ -55,8 +55,8 @@ risk of class 1 for each total score:
   score       0     +1     +2     +3     +4     +5     +6     +7     +8     +9    +10    +11    +12    +13    +14    +15    +16    +17    +18
   risk     0.0%   0.0%   0.0%   0.0%   0.1%   0.3%   1.2%   4.8%  17.1%  45.6%  77.4%  93.3%  98.3%  99.6%  99.9% 100.0% 100.0% 100.0% 100.0%</code></pre>
 
-                    <p>Class 1 is a benign tumour. This score reaches a test AUC of 0.984 and was fit in 0.03 s. The fitted model also
-                      exposes the points and the risk map directly:</p>
+                    <p>Class 1 is a benign tumour. This score has a test AUC of 0.984 and took 0.03 s to fit. The fitted
+                      model also stores the points and the risk curve:</p>
 
                     <pre><code class="language-python">model.points_           # {"worst area &lt;= 906.6": 5, ...}, the lines of the score
 model.total_score(X)    # the total points of each row
@@ -65,32 +65,34 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
 
                     <details class="collapsible" id="reading-the-score">
                       <summary>How the risk for a total is chosen</summary>
-                      <p>The points fix only the ranking of rows. The risk for each total comes from a logistic
-                        curve, <code>risk(s) = 1 / (1 + exp(-(a&middot;s + b)))</code>, whose two numbers <i>a</i> and
-                        <i>b</i> are fit to the training data after the points are chosen. The points are chosen to
-                        make that fitted curve's log loss as small as possible (<a href="#methods">Sec 3</a>), so the
-                        table in the printout is calibrated on the training data by construction. RiskSLIM and
-                        FasterRisk print the same kind of table; they write <i>b</i> as an integer offset and
-                        <i>1/a</i> as a multiplier.</p>
+                      <p>The points determine the total score of each row. The risk for a total comes from a logistic
+                        curve, <code>risk(s) = 1 / (1 + exp(-(a&middot;s + b)))</code>, whose two parameters <i>a</i> and
+                        <i>b</i> are fit to the training data once the points are chosen. The points are chosen to make
+                        the log loss of this fitted curve as small as possible (<a href="#methods">Sec 3</a>), so the
+                        risks in the printed table are calibrated on the training data. RiskSLIM and FasterRisk print
+                        the same kind of table; they write <i>b</i> as an integer offset and <i>1/a</i> as a
+                        multiplier.</p>
                     </details>
 
                     <h2 id="results">2. Experimental results</h2>
 
-                    <p>FastRiskScore was produced by the autoresearch loop of
+                    <p>FastRiskScore came out of the autoresearch loop of
                         <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a> (code on
                         <a href="https://github.com/csinva/agentic-imodels/tree/main/evolve_slim">github</a>). Two coding
-                        agents were each given the same starting solver, FasterRisk rewritten as one Python file, and
-                        the same fixed benchmark, and ran independently for about 90 minutes. One was asked to lower the
-                        loss, the other to go faster. Each proposed a change, ran the benchmark, and kept the change
-                        only if it lowered the loss without slowing down by more than 10%, or sped up by at least 10%
-                        without raising the loss. The benchmark (the visible set) has 70 problems: 14 datasets &times; 5
-                        values of <code>k</code> (3, 4, 5, 7 and 10), each with a 60 s limit, run one per core.</p>
+                        agents started from the same solver, FasterRisk rewritten as a single Python file, and used the
+                        same benchmark. Each ran for about 90 minutes. One was asked to lower the loss and the other to
+                        make the solver faster. In each round an agent changed the solver, ran the benchmark, and kept
+                        the change only if the loss went down without the time rising by more than 10%, or the time
+                        went down by at least 10% without the loss rising. The benchmark, called the visible set, has
+                        70 problems: 14 datasets &times; 5 values of <code>k</code> (3, 4, 5, 7 and 10). Each problem
+                        has a 60 s limit and runs on one core.</p>
 
-                    <p>Every solver is scored the same way. It returns integer points in [&minus;5, 5] on at most
-                        <code>k</code> of a dataset's binary features; the benchmark then fits the risk curve for those
-                        points itself and records the training log loss of that curve (the criterion), the test AUC of
-                        the total score on a held-out 20% split, and the fit time. Because the benchmark computes the loss
-                        from the points alone, a solver cannot score well by misreporting.</p>
+                    <p>All solvers are scored the same way. A solver returns integer points in [&minus;5, 5] for at most
+                        <code>k</code> of a dataset's binary features. The benchmark then fits the risk curve for those
+                        points itself and records three numbers: the training log loss of that curve, which is the
+                        quantity being minimized; the test AUC of the total score on a held-out 20% split; and the fit
+                        time. Since the loss is computed from the points alone, a solver cannot improve its score by
+                        reporting a wrong loss.</p>
 
 <details class="collapsible" id="datasets">
                       <summary>The 14 visible datasets (from the RiskSLIM and FasterRisk papers, and OpenML)</summary>
@@ -166,23 +168,29 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         and never used during development. Builder: <code>evolve_slim/data/build_data.py</code>.</p>
                     </details>
 
-                    <p>Fig <a href="#fig1">1</a> plots the loss (y-axis, lower is better) against the time per problem
-                      (x-axis, left is faster). We compare against 14 baselines, found by a search for methods that can be
-                      run from Python without a commercial solver (<a href="#baselines">details below</a>):
-                      <a href="https://arxiv.org/abs/2210.05846">FasterRisk</a> (Liu et al., 2022), both at its defaults
-                      and with every search width raised; exact methods for integer scores, namely
-                      <a href="https://jmlr.org/papers/v20/18-615.html">RiskSLIM</a> (Ustun &amp; Rudin, 2019) with the free
-                      CPLEX Community Edition, RiskSLIM's cutting-plane algorithm with the open-source HiGHS solver, and
-                      <a href="https://arxiv.org/abs/1502.04269">SLIM</a> (Ustun &amp; Rudin, 2016); sparse real-valued
-                      models rounded by FasterRisk's own rounding step, namely <a href="https://www.jmlr.org/papers/v23/21-1060.html">abess</a>
-                      best-subset selection, the <a href="https://arxiv.org/abs/2202.11389">fastSparse</a> L0 path,
-                      <a href="https://arxiv.org/abs/2304.06686">OKRidge</a>'s optimal sparse ridge support and the L1
-                      path; <a href="https://arxiv.org/abs/2407.21535">probabilistic scoring lists</a>;
-                      <a href="https://medinform.jmir.org/2020/10/e21798/">AutoScore</a>; and the simple practices of
-                      rounding a scaled L1 logistic regression, unit weights, and imodels' previous
-                      <code>SLIMClassifier</code>. The loss is shown as the excess over the best loss any solver reached
-                      on each problem, averaged over the problems. A solver that returns no score on a problem is
-                      charged the loss of predicting the base rate there.</p>
+                    <p>Fig <a href="#fig1">1</a> plots the training loss (panels A to C, lower is better) and the test AUC
+                      (panel D, higher is better) against the time per problem (left is faster). The loss is shown as
+                      the excess over the lowest loss any solver reached on each problem, averaged over problems. A
+                      solver that returns no score on a problem is charged the loss of predicting the base rate there.
+                      We compare against 14 baselines that can be run from Python without a commercial solver
+                      (<a href="#baselines">details below</a>):</p>
+                    <ul>
+                      <li><a href="https://arxiv.org/abs/2210.05846">FasterRisk</a> (Liu et al., 2022), with its default
+                        settings and with every search width raised.</li>
+                      <li>Exact methods: <a href="https://jmlr.org/papers/v20/18-615.html">RiskSLIM</a> (Ustun &amp; Rudin,
+                        2019) with the free CPLEX Community Edition, RiskSLIM's cutting-plane algorithm with the
+                        open-source HiGHS solver, and <a href="https://arxiv.org/abs/1502.04269">SLIM</a> (Ustun &amp;
+                        Rudin, 2016).</li>
+                      <li>Sparse real-valued models rounded with FasterRisk's rounding step:
+                        <a href="https://www.jmlr.org/papers/v23/21-1060.html">abess</a> best-subset selection, the
+                        <a href="https://arxiv.org/abs/2202.11389">fastSparse</a> L0 path,
+                        <a href="https://arxiv.org/abs/2304.06686">OKRidge</a>'s optimal sparse ridge support, and the L1
+                        path.</li>
+                      <li><a href="https://arxiv.org/abs/2407.21535">Probabilistic scoring lists</a> and
+                        <a href="https://medinform.jmir.org/2020/10/e21798/">AutoScore</a>.</li>
+                      <li>Common practice: L1 logistic regression scaled and rounded, unit weights, and the previous
+                        <code>SLIMClassifier</code> in imodels.</li>
+                    </ul>
                     <span class="fig-anchor" id="fig1"></span>
                     <div class="fig-wide">
                       <ul class="fig-legend" aria-label="Legend">
@@ -208,17 +216,25 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                           <h4>Hidden set, full size <span>(k = 5, 10 min per problem)</span></h4>
                           <div id="pareto-full" role="img" aria-label="The same measure on the full-size held-out datasets at k = 5."></div>
                         </div>
+                        <div class="fig-panel">
+                          <span class="panel-letter" aria-hidden="true">D</span>
+                          <h4>Hidden set, test AUC <span>(27 datasets &times; 5 values of k, 60 s per problem)</span></h4>
+                          <div id="pareto-test" role="img" aria-label="Mean test AUC against geometric-mean time for the kept versions and the baselines on the 27 held-out TabArena datasets."></div>
+                        </div>
                       </div>
                     </div>
-                    <p class="caption"><b>Fig 1.</b> Loss against speed. <b>A</b>: the visible set the loop was scored on,
-                        showing every version either run tried (discarded attempts faded). <b>B</b>: the same protocol on
-                        27 held-out TabArena datasets, for the versions each run kept. <b>C</b>: the held-out datasets at
-                        full size, up to 120,000 training rows, at <code>k</code> = 5 with 10 minutes a problem. Each
-                        point is a solver's geometric-mean fit time over a panel's problems and its mean excess
-                        training loss over the best loss any solver reached on each problem (log scale). Large points
-                        average three runs. In C no solver beats FastRiskScore on any dataset, so its excess loss is 0 and
-                        its star sits on the bottom of the axis. All runs used one core per problem on a Linux server (two Xeon Platinum
-                        8468V), 14 problems at a time (27 in C).</p>
+                    <p class="caption"><b>Fig 1.</b> Training loss and test AUC against fit time. <b>A</b>: the visible set
+                        that the loop was scored on, with every version either run tried (discarded attempts are faded).
+                        <b>B</b>: the same protocol on 27 held-out TabArena datasets, for the versions each run kept.
+                        <b>C</b>: the held-out datasets at full size, up to 120,000 training rows, at <code>k</code> = 5
+                        with 10 minutes per problem. <b>D</b>: the test AUC of the solvers in B, averaged over the 135
+                        held-out problems; the axis starts at 0.725, so the solvers below it (RiskSLIM 0.568, SLIM
+                        0.642, cutting planes 0.667 and scoring lists 0.681) are not shown. Each point is one solver; the x-axis is its geometric-mean fit time, and in A
+                        to C the y-axis is its mean excess training loss over the best loss any solver reached on each
+                        problem (log scale). Large points are the mean of three runs. In C no solver beats FastRiskScore
+                        on any dataset, so its excess loss is 0 and its star sits at the bottom of the axis. All runs
+                        used one core per problem on a Linux server (two Xeon Platinum 8468V), with 14 problems at a
+                        time (27 in C).</p>
                     <details class="collapsible" id="fig1-measurement">
                       <summary>Extra details on experimental settings</summary>
                       <p><b>Scoring.</b> The benchmark rejects any answer whose points are not integers, fall outside
@@ -234,9 +250,9 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                       <p><b>RiskSLIM.</b> The free CPLEX Community Edition refuses problems above 1,000 variables or
                         constraints, and RiskSLIM's cutting planes pass that limit on wider datasets; it returned no
                         score on 25 of 70 visible problems and 102 of 135 hidden ones, and
-                        is charged the base rate there. With a full CPLEX licence it would do better, but it certifies
-                        optimality only on small problems within these limits either way, as the FasterRisk paper
-                        also found. RiskSLIM and SLIM run until their time limit on most problems, so their times sit
+                        is charged the base rate there. With a full CPLEX licence it would do better, but within these time
+                        limits it still certifies optimality only on small problems, as the FasterRisk paper also
+                        found. RiskSLIM and SLIM run until their time limit on most problems, so their times sit
                         near 60 s.</p>
                       <p id="baselines"><b>Baselines.</b> The search tested each candidate package in a clean Python 3.12
                         environment. abess and fastsparsegams install from PyPI; scikit-psl and okridge pin numpy&nbsp;&lt;&nbsp;2
@@ -310,7 +326,9 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                           'mean loss ' + p.loss.toFixed(5) + ' · test AUC ' + p.auc.toFixed(4),
                           p.runs > 1 ? 'mean of ' + p.runs + ' runs' : 'single run'].join('<br>');
                       }
-                      function panel(el, D) {
+                      function panel(el, D, metric) {
+                        var auc = metric === 'auc';
+                        function yv(p) { return auc ? p.auc : p.c; }
                         var pts = D.points, traces = [];
                         ['run1_discard', 'run2_discard', 'baseline', 'run1', 'run2'].forEach(function (g) {
                           [false, true].forEach(function (rep) {
@@ -318,7 +336,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                             if (!sub.length) return;
                             var faded = /_discard$/.test(g);
                             traces.push({
-                              x: sub.map(function (p) { return p.t; }), y: sub.map(function (p) { return p.c; }),
+                              x: sub.map(function (p) { return p.t; }), y: sub.map(yv),
                               mode: 'markers', showlegend: false,
                               marker: { symbol: 'circle', size: rep ? 14 : (faded ? 7 : 9), opacity: faded ? 0.35 : 1,
                                         color: C[g], line: { color: C.surface, width: faded ? 0 : 1.5 } },
@@ -328,7 +346,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         });
                         var ship = pts.filter(function (p) { return p.model === 'v35_scratch'; });
                         if (ship.length) traces.push({
-                          x: ship.map(function (p) { return p.t; }), y: ship.map(function (p) { return p.c; }),
+                          x: ship.map(function (p) { return p.t; }), y: ship.map(yv),
                           mode: 'markers', showlegend: false,
                           marker: { symbol: 'star', size: 19, color: C.run2, line: { color: C.surface, width: 1.5 } },
                           text: ship.map(hover), hovertemplate: '%{text}<extra></extra>'
@@ -338,10 +356,11 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                                     rounded_lr: [-30, -22], imodels_slim: [36, -16], riskslim: [-24, -20],
                                     slim_milp: [14, -24], cpa_highs: [-64, 8], psl: [-8, 30], abess_seqround: [44, 14],
                                     autoscore: [-44, -18] };
-                        var notes = pts.filter(function (p) { return p.direct; }).map(function (p) {
-                          return { x: Math.log10(p.t), y: Math.log10(p.c), xref: 'x', yref: 'y', text: p.direct,
+                        var AUC_MIN = 0.725;  // panel D is cropped to the solvers that compete; the rest are listed in the caption
+                        var notes = pts.filter(function (p) { return p.direct && (!auc || p.auc >= AUC_MIN); }).map(function (p) {
+                          return { x: Math.log10(p.t), y: auc ? p.auc : Math.log10(p.c), xref: 'x', yref: 'y', text: p.direct,
                                    showarrow: true, arrowhead: 0, arrowwidth: 1, arrowcolor: C.axis,
-                                   ax: (OFF[p.model] || [28, -22])[0], ay: (OFF[p.model] || [28, -22])[1],
+                                   ax: (OFF[p.model] || [28, -22])[0], ay: (auc ? -1 : 1) * (OFF[p.model] || [28, -22])[1],
                                    font: { size: 11, color: C.ink }, bgcolor: 'rgba(255,255,255,0.85)', borderpad: 2 };
                         });
                         var axis = { gridcolor: C.grid, linecolor: C.axis, zeroline: false, ticks: 'outside', tickcolor: C.axis,
@@ -351,7 +370,8 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                           paper_bgcolor: C.surface, plot_bgcolor: C.surface,
                           font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: C.ink },
                           xaxis: Object.assign({ type: 'log', title: { text: 'Geometric-mean time per problem (s)' } }, axis),
-                          yaxis: Object.assign({ type: 'log', exponentformat: 'power', title: { text: 'Mean excess training loss' } }, axis),
+                          yaxis: Object.assign(auc ? { range: [AUC_MIN, 0.8], title: { text: 'Mean test AUC' } }
+                                                  : { type: 'log', exponentformat: 'power', title: { text: 'Mean excess training loss' } }, axis),
                           hovermode: 'closest', hoverlabel: { bgcolor: C.surface, bordercolor: C.grid, font: { color: C.ink, size: 12 } },
                           annotations: notes
                         }, { displayModeBar: false, responsive: true });
@@ -361,49 +381,55 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                       var full = document.getElementById('pareto-full');
                       if (PARETO.full) panel(full, PARETO.full);
                       else full.innerHTML = '<div class="fig-pending">full-size run in progress</div>';
+                      panel(document.getElementById('pareto-test'), PARETO.hidden, 'auc');
                     })();
                     </script>
 
-                    <p><b>Both runs cut the time by more than 20&times; and lowered the loss.</b> On the visible set
-                        (Fig <a href="#fig1">1</a>A) the kept versions move steadily down and to the left. Run 2's
-                        final version fits a problem in 0.038 s against 1.49 s for FasterRisk and reaches a
-                        lower training loss on 54 of 70 problems (higher on 1). Its loss is also below
-                        that of FasterRisk with every search width raised, which takes 18 s a problem. The two runs,
-                        started from the same code with different goals, arrived at the same two main changes
-                        (<a href="#methods">Sec 3</a>).</p>
+                    <p>On the visible set (Fig <a href="#fig1">1</a>A), both runs made the solver more than 20&times;
+                        faster and lowered the loss, and the kept versions move down and to the left. Run 2's final
+                        version takes 0.038 s per problem, against 1.49 s for FasterRisk, and has a lower training loss on
+                        54 of the 70 problems and a higher one on 1. Its loss is also lower than that of FasterRisk with
+                        every search width raised, which takes 18 s per problem. The two runs started from the same code
+                        with different goals and made the same two main changes (<a href="#methods">Sec 3</a>).</p>
 
-                    <p><b>The speed-up holds on the hidden set; the loss gain is smaller there.</b> On the 27 TabArena
-                        datasets (Fig <a href="#fig1">1</a>B), FastRiskScore is 54&times; faster than FasterRisk
-                        (median over problems; slowest fit 0.51 s against 35 s) and reaches a lower loss on
-                        90 of 135 problems, the same loss on 40 and a higher one on 5. The mean
-                        loss drops by only 0.00025, about a third of the gap between FasterRisk and a real-valued
-                        model with the same features. Much of the visible-set gain came from datasets with
-                        real-valued columns (spambase above all), where FasterRisk's rounding loses a feature; every
-                        hidden dataset is binarized, and there FasterRisk was already close to the best score.</p>
+                    <p>On the 27 held-out TabArena datasets (Fig <a href="#fig1">1</a>B), FastRiskScore is 54&times; faster
+                        than FasterRisk (median over problems; the slowest fit takes 0.51 s against 35 s). Its loss is
+                        lower on 90 of the 135 problems, the same on 40 and higher on 5. The mean loss drops by only
+                        0.00025, about a third of the gap between FasterRisk and a real-valued model on the same
+                        features. Most of the gain on the visible set came from datasets with real-valued columns,
+                        mainly spambase, where FasterRisk's rounding drops a feature. All held-out datasets are binarized,
+                        and on them FasterRisk was already close to the best score.</p>
 
-                    <p><b>No baseline comes close.</b> The best of the rest are sparse real-valued models rounded by
-                        FasterRisk's rounding step: OKRidge's optimal support reaches a hidden-set loss of 0.3286 and abess
-                        and fastSparse 0.3303, against 0.3272 for FasterRisk and 0.3270 for FastRiskScore
-                        (Table <a href="#tab1">1</a>); OKRidge also takes about 450&times; as long as FastRiskScore. The
-                        exact methods fall behind for a structural reason as much as a computational one. RiskSLIM's
-                        objective fixes the scale of the score, so on the 6 problems where the cutting planes prove
-                        RiskSLIM's optimum, that optimal score still has a higher loss than FastRiskScore's once the risk
-                        curve is refit (for example 0.0875 against 0.0659 on breastcancer at <code>k</code> = 10). This
-                        is the reason FasterRisk introduced its multiplier.</p>
+                    <p>The strongest baselines after FasterRisk are the sparse real-valued models rounded with FasterRisk's
+                        rounding step. On the held-out set OKRidge's support reaches a loss of 0.3286, and abess and
+                        fastSparse reach 0.3303, against 0.3272 for FasterRisk and 0.3270 for FastRiskScore
+                        (Table <a href="#tab1">1</a>). OKRidge also takes about 450&times; as long as FastRiskScore. The
+                        exact methods do worse partly because of time limits and partly because of their objective.
+                        RiskSLIM fixes the scale of the score instead of fitting it. On the 6 problems where the cutting
+                        planes prove RiskSLIM's optimum, that optimal score still has a higher loss than FastRiskScore's
+                        once the risk curve is fit (for example 0.0875 against 0.0659 on breastcancer at
+                        <code>k</code> = 10). This is why FasterRisk added its multiplier.</p>
 
-                    <p><b>The ordering holds at full size.</b> With every row kept (up to 120,000 training rows) and <code>k</code> = 5
-                        (Fig <a href="#fig1">1</a>C, Table <a href="#tab1">1</a>), FastRiskScore takes 0.08 s a problem against 4.8 s for
-                        FasterRisk (50&times; faster by the median; slowest fit 1.0 s against 103 s), with a lower loss
-                        on 21 of the 27 datasets and a higher one on none. RiskSLIM returns no score on 22 of the 27
-                        within the free CPLEX edition's limits, and SLIM runs out its 10 minutes on 25 and returns
-                        worse scores than rounding a logistic regression. Across all three panels the test AUC follows
-                        the training loss: FastRiskScore's is the highest of the integer scores, within 0.002 of the
-                        real-valued model it approximates.</p>
+                    <p>The results are similar at full size (Fig <a href="#fig1">1</a>C, Table <a href="#tab1">1</a>), with every
+                        row kept (up to 120,000 training rows) and <code>k</code> = 5. FastRiskScore takes 0.08 s per
+                        problem against 4.8 s for FasterRisk (50&times; faster by the median; the slowest fit takes
+                        1.0 s against 103 s), and its loss is lower on 21 of the 27 datasets and higher on none.
+                        RiskSLIM returns no score on 22 of the 27 because of the free CPLEX edition's size limits, and
+                        SLIM uses its full 10 minutes on 25 of them and returns worse scores than rounded logistic
+                        regression.</p>
+
+                    <p>Test AUC (Fig <a href="#fig1">1</a>D) ranks the solvers almost the same way as training loss. On
+                        the held-out set FastRiskScore has a mean test AUC of 0.794, against 0.793 for FasterRisk, 0.789
+                        to 0.791 for the rounded sparse models, 0.743 for rounded L1 logistic regression and 0.568 for
+                        RiskSLIM. On all three suites FastRiskScore has the highest test AUC of the integer scores, within
+                        0.002 of the real-valued model it approximates (0.795 on the held-out set).</p>
 
                     <p class="caption" id="tab1"><b>Table 1.</b> Mean training log loss, mean test AUC and geometric-mean
-                      fit time (s) of every solver on the three panels of Fig <a href="#fig1">1</a>. Eight of the baselines (cutting planes, abess, fastSparse, OKRidge, the L1 path, scoring lists, AutoScore, unit weighting) were added after a search for runnable baselines (<a href="#baselines">details</a>). The real-valued row is
-                      not a risk score: it is FasterRisk's continuous solution before rounding, the loss an integer score
-                      would have if rounding cost nothing.</p>
+                      fit time (s) of every solver on the three suites of Fig <a href="#fig1">1</a>. Eight of the baselines
+                      (cutting planes, abess, fastSparse, OKRidge, the L1 path, scoring lists, AutoScore and unit
+                      weighting) were added after a search for baselines that can be run
+                      (<a href="#baselines">details</a>). The last row is not a risk score: it is FasterRisk's
+                      real-valued solution before rounding, shown as a reference.</p>
                     <table class="ranktbl results-table">
                       <thead>
                         <tr><th></th><th class="grp" colspan="3">Visible (70 problems)</th><th class="grp" colspan="3">Hidden (135 problems)</th><th class="grp" colspan="3">Hidden, full size (27)</th></tr>
@@ -431,11 +457,11 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                       </tbody>
                     </table>
 
-                    <p><b>On small problems it finds the best score.</b> A benchmark can only compare solvers with each
-                        other, so we also generated 50 random problems small enough to enumerate every possible score
-                        (300 rows, 7 binary features, <code>k</code> = 3, points in [&minus;3, 3]: 8,358 candidate scores
-                        each). FastRiskScore's score is the best one on 49 of the 50 (the other is 0.0008 above it),
-                        and FasterRisk's on 28 of the 50, with a mean gap to the best score 50 times larger
+                    <p>The benchmark only compares solvers with each other, so we also checked against the true optimum.
+                        We generated 50 random problems small enough to check every possible score (300 rows, 7 binary
+                        features, <code>k</code> = 3, points in [&minus;3, 3]: 8,358 candidate scores each).
+                        FastRiskScore finds the best score on 49 of the 50 (on the other it is 0.0008 above it).
+                        FasterRisk finds it on 28 of the 50, and its mean gap to the best score is 50 times larger
                         (<code>evolve_slim/benchmarks/exhaustive_check.py</code>).</p>
 
                     <h2 id="methods">3. Methods: FastRiskScore</h2>
@@ -447,75 +473,77 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                       \underbrace{\frac{1}{n}\sum_{i=1}^{n} \log\!\left(1 + e^{-\tilde y_i\,(a\, x_i^\top w \,+\, b)}\right)}_{\text{log loss of the risk curve for the total score } x_i^\top w}
                     \]</div>
                     <p>with <span>\(\tilde y_i \in \{-1, +1\}\)</span>. The inner minimum over <i>a</i> and <i>b</i> is the
-                      risk curve of <a href="#reading-the-score">Sec 1</a>. FasterRisk searches for good real-valued
-                      coefficients and then rounds them, choosing among a few multipliers <i>1/a</i> with the
-                      intercept fixed by the rounding. FastRiskScore keeps FasterRisk's first stage, rebuilt for speed,
-                      and replaces its second stage with a search over the integer points themselves, each candidate
-                      scored by the loss above with <i>a</i> and <i>b</i> refit. Four stages:</p>
+                      risk curve of <a href="#reading-the-score">Sec 1</a>. FasterRisk first finds good real-valued
+                      coefficients and then rounds them, trying a few multipliers <i>1/a</i> with the intercept fixed by
+                      the rounding. FastRiskScore keeps FasterRisk's first stage, rewritten to run faster, and replaces
+                      the rounding stage with a search over the integer points, where each candidate is scored by the
+                      loss above with <i>a</i> and <i>b</i> fit again. It has four steps:</p>
                     <ol>
                       <li><b>Compress the data.</b> Identical rows (same features and label) are merged into one row with
-                        a count. Binary data has many: a dataset of 10,000 rows often has a few hundred distinct ones on
-                        the features a score uses.</li>
+                        a count. Binary data has many duplicates: on the features a score uses, a dataset of 10,000 rows
+                        often has only a few hundred distinct rows.</li>
                       <li><b>Beam search</b> for real-valued solutions (FasterRisk's): grow the set of features one at a
                         time, keeping the 10 best sets and extending each by the 10 features with the largest gradient.
-                        Each candidate is fit by Newton's method on its own features, where FasterRisk used coordinate
-                        descent over all rows. Each set keeps its rows grouped by their values on the chosen features, so
-                        a fit runs on a few hundred groups rather than every row.</li>
+                        Each candidate is fit by Newton's method on its own features; FasterRisk used coordinate descent
+                        over all rows. Each set keeps its rows grouped by their values on the chosen features, so a fit
+                        uses a few hundred groups instead of every row.</li>
                       <li><b>Round</b> each of the 10 final solutions at 20 scales (the largest point from 0.5 to 5) and
                         keep, for each, the rounding with the lowest loss after refitting <i>a</i> and <i>b</i>.</li>
-                      <li><b>Local search</b> on the integer points from the 5 best roundings: change one feature's
-                        points to any value in [&minus;5, 5], add a feature, or, when neither helps, swap a feature for
-                        another. Because the total score takes only a few distinct values, a move's loss is computed on
-                        a table of (score, feature value) cells rather than on rows. A cheap estimate ranks all moves,
-                        and the two best are checked exactly.</li>
+                      <li><b>Local search</b> on the integer points, starting from the 5 best roundings. A move changes one
+                        feature's points to any value in [&minus;5, 5] or adds a feature; if neither lowers the loss, it
+                        swaps one feature for another. The total score takes only a few distinct values, so the loss of a
+                        move is computed from a table of (score, feature value) counts instead of from the rows. A quick
+                        estimate ranks all moves, and the two best are checked exactly.</li>
                     </ol>
 
                     <h3 id="found">What the loop found</h3>
 
                     <details class="collapsible" id="m-lattice">
                       <summary>Searching the integer points directly, scored by the refit loss (both runs)</summary>
-                      <p>Both runs found this first and it made the largest difference to the loss: on the visible set
-                        it moved the mean excess loss from about +0.002 to &minus;0.001 (relative to the original best
-                        known losses) in each run. FasterRisk's rounding is judged by the loss at a fixed multiplier,
-                        but a risk score is used with its best-fitting curve, so a rounding that looks worse at the
-                        fixed multiplier can be better once <i>a</i> and <i>b</i> are refit. On spambase at
-                        <code>k</code> = 3 FasterRisk's rounding sends one of its three features to zero, because the
-                        feature's scale makes its best integer point round to 0; the local search recovers it and lowers
-                        the loss by 0.095.</p>
-                      <p>At first the local search added 60 to 80% to the run time, since every candidate move meant a
-                        new fit of <i>a</i> and <i>b</i> over all rows. Two changes made it cheap: computing the loss from
-                        counts of positive and negative rows per value of the total score (with 5 features the total takes at most 51
-                        values), and ranking moves by an estimate before checking only the best
-                        two exactly. Run 2 found that its first estimate was too optimistic for moves that change the
-                        spread of the scores (0.58 estimated against 0.63 true on compas at <code>k</code> = 3), and fixed
-                        it by recomputing the cells a move touches after one Newton step in (<i>a</i>, <i>b</i>).</p>
+                      <p>Both runs found this change first, and it lowered the loss more than any other: on the visible set
+                        it moved the mean excess loss from about +0.002 to &minus;0.001 (measured against the original best
+                        known losses) in each run. FasterRisk judges a rounding by its loss at a fixed multiplier, but a
+                        risk score is used with its fitted curve, so a rounding that is worse at the fixed multiplier can
+                        be better once <i>a</i> and <i>b</i> are fit again. On spambase at <code>k</code> = 3, FasterRisk's
+                        rounding sets one of its three features to zero, because at that feature's scale the best integer
+                        point rounds to 0. The local search puts the feature back and lowers the loss by 0.095.</p>
+                      <p>At first the local search added 60 to 80% to the run time, because every candidate move required
+                        fitting <i>a</i> and <i>b</i> again over all rows. Two changes made it cheap. The loss is computed
+                        from the counts of positive and negative rows at each value of the total score (with 5 features
+                        the total takes at most 51 values), and moves are ranked by an estimate so that only the best two
+                        are checked exactly. Run 2 found that its first estimate was too optimistic for moves that change
+                        the spread of the scores (0.58 estimated against 0.63 true on compas at <code>k</code> = 3). It
+                        fixed this by recomputing the cells a move touches after one Newton step in (<i>a</i>,
+                        <i>b</i>).</p>
                     </details>
 
                     <details class="collapsible" id="m-speed">
-                      <summary>Where the time went, and how it was removed (mostly run 2)</summary>
-                      <p>Profiling FasterRisk on bank at <code>k</code> = 10 (19.9 s) showed 82% of the time in coordinate
-                        descent, which passes over every row for each coordinate step. Merging identical rows and
-                        fitting by Newton's method on the few chosen features cut the time 5&times; in both runs. Run 2
-                        then grouped each beam candidate's rows by their values on its features (another 2.5&times;),
-                        moved the creation of each child candidate into one compiled call along with smaller changes
-                        (&minus;34%), and batched the gradient and swap screens into single matrix products (&minus;14%,
-                        then &minus;12%), so that each step reads the data once rather than once per candidate.</p>
-                      <p>The integer search also let the loop remove work from FasterRisk's first stage. Run 2 dropped
-                        FasterRisk's diverse pool (swapping each feature for up to 50 others) and started the local search
-                        from the 10 beam solutions instead, with a lower loss. Run 1 kept the pool but cut it from 50 to
-                        10 solutions and the rounding multipliers from 20 to 5, each at no cost in loss.</p>
+                      <summary>Speed changes (mostly run 2)</summary>
+                      <p>A profile of FasterRisk on bank at <code>k</code> = 10 (19.9 s) showed 82% of the time in
+                        coordinate descent, which reads every row for each coordinate step. Merging identical rows and
+                        fitting by Newton's method on the few chosen features made both runs 5&times; faster. Run 2 then
+                        grouped each beam candidate's rows by their values on its features (another 2.5&times;), moved the
+                        creation of each new candidate into one compiled function together with smaller changes
+                        (&minus;34% time), and computed the gradient and swap screens as single matrix products
+                        (&minus;14%, then &minus;12%). After these changes each step reads the data once instead of once
+                        per candidate.</p>
+                      <p>The integer search also made parts of FasterRisk's first stage unnecessary. Run 2 removed FasterRisk's
+                        diverse pool (swapping each feature for up to 50 others) and started the local search from the 10
+                        beam solutions instead, which gave a lower loss. Run 1 kept the pool but reduced it from 50 to 10
+                        solutions and the rounding multipliers from 20 to 5, with no change in loss.</p>
                     </details>
 
                     <details class="collapsible" id="m-failed">
                       <summary>What did not work</summary>
                       <ul>
-                        <li>Local search from an empty score, without the beam: much worse (excess loss +0.010 against
-                          &minus;0.001); the beam's choice of features matters.</li>
+                        <li>Local search from an empty score, without the beam search: much worse (excess loss +0.010
+                          against &minus;0.001), so the features chosen by the beam search matter.</li>
                         <li>Cheaper ways to rank beam candidates before fitting them (a one-step score test, a
                           one-coordinate fit): all raised the loss by 0.0002 to 0.0007.</li>
                         <li>Smaller beams: 5 parents instead of 10 raised the loss by 0.003.</li>
-                        <li>Random restarts and perturbations of the local search: large gains on a few stuck problems
-                          (mushroom at <code>k</code> = 7) but less than 0.0001 on average, for 2 to 3 times the time.
+                        <li>Random restarts and perturbations of the local search: large gains on a few problems where it
+                          got stuck (mushroom at <code>k</code> = 7), but less than 0.0001 on average, for 2 to 3 times the
+                          time.
                           300 random restarts per problem on 15 problems beat the final version on only 4.</li>
                         <li>More starts, deeper swaps, rescaling all points at once, refitting the best set of features
                           and rounding again at several resolutions: gains of at most 0.0002, for 20 to 60% more
@@ -560,12 +588,12 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         <code>runs/sep26-run2/notes.md</code>) list every attempt, kept or not, with its measured effect.</p>
                     </details>
 
-                    <p>FastRiskScore is a heuristic: unlike RiskSLIM with a full CPLEX licence, it does not prove that
-                      its score is the best one. It is deterministic, single-threaded, and needs numba, which compiles
-                      the search once per machine in about 30 seconds and caches it (set
-                      <code>RISKSCORE_NUMBA_CACHE=0</code> if the package directory is not writable). A time limit
-                      (<code>time_limit</code>, 60 s by default) stops the search early on very large data and
-                      returns the best score found; on every dataset here it finished well within it.</p>
+                    <p>FastRiskScore is a heuristic. Unlike RiskSLIM with a full CPLEX licence, it does not prove that its
+                      score is the best one. It is deterministic and single-threaded. It needs numba, which compiles the
+                      search once per machine (about 30 seconds) and caches the result; set
+                      <code>RISKSCORE_NUMBA_CACHE=0</code> if the package directory is not writable. The search stops at
+                      a time limit (<code>time_limit</code>, 60 s by default) and returns the best score found so far;
+                      every dataset here finished well within it.</p>
 
                     <h3 id="related-work">Related work</h3>
                     <table class="ranktbl dataset-table">
