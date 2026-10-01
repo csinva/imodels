@@ -93,12 +93,16 @@ def run_chain(model: &#39;SklearnModel&#39;, X: np.ndarray, y: np.ndarray):
 
     model.model = model._construct_model(X, y)
 
+    # chains running in parallel would interleave their bars, so progress is
+    # only reported when they run one at a time
+    verbose = model.verbose if (model.n_chains == 1 or model.n_jobs == 1) else 0
     return model.sampler.samples(model.model,
                                  model.n_samples,
                                  model.n_burn,
                                  model.thin,
                                  model.store_in_sample_predictions,
-                                 model.store_acceptance_trace)
+                                 model.store_acceptance_trace,
+                                 verbose=verbose)
 
 
 def delayed_run_chain():
@@ -254,7 +258,8 @@ class SklearnModel(BaseEstimator, RegressorMixin):
                  initializer: Optional[Initializer] = None,
                  n_jobs=-1,
                  classification: bool = False,
-                 max_rules=None):
+                 max_rules=None,
+                 verbose: int = 0):
         self.n_trees = n_trees
         self.n_chains = n_chains
         self.sigma_a = sigma_a
@@ -276,6 +281,7 @@ class SklearnModel(BaseEstimator, RegressorMixin):
         self.sampler = ModelSampler(self.schedule)
         self.classification = classification
         self.max_rules = max_rules
+        self.verbose = verbose
 
         self.sigma, self.data, self.model, self._prediction_samples, self._model_samples, self.extract = [None] * 6
 
@@ -1035,12 +1041,16 @@ Primarily used as a building block for constructing a parallel run of multiple c
 
     model.model = model._construct_model(X, y)
 
+    # chains running in parallel would interleave their bars, so progress is
+    # only reported when they run one at a time
+    verbose = model.verbose if (model.n_chains == 1 or model.n_jobs == 1) else 0
     return model.sampler.samples(model.model,
                                  model.n_samples,
                                  model.n_burn,
                                  model.thin,
                                  model.store_in_sample_predictions,
-                                 model.store_acceptance_trace)</code></pre>
+                                 model.store_acceptance_trace,
+                                 verbose=verbose)</code></pre>
 </details>
 </dd>
 <dt id="imodels.experimental.bartpy.sklearnmodel.shrink_node"><code class="name flex">
@@ -1114,7 +1124,7 @@ Primarily used as a building block for constructing a parallel run of multiple c
 <dl>
 <dt id="imodels.experimental.bartpy.sklearnmodel.BART"><code class="flex name class">
 <span>class <span class="ident">BART</span></span>
-<span>(</span><span>n_trees: int = 200, n_chains: int = 4, sigma_a: float = 0.001, sigma_b: float = 0.001, n_samples: int = 200, n_burn: int = 200, thin: float = 0.1, alpha: float = 0.95, beta: float = 2.0, store_in_sample_predictions: bool = False, store_acceptance_trace: bool = False, tree_sampler: <a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler" href="samplers/treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler">TreeMutationSampler</a> = &lt;imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler object&gt;, initializer: <a title="imodels.experimental.bartpy.initializers.initializer.Initializer" href="initializers/initializer.html#imodels.experimental.bartpy.initializers.initializer.Initializer">Initializer</a> | None = None, n_jobs=-1, classification: bool = False, max_rules=None)</span>
+<span>(</span><span>n_trees: int = 200, n_chains: int = 4, sigma_a: float = 0.001, sigma_b: float = 0.001, n_samples: int = 200, n_burn: int = 200, thin: float = 0.1, alpha: float = 0.95, beta: float = 2.0, store_in_sample_predictions: bool = False, store_acceptance_trace: bool = False, tree_sampler: <a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler" href="samplers/treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler">TreeMutationSampler</a> = &lt;imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler object&gt;, initializer: <a title="imodels.experimental.bartpy.initializers.initializer.Initializer" href="initializers/initializer.html#imodels.experimental.bartpy.initializers.initializer.Initializer">Initializer</a> | None = None, n_jobs=-1, classification: bool = False, max_rules=None, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The main access point to building BART models in BartPy</p>
@@ -1746,7 +1756,7 @@ array([3, 3, 3])
 </dd>
 <dt id="imodels.experimental.bartpy.sklearnmodel.SklearnModel"><code class="flex name class">
 <span>class <span class="ident">SklearnModel</span></span>
-<span>(</span><span>n_trees: int = 200, n_chains: int = 4, sigma_a: float = 0.001, sigma_b: float = 0.001, n_samples: int = 200, n_burn: int = 200, thin: float = 0.1, alpha: float = 0.95, beta: float = 2.0, store_in_sample_predictions: bool = False, store_acceptance_trace: bool = False, tree_sampler: <a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler" href="samplers/treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler">TreeMutationSampler</a> = &lt;imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler object&gt;, initializer: <a title="imodels.experimental.bartpy.initializers.initializer.Initializer" href="initializers/initializer.html#imodels.experimental.bartpy.initializers.initializer.Initializer">Initializer</a> | None = None, n_jobs=-1, classification: bool = False, max_rules=None)</span>
+<span>(</span><span>n_trees: int = 200, n_chains: int = 4, sigma_a: float = 0.001, sigma_b: float = 0.001, n_samples: int = 200, n_burn: int = 200, thin: float = 0.1, alpha: float = 0.95, beta: float = 2.0, store_in_sample_predictions: bool = False, store_acceptance_trace: bool = False, tree_sampler: <a title="imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler" href="samplers/treemutation.html#imodels.experimental.bartpy.samplers.treemutation.TreeMutationSampler">TreeMutationSampler</a> = &lt;imodels.experimental.bartpy.samplers.unconstrainedtree.treemutation.UnconstrainedTreeMutationSampler object&gt;, initializer: <a title="imodels.experimental.bartpy.initializers.initializer.Initializer" href="initializers/initializer.html#imodels.experimental.bartpy.initializers.initializer.Initializer">Initializer</a> | None = None, n_jobs=-1, classification: bool = False, max_rules=None, verbose: int = 0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>The main access point to building BART models in BartPy</p>
@@ -1859,7 +1869,8 @@ set to <code>-1</code> to use all cores</dd>
                  initializer: Optional[Initializer] = None,
                  n_jobs=-1,
                  classification: bool = False,
-                 max_rules=None):
+                 max_rules=None,
+                 verbose: int = 0):
         self.n_trees = n_trees
         self.n_chains = n_chains
         self.sigma_a = sigma_a
@@ -1881,6 +1892,7 @@ set to <code>-1</code> to use all cores</dd>
         self.sampler = ModelSampler(self.schedule)
         self.classification = classification
         self.max_rules = max_rules
+        self.verbose = verbose
 
         self.sigma, self.data, self.model, self._prediction_samples, self._model_samples, self.extract = [None] * 6
 
@@ -3007,6 +3019,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

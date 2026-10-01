@@ -6,6 +6,7 @@
 
 from .algebraic.gp_gam import GPGamRegressor
 from .algebraic.slim import SLIMRegressor, SLIMClassifier
+from .algebraic.risk_score.fast_risk_score import FastRiskScoreClassifier
 from .algebraic.tree_gam import TreeGAMClassifier, TreeGAMRegressor
 from .algebraic.marginal_shrinkage_linear_model import (
     MarginalShrinkageLinearModelRegressor,
@@ -57,6 +58,7 @@ CLASSIFIERS = [
     SkopeRulesClassifier,
     BoostedRulesClassifier,
     SLIMClassifier,
+    FastRiskScoreClassifier,
     SlipperClassifier,
     BayesianRuleSetClassifier,
     C45TreeClassifier,
@@ -101,7 +103,7 @@ DISCRETIZERS = [RFDiscretizer, BasicDiscretizer,
 # models and helpers rather than whatever each submodule happened to import.
 __all__ = [
     "GPGamRegressor", "AutoInterpretableClassifier",
-    "AutoInterpretableRegressor", "FastSmallTreeClassifier", "BART",
+    "AutoInterpretableRegressor", "FastSmallTreeClassifier", "FastRiskScoreClassifier", "BART",
     "BRLDiscretizer", "BasicDiscretizer", "BayesianRuleListClassifier",
     "BayesianRuleSetClassifier", "BoostedRulesClassifier",
     "BoostedRulesRegressor", "C45TreeClassifier", "CLASSIFIERS",

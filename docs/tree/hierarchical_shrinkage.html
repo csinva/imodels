@@ -66,6 +66,7 @@ from imodels.util import checks
 from imodels.util.arguments import check_fit_arguments, check_predict_X
 from imodels.util.tree import compute_tree_complexity
 from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.progress import progress_iter
 
 
 def _as_arrays(X, y):
@@ -553,6 +554,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
+        verbose: int = 0,
         *args,
         **kwargs
     ):
@@ -577,6 +579,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
         self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.shrinkage_scheme_ = shrinkage_scheme_
         # print(&#39;estimator&#39;, self.estimator_,
         #       &#39;checks.check_is_fitted(estimator)&#39;, checks.check_is_fitted(self.estimator_))
@@ -592,6 +595,7 @@ class HSTreeClassifierCV(HSTreeClassifier):
             &#34;max_leaf_nodes&#34;: self.estimator_.max_leaf_nodes,
             &#34;cv&#34;: self.cv,
             &#34;scoring&#34;: self.scoring,
+            &#34;verbose&#34;: self.verbose,
         }
         if deep:
             return deepcopy(d)
@@ -602,7 +606,9 @@ class HSTreeClassifierCV(HSTreeClassifier):
         self.scores_ = [[] for _ in self.reg_param_list]
         scorer = kwargs.get(&#34;scoring&#34;, log_loss)
         kf = KFold(n_splits=self.cv)
-        for train_index, test_index in kf.split(X_arr):
+        for train_index, test_index in progress_iter(
+                kf.split(X_arr), verbose=self.verbose, total=self.cv,
+                desc=&#39;cross-validating&#39;):
             X_out, y_out = X_arr[test_index, :], y_arr[test_index]
             X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)
@@ -665,6 +671,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
+        verbose: int = 0,
         *args,
         **kwargs
     ):
@@ -689,6 +696,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
         self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.shrinkage_scheme_ = shrinkage_scheme_
         # print(&#39;estimator&#39;, self.estimator_,
         #       &#39;checks.check_is_fitted(estimator)&#39;, checks.check_is_fitted(self.estimator_))
@@ -704,6 +712,7 @@ class HSTreeRegressorCV(HSTreeRegressor):
             &#34;max_leaf_nodes&#34;: self.estimator_.max_leaf_nodes,
             &#34;cv&#34;: self.cv,
             &#34;scoring&#34;: self.scoring,
+            &#34;verbose&#34;: self.verbose,
         }
         if deep:
             return deepcopy(d)
@@ -714,7 +723,9 @@ class HSTreeRegressorCV(HSTreeRegressor):
         self.scores_ = [[] for _ in self.reg_param_list]
         kf = KFold(n_splits=self.cv)
         scorer = kwargs.get(&#34;scoring&#34;, mean_squared_error)
-        for train_index, test_index in kf.split(X_arr):
+        for train_index, test_index in progress_iter(
+                kf.split(X_arr), verbose=self.verbose, total=self.cv,
+                desc=&#39;cross-validating&#39;):
             X_out, y_out = X_arr[test_index, :], y_arr[test_index]
             X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)
@@ -1588,7 +1599,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV"><code class="flex name class">
 <span>class <span class="ident">HSTreeClassifierCV</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = 20, cv: int = 3, scoring=None, *args, **kwargs)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = 20, cv: int = 3, scoring=None, verbose: int = 0, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Hierarchical shrinkage: post-hoc regularization for any decision tree
@@ -1650,6 +1661,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
+        verbose: int = 0,
         *args,
         **kwargs
     ):
@@ -1674,6 +1686,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.shrinkage_scheme_ = shrinkage_scheme_
         # print(&#39;estimator&#39;, self.estimator_,
         #       &#39;checks.check_is_fitted(estimator)&#39;, checks.check_is_fitted(self.estimator_))
@@ -1689,6 +1702,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
             &#34;max_leaf_nodes&#34;: self.estimator_.max_leaf_nodes,
             &#34;cv&#34;: self.cv,
             &#34;scoring&#34;: self.scoring,
+            &#34;verbose&#34;: self.verbose,
         }
         if deep:
             return deepcopy(d)
@@ -1699,7 +1713,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         self.scores_ = [[] for _ in self.reg_param_list]
         scorer = kwargs.get(&#34;scoring&#34;, log_loss)
         kf = KFold(n_splits=self.cv)
-        for train_index, test_index in kf.split(X_arr):
+        for train_index, test_index in progress_iter(
+                kf.split(X_arr), verbose=self.verbose, total=self.cv,
+                desc=&#39;cross-validating&#39;):
             X_out, y_out = X_arr[test_index, :], y_arr[test_index]
             X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)
@@ -1758,7 +1774,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
     self.scores_ = [[] for _ in self.reg_param_list]
     scorer = kwargs.get(&#34;scoring&#34;, log_loss)
     kf = KFold(n_splits=self.cv)
-    for train_index, test_index in kf.split(X_arr):
+    for train_index, test_index in progress_iter(
+            kf.split(X_arr), verbose=self.verbose, total=self.cv,
+            desc=&#39;cross-validating&#39;):
         X_out, y_out = X_arr[test_index, :], y_arr[test_index]
         X_in, y_in = X_arr[train_index, :], y_arr[train_index]
         base_est = deepcopy(self.estimator_)
@@ -1989,7 +2007,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 <dt id="imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV"><code class="flex name class">
 <span>class <span class="ident">HSTreeRegressorCV</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = 20, cv: int = 3, scoring=None, *args, **kwargs)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator = None, reg_param_list: List[float] = [0, 0.1, 1, 10, 50, 100, 500], shrinkage_scheme_: str = 'node_based', max_leaf_nodes: int = 20, cv: int = 3, scoring=None, verbose: int = 0, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Hierarchical shrinkage: post-hoc regularization for any decision tree
@@ -2051,6 +2069,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         max_leaf_nodes: int = 20,
         cv: int = 3,
         scoring=None,
+        verbose: int = 0,
         *args,
         **kwargs
     ):
@@ -2075,6 +2094,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         self.reg_param_list = reg_param_list
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.shrinkage_scheme_ = shrinkage_scheme_
         # print(&#39;estimator&#39;, self.estimator_,
         #       &#39;checks.check_is_fitted(estimator)&#39;, checks.check_is_fitted(self.estimator_))
@@ -2090,6 +2110,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
             &#34;max_leaf_nodes&#34;: self.estimator_.max_leaf_nodes,
             &#34;cv&#34;: self.cv,
             &#34;scoring&#34;: self.scoring,
+            &#34;verbose&#34;: self.verbose,
         }
         if deep:
             return deepcopy(d)
@@ -2100,7 +2121,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
         self.scores_ = [[] for _ in self.reg_param_list]
         kf = KFold(n_splits=self.cv)
         scorer = kwargs.get(&#34;scoring&#34;, mean_squared_error)
-        for train_index, test_index in kf.split(X_arr):
+        for train_index, test_index in progress_iter(
+                kf.split(X_arr), verbose=self.verbose, total=self.cv,
+                desc=&#39;cross-validating&#39;):
             X_out, y_out = X_arr[test_index, :], y_arr[test_index]
             X_in, y_in = X_arr[train_index, :], y_arr[train_index]
             base_est = deepcopy(self.estimator_)
@@ -2158,7 +2181,9 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
     self.scores_ = [[] for _ in self.reg_param_list]
     kf = KFold(n_splits=self.cv)
     scorer = kwargs.get(&#34;scoring&#34;, mean_squared_error)
-    for train_index, test_index in kf.split(X_arr):
+    for train_index, test_index in progress_iter(
+            kf.split(X_arr), verbose=self.verbose, total=self.cv,
+            desc=&#39;cross-validating&#39;):
         X_out, y_out = X_arr[test_index, :], y_arr[test_index]
         X_in, y_in = X_arr[train_index, :], y_arr[train_index]
         base_est = deepcopy(self.estimator_)
@@ -2204,6 +2229,7 @@ Note: args, kwargs are not used but left so that imodels-experiments can still p
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

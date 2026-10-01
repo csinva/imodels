@@ -62,6 +62,7 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, export_t
 from sklearn.utils import check_X_y
 
 from imodels.util.arguments import check_fit_arguments, check_predict_X
+from imodels.util.progress import progress_iter
 from sklearn.utils.validation import check_is_fitted
 from imodels.util.introspection import RuleInspectionMixin
 
@@ -192,7 +193,8 @@ class TaoTree(RuleInspectionMixin, BaseEstimator):
                     X[:, self.model.tree_.feature[i]])
         if self.verbose:
             print(&#39;starting score&#39;, self.model.score(X, y))
-        for i in range(self.n_iters):
+        for i in progress_iter(range(self.n_iters), verbose=self.verbose,
+                              desc=&#39;TAO iterations&#39;):
             num_updates = self._tao_iter_cart(
                 X, y, self.model.tree_, sample_weight=sample_weight)
             if num_updates == 0:
@@ -637,7 +639,8 @@ Note: this implementation learns single-feature splits rather than oblique trees
                     X[:, self.model.tree_.feature[i]])
         if self.verbose:
             print(&#39;starting score&#39;, self.model.score(X, y))
-        for i in range(self.n_iters):
+        for i in progress_iter(range(self.n_iters), verbose=self.verbose,
+                              desc=&#39;TAO iterations&#39;):
             num_updates = self._tao_iter_cart(
                 X, y, self.model.tree_, sample_weight=sample_weight)
             if num_updates == 0:
@@ -973,7 +976,8 @@ are ignored while searching for a split in each node.</p></div>
                 X[:, self.model.tree_.feature[i]])
     if self.verbose:
         print(&#39;starting score&#39;, self.model.score(X, y))
-    for i in range(self.n_iters):
+    for i in progress_iter(range(self.n_iters), verbose=self.verbose,
+                          desc=&#39;TAO iterations&#39;):
         num_updates = self._tao_iter_cart(
             X, y, self.model.tree_, sample_weight=sample_weight)
         if num_updates == 0:
@@ -1496,6 +1500,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

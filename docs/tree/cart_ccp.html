@@ -61,6 +61,7 @@ from imodels.tree.hierarchical_shrinkage import HSTreeRegressor, HSTreeClassifie
 from imodels.util.tree import compute_tree_complexity
 from imodels.util.introspection import RuleInspectionMixin
 from imodels.util.arguments import explicit_get_params, explicit_set_params
+from imodels.util.progress import progress_iter
 
 
 class DecisionTreeCCPClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimator):
@@ -239,18 +240,21 @@ class DecisionTreeCCPRegressor(RuleInspectionMixin, BaseEstimator):
 
 class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-                 desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
+                 desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
+                 *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         m = DecisionTreeCCPRegressor(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
-        for reg_param in self.reg_param_list:
+        for reg_param in progress_iter(self.reg_param_list, verbose=self.verbose,
+                                       desc=&#39;cross-validating&#39;):
             est = HSTreeRegressor(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
@@ -260,18 +264,21 @@ class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
 
 class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-                 desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
+                 desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
+                 *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         m = DecisionTreeCCPClassifier(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
-        for reg_param in self.reg_param_list:
+        for reg_param in progress_iter(self.reg_param_list, verbose=self.verbose,
+                                       desc=&#39;cross-validating&#39;):
             est = HSTreeClassifier(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
@@ -991,7 +998,7 @@ possible to update each component of a nested object.</p>
 </dd>
 <dt id="imodels.tree.cart_ccp.HSDecisionTreeCCPClassifierCV"><code class="flex name class">
 <span>class <span class="ident">HSDecisionTreeCCPClassifierCV</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Hierarchical shrinkage: post-hoc regularization for any decision tree
@@ -1015,18 +1022,21 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 </summary>
 <pre><code class="python">class HSDecisionTreeCCPClassifierCV(HSTreeClassifier):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-                 desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
+                 desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
+                 *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         m = DecisionTreeCCPClassifier(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
-        for reg_param in self.reg_param_list:
+        for reg_param in progress_iter(self.reg_param_list, verbose=self.verbose,
+                                       desc=&#39;cross-validating&#39;):
             est = HSTreeClassifier(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
@@ -1060,7 +1070,8 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
     m = DecisionTreeCCPClassifier(self.estimator_, desired_complexity=self.desired_complexity)
     m.fit(X, y, sample_weight, *args, **kwargs)
     self.scores_ = []
-    for reg_param in self.reg_param_list:
+    for reg_param in progress_iter(self.reg_param_list, verbose=self.verbose,
+                                   desc=&#39;cross-validating&#39;):
         est = HSTreeClassifier(deepcopy(m.estimator_), reg_param)
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
@@ -1085,7 +1096,7 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 </dd>
 <dt id="imodels.tree.cart_ccp.HSDecisionTreeCCPRegressorCV"><code class="flex name class">
 <span>class <span class="ident">HSDecisionTreeCCPRegressorCV</span></span>
-<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs)</span>
+<span>(</span><span>estimator_: sklearn.base.BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500], desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0, *args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Hierarchical shrinkage: post-hoc regularization for any decision tree
@@ -1109,18 +1120,21 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 </summary>
 <pre><code class="python">class HSDecisionTreeCCPRegressorCV(HSTreeRegressor):
     def __init__(self, estimator_: BaseEstimator, reg_param_list: List[float] = [0.1, 1, 10, 50, 100, 500],
-                 desired_complexity: int = 1, cv: int = 3, scoring=None, *args, **kwargs):
+                 desired_complexity: int = 1, cv: int = 3, scoring=None, verbose: int = 0,
+                 *args, **kwargs):
         super().__init__(estimator_=estimator_, reg_param=None)
         self.reg_param_list = np.array(reg_param_list)
         self.cv = cv
         self.scoring = scoring
+        self.verbose = verbose
         self.desired_complexity = desired_complexity
 
     def fit(self, X, y, sample_weight=None, *args, **kwargs):
         m = DecisionTreeCCPRegressor(self.estimator_, desired_complexity=self.desired_complexity)
         m.fit(X, y, sample_weight, *args, **kwargs)
         self.scores_ = []
-        for reg_param in self.reg_param_list:
+        for reg_param in progress_iter(self.reg_param_list, verbose=self.verbose,
+                                       desc=&#39;cross-validating&#39;):
             est = HSTreeRegressor(deepcopy(m.estimator_), reg_param)
             cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
             self.scores_.append(np.mean(cv_scores))
@@ -1154,7 +1168,8 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
     m = DecisionTreeCCPRegressor(self.estimator_, desired_complexity=self.desired_complexity)
     m.fit(X, y, sample_weight, *args, **kwargs)
     self.scores_ = []
-    for reg_param in self.reg_param_list:
+    for reg_param in progress_iter(self.reg_param_list, verbose=self.verbose,
+                                   desc=&#39;cross-validating&#39;):
         est = HSTreeRegressor(deepcopy(m.estimator_), reg_param)
         cv_scores = cross_val_score(est, X, y, cv=self.cv, scoring=self.scoring)
         self.scores_.append(np.mean(cv_scores))
@@ -1192,6 +1207,7 @@ summary plots in the <a href="https://arxiv.org/abs/2202.00858">paper</a>.</p></
 </li>
 <li><h3>Our favorite methods</h3>
 <ul class="post-list">
+<li><a href="https://csinva.io/imodels/fastriskscore.html" title="Sparse integer risk scores">FastRiskScore</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/fastsmalltree.html" title="Certifiably optimal sparse decision trees">FastSmallTree</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/gpgam.html" title="Additive Gaussian processes over binned features">GPGam</a><span class="post-tag" title="Discovered by an autoresearch loop">autoresearch</span><span class="post-date">Sep '26</span></li>
 <li><a href="https://csinva.io/imodels/mdi_plus.html" title="Flexible tree-based feature importance">MDI+</a><span class="post-date">Jul '23</span></li>

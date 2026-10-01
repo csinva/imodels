@@ -40,6 +40,8 @@ MODEL_KWARGS = {
     # distinct value, so the test config prices leaves high enough to keep the
     # optimal tree small and caps the search so a slow machine cannot hang
     "FastSmallTreeClassifier": dict(regularization=0.1, time_limit=30),
+    # a small score keeps the test fits quick; the search compiles with numba once per machine
+    "FastRiskScoreClassifier": dict(k=3, time_limit=30),
     "FIGSRegressorCV": dict(n_rules_list=[3], n_trees_list=[2], cv=2),
     "BART": dict(n_samples=5, n_burn=5, n_trees=3, n_chains=1),
     "DecisionTreeCCPClassifier": dict(
@@ -95,4 +97,5 @@ EXCLUDED_MODELS = {
 # raises an ImportError naming the fix (checked by fast_small_tree_without_numba_test.py)
 if importlib.util.find_spec("numba") is None:
     EXCLUDED_MODELS["FastSmallTreeClassifier"] = "numba is not installed"
+    EXCLUDED_MODELS["FastRiskScoreClassifier"] = "numba is not installed"
 
