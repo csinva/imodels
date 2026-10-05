@@ -340,7 +340,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         </div>
                       </div>
                     </div>
-                    <p class="caption"><b>Fig 1.</b> Training loss and test error against fit time. FastRiskScore (star)
+                    <p class="caption"><b>Fig 1. Training loss and test error against fit time.</b> FastRiskScore (star)
                         is about 180&times; faster than FasterRisk on the visible set and 225&times; on the held-out sets (by
                         the median), and has a lower loss on 55 of 70, 94 of 135 and 21 of 27 problems (a higher one on 0, 8
                         and 0), and has the lowest test error of the integer scores. The closest baselines are sparse
@@ -932,7 +932,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                     </details>
 
                     <details class="collapsible" id="m-failed">
-                      <summary>What did not work</summary>
+                      <summary>Changes that didn't yield improvements</summary>
                       <ul>
                         <li>Local search from an empty score, without the beam search: much worse (excess loss +0.010
                           against &minus;0.001), so the features chosen by the beam search matter.</li>
@@ -951,36 +951,44 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
 
                     <details class="collapsible" id="versions">
                       <summary>Full table of kept versions</summary>
-                      <table class="ranktbl dataset-table">
+                      <table class="ranktbl dataset-table vers">
                         <thead>
-                          <tr><th>run</th><th>version</th><th>what changed</th><th>mean loss</th><th>time (s)</th><th>test AUC</th></tr>
+                          <tr><th>version</th><th>what changed</th><th>mean loss</th><th>time (s)</th><th>test AUC</th></tr>
                         </thead>
                         <tbody>
-                          <tr><td>1</td><td><code>pyfasterrisk_v1</code></td><td>FasterRisk in one file: beam search, diverse pool, star-ray search with sequential rounding</td><td>0.36029</td><td>1.444</td><td>0.8406</td></tr>
-                          <tr><td>1</td><td><code>v3_fastnewton</code></td><td>the same algorithm on unique (x, y) rows with counts, numba kernels, Newton on the support in place of coordinate descent</td><td>0.35920</td><td>0.279</td><td>0.8415</td></tr>
-                          <tr><td>1</td><td><code>v5_tunetop</code></td><td>beam: fine-tune only the children with the best one-coordinate fit</td><td>0.35924</td><td>0.211</td><td>0.8424</td></tr>
-                          <tr><td>1</td><td><code>v6_numbaray</code></td><td>star-ray search and sequential rounding in one numba kernel</td><td>0.35924</td><td>0.176</td><td>0.8424</td></tr>
-                          <tr><td>1</td><td><code>v9_pool10</code></td><td>integer local search scored by the calibrated loss, on score histograms; rounding pool 50 &rarr; 10</td><td>0.35661</td><td>0.163</td><td>0.8427</td></tr>
-                          <tr><td>1</td><td><code>v11_pooltune</code></td><td>diverse pool: fine-tune only the most promising swaps</td><td>0.35661</td><td>0.143</td><td>0.8427</td></tr>
-                          <tr><td>1</td><td><code>v24_child5</code></td><td>rescale and paired &plusmn;1 moves to polish the best result; beam child size 10 &rarr; 5</td><td>0.35631</td><td>0.142</td><td>0.8426</td></tr>
-                          <tr><td>1</td><td><code>v27_cheap1d</code></td><td>ranking fits capped at 3 Newton steps; 20 swap attempts per feature</td><td>0.35632</td><td>0.122</td><td>0.8425</td></tr>
-                          <tr><td>1</td><td><code>v28_ray5</code></td><td>5 multipliers in the star-ray search instead of 20</td><td>0.35632</td><td>0.105</td><td>0.8425</td></tr>
-                          <tr><td>1</td><td><code>v29_tune1</code></td><td>row deduplication by a random projection; fewer fine-tuned candidates</td><td>0.35636</td><td>0.087</td><td>0.8427</td></tr>
-                          <tr><td>1</td><td><code>v34_2starts</code></td><td>local search in numba on the support; 2 starts instead of 3</td><td>0.35640</td><td>0.074</td><td>0.8431</td></tr>
-                          <tr><td>1</td><td><code>v36_robust</code></td><td>end of run: same points, plus a deadline and kernels compiled at import</td><td>0.35640</td><td>0.071</td><td>0.8431</td></tr>
-                          <tr><td>2</td><td><code>v2_numba</code></td><td>FasterRisk in numba on unique (x, y) rows; projected Newton in place of coordinate descent</td><td>0.35981</td><td>0.296</td><td>0.8414</td></tr>
-                          <tr><td>2</td><td><code>v5_nopool</code></td><td>integer local search scored by the calibrated loss (value changes, additions, swaps); diverse pool dropped</td><td>0.35637</td><td>0.264</td><td>0.8427</td></tr>
-                          <tr><td>2</td><td><code>v7_groups</code></td><td>beam nodes keep rows grouped by (y, support pattern): at most a few hundred groups instead of all rows</td><td>0.35637</td><td>0.107</td><td>0.8427</td></tr>
-                          <tr><td>2</td><td><code>v14_numbachild</code></td><td>faster data setup, swap screen, score binning by counting, visited-state memory; child creation in one numba call</td><td>0.35639</td><td>0.071</td><td>0.8428</td></tr>
-                          <tr><td>2</td><td><code>v16_swaplast</code></td><td>value changes and additions before swaps; swaps only when those fail</td><td>0.35622</td><td>0.063</td><td>0.8427</td></tr>
-                          <tr><td>2</td><td><code>v17_calround</code></td><td>rounding by the calibrated loss over 20 scales, replacing star-ray sequential rounding</td><td>0.35602</td><td>0.066</td><td>0.8430</td></tr>
-                          <tr><td>2</td><td><code>v18_roundnb</code></td><td>that rounding in one numba kernel</td><td>0.35597</td><td>0.057</td><td>0.8430</td></tr>
-                          <tr><td>2</td><td><code>v24_blasscreen</code></td><td>better move estimate (touched cells exact after a Newton step in (a, b)); swap screen as two BLAS products</td><td>0.35592</td><td>0.049</td><td>0.8428</td></tr>
-                          <tr><td>2</td><td><code>v30_lazycodes</code></td><td>column codes computed lazily; exact checks skipped when the estimate rules a move out</td><td>0.35592</td><td>0.042</td><td>0.8428</td></tr>
-                          <tr><td>2</td><td><code>v34_gemm</code></td><td>swap screens for all k removals, and beam gradients for all parents, as one matrix product each</td><td>0.35592</td><td>0.037</td><td>0.8424</td></tr>
-                          <tr><td>2</td><td><code>v35_scratch</code></td><td>run 2's final version, shipped until the later loops of <a href="#next">Sec 2</a>: same points as v34, plus deadlines at 40/80/90% of the time limit</td><td>0.35592</td><td>0.038</td><td>0.8424</td></tr>
+                          <tr class="vgrp"><td colspan="5">Run 1 (lower loss)</td></tr>
+                          <tr><td><code>pyfasterrisk_v1</code></td><td>FasterRisk in one file: beam search, diverse pool, star-ray search with sequential rounding</td><td>0.36029</td><td>1.444</td><td>0.8406</td></tr>
+                          <tr><td><code>v3_fastnewton</code></td><td>the same algorithm on unique (x, y) rows with counts, numba kernels, Newton on the support in place of coordinate descent</td><td>0.35920</td><td>0.279</td><td>0.8415</td></tr>
+                          <tr><td><code>v5_tunetop</code></td><td>beam: fine-tune only the children with the best one-coordinate fit</td><td>0.35924</td><td>0.211</td><td>0.8424</td></tr>
+                          <tr><td><code>v6_numbaray</code></td><td>star-ray search and sequential rounding in one numba kernel</td><td>0.35924</td><td>0.176</td><td>0.8424</td></tr>
+                          <tr><td><code>v9_pool10</code></td><td>integer local search scored by the calibrated loss, on score histograms; rounding pool 50 &rarr; 10</td><td>0.35661</td><td>0.163</td><td>0.8427</td></tr>
+                          <tr><td><code>v11_pooltune</code></td><td>diverse pool: fine-tune only the most promising swaps</td><td>0.35661</td><td>0.143</td><td>0.8427</td></tr>
+                          <tr><td><code>v24_child5</code></td><td>rescale and paired &plusmn;1 moves to polish the best result; beam child size 10 &rarr; 5</td><td>0.35631</td><td>0.142</td><td>0.8426</td></tr>
+                          <tr><td><code>v27_cheap1d</code></td><td>ranking fits capped at 3 Newton steps; 20 swap attempts per feature</td><td>0.35632</td><td>0.122</td><td>0.8425</td></tr>
+                          <tr><td><code>v28_ray5</code></td><td>5 multipliers in the star-ray search instead of 20</td><td>0.35632</td><td>0.105</td><td>0.8425</td></tr>
+                          <tr><td><code>v29_tune1</code></td><td>row deduplication by a random projection; fewer fine-tuned candidates</td><td>0.35636</td><td>0.087</td><td>0.8427</td></tr>
+                          <tr><td><code>v34_2starts</code></td><td>local search in numba on the support; 2 starts instead of 3</td><td>0.35640</td><td>0.074</td><td>0.8431</td></tr>
+                          <tr><td><code>v36_robust</code></td><td>end of run: same points, plus a deadline and kernels compiled at import</td><td>0.35640</td><td>0.071</td><td>0.8431</td></tr>
+                          <tr class="vgrp"><td colspan="5">Run 2 (faster)</td></tr>
+                          <tr><td><code>v2_numba</code></td><td>FasterRisk in numba on unique (x, y) rows; projected Newton in place of coordinate descent</td><td>0.35981</td><td>0.296</td><td>0.8414</td></tr>
+                          <tr><td><code>v5_nopool</code></td><td>integer local search scored by the calibrated loss (value changes, additions, swaps); diverse pool dropped</td><td>0.35637</td><td>0.264</td><td>0.8427</td></tr>
+                          <tr><td><code>v7_groups</code></td><td>beam nodes keep rows grouped by (y, support pattern): at most a few hundred groups instead of all rows</td><td>0.35637</td><td>0.107</td><td>0.8427</td></tr>
+                          <tr><td><code>v14_numbachild</code></td><td>faster data setup, swap screen, score binning by counting, visited-state memory; child creation in one numba call</td><td>0.35639</td><td>0.071</td><td>0.8428</td></tr>
+                          <tr><td><code>v16_swaplast</code></td><td>value changes and additions before swaps; swaps only when those fail</td><td>0.35622</td><td>0.063</td><td>0.8427</td></tr>
+                          <tr><td><code>v17_calround</code></td><td>rounding by the calibrated loss over 20 scales, replacing star-ray sequential rounding</td><td>0.35602</td><td>0.066</td><td>0.8430</td></tr>
+                          <tr><td><code>v18_roundnb</code></td><td>that rounding in one numba kernel</td><td>0.35597</td><td>0.057</td><td>0.8430</td></tr>
+                          <tr><td><code>v24_blasscreen</code></td><td>better move estimate (touched cells exact after a Newton step in (a, b)); swap screen as two BLAS products</td><td>0.35592</td><td>0.049</td><td>0.8428</td></tr>
+                          <tr><td><code>v30_lazycodes</code></td><td>column codes computed lazily; exact checks skipped when the estimate rules a move out</td><td>0.35592</td><td>0.042</td><td>0.8428</td></tr>
+                          <tr><td><code>v34_gemm</code></td><td>swap screens for all k removals, and beam gradients for all parents, as one matrix product each</td><td>0.35592</td><td>0.037</td><td>0.8424</td></tr>
+                          <tr><td><code>v35_scratch</code></td><td>run 2's final version, shipped until the later loops of <a href="#next">Sec 2</a>: same points as v34, plus deadlines at 40/80/90% of the time limit</td><td>0.35592</td><td>0.038</td><td>0.8424</td></tr>
                         </tbody>
                       </table>
+                      <style>
+                        table.vers td:not(:nth-child(2)), table.vers th { white-space: nowrap; }
+                        table.vers td:nth-child(n+3), table.vers th:nth-child(n+3) { text-align: right; }
+                        table.vers code { font-size: 0.85em; }
+                        table.vers tr.vgrp td { font-weight: 600; background: var(--surface-alt); }
+                      </style>
                       <p class="tblnote">Visible set, as recorded by each run. Times vary by about 5% between runs of the
                         same code. The runs' logs (<code>runs/sep26-run1/notes.md</code>,
                         <code>runs/sep26-run2/notes.md</code>) list every attempt, kept or not, with its measured effect.</p>
@@ -989,9 +997,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                     <p>FastRiskScore is a heuristic. Unlike RiskSLIM with a full CPLEX licence, it does not prove that its
                       score is the best one. It is deterministic and single-threaded. It needs numba, which compiles the
                       search once per machine (about 2 minutes) and caches the result; set
-                      <code>RISKSCORE_NUMBA_CACHE=0</code> if the package directory is not writable. The search stops at
-                      a time limit (<code>time_limit</code>, 60 s by default) and returns the best score found so far;
-                      every dataset here finished well within it.</p>
+                      <code>RISKSCORE_NUMBA_CACHE=0</code> if the package directory is not writable.</p>
 
                     <h3 id="citation">Citation</h3>
 
