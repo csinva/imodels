@@ -19,6 +19,8 @@ from imodels.tree.optimal_tree.solver import (HAVE_NUMBA, ST_LB, ST_UB, BinaryEn
 from imodels.util.arguments import (check_fit_arguments, check_predict_X,
                                     decode_labels)
 from imodels.util.introspection import RuleInspectionMixin
+from imodels.util.numba_compile import notify_first_compile
+from imodels.tree.optimal_tree import solver as _solver_module
 
 NUMBA_HINT = (
     "FastSmallTreeClassifier needs numba, which is not installed. Install it with "
@@ -188,6 +190,8 @@ class FastSmallTreeClassifier(RuleInspectionMixin, ClassifierMixin, BaseEstimato
         """
         if not HAVE_NUMBA:
             raise ImportError(NUMBA_HINT)
+        notify_first_compile(_solver_module.__file__, "FastSmallTreeClassifier", "about 20 seconds",
+                             _solver_module.NUMBA_CACHE, "OPTTREE_NUMBA_CACHE")
         X, y, feature_names = check_fit_arguments(self, X, y, feature_names)
         # the certificate rests on bounds of the form "a tree with a leaves costs at least
         # a * regularization" and "a tree's loss cannot fall below zero", which need a

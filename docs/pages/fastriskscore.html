@@ -99,11 +99,17 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 model = FastRiskScoreClassifier(k=5).fit(X_train, y_train)
 proba = model.predict_proba(X_test)</code></pre>
 
-                    <p><code>k</code> is the maximum number of conditions, and <code>max_points</code> (default 5) is the
-                      largest number of points one condition can carry. Numeric columns are split at their deciles and
-                      categorical columns are one-hot encoded, so each condition refers to one of the original columns.
-                      <code>n_thresholds</code> (default 9) sets the number of thresholds per numeric column; with more than
-                      19 (for example 99, the percentiles) the search switches to settings tuned for fine thresholds.</p>
+                    <ul>
+                      <li><code>k</code> (default 5): the most conditions the score may use.</li>
+                      <li><code>max_points</code> (default 5): the largest number of points one condition can carry.</li>
+                      <li><code>n_thresholds</code> (default 9): thresholds per numeric column, so the default splits each at
+                        its deciles. With more than 19 (for example 99, the percentiles) the search switches to settings tuned
+                        for fine thresholds.</li>
+                      <li><code>binarize</code> (default True): numeric columns become <code>x &le; t</code> conditions and
+                        categorical columns one condition per level, so each condition refers to one of the original columns.
+                        Set it to False to use binary or small-integer columns as they are.</li>
+                      <li><code>time_limit</code> (default 60 s): the search returns the best score found by then.</li>
+                    </ul>
 
                     <details class="collapsible" id="reading-the-score">
                       <summary>The fitted model: points, total score and risk curve</summary>
@@ -150,7 +156,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         make the solver faster. In each round an agent changed the solver, ran the benchmark, and kept
                         the change only if the loss went down without the time rising by more than 10%, or the time
                         went down by at least 10% without the loss rising. The agents ran for about 75 hours of autoresearch. The
-                        shipped version comes from the later loops (<a href="#next">Sec 3</a>); Fig <a href="#fig1">1</a> and
+                        shipped version comes from later loops (<a href="#next">below</a>); Fig <a href="#fig1">1</a> and
                         Table <a href="#tab1">1</a> show it.
                       All solvers are scored the same way. A solver returns integer points in [&minus;5, 5] for at most
                         <code>k</code> of a dataset's binary features. The benchmark then fits the risk curve for those
@@ -473,9 +479,32 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                     })();
                     </script>
 
-                    <p>Table <a href="#tab2">2</a> in <a href="#finer">Sec 3</a> gives results for six later loops on
-                        versions of both suites with 99 thresholds per numeric column instead of 9. Table <a href="#tab3">3</a> compares the shipped version with run 2's.</p>
 
+                    <details class="collapsible" id="fig1-measurement">
+                      <summary>Extra details on experimental settings</summary>
+                      <p><b>Scoring.</b> The benchmark rejects any answer whose points are not integers, fall outside
+                        [&minus;5, 5] or use more than <code>k</code> features; no solver in the figure had such an answer.
+                        Given the points, the risk curve is fit by Newton's method on the two numbers <i>a</i> and
+                        <i>b</i>, a convex problem. Each solver process first fits a tiny warm-up problem, untimed, so
+                        numba compilation is not counted; FastRiskScore's first fit on a new machine takes about 2 minutes
+                        longer for that reason.</p>
+                      <p><b>Best known losses.</b> The excess loss is measured against the lowest loss any integer
+                        solver reached on the problem in any of these runs, including FasterRisk with every search
+                        width raised (a beam of 50 &times; 50, a pool of 200 and 100 multipliers) and a 20-minute
+                        limit, which takes about 12&times; its default time.</p>
+                      <p><b>RiskSLIM.</b> The free CPLEX Community Edition refuses problems above 1,000 variables or
+                        constraints, and RiskSLIM's cutting planes pass that limit on wider datasets; it returned no
+                        score on 25 of 70 visible problems and 102 of 135 hidden ones, and
+                        is charged the base rate there. With a full CPLEX licence it would do better, but within these time
+                        limits it still certifies optimality only on small problems, as the FasterRisk paper also
+                        found. RiskSLIM and SLIM run until their time limit on most problems, so their times sit
+                        near 60 s.</p>
+                      <p><b>C.</b> One run per solver at <code>k</code> = 5 on each of the 27 datasets at full size, 27 at a
+                        time, with a 10-minute limit (killed at 30 minutes). RiskSLIM stops at the CPLEX Community
+                        Edition's size limit on 22 datasets; SLIM passes its limit on 25, since HiGHS finishes its
+                        current step before stopping, and on the remaining 2 returns a proven optimum of its 0-1
+                        loss.</p>
+                    </details>
                     <details class="collapsible" id="tab1">
                       <summary>Table 1: loss, test AUC and time of every solver on the three suites</summary>
                       <p class="caption"><b>Table 1.</b> Mean training log loss, mean test AUC and geometric-mean
@@ -517,30 +546,112 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         </tbody>
                       </table>
                     </details>
-                    <details class="collapsible" id="fig1-measurement">
-                      <summary>Extra details on experimental settings</summary>
-                      <p><b>Scoring.</b> The benchmark rejects any answer whose points are not integers, fall outside
-                        [&minus;5, 5] or use more than <code>k</code> features; no solver in the figure had such an answer.
-                        Given the points, the risk curve is fit by Newton's method on the two numbers <i>a</i> and
-                        <i>b</i>, a convex problem. Each solver process first fits a tiny warm-up problem, untimed, so
-                        numba compilation is not counted; FastRiskScore's first fit on a new machine takes about 2 minutes
-                        longer for that reason.</p>
-                      <p><b>Best known losses.</b> The excess loss is measured against the lowest loss any integer
-                        solver reached on the problem in any of these runs, including FasterRisk with every search
-                        width raised (a beam of 50 &times; 50, a pool of 200 and 100 multipliers) and a 20-minute
-                        limit, which takes about 12&times; its default time.</p>
-                      <p><b>RiskSLIM.</b> The free CPLEX Community Edition refuses problems above 1,000 variables or
-                        constraints, and RiskSLIM's cutting planes pass that limit on wider datasets; it returned no
-                        score on 25 of 70 visible problems and 102 of 135 hidden ones, and
-                        is charged the base rate there. With a full CPLEX licence it would do better, but within these time
-                        limits it still certifies optimality only on small problems, as the FasterRisk paper also
-                        found. RiskSLIM and SLIM run until their time limit on most problems, so their times sit
-                        near 60 s.</p>
-                      <p><b>C.</b> One run per solver at <code>k</code> = 5 on each of the 27 datasets at full size, 27 at a
-                        time, with a 10-minute limit (killed at 30 minutes). RiskSLIM stops at the CPLEX Community
-                        Edition's size limit on 22 datasets; SLIM passes its limit on 25, since HiGHS finishes its
-                        current step before stopping, and on the remaining 2 returns a proven optimum of its 0-1
-                        loss.</p>
+
+                    <details class="collapsible" id="finer">
+                      <summary>Table 2: six later loops on versions of both suites with 99 thresholds per numeric column instead of 9</summary>
+
+                      <p>The suites above split each numeric column at its 9 deciles. We also built versions of the visible
+                        and hidden suites that split each numeric column at its 99 percentiles, which gives the search many
+                        more features to choose from (990 instead of 90 on magic). The six RiskSLIM datasets were rebuilt
+                        from their raw OpenML sources for this. Six more loops ran on the fine visible suite with the same keep rule. Loops 1 and 2 both
+                        started from FastRiskScore; each later loop started from the best version of the one before. From loop 3 on, a change was also
+                        rejected if it lowered the mean test AUC by more than 0.001. The fine hidden suite (27 datasets
+                        &times; 5 values of <code>k</code>) was not used during the loops. Table <a href="#tab2">2</a>
+                        gives the best version of each loop that kept a change, on both.</p>
+
+                      <p class="caption" id="tab2"><b>Table 2.</b> Mean training log loss, mean test AUC and geometric-mean
+                        fit time (s) on the fine suites (99 thresholds per numeric column). Run 2's version is the first
+                        release of FastRiskScore; each loop row is that loop's best version and its main change; the last
+                        row is the shipped solver with <code>n_thresholds</code> &gt; 19.</p>
+                      <div style="overflow-x:auto">
+                      <table class="ranktbl results-table t2">
+                        <thead>
+                          <tr><th></th><th class="grp" colspan="3">Fine visible (70)</th><th class="grp" colspan="3">Fine hidden (135)</th></tr>
+                          <tr><th>solver</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td class="t2-name"><b>FasterRisk</b></td><td>0.34282</td><td>0.848</td><td>2.16</td><td>0.32448</td><td>0.792</td><td>4.62</td></tr>
+                          <tr><td class="t2-name"><b>Run 2's version</b> (first release)</td><td>0.34119</td><td>0.850</td><td>0.068</td><td>0.32416</td><td>0.792</td><td>0.153</td></tr>
+                          <tr><td class="t2-name"><b>Loop 1</b>: wider local search with kicks</td><td>0.33882</td><td>0.847</td><td>0.259</td><td>0.32393</td><td>0.793</td><td>0.322</td></tr>
+                          <tr><td class="t2-name"><b>Loop 2</b>: thresholds of one column handled together</td><td>0.33982</td><td>0.848</td><td>0.032</td><td>0.32400</td><td>0.793</td><td>0.050</td></tr>
+                          <tr><td class="t2-name"><b>Loop 3</b>: minimum support per feature</td><td>0.33998</td><td>0.851</td><td>0.023</td><td>0.32416</td><td>0.793</td><td>0.042</td></tr>
+                          <tr><td class="t2-name"><b>Loop 4</b>: faster</td><td>0.33996</td><td>0.851</td><td>0.011</td><td>0.32414</td><td>0.793</td><td>0.021</td></tr>
+                          <tr><td class="t2-name"><b>Loop 5</b>: exact polish of the best score</td><td>0.33976</td><td>0.851</td><td>0.011</td><td>0.32414</td><td>0.793</td><td>0.021</td></tr>
+                          <tr class="ours"><td class="t2-name"><b>FastRiskScore</b> (shipped, fine settings)</td><td>0.34079</td><td>0.852</td><td>0.011</td><td>0.32414</td><td>0.794</td><td>0.020</td></tr>
+                        </tbody>
+                      </table>
+                      </div>
+                      <style>
+                        table.t2 td.t2-name { min-width: 12em; white-space: normal; }
+                        table.t2 td, table.t2 th { padding-left: 0.5em; padding-right: 0.5em; }
+                      </style>
+                      <p class="tblnote">Versions: loop 1 <code>f31_fastsame</code>, loop 2 <code>g24_fastcol</code>, loop 3
+                        <code>h8_fastbeam</code>, loop 4 <code>i30_final</code>, loop 5 <code>j18_poliso</code>. Hidden-suite AUCs
+                        to four decimals: FasterRisk 0.7917, run 2's version 0.7924, loops 1 and 2 0.7927, loop 3 0.7930, loops
+                        4 and 5 0.7932, shipped 0.7937. Times vary by about 5% between runs; the loop 1 and 2 hidden rows were run while
+                        another loop used the same machine.</p>
+
+                      <ul>
+                        <li><b>Loss.</b> Every loop beats FastRiskScore on the fine visible suite, but on the fine hidden
+                          suite the gains are small: 0.0002 at most. Loop 1 has the lowest loss on both suites, at 6 to
+                          15 times the hidden-suite time of the later loops.</li>
+                        <li><b>Feature handling.</b> Loop 2 found that the 99 indicators of a numeric column are nested
+                          (<code>x &le; t</code> for increasing <code>t</code>), and handled each column's indicators as
+                          one ordered variable. This made the search faster and let the beam pick the best threshold
+                          of a column instead of filling with neighbouring thresholds of one column.</li>
+                        <li><b>AUC.</b> Loop 3 required each chosen indicator to cover at least &radic;<i>N</i> training rows
+                          on each side. Without it, the search picks thresholds that fit a handful of training rows. Against loop 2,
+                          it raised visible AUC by 0.003 for a loss increase of 0.0002, and the AUC gain held on the hidden suite
+                          (0.7927 to 0.7930).</li>
+                        <li><b>Speed.</b> Loop 4 reached about the same loss as loop 3 in half the time: 0.021 s on the hidden
+                          suite, 7&times; faster than FastRiskScore and 220&times; faster than FasterRisk.</li>
+                        <li><b>Saturation.</b> Loop 5's only kept change, an exact polish of the final score, lowered the
+                          visible loss by 0.0002. Almost all of that came from two near-separable problems (ionosphere at
+                          <code>k</code> = 7, mushroom at <code>k</code> = 10), and it changed 2 of the 135 hidden
+                          problems. On the problems where the polish runs, no single change of one feature's points, and no swap
+                          of one feature, lowers the loss of the final score. A sixth loop (30 attempts: new starting
+                          points, tabu walks, pair moves) kept nothing; running its whole search 4 times longer lowered
+                          the mean loss by 0.00001.</li>
+                      </ul>
+                    </details>
+
+                    <details class="collapsible" id="next">
+                      <summary>Table 3: how the shipped version was found (two loops on the decile suites), compared with run 2's version</summary>
+
+                      <p>The fine-track versions are 3&times; faster than run 2's version, but on the decile suites they
+                        lost 0.0014 in visible loss, mostly on spambase and ionosphere. Two causes accounted for most of
+                        it: loop 3's minimum support per feature, and beam rules that kept one threshold per variable and
+                        one child per set of variables, which removed good feature sets on decile data. A loop on the
+                        decile visible suite started from loop 5's version with the minimum support switched off and kept
+                        four changes: candidates whose real-valued coefficient rounds to 0 are ranked last in the beam
+                        (spambase, whose large-scale columns collapsed 3 of 5 final feature sets to 2 features), the
+                        search kernels are compiled before the first fit (about 4 s had been spent compiling inside
+                        a few fits), the beam diversity rules are switched off, and the beam is trimmed back to 8 parents.
+                        A second loop from that version found nothing that held on the hidden suite. The package ships the second
+                        loop's final version (<code>n17_lean</code>, with the same hidden-suite results), and switches to the
+                        fine-track settings when <code>n_thresholds</code> &gt; 19. Table <a href="#tab3">3</a> compares it with
+                        run 2's version.</p>
+
+                      <p class="caption" id="tab3"><b>Table 3.</b> Mean training log loss, mean test AUC and geometric-mean
+                        fit time (s) of the shipped version and run 2's version on the suites of
+                        Table <a href="#tab1">1</a>.</p>
+                      <table class="ranktbl results-table">
+                        <thead>
+                          <tr><th></th><th class="grp" colspan="3">Visible (70 problems)</th><th class="grp" colspan="3">Hidden (135 problems)</th><th class="grp" colspan="3">Hidden, full size (27)</th></tr>
+                          <tr><th>solver</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td>FasterRisk</td><td>0.36029</td><td>0.841</td><td>1.49</td><td>0.32720</td><td>0.793</td><td>3.27</td><td>0.32823</td><td>0.790</td><td>4.82</td></tr>
+                          <tr><td>Run 2's version (first release)</td><td>0.35592</td><td>0.842</td><td>0.035</td><td>0.32695</td><td>0.794</td><td>0.057</td><td>0.32789</td><td>0.793</td><td>0.079</td></tr>
+                          <tr class="ours"><td>FastRiskScore (shipped)</td><td>0.35583</td><td>0.842</td><td>0.011</td><td>0.32688</td><td>0.794</td><td>0.015</td><td>0.32789</td><td>0.792</td><td>0.020</td></tr>
+                        </tbody>
+                      </table>
+                      <p class="tblnote">AUCs to four decimals, visible / hidden / full size: run 2's version 0.8424 / 0.7937 / 0.7926,
+                        shipped 0.8421 / 0.7939 / 0.7920. Times vary by about 10% between runs.</p>
+
+                      <p>On the hidden suite the shipped version has a lower loss than run 2's version on 23 of the 135 problems
+                        and a higher one on 10, and it is 3 to 4&times; faster on the three suites. Test AUC is within 0.0006 of
+                        run 2's version on every suite.</p>
                     </details>
 
                     <h2 id="methods">3. Methods: FastRiskScore</h2>
@@ -781,7 +892,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                     <p>With more than 19 thresholds per column the search also requires each chosen feature to cover at
                       least &radic;<i>n</i> rows on each side, keeps one threshold per variable in the beam, and uses 10 sets
                       in the beam and 5 roundings; these settings come from the fine-threshold loops of
-                      <a href="#finer">Sec 3</a>.</p>
+                      <a href="#finer">Sec 2</a>.</p>
 
                     <h3 id="found">Loop findings</h3>
 
@@ -805,7 +916,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                     </details>
 
                     <details class="collapsible" id="m-speed">
-                      <summary>Speed changes (mostly run 2)</summary>
+                      <summary>Speed changes</summary>
                       <p>A profile of FasterRisk on bank at <code>k</code> = 10 (19.9 s) showed 82% of the time in
                         coordinate descent, which reads every row for each coordinate step. Merging identical rows and
                         fitting by Newton's method on the few chosen features made both runs 5&times; faster. Run 2 then
@@ -867,119 +978,12 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                           <tr><td>2</td><td><code>v24_blasscreen</code></td><td>better move estimate (touched cells exact after a Newton step in (a, b)); swap screen as two BLAS products</td><td>0.35592</td><td>0.049</td><td>0.8428</td></tr>
                           <tr><td>2</td><td><code>v30_lazycodes</code></td><td>column codes computed lazily; exact checks skipped when the estimate rules a move out</td><td>0.35592</td><td>0.042</td><td>0.8428</td></tr>
                           <tr><td>2</td><td><code>v34_gemm</code></td><td>swap screens for all k removals, and beam gradients for all parents, as one matrix product each</td><td>0.35592</td><td>0.037</td><td>0.8424</td></tr>
-                          <tr><td>2</td><td><code>v35_scratch</code></td><td>run 2's final version, shipped until the later loops of <a href="#next">Sec 3</a>: same points as v34, plus deadlines at 40/80/90% of the time limit</td><td>0.35592</td><td>0.038</td><td>0.8424</td></tr>
+                          <tr><td>2</td><td><code>v35_scratch</code></td><td>run 2's final version, shipped until the later loops of <a href="#next">Sec 2</a>: same points as v34, plus deadlines at 40/80/90% of the time limit</td><td>0.35592</td><td>0.038</td><td>0.8424</td></tr>
                         </tbody>
                       </table>
                       <p class="tblnote">Visible set, as recorded by each run. Times vary by about 5% between runs of the
                         same code. The runs' logs (<code>runs/sep26-run1/notes.md</code>,
                         <code>runs/sep26-run2/notes.md</code>) list every attempt, kept or not, with its measured effect.</p>
-                    </details>
-
-                    <details class="collapsible" id="finer">
-                      <summary>Later loops: finer thresholds</summary>
-
-                      <p>The suites above split each numeric column at its 9 deciles. We also built versions of the visible
-                        and hidden suites that split each numeric column at its 99 percentiles, which gives the search many
-                        more features to choose from (990 instead of 90 on magic). The six RiskSLIM datasets were rebuilt
-                        from their raw OpenML sources for this. Six more loops ran on the fine visible suite with the same keep rule. Loops 1 and 2 both
-                        started from FastRiskScore; each later loop started from the best version of the one before. From loop 3 on, a change was also
-                        rejected if it lowered the mean test AUC by more than 0.001. The fine hidden suite (27 datasets
-                        &times; 5 values of <code>k</code>) was not used during the loops. Table <a href="#tab2">2</a>
-                        gives the best version of each loop that kept a change, on both.</p>
-
-                      <p class="caption" id="tab2"><b>Table 2.</b> Mean training log loss, mean test AUC and geometric-mean
-                        fit time (s) on the fine suites (99 thresholds per numeric column). Run 2's version is the first
-                        release of FastRiskScore; each loop row is that loop's best version and its main change; the last
-                        row is the shipped solver with <code>n_thresholds</code> &gt; 19.</p>
-                      <div style="overflow-x:auto">
-                      <table class="ranktbl results-table t2">
-                        <thead>
-                          <tr><th></th><th class="grp" colspan="3">Fine visible (70)</th><th class="grp" colspan="3">Fine hidden (135)</th></tr>
-                          <tr><th>solver</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th></tr>
-                        </thead>
-                        <tbody>
-                          <tr><td class="t2-name"><b>FasterRisk</b></td><td>0.34282</td><td>0.848</td><td>2.16</td><td>0.32448</td><td>0.792</td><td>4.62</td></tr>
-                          <tr><td class="t2-name"><b>Run 2's version</b> (first release)</td><td>0.34119</td><td>0.850</td><td>0.068</td><td>0.32416</td><td>0.792</td><td>0.153</td></tr>
-                          <tr><td class="t2-name"><b>Loop 1</b>: wider local search with kicks</td><td>0.33882</td><td>0.847</td><td>0.259</td><td>0.32393</td><td>0.793</td><td>0.322</td></tr>
-                          <tr><td class="t2-name"><b>Loop 2</b>: thresholds of one column handled together</td><td>0.33982</td><td>0.848</td><td>0.032</td><td>0.32400</td><td>0.793</td><td>0.050</td></tr>
-                          <tr><td class="t2-name"><b>Loop 3</b>: minimum support per feature</td><td>0.33998</td><td>0.851</td><td>0.023</td><td>0.32416</td><td>0.793</td><td>0.042</td></tr>
-                          <tr><td class="t2-name"><b>Loop 4</b>: faster</td><td>0.33996</td><td>0.851</td><td>0.011</td><td>0.32414</td><td>0.793</td><td>0.021</td></tr>
-                          <tr><td class="t2-name"><b>Loop 5</b>: exact polish of the best score</td><td>0.33976</td><td>0.851</td><td>0.011</td><td>0.32414</td><td>0.793</td><td>0.021</td></tr>
-                          <tr class="ours"><td class="t2-name"><b>FastRiskScore</b> (shipped, fine settings)</td><td>0.34079</td><td>0.852</td><td>0.011</td><td>0.32414</td><td>0.794</td><td>0.020</td></tr>
-                        </tbody>
-                      </table>
-                      </div>
-                      <style>
-                        table.t2 td.t2-name { min-width: 12em; white-space: normal; }
-                        table.t2 td, table.t2 th { padding-left: 0.5em; padding-right: 0.5em; }
-                      </style>
-                      <p class="tblnote">Versions: loop 1 <code>f31_fastsame</code>, loop 2 <code>g24_fastcol</code>, loop 3
-                        <code>h8_fastbeam</code>, loop 4 <code>i30_final</code>, loop 5 <code>j18_poliso</code>. Hidden-suite AUCs
-                        to four decimals: FasterRisk 0.7917, run 2's version 0.7924, loops 1 and 2 0.7927, loop 3 0.7930, loops
-                        4 and 5 0.7932, shipped 0.7937. Times vary by about 5% between runs; the loop 1 and 2 hidden rows were run while
-                        another loop used the same machine.</p>
-
-                      <ul>
-                        <li><b>Loss.</b> Every loop beats FastRiskScore on the fine visible suite, but on the fine hidden
-                          suite the gains are small: 0.0002 at most. Loop 1 has the lowest loss on both suites, at 6 to
-                          15 times the hidden-suite time of the later loops.</li>
-                        <li><b>Feature handling.</b> Loop 2 found that the 99 indicators of a numeric column are nested
-                          (<code>x &le; t</code> for increasing <code>t</code>), and handled each column's indicators as
-                          one ordered variable. This made the search faster and let the beam pick the best threshold
-                          of a column instead of filling with neighbouring thresholds of one column.</li>
-                        <li><b>AUC.</b> Loop 3 required each chosen indicator to cover at least &radic;<i>N</i> training rows
-                          on each side. Without it, the search picks thresholds that fit a handful of training rows. Against loop 2,
-                          it raised visible AUC by 0.003 for a loss increase of 0.0002, and the AUC gain held on the hidden suite
-                          (0.7927 to 0.7930).</li>
-                        <li><b>Speed.</b> Loop 4 reached about the same loss as loop 3 in half the time: 0.021 s on the hidden
-                          suite, 7&times; faster than FastRiskScore and 220&times; faster than FasterRisk.</li>
-                        <li><b>Saturation.</b> Loop 5's only kept change, an exact polish of the final score, lowered the
-                          visible loss by 0.0002. Almost all of that came from two near-separable problems (ionosphere at
-                          <code>k</code> = 7, mushroom at <code>k</code> = 10), and it changed 2 of the 135 hidden
-                          problems. On the problems where the polish runs, no single change of one feature's points, and no swap
-                          of one feature, lowers the loss of the final score. A sixth loop (30 attempts: new starting
-                          points, tabu walks, pair moves) kept nothing; running its whole search 4 times longer lowered
-                          the mean loss by 0.00001.</li>
-                      </ul>
-                    </details>
-
-                    <details class="collapsible" id="next">
-                      <summary>Later loops: the shipped version</summary>
-
-                      <p>The fine-track versions are 3&times; faster than run 2's version, but on the decile suites they
-                        lost 0.0014 in visible loss, mostly on spambase and ionosphere. Two causes accounted for most of
-                        it: loop 3's minimum support per feature, and beam rules that kept one threshold per variable and
-                        one child per set of variables, which removed good feature sets on decile data. A loop on the
-                        decile visible suite started from loop 5's version with the minimum support switched off and kept
-                        four changes: candidates whose real-valued coefficient rounds to 0 are ranked last in the beam
-                        (spambase, whose large-scale columns collapsed 3 of 5 final feature sets to 2 features), the
-                        search kernels are compiled before the first fit (about 4 s had been spent compiling inside
-                        a few fits), the beam diversity rules are switched off, and the beam is trimmed back to 8 parents.
-                        A second loop from that version found nothing that held on the hidden suite. The package ships the second
-                        loop's final version (<code>n17_lean</code>, with the same hidden-suite results), and switches to the
-                        fine-track settings when <code>n_thresholds</code> &gt; 19. Table <a href="#tab3">3</a> compares it with
-                        run 2's version.</p>
-
-                      <p class="caption" id="tab3"><b>Table 3.</b> Mean training log loss, mean test AUC and geometric-mean
-                        fit time (s) of the shipped version and run 2's version on the suites of
-                        Table <a href="#tab1">1</a>.</p>
-                      <table class="ranktbl results-table">
-                        <thead>
-                          <tr><th></th><th class="grp" colspan="3">Visible (70 problems)</th><th class="grp" colspan="3">Hidden (135 problems)</th><th class="grp" colspan="3">Hidden, full size (27)</th></tr>
-                          <tr><th>solver</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th><th>loss</th><th>AUC</th><th>time</th></tr>
-                        </thead>
-                        <tbody>
-                          <tr><td>FasterRisk</td><td>0.36029</td><td>0.841</td><td>1.49</td><td>0.32720</td><td>0.793</td><td>3.27</td><td>0.32823</td><td>0.790</td><td>4.82</td></tr>
-                          <tr><td>Run 2's version (first release)</td><td>0.35592</td><td>0.842</td><td>0.035</td><td>0.32695</td><td>0.794</td><td>0.057</td><td>0.32789</td><td>0.793</td><td>0.079</td></tr>
-                          <tr class="ours"><td>FastRiskScore (shipped)</td><td>0.35583</td><td>0.842</td><td>0.011</td><td>0.32688</td><td>0.794</td><td>0.015</td><td>0.32789</td><td>0.792</td><td>0.020</td></tr>
-                        </tbody>
-                      </table>
-                      <p class="tblnote">AUCs to four decimals, visible / hidden / full size: run 2's version 0.8424 / 0.7937 / 0.7926,
-                        shipped 0.8421 / 0.7939 / 0.7920. Times vary by about 10% between runs.</p>
-
-                      <p>On the hidden suite the shipped version has a lower loss than run 2's version on 23 of the 135 problems
-                        and a higher one on 10, and it is 3 to 4&times; faster on the three suites. Test AUC is within 0.0006 of
-                        run 2's version on every suite.</p>
                     </details>
 
                     <p>FastRiskScore is a heuristic. Unlike RiskSLIM with a full CPLEX licence, it does not prove that its
@@ -995,7 +999,7 @@ model.train_loss_       # the mean training log loss of that risk</code></pre>
                         <a href="https://arxiv.org/abs/2605.03808">Agentic-imodels</a>. If you use
                         either, please cite:</p>
 
-                    <pre><code>@inproceedings{singh2026agenticimodels,
+                    <pre style="font-size: 0.92em;"><code>@inproceedings{singh2026agenticimodels,
       title={Agentic-imodels: Evolving agentic interpretability tools via autoresearch},
       author={Chandan Singh and Yan Shuo Tan and Weijia Xu and Zelalem Gero and Weiwei Yang and Michel Galley and Jianfeng Gao},
       booktitle={The Fortieth Annual Conference on Neural Information Processing Systems},

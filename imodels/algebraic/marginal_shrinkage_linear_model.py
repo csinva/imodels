@@ -19,6 +19,7 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         return (
             repr(self)
             .replace("MarginalShrinkageLinearModel", "MSLM")
+            .replace("MarginalShrinkageLinear", "MSL")
             .replace("Regressor", "Reg")
             .replace("Classifier", "Clf")
         )
@@ -198,13 +199,13 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         return self.scalar_y_.inverse_transform(pred.reshape(-1, 1)).squeeze()
 
 
-class MarginalShrinkageLinearModelRegressor(
+class MarginalShrinkageLinearRegressor(
     MarginalShrinkageLinearModel, RegressorMixin
 ):
     ...
 
 
-# class MarginalShrinkageLinearModelClassifier(
+# class MarginalShrinkageLinearClassifier(
 #     MarginalShrinkageLinearModel, ClassifierMixin
 # ):
 #     ...

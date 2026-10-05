@@ -25,6 +25,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_array, check_is_fitted
 
 from imodels.algebraic.risk_score import solver
+from imodels.util.numba_compile import notify_first_compile
 from imodels.util.arguments import (_finite_check_kwarg, check_binary_target, check_predict_X,
                                     set_feature_names_in)
 
@@ -234,6 +235,9 @@ class FastRiskScoreClassifier(ClassifierMixin, BaseEstimator):
         if B.shape[1] == 0:
             points, stopped = np.zeros(0), False
         else:
+            if not solver._WARM:  # the first fit in this process compiles the search (or loads it)
+                notify_first_compile(solver.__file__, "FastRiskScoreClassifier", "about 2 minutes",
+                                     solver.NUMBA_CACHE, "RISKSCORE_NUMBA_CACHE")
             points, _, _, stopped = solver.solve(B, y01, int(self.k), bound=int(self.max_points),
                                                  time_limit=float(self.time_limit), profile=self.profile_)
         points = points.astype(np.int64)

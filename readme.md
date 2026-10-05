@@ -121,7 +121,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <a href="https://github.com/csinva/imodels/blob/master/notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
 </details>
 
-## What's the difference between the models?
+## Model categories
 
 The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:
 
@@ -182,7 +182,7 @@ All of these models follow the standard sklearn estimator API, which is checked 
 | GP GAM |  | [GPGamRegressor](https://csinva.io/imodels/algebraic/gp_gam.html) | GAM with pairwise interactions; nothing to tune, and deterministic |
 | Greedy tree sums (FIGS) | [FIGSClassifier](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSClassifier) | [FIGSRegressor](https://csinva.io/imodels/tree/figs.html#imodels.tree.figs.FIGSRegressor) |                                                              |
 | Hierarchical shrinkage | [HSTreeClassifierCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV) | [HSTreeRegressorCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV) | Wraps any sklearn tree-based model |
-| Marginal shrinkage<br/>linear model |  | [MarginalShrinkageLinearModelRegressor](https://csinva.io/imodels/algebraic/marginal_shrinkage_linear_model.html) | Linear model shrunk towards its marginal effects |
+| Marginal shrinkage<br/>linear model |  | [MarginalShrinkageLinearRegressor](https://csinva.io/imodels/algebraic/marginal_shrinkage_linear_model.html) | Linear model shrunk towards its marginal effects |
 | BART |  | [BART](https://csinva.io/imodels/experimental/bartpy/index.html) | Bayesian additive regression trees (slow) |
 | Distillation |  | [DistilledRegressor](https://csinva.io/imodels/util/distillation.html#imodels.util.distillation.DistilledRegressor) | Wraps any sklearn-compatible models |
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)  | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
@@ -286,7 +286,7 @@ one index per sample; a model made of several trees (FIGS, boosted rules) return
 one column per tree, like `RandomForest.apply`.
 </details>
 
-### Extras
+## Extras
 
 <details>
 <summary><a href="https://csinva.io/imodels/util/data_util.html#imodels.util.data_util.get_clean_dataset">Data-wrangling functions</a> for working with popular tabular datasets (e.g. compas).</summary>

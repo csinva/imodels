@@ -253,7 +253,7 @@ We also include some demos of posthoc analysis, which occurs after fitting model
 <a href="https://github.com/csinva/imodels/blob/master/notebooks/posthoc_analysis.ipynb">posthoc.ipynb</a> shows different simple analyses to interpret a trained model and
 <a href="https://github.com/csinva/imodels/blob/master/notebooks/uncertainty_analysis.ipynb">uncertainty.ipynb</a> contains basic code to get uncertainty estimates for a model
 </details>
-<h2 id="whats-the-difference-between-the-models">What's the difference between the models?</h2>
+<h2 id="model-categories">Model categories</h2>
 <p>The final form of the above models takes one of the following forms, which aim to be simultaneously simple to understand and highly predictive:</p>
 <table>
 <thead>
@@ -378,20 +378,20 @@ Regression
 |
 | Hierarchical shrinkage | [HSTreeClassifierCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV) | [HSTreeRegressorCV](https://csinva.io/imodels/tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV) | Wraps any sklearn tree-based model |
 | Marginal shrinkage<br/>linear model |
-| [MarginalShrinkageLinearModelRegressor](https://csinva.io/imodels/algebraic/marginal_shrinkage_linear_model.html) | Linear model shrunk towards its marginal effects |
+| [MarginalShrinkageLinearRegressor](https://csinva.io/imodels/algebraic/marginal_shrinkage_linear_model.html) | Linear model shrunk towards its marginal effects |
 | BART |
 | [BART](https://csinva.io/imodels/experimental/bartpy/index.html) | Bayesian additive regression trees (slow) |
 | Distillation |
 | [DistilledRegressor](https://csinva.io/imodels/util/distillation.html#imodels.util.distillation.DistilledRegressor) | Wraps any sklearn-compatible models |
 | AutoML model | [AutoInterpretableClassifier️](https://csinva.io/imodels/util/automl.html)
 | [AutoInterpretableRegressor️](https://csinva.io/imodels/util/automl.html) | |
-**Feature scaling.** Most models here work on raw features. <code>SLIMClassifier</code> and
+**Feature scaling.** Most models here work on raw features. <code><a title="imodels.SLIMClassifier" href="algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></code> and
 <code><a title="imodels.SLIMRegressor" href="algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></code> are the exception: their coefficients are integers, so features
 on very different scales collapse to zero when rounded. Standardize X before
 fitting them (they warn if rounding has removed most of the model).
 **Multiclass.** These classifiers handle more than two classes: <code><a title="imodels.FIGSClassifier" href="tree/figs.html#imodels.tree.figs.FIGSClassifier">FIGSClassifier</a></code>,
 <code><a title="imodels.GreedyTreeClassifier" href="tree/cart_wrapper.html#imodels.tree.cart_wrapper.GreedyTreeClassifier">GreedyTreeClassifier</a></code>, <code><a title="imodels.HSTreeClassifier" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifier">HSTreeClassifier</a></code>, <code><a title="imodels.TaoTreeClassifier" href="tree/tao.html#imodels.tree.tao.TaoTreeClassifier">TaoTreeClassifier</a></code>,
-<code><a title="imodels.BoostedRulesClassifier" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></code>, <code>SLIMClassifier</code>, <code><a title="imodels.C45TreeClassifier" href="tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></code>,
+<code><a title="imodels.BoostedRulesClassifier" href="rule_set/boosted_rules.html#imodels.rule_set.boosted_rules.BoostedRulesClassifier">BoostedRulesClassifier</a></code>, <code><a title="imodels.SLIMClassifier" href="algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></code>, <code><a title="imodels.C45TreeClassifier" href="tree/c45_tree/c45_tree.html#imodels.tree.c45_tree.c45_tree.C45TreeClassifier">C45TreeClassifier</a></code>,
 <code><a title="imodels.DecisionTreeCCPClassifier" href="tree/cart_ccp.html#imodels.tree.cart_ccp.DecisionTreeCCPClassifier">DecisionTreeCCPClassifier</a></code>, <code><a title="imodels.FastSmallTreeClassifier" href="tree/optimal_tree/fast_small_tree.html#imodels.tree.optimal_tree.fast_small_tree.FastSmallTreeClassifier">FastSmallTreeClassifier</a></code> and the <code>CV</code> variants. The rule-set and rule-list models, and
 <code><a title="imodels.FastRiskScoreClassifier" href="algebraic/risk_score/fast_risk_score.html#imodels.algebraic.risk_score.fast_risk_score.FastRiskScoreClassifier">FastRiskScoreClassifier</a></code>, are binary-only and raise a
 clear error if given a multiclass target, rather than silently treating it as
@@ -460,7 +460,7 @@ falls into, using the same node numbering as scikit-learn. A single tree returns
 one index per sample; a model made of several trees (FIGS, boosted rules) returns
 one column per tree, like <code>RandomForest.apply</code>.
 </details>
-<h3 id="extras">Extras</h3>
+<h2 id="extras">Extras</h2>
 <details>
 <summary><a href="https://csinva.io/imodels/util/data_util.html#imodels.util.data_util.get_clean_dataset">Data-wrangling functions</a> for working with popular tabular datasets (e.g. compas).</summary>
 These functions, in conjunction with <a href="https://github.com/csinva/imodels-data">imodels-data</a> and <a href="https://github.com/Yu-Group/imodels-experiments">imodels-experiments</a>, make it simple to download data and run experiments on new models.
@@ -575,7 +575,7 @@ from .algebraic.slim import SLIMRegressor, SLIMClassifier as _SLIMClassifier
 from .algebraic.risk_score.fast_risk_score import FastRiskScoreClassifier
 from .algebraic.tree_gam import TreeGAMClassifier, TreeGAMRegressor
 from .algebraic.marginal_shrinkage_linear_model import (
-    MarginalShrinkageLinearModelRegressor,
+    MarginalShrinkageLinearRegressor,
 )
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
@@ -654,7 +654,7 @@ REGRESSORS = [
     TaoTreeRegressor,
     TreeGAMRegressor,
     BoostedRulesRegressor,
-    MarginalShrinkageLinearModelRegressor,
+    MarginalShrinkageLinearRegressor,
     HSTreeRegressor,
     HSTreeRegressorCV,
     DecisionTreeCCPRegressor,
@@ -682,9 +682,9 @@ __all__ = [
     &#34;HSDecisionTreeCCPClassifierCV&#34;, &#34;HSDecisionTreeCCPRegressorCV&#34;,
     &#34;HSTreeClassifier&#34;, &#34;HSTreeClassifierCV&#34;, &#34;HSTreeRegressor&#34;,
     &#34;HSTreeRegressorCV&#34;, &#34;MDLPDiscretizer&#34;,
-    &#34;MarginalShrinkageLinearModelRegressor&#34;, &#34;OneRClassifier&#34;, &#34;REGRESSORS&#34;,
+    &#34;MarginalShrinkageLinearRegressor&#34;, &#34;OneRClassifier&#34;, &#34;REGRESSORS&#34;,
     &#34;RFDiscretizer&#34;, &#34;RuleFitClassifier&#34;, &#34;RuleFitRegressor&#34;,
-    &#34;SLIMRegressor&#34;, &#34;SkopeRulesClassifier&#34;,
+    &#34;SLIMClassifier&#34;, &#34;SLIMRegressor&#34;, &#34;SkopeRulesClassifier&#34;,
     &#34;SlipperClassifier&#34;, &#34;StableClustering&#34;, &#34;TaoTreeClassifier&#34;,
     &#34;TaoTreeRegressor&#34;, &#34;TreeGAMClassifier&#34;, &#34;TreeGAMRegressor&#34;,
     &#34;explain_classification_errors&#34;, &#34;get_clean_dataset&#34;, &#34;get_rules&#34;,
@@ -693,6 +693,11 @@ __all__ = [
 
 
 def __getattr__(name):
+    if name == &#34;MarginalShrinkageLinearModelRegressor&#34;:  # renamed; the old name still works for now
+        warnings.warn(
+            &#34;MarginalShrinkageLinearModelRegressor has been renamed MarginalShrinkageLinearRegressor; &#34;
+            &#34;the old name will be removed in a future release.&#34;, FutureWarning, stacklevel=2)
+        return MarginalShrinkageLinearRegressor
     if name == &#34;SLIMClassifier&#34;:
         warnings.warn(
             &#34;SLIMClassifier is deprecated and will be removed in a future release. Use &#34;
@@ -710,10 +715,8 @@ def __getattr__(name):
 <li><a href="#installation">Installation</a></li>
 <li><a href="#supported-models">Supported models</a></li>
 <li><a href="#demo-notebooks">Demo notebooks</a></li>
-<li><a href="#whats-the-difference-between-the-models">What's the difference between the models?</a><ul>
+<li><a href="#model-categories">Model categories</a></li>
 <li><a href="#extras">Extras</a></li>
-</ul>
-</li>
 <li><a href="#references">References</a></li>
 </ul>
 </div>
@@ -767,10 +770,11 @@ def __getattr__(name):
 <li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeClassifierCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeClassifierCV">HSTreeClassifierCV</a></li>
 <li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeRegressor" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressor">HSTreeRegressor</a></li>
 <li><span class="cat-dot cat-tree" title="trees"></span><a title="imodels.HSTreeRegressorCV" href="tree/hierarchical_shrinkage.html#imodels.tree.hierarchical_shrinkage.HSTreeRegressorCV">HSTreeRegressorCV</a></li>
-<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.MarginalShrinkageLinearModelRegressor" href="algebraic/marginal_shrinkage_linear_model.html#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor">MarginalShrinkageLinearModelRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.MarginalShrinkageLinearRegressor" href="algebraic/marginal_shrinkage_linear_model.html#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor">MarginalShrinkageLinearRegressor</a></li>
 <li><span class="cat-dot cat-rule_list" title="rule lists"></span><a title="imodels.OneRClassifier" href="rule_list/one_r.html#imodels.rule_list.one_r.OneRClassifier">OneRClassifier</a></li>
 <li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.RuleFitClassifier" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitClassifier">RuleFitClassifier</a></li>
 <li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.RuleFitRegressor" href="rule_set/rule_fit.html#imodels.rule_set.rule_fit.RuleFitRegressor">RuleFitRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.SLIMClassifier" href="algebraic/slim.html#imodels.algebraic.slim.SLIMClassifier">SLIMClassifier</a></li>
 <li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.SLIMRegressor" href="algebraic/slim.html#imodels.algebraic.slim.SLIMRegressor">SLIMRegressor</a></li>
 <li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.SkopeRulesClassifier" href="rule_set/skope_rules.html#imodels.rule_set.skope_rules.SkopeRulesClassifier">SkopeRulesClassifier</a></li>
 <li><span class="cat-dot cat-rule_set" title="rule sets"></span><a title="imodels.SlipperClassifier" href="rule_set/slipper.html#imodels.rule_set.slipper.SlipperClassifier">SlipperClassifier</a></li>

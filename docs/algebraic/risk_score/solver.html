@@ -123,7 +123,7 @@ import numpy as np
 
 #: numba is optional for importing imodels but required to fit this model
 HAVE_NUMBA = importlib.util.find_spec(&#34;numba&#34;) is not None
-#: compiled kernels are cached on disk (about 30 s to compile once per machine); set
+#: compiled kernels are cached on disk (about 2 minutes to compile once per machine); set
 #: RISKSCORE_NUMBA_CACHE=0 to disable, e.g. when the package directory is read-only
 NUMBA_CACHE = os.environ.get(&#34;RISKSCORE_NUMBA_CACHE&#34;, &#34;1&#34;) != &#34;0&#34;
 
@@ -3699,7 +3699,7 @@ def solve(X, y, k, bound=COEF_BOUND, time_limit=60.0, profile=&#34;decile&#34;):
 </dd>
 <dt id="imodels.algebraic.risk_score.solver.NUMBA_CACHE"><code class="name">var <span class="ident">NUMBA_CACHE</span></code></dt>
 <dd>
-<div class="desc"><p>compiled kernels are cached on disk (about 30 s to compile once per machine); set
+<div class="desc"><p>compiled kernels are cached on disk (about 2 minutes to compile once per machine); set
 RISKSCORE_NUMBA_CACHE=0 to disable, e.g. when the package directory is read-only</p></div>
 </dd>
 <dt id="imodels.algebraic.risk_score.solver.PROFILES"><code class="name">var <span class="ident">PROFILES</span></code></dt>

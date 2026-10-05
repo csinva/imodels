@@ -71,6 +71,7 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         return (
             repr(self)
             .replace(&#34;MarginalShrinkageLinearModel&#34;, &#34;MSLM&#34;)
+            .replace(&#34;MarginalShrinkageLinear&#34;, &#34;MSL&#34;)
             .replace(&#34;Regressor&#34;, &#34;Reg&#34;)
             .replace(&#34;Classifier&#34;, &#34;Clf&#34;)
         )
@@ -250,13 +251,13 @@ class MarginalShrinkageLinearModel(BaseEstimator):
         return self.scalar_y_.inverse_transform(pred.reshape(-1, 1)).squeeze()
 
 
-class MarginalShrinkageLinearModelRegressor(
+class MarginalShrinkageLinearRegressor(
     MarginalShrinkageLinearModel, RegressorMixin
 ):
     ...
 
 
-# class MarginalShrinkageLinearModelClassifier(
+# class MarginalShrinkageLinearClassifier(
 #     MarginalShrinkageLinearModel, ClassifierMixin
 # ):
 #     ...
@@ -873,6 +874,7 @@ If nonzero, show a progress bar over the per-feature marginal fits</p></div>
         return (
             repr(self)
             .replace(&#34;MarginalShrinkageLinearModel&#34;, &#34;MSLM&#34;)
+            .replace(&#34;MarginalShrinkageLinear&#34;, &#34;MSL&#34;)
             .replace(&#34;Regressor&#34;, &#34;Reg&#34;)
             .replace(&#34;Classifier&#34;, &#34;Clf&#34;)
         )
@@ -1059,7 +1061,7 @@ If nonzero, show a progress bar over the per-feature marginal fits</p></div>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor">MarginalShrinkageLinearModelRegressor</a></li>
+<li><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor">MarginalShrinkageLinearRegressor</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1233,8 +1235,8 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 </dd>
 </dl>
 </dd>
-<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor"><code class="flex name class">
-<span>class <span class="ident">MarginalShrinkageLinearModelRegressor</span></span>
+<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor"><code class="flex name class">
+<span>class <span class="ident">MarginalShrinkageLinearRegressor</span></span>
 <span>(</span><span>est_marginal_name='ridge', est_main_name='ridge', marginal_divide_by_d=True, marginal_sign_constraint=False, alphas=[0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0], elasticnet_ratio=0.5, random_state=None, verbose=0)</span>
 </code></dt>
 <dd>
@@ -1263,7 +1265,7 @@ If nonzero, show a progress bar over the per-feature marginal fits</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class MarginalShrinkageLinearModelRegressor(
+<pre><code class="python">class MarginalShrinkageLinearRegressor(
     MarginalShrinkageLinearModel, RegressorMixin
 ):
     ...</code></pre>
@@ -1278,8 +1280,8 @@ If nonzero, show a progress bar over the per-feature marginal fits</p></div>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor.set_score_request"><code class="name flex">
-<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor">MarginalShrinkageLinearModelRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor">MarginalShrinkageLinearModelRegressor</a></span>
+<dt id="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor.set_score_request"><code class="name flex">
+<span>def <span class="ident">set_score_request</span></span>(<span>self: <a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor">MarginalShrinkageLinearRegressor</a>, *, sample_weight: bool | str | None = '$UNCHANGED$') ‑> <a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor">MarginalShrinkageLinearRegressor</a></span>
 </code></dt>
 <dd>
 <div class="desc"><p>Request metadata passed to the <code>score</code> method.</p>
@@ -1418,7 +1420,7 @@ default=<code>sklearn.utils.metadata_routing.UNCHANGED</code></dt>
 <li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearModel">MarginalLinearModel</a></li>
 <li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalLinearRegressor">MarginalLinearRegressor</a></li>
 <li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModel" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModel">MarginalShrinkageLinearModel</a></li>
-<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearModelRegressor">MarginalShrinkageLinearModelRegressor</a></li>
+<li><span class="cat-dot cat-algebraic" title="algebraic"></span><a title="imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor" href="#imodels.algebraic.marginal_shrinkage_linear_model.MarginalShrinkageLinearRegressor">MarginalShrinkageLinearRegressor</a></li>
 </ul>
 </li>
 </ul>

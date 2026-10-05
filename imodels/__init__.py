@@ -12,7 +12,7 @@ from .algebraic.slim import SLIMRegressor, SLIMClassifier as _SLIMClassifier
 from .algebraic.risk_score.fast_risk_score import FastRiskScoreClassifier
 from .algebraic.tree_gam import TreeGAMClassifier, TreeGAMRegressor
 from .algebraic.marginal_shrinkage_linear_model import (
-    MarginalShrinkageLinearModelRegressor,
+    MarginalShrinkageLinearRegressor,
 )
 from .discretization.discretizer import RFDiscretizer, BasicDiscretizer
 from .discretization.mdlp import MDLPDiscretizer, BRLDiscretizer
@@ -91,7 +91,7 @@ REGRESSORS = [
     TaoTreeRegressor,
     TreeGAMRegressor,
     BoostedRulesRegressor,
-    MarginalShrinkageLinearModelRegressor,
+    MarginalShrinkageLinearRegressor,
     HSTreeRegressor,
     HSTreeRegressorCV,
     DecisionTreeCCPRegressor,
@@ -119,9 +119,9 @@ __all__ = [
     "HSDecisionTreeCCPClassifierCV", "HSDecisionTreeCCPRegressorCV",
     "HSTreeClassifier", "HSTreeClassifierCV", "HSTreeRegressor",
     "HSTreeRegressorCV", "MDLPDiscretizer",
-    "MarginalShrinkageLinearModelRegressor", "OneRClassifier", "REGRESSORS",
+    "MarginalShrinkageLinearRegressor", "OneRClassifier", "REGRESSORS",
     "RFDiscretizer", "RuleFitClassifier", "RuleFitRegressor",
-    "SLIMRegressor", "SkopeRulesClassifier",
+    "SLIMClassifier", "SLIMRegressor", "SkopeRulesClassifier",
     "SlipperClassifier", "StableClustering", "TaoTreeClassifier",
     "TaoTreeRegressor", "TreeGAMClassifier", "TreeGAMRegressor",
     "explain_classification_errors", "get_clean_dataset", "get_rules",
@@ -130,6 +130,11 @@ __all__ = [
 
 
 def __getattr__(name):
+    if name == "MarginalShrinkageLinearModelRegressor":  # renamed; the old name still works for now
+        warnings.warn(
+            "MarginalShrinkageLinearModelRegressor has been renamed MarginalShrinkageLinearRegressor; "
+            "the old name will be removed in a future release.", FutureWarning, stacklevel=2)
+        return MarginalShrinkageLinearRegressor
     if name == "SLIMClassifier":
         warnings.warn(
             "SLIMClassifier is deprecated and will be removed in a future release. Use "

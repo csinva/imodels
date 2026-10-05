@@ -42,7 +42,7 @@ import numpy as np
 
 #: numba is optional for importing imodels but required to fit this model
 HAVE_NUMBA = importlib.util.find_spec("numba") is not None
-#: compiled kernels are cached on disk (about 30 s to compile once per machine); set
+#: compiled kernels are cached on disk (about 2 minutes to compile once per machine); set
 #: RISKSCORE_NUMBA_CACHE=0 to disable, e.g. when the package directory is read-only
 NUMBA_CACHE = os.environ.get("RISKSCORE_NUMBA_CACHE", "1") != "0"
 
